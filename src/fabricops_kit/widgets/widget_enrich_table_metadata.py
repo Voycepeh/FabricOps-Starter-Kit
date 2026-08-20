@@ -80,7 +80,7 @@ def widget_enrich_table_metadata(
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
-    status = widgets.HTML(value="")
+    status = _widget_shared.status_message(widgets)
     runtime_context = {"config": config, "env": env, **resolved}
     try:
         catalogue = read_lakehouse_table_core(
@@ -111,32 +111,31 @@ def widget_enrich_table_metadata(
     state_holder: dict[str, Any] = {"state": {}}
     detail_state = {"is_rendering": False}
 
-    def pane_layout(basis: str) -> Any:
-        return widgets.Layout(
-            flex=f"1 1 {basis}", min_width="220px", max_width="100%", overflow="auto", height="560px"
-        )
-
     table_search = widgets.Text(
-        description="Search tables",
         placeholder="Table, layer, schema…",
-        layout=widgets.Layout(width="100%"),
+        **_widget_shared.widget_common(widgets, "Search tables"),
     )
     table_select = widgets.Select(
-        options=[], description="Logical table", layout=widgets.Layout(width="100%", height="360px")
+        options=[],
+        **_widget_shared.widget_common(widgets, "Logical table"),
     )
+    table_select.layout.height = "360px"
     table_summary = widgets.HTML(value="")
     catalogue_summary = widgets.HTML(value="")
     column_search = widgets.Text(
-        description="Search columns", placeholder="Column name or status…", layout=widgets.Layout(width="100%")
+        placeholder="Column name or status…",
+        **_widget_shared.widget_common(widgets, "Search columns"),
     )
     column_select = widgets.Select(
-        options=[], description="Table / columns", layout=widgets.Layout(width="100%", height="390px")
+        options=[],
+        **_widget_shared.widget_common(widgets, "Table / columns"),
     )
+    column_select.layout.height = "390px"
     detail_title = widgets.HTML(value="")
     technical_detail = widgets.HTML(value="")
-    description = widgets.Textarea(description="Description", rows=5, layout=widgets.Layout(width="100%"))
-    classification = widgets.Dropdown(description="Classification", options=[""], layout=widgets.Layout(width="100%"))
-    personal = widgets.Dropdown(description="Personal identifier", options=[""], layout=widgets.Layout(width="100%"))
+    description = widgets.Textarea(rows=5, **_widget_shared.widget_common(widgets, "Description", textarea=True))
+    classification = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Classification"))
+    personal = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Personal identifier"))
     save_button = widgets.Button(description="Save enrichment", button_style="success")
     unsaved = widgets.HTML(value="")
     controls = {"Description": description, "Classification": classification, "Personal_identifier": personal}
@@ -347,30 +346,26 @@ def widget_enrich_table_metadata(
     save_button.on_click(lambda _: save())
     filter_tables()
 
-    left = widgets.VBox(
-        [widgets.HTML("<h3>Tables</h3>"), table_search, table_select, table_summary], layout=pane_layout("25%")
-    )
-    middle = widgets.VBox(
-        [widgets.HTML("<h3>Catalogue browser</h3>"), catalogue_summary, column_search, column_select],
-        layout=pane_layout("30%"),
-    )
-    right = widgets.VBox(
-        [detail_title, technical_detail, description, classification, personal, save_button, unsaved, status],
-        layout=pane_layout("45%"),
-    )
-    page = widgets.VBox(
-        [
-            widgets.HTML(
-                "<h2>Enrich table metadata</h2><p>Select a table in the current environment, browse its Catalogue columns, and maintain enrichment.</p>"
-            ),
-            widgets.HBox(
-                [left, middle, right],
-                layout=widgets.Layout(
-                    width="100%", display="flex", flex_flow="row wrap", align_items="stretch", gap="12px"
-                ),
-            ),
+    workspace = _widget_shared.authoring_workspace(
+        widgets,
+        target=[table_search, table_select, table_summary],
+        selection=[catalogue_summary, column_search, column_select],
+        configuration=[
+            detail_title,
+            technical_detail,
+            description,
+            classification,
+            personal,
+            _widget_shared.action_row(widgets, [save_button]),
+            unsaved,
         ],
-        layout=widgets.Layout(width="100%", overflow="visible"),
+        titles=("Target table", "Catalogue selection", "Enrichment configuration"),
+    )
+    page = _widget_shared.form_page(
+        widgets,
+        title="Enrich Table Metadata",
+        description="Select a table in the current environment, browse its Catalogue columns, and maintain enrichment.",
+        children=[workspace, status],
     )
     ip.display(page)
     return {
@@ -387,6 +382,7 @@ def widget_enrich_table_metadata(
         "save": save,
         "save_button": save_button,
         "status": status,
+        "workspace": workspace,
         "spark_read_count": spark_read_count,
         "page": page,
     }

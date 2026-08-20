@@ -31,6 +31,8 @@ _WIDGET_STYLE = {"description_width": "initial"}
 _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
+_AUTHORING_PANE_HEIGHT = "560px"
+_STATUS_MIN_HEIGHT = "32px"
 
 
 def require_ipywidgets():
@@ -90,6 +92,85 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     if callable(add_class):
         add_class("fabricops-form")
     return page
+
+
+def status_message(widgets: Any) -> Any:
+    """Create a full-width message region that reserves space as text changes."""
+    message = widgets.HTML(value="")
+    message.layout = widgets.Layout(
+        width="100%",
+        min_width="0",
+        max_width="100%",
+        min_height=_STATUS_MIN_HEIGHT,
+        height="auto",
+        overflow="visible",
+    )
+    return message
+
+
+def bounded_region(widgets: Any, children: Iterable[Any], *, height: str = _AUTHORING_PANE_HEIGHT) -> Any:
+    """Contain long authoring content in a stable, internally scrolling region."""
+    return widgets.VBox(
+        list(children),
+        layout=widgets.Layout(
+            width="100%",
+            min_width="0",
+            max_width="100%",
+            height=height,
+            overflow="auto",
+            gap="8px",
+        ),
+    )
+
+
+def authoring_pane(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
+    """Compose one named, bounded pane in a landscape authoring workspace."""
+    heading = widgets.HTML(
+        value=(
+            '<div style="color:#0f548c;font-size:15px;font-weight:600;'
+            f'border-bottom:1px solid #d7e7f5;padding-bottom:6px;">{_html_escape(title)}</div>'
+        )
+    )
+    return bounded_region(widgets, [heading, *children])
+
+
+def authoring_workspace(
+    widgets: Any,
+    *,
+    target: Iterable[Any],
+    selection: Iterable[Any],
+    configuration: Iterable[Any],
+    titles: tuple[str, str, str] = ("Target", "Selection", "Configuration"),
+) -> Any:
+    """Compose a stable full-width 25/30/45 landscape authoring workspace."""
+    panes = [
+        authoring_pane(widgets, title=title, children=children)
+        for title, children in zip(titles, (target, selection, configuration), strict=True)
+    ]
+    workspace = widgets.GridBox(
+        panes,
+        layout=widgets.Layout(
+            width="100%",
+            min_width="0",
+            max_width="100%",
+            grid_template_columns="minmax(0, 25fr) minmax(0, 30fr) minmax(0, 45fr)",
+            grid_gap="12px",
+            align_items="stretch",
+            overflow="visible",
+        ),
+    )
+    add_class = getattr(workspace, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-authoring-workspace")
+    return workspace
+
+
+def preview_region(widgets: Any, preview: Any, *, height: str = "180px") -> Any:
+    """Apply a bounded, readable layout to a canonical preview control."""
+    preview.layout = widgets.Layout(
+        width="100%", min_width="0", max_width="100%", height=height, overflow="auto"
+    )
+    return preview
 
 
 def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
@@ -153,22 +234,6 @@ def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None
             justify_content="flex-end",
             align_items="center",
             gap="10px",
-        ),
-    )
-
-
-def execution_log_section(widgets: Any, output: Any) -> Any:
-    """Present unfiltered technical output beneath a visible execution-log heading."""
-    output.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
-    return widgets.VBox(
-        [widgets.HTML(value="<b>Execution log</b>"), output],
-        layout=widgets.Layout(
-            width="100%",
-            height="auto",
-            overflow="visible",
-            border="1px solid #d7e7f5",
-            padding="10px",
-            font_family="monospace",
         ),
     )
 

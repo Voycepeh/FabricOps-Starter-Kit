@@ -243,7 +243,7 @@ def _build_catalogue_widget(
         control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
 
     selection_details = widgets.HTML(value="")
-    status = widgets.HTML(value="")
+    status = widget_shared.status_message(widgets)
     controls = {"search": search, "dataset": dataset, "profile_id": profile_column}
     state: dict[str, Any] = {
         "get_selection": None,

@@ -44,6 +44,19 @@ Use these fixtures instead of repeated ad hoc notebook runtime mocks.
 - Exact documentation wording, Markdown headings, comments, or notebook cell ordering.
 - Private helper details unless they are the only practical seam for a current public workflow.
 
+## Fabric widget smoke test
+
+Local tests do not prove Microsoft Fabric rendering. Before a widget UI release, run every live widget in a Fabric notebook at normal landscape width and confirm:
+
+- controls are not clipped and the page does not scroll horizontally;
+- long table, column, schema, and DQ selections scroll inside their panes;
+- table and column navigation does not resize the whole cell excessively;
+- switching DQ rule types does not cause major layout jumps;
+- status messages do not substantially move the primary action;
+- save controls remain visible and predictably placed;
+- DataFrame output still uses Fabric-native `display()` outside the widget; and
+- rerunning or reopening the notebook recreates each widget normally.
+
 ## How to run
 
 ```bash
