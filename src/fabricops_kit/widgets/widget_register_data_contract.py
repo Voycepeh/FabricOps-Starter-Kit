@@ -83,6 +83,15 @@ def _contract_id(agreement_id: str, table_id: str) -> str:
     return str(uuid.uuid5(_CONTRACT_NAMESPACE, f"{agreement_id.strip()}\n{table_id.strip()}"))
 
 
+def _agreement_version_key(value: Any) -> tuple[int, int, int]:
+    """Return the canonical numeric Data Agreement version ordering key."""
+    try:
+        parts = str(value or "").strip().split(".")
+        return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
+    except (TypeError, ValueError):
+        return (0, 0, 0)
+
+
 def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dict[str, Any], table_id: str, usages: list[str], tables: dict[str, list[dict[str, Any]]], environment_name: str) -> tuple[dict[str, Any], list[str]]:
     """Assemble a deterministic, self-contained FabricOps contract document."""
     catalogue = [r for r in tables["METADATA_DATA_CATALOGUE"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name and r.get("is_active") is not False]
@@ -125,6 +134,8 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "description"}
     if any(str(r.get("column_id")) not in described for r in column_docs):
         warnings.append("One or more column descriptions are missing.")
+    if any(not r.get("data_type") for r in column_docs):
+        warnings.append("One or more active columns have no current profiled data type.")
     if not guardrail_docs:
         warnings.append("No active Guardrails are configured.")
     return payload, warnings
@@ -204,7 +215,10 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     contract_frame = read_lakehouse_table_core(CONTRACT_TABLE, target=target, schema=schema, spark_session=spark_session, context=runtime_context)
     contract_rows = _rows(contract_frame)
     agreements = _latest(source["METADATA_DATA_AGREEMENT"], ("agreement_id", "agreement_version"))
-    agreement_options = sorted(agreements, key=lambda r: (str(r.get("agreement_id") or ""), str(r.get("agreement_version") or "")))
+    agreement_options = sorted(
+        agreements,
+        key=lambda r: (str(r.get("agreement_id") or ""), _agreement_version_key(r.get("agreement_version"))),
+    )
     active_table_rows = _latest([r for r in source["METADATA_DATA_CATALOGUE"] if str(r.get("environment_name") or "") == env and r.get("is_active") is not False and (str(r.get("metadata_level") or "").lower() == "table" or not r.get("column_id"))], ("table_id",))
     table_options = sorted({str(r.get("table_id") or "") for r in active_table_rows if r.get("table_id")})
     state: dict[str, Any] = {"environment_name": env, "available_agreements": agreement_options, "available_table_ids": table_options, "agreement_id": agreement_id, "agreement_version": agreement_version, "table_id": table_id, "approved_usages": approved_usages, "review": None, "warnings": [], "saved_contract_id": None, "saved_contract_version": None, "_controls": {}}
@@ -215,7 +229,10 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
             state["review"], state["warnings"] = None, ["Select a saved Data Agreement."]
             return None
         selected_version = str(state.get("agreement_version") or "")
-        agreement = next((r for r in matches if str(r.get("agreement_version") or "") == selected_version), matches[-1] if not selected_version else None)
+        agreement = next(
+            (r for r in matches if str(r.get("agreement_version") or "") == selected_version),
+            max(matches, key=lambda r: _agreement_version_key(r.get("agreement_version"))) if not selected_version else None,
+        )
         if agreement is None:
             raise ValueError("Select an exact saved Data Agreement version.")
         state["agreement_version"] = str(agreement["agreement_version"])
@@ -253,29 +270,69 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         widgets = require_ipywidgets()
     except ModuleNotFoundError:
         return state
-    agreement_control = widgets.Dropdown(options=[(f"{r.get('agreement_name') or r['agreement_id']} · v{r['agreement_version']}", f"{r['agreement_id']}\n{r['agreement_version']}") for r in agreement_options], **widget_common(widgets, "Data Agreement"))
+    agreement_choices = [
+        (f"{r.get('agreement_name') or r['agreement_id']} · v{r['agreement_version']}", f"{r['agreement_id']}\n{r['agreement_version']}")
+        for r in agreement_options
+    ]
+    selected_agreement = (
+        f"{state['agreement_id']}\n{state['agreement_version']}"
+        if state.get("agreement_id") and state.get("agreement_version")
+        else None
+    )
+    agreement_control = widgets.Dropdown(
+        options=agreement_choices,
+        value=selected_agreement if selected_agreement in {value for _label, value in agreement_choices} else None,
+        **widget_common(widgets, "Data Agreement"),
+    )
     table_control = widgets.Dropdown(options=[("Select one table", ""), *[(value, value) for value in table_options]], value=state.get("table_id") or "", **widget_common(widgets, "Governed table"))
     usage_box = widgets.SelectMultiple(options=state.get("parent_approved_usages", []), value=tuple(state.get("approved_usages") or []), **widget_common(widgets, "Approved usages"))
     review_html, warning_html, status = widgets.HTML(), widgets.HTML(), status_message(widgets)
     save_button = widgets.Button(description="Save draft Data Contract", button_style="primary")
+    synchronizing = False
+
     def render(*_args: Any) -> None:
+        nonlocal synchronizing
+        if synchronizing:
+            return
         if agreement_control.value:
             state["agreement_id"], state["agreement_version"] = agreement_control.value.split("\n", 1)
-        state["table_id"], state["approved_usages"] = table_control.value or None, list(usage_box.value)
+        visible_usages = list(usage_box.value)
+        selected_agreement_row = next(
+            (
+                row for row in agreement_options
+                if str(row.get("agreement_id") or "") == str(state.get("agreement_id") or "")
+                and str(row.get("agreement_version") or "") == str(state.get("agreement_version") or "")
+            ),
+            None,
+        )
+        allowed_before_refresh = (
+            _approved_usages(selected_agreement_row.get("approved_usage_json"))
+            if selected_agreement_row else []
+        )
+        state["table_id"] = table_control.value or None
+        state["approved_usages"] = [value for value in visible_usages if value in allowed_before_refresh]
         try:
             refresh()
+            allowed = list(state.get("parent_approved_usages") or [])
+            selected = tuple(value for value in state.get("approved_usages") or [] if value in allowed)
+            synchronizing = True
+            usage_box.options = allowed
+            usage_box.value = selected
+            synchronizing = False
             review_html.value = "<pre>" + html.escape(json.dumps(state["review"], indent=2, default=str)) + "</pre>" if state["review"] else "<i>Select an Agreement and table to review governance context.</i>"
             warning_html.value = "<br>".join(html.escape(v) for v in state["warnings"])
         except ValueError as exc:
+            synchronizing = False
             status.value = html.escape(str(exc))
     agreement_control.observe(render, names="value"); table_control.observe(render, names="value"); usage_box.observe(render, names="value")
+    render()
     def on_save(_button: Any) -> None:
         try:
             saved = save(); status.value = f"Saved draft {html.escape(saved['contract_id'])} version {saved['contract_version']}."
         except ValueError as exc:
             status.value = html.escape(str(exc))
     save_button.on_click(on_save)
-    page = form_page(widgets, title="Prepare Data Contract", description="Review and freeze one governed table definition.", children=[form_section(widgets, title="1. Agreement and table", description="Select an exact saved Agreement and one active table.", children=[agreement_control, table_control]), form_section(widgets, title="2. Approved usage", description="Narrow, but never expand, parent Agreement permissions.", children=[usage_box]), form_section(widgets, title="3. Governance review", description="Review structure, stewardship, enrichment, and Guardrail expectations.", children=[warning_html, review_html]), action_row(widgets, [save_button]), status])
+    page = form_page(widgets, title="Prepare Data Contract", description="Review and freeze one governed table definition.", children=[form_section(widgets, title="1. Agreement and table", children=[agreement_control, table_control]), form_section(widgets, title="2. Approved usage", children=[usage_box]), form_section(widgets, title="3. Governance review", children=[warning_html, review_html]), action_row(widgets, [save_button]), status])
     state["_controls"] = {"agreement": agreement_control, "table": table_control, "approved_usages": usage_box, "save": save_button, "review": review_html, "warnings": warning_html, "status": status, "page": page}
     from IPython import display as ip
     ip.display(page)

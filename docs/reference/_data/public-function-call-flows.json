@@ -8199,6 +8199,27 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
+      "function_name": "_agreement_version_key",
+      "function_type": "private_function",
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "qualified_name": "fabricops_kit.widgets.widget_register_data_contract._agreement_version_key",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 92,
+      "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
+      "source_start_line": 86,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
       "function_name": "_approved_usages",
       "function_type": "private_function",
       "lifecycle_status": "internal",
@@ -8228,9 +8249,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_register_data_contract._assemble_payload",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 130,
+      "source_end_line": 141,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-      "source_start_line": 86,
+      "source_start_line": 95,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8403,9 +8424,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 282,
+      "source_end_line": 339,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-      "source_start_line": 133,
+      "source_start_line": 144,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -63542,7 +63563,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 5,
-      "direct_call_count": 19,
+      "direct_call_count": 20,
       "discontinued_in": null,
       "examples": ">>> state = widget_register_data_contract(\n...     agreement_id=\"agreement-123\",\n...     agreement_version=\"2\",\n...     table_id=\"orders\",\n...     approved_usages=[\"analytics\"],\n...     target=\"metadata\",\n...     spark_session=spark,\n... )\n>>> state[\"save\"]()",
       "files_touched": [
@@ -63584,9 +63605,9 @@
           "release_versions": [
             "0.2.0"
           ],
-          "source_end_line": 282,
+          "source_end_line": 339,
           "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-          "source_start_line": 133,
+          "source_start_line": 144,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -66146,6 +66167,38 @@
           "direct_live_dependent_count": 0,
           "direct_live_dependents": [],
           "discontinued_in": null,
+          "distinct_caller_count": 1,
+          "edge_type": "direct",
+          "function_name": "_agreement_version_key",
+          "function_type": "private_function",
+          "inline_candidate": true,
+          "lifecycle_status": "internal",
+          "live_impact_level": "preview_only",
+          "live_since": null,
+          "parent_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.widgets.widget_register_data_contract._agreement_version_key",
+          "recursive": false,
+          "release_history": [],
+          "release_versions": [],
+          "source_end_line": 92,
+          "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
+          "source_start_line": 86,
+          "supports_live_contract": false,
+          "transitive_live_dependent_count": 0,
+          "transitive_live_dependents": [],
+          "violation_details": [],
+          "violation_types": []
+        },
+        {
+          "architecture_violations": [],
+          "call_count_from_parent": 1,
+          "contract_classification": "preview_only_internal",
+          "contract_display": "Preview-only internal",
+          "depth": 1,
+          "direct_live_dependent_count": 0,
+          "direct_live_dependents": [],
+          "discontinued_in": null,
           "distinct_caller_count": 2,
           "edge_type": "direct",
           "function_name": "_approved_usages",
@@ -66224,9 +66277,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 130,
+          "source_end_line": 141,
           "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-          "source_start_line": 86,
+          "source_start_line": 95,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -66623,7 +66676,7 @@
           "evidence": [
             {
               "depth": 5,
-              "width": 19
+              "width": 20
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -66642,18 +66695,18 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    Mutable state with structured ``review`` and ``warnings`` values,\n    ``refresh`` and ``save`` callables, saved identity/version values, and\n    notebook controls under ``_controls``.",
-      "scope": 51,
+      "scope": 52,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_register_data_contract(*, agreement_id: str | None=None, agreement_version: str | None=None, table_id: str | None=None, approved_usages: list[str] | None=None, target: str='metadata', schema: str | None=None, spark_session=None, context=None)",
-      "source_end_line": 282,
+      "source_end_line": 339,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-      "source_start_line": 133,
+      "source_start_line": 144,
       "summary": "Review and save one immutable, versioned governed-table Data Contract.",
-      "transitive_function_count": 51,
+      "transitive_function_count": 52,
       "usage_notes": "Rendering does not write metadata. Each explicit save appends exactly one\n``draft`` row with ``is_active=False`` and the next version of a stable\ncontract identity derived from the Agreement lifecycle and ``table_id``.\nThe canonical payload freezes Agreement and steward context, current active\nCatalogue structure, current enrichment, active Guardrail expectations,\nand the selected approved-usage subset. Runtime Guardrail result tables are\nneither read nor embedded. Historical contract versions are never updated.\nThis workflow does not submit, approve, promote, export, or enforce a\ncontract and requires a configured Microsoft Fabric metadata Lakehouse.",
-      "width": 19
+      "width": 20
     },
     {
       "architecture_violation_count": 0,
@@ -83240,12 +83293,12 @@
   ],
   "summary": {
     "defined_but_not_used_count": 41,
-    "defined_function_count": 383,
+    "defined_function_count": 384,
     "detached_function_count": 60,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 25,
     "source_referenced_function_count": 58,
-    "used_function_count": 282
+    "used_function_count": 283
   },
   "used_functions": [
     "fabricops_kit.config.audit._context_get",
@@ -83497,6 +83550,7 @@
     "fabricops_kit.widgets.widget_enrich_table_metadata._display_time",
     "fabricops_kit.widgets.widget_enrich_table_metadata._rows",
     "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+    "fabricops_kit.widgets.widget_register_data_contract._agreement_version_key",
     "fabricops_kit.widgets.widget_register_data_contract._approved_usages",
     "fabricops_kit.widgets.widget_register_data_contract._assemble_payload",
     "fabricops_kit.widgets.widget_register_data_contract._contract_id",

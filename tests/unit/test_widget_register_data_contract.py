@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import importlib
+import sys
+from types import ModuleType
 
 import pytest
 
@@ -91,3 +93,187 @@ def test_public_export_remains_the_owner_entrypoint():
     assert module.widget_register_data_contract is public_widget
     assert not hasattr(module, "_latest_inventory")
     assert not hasattr(module, "_compare_schemas")
+
+
+class _Widget:
+    """Observable ipywidget double with trait-style options and values."""
+
+    def __init__(self, *children, value=None, options=None, **kwargs):
+        self.children = tuple(children[0]) if children and isinstance(children[0], (list, tuple)) else children
+        self.layout = kwargs.get("layout")
+        self._observers = []
+        self._clicks = []
+        self._options = []
+        self._value = value
+        if options is not None:
+            self.options = options
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, values):
+        self._options = list(values or [])
+        allowed = [item[1] if isinstance(item, tuple) else item for item in self._options]
+        if isinstance(self._value, tuple):
+            self.value = tuple(item for item in self._value if item in allowed)
+        elif self._value not in allowed:
+            self.value = allowed[0] if allowed else None
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        old = self._value
+        self._value = value
+        if old != value:
+            for callback in list(self._observers):
+                callback({"name": "value", "old": old, "new": value})
+
+    def observe(self, callback, names=None):
+        self._observers.append(callback)
+
+    def on_click(self, callback):
+        self._clicks.append(callback)
+
+    def click(self):
+        for callback in self._clicks:
+            callback(self)
+
+    def add_class(self, _name):
+        return None
+
+
+class _Layout:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+
+class _Widgets:
+    Dropdown = SelectMultiple = HTML = Button = VBox = HBox = _Widget
+    Layout = _Layout
+
+
+class _Frame:
+    def __init__(self, rows):
+        self.rows = list(rows)
+
+    def collect(self):
+        return list(self.rows)
+
+
+class _Spark:
+    def createDataFrame(self, rows, schema=None):
+        return _Frame(rows)
+
+
+def _widget_sources():
+    sources = _sources()
+    sources["METADATA_DATA_AGREEMENT"] = [
+        {**_agreement(), "agreement_id": "agreement-a", "agreement_version": "1.0.0", "agreement_name": "Agreement A", "approved_usage_json": '["analytics","research"]'},
+        {**_agreement(), "agreement_id": "agreement-b", "agreement_version": "3.0.0", "agreement_name": "Agreement B", "approved_usage_json": '["internal"]'},
+        {**_agreement(), "agreement_id": "agreement-b", "agreement_version": "10.0.0", "agreement_name": "Agreement B", "approved_usage_json": '["internal","reporting"]'},
+    ]
+    return sources
+
+
+def _run_widget(monkeypatch, *, agreement_id="agreement-b", agreement_version="10.0.0", approved_usages=None):
+    """Run the public widget against deterministic metadata and UI doubles."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+    tables = {name: _Frame(rows) for name, rows in _widget_sources().items()}
+    tables["METADATA_DATA_CONTRACT"] = _Frame([])
+    writes = []
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "dev", {}))
+    monkeypatch.setattr(module, "get_spark_session", lambda spark_session=None: _Spark())
+    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda name, **kwargs: tables[name])
+    monkeypatch.setattr(module, "write_lakehouse_table_core", lambda frame, name, **kwargs: writes.extend(frame.rows))
+    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: {
+        "_committed_by": "tester", "_committed_at": "2026-01-01T00:00:00",
+        "_workspace_id": "workspace", "_workspace_name": "Workspace",
+        "_notebook_id": "notebook", "_notebook_name": "Notebook",
+        "_metadata_lakehouse_name": "Metadata", "_activity_id": "activity",
+    })
+    monkeypatch.setattr(module, "require_ipywidgets", lambda: _Widgets)
+    ipython = ModuleType("IPython")
+    display_module = ModuleType("IPython.display")
+    display_module.display = lambda _value: None
+    ipython.display = display_module
+    monkeypatch.setitem(sys.modules, "IPython", ipython)
+    monkeypatch.setitem(sys.modules, "IPython.display", display_module)
+    state = module.widget_register_data_contract(
+        agreement_id=agreement_id,
+        agreement_version=agreement_version,
+        table_id="orders",
+        approved_usages=approved_usages,
+    )
+    return state, writes
+
+
+def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch):
+    """Keep displayed Agreement, table, usages, and review in one initial state."""
+    state, writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    controls = state["_controls"]
+    assert controls["agreement"].value == "agreement-b\n10.0.0"
+    assert controls["table"].value == "orders"
+    assert controls["approved_usages"].options == ["internal", "reporting"]
+    assert controls["approved_usages"].value == ("reporting",)
+    assert state["review"]["agreement"]["agreement_version"] == "10.0.0"
+    assert writes == []
+
+
+def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
+    """Replace stale usage options and remove permissions absent from the new Agreement."""
+    state, _writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    controls = state["_controls"]
+    controls["agreement"].value = "agreement-a\n1.0.0"
+    assert controls["approved_usages"].options == ["analytics", "research"]
+    assert controls["approved_usages"].value == ()
+    assert state["approved_usages"] == []
+    assert state["review"]["agreement"]["agreement_id"] == "agreement-a"
+
+
+def test_widget_uses_numeric_agreement_versions_and_appends_contract_versions(monkeypatch):
+    """Resolve semantic versions and append exactly one immutable row per save."""
+    state, writes = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
+    assert state["agreement_version"] == "10.0.0"
+    displayed_payload = state["review"]
+    first = state["save"]()
+    second = state["save"]()
+    assert len(writes) == 2
+    assert first["contract_version"] == 1
+    assert second["contract_version"] == 2
+    assert first["contract_id"] == second["contract_id"]
+    assert json.loads(first["contract_payload_json"]) == displayed_payload
+    assert first["status"] == "draft" and first["is_active"] is False
+
+
+def test_widget_different_agreement_table_lifecycle_has_different_identity(monkeypatch):
+    """Separate contract lifecycles when the Agreement lifecycle changes."""
+    first, _writes = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
+    second, _writes = _run_widget(monkeypatch)
+    assert first["contract_id"] != second["contract_id"]
+
+
+def test_widget_cannot_save_stale_usage_from_another_agreement(monkeypatch):
+    """Discard a stale visible permission before building or saving the payload."""
+    state, writes = _run_widget(monkeypatch, approved_usages=["internal"])
+    controls = state["_controls"]
+    controls["agreement"].value = "agreement-a\n1.0.0"
+    controls["approved_usages"].value = ("internal",)
+    saved = state["save"]()
+    assert json.loads(saved["contract_payload_json"])["approved_usages"] == []
+    assert len(writes) == 1
+
+
+def test_payload_warns_when_profiled_data_type_is_missing():
+    """Make incomplete structural typing explicit without inventing a hard gate."""
+    sources = _sources()
+    sources["METADATA_DATA_PROFILED"] = []
+    _payload, warnings = _assemble_payload(
+        contract_id="contract", contract_version=1, agreement=_agreement(),
+        table_id="orders", usages=[], tables=sources, environment_name="dev",
+    )
+    assert "One or more active columns have no current profiled data type." in warnings
