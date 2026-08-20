@@ -343,12 +343,11 @@ def widget_author_dq_rules(
         value=severity if severity in {"warning", "error"} else "warning",
         description="Severity",
     )
-    preview = widgets.Textarea(
+    preview = shared.preview_region(widgets, widgets.Textarea(
         description="Canonical preview",
         disabled=True,
-        layout=widgets.Layout(width="100%", height="260px"),
-    )
-    message = widgets.HTML()
+    ))
+    message = shared.status_message(widgets)
     records_state: dict[str, list[dict[str, Any]]] = {"records": []}
 
     def render_parameters(selected_state: Mapping[str, Any], *_: Any) -> None:
@@ -541,33 +540,25 @@ def widget_author_dq_rules(
     severity_control.observe(refresh_preview, names="value")
     save_button = widgets.Button(description="Save DQ rules", button_style="primary")
     save_button.on_click(lambda _: save())
+    workspace = shared.authoring_workspace(
+        widgets,
+        target=[target, target_controls["target_summary"]],
+        selection=[rule, column_box],
+        configuration=[
+            parameter_box,
+            severity_control,
+            preview,
+            shared.action_row(widgets, [save_button]),
+        ],
+        titles=("Profiled table", "Rule and columns", "Parameters and preview"),
+    )
     ui = shared.form_page(
         widgets,
         title="Author DQ Rules",
         description=(
             "Select a profiled table, choose a DQ rule, then apply it to the relevant columns."
         ),
-        children=[
-            shared.form_section(
-                widgets,
-                title="1. Profiled table",
-                children=[target, target_controls["target_summary"]],
-            ),
-            shared.form_section(
-                widgets,
-                title="2. DQ rule and parameters",
-                children=[rule, parameter_box],
-            ),
-            shared.form_section(
-                widgets, title="3. Relevant columns", children=[column_box]
-            ),
-            shared.form_section(
-                widgets, title="4. Failure behaviour", children=[severity_control]
-            ),
-            shared.form_section(widgets, title="5. Preview", children=[preview]),
-            shared.action_row(widgets, [save_button]),
-            message,
-        ],
+        children=[workspace, message],
     )
     ip.display(ui)
     result = {
@@ -588,6 +579,7 @@ def widget_author_dq_rules(
         "refresh_preview": refresh_preview,
         "save": save,
         "save_button": save_button,
+        "workspace": workspace,
         "ui": ui,
     }
     refresh_preview()

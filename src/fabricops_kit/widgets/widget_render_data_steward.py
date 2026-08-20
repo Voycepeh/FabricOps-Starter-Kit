@@ -28,6 +28,7 @@ from fabricops_kit.widgets.shared import (
     config_value,
     render_searchable_selector,
     require_ipywidgets,
+    status_message,
     write_widget_metadata_row,
 )
 
@@ -127,7 +128,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     save = widgets.Button(description="Save steward")
     output = widgets.Output()
-    status = widgets.HTML(value="")
+    status = status_message(widgets)
     required_labels = {
         "steward_name": "Steward name",
         "steward_role": "Steward role",

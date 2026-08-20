@@ -33,6 +33,7 @@ from fabricops_kit.widgets.shared import (
     list_all_data_agreement_rows,
     list_data_agreements,
     render_searchable_selector,
+    status_message,
     require_ipywidgets,
     write_widget_metadata_row,
     render_custom_fields,
@@ -174,7 +175,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "Create or reactivate another data steward, then select Refresh active stewards."
     )
     save = widgets.Button(description="Save Agreement")
-    status = widgets.HTML(value="", layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
+    status = status_message(widgets)
     execution_output = widgets.Output(layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
 
     def _set_status(message: str, *, error: bool = False) -> None:
