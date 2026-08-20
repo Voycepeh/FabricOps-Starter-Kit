@@ -30,9 +30,8 @@ def _sources():
         ],
         "METADATA_DATA_CATALOGUE": [
             {"metadata_level": "table", "table_id": "orders", "column_id": None, "environment_name": "dev", "store_type": "lakehouse", "layer": "gold", "schema_name": "sales", "table_name": "orders", "is_active": True, **audit},
-            {"metadata_level": "column", "table_id": "orders", "column_id": "order_id", "column_name": "order_id", "environment_name": "dev", "is_active": True, **audit},
+            {"metadata_level": "column", "table_id": "orders", "column_id": "order_id", "column_name": "order_id", "data_type": "long", "environment_name": "dev", "is_active": True, **audit},
         ],
-        "METADATA_DATA_PROFILED": [{"table_id": "orders", "column_id": "order_id", "data_type": "long", **audit}],
         "METADATA_ENRICHMENT": [
             {"enrichment_id": "e1", "table_id": "orders", "column_id": None, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "description", "value": "Orders", **audit},
             {"enrichment_id": "e2", "table_id": "orders", "column_id": "order_id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "description", "value": "Identifier", **audit},
@@ -268,12 +267,25 @@ def test_widget_cannot_save_stale_usage_from_another_agreement(monkeypatch):
     assert len(writes) == 1
 
 
-def test_payload_warns_when_profiled_data_type_is_missing():
-    """Make incomplete structural typing explicit without inventing a hard gate."""
+def test_payload_blocks_when_catalogue_data_type_is_missing():
+    """Require complete structural typing from the active Catalogue definition."""
     sources = _sources()
-    sources["METADATA_DATA_PROFILED"] = []
-    _payload, warnings = _assemble_payload(
+    sources["METADATA_DATA_CATALOGUE"][1]["data_type"] = None
+    with pytest.raises(ValueError, match="must define data_type"):
+        _assemble_payload(
+            contract_id="contract", contract_version=1, agreement=_agreement(),
+            table_id="orders", usages=[], tables=sources, environment_name="dev",
+        )
+
+
+def test_payload_uses_catalogue_type_without_profiled_metadata():
+    """Assemble the frozen schema entirely from the current Catalogue registry."""
+    sources = _sources()
+    assert "METADATA_DATA_PROFILED" not in sources
+    payload, _warnings = _assemble_payload(
         contract_id="contract", contract_version=1, agreement=_agreement(),
         table_id="orders", usages=[], tables=sources, environment_name="dev",
     )
-    assert "One or more active columns have no current profiled data type." in warnings
+    assert payload["table"]["columns"] == [
+        {"column_id": "order_id", "column_name": "order_id", "data_type": "long"}
+    ]

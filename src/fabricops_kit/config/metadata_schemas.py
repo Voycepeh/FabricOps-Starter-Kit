@@ -153,6 +153,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("schema_name", "string"),
                 ("table_name", "string"),
                 ("column_name", "string"),
+                ("data_type", "string"),
                 ("first_profiled_at", "timestamp"),
                 ("last_profiled_at", "timestamp"),
                 ("is_active", "boolean"),

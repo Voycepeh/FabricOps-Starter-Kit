@@ -17,7 +17,7 @@ from fabricops_kit.widgets.shared import action_row, form_page, form_section, re
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 _SOURCE_TABLES = (
     "METADATA_DATA_AGREEMENT", "METADATA_DATA_STEWARD", "METADATA_DATA_CATALOGUE",
-    "METADATA_DATA_PROFILED", "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
+    "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
 )
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
@@ -101,9 +101,13 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
         raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
     table = table_rows[-1]
     columns = [r for r in current if r.get("column_id")]
-    profiles = _latest([r for r in tables["METADATA_DATA_PROFILED"] if str(r.get("table_id") or "") == table_id], ("column_id",))
-    data_types = {str(r.get("column_id") or ""): r.get("data_type") for r in profiles}
-    column_docs = [dict(_fields(r, ("column_id", "column_name")), data_type=data_types.get(str(r.get("column_id") or ""))) for r in columns]
+    column_docs = [_fields(r, ("column_id", "column_name", "data_type")) for r in columns]
+    missing_data_types = [str(row.get("column_name") or row.get("column_id")) for row in column_docs if not row.get("data_type")]
+    if missing_data_types:
+        raise ValueError(
+            "Active METADATA_DATA_CATALOGUE columns must define data_type before a Data Contract can be assembled: "
+            + ", ".join(missing_data_types)
+        )
     enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
     enrichment_docs = [_fields(r, ("enrichment_id", "table_id", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
     guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
@@ -134,8 +138,6 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "description"}
     if any(str(r.get("column_id")) not in described for r in column_docs):
         warnings.append("One or more column descriptions are missing.")
-    if any(not r.get("data_type") for r in column_docs):
-        warnings.append("One or more active columns have no current profiled data type.")
     if not guardrail_docs:
         warnings.append("No active Guardrails are configured.")
     return payload, warnings

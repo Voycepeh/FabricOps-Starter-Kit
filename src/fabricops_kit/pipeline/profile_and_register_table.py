@@ -361,18 +361,27 @@ def _catalogue_dataframe_from_profiled(
     rows = [
         coerce_metadata_row_types(
             CATALOGUE_TABLE,
-            {**common, "metadata_level": "table", "column_id": None, "column_name": None},
+            {
+                **common,
+                "metadata_level": "table",
+                "column_id": None,
+                "column_name": None,
+                "data_type": None,
+            },
         )
     ]
-    profiled_ids = {row.column_id for row in profiled_df.select("column_id").collect()}
     for field in source_df.schema.fields:
         column_id = build_column_id(first["table_id"], field.name)
-        if column_id not in profiled_ids:
-            continue
         rows.append(
             coerce_metadata_row_types(
                 CATALOGUE_TABLE,
-                {**common, "metadata_level": "column", "column_id": column_id, "column_name": field.name},
+                {
+                    **common,
+                    "metadata_level": "column",
+                    "column_id": column_id,
+                    "column_name": field.name,
+                    "data_type": field.dataType.simpleString(),
+                },
             )
         )
     return profiled_df.sparkSession.createDataFrame(rows, schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
@@ -414,6 +423,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "schema_name": "source.schema_name",
                 "table_name": "source.table_name",
                 "column_name": "source.column_name",
+                "data_type": "source.data_type",
                 "last_profiled_at": "source.last_profiled_at",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
@@ -692,7 +702,9 @@ def profile_and_register_table(
     record is added. Matching uses ``environment_name + metadata_level + table_id
     + column_id``. ``table_id`` and ``column_id`` are stable logical identities
     shared across environments, while ``environment_name`` keeps Development and
-    Production observations separate. Column catalogue rows that disappear from a
+    Production observations separate. Column rows store the current source schema
+    ``data_type``. A type change updates that value without changing the column
+    identity or deactivating the column. Column catalogue rows that disappear from a
     new profile are retained but marked inactive rather than silently deleted.
     
     ``METADATA_DATA_LINEAGE`` records whether the table was used as an input

@@ -358,6 +358,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
+        "data_type": ["fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled"],
         "metadata_table_key": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
             "fabricops_kit.config.shared.build_metadata_table_key",

@@ -46,6 +46,7 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "schema_name",
         "table_name",
         "column_name",
+        "data_type",
         "first_profiled_at",
         "last_profiled_at",
         "is_active",

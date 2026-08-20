@@ -16,8 +16,8 @@ See the tables and columns FabricOps has observed.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
+| Total columns | 21 |
+| Business columns | 13 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -33,6 +33,7 @@ See the tables and columns FabricOps has observed.
 | `schema_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Lakehouse or warehouse schema name recorded for the dataset when available. |
 | `table_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Physical table name recorded for the metadata row. |
 | `column_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Physical column name recorded for the metadata row. |
+| `data_type` | `string` | `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Stable data type label recorded for the column. |
 | `first_profiled_at` | `timestamp` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Timestamp stored for `first_profiled_at`. |
 | `last_profiled_at` | `timestamp` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Timestamp stored for `last_profiled_at`. |
 | `is_active` | `boolean` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Whether the row is currently active. |

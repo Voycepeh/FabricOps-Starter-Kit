@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:501`
+`fabricops_kit/pipeline/profile_and_register_table.py:511`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L501-L843">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L511-L855">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -218,7 +218,9 @@ environment. If a matching record exists, it is updated. Otherwise, a new
 record is added. Matching uses ``environment_name + metadata_level + table_id
 + column_id``. ``table_id`` and ``column_id`` are stable logical identities
 shared across environments, while ``environment_name`` keeps Development and
-Production observations separate. Column catalogue rows that disappear from a
+Production observations separate. Column rows store the current source schema
+``data_type``. A type change updates that value without changing the column
+identity or deactivating the column. Column catalogue rows that disappear from a
 new profile are retained but marked inactive rather than silently deleted.
 
 ``METADATA_DATA_LINEAGE`` records whether the table was used as an input
