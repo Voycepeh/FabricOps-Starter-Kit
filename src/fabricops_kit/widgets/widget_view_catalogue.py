@@ -102,12 +102,12 @@ def _resolve_agreement_catalogue_scope(
         context=runtime_context,
     )
     table_ids = {
-        str(row["metadata_table_key"])
+        str(row["table_id"])
         for row in contracts.filter(F.col("agreement_id") == agreement_id)
-        .select("metadata_table_key")
+        .select("table_id")
         .distinct()
         .collect()
-        if row["metadata_table_key"]
+        if row["table_id"]
     }
     return (
         table_ids,

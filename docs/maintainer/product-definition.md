@@ -49,7 +49,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
 | 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
 | 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
-| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, link governed Data Catalogues to the Data Agreement and prepare Governance sign-off. |
+| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. The saved version freezes the definition that will later be submitted for promotion approval. |
 | 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production. |
 | 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
 
@@ -65,7 +65,7 @@ Provide the user-facing implementation pattern for configuring workspaces, creat
 
 ### Shared metadata model
 
-Connects Governance intent with Engineering evidence. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract records remain part of the normal operating workflow rather than separate documentation work.
+Connects Governance intent with Engineering evidence. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow; the Data Contract freezes their relevant governed table definition as a complete versioned artifact for later promotion approval.
 
 ### Guided Demo and technical documentation
 

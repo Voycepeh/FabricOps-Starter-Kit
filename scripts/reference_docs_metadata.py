@@ -112,7 +112,7 @@ METADATA_REFERENCE_OVERVIEW_INTRO = (
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.\n\n"
+    "A Data Contract is the complete, immutable, versioned governed definition of one table under one exact Data Agreement version. Its canonical FabricOps payload freezes the agreement, stewardship, catalogue structure, enrichment, active Guardrail expectations, and narrowed approved usages needed for later approval and export.\n\n"
     "One Data Agreement can govern multiple Data Contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
@@ -150,13 +150,14 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_DATA_CONTRACT": {
         "purpose": "Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.",
-        "grain": "One authorised catalogue table and schema fingerprint governed by one Data Agreement.",
-        "primary_key": ["agreement_id", "metadata_table_key", "schema_fingerprint"],
+        "grain": "One immutable Data Contract version for one governed table under one exact Data Agreement version.",
+        "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [
-            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The current Data Contract column retains its pre-Stage-2 name, but its stable hash value identifies the same logical table now exposed by Catalogue as table_id. Data Contract redesign is deferred to Stage 5."},
+            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Together with agreement_version, identifies the exact parent Data Agreement version."},
+            {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Together with agreement_id, identifies the exact parent Data Agreement version."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Each Data Contract governs one logical Catalogue table."},
         ],
-        "relationships": [],
+        "relationships": [{"cardinality": "1:N", "statement": "One stable contract_id has monotonically increasing immutable contract_version rows."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "See the tables and columns FabricOps has observed.",
@@ -1647,22 +1648,22 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',
   'function_type': 'callable',
-  'summary_override': 'Register dataset-level Data Contract tables under a parent Data Agreement.',
+  'summary_override': 'Assemble and save a versioned Data Contract for one governed table.',
   'symbol_name': 'widget_register_data_contract',
   'template_notebook': '01_governance',
   'template_segment': 'Contract registration',
-  'use_when': 'Use in 01_governance after catalogue and validation evidence exists to register authorised tables and schema fingerprints under a parent Data Agreement.',
-  'parameters': 'See the source docstring for agreement resolution, initial metadata identities, metadata target, Spark session, and context parameters.',
-  'returns': 'Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.',
+  'use_when': 'Use in 01_governance after an Agreement version is saved and governed table metadata is ready for contract review.',
+  'parameters': 'See the source docstring for exact Agreement and table selection, approved usages, metadata target, Spark session, and context parameters.',
+  'returns': 'Mutable contract review state with structured governance context, completeness warnings, and an explicit save action.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
   'related_functions': ['widget_render_data_agreement', 'widget_view_catalogue', 'widget_enrich_table_metadata'],
-  'expanded_purpose': 'A dataset-level contract inventory governed by a parent Data Agreement. Tables can be added to or removed from an in-memory contract draft. The right panel compares contracted and latest fingerprints, shows current and removed columns (including each removed column’s last-observed date), and displays latest table- and column-level enrichment as read-only catalogue context. Enrichment must be maintained through widget_enrich_table_metadata. One explicit save persists only contract membership and schema fingerprint metadata. One Data Agreement can govern multiple Data Contracts.',
-  'when_to_use': 'Use to manage authorised catalogue tables, review actual contracted and latest schemas, and inspect read-only enrichment before explicitly saving the contract draft under the selected parent Data Agreement.',
+  'expanded_purpose': 'Assembles one self-contained canonical FabricOps contract payload from the exact Agreement version, its stewards, one active Catalogue table and columns, current enrichment, and active Guardrail expectations. Each explicit save appends the next immutable draft version; runtime Guardrail results are excluded.',
+  'when_to_use': 'Use to review governed metadata and explicitly freeze a new draft contract version for one table before a later approval workflow.',
   'do_not_use_when': 'Do not use to edit enrichment, descriptions, classifications, personal-identifier values, guardrails, or agreement metadata.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],
-  'return_interpretation': 'dataset_reviews exposes complete schemas, removed-column history, stable-key differences, and read-only enrichment; each changed save records one exact schema version per logical dataset without changing enrichment.',
-  'common_failure_causes': ['No saved agreement is selected, so the inventory editor remains disabled.',
-                            'The active environment has no registered catalogue datasets.',
+  'return_interpretation': 'review exposes the assembled governance context without HTML parsing; save appends exactly one draft contract version and does not mutate history.',
+  'common_failure_causes': ['No exact saved Agreement version is selected.',
+                            'The active environment has no active governed Catalogue tables.',
                             'The metadata target cannot be written.']},
 
 
