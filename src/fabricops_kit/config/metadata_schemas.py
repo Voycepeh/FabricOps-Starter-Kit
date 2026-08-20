@@ -129,7 +129,17 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
         "METADATA_DATA_CONTRACT": build_metadata_schema(
             "METADATA_DATA_CONTRACT",
-            [("agreement_id", "string", False), ("metadata_table_key", "string", False), ("schema_fingerprint", "string", False), ("approved_usage_json", "string", False), *audit],
+            [
+                ("contract_id", "string", False),
+                ("contract_version", "integer", False),
+                ("agreement_id", "string", False),
+                ("agreement_version", "string", False),
+                ("table_id", "string", False),
+                ("contract_payload_json", "string", False),
+                ("status", "string", False),
+                ("is_active", "boolean", False),
+                *audit,
+            ],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",

@@ -461,7 +461,7 @@ def get_current_notebook_lineage_scope(
 
 
 def get_data_contract_views(
-    metadata_table_key: str,
+    table_id: str,
     *,
     agreement_id: str | None = None,
     environment_name: str | None = None,
@@ -480,7 +480,7 @@ def get_data_contract_views(
 
     raw_tables = {name: read(name) for name in CANONICAL_METADATA_TABLES}
     contracts = raw_tables["METADATA_DATA_CONTRACT"].filter(
-        F.col("metadata_table_key") == metadata_table_key
+        F.col("table_id") == table_id
     )
     if agreement_id:
         contracts = contracts.filter(F.col("agreement_id") == agreement_id)
@@ -508,7 +508,7 @@ def get_data_contract_views(
         elif name == "METADATA_DATA_CONTRACT":
             frame = contracts
         else:
-            frame = frame.filter(F.col("metadata_table_key") == metadata_table_key)
+            frame = frame.filter(F.col("table_id") == table_id)
         if environment_name and "environment_name" in frame.columns:
             frame = frame.filter(F.col("environment_name") == environment_name)
         tables[name] = frame.orderBy(F.col("_committed_at").desc_nulls_last())
@@ -516,7 +516,7 @@ def get_data_contract_views(
     return {
         "selection": {
             "environment_name": environment_name,
-            "metadata_table_key": metadata_table_key,
+            "table_id": table_id,
             "agreement_id": agreement_id,
             "provider_steward_id": provider_steward_ids[0] if len(provider_steward_ids) == 1 else None,
             "recipient_steward_id": recipient_steward_ids[0] if len(recipient_steward_ids) == 1 else None,

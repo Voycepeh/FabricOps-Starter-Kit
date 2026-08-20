@@ -13,16 +13,23 @@ from fabricops_kit.config.metadata_schemas import (
 pytestmark = pytest.mark.unit
 
 
-def test_data_contract_uses_one_snapshot_membership_schema():
-    """Keep the current Data Contract contract unchanged until Stage 5."""
+def test_data_contract_uses_versioned_one_table_schema():
+    """Contract rows freeze one table definition under one Agreement version."""
     registry = metadata_table_schema_registry()
     audit_names = [name for name, _kind, _nullable in audit_schema_fields()]
-    membership_names = registry["METADATA_DATA_CONTRACT"].fieldNames()
+    schema = registry["METADATA_DATA_CONTRACT"]
 
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
-    assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in registry
-    assert membership_names == [
-        "agreement_id", "metadata_table_key", "schema_fingerprint", "approved_usage_json", *audit_names,
+    assert schema.fieldNames() == [
+        "contract_id", "contract_version", "agreement_id", "agreement_version",
+        "table_id", "contract_payload_json", "status", "is_active", *audit_names,
+    ]
+    assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
+    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
+        ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
+        ("agreement_id", "StringType", False), ("agreement_version", "StringType", False),
+        ("table_id", "StringType", False), ("contract_payload_json", "StringType", False),
+        ("status", "StringType", False), ("is_active", "BooleanType", False),
     ]
 
 

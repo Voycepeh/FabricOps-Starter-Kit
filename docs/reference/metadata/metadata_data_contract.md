@@ -4,31 +4,37 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 ## Model
 
-**Grain:** One authorised catalogue table and schema fingerprint governed by one Data Agreement.
+**Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.
 
-**Primary key:** `agreement_id` + `metadata_table_key` + `schema_fingerprint`
+**Primary key:** `contract_id` + `contract_version`
 
 **Relationships:**
 
-* `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). The current Data Contract column retains its pre-Stage-2 name, but its stable hash value identifies the same logical table now exposed by Catalogue as table_id. Data Contract redesign is deferred to Stage 5.
+* `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Together with agreement_version, identifies the exact parent Data Agreement version.
+* `agreement_version` → `METADATA_DATA_AGREEMENT.agreement_version` (**N:1**). Together with agreement_id, identifies the exact parent Data Agreement version.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Each Data Contract governs one logical Catalogue table.
+* **1:N**: One stable contract_id has monotonically increasing immutable contract_version rows.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 12 |
-| Business columns | 4 |
+| Total columns | 16 |
+| Business columns | 8 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
+| `contract_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Stable identifier for the contract row. |
+| `contract_version` | `integer` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Version recorded for the contract row. |
 | `agreement_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Stable identifier for the agreement lifecycle. |
-| `metadata_table_key` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `schema_fingerprint` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Deterministic fingerprint for the observed or governed schema snapshot. |
-| `approved_usage_json` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | JSON payload stored for `approved_usage_json`. |
+| `agreement_version` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Canonical agreement version associated with the row. |
+| `table_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Identifier for the accessed table or object. |
+| `contract_payload_json` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Serialized contract payload stored for the row. |
+| `status` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Pipeline run status recorded with the run summary. |
+| `is_active` | `boolean` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Whether the row is currently active. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

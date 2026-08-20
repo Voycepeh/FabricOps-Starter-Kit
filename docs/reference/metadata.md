@@ -92,11 +92,11 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__purpose">Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One authorised catalogue table and schema fingerprint governed by one Data Agreement.</span>
+    <span>One immutable Data Contract version for one governed table under one exact Data Agreement version.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>agreement_id</code> <span class="metadata-table-card__key-separator">+</span> <code>metadata_table_key</code> <span class="metadata-table-card__key-separator">+</span> <code>schema_fingerprint</code></span>
+    <span><code>contract_id</code> <span class="metadata-table-card__key-separator">+</span> <code>contract_version</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-header">
