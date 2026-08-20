@@ -220,6 +220,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "schema_name",
         "table_name",
         "column_name",
+        "data_type",
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
