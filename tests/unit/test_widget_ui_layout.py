@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import inspect
 import re
 
@@ -35,6 +36,35 @@ def test_live_widgets_avoid_fabric_unsupported_widget_apis():
     for name in LIVE_WIDGETS:
         module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
         assert forbidden.search(inspect.getsource(module)) is None, name
+
+
+def test_live_widgets_preserve_fabric_native_display_resolution():
+    """Verify widget rendering cannot shadow Fabric's native bare display function."""
+    for name in LIVE_WIDGETS:
+        module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
+        tree = ast.parse(inspect.getsource(module))
+        imports = [node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)]
+        assert any(
+            node.module == "IPython"
+            and any(alias.name == "display" and alias.asname == "ip" for alias in node.names)
+            for node in imports
+        ), name
+        assert not any(
+            node.module == "IPython.display"
+            and any(alias.name == "display" for alias in node.names)
+            for node in imports
+        ), name
+        assert not any(
+            node.module == "IPython"
+            and any(alias.name == "display" and alias.asname is None for alias in node.names)
+            for node in imports
+        ), name
+        assert not any(
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "display"
+            for node in ast.walk(tree)
+        ), name
 
 
 def test_authoring_workspace_is_full_width_stable_and_shrinkable(monkeypatch):
