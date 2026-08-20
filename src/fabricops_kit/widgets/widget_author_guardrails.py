@@ -341,12 +341,11 @@ def _render_guardrail_authoring(
         value=str(change_rule.get("severity") or "blocking"),
         **shared.widget_common(widgets, "On failure"),
     )
-    preview = widgets.Textarea(
+    preview = shared.preview_region(widgets, widgets.Textarea(
         description="Canonical preview",
         disabled=True,
-        layout=widgets.Layout(width="100%", height="260px"),
-    )
-    message = widgets.HTML()
+    ))
+    message = shared.status_message(widgets)
     save_button = widgets.Button(description="Save Guardrails", button_style="primary")
     version_display = widgets.HTML(
         value=f"<b>Next save version</b><br>{version_state['persisted'] + 1}"
@@ -447,22 +446,20 @@ def _render_guardrail_authoring(
             version_display,
         ],
     )
-    ui = shared.form_page(
+    ui = shared.authoring_workspace(
         widgets,
-        title="Author Guardrails",
-        description=(
-            "Version Schema, Freshness, and Changes expectations for this profiled table."
-        ),
-        children=[
-            identity,
+        target=[identity],
+        selection=[
             shared.form_section(
                 widgets,
-                title="1. Schema",
+                title="Schema",
                 children=[required_schema, schema_failure_action],
             ),
+        ],
+        configuration=[
             shared.form_section(
                 widgets,
-                title="2. Freshness",
+                title="Freshness",
                 children=[
                     shared.form_grid(
                         widgets,
@@ -477,7 +474,7 @@ def _render_guardrail_authoring(
             ),
             shared.form_section(
                 widgets,
-                title="3. Changes",
+                title="Changes",
                 children=[
                     shared.form_grid(
                         widgets,
@@ -490,10 +487,11 @@ def _render_guardrail_authoring(
                     )
                 ],
             ),
-            shared.form_section(widgets, title="Preview", children=[preview]),
+            preview,
             shared.action_row(widgets, [save_button]),
             message,
         ],
+        titles=("Target context", "Schema selection", "Freshness, changes, and preview"),
     )
     result = {
         "version": version_state["persisted"] + 1,
@@ -518,6 +516,7 @@ def _render_guardrail_authoring(
         "refresh_preview": refresh_preview,
         "save": save,
         "save_button": save_button,
+        "workspace": ui,
         "ui": ui,
     }
     refresh_preview()

@@ -16,11 +16,11 @@ from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
 from fabricops_kit.widgets.shared import (
     action_row,
     checkbox_group,
-    execution_log_section,
     form_grid,
     form_page,
     form_section,
     require_ipywidgets,
+    status_message,
     widget_common,
 )
 from fabricops_kit.widgets import shared as _catalogue_browser
@@ -495,8 +495,7 @@ def widget_register_data_contract(
     summary = widgets.HTML(value="")
     selected_schema = widgets.HTML(value="<i>Select a catalogue dataset to review its current schema.</i>")
     contract_schema_warning = widgets.HTML(value="")
-    status = widgets.HTML(value="")
-    execution_output = widgets.Output()
+    status = status_message(widgets)
     agreement_text = widgets.HTML(value=f"<b>Parent Data Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
     environment_text = widgets.HTML(value=f"<b>Environment:</b> {html.escape(env)}")
 
@@ -875,14 +874,10 @@ def widget_register_data_contract(
             "approved_usage_json": selected_usage_json,
             **audit,
         } for key in current]
-        clear = getattr(execution_output, "clear_output", None)
-        if clear is not None:
-            clear(wait=True)
-        with execution_output:
-            _append_inventory(
-                membership_rows=rows, target=target, schema=schema,
-                spark_session=spark_session, context=runtime_context,
-            )
+        _append_inventory(
+            membership_rows=rows, target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
         latest_summary = {
             "activity_id": activity_id, "agreement_id": state["agreement_id"],
             "committed_at": saved_at, "linked_dataset_count": len(current),
@@ -925,7 +920,7 @@ def widget_register_data_contract(
         "approved_usage_checkboxes": approved_usage_checkboxes,
         "approved_usage_box": approved_usage_box,
         "search": search, "available": available, "add": add, "save": save,
-        "status": status, "execution_output": execution_output,
+        "status": status,
     }
     refresh_controls()
     set_editor_enabled(bool(state["agreement_id"]))
@@ -967,9 +962,8 @@ def widget_register_data_contract(
     actions = form_section(
         widgets, title="Save contract", children=[action_row(widgets, [save])]
     )
-    log_section = execution_log_section(widgets, execution_output)
     result_section = form_section(
-        widgets, title="Save result", children=[status, log_section]
+        widgets, title="Save result", children=[status]
     )
     landscape = widgets.HBox(
         [
@@ -995,7 +989,6 @@ def widget_register_data_contract(
         details_section=details_section,
         action_section=actions,
         result_section=result_section,
-        execution_log_section=log_section,
     )
     _display_widget(container)
     return state

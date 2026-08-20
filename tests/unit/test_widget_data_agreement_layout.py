@@ -124,8 +124,8 @@ def test_long_search_results_are_bounded_without_scrolling_the_form():
     assert selector["container"].layout.kwargs["overflow"] == "visible"
 
 
-def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
-    """Expose meaningful agreement labels and naturally expanding output."""
+def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch):
+    """Expose meaningful agreement labels and a Fabric-safe result status."""
     controls = _render(monkeypatch)
     text = _visible_text(controls["container"])
 
@@ -137,7 +137,6 @@ def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
         "Search recipient data stewards",
         "Document name",
         "Document link",
-        "Execution log",
         "Custom columns",
     ):
         assert label in text
@@ -150,7 +149,8 @@ def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
     }
     assert controls["save_button"].click_callbacks
     assert controls["existing_record"].callbacks
-    assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
+    assert "execution_output" not in controls
+    assert "execution_log_section" not in controls
 
 
 def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch, capsys):
@@ -242,8 +242,8 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     assert controls["save_button"].description == "Save steward"
     assert controls["save_button"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "auto"
-    assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
-    assert controls["execution_log_section"] not in controls["container"].children
+    assert "execution_output" not in controls
+    assert "execution_log_section" not in controls
 
 
 def test_steward_additional_information_renders_only_for_custom_fields(monkeypatch):
@@ -335,7 +335,7 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     for label in (
         "Data Agreement → Data Contract → Authorised tables", "Contract details",
         "Related catalogue datasets", "Save contract", "Save result",
-        "Execution log", "Search catalogue", "Existing inventory",
+        "Search catalogue", "Existing inventory",
     ):
         assert label in text
     assert "Dataset-level delivery promise" in text
@@ -345,7 +345,8 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     assert "Optional" not in text
     assert controls["save"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "auto"
-    assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
+    assert "execution_output" not in controls
+    assert "execution_log_section" not in controls
 
     landscape = controls["container"].children[1]
     catalogue_section = next(
@@ -356,8 +357,8 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     assert catalogue_selector_layout.kwargs["align_items"] == "flex-start"
 
 
-def test_contract_save_preserves_complete_execution_output(monkeypatch, capsys):
-    """Do not filter the technical Lakehouse destination emitted during a save."""
+def test_contract_save_preserves_complete_notebook_stdout(monkeypatch, capsys):
+    """Leave the technical Lakehouse destination on ordinary notebook stdout."""
     message = "Writing Lakehouse table to abfss://container@account.dfs.core.windows.net/path"
     monkeypatch.setattr(contract_widget, "_append_inventory", lambda **kwargs: print(message))
     monkeypatch.setattr(

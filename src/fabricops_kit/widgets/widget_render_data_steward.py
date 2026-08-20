@@ -15,7 +15,6 @@ from fabricops_kit.widgets.shared import (
     collect_custom_fields,
     deserialize_custom_fields,
     action_row,
-    execution_log_section,
     form_grid,
     form_page,
     form_section,
@@ -28,6 +27,7 @@ from fabricops_kit.widgets.shared import (
     config_value,
     render_searchable_selector,
     require_ipywidgets,
+    status_message,
     write_widget_metadata_row,
 )
 
@@ -126,8 +126,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         callbacks.insert(0, callbacks.pop())
 
     save = widgets.Button(description="Save steward")
-    output = widgets.Output()
-    status = widgets.HTML(value="")
+    status = status_message(widgets)
     required_labels = {
         "steward_name": "Steward name",
         "steward_role": "Steward role",
@@ -150,37 +149,33 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     def _save(_: Any) -> None:
         save.disabled = True
-        clear = getattr(output, "clear_output", None)
-        if clear is not None:
-            clear(wait=True)
-        with output:
-            try:
-                values = {
-                    key: widget.value.strip() if isinstance(widget.value, str) else widget.value
-                    for key, widget in form.items()
-                }
-                missing = _missing_required(values)
-                if missing:
-                    status.value = "Data steward was not saved. Complete the required fields."
-                    print("Cannot save data steward.\n\nComplete the following required fields:")
-                    for label in missing:
-                        print(f"• {label}")
-                    return
-                extras = collect_custom_fields(widget_config, custom)
-                if selected.value:
-                    values["steward_id"] = selected.value
-                    values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
-                row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
-                _refresh_existing_options(row["steward_id"])
-                for callback in after_save_callbacks:
-                    callback(row)
-                status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
-                print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
-            except Exception as exc:
-                status.value = f"Data steward was not saved: {exc}"
-                print(f"Error: {exc}")
-            finally:
-                _sync_save_state()
+        try:
+            values = {
+                key: widget.value.strip() if isinstance(widget.value, str) else widget.value
+                for key, widget in form.items()
+            }
+            missing = _missing_required(values)
+            if missing:
+                status.value = "Data steward was not saved. Complete the required fields."
+                print("Cannot save data steward.\n\nComplete the following required fields:")
+                for label in missing:
+                    print(f"• {label}")
+                return
+            extras = collect_custom_fields(widget_config, custom)
+            if selected.value:
+                values["steward_id"] = selected.value
+                values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
+            row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
+            _refresh_existing_options(row["steward_id"])
+            for callback in after_save_callbacks:
+                callback(row)
+            status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
+            print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
+        except Exception as exc:
+            status.value = f"Data steward was not saved: {exc}"
+            print(f"Error: {exc}")
+        finally:
+            _sync_save_state()
 
     save.on_click(_save)
     detail_fields = [form[field] for field in fields]
@@ -200,7 +195,6 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             )
         )
     actions = action_row(widgets, [save])
-    log_section = execution_log_section(widgets, output)
     container = form_page(
         widgets,
         title="Data Steward",
@@ -208,7 +202,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         children=[selection_section, details_section, *supporting_sections, actions, status],
     )
     ip.display(container)
-    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "status": status, "output": output, "execution_output": output, "execution_log_section": log_section}
+    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "status": status}
 
 
 def _generate_steward_id() -> str:

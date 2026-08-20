@@ -18,7 +18,6 @@ from fabricops_kit.widgets.shared import (
     form_section,
     form_page,
     form_grid,
-    execution_log_section,
     checkbox_group,
     action_row,
     deserialize_custom_fields,
@@ -33,6 +32,7 @@ from fabricops_kit.widgets.shared import (
     list_all_data_agreement_rows,
     list_data_agreements,
     render_searchable_selector,
+    status_message,
     require_ipywidgets,
     write_widget_metadata_row,
     render_custom_fields,
@@ -174,8 +174,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "Create or reactivate another data steward, then select Refresh active stewards."
     )
     save = widgets.Button(description="Save Agreement")
-    status = widgets.HTML(value="", layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
-    execution_output = widgets.Output(layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
+    status = status_message(widgets)
 
     def _set_status(message: str, *, error: bool = False) -> None:
         colour = "#a4262c" if error else "#107c10"
@@ -396,7 +395,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     result_section = form_section(
         widgets,
         title="Save result",
-        children=[status, execution_log_section(widgets, execution_output)],
+        children=[status],
     )
     container = form_page(
         widgets,
@@ -431,8 +430,6 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "after_save_callbacks": after_save_callbacks,
         "save_button": save,
         "status": status,
-        "execution_output": execution_output,
-        "execution_log_section": result_section.children[2],
     }
 
 

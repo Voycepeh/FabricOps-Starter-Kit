@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import inspect
+import importlib
 import json
-import sys
 from types import SimpleNamespace
 
 import pytest
@@ -204,10 +204,9 @@ def test_dq_records_contain_no_obsolete_stage4_fields():
 
 def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
     """Verify visible column checkboxes and dynamic rule parameter controls."""
-    from fabricops_kit.widgets import widget_author_dq_rules as public_callable
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
-    module = sys.modules[public_callable.__module__]
+    module = importlib.import_module("fabricops_kit.widgets.widget_author_dq_rules")
     widgets = _install_fake_notebook_widgets(monkeypatch, auto_observe=True)
 
     def fake_targets(config, env, *, spark_session, widgets, on_change):
@@ -230,10 +229,9 @@ def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
 
 def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_fields(monkeypatch):
     """Verify multiple independent preview rows with canonical fields only."""
-    from fabricops_kit.widgets import widget_author_dq_rules as public_callable
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
-    module = sys.modules[public_callable.__module__]
+    module = importlib.import_module("fabricops_kit.widgets.widget_author_dq_rules")
     _install_fake_notebook_widgets(monkeypatch)
 
     def fake_targets(config, env, *, spark_session, widgets, on_change):
@@ -260,10 +258,9 @@ def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_field
 
 def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
     """Verify that the DQ widget uses the shared canonical Guardrail writer."""
-    from fabricops_kit.widgets import widget_author_dq_rules as public_callable
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
-    module = sys.modules[public_callable.__module__]
+    module = importlib.import_module("fabricops_kit.widgets.widget_author_dq_rules")
     _install_fake_notebook_widgets(monkeypatch)
     saved = []
 
@@ -289,9 +286,8 @@ def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
 
 def test_authoring_widgets_are_independent_and_use_shared_storage_model():
     """Verify independent widget orchestration with shared storage primitives."""
-    from fabricops_kit.widgets import widget_author_dq_rules as public_callable
-
-    dq_source = inspect.getsource(sys.modules[public_callable.__module__])
+    module = importlib.import_module("fabricops_kit.widgets.widget_author_dq_rules")
+    dq_source = inspect.getsource(module)
     assert "widget_author_guardrails(" not in dq_source
     assert "widget_select_guardrail_target" not in dq_source
     assert "authoring.canonicalize_records" in dq_source
