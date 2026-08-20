@@ -28,6 +28,17 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
         assert "form_page(" in inspect.getsource(module)
 
 
+def test_live_widgets_do_not_shadow_fabric_display():
+    """Keep IPython widget rendering namespaced so Fabric display() stays native."""
+    for name in LIVE_WIDGETS:
+        module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
+        source = inspect.getsource(module)
+        assert "from IPython import display as ip" in source
+        assert "ip.display(" in source
+        assert "from IPython.display import display" not in source
+        assert "from IPython import display\n" not in source
+
+
 def test_authoring_workspace_is_full_width_stable_and_shrinkable(monkeypatch):
     """Verify the reusable landscape workspace keeps stable pane dimensions."""
     widgets = _install_fake_notebook_widgets(monkeypatch)
