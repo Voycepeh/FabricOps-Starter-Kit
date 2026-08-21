@@ -55,7 +55,9 @@ def check_dq(
 
     Notes
     -----
-    Only current active approved rules in ``METADATA_GUARDRAIL`` are evaluated.
+    Production resolves the physical table through the Catalogue and evaluates
+    frozen DQ rules from its active Data Contract. Development evaluates current
+    active approved authoring rules in ``METADATA_GUARDRAIL``.
     Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
     only failed row/rule pairs are appended to
     ``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while

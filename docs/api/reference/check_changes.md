@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:256`
+`fabricops_kit/pipeline/check_changes.py:258`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L256-L287">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L258-L295">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -67,6 +67,16 @@ Structured change counts, partition fingerprints, recent and historical classifi
 ValueError
     If configuration is invalid or logical keys are null, missing, or
     duplicated.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Production resolves source-change expectations from the active frozen Data
+Contract. Development uses mutable authoring metadata, and change detection
+itself is unchanged.
+
+</div>
 
 ## See also
 

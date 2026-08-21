@@ -30,6 +30,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
     "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+    "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
     "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",

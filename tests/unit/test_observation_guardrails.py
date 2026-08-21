@@ -323,6 +323,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
     )
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "warehouse||product||sales||orders")
+    monkeypatch.setattr(schema_module, "resolve_catalogue_table_id", lambda *args, **kwargs: "catalogue-orders")
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: None)
@@ -362,6 +363,7 @@ def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "governed-orders")
+    monkeypatch.setattr(schema_module, "resolve_catalogue_table_id", lambda *args, **kwargs: "catalogue-orders")
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: [result])
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: result)
     monkeypatch.setattr(schema_module, "schema_check_core", lambda *args, **kwargs: result.copy())

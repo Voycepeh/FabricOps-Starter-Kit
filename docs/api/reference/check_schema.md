@@ -12,9 +12,9 @@ Check observed table schema against direct or approved schema intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_schema.py:19`
+`fabricops_kit/pipeline/check_schema.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L19-L111">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L128">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -76,6 +76,15 @@ ValueError
     exists for the resolved table.
 SchemaDriftError
     If an active blocking schema guardrail rejects the checked schema.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Production resolves the physical table through the Catalogue and uses its
+active frozen Data Contract. Development uses mutable authoring metadata.
+
+</div>
 
 ## See also
 

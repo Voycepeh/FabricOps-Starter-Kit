@@ -78,6 +78,7 @@ WIDGET_EXPORTS = (
     "widget_author_guardrails",
     "widget_view_catalogue",
     "widget_register_data_contract",
+    "widget_activate_data_contract",
     "widget_author_dq_rules",
 )
 

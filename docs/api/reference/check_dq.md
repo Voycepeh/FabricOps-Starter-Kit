@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L8-L91">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L8-L93">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,7 +87,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Only current active approved rules in ``METADATA_GUARDRAIL`` are evaluated.
+Production resolves the physical table through the Catalogue and evaluates
+frozen DQ rules from its active Data Contract. Development evaluates current
+active approved authoring rules in ``METADATA_GUARDRAIL``.
 Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
 only failed row/rule pairs are appended to
 ``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while

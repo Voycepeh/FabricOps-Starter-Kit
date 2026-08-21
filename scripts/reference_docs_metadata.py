@@ -349,7 +349,7 @@ METADATA_COLUMN_OWNERS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "__default__": ["fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"],
+        "__default__": ["fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract", "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -1663,9 +1663,23 @@ PUBLIC_SYMBOL_DOCS = [
   'do_not_use_when': 'Do not use to edit enrichment, descriptions, classifications, personal-identifier values, guardrails, or agreement metadata.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],
   'return_interpretation': 'review exposes the assembled governance context without HTML parsing; save appends exactly one draft contract version and does not mutate history.',
-  'common_failure_causes': ['No exact saved Agreement version is selected.',
+ 'common_failure_causes': ['No exact saved Agreement version is selected.',
                             'The active environment has no active governed Catalogue tables.',
                             'The metadata target cannot be written.']},
+
+ {'kind': 'function',
+  'module': 'widgets.widget_activate_data_contract',
+  'function_type': 'callable',
+  'summary_override': 'Manually select the frozen Data Contract version used by Production.',
+  'symbol_name': 'widget_activate_data_contract',
+  'template_notebook': '01_governance',
+  'template_segment': 'Contract activation',
+  'use_when': 'Use after saving a Data Contract version to make that exact frozen definition active for its governed table.',
+  'related_functions': ['widget_register_data_contract', 'check_schema', 'check_freshness', 'check_changes', 'check_dq'],
+  'return_interpretation': 'review is derived only from the frozen payload; activate updates lifecycle fields and reports whether a write occurred.',
+  'common_failure_causes': ['The selected version does not exist or belongs to another table.',
+                            'The selected contract is rejected or its frozen payload is invalid.',
+                            'The metadata table contains multiple active versions.']},
 
 
  {'kind': 'function',

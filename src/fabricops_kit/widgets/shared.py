@@ -15,6 +15,7 @@ from fabricops_kit.config import shared as config_shared
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     read_lakehouse_table_core,
+    resolve_configured_lakehouse_table,
     write_lakehouse_table_core,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
@@ -33,6 +34,101 @@ _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
 _AUTHORING_PANE_HEIGHT = "560px"
 _STATUS_MIN_HEIGHT = "32px"
+
+DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
+
+
+def parse_data_contract_payload(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Parse and validate the immutable identity in one contract payload."""
+    try:
+        payload = json.loads(str(row.get("contract_payload_json") or ""))
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("Selected contract_payload_json is invalid JSON.") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("contract"), dict) or not isinstance(payload.get("table"), dict):
+        raise ValueError("Selected Data Contract payload must identify its contract and table.")
+    if str(payload["contract"].get("contract_id") or "") != str(row.get("contract_id") or ""):
+        raise ValueError("Selected Data Contract payload contract_id does not match its version row.")
+    if int(payload["contract"].get("contract_version") or 0) != int(row.get("contract_version") or 0):
+        raise ValueError("Selected Data Contract payload contract_version does not match its version row.")
+    if str(payload["table"].get("table_id") or "") != str(row.get("table_id") or ""):
+        raise ValueError("Selected Data Contract payload table_id does not match its version row.")
+    return payload
+
+
+def _contract_activation_changes(rows: list[dict[str, Any]], selected: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return lifecycle-only mutations for one selected contract version."""
+    changes = [
+        {"contract_id": prior["contract_id"], "contract_version": int(prior["contract_version"]), "status": "superseded", "is_active": False}
+        for prior in rows
+        if str(prior.get("table_id") or "") == str(selected.get("table_id") or "")
+        and prior.get("is_active") is True
+        and not (
+            str(prior.get("contract_id") or "") == str(selected.get("contract_id") or "")
+            and int(prior.get("contract_version") or 0) == int(selected.get("contract_version") or 0)
+        )
+    ]
+    if selected.get("is_active") is not True or str(selected.get("status") or "").lower() != "active":
+        changes.append({"contract_id": selected["contract_id"], "contract_version": int(selected["contract_version"]), "status": "active", "is_active": True})
+    return changes
+
+
+def activate_contract_version(
+    *,
+    config,
+    env: str,
+    table_id: str,
+    contract_id: str,
+    contract_version: int,
+    target: str = "metadata",
+    schema: str | None = None,
+    spark_session=None,
+    context=None,
+) -> dict[str, Any]:
+    """Activate one frozen version and supersede the prior active version."""
+    frame = read_lakehouse_table_core(
+        DATA_CONTRACT_TABLE, target=target, schema=schema,
+        spark_session=spark_session, context=context,
+    )
+    rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
+    selected = [
+        row for row in rows
+        if str(row.get("contract_id") or "") == contract_id
+        and int(row.get("contract_version") or 0) == int(contract_version)
+    ]
+    if not selected:
+        raise ValueError("Selected Data Contract version does not exist.")
+    row = selected[0]
+    if str(row.get("table_id") or "") != table_id:
+        raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
+    if str(row.get("status") or "").lower() == "rejected":
+        raise ValueError("Rejected Data Contracts cannot be manually activated. Register a corrected version first.")
+    parse_data_contract_payload(row)
+    active = [
+        candidate for candidate in rows
+        if str(candidate.get("table_id") or "") == table_id
+        and candidate.get("is_active") is True
+    ]
+    if len(active) > 1:
+        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
+    changes = _contract_activation_changes(rows, row)
+    if not changes:
+        return {"changed": False, "contract_id": contract_id, "contract_version": int(contract_version), "changes": []}
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric runtime dependency
+        raise RuntimeError("Delta Lake support is required to activate a Data Contract.") from exc
+    source = spark_session.createDataFrame(changes)
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        target, DATA_CONTRACT_TABLE,
+        schema or configured_lakehouse_schema(config, env, target), context=context,
+    )
+    (
+        DeltaTable.forPath(spark_session, path).alias("target")
+        .merge(source.alias("source"), "target.contract_id = source.contract_id AND target.contract_version = source.contract_version")
+        .whenMatchedUpdate(set={"status": "source.status", "is_active": "source.is_active"})
+        .execute()
+    )
+    return {"changed": True, "contract_id": contract_id, "contract_version": int(contract_version), "changes": changes}
 
 
 def require_ipywidgets():

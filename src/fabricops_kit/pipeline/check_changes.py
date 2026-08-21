@@ -184,6 +184,8 @@ def _observation_changes(observation) -> dict:
         config,
         env,
         spark_session=getattr(observation, "sparkSession", None),
+        table_id=table_id,
+        metadata_table_key=table_id,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
@@ -273,6 +275,12 @@ def check_changes(observation) -> dict:
     ValueError
         If configuration is invalid or logical keys are null, missing, or
         duplicated.
+
+    Notes
+    -----
+    Production resolves source-change expectations from the active frozen Data
+    Contract. Development uses mutable authoring metadata, and change detection
+    itself is unchanged.
     
     Examples
     --------
