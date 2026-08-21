@@ -25,12 +25,55 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     PROFILED_FREQUENCY_TABLE,
     PROFILED_TABLE,
     _catalogue_dataframe_from_profiled,
+    _processing_definition,
     _replace_frequency_rows,
     _resolve_physical_identity,
     _schema_fingerprint,
     _upsert_catalogue_identities,
+    _validate_processing_columns,
     profile_and_register_table,
 )
+
+
+@pytest.mark.parametrize(
+    ("strategy", "parameters"),
+    [
+        ("overwrite", {}),
+        ("overwrite", {"partition_column": "event_date"}),
+        ("append", {}),
+        ("scd1", {"key_columns": ["student_id"]}),
+        ("scd2", {"key_columns": ["student_id"], "effective_column": "changed_at"}),
+    ],
+)
+def test_target_processing_contract_is_accepted_and_deterministic(strategy, parameters):
+    first = _processing_definition("target", strategy, parameters)
+    second = _processing_definition("target", strategy, dict(reversed(list(parameters.items()))))
+    assert first == second
+    assert json.loads(first[1]) == parameters
+
+
+@pytest.mark.parametrize(
+    ("role", "strategy", "parameters", "message"),
+    [
+        ("source", "append", None, "Source registration"),
+        ("target", "merge", {}, "write_strategy must be one of"),
+        ("target", "scd1", {}, "requires key_columns"),
+        ("target", "scd2", {}, "requires key_columns"),
+        ("target", "scd2", {"key_columns": ["id"]}, "requires effective_column"),
+        ("target", "append", {"partition_column": "day"}, "does not accept"),
+    ],
+)
+def test_target_processing_contract_rejects_invalid_definitions(role, strategy, parameters, message):
+    with pytest.raises(ValueError, match=message):
+        _processing_definition(role, strategy, parameters)
+
+
+def test_processing_columns_must_exist_in_target_dataframe(spark_session):
+    with pytest.raises(ValueError, match="not present in df: missing_id"):
+        _validate_processing_columns(
+            _source_df(spark_session),
+            '{"key_columns":["missing_id"]}',
+        )
 
 AUDIT_COLUMNS = [
     "_committed_by",
@@ -209,6 +252,8 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "target",
         "table_name",
         "schema",
+        "write_strategy",
+        "write_strategy_parameters",
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
@@ -461,9 +506,10 @@ def test_profiled_schema_matches_stage2_contract():
 
 def test_catalogue_schema_is_environment_aware_asset_contract():
     assert metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames() == CATALOGUE_COLUMNS
-    assert CATALOGUE_COLUMNS[:13] == [
+    assert CATALOGUE_COLUMNS[:15] == [
         "metadata_level", "table_id", "column_id", "environment_name", "store_type", "layer",
-        "schema_name", "table_name", "column_name", "data_type", "first_profiled_at", "last_profiled_at", "is_active",
+        "schema_name", "table_name", "column_name", "data_type", "write_strategy",
+        "write_strategy_parameters_json", "first_profiled_at", "last_profiled_at", "is_active",
     ]
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(CATALOGUE_COLUMNS)
 

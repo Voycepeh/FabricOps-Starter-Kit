@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:511`
+`fabricops_kit/pipeline/profile_and_register_table.py:584`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L511-L855">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L584-L943">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -58,6 +58,8 @@ def profile_and_register_table(
     target,
     table_name,
     schema=None,
+    write_strategy=None,
+    write_strategy_parameters=None,
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
@@ -86,6 +88,8 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | `target` | `str` | Yes | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. |
 | `table_name` | `str` | Yes | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. |
 | `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
+| `write_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Current target write strategy. Valid only when ``profile_role="target"``. |
+| `write_strategy_parameters` | `dict` | No | Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` requires ``key_columns`` and ``effective_column`` and optionally accepts ``tracked_columns``; ``overwrite`` optionally accepts ``partition_column``; ``append`` accepts no parameters. |
 | `frequency_columns` | `sequence of str` | No | Selected columns whose flattened frequency rows should be persisted. ``None`` profiles eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and writes no child rows. Requested columns should also be eligible for the main statistical profile. |
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold are skipped and produce no child frequency rows. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns remain skipped. Explicit ``frequency_columns`` selections override this threshold. |
@@ -288,7 +292,7 @@ compatibility or automatic migration layer is provided.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 59 |
+| Live-critical dependencies | 61 |
 
 ### Release history
 
@@ -344,6 +348,7 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._normalize_choice</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._require_non_empty_string</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._resolve_physical_identity</code></li>
@@ -352,6 +357,7 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_lineage_event</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_frequency_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_processing_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
