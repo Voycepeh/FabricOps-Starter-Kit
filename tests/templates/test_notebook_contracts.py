@@ -155,15 +155,31 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "METADATA_SCHEMA" not in source
 
 
-def test_02_pipeline_uses_only_the_catalogue_widget():
-    """Verify the simplified pipeline uses only the scoped catalogue widget."""
+def test_02_pipeline_uses_only_read_only_pipeline_widgets():
+    """Verify the pipeline uses scoped, read-only widgets only."""
     source = _notebook_source("02_pipeline.ipynb")
 
     assert "widget_view_catalogue" in source
+    assert "widget_select_data_contract" in source
     assert 'mode="pipeline"' in source
     assert "widget_view_data_contract" not in source
     assert "widget_author_" not in source
     assert "widget_enrich_" not in source
+    assert "widget_activate_data_contract" not in source
+
+
+def test_02_pipeline_selects_validation_source_before_guardrail_execution():
+    """Keep one table-scoped selector ahead of unchanged public check calls."""
+    source = _notebook_source("02_pipeline.ipynb")
+
+    selector = source.index("source_validation = widget_select_data_contract(")
+    checks = [source.index(f"{name}(", selector) for name in ("check_schema", "check_freshness", "check_changes", "check_dq")]
+
+    assert selector < min(checks)
+    assert 'SOURCE_TABLE_NAME, target=SOURCE_TARGET, schema=SOURCE_SCHEMA' in source
+    assert source.count("source_validation = widget_select_data_contract(") == 1
+    assert "activate_contract_version" not in source
+    assert "METADATA_DATA_CONTRACT" not in source
 
 
 def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
