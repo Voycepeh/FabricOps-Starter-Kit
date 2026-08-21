@@ -1,38 +1,68 @@
-# Step 5: Create the Data Contract and prepare for promotion
+# Step 5: Create and activate the Data Contract
 
-**Use `01_governance` to link the governed Data Catalogue to the Data Agreement through a Data Contract, then prepare the validated ETL workflow for promotion.**
+**Use `01_governance` to assemble one versioned Data Contract for one governed table, then manually activate the version that Production is authorised to use.**
 
 ## Before you begin
 
 Confirm that:
 
 - the relevant Data Agreement exists
-- `02_pipeline` has produced the required Data Catalogue and Data Profiled evidence
-- Guardrails have been defined and re-validated in Engineering Development
+- the table is registered in the Data Catalogue
+- Enrichment has been added where needed
+- Guardrails have been authored and re-validated in Engineering Development
 
 ## What to do
 
 1. Open `01_governance` in the Governance workspace.
 2. Run `00_env_config`.
-3. Select the relevant Data Steward records and Data Agreement.
-4. Inspect the Data Catalogue and Data Profiled evidence written by `02_pipeline`.
-5. Select the registered logical datasets discovered from the active environment.
-6. Save the Data Contract membership linking those governed Data Catalogues to the Data Agreement.
-7. Finalise the ETL contract and Governance sign-off needed for promotion and release management.
+3. Open `widget_register_data_contract()`.
+4. Select the exact Data Agreement version and one governed table.
+5. Review the frozen contract preview, including the table structure, Enrichment, Guardrails, Data Stewards, and approved usages.
+6. Save the Data Contract. FabricOps appends a new draft version for that table lifecycle.
+7. Open `widget_activate_data_contract()` and activate the exact version that Production should use.
 
-!!! note "Logical contract membership"
+## What the Data Contract freezes
 
-    Each agreement links once to each logical `metadata_table_key`. Engineering Development and Engineering Production use the same logical key, while their catalogue, profile, lineage, Guardrail, and other evidence remains stored as separate environment-specific observations.
+**The Data Contract is a self-contained snapshot of the governed definition at the time that version is created.**
+
+It includes the selected:
+
+- Data Agreement version
+- Data Stewards
+- governed `table_id` and table structure
+- Enrichment
+- active Guardrails and their exact `guardrail_version`
+- approved usages
+
+Guardrail Results and row-level failure evidence remain runtime evidence and are not frozen into the contract.
+
+!!! important "One table per Data Contract lifecycle"
+
+    Each Data Contract governs one canonical `table_id`. Multiple historical versions may exist, but Production must resolve exactly one active version for that table.
+
+## Optional Development test
+
+After the contract exists, return to `02_pipeline` in Engineering Development and use `widget_select_data_contract()` for the same table.
+
+- **Current authoring Guardrails** keeps using the mutable rules in `METADATA_GUARDRAIL`.
+- **Data Contract vN** makes the same Guardrail checks use the frozen rules from that exact contract version.
+
+This selection is read only. It does not approve, activate, or change the Data Contract.
 
 ## Expected result
 
 You should now have:
 
-- a Data Contract linked to the parent Data Agreement
-- governed Data Catalogue membership recorded in the contract
-- the approval context needed to promote the validated `02_pipeline`
+- a versioned Data Contract for one governed table
+- a frozen `contract_payload_json` containing the governed definition
+- exactly one manually activated Data Contract version for Production use
+- an optional way to test an exact frozen version in Engineering Development
+
+!!! note "Approval and promotion are not part of this step"
+
+    FabricOps currently provides manual Data Contract activation. The external approval and Development-to-Production promotion workflow is deferred until we are ready to configure and demonstrate the Fabric GUI flow end to end.
 
 **Previous:** [Step 4: Rerun the Development pipeline with Guardrails](04-run-pipeline-with-guardrails.md)  
-**Next:** [Step 6: Promote the validated pipeline to Production](06-promote-to-production.md)
+**Next:** [Step 6: Run Production with the active Data Contract](06-promote-to-production.md)
 
-See also: [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md) and [List of Metadata Tables](../reference/metadata.md).
+See also: [`widget_register_data_contract()`](../api/reference/widget_register_data_contract.md), [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
