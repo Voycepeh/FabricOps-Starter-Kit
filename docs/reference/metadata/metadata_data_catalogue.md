@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-The current structural registry of known table and column assets.
+The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
 
 ## Model
 
@@ -11,9 +11,6 @@ The current structural registry of known table and column assets.
 **Relationships:**
 
 * **1:N**: A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time.
-* **1:N**: table_id identifies the logical table; column_id identifies a logical column while its normalized column name remains the same.
-* **1:N**: data_type stores the current structural datatype and is_active indicates whether the asset currently exists. Datatype changes retain column_id, removed columns become inactive instead of being deleted, and a returning column with the same normalized name reuses its identity.
-* **1:N**: METADATA_DATA_PROFILED retains the historical observations for Catalogue assets.
 
 ## Column summary
 
