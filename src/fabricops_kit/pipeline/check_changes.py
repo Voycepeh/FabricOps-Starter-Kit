@@ -185,7 +185,7 @@ def _observation_changes(observation) -> dict:
         env,
         spark_session=getattr(observation, "sparkSession", None),
         table_id=table_id,
-        metadata_table_key=table_id,
+        metadata_table_key=table_id, context=context,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
