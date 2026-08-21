@@ -56413,7 +56413,7 @@
           "type": "str, optional"
         },
         {
-          "description": "Current target write strategy. Valid only when ``profile_role=\"target\"``.",
+          "description": "Current target load strategy. Valid only when ``profile_role=\"target\"``.",
           "name": "load_strategy",
           "required": "No",
           "type": "{\"overwrite\", \"append\", \"scd1\", \"scd2\"}, optional"
