@@ -18,6 +18,7 @@ def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[
         catalogue.filter(
             (F.col("environment_name") == environment_name)
             & (F.col("metadata_level") == "table")
+            & F.col("is_active")
         )
         .select(
             "table_id",
@@ -295,8 +296,15 @@ def _build_catalogue_widget(
         selected_profile_snapshot_id = str(latest[0]["profile_snapshot_id"]) if latest else None
         selected_profiled_at = latest[0]["profiled_at"] if latest else None
         catalogue_columns = catalogue_raw.filter(F.col("metadata_level") == "column").select(
-            "table_id", "column_id", "column_name"
+            "table_id", "column_id", "column_name", "is_active"
         )
+        active_column_ids = {
+            str(row["column_id"])
+            for row in catalogue_columns.filter(F.col("is_active"))
+            .select("column_id")
+            .collect()
+            if row["column_id"]
+        }
 
         if selected_profile_snapshot_id is None:
             profile_snapshot = profile_for_table.limit(0)
@@ -310,11 +318,14 @@ def _build_catalogue_widget(
             profile_snapshot = profile_for_table.filter(
                 F.col("profile_snapshot_id") == selected_profile_snapshot_id
             )
-            profile_reader = profile_snapshot.join(catalogue_columns, on=["table_id", "column_id"], how="left")
+            profile_reader = profile_snapshot.join(
+                catalogue_columns.drop("is_active"), on=["table_id", "column_id"], how="left"
+            )
             column_options = sorted(
                 (
                     (str(row["column_name"] or row["profile_id"]), str(row["profile_id"]))
-                    for row in profile_reader.select("profile_id", "column_name").distinct().collect()
+                    for row in profile_reader.select("profile_id", "column_id", "column_name").distinct().collect()
+                    if str(row["column_id"] or "") in active_column_ids
                 ),
                 key=lambda option: (option[0].casefold(), option[1]),
             )
@@ -326,7 +337,7 @@ def _build_catalogue_widget(
                     on=["profile_id", "profile_snapshot_id"],
                     how="inner",
                 )
-                .join(catalogue_columns, on=["table_id", "column_id"], how="left")
+                .join(catalogue_columns.drop("is_active"), on=["table_id", "column_id"], how="left")
             )
             frequency_profile_ids = {
                 str(row["profile_id"])
@@ -403,6 +414,7 @@ def _build_catalogue_widget(
                 "metadata_level",
                 "table_name",
                 "column_name",
+                "data_type",
                 "store_type",
                 "layer",
                 "schema_name",

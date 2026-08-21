@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-See the tables and columns FabricOps has observed.
+The current structural registry of known table and column assets.
 
 ## Model
 
@@ -11,6 +11,9 @@ See the tables and columns FabricOps has observed.
 **Relationships:**
 
 * **1:N**: A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time.
+* **1:N**: table_id identifies the logical table; column_id identifies a logical column while its normalized column name remains the same.
+* **1:N**: data_type stores the current structural datatype and is_active indicates whether the asset currently exists. Datatype changes retain column_id, removed columns become inactive instead of being deleted, and a returning column with the same normalized name reuses its identity.
+* **1:N**: METADATA_DATA_PROFILED retains the historical observations for Catalogue assets.
 
 ## Column summary
 

@@ -111,7 +111,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__title">METADATA_DATA_CATALOGUE</span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See the tables and columns FabricOps has observed.</span>
+  <span class="metadata-table-card__purpose">The current structural registry of known table and column assets.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One table or column asset in one environment.</span>

@@ -742,3 +742,123 @@ def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_remo
     assert "metadata_level = 'column'" in captured["missing_condition"]
     assert captured["missing"] == {"is_active": "false"}
     assert captured["executed"] is True
+
+
+def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
+    monkeypatch, spark_session
+):
+    """Exercise repeated merge writes through an in-memory Delta lifecycle harness."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    table_id = build_table_id("lakehouse", "raw", None, "orders")
+    stored: dict[tuple[str, str, str, str], dict] = {}
+
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, source, _condition):
+            self.source = source
+            return self
+
+        def whenMatchedUpdate(self, *, set):
+            self.matched = set
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def whenNotMatchedBySourceUpdate(self, *, condition, set):
+            self.missing_condition = condition
+            self.missing = set
+            return self
+
+        def execute(self):
+            incoming = [row.asDict(recursive=True) for row in self.source.collect()]
+            incoming_keys = set()
+            for row in incoming:
+                key = (row["environment_name"], row["metadata_level"], row["table_id"], row["column_id"] or "")
+                incoming_keys.add(key)
+                if key in stored:
+                    current = stored[key]
+                    for name, expression in self.matched.items():
+                        current[name] = True if expression == "true" else row[expression.removeprefix("source.")]
+                else:
+                    stored[key] = row
+            for key, row in stored.items():
+                if (
+                    key not in incoming_keys
+                    and row["environment_name"] == "dev"
+                    and row["table_id"] == table_id
+                    and row["metadata_level"] == "column"
+                    and row["is_active"] is True
+                ):
+                    row["is_active"] = False
+
+    delta_module = ModuleType("delta")
+    delta_tables = ModuleType("delta.tables")
+    delta_tables.DeltaTable = SimpleNamespace(forPath=lambda _spark, _path: Merge())
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
+    monkeypatch.setattr(
+        module,
+        "resolve_configured_lakehouse_table",
+        lambda *_args, **_kwargs: (None, None, None, "/metadata/catalogue"),
+    )
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+
+    schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
+
+    def register(columns):
+        now = datetime(2026, 8, 1)
+        common = {
+            name: None for name in schema.fieldNames()
+        }
+        common.update({
+            "table_id": table_id,
+            "environment_name": "dev",
+            "store_type": "lakehouse",
+            "layer": "raw",
+            "table_name": "orders",
+            "first_profiled_at": now,
+            "last_profiled_at": now,
+            "is_active": True,
+            "_committed_at": now,
+        })
+        rows = [{**common, "metadata_level": "table"}]
+        rows.extend(
+            {
+                **common,
+                "metadata_level": "column",
+                "column_id": build_column_id(table_id, name),
+                "column_name": name,
+                "data_type": data_type,
+            }
+            for name, data_type in columns
+        )
+        _upsert_catalogue_identities(
+            catalogue_df=spark_session.createDataFrame(rows, schema=schema),
+            config=object(),
+            env="dev",
+            spark_session=spark_session,
+        )
+
+    amount_id = build_column_id(table_id, "amount")
+    register([("id", "bigint"), ("amount", "decimal(18,2)")])
+    register([("id", "bigint"), ("amount", "double"), ("customer_id", "string")])
+    assert stored[("dev", "column", table_id, amount_id)]["data_type"] == "double"
+    assert stored[("dev", "column", table_id, amount_id)]["is_active"] is True
+    assert stored[("dev", "column", table_id, build_column_id(table_id, "customer_id"))]["is_active"] is True
+
+    register([("id", "bigint"), ("customer_id", "string")])
+    assert stored[("dev", "column", table_id, amount_id)]["is_active"] is False
+
+    register([("id", "bigint"), ("amount", "float"), ("customer_id", "string")])
+    assert stored[("dev", "column", table_id, amount_id)]["is_active"] is True
+    assert stored[("dev", "column", table_id, amount_id)]["data_type"] == "float"
+
+    register([("id", "bigint"), ("amount", "float"), ("customer_id", "string")])
+    assert len(stored) == 4  # one table plus three current column identities
+
+    register([("id", "bigint"), ("total_amount", "float"), ("customer_id", "string")])
+    assert stored[("dev", "column", table_id, amount_id)]["is_active"] is False
+    assert stored[("dev", "column", table_id, build_column_id(table_id, "total_amount"))]["is_active"] is True
