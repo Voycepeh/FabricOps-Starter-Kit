@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import importlib
+import types
 
 import pytest
 
@@ -13,6 +15,22 @@ from fabricops_kit.widgets import shared as governance_authoring
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
+
+
+def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
+    """Keep DQ selection in the shared runtime loader without changing its public signature."""
+    module = importlib.import_module("fabricops_kit.pipeline.check_dq")
+    context = {"data_contract_id": "contract-a", "data_contract_version": 2}
+    captured = {}
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", context))
+    monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))
+    monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda *args: ("orders", "sales", "path"))
+    monkeypatch.setattr(
+        module, "check_dq_runtime",
+        lambda *args, **kwargs: captured.update(kwargs) or {"status": "passed"},
+    )
+    assert module.check_dq(object(), "orders")["status"] == "passed"
+    assert captured["context"] is context
 
 
 def _rule(rule_type: str, **kwargs):

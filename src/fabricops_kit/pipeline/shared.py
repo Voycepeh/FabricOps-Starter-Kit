@@ -1880,6 +1880,58 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     return row
 
 
+def _resolve_data_contract_version(
+    config,
+    env: str,
+    table_id: str,
+    contract_id: str,
+    contract_version: Any,
+    *,
+    spark_session=None,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve and validate one exact immutable Data Contract version."""
+    try:
+        requested_version = int(contract_version)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("data_contract_version must identify an exact integer version.") from exc
+    try:
+        frame = read_lakehouse_table_core(
+            DATA_CONTRACT_TABLE,
+            target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session,
+            context=context or {"config": config, "env": env},
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            raise ValueError(
+                f"Data Contract {contract_id!r} version {requested_version} does not exist."
+            ) from exc
+        raise
+    rows = [_row_to_dict(row) for row in frame.collect()]
+    matches = [
+        row for row in rows
+        if str(row.get("contract_id") or "") == contract_id
+        and int(row.get("contract_version") or 0) == requested_version
+    ]
+    if not matches:
+        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} does not exist.")
+    if len(matches) > 1:
+        raise RuntimeError(
+            f"Data Contract integrity error: {contract_id!r} version {requested_version} has duplicate version rows."
+        )
+    row = dict(matches[0])
+    if str(row.get("table_id") or "") != table_id:
+        raise ValueError(
+            f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
+        )
+    if str(row.get("status") or "").strip().lower() == "rejected":
+        raise ValueError(f"Rejected Data Contract {contract_id!r} version {requested_version} cannot be used for Development testing.")
+    row["contract_payload"] = _contract_payload(row)
+    return row
+
+
 def resolve_catalogue_table_id(
     config,
     env: str,
@@ -1950,8 +2002,9 @@ def load_table_guardrail_rules(
     spark_session=None,
     table_id: str = "",
     metadata_table_key: str = "",
+    context: Mapping[str, Any] | None = None,
 ):
-    """Load frozen contract intent when active, otherwise mutable authoring intent."""
+    """Resolve the environment's single Guardrail rule source."""
     if env == "prod":
         if not table_id:
             raise ValueError("Production Guardrail resolution requires a canonical Catalogue table_id.")
@@ -1962,11 +2015,32 @@ def load_table_guardrail_rules(
             metadata_table_key=metadata_table_key or table_id,
         )
         return spark_session.createDataFrame(rows) if rows else []
+    runtime_context = context or {}
+    contract_id = str(runtime_context.get("data_contract_id") or "").strip()
+    raw_version = runtime_context.get("data_contract_version")
+    contract_version = str(raw_version or "").strip()
+    if bool(contract_id) != bool(contract_version):
+        raise ValueError(
+            "Development Data Contract override requires both data_contract_id and data_contract_version."
+        )
+    if contract_id:
+        if not table_id:
+            raise ValueError("Development Data Contract override requires a canonical Catalogue table_id.")
+        contract = _resolve_data_contract_version(
+            config, env, table_id, contract_id, contract_version,
+            spark_session=spark_session, context=context,
+        )
+        rows = contract_guardrail_rows(
+            contract,
+            environment_name=env,
+            metadata_table_key=metadata_table_key or table_id,
+        )
+        return spark_session.createDataFrame(rows) if rows else []
     try:
         return read_lakehouse_table_core(
             GUARDRAIL_TABLE, target="metadata",
             schema=configured_lakehouse_schema(config, env, "metadata"),
-            spark_session=spark_session, context={"config": config, "env": env},
+            spark_session=spark_session, context=context or {"config": config, "env": env},
         )
     except Exception as exc:
         if is_table_not_found_error(exc):
@@ -3217,6 +3291,7 @@ def check_dq_runtime(
     dataset_name: str = "",
     run_id: str = "",
     row_identity_columns: list[str] | None = None,
+    context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate governed DQ rules and persist rule summaries and failed-row evidence."""
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -3235,12 +3310,12 @@ def check_dq_runtime(
             config, env, store_type=store_type, layer=target,
             schema_name=schema_name, table_name=table_name, spark_session=spark_session,
         )
-        if env == "prod"
+        if env == "prod" or bool(str((context or {}).get("data_contract_id") or "").strip())
         else ""
     )
     metadata_df = load_table_guardrail_rules(
         config, env, spark_session=spark_session, table_id=table_id,
-        metadata_table_key=metadata_table_key,
+        metadata_table_key=metadata_table_key, context=context,
     )
     rules = (
         []

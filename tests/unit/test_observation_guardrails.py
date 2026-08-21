@@ -139,6 +139,33 @@ def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypa
     assert result["new_partitions"] == ["a"]
 
 
+def test_observation_checks_pass_development_contract_context_to_rule_loader(monkeypatch):
+    """Route freshness and changes through the shared context-aware rule loader."""
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    context = {"data_contract_id": "contract-a", "data_contract_version": 2}
+    captured = {}
+
+    configure_freshness(monkeypatch)
+    monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", context))
+    def load_freshness(*args, **kwargs):
+        captured["freshness"] = kwargs
+        return [freshness_rule(), change_rule()]
+
+    monkeypatch.setattr(freshness, "load_table_guardrail_rules", load_freshness)
+    freshness.check_freshness(Frame([row(at=now)], Spark()))
+
+    configure_changes(monkeypatch, [row(at=now)])
+    monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", context))
+    def load_changes(*args, **kwargs):
+        captured["changes"] = kwargs
+        return [change_rule()]
+
+    monkeypatch.setattr(changes, "load_table_guardrail_rules", load_changes)
+    check_changes(Frame([row(at=now)], Spark()))
+    assert captured["freshness"]["context"] is context
+    assert captured["changes"]["context"] is context
+
+
 def test_previous_comparable_snapshot_is_selected_by_table_and_environment(monkeypatch):
     now = datetime(2026, 8, 14, tzinfo=UTC)
     previous = now - timedelta(hours=1)
@@ -281,7 +308,11 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "read_lakehouse_table_core", lambda *args, **kwargs: frame)
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "lakehouse||source||dbo||orders")
-    monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
+    loader_calls = []
+    monkeypatch.setattr(
+        schema_module, "load_table_guardrail_rules",
+        lambda *args, **kwargs: loader_calls.append(kwargs) or rules,
+    )
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
 
     def fake_core(dataframe, **kwargs):
@@ -297,6 +328,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     assert writes[0]["guardrail_type"] == "schema"
     assert writes[0]["table_name"] == "orders"
     assert writes[0]["result"]["guardrail_version"] == 2
+    assert loader_calls[0]["context"] == {"active": True}
 
 
 def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monkeypatch):

@@ -93,12 +93,12 @@ def check_schema(
             config, env, store_type=store_type, layer=target,
             schema_name=schema_name, table_name=resolved_table, spark_session=spark,
         )
-        if env == "prod"
+        if env == "prod" or bool(str(context.get("data_contract_id") or "").strip())
         else ""
     )
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark, table_id=table_id,
-        metadata_table_key=metadata_table_key,
+        metadata_table_key=metadata_table_key, context=context,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,

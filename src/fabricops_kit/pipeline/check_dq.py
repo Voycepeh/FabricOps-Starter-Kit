@@ -74,7 +74,7 @@ def check_dq(
     check_schema, check_freshness, check_changes
 
     """
-    config, env, _context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context()
     store = get_store(config, env, target)
     store_type = str(store.kind).lower()
     if store_type == "lakehouse":
@@ -89,5 +89,5 @@ def check_dq(
         dataframe, config, env, resolved_table, target=target,
         store_type=store_type, schema_name=resolved_schema,
         dataset_name=dataset_name, run_id=run_id,
-        row_identity_columns=row_identity_columns,
+        row_identity_columns=row_identity_columns, context=context,
     )

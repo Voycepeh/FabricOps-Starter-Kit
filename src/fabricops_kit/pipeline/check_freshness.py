@@ -75,7 +75,7 @@ def check_freshness(observation) -> dict:
     if any(str(row.get("environment_name") or "") != environment_name for row in rows):
         raise ValueError("observation dataframe must contain one shared environment_name")
 
-    config, env, _context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context()
     if environment_name != env:
         raise ValueError(
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
@@ -83,7 +83,7 @@ def check_freshness(observation) -> dict:
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark_session, table_id=table_id,
-        metadata_table_key=table_id,
+        metadata_table_key=table_id, context=context,
     )
     freshness_rule = select_table_guardrail_rule(
         rules_df,
