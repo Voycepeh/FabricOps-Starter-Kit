@@ -2,6 +2,10 @@
 
 Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.
 
+## Writer functions
+
+* [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)
+
 ## Model
 
 **Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.

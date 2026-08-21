@@ -2,6 +2,10 @@
 
 See where the data came from and where it ends up.
 
+## Writer functions
+
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+
 ## Model
 
 **Grain:** One table participating as a source or target in one pipeline/profiling execution.

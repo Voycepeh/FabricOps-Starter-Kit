@@ -2,6 +2,13 @@
 
 See whether the expectations of the data in the ETL pipeline run are met.
 
+## Writer functions
+
+* [`check_changes`](../../api/reference/check_changes.md)
+* [`check_dq`](../../api/reference/check_dq.md)
+* [`check_freshness`](../../api/reference/check_freshness.md)
+* [`check_schema`](../../api/reference/check_schema.md)
+
 ## Model
 
 **Grain:** One runtime outcome for one Guardrail rule in one pipeline run.

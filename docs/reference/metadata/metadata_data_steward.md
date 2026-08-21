@@ -2,6 +2,10 @@
 
 Know who is responsible for the data.
 
+## Writer functions
+
+* [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
+
 ## Model
 
 **Grain:** One registered Data Steward.

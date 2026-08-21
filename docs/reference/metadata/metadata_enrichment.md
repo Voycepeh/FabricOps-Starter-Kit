@@ -2,6 +2,10 @@
 
 Add business and governance context to the data.
 
+## Writer functions
+
+* [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
+
 ## Model
 
 **Grain:** One appended enrichment value for one table or column identity in one environment.

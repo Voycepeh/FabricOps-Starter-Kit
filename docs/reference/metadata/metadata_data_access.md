@@ -2,6 +2,10 @@
 
 See who has row-level access to the data.
 
+## Writer functions
+
+No public writer function is traced in the current implementation.
+
 ## Model
 
 **Grain:** One RLS assignment for one user and one Catalogue table in one environment.

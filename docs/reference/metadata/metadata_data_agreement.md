@@ -2,6 +2,10 @@
 
 Define why the data is shared, with whom, and under what conditions.
 
+## Writer functions
+
+* [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
+
 ## Model
 
 **Grain:** One version of one Data Agreement.

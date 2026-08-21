@@ -77,6 +77,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert first_landing.count(f'href="{slug}/"') == 1
         assert first_landing.count(f'>{table_name}</span>') == 1
         page = first_pages[f"{slug}.md"]
+        assert "## Writer functions" in page
+        assert page.index("## Writer functions") < page.index("## Model")
         assert "## Model" in page
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
@@ -102,6 +104,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert 'href="metadata_data_profiled_frequency/"' in first_landing
 
     contract_page = first_pages["metadata_data_contract.md"]
+    assert "[`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)" in contract_page
     assert contract_page.count("`METADATA_DATA_AGREEMENT` **(N → 1)**") == 1
     assert "via `agreement_id` + `agreement_version`" in contract_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page

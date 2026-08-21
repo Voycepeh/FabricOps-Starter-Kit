@@ -2,6 +2,10 @@
 
 See what FabricOps previously observed about the source data.
 
+## Writer functions
+
+* [`observe_table`](../../api/reference/observe_table.md)
+
 ## Model
 
 **Grain:** One partition observation within one source-table observation.

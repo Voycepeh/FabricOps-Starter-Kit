@@ -2,6 +2,10 @@
 
 See the individual records that failed a Data Quality rule.
 
+## Writer functions
+
+* [`check_dq`](../../api/reference/check_dq.md)
+
 ## Model
 
 **Grain:** One failed record belonging to one Guardrail Result.

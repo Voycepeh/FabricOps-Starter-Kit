@@ -2,6 +2,10 @@
 
 See the column-level profile metrics captured for a dataset snapshot.
 
+## Writer functions
+
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+
 ## Model
 
 **Grain:** One observed column in one profiling snapshot.

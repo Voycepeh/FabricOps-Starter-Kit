@@ -4363,6 +4363,28 @@ def _metadata_column_counts(
     return {"total": total, "business": business, "audit": audit}
 
 
+def _metadata_writer_functions(
+    table_name: str,
+    rows: list[dict[str, Any]],
+    *,
+    column_owners: dict[str, dict[str, list[Any]]],
+    public_callable_set: set[str],
+) -> list[str]:
+    """Return public functions traced as owners of columns in a metadata table."""
+    writers: set[str] = set()
+    owner_specs = list(column_owners.get(table_name, {}).get("__default__", []))
+    for row in rows:
+        owner_specs.extend(_metadata_owner_specs(table_name, str(row["name"]), column_owners))
+    for owner in owner_specs:
+        if not isinstance(owner, str):
+            continue
+        owner_parts = owner.split(".")
+        for function_name in owner_parts[-2:]:
+            if function_name in public_callable_set:
+                writers.add(function_name)
+    return sorted(writers)
+
+
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import (
@@ -4481,10 +4503,26 @@ def generate_metadata_reference_pages() -> None:
         purpose = _metadata_table_purpose(table_name, table_purposes)
         rows = metadata_table_schema_rows(registry[table_name])
         column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
+        writer_functions = _metadata_writer_functions(
+            table_name,
+            rows,
+            column_owners=column_owners,
+            public_callable_set=public_callable_set,
+        )
         lines = [
             f"# {table_name}",
             "",
             purpose,
+            "",
+            "## Writer functions",
+            "",
+            *(
+                [
+                    f"* [`{function_name}`](../../api/reference/{function_name}.md)"
+                    for function_name in writer_functions
+                ]
+                or ["No public writer function is traced in the current implementation."]
+            ),
             "",
             "## Model",
             "",

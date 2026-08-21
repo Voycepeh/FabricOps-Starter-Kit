@@ -2,6 +2,11 @@
 
 See the frequency distribution captured for a profiled column.
 
+## Writer functions
+
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+* [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md)
+
 ## Model
 
 **Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.
