@@ -7,6 +7,10 @@ Define the expectations the data used in the ETL pipeline should meet.
 * [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
 * [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
 
+## Related templates / solutions
+
+* [`01_governance`](../../notebook-templates.md) — Guardrail authoring
+
 ## Model
 
 **Grain:** One configured Guardrail rule for one Catalogue table or column in one environment.

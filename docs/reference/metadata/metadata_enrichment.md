@@ -6,6 +6,10 @@ Add business and governance context to the data.
 
 * [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
 
+## Related templates / solutions
+
+* [`01_governance`](../../notebook-templates.md) — Guardrail governance review
+
 ## Model
 
 **Grain:** One appended enrichment value for one table or column identity in one environment.

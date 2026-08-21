@@ -6,6 +6,10 @@ See who has row-level access to the data.
 
 No public writer function is traced in the current implementation.
 
+## Related templates / solutions
+
+No starter template or solution is traced for the public writer functions.
+
 ## Model
 
 **Grain:** One RLS assignment for one user and one Catalogue table in one environment.

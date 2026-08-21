@@ -6,6 +6,10 @@ See the individual records that failed a Data Quality rule.
 
 * [`check_dq`](../../api/reference/check_dq.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+
 ## Model
 
 **Grain:** One failed record belonging to one Guardrail Result.

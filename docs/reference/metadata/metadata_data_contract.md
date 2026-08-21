@@ -6,6 +6,10 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 * [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)
 
+## Related templates / solutions
+
+* [`01_governance`](../../notebook-templates.md) — Contract registration
+
 ## Model
 
 **Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.

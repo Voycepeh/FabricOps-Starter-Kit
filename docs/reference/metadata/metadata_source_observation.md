@@ -6,6 +6,10 @@ See what FabricOps previously observed about the source data.
 
 * [`observe_table`](../../api/reference/observe_table.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+
 ## Model
 
 **Grain:** One partition observation within one source-table observation.

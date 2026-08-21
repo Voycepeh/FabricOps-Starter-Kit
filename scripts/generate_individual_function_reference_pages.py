@@ -4385,6 +4385,21 @@ def _metadata_writer_functions(
     return sorted(writers)
 
 
+def _metadata_writer_templates(
+    writer_functions: list[str],
+    docs_metadata: dict[str, dict[str, Any]],
+) -> list[tuple[str, str]]:
+    """Return unique template and solution locations for metadata writers."""
+    locations: set[tuple[str, str]] = set()
+    for function_name in writer_functions:
+        metadata = docs_metadata.get(function_name, {})
+        template = str(metadata.get("template_notebook", "")).strip()
+        segment = str(metadata.get("template_segment", "")).strip()
+        if template:
+            locations.add((template, segment))
+    return sorted(locations)
+
+
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import (
@@ -4492,6 +4507,7 @@ def generate_metadata_reference_pages() -> None:
                         )
 
     table_purposes, column_owners = parse_metadata_reference_contract()
+    docs_metadata = parse_docs_metadata()
     public_callable_set = public_callable_names()
     audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
@@ -4509,6 +4525,7 @@ def generate_metadata_reference_pages() -> None:
             column_owners=column_owners,
             public_callable_set=public_callable_set,
         )
+        writer_templates = _metadata_writer_templates(writer_functions, docs_metadata)
         lines = [
             f"# {table_name}",
             "",
@@ -4522,6 +4539,17 @@ def generate_metadata_reference_pages() -> None:
                     for function_name in writer_functions
                 ]
                 or ["No public writer function is traced in the current implementation."]
+            ),
+            "",
+            "## Related templates / solutions",
+            "",
+            *(
+                [
+                    f"* [`{template}`](../../notebook-templates.md)"
+                    + (f" — {segment}" if segment else "")
+                    for template, segment in writer_templates
+                ]
+                or ["No starter template or solution is traced for the public writer functions."]
             ),
             "",
             "## Model",

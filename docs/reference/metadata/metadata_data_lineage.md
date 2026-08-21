@@ -6,6 +6,10 @@ See where the data came from and where it ends up.
 
 * [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Profiling
+
 ## Model
 
 **Grain:** One table participating as a source or target in one pipeline/profiling execution.

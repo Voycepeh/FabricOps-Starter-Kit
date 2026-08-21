@@ -6,6 +6,10 @@ Define why the data is shared, with whom, and under what conditions.
 
 * [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
 
+## Related templates / solutions
+
+* [`01_governance`](../../notebook-templates.md) — Agreement intake
+
 ## Model
 
 **Grain:** One version of one Data Agreement.

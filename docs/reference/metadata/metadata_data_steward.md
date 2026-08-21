@@ -6,6 +6,10 @@ Know who is responsible for the data.
 
 * [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
 
+## Related templates / solutions
+
+* [`01_governance`](../../notebook-templates.md) — Agreement intake
+
 ## Model
 
 **Grain:** One registered Data Steward.

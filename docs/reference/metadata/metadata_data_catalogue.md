@@ -6,6 +6,10 @@ The current structural registry of known table and column assets. table_id ident
 
 * [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Profiling
+
 ## Model
 
 **Grain:** One table or column asset in one environment.

@@ -9,6 +9,10 @@ See whether the expectations of the data in the ETL pipeline run are met.
 * [`check_freshness`](../../api/reference/check_freshness.md)
 * [`check_schema`](../../api/reference/check_schema.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+
 ## Model
 
 **Grain:** One runtime outcome for one Guardrail rule in one pipeline run.

@@ -7,6 +7,11 @@ See the frequency distribution captured for a profiled column.
 * [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
 * [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Profiling
+* [`02_pipeline / optional 99_explore`](../../notebook-templates.md) — Profiling
+
 ## Model
 
 **Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.

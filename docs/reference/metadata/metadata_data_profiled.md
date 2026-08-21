@@ -6,6 +6,10 @@ See the column-level profile metrics captured for a dataset snapshot.
 
 * [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
 
+## Related templates / solutions
+
+* [`02_pipeline`](../../notebook-templates.md) — Profiling
+
 ## Model
 
 **Grain:** One observed column in one profiling snapshot.
