@@ -28,6 +28,7 @@ LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
+LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
 
 
 def _require_non_empty_string(value: Any, name: str) -> str:
@@ -44,6 +45,70 @@ def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
         choices = ", ".join(sorted(allowed))
         raise ValueError(f"{name} must be one of: {choices}.")
     return normalized
+
+
+def _processing_definition(
+    profile_role: str,
+    load_strategy: Any,
+    load_strategy_parameters: Any,
+) -> tuple[str | None, str | None]:
+    """Validate and canonically serialize one table-owned processing definition."""
+    supplied = load_strategy is not None or load_strategy_parameters is not None
+    if profile_role == "source":
+        if supplied:
+            raise ValueError("Source registration does not accept target processing arguments.")
+        return None, None
+    if load_strategy is None:
+        if load_strategy_parameters is not None:
+            raise ValueError("load_strategy is required when load_strategy_parameters is supplied.")
+        return None, None
+    strategy = _normalize_choice(load_strategy, "load_strategy", LOAD_STRATEGIES)
+    if load_strategy_parameters is None:
+        parameters: dict[str, Any] = {}
+    elif not isinstance(load_strategy_parameters, dict):
+        raise ValueError("load_strategy_parameters must be a mapping when supplied.")
+    else:
+        parameters = dict(load_strategy_parameters)
+    allowed = {
+        "overwrite": {"partition_column"},
+        "append": set(),
+        "scd1": {"key_columns"},
+        "scd2": {"key_columns", "effective_column", "tracked_columns"},
+    }[strategy]
+    unexpected = sorted(set(parameters) - allowed)
+    if unexpected:
+        raise ValueError(f"{strategy} does not accept processing parameters: {', '.join(unexpected)}.")
+    for name in ("key_columns", "tracked_columns"):
+        if name in parameters:
+            values = parameters[name]
+            if not isinstance(values, (list, tuple)) or not values:
+                raise ValueError(f"{name} must be a non-empty sequence of column names.")
+            parameters[name] = [_require_non_empty_string(value, name) for value in values]
+    for name in ("partition_column", "effective_column"):
+        if name in parameters:
+            parameters[name] = _require_non_empty_string(parameters[name], name)
+    if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
+        raise ValueError(f"{strategy} requires key_columns.")
+    if strategy == "scd2" and "effective_column" not in parameters:
+        raise ValueError("scd2 requires effective_column.")
+    return strategy, json.dumps(parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
+    """Require every authored processing column name to exist in the target schema."""
+    if parameters_json is None:
+        return
+    parameters = json.loads(parameters_json)
+    available = {str(field.name) for field in df.schema.fields}
+    referenced = []
+    for name in ("partition_column", "effective_column"):
+        if parameters.get(name):
+            referenced.append(str(parameters[name]))
+    for name in ("key_columns", "tracked_columns"):
+        referenced.extend(str(value) for value in parameters.get(name, []))
+    missing = sorted(set(referenced) - available)
+    if missing:
+        raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
 
 
 def _schema_fingerprint(df: Any) -> str:
@@ -327,6 +392,8 @@ def _catalogue_dataframe_from_profiled(
     layer: str,
     schema_name: str | None,
     table_name: str,
+    load_strategy: str | None = None,
+    load_strategy_parameters_json: str | None = None,
 ):
     """Return one table row and one row for each observed column asset."""
     from pyspark.sql import functions as F
@@ -367,6 +434,8 @@ def _catalogue_dataframe_from_profiled(
                 "column_id": None,
                 "column_name": None,
                 "data_type": None,
+                "load_strategy": load_strategy,
+                "load_strategy_parameters_json": load_strategy_parameters_json,
             },
         )
     ]
@@ -381,6 +450,8 @@ def _catalogue_dataframe_from_profiled(
                     "column_id": column_id,
                     "column_name": field.name,
                     "data_type": field.dataType.simpleString(),
+                    "load_strategy": None,
+                    "load_strategy_parameters_json": None,
                 },
             )
         )
@@ -424,6 +495,10 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "table_name": "source.table_name",
                 "column_name": "source.column_name",
                 "data_type": "source.data_type",
+                "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
+                "load_strategy_parameters_json": (
+                    "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
+                ),
                 "last_profiled_at": "source.last_profiled_at",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
@@ -515,6 +590,8 @@ def profile_and_register_table(
     target,
     table_name,
     schema=None,
+    load_strategy=None,
+    load_strategy_parameters=None,
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
@@ -554,6 +631,13 @@ def profile_and_register_table(
     schema : str, optional
         Physical schema name, or ``None`` to use the configured store default.
         Classic or schema-disabled Lakehouses preserve ``None``.
+    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
+        Current target load strategy. Valid only when ``profile_role="target"``.
+    load_strategy_parameters : dict, optional
+        Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2``
+        requires ``key_columns`` and ``effective_column`` and optionally accepts
+        ``tracked_columns``; ``overwrite`` optionally accepts
+        ``partition_column``; ``append`` accepts no parameters.
     frequency_columns : sequence of str, optional
         Selected columns whose flattened frequency rows should be persisted.
         ``None`` profiles eligible non-technical scalar columns. An empty
@@ -764,6 +848,10 @@ def profile_and_register_table(
         env,
         context,
     ) = _resolve_physical_identity(profile_role=profile_role, target=target, schema=schema, table_name=table_name)
+    normalized_load_strategy, write_parameters_json = _processing_definition(
+        normalized_profile_role, load_strategy, load_strategy_parameters
+    )
+    _validate_processing_columns(df, write_parameters_json)
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)
@@ -830,6 +918,8 @@ def profile_and_register_table(
         layer=normalized_target,
         schema_name=normalized_schema,
         table_name=normalized_table,
+        load_strategy=normalized_load_strategy,
+        load_strategy_parameters_json=write_parameters_json,
     )
     _upsert_catalogue_identities(
         catalogue_df=catalogue_df,

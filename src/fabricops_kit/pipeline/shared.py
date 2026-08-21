@@ -1995,6 +1995,82 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
     return adapted
 
 
+def _validated_processing(processing: Any) -> dict[str, Any]:
+    """Return a valid frozen/current processing definition."""
+    if not isinstance(processing, dict):
+        raise ValueError("Data Contract processing definition is missing or malformed.")
+    strategy = str(processing.get("load_strategy") or "").strip().lower()
+    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+        raise ValueError("Processing definition has an invalid load_strategy.")
+    if strategy in {"scd1", "scd2"} and not processing.get("key_columns"):
+        raise ValueError(f"Processing definition for {strategy} requires key_columns.")
+    if strategy == "scd2" and not processing.get("effective_column"):
+        raise ValueError("Processing definition for scd2 requires effective_column.")
+    return {**processing, "load_strategy": strategy}
+
+
+def resolve_table_processing_definition(
+    config,
+    env: str,
+    table_id: str,
+    *,
+    spark_session=None,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve current or frozen table processing through the contract-source model."""
+    runtime_context = context or {}
+    contract = None
+    if env == "prod":
+        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
+    else:
+        overrides = runtime_context.get("data_contract_overrides") or {}
+        if not isinstance(overrides, Mapping):
+            raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
+        selected = overrides.get(table_id) or {}
+        if not isinstance(selected, Mapping):
+            raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
+        contract_id = str(selected.get("contract_id") or "").strip()
+        version = selected.get("contract_version")
+        if bool(contract_id) != bool(str(version or "").strip()):
+            raise ValueError("Development Data Contract override requires both contract_id and contract_version.")
+        if contract_id:
+            contract = _resolve_data_contract_version(
+                config, env, table_id, contract_id, version,
+                spark_session=spark_session, context=context,
+            )
+    if contract is not None:
+        payload = contract.get("contract_payload") or _contract_payload(contract)
+        definition = _validated_processing((payload.get("table") or {}).get("processing"))
+        return {
+            **definition,
+            "source": "data_contract",
+            "contract_id": contract["contract_id"],
+            "contract_version": int(contract["contract_version"]),
+        }
+    frame = read_lakehouse_table_core(
+        CATALOGUE_TABLE, target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        spark_session=spark_session, context=context or {"config": config, "env": env},
+    )
+    rows = [_row_to_dict(row) for row in frame.collect()]
+    matches = [
+        row for row in rows
+        if str(row.get("table_id") or "") == table_id
+        and str(row.get("environment_name") or "") == env
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"Current Catalogue must contain exactly one active table row for {table_id!r}.")
+    row = matches[0]
+    try:
+        parameters = json.loads(str(row.get("load_strategy_parameters_json") or "{}"))
+    except json.JSONDecodeError as exc:
+        raise ValueError("Catalogue load_strategy_parameters_json is invalid JSON.") from exc
+    definition = _validated_processing({"load_strategy": row.get("load_strategy"), **parameters})
+    return {**definition, "source": "current_authoring"}
+
+
 def load_table_guardrail_rules(
     config,
     env: str,

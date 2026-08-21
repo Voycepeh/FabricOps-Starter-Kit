@@ -25,12 +25,55 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     PROFILED_FREQUENCY_TABLE,
     PROFILED_TABLE,
     _catalogue_dataframe_from_profiled,
+    _processing_definition,
     _replace_frequency_rows,
     _resolve_physical_identity,
     _schema_fingerprint,
     _upsert_catalogue_identities,
+    _validate_processing_columns,
     profile_and_register_table,
 )
+
+
+@pytest.mark.parametrize(
+    ("strategy", "parameters"),
+    [
+        ("overwrite", {}),
+        ("overwrite", {"partition_column": "event_date"}),
+        ("append", {}),
+        ("scd1", {"key_columns": ["student_id"]}),
+        ("scd2", {"key_columns": ["student_id"], "effective_column": "changed_at"}),
+    ],
+)
+def test_target_processing_contract_is_accepted_and_deterministic(strategy, parameters):
+    first = _processing_definition("target", strategy, parameters)
+    second = _processing_definition("target", strategy, dict(reversed(list(parameters.items()))))
+    assert first == second
+    assert json.loads(first[1]) == parameters
+
+
+@pytest.mark.parametrize(
+    ("role", "strategy", "parameters", "message"),
+    [
+        ("source", "append", None, "Source registration"),
+        ("target", "merge", {}, "load_strategy must be one of"),
+        ("target", "scd1", {}, "requires key_columns"),
+        ("target", "scd2", {}, "requires key_columns"),
+        ("target", "scd2", {"key_columns": ["id"]}, "requires effective_column"),
+        ("target", "append", {"partition_column": "day"}, "does not accept"),
+    ],
+)
+def test_target_processing_contract_rejects_invalid_definitions(role, strategy, parameters, message):
+    with pytest.raises(ValueError, match=message):
+        _processing_definition(role, strategy, parameters)
+
+
+def test_processing_columns_must_exist_in_target_dataframe(spark_session):
+    with pytest.raises(ValueError, match="not present in df: missing_id"):
+        _validate_processing_columns(
+            _source_df(spark_session),
+            '{"key_columns":["missing_id"]}',
+        )
 
 AUDIT_COLUMNS = [
     "_committed_by",
@@ -209,6 +252,8 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "target",
         "table_name",
         "schema",
+        "load_strategy",
+        "load_strategy_parameters",
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
@@ -461,9 +506,10 @@ def test_profiled_schema_matches_stage2_contract():
 
 def test_catalogue_schema_is_environment_aware_asset_contract():
     assert metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames() == CATALOGUE_COLUMNS
-    assert CATALOGUE_COLUMNS[:13] == [
+    assert CATALOGUE_COLUMNS[:15] == [
         "metadata_level", "table_id", "column_id", "environment_name", "store_type", "layer",
-        "schema_name", "table_name", "column_name", "data_type", "first_profiled_at", "last_profiled_at", "is_active",
+        "schema_name", "table_name", "column_name", "data_type", "load_strategy",
+        "load_strategy_parameters_json", "first_profiled_at", "last_profiled_at", "is_active",
     ]
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(CATALOGUE_COLUMNS)
 
@@ -738,6 +784,7 @@ def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_remo
     )
 
     assert captured["matched"]["data_type"] == "source.data_type"
+    assert captured["matched"]["load_strategy"] == "coalesce(source.load_strategy, target.load_strategy)"
     assert captured["matched"]["is_active"] == "true"
     assert "metadata_level = 'column'" in captured["missing_condition"]
     assert captured["missing"] == {"is_active": "false"}
@@ -781,7 +828,13 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
                 if key in stored:
                     current = stored[key]
                     for name, expression in self.matched.items():
-                        current[name] = True if expression == "true" else row[expression.removeprefix("source.")]
+                        if expression == "true":
+                            current[name] = True
+                        elif expression.startswith("coalesce(source."):
+                            source_name = expression.removeprefix("coalesce(source.").split(",", 1)[0]
+                            current[name] = row[source_name] if row[source_name] is not None else current[name]
+                        else:
+                            current[name] = row[expression.removeprefix("source.")]
                 else:
                     stored[key] = row
             for key, row in stored.items():
@@ -808,7 +861,7 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
 
     schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
 
-    def register(columns):
+    def register(columns, *, load_strategy=None, parameters_json=None):
         now = datetime(2026, 8, 1)
         audit_values = {
             "_committed_by": "catalogue-lifecycle-test",
@@ -835,6 +888,8 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
             "first_profiled_at": now,
             "last_profiled_at": now,
             "is_active": True,
+            "load_strategy": load_strategy,
+            "load_strategy_parameters_json": parameters_json,
             **{name: audit_values[name] for name in required_audit_fields},
         })
         rows = [{**common, "metadata_level": "table"}]
@@ -856,6 +911,19 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
         )
 
     amount_id = build_column_id(table_id, "amount")
+    table_key = ("dev", "table", table_id, "")
+    register([("id", "bigint"), ("amount", "decimal(18,2)")], load_strategy="overwrite", parameters_json="{}")
+    assert stored[table_key]["load_strategy"] == "overwrite"
+    register(
+        [("id", "bigint"), ("amount", "decimal(18,2)")],
+        load_strategy="scd1",
+        parameters_json='{"key_columns":["id"]}',
+    )
+    assert stored[table_key]["load_strategy"] == "scd1"
+    register([("id", "bigint"), ("amount", "decimal(18,2)")])
+    assert stored[table_key]["load_strategy"] == "scd1"
+    assert stored[table_key]["load_strategy_parameters_json"] == '{"key_columns":["id"]}'
+
     register([("id", "bigint"), ("amount", "decimal(18,2)")])
     register([("id", "bigint"), ("amount", "double"), ("customer_id", "string")])
     assert stored[("dev", "column", table_id, amount_id)]["data_type"] == "double"

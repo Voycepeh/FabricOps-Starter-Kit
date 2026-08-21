@@ -229,6 +229,8 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "table_name",
         "column_name",
         "data_type",
+        "load_strategy",
+        "load_strategy_parameters_json",
         "first_profiled_at",
         "last_profiled_at",
         "is_active",

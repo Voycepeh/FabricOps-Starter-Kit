@@ -29,7 +29,7 @@ def _sources():
             {"steward_id": "other", "steward_name": "Other", "is_active": True, **audit},
         ],
         "METADATA_DATA_CATALOGUE": [
-            {"metadata_level": "table", "table_id": "orders", "column_id": None, "environment_name": "dev", "store_type": "lakehouse", "layer": "gold", "schema_name": "sales", "table_name": "orders", "is_active": True, **audit},
+            {"metadata_level": "table", "table_id": "orders", "column_id": None, "environment_name": "dev", "store_type": "lakehouse", "layer": "gold", "schema_name": "sales", "table_name": "orders", "load_strategy": "scd1", "load_strategy_parameters_json": '{"key_columns":["order_id"]}', "is_active": True, **audit},
             {"metadata_level": "column", "table_id": "orders", "column_id": "order_id", "column_name": "order_id", "data_type": "long", "environment_name": "dev", "is_active": True, **audit},
         ],
         "METADATA_ENRICHMENT": [
@@ -68,6 +68,7 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert json.dumps(first, sort_keys=True, separators=(",", ":")) == json.dumps(second, sort_keys=True, separators=(",", ":"))
     assert first["agreement"]["agreement_version"] == "3"
     assert first["table"]["table_id"] == "orders"
+    assert first["table"]["processing"] == {"load_strategy": "scd1", "key_columns": ["order_id"]}
     assert first["table"]["columns"] == [{"column_id": "order_id", "column_name": "order_id", "data_type": "long"}]
     assert {row["steward_id"] for row in first["stewards"]} == {"provider", "recipient"}
     assert first["enrichment"]["table"][0]["value"] == "Orders"
@@ -75,6 +76,35 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert first["guardrails"][0]["rule_parameters"] == {"threshold": 1}
     assert "results" not in json.dumps(first).lower()
     assert warnings == []
+
+
+def test_contract_versions_freeze_catalogue_processing_independently():
+    """Keep earlier payloads unchanged when current Catalogue processing changes."""
+    sources = _sources()
+    kwargs = {
+        "contract_id": _contract_id("agreement", "orders"),
+        "agreement": _agreement(),
+        "table_id": "orders",
+        "usages": ["analytics"],
+        "tables": sources,
+        "environment_name": "dev",
+    }
+    sources["METADATA_DATA_CATALOGUE"][0].update(
+        load_strategy="overwrite", load_strategy_parameters_json="{}"
+    )
+    version_one, _ = _assemble_payload(contract_version=1, **kwargs)
+
+    sources["METADATA_DATA_CATALOGUE"][0].update(
+        load_strategy="scd1",
+        load_strategy_parameters_json='{"key_columns":["order_id"]}',
+    )
+    version_two, _ = _assemble_payload(contract_version=2, **kwargs)
+
+    assert version_one["table"]["processing"] == {"load_strategy": "overwrite"}
+    assert version_two["table"]["processing"] == {
+        "load_strategy": "scd1",
+        "key_columns": ["order_id"],
+    }
 
 
 def test_payload_rejects_inactive_or_unknown_table():
