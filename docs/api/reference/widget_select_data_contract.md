@@ -12,9 +12,9 @@ Choose whether Development Guardrail checks use current authoring rules or one e
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:68`
+`fabricops_kit/widgets/widget_select_data_contract.py:75`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L68-L205">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L75-L226">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,12 +70,13 @@ def widget_select_data_contract(
 
 dict
     Read-only selection state, available versions, frozen preview, controls,
-    and a ``select`` callable. Selecting current authoring Guardrails sets
-    both Data Contract override values to ``None``.
+    and a ``select`` callable. Each exact selection is stored under its
+    canonical table identity in ``data_contract_overrides``; selecting
+    current authoring Guardrails removes only that table's entry.
 
 ### Return interpretation
 
-The default clears the Development override; an exact selection supplies its contract ID and version through the active Fabric context.
+The default clears this table’s Development override; an exact selection stores its contract ID and version under the canonical table ID in the active Fabric context.
 
 ## Raises / Errors
 

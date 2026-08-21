@@ -1690,7 +1690,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source validation selection',
   'use_when': 'Use once before source Guardrail checks when Development engineers need to test current authoring Guardrails or an exact frozen contract version.',
   'related_functions': ['widget_activate_data_contract', 'check_schema', 'check_freshness', 'check_changes', 'check_dq'],
-  'return_interpretation': 'The default clears the Development override; an exact selection supplies its contract ID and version through the active Fabric context.',
+  'return_interpretation': 'The default clears this table’s Development override; an exact selection stores its contract ID and version under the canonical table ID in the active Fabric context.',
   'expanded_purpose': 'This read-only Development testing tool does not activate contracts. Current authoring Guardrails are the default, while Production uses the active Data Contract automatically.',
   'common_failure_causes': ['The configured physical table has no canonical active Catalogue table identity.',
                             'The selected version is rejected or belongs to another table.',

@@ -72,14 +72,20 @@ class _Store:
     kind = "lakehouse"
 
 
-def _render(monkeypatch, rows, *, env="dev"):
-    state_context = {"config": object(), "env": env}
+def _render(monkeypatch, rows, *, env="dev", overrides=None):
+    state_context = {"config": object(), "env": env, "data_contract_overrides": dict(overrides or {})}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], env, state_context))
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
     monkeypatch.setattr(module, "get_store", lambda *_args: _Store())
     monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda *_args: ("orders", "demo", "path"))
     monkeypatch.setattr(module, "resolve_catalogue_table_id", lambda *_args, **_kwargs: "table-a")
-    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame(rows))
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: "governance")
+    def read_contracts(*_args, **kwargs):
+        assert kwargs["schema"] == "governance"
+        return _Frame(rows)
+
+    monkeypatch.setattr(module, "read_lakehouse_table_core", read_contracts)
+    monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: rows[0] if rows else None)
     monkeypatch.setattr(module, "get_default_fabric_context", lambda: state_context)
     monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
     return state_context, module.widget_select_data_contract("orders", schema="demo")
@@ -89,12 +95,23 @@ def test_default_and_exact_selection_feed_active_context(monkeypatch):
     """Default clears overrides and exact selection updates the active context."""
     context, state = _render(monkeypatch, [_row(4), _row(3, status="active")])
 
-    assert context["data_contract_id"] is None
-    assert context["data_contract_version"] is None
+    assert context["data_contract_overrides"] == {}
     state["select"]("contract-a", 3)
-    assert context["data_contract_id"] == "contract-a"
-    assert context["data_contract_version"] == 3
+    assert context["data_contract_overrides"] == {
+        "table-a": {"contract_id": "contract-a", "contract_version": 3},
+    }
     assert state["review"]["guardrail_details"][0]["rule_id"] == "frozen-rule"
+
+
+def test_selection_updates_only_its_table_entry(monkeypatch):
+    """Selecting or clearing table A preserves table B's independent override."""
+    table_b = {"table-b": {"contract_id": "contract-b", "contract_version": 2}}
+    context, state = _render(monkeypatch, [_row(3, status="active")], overrides=table_b)
+
+    state["select"]("contract-a", 3)
+    assert context["data_contract_overrides"]["table-b"] == table_b["table-b"]
+    state["select"]()
+    assert context["data_contract_overrides"] == table_b
 
 
 def test_rejected_contract_cannot_become_override(monkeypatch):
@@ -103,7 +120,7 @@ def test_rejected_contract_cannot_become_override(monkeypatch):
 
     with pytest.raises(ValueError, match="Rejected"):
         state["select"]("contract-a", 5)
-    assert context["data_contract_id"] is None
+    assert context["data_contract_overrides"] == {}
 
 
 def test_production_never_accepts_manual_override(monkeypatch):
@@ -111,6 +128,5 @@ def test_production_never_accepts_manual_override(monkeypatch):
     context, state = _render(monkeypatch, [_row(3, status="active")], env="prod")
 
     state["select"]("contract-a", 3)
-    assert context["data_contract_id"] is None
-    assert context["data_contract_version"] is None
-    assert state["message"] == "Production uses the active Data Contract automatically."
+    assert context["data_contract_overrides"] == {}
+    assert state["message"] == "Active Data Contract v3"

@@ -93,7 +93,7 @@ def check_schema(
             config, env, store_type=store_type, layer=target,
             schema_name=schema_name, table_name=resolved_table, spark_session=spark,
         )
-        if env == "prod" or bool(str(context.get("data_contract_id") or "").strip())
+        if env == "prod" or bool(context.get("data_contract_overrides"))
         else ""
     )
     rules_df = load_table_guardrail_rules(

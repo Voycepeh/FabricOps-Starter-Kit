@@ -6,8 +6,8 @@ import html
 from typing import Any
 
 from fabricops_kit.config.shared import get_default_fabric_context, get_store, resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, resolve_lakehouse_table_location, resolve_warehouse_table_location
-from fabricops_kit.pipeline.shared import resolve_catalogue_table_id
+from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_lakehouse_table_location, resolve_warehouse_table_location
+from fabricops_kit.pipeline.shared import resolve_active_data_contract, resolve_catalogue_table_id
 from fabricops_kit.widgets.shared import form_page, form_section, parse_data_contract_payload, pipeline_active_context, require_ipywidgets, status_message, widget_common
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -48,21 +48,28 @@ def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _set_override(context: dict[str, Any], contract: dict[str, Any] | None) -> None:
-    values = {
-        "data_contract_id": str(contract["contract_id"]) if contract else None,
-        "data_contract_version": int(contract["contract_version"]) if contract else None,
-    }
-    context.update(values)
+def _set_override(context: dict[str, Any], table_id: str, contract: dict[str, Any] | None) -> None:
+    """Set or clear one table's override in established Fabric contexts."""
+    contexts = [context]
     active = pipeline_active_context()
     if active is not None:
         if active.context is None:
             active.context = {}
-        active.context.update(values)
+        contexts.append(active.context)
     try:
-        get_default_fabric_context().update(values)
+        contexts.append(get_default_fabric_context())
     except RuntimeError:
         pass
+    for target_context in contexts:
+        overrides = dict(target_context.get("data_contract_overrides") or {})
+        if contract is None:
+            overrides.pop(table_id, None)
+        else:
+            overrides[table_id] = {
+                "contract_id": str(contract["contract_id"]),
+                "contract_version": int(contract["contract_version"]),
+            }
+        target_context["data_contract_overrides"] = overrides
 
 
 def widget_select_data_contract(
@@ -92,8 +99,9 @@ def widget_select_data_contract(
     -------
     dict
         Read-only selection state, available versions, frozen preview, controls,
-        and a ``select`` callable. Selecting current authoring Guardrails sets
-        both Data Contract override values to ``None``.
+        and a ``select`` callable. Each exact selection is stored under its
+        canonical table identity in ``data_contract_overrides``; selecting
+        current authoring Guardrails removes only that table's entry.
 
     Raises
     ------
@@ -130,21 +138,24 @@ def widget_select_data_contract(
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     table_id = resolve_catalogue_table_id(config, env, store_type=store_type, layer=target, schema_name=schema_name, table_name=resolved_table, spark_session=spark)
-    frame = read_lakehouse_table_core(CONTRACT_TABLE, target="metadata", schema=None, spark_session=spark, context=runtime_context)
-    versions = _contract_options([_row_dict(row) for row in frame.collect()], table_id)
+    metadata_schema = configured_lakehouse_schema(config, env, "metadata")
+    if env == "prod":
+        versions = []
+    else:
+        frame = read_lakehouse_table_core(
+            CONTRACT_TABLE, target="metadata", schema=metadata_schema,
+            spark_session=spark, context=runtime_context,
+        )
+        versions = _contract_options([_row_dict(row) for row in frame.collect()], table_id)
     state: dict[str, Any] = {"table_id": table_id, "table_name": resolved_table, "versions": versions, "data_contract_id": None, "data_contract_version": None, "review": None, "message": "", "_controls": {}}
+    selection_context = context if isinstance(context, dict) else resolved
 
     def select(contract_id: str | None = None, contract_version: int | None = None) -> dict[str, Any]:
         if env == "prod":
-            _set_override(resolved, None)
-            if isinstance(context, dict):
-                _set_override(context, None)
-            state.update(data_contract_id=None, data_contract_version=None, review=None, message="Production uses the active Data Contract automatically.")
+            state.update(data_contract_id=None, data_contract_version=None, review=None)
             return state
         if not contract_id and contract_version is None:
-            _set_override(resolved, None)
-            if isinstance(context, dict):
-                _set_override(context, None)
+            _set_override(selection_context, table_id, None)
             state.update(data_contract_id=None, data_contract_version=None, review=None, message="Validation source: Current authoring Guardrails")
             return state
         matches = [row for row in versions if str(row.get("contract_id") or "") == str(contract_id or "") and int(row.get("contract_version") or 0) == int(contract_version or 0)]
@@ -154,21 +165,31 @@ def widget_select_data_contract(
         if str(selected.get("status") or "").lower() == "rejected":
             raise ValueError("Rejected Data Contracts cannot be used for Development testing.")
         review = _contract_review(selected)
-        _set_override(resolved, selected)
-        if isinstance(context, dict):
-            _set_override(context, selected)
+        _set_override(selection_context, table_id, selected)
         state.update(data_contract_id=str(selected["contract_id"]), data_contract_version=int(selected["contract_version"]), review=review, message=f"Using frozen Guardrails from Data Contract v{selected['contract_version']}")
         return state
 
     state["select"] = select
-    select()
+    if env == "prod":
+        try:
+            active_contract = resolve_active_data_contract(
+                config, env, table_id, spark_session=spark, required=False,
+            )
+        except ValueError:
+            active_contract = None
+        state["message"] = (
+            f"Active Data Contract v{active_contract['contract_version']}"
+            if active_contract else "No active Data Contract"
+        )
+    else:
+        select()
     try:
         widgets = require_ipywidgets()
     except ModuleNotFoundError:
         return state
     status = status_message(widgets)
     if env == "prod":
-        page = form_page(widgets, title="Validation source", description="Production validation is read only.", children=[form_section(widgets, title="Active Data Contract", children=[widgets.HTML(value="Production uses the active Data Contract automatically.")])])
+        page = form_page(widgets, title="Validation source", description="Production validation is read only.", children=[form_section(widgets, title="Production Data Contract", children=[widgets.HTML(value=html.escape(state["message"]))])])
         state["_controls"] = {"status": status, "page": page}
     else:
         options = [("Current authoring Guardrails", AUTHORING)] + [
