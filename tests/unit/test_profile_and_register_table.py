@@ -56,7 +56,7 @@ def test_target_processing_contract_is_accepted_and_deterministic(strategy, para
     ("role", "strategy", "parameters", "message"),
     [
         ("source", "append", None, "Source registration"),
-        ("target", "merge", {}, "write_strategy must be one of"),
+        ("target", "merge", {}, "load_strategy must be one of"),
         ("target", "scd1", {}, "requires key_columns"),
         ("target", "scd2", {}, "requires key_columns"),
         ("target", "scd2", {"key_columns": ["id"]}, "requires effective_column"),
@@ -252,8 +252,8 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "target",
         "table_name",
         "schema",
-        "write_strategy",
-        "write_strategy_parameters",
+        "load_strategy",
+        "load_strategy_parameters",
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
@@ -508,8 +508,8 @@ def test_catalogue_schema_is_environment_aware_asset_contract():
     assert metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames() == CATALOGUE_COLUMNS
     assert CATALOGUE_COLUMNS[:15] == [
         "metadata_level", "table_id", "column_id", "environment_name", "store_type", "layer",
-        "schema_name", "table_name", "column_name", "data_type", "write_strategy",
-        "write_strategy_parameters_json", "first_profiled_at", "last_profiled_at", "is_active",
+        "schema_name", "table_name", "column_name", "data_type", "load_strategy",
+        "load_strategy_parameters_json", "first_profiled_at", "last_profiled_at", "is_active",
     ]
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(CATALOGUE_COLUMNS)
 
@@ -784,7 +784,7 @@ def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_remo
     )
 
     assert captured["matched"]["data_type"] == "source.data_type"
-    assert captured["matched"]["write_strategy"] == "coalesce(source.write_strategy, target.write_strategy)"
+    assert captured["matched"]["load_strategy"] == "coalesce(source.load_strategy, target.load_strategy)"
     assert captured["matched"]["is_active"] == "true"
     assert "metadata_level = 'column'" in captured["missing_condition"]
     assert captured["missing"] == {"is_active": "false"}
@@ -861,7 +861,7 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
 
     schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
 
-    def register(columns, *, write_strategy=None, parameters_json=None):
+    def register(columns, *, load_strategy=None, parameters_json=None):
         now = datetime(2026, 8, 1)
         audit_values = {
             "_committed_by": "catalogue-lifecycle-test",
@@ -888,8 +888,8 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
             "first_profiled_at": now,
             "last_profiled_at": now,
             "is_active": True,
-            "write_strategy": write_strategy,
-            "write_strategy_parameters_json": parameters_json,
+            "load_strategy": load_strategy,
+            "load_strategy_parameters_json": parameters_json,
             **{name: audit_values[name] for name in required_audit_fields},
         })
         rows = [{**common, "metadata_level": "table"}]
@@ -912,17 +912,17 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
 
     amount_id = build_column_id(table_id, "amount")
     table_key = ("dev", "table", table_id, "")
-    register([("id", "bigint"), ("amount", "decimal(18,2)")], write_strategy="overwrite", parameters_json="{}")
-    assert stored[table_key]["write_strategy"] == "overwrite"
+    register([("id", "bigint"), ("amount", "decimal(18,2)")], load_strategy="overwrite", parameters_json="{}")
+    assert stored[table_key]["load_strategy"] == "overwrite"
     register(
         [("id", "bigint"), ("amount", "decimal(18,2)")],
-        write_strategy="scd1",
+        load_strategy="scd1",
         parameters_json='{"key_columns":["id"]}',
     )
-    assert stored[table_key]["write_strategy"] == "scd1"
+    assert stored[table_key]["load_strategy"] == "scd1"
     register([("id", "bigint"), ("amount", "decimal(18,2)")])
-    assert stored[table_key]["write_strategy"] == "scd1"
-    assert stored[table_key]["write_strategy_parameters_json"] == '{"key_columns":["id"]}'
+    assert stored[table_key]["load_strategy"] == "scd1"
+    assert stored[table_key]["load_strategy_parameters_json"] == '{"key_columns":["id"]}'
 
     register([("id", "bigint"), ("amount", "decimal(18,2)")])
     register([("id", "bigint"), ("amount", "double"), ("customer_id", "string")])

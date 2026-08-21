@@ -1999,14 +1999,14 @@ def _validated_processing(processing: Any) -> dict[str, Any]:
     """Return a valid frozen/current processing definition."""
     if not isinstance(processing, dict):
         raise ValueError("Data Contract processing definition is missing or malformed.")
-    strategy = str(processing.get("write_strategy") or "").strip().lower()
+    strategy = str(processing.get("load_strategy") or "").strip().lower()
     if strategy not in {"overwrite", "append", "scd1", "scd2"}:
-        raise ValueError("Processing definition has an invalid write_strategy.")
+        raise ValueError("Processing definition has an invalid load_strategy.")
     if strategy in {"scd1", "scd2"} and not processing.get("key_columns"):
         raise ValueError(f"Processing definition for {strategy} requires key_columns.")
     if strategy == "scd2" and not processing.get("effective_column"):
         raise ValueError("Processing definition for scd2 requires effective_column.")
-    return {**processing, "write_strategy": strategy}
+    return {**processing, "load_strategy": strategy}
 
 
 def resolve_table_processing_definition(
@@ -2064,10 +2064,10 @@ def resolve_table_processing_definition(
         raise ValueError(f"Current Catalogue must contain exactly one active table row for {table_id!r}.")
     row = matches[0]
     try:
-        parameters = json.loads(str(row.get("write_strategy_parameters_json") or "{}"))
+        parameters = json.loads(str(row.get("load_strategy_parameters_json") or "{}"))
     except json.JSONDecodeError as exc:
-        raise ValueError("Catalogue write_strategy_parameters_json is invalid JSON.") from exc
-    definition = _validated_processing({"write_strategy": row.get("write_strategy"), **parameters})
+        raise ValueError("Catalogue load_strategy_parameters_json is invalid JSON.") from exc
+    definition = _validated_processing({"load_strategy": row.get("load_strategy"), **parameters})
     return {**definition, "source": "current_authoring"}
 
 

@@ -42,8 +42,8 @@ No immediate table relationship is defined in the current implementation.
 | `table_name` | `string` | Physical table name recorded for the metadata row. |
 | `column_name` | `string` | Physical column name recorded for the metadata row. |
 | `data_type` | `string` | Stable data type label recorded for the column. |
-| `write_strategy` | `string` | Metadata Data Catalogue field `write_strategy`. |
-| `write_strategy_parameters_json` | `string` | JSON payload stored for `write_strategy_parameters_json`. |
+| `load_strategy` | `string` | Metadata Data Catalogue field `load_strategy`. |
+| `load_strategy_parameters_json` | `string` | JSON payload stored for `load_strategy_parameters_json`. |
 | `first_profiled_at` | `timestamp` | Timestamp stored for `first_profiled_at`. |
 | `last_profiled_at` | `timestamp` | Timestamp stored for `last_profiled_at`. |
 | `is_active` | `boolean` | Whether the row is currently active. |

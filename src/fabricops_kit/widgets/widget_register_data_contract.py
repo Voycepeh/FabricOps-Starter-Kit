@@ -123,17 +123,17 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     steward_docs = [_fields(r, ("steward_id", "steward_name", "steward_role", "contact")) for r in stewards]
     agreement_doc = _fields(agreement, ("agreement_id", "agreement_version", "agreement_name", "domain", "business_purpose", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date"))
     agreement_doc["approved_usages"] = _approved_usages(agreement.get("approved_usage_json"))
-    strategy = str(table.get("write_strategy") or "").strip().lower()
+    strategy = str(table.get("load_strategy") or "").strip().lower()
     processing = None
     if strategy:
         parameters = _json_value(
-            table.get("write_strategy_parameters_json"),
-            field="write_strategy_parameters_json",
+            table.get("load_strategy_parameters_json"),
+            field="load_strategy_parameters_json",
             default={},
         )
         if not isinstance(parameters, dict):
-            raise ValueError("Catalogue write_strategy_parameters_json must contain a JSON object.")
-        processing = {"write_strategy": strategy, **parameters}
+            raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
+        processing = {"load_strategy": strategy, **parameters}
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "draft"},
         "agreement": agreement_doc,

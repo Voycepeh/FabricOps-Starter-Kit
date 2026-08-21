@@ -21,7 +21,7 @@ class Frame:
 
 
 def contract(strategy="scd1", *, version=3):
-    processing = {"write_strategy": strategy}
+    processing = {"load_strategy": strategy}
     if strategy == "scd1":
         processing["key_columns"] = ["student_id"]
     return {
@@ -35,15 +35,15 @@ def contract(strategy="scd1", *, version=3):
 def catalogue(strategy="overwrite"):
     return Frame([{
         "metadata_level": "table", "table_id": "students", "environment_name": "dev",
-        "is_active": True, "write_strategy": strategy,
-        "write_strategy_parameters_json": "{}",
+        "is_active": True, "load_strategy": strategy,
+        "load_strategy_parameters_json": "{}",
     }])
 
 
 def test_development_uses_current_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: catalogue())
     resolved = shared.resolve_table_processing_definition(object(), "dev", "students")
-    assert resolved == {"write_strategy": "overwrite", "source": "current_authoring"}
+    assert resolved == {"load_strategy": "overwrite", "source": "current_authoring"}
 
 
 def test_development_override_uses_frozen_contract(monkeypatch):
@@ -52,7 +52,7 @@ def test_development_override_uses_frozen_contract(monkeypatch):
         object(), "dev", "students",
         context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
     )
-    assert resolved["write_strategy"] == "scd1"
+    assert resolved["load_strategy"] == "scd1"
     assert resolved["source"] == "data_contract"
     assert resolved["contract_version"] == 3
 
@@ -60,7 +60,7 @@ def test_development_override_uses_frozen_contract(monkeypatch):
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    assert shared.resolve_table_processing_definition(object(), "prod", "students")["write_strategy"] == "scd1"
+    assert shared.resolve_table_processing_definition(object(), "prod", "students")["load_strategy"] == "scd1"
 
 
 def test_production_missing_active_contract_fails(monkeypatch):
@@ -71,7 +71,7 @@ def test_production_missing_active_contract_fails(monkeypatch):
         shared.resolve_table_processing_definition(object(), "prod", "students")
 
 
-@pytest.mark.parametrize("processing", [None, {}, {"write_strategy": "merge"}, {"write_strategy": "scd2", "key_columns": ["id"]}])
+@pytest.mark.parametrize("processing", [None, {}, {"load_strategy": "merge"}, {"load_strategy": "scd2", "key_columns": ["id"]}])
 def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, processing):
     frozen = contract()
     frozen["contract_payload"]["table"]["processing"] = processing
