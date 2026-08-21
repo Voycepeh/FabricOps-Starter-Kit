@@ -185,6 +185,7 @@ def _observation_changes(observation) -> dict:
         env,
         spark_session=getattr(observation, "sparkSession", None),
         table_id=table_id,
+        metadata_table_key=table_id,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
@@ -277,8 +278,9 @@ def check_changes(observation) -> dict:
 
     Notes
     -----
-    When an active Data Contract exists, source-change expectations are
-    resolved from its frozen Guardrails; change detection itself is unchanged.
+    Production resolves source-change expectations from the active frozen Data
+    Contract. Development uses mutable authoring metadata, and change detection
+    itself is unchanged.
     
     Examples
     --------

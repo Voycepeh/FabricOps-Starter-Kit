@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:257`
+`fabricops_kit/pipeline/check_changes.py:258`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L257-L293">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L258-L295">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -72,8 +72,9 @@ ValueError
 
 <div class="reference-docstring-notes" markdown="1">
 
-When an active Data Contract exists, source-change expectations are
-resolved from its frozen Guardrails; change detection itself is unchanged.
+Production resolves source-change expectations from the active frozen Data
+Contract. Development uses mutable authoring metadata, and change detection
+itself is unchanged.
 
 </div>
 

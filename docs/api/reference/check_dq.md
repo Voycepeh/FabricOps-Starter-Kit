@@ -87,9 +87,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-When an active Data Contract exists, its frozen DQ rules are evaluated;
-otherwise current active approved authoring rules in ``METADATA_GUARDRAIL``
-are evaluated.
+Production resolves the physical table through the Catalogue and evaluates
+frozen DQ rules from its active Data Contract. Development evaluates current
+active approved authoring rules in ``METADATA_GUARDRAIL``.
 Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
 only failed row/rule pairs are appended to
 ``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while

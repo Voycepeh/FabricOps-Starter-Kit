@@ -7,8 +7,8 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_configured_lakehouse_table
-from fabricops_kit.widgets.shared import action_row, form_page, form_section, require_ipywidgets, status_message, widget_common
+from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
+from fabricops_kit.widgets.shared import activate_contract_version, action_row, form_page, form_section, parse_data_contract_payload, require_ipywidgets, status_message, widget_common
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
@@ -18,19 +18,7 @@ def _row_dict(row: Any) -> dict[str, Any]:
 
 
 def _payload(row: dict[str, Any]) -> dict[str, Any]:
-    try:
-        payload = json.loads(str(row.get("contract_payload_json") or ""))
-    except (TypeError, json.JSONDecodeError) as exc:
-        raise ValueError("Selected contract_payload_json is invalid JSON.") from exc
-    if not isinstance(payload, dict) or not isinstance(payload.get("contract"), dict) or not isinstance(payload.get("table"), dict):
-        raise ValueError("Selected Data Contract payload must identify its contract and table.")
-    if str(payload["contract"].get("contract_id") or "") != str(row.get("contract_id") or ""):
-        raise ValueError("Selected Data Contract payload contract_id does not match its version row.")
-    if int(payload["contract"].get("contract_version") or 0) != int(row.get("contract_version") or 0):
-        raise ValueError("Selected Data Contract payload contract_version does not match its version row.")
-    if str(payload["table"].get("table_id") or "") != str(row.get("table_id") or ""):
-        raise ValueError("Selected Data Contract payload table_id does not match its version row.")
-    return payload
+    return parse_data_contract_payload(row)
 
 
 def _selected_contract(rows: list[dict[str, Any]], table_id: str, contract_id: str, contract_version: int) -> dict[str, Any]:
@@ -44,27 +32,6 @@ def _selected_contract(rows: list[dict[str, Any]], table_id: str, contract_id: s
         raise ValueError("Rejected Data Contracts cannot be manually activated. Register a corrected version first.")
     _payload(row)
     return row
-
-
-def _activation_states(rows: list[dict[str, Any]], selected: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return lifecycle-only changes while preserving every frozen definition."""
-    table_id = str(selected["table_id"])
-    changes = []
-    for row in rows:
-        if str(row.get("table_id") or "") != table_id:
-            continue
-        is_selected = row is selected or (
-            str(row.get("contract_id")) == str(selected.get("contract_id"))
-            and int(row.get("contract_version") or 0) == int(selected.get("contract_version") or 0)
-        )
-        was_active = row.get("is_active") is True or str(row.get("status") or "").lower() == "active"
-        if not is_selected and not was_active:
-            continue
-        desired_status = "active" if is_selected else "superseded"
-        desired_active = is_selected
-        if row.get("status") != desired_status or row.get("is_active") is not desired_active:
-            changes.append({"contract_id": row["contract_id"], "contract_version": int(row["contract_version"]), "status": desired_status, "is_active": desired_active})
-    return changes
 
 
 def _compact_review(payload: dict[str, Any]) -> dict[str, Any]:
@@ -146,7 +113,7 @@ def widget_activate_data_contract(*, table_id: str | None = None, contract_id: s
     def refresh() -> dict[str, Any] | None:
         selected_table = str(state.get("table_id") or "")
         versions = sorted([row for row in rows if str(row.get("table_id") or "") == selected_table], key=lambda row: int(row.get("contract_version") or 0), reverse=True)
-        active = [row for row in versions if row.get("is_active") is True and str(row.get("status") or "").lower() == "active"]
+        active = [row for row in versions if row.get("is_active") is True]
         if len(active) > 1:
             raise RuntimeError(f"Data Contract integrity error: {selected_table!r} has multiple active versions.")
         state["versions"] = versions
@@ -164,23 +131,21 @@ def widget_activate_data_contract(*, table_id: str | None = None, contract_id: s
         selected = refresh()
         if selected is None:
             raise ValueError("Select a table and saved Data Contract version.")
-        changes = _activation_states(rows, selected)
-        if not changes:
+        result = activate_contract_version(
+            config=config, env=env, table_id=str(selected["table_id"]),
+            contract_id=str(selected["contract_id"]),
+            contract_version=int(selected["contract_version"]), target=target,
+            schema=schema, spark_session=spark, context=runtime_context,
+        )
+        if not result["changed"]:
             state["message"] = f"Data Contract v{selected['contract_version']} is already active."
-            return {"changed": False, "contract_id": selected["contract_id"], "contract_version": selected["contract_version"]}
-        try:
-            from delta.tables import DeltaTable
-        except Exception as exc:  # pragma: no cover - Fabric runtime dependency
-            raise RuntimeError("Delta Lake support is required to activate a Data Contract.") from exc
-        source = spark.createDataFrame(changes)
-        _store, _table, _schema, path = resolve_configured_lakehouse_table(target, CONTRACT_TABLE, schema or configured_lakehouse_schema(config, env, target), context=runtime_context)
-        (DeltaTable.forPath(spark, path).alias("target").merge(source.alias("source"), "target.contract_id = source.contract_id AND target.contract_version = source.contract_version").whenMatchedUpdate(set={"status": "source.status", "is_active": "source.is_active"}).execute())
+            return result
         by_key = {(row["contract_id"], int(row["contract_version"])): row for row in rows}
-        for change in changes:
+        for change in result["changes"]:
             by_key[(change["contract_id"], change["contract_version"])].update(status=change["status"], is_active=change["is_active"])
         state["message"] = f"Data Contract v{selected['contract_version']} is now active for Production."
         refresh()
-        return {"changed": True, "contract_id": selected["contract_id"], "contract_version": selected["contract_version"]}
+        return result
 
     state["refresh"], state["activate"] = refresh, activate
     refresh()

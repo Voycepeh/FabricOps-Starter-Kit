@@ -1866,7 +1866,7 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
         raise
     rows = [_row_to_dict(row) for row in frame.collect()]
     matching = [row for row in rows if str(row.get("table_id") or "") == str(table_id)]
-    active = [row for row in matching if row.get("is_active") is True and str(row.get("status") or "").lower() == "active"]
+    active = [row for row in matching if row.get("is_active") is True]
     if len(active) > 1:
         raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
     if not active:
@@ -1874,14 +1874,54 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
             raise ValueError(f"No active Data Contract exists for {table_id!r}; Governance must activate one first.")
         return None
     row = dict(active[0])
+    if str(row.get("status") or "").lower() != "active":
+        raise RuntimeError(f"Data Contract integrity error: active version for {table_id!r} does not have status='active'.")
     row["contract_payload"] = _contract_payload(row)
     return row
 
 
-def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str) -> list[dict[str, Any]]:
+def resolve_catalogue_table_id(
+    config,
+    env: str,
+    *,
+    store_type: str,
+    layer: str,
+    schema_name: str | None,
+    table_name: str,
+    spark_session=None,
+) -> str:
+    """Resolve one physical runtime table to its canonical Catalogue identity."""
+    frame = read_lakehouse_table_core(
+        CATALOGUE_TABLE, target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        spark_session=spark_session, context={"config": config, "env": env},
+    )
+    expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
+    matches = []
+    for raw in frame.collect():
+        row = _row_to_dict(raw)
+        actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
+        if (
+            str(row.get("environment_name") or "") == env
+            and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+            and row.get("is_active") is not False
+            and actual == expected
+        ):
+            matches.append(str(row.get("table_id") or ""))
+    identities = sorted(set(value for value in matches if value))
+    if not identities:
+        raise ValueError(
+            f"No active Catalogue table matches Production runtime table {table_name!r}; "
+            "profile and register the table before enforcing its Data Contract."
+        )
+    if len(identities) > 1:
+        raise RuntimeError(f"Catalogue integrity error: Production runtime table {table_name!r} resolves to multiple table_id values.")
+    return identities[0]
+
+
+def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, metadata_table_key: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
-    table_id = str(contract.get("table_id") or "")
     rules = payload.get("guardrails")
     if not isinstance(rules, list):
         raise ValueError("Active Data Contract guardrails must be a list.")
@@ -1892,7 +1932,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str) 
         params = raw.get("rule_parameters") or {}
         adapted.append({
             **raw,
-            "metadata_table_key": table_id,
+            "metadata_table_key": metadata_table_key,
             "environment_name": environment_name,
             "rule_parameters_json": json.dumps(params, sort_keys=True),
             "is_active": True,
@@ -1903,13 +1943,25 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str) 
     return adapted
 
 
-def load_table_guardrail_rules(config, env: str, *, spark_session=None, table_id: str = ""):
+def load_table_guardrail_rules(
+    config,
+    env: str,
+    *,
+    spark_session=None,
+    table_id: str = "",
+    metadata_table_key: str = "",
+):
     """Load frozen contract intent when active, otherwise mutable authoring intent."""
-    if table_id:
-        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
-        if contract is not None:
-            rows = contract_guardrail_rows(contract, environment_name=env)
-            return spark_session.createDataFrame(rows) if rows else []
+    if env == "prod":
+        if not table_id:
+            raise ValueError("Production Guardrail resolution requires a canonical Catalogue table_id.")
+        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
+        rows = contract_guardrail_rows(
+            contract,
+            environment_name=env,
+            metadata_table_key=metadata_table_key or table_id,
+        )
+        return spark_session.createDataFrame(rows) if rows else []
     try:
         return read_lakehouse_table_core(
             GUARDRAIL_TABLE, target="metadata",
@@ -3178,8 +3230,17 @@ def check_dq_runtime(
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
+    table_id = (
+        resolve_catalogue_table_id(
+            config, env, store_type=store_type, layer=target,
+            schema_name=schema_name, table_name=table_name, spark_session=spark_session,
+        )
+        if env == "prod"
+        else ""
+    )
     metadata_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=metadata_table_key,
+        config, env, spark_session=spark_session, table_id=table_id,
+        metadata_table_key=metadata_table_key,
     )
     rules = (
         []

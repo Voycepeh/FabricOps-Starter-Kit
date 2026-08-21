@@ -10,6 +10,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
+    resolve_catalogue_table_id,
     schema_check_core,
     select_table_guardrail_rule,
 )
@@ -54,8 +55,8 @@ def check_schema(
 
     Notes
     -----
-    When Governance has activated a Data Contract for the resolved table,
-    the frozen contract rule is used instead of mutable authoring metadata.
+    Production resolves the physical table through the Catalogue and uses its
+    active frozen Data Contract. Development uses mutable authoring metadata.
 
     Examples
     --------
@@ -87,7 +88,18 @@ def check_schema(
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
-    rules_df = load_table_guardrail_rules(config, env, spark_session=spark, table_id=metadata_table_key)
+    table_id = (
+        resolve_catalogue_table_id(
+            config, env, store_type=store_type, layer=target,
+            schema_name=schema_name, table_name=resolved_table, spark_session=spark,
+        )
+        if env == "prod"
+        else ""
+    )
+    rules_df = load_table_guardrail_rules(
+        config, env, spark_session=spark, table_id=table_id,
+        metadata_table_key=metadata_table_key,
+    )
     selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,
         environment_name=env,
