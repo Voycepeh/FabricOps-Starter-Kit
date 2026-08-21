@@ -2,6 +2,14 @@
 
 Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.
 
+## Writer functions
+
+* [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)
+
+## Used in Workflow Template
+
+* [`01_governance`](../../notebook-templates.md) — Contract registration
+
 ## Model
 
 **Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.
@@ -10,10 +18,11 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 **Relationships:**
 
-* `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Together with agreement_version, identifies the exact parent Data Agreement version.
-* `agreement_version` → `METADATA_DATA_AGREEMENT.agreement_version` (**N:1**). Together with agreement_id, identifies the exact parent Data Agreement version.
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Each Data Contract governs one logical Catalogue table.
-* **1:N**: One stable contract_id has monotonically increasing immutable contract_version rows.
+`METADATA_DATA_AGREEMENT` **(N → 1)**
+via `agreement_id` + `agreement_version`
+
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
 ## Column summary
 
@@ -25,21 +34,21 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 ## Implemented schema
 
-| Column | Data type | Managed by | Description |
-| --- | --- | --- | --- |
-| `contract_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Stable identifier for the contract row. |
-| `contract_version` | `integer` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Version recorded for the contract row. |
-| `agreement_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Stable identifier for the agreement lifecycle. |
-| `agreement_version` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Canonical agreement version associated with the row. |
-| `table_id` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Identifier for the accessed table or object. |
-| `contract_payload_json` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Serialized contract payload stored for the row. |
-| `status` | `string` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Pipeline run status recorded with the run summary. |
-| `is_active` | `boolean` | [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md) | Whether the row is currently active. |
-| `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Description |
+| --- | --- | --- |
+| `contract_id` | `string` | Stable identifier for the contract row. |
+| `contract_version` | `integer` | Version recorded for the contract row. |
+| `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
+| `agreement_version` | `string` | Canonical agreement version associated with the row. |
+| `table_id` | `string` | Identifier for the accessed table or object. |
+| `contract_payload_json` | `string` | Serialized contract payload stored for the row. |
+| `status` | `string` | Pipeline run status recorded with the run summary. |
+| `is_active` | `boolean` | Whether the row is currently active. |
+| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |

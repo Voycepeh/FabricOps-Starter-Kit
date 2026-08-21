@@ -2,6 +2,14 @@
 
 See who has row-level access to the data.
 
+## Writer functions
+
+No public writer function is traced in the current implementation.
+
+## Used in Workflow Template
+
+No starter template or solution is traced for the public writer functions.
+
 ## Model
 
 **Grain:** One RLS assignment for one user and one Catalogue table in one environment.
@@ -10,7 +18,8 @@ See who has row-level access to the data.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many RLS assignments can reference the same logical Catalogue table identity in an environment.
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
 ## Column summary
 
@@ -22,20 +31,20 @@ See who has row-level access to the data.
 
 ## Implemented schema
 
-| Column | Data type | Managed by | Description |
-| --- | --- | --- | --- |
-| `access_id` | `string` | Implemented schema registry only | Identifier stored for `access_id`. |
-| `user_principal` | `string` | Implemented schema registry only | User principal recorded for the access row. |
-| `table_id` | `string` | Implemented schema registry only | Identifier for the accessed table or object. |
-| `environment_name` | `string` | Implemented schema registry only | Environment name recorded for the metadata row. |
-| `access_level` | `string` | Implemented schema registry only | Metadata Data Access field `access_level`. |
-| `access_value` | `string` | Implemented schema registry only | Metadata Data Access field `access_value`. |
-| `access_state` | `string` | Implemented schema registry only | Metadata Data Access field `access_state`. |
-| `_committed_by` | `string` | Implemented schema registry only | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Implemented schema registry only | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Implemented schema registry only | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Implemented schema registry only | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Implemented schema registry only | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Implemented schema registry only | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Implemented schema registry only | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Implemented schema registry only | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Description |
+| --- | --- | --- |
+| `access_id` | `string` | Identifier stored for `access_id`. |
+| `user_principal` | `string` | User principal recorded for the access row. |
+| `table_id` | `string` | Identifier for the accessed table or object. |
+| `environment_name` | `string` | Environment name recorded for the metadata row. |
+| `access_level` | `string` | Metadata Data Access field `access_level`. |
+| `access_value` | `string` | Metadata Data Access field `access_value`. |
+| `access_state` | `string` | Metadata Data Access field `access_state`. |
+| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |

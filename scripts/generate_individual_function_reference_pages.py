@@ -4216,24 +4216,67 @@ def _metadata_index_key_html(fields: list[str]) -> str:
     )
 
 
-def _metadata_index_downstream_tables(
+def _metadata_relationships(
     table_name: str,
     table_models: dict[str, dict[str, Any]],
-) -> list[str]:
-    """Return unique downstream tables that reference one metadata table."""
-    downstream_tables: list[str] = []
-    seen: set[str] = set()
-    for child_table, child_model in table_models.items():
-        if child_table == table_name:
+    *,
+    include_inbound: bool,
+) -> list[dict[str, Any]]:
+    """Return deduplicated table relationships relative to ``table_name``."""
+    relationships: dict[str, dict[str, Any]] = {}
+    model = table_models[table_name]
+
+    for foreign_key in model.get("foreign_keys", []):
+        related_table = foreign_key["referenced_table"]
+        relationship = relationships.setdefault(
+            related_table,
+            {
+                "table": related_table,
+                "cardinality": foreign_key["cardinality"],
+                "fields": [],
+            },
+        )
+        if foreign_key["local_field"] not in relationship["fields"]:
+            relationship["fields"].append(foreign_key["local_field"])
+
+    # Structured logical relationships override physical FK cardinality. Prose-only
+    # lifecycle/versioning notes intentionally do not become table relationships.
+    for relationship in model.get("relationships", []):
+        related_table = relationship.get("related_table")
+        if not related_table or related_table == table_name:
             continue
-        for foreign_key in child_model.get("foreign_keys", []):
-            if foreign_key["referenced_table"] != table_name:
+        relationships[related_table] = {
+            "table": related_table,
+            "cardinality": relationship["cardinality"],
+            "fields": list(relationship.get("fields", [])),
+        }
+
+    if include_inbound:
+        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N"}
+        for other_table in table_models:
+            if other_table == table_name:
                 continue
-            if child_table not in seen:
-                seen.add(child_table)
-                downstream_tables.append(child_table)
-            break
-    return downstream_tables
+            for relationship in _metadata_relationships(
+                other_table, table_models, include_inbound=False
+            ):
+                if relationship["table"] != table_name:
+                    continue
+                relationships.setdefault(
+                    other_table,
+                    {
+                        "table": other_table,
+                        "cardinality": reverse_cardinality[relationship["cardinality"]],
+                        "fields": [],
+                    },
+                )
+
+    order = {name: index for index, name in enumerate(table_models)}
+    return sorted(relationships.values(), key=lambda item: order[item["table"]])
+
+
+def _metadata_cardinality_display(cardinality: str) -> str:
+    """Return a compact rendered cardinality arrow."""
+    return cardinality.replace(":", " → ")
 
 
 def render_metadata_reference_index(
@@ -4260,13 +4303,10 @@ def render_metadata_reference_index(
         ".metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }",
         ".metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }",
         ".metadata-table-card__relationships { display: flex; flex-direction: column; gap: .35rem; padding-top: .15rem; }",
-        ".metadata-table-card__relationships-header { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }",
-        ".metadata-table-card__relationships-count { font-size: .74rem; color: var(--md-default-fg-color--light); white-space: nowrap; }",
         ".metadata-table-card__relationship-summary { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: .5rem; align-items: start; }",
         ".metadata-table-card__relationship-list { display: flex; flex-wrap: wrap; gap: .35rem .5rem; min-width: 0; }",
         ".metadata-table-card__relationship-list code { font-size: .74rem; overflow-wrap: anywhere; }",
         ".metadata-table-card__cardinality { font-weight: 700; color: var(--md-primary-fg-color); white-space: nowrap; }",
-        ".metadata-table-card__empty { font-size: .8rem; color: var(--md-default-fg-color--light); }",
         "@media (max-width: 720px) { .metadata-table-grid { gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 1fr; gap: .15rem; } .metadata-table-card__relationship-summary { grid-template-columns: 3rem minmax(0, 1fr); } }",
         "</style>",
         "",
@@ -4276,9 +4316,7 @@ def render_metadata_reference_index(
         slug = table_name.lower()
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
-        downstream_tables = _metadata_index_downstream_tables(table_name, table_models)
-        downstream_count = len(downstream_tables)
-        downstream_label = plural_word(downstream_count, "table", "tables")
+        relationships = _metadata_relationships(table_name, table_models, include_inbound=True)
         lines.extend([
             f'<a class="metadata-table-card" href="{slug}/" aria-label="Open {html_escape(table_name)} schema">',
             '  <span class="metadata-table-card__header">',
@@ -4295,25 +4333,17 @@ def render_metadata_reference_index(
             f'    <span>{_metadata_index_key_html(model["primary_key"])}</span>',
             '  </span>',
             '  <span class="metadata-table-card__relationships">',
-            '    <span class="metadata-table-card__relationships-header">',
-            '      <span class="metadata-table-card__relationships-label">Used by</span>',
-            f'      <span class="metadata-table-card__relationships-count">{downstream_count} {downstream_label}</span>',
-            '    </span>',
+            '    <span class="metadata-table-card__relationships-label">Relationships</span>',
         ])
-        if downstream_tables:
+        for relationship in relationships:
             lines.extend([
                 '    <span class="metadata-table-card__relationship-summary">',
-                '      <span class="metadata-table-card__cardinality">1 → N</span>',
+                f'      <span class="metadata-table-card__cardinality">{_metadata_cardinality_display(relationship["cardinality"])}</span>',
                 '      <span class="metadata-table-card__relationship-list">',
-            ])
-            for downstream_table in downstream_tables:
-                lines.append(f'        <code>{html_escape(downstream_table)}</code>')
-            lines.extend([
+                f'        <code>{html_escape(relationship["table"])}</code>',
                 '      </span>',
                 '    </span>',
             ])
-        else:
-            lines.append('    <span class="metadata-table-card__empty">No downstream tables.</span>')
         lines.extend(['  </span>', '</a>'])
     lines.extend(['</div>', ''])
     return "\n".join(lines).rstrip() + "\n"
@@ -4333,6 +4363,43 @@ def _metadata_column_counts(
     return {"total": total, "business": business, "audit": audit}
 
 
+def _metadata_writer_functions(
+    table_name: str,
+    rows: list[dict[str, Any]],
+    *,
+    column_owners: dict[str, dict[str, list[Any]]],
+    public_callable_set: set[str],
+) -> list[str]:
+    """Return public functions traced as owners of columns in a metadata table."""
+    writers: set[str] = set()
+    owner_specs = list(column_owners.get(table_name, {}).get("__default__", []))
+    for row in rows:
+        owner_specs.extend(_metadata_owner_specs(table_name, str(row["name"]), column_owners))
+    for owner in owner_specs:
+        if not isinstance(owner, str):
+            continue
+        owner_parts = owner.split(".")
+        for function_name in owner_parts[-2:]:
+            if function_name in public_callable_set:
+                writers.add(function_name)
+    return sorted(writers)
+
+
+def _metadata_writer_templates(
+    writer_functions: list[str],
+    docs_metadata: dict[str, dict[str, Any]],
+) -> list[tuple[str, str]]:
+    """Return unique template and solution locations for metadata writers."""
+    locations: set[tuple[str, str]] = set()
+    for function_name in writer_functions:
+        metadata = docs_metadata.get(function_name, {})
+        template = str(metadata.get("template_notebook", "")).strip()
+        segment = str(metadata.get("template_segment", "")).strip()
+        if template:
+            locations.add((template, segment))
+    return sorted(locations)
+
+
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import (
@@ -4347,17 +4414,20 @@ def generate_metadata_reference_pages() -> None:
             return "Not defined in the current implementation."
         return " + ".join(f"`{field}`" for field in fields)
 
-    def _relationship_lines(model: dict[str, Any]) -> list[str]:
+    def _relationship_lines(table_name: str) -> list[str]:
         rendered: list[str] = []
-        for foreign_key in model.get("foreign_keys", []):
-            rendered.append(
-                f"* `{foreign_key['local_field']}` → "
-                f"`{foreign_key['referenced_table']}.{foreign_key['referenced_field']}` "
-                f"(**{foreign_key['cardinality']}**). {foreign_key['statement']}"
-            )
-        for relationship in model.get("relationships", []):
-            rendered.append(f"* **{relationship['cardinality']}**: {relationship['statement']}")
-        return rendered or ["* No immediate logical relationship is defined in the current implementation."]
+        for relationship in _metadata_relationships(
+            table_name, table_models, include_inbound=False
+        ):
+            rendered.extend([
+                f"`{relationship['table']}` "
+                f"**({_metadata_cardinality_display(relationship['cardinality'])})**",
+                f"via {_model_key_text(relationship['fields'])}",
+                "",
+            ])
+        if rendered:
+            rendered.pop()
+        return rendered or ["No immediate table relationship is defined in the current implementation."]
 
     METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     registry = metadata_table_schema_registry()
@@ -4426,8 +4496,18 @@ def generate_metadata_reference_pages() -> None:
                 )
             if not str(relationship.get("statement", "")).strip():
                 raise RuntimeError(f"Metadata relationship for {table_name} needs a statement")
+            related_table = relationship.get("related_table")
+            if related_table is not None:
+                if related_table not in registry:
+                    raise RuntimeError(f"Metadata relationship target table {related_table} does not exist")
+                for field_name in relationship.get("fields", []):
+                    if field_name not in field_names_by_table[table_name]:
+                        raise RuntimeError(
+                            f"Metadata relationship field {table_name}.{field_name} is not in the implemented schema"
+                        )
 
     table_purposes, column_owners = parse_metadata_reference_contract()
+    docs_metadata = parse_docs_metadata()
     public_callable_set = public_callable_names()
     audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
@@ -4439,10 +4519,38 @@ def generate_metadata_reference_pages() -> None:
         purpose = _metadata_table_purpose(table_name, table_purposes)
         rows = metadata_table_schema_rows(registry[table_name])
         column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
+        writer_functions = _metadata_writer_functions(
+            table_name,
+            rows,
+            column_owners=column_owners,
+            public_callable_set=public_callable_set,
+        )
+        writer_templates = _metadata_writer_templates(writer_functions, docs_metadata)
         lines = [
             f"# {table_name}",
             "",
             purpose,
+            "",
+            "## Writer functions",
+            "",
+            *(
+                [
+                    f"* [`{function_name}`](../../api/reference/{function_name}.md)"
+                    for function_name in writer_functions
+                ]
+                or ["No public writer function is traced in the current implementation."]
+            ),
+            "",
+            "## Used in Workflow Template",
+            "",
+            *(
+                [
+                    f"* [`{template}`](../../notebook-templates.md)"
+                    + (f" — {segment}" if segment else "")
+                    for template, segment in writer_templates
+                ]
+                or ["No starter template or solution is traced for the public writer functions."]
+            ),
             "",
             "## Model",
             "",
@@ -4452,7 +4560,7 @@ def generate_metadata_reference_pages() -> None:
             "",
             "**Relationships:**",
             "",
-            *_relationship_lines(model),
+            *_relationship_lines(table_name),
             "",
             "## Column summary",
             "",
@@ -4464,36 +4572,14 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
-            "| Column | Data type | Managed by | Description |",
-            "| --- | --- | --- | --- |",
+            "| Column | Data type | Description |",
+            "| --- | --- | --- |",
         ]
         for row in rows:
             column = str(row["name"])
             lines.append(
                 f"| `{column}` | `{row['type']}` | "
-                f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
                 f"{_metadata_field_description(table_name, column)} |"
-            )
-        if table_name == "METADATA_ENRICHMENT":
-            lines.extend([
-                "", "## Breaking pre release replacement", "",
-                "This intentionally breaking schema replaces the previous enrichment lifecycle and payload model. Existing development `METADATA_ENRICHMENT` tables must be recreated; no automated migration or compatibility support is provided. Values to retain may be exported and manually reshaped before recreation.",
-                "", "## Current value", "", "The latest appended row for `enrichment_level` + `metadata_key` + `enrichment_type` is current, ordered by `_committed_at`, `_activity_id`, and `enrichment_id`. Empty values are rejected, so clearing is deferred to a future change.",
-                "", "## Examples", "",
-                "| enrichment_level | metadata_key | enrichment_type | value |",
-                "| --- | --- | --- | --- |",
-                "| table | tbl_abc | Description | Student enrolment records |",
-                "| table | tbl_abc | Classification | Highly sensitive |",
-                "| column | col_xyz | Description | Unique student identifier |",
-                "| column | col_xyz | Personal_identifier | Direct PII |",
-                "", "The catalogue remains the source of table and column identity. New enrichment types do not require a schema change.",
-            ])
-        related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
-        if related_functions:
-            lines.extend(["", "## Related function reference", ""])
-            lines.extend(
-                f"* [`{function_name}`](../../api/reference/{function_name}.md)"
-                for function_name in related_functions
             )
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"

@@ -40,6 +40,9 @@ def test_metadata_model_contract_matches_implemented_schema() -> None:
         for relationship in model["relationships"]:
             assert relationship["cardinality"] in VALID_CARDINALITIES
             assert relationship["statement"].strip()
+            if related_table := relationship.get("related_table"):
+                assert related_table in fields
+                assert set(relationship.get("fields", [])) <= fields[table_name]
 
 
 def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path, monkeypatch) -> None:
@@ -60,8 +63,11 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<div class="metadata-table-grid">' in first_landing
     assert "grid-template-columns: 1fr;" in first_landing
     assert "repeat(2, minmax(0, 1fr))" not in first_landing
-    assert "1 → N" in first_landing
-    assert "Used by" in first_landing
+    assert "Relationships" in first_landing
+    assert "Used by" not in first_landing
+    assert "0 tables" not in first_landing
+    assert "No downstream tables." not in first_landing
+    assert all(cardinality in first_landing for cardinality in ("1 → N", "1 → 1", "N → 1"))
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
     assert "METADATA_DATA_CATALOGUE.table_id" not in first_landing
@@ -71,24 +77,44 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert first_landing.count(f'href="{slug}/"') == 1
         assert first_landing.count(f'>{table_name}</span>') == 1
         page = first_pages[f"{slug}.md"]
+        assert "## Writer functions" in page
+        assert page.index("## Writer functions") < page.index("## Model")
+        assert "## Used in Workflow Template" in page
+        assert page.index("## Used in Workflow Template") < page.index("## Model")
         assert "## Model" in page
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
         assert "**Relationships:**" in page
+        assert "## Column summary" in page
+        assert "| Total columns |" in page
+        assert "| Business columns |" in page
+        assert "| Audit columns |" in page
         assert "## Implemented schema" in page
-        assert "| Column | Data type | Managed by | Description |" in page
+        assert "| Column | Data type | Description |" in page
+        assert "Managed by" not in page
 
     catalogue_card = first_landing.split(
         'aria-label="Open METADATA_DATA_CATALOGUE schema">', 1
     )[1].split("</a>", 1)[0]
     assert catalogue_card.count(">METADATA_DATA_PROFILED</code>") == 1
+    assert ">METADATA_DATA_CONTRACT</code>" in catalogue_card
 
     profiled_card = first_landing.split(
         'aria-label="Open METADATA_DATA_PROFILED schema">', 1
     )[1].split("</a>", 1)[0]
-    assert "METADATA_DATA_CATALOGUE" not in profiled_card
+    assert ">METADATA_DATA_CATALOGUE</code>" in profiled_card
     assert ">METADATA_DATA_PROFILED_FREQUENCY</code>" in profiled_card
     assert 'href="metadata_data_profiled_frequency/"' in first_landing
+
+    contract_page = first_pages["metadata_data_contract.md"]
+    assert "[`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)" in contract_page
+    assert "[`01_governance`](../../notebook-templates.md) — Contract registration" in contract_page
+    assert contract_page.count("`METADATA_DATA_AGREEMENT` **(N → 1)**") == 1
+    assert "via `agreement_id` + `agreement_version`" in contract_page
+    assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
+    assert "via `table_id`" in contract_page
+    assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
+    assert "monotonically increasing" not in contract_page
 
     generator.generate_metadata_reference_pages()
     assert landing.read_text(encoding="utf-8") == first_landing

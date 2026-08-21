@@ -19,13 +19,10 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 .metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }
 .metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }
 .metadata-table-card__relationships { display: flex; flex-direction: column; gap: .35rem; padding-top: .15rem; }
-.metadata-table-card__relationships-header { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
-.metadata-table-card__relationships-count { font-size: .74rem; color: var(--md-default-fg-color--light); white-space: nowrap; }
 .metadata-table-card__relationship-summary { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: .5rem; align-items: start; }
 .metadata-table-card__relationship-list { display: flex; flex-wrap: wrap; gap: .35rem .5rem; min-width: 0; }
 .metadata-table-card__relationship-list code { font-size: .74rem; overflow-wrap: anywhere; }
 .metadata-table-card__cardinality { font-weight: 700; color: var(--md-primary-fg-color); white-space: nowrap; }
-.metadata-table-card__empty { font-size: .8rem; color: var(--md-default-fg-color--light); }
 @media (max-width: 720px) { .metadata-table-grid { gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 1fr; gap: .15rem; } .metadata-table-card__relationship-summary { grid-template-columns: 3rem minmax(0, 1fr); } }
 </style>
 
@@ -45,10 +42,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>steward_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">1 table</span>
-    </span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
@@ -72,9 +66,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>agreement_id</code> <span class="metadata-table-card__key-separator">+</span> <code>agreement_version</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">1 table</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_STEWARD</code>
+      </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
@@ -99,11 +96,19 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>contract_id</code> <span class="metadata-table-card__key-separator">+</span> <code>contract_version</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_AGREEMENT</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_data_catalogue/" aria-label="Open METADATA_DATA_CATALOGUE schema">
@@ -121,19 +126,46 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>column_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">7 tables</span>
-    </span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_CONTRACT</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_SOURCE_OBSERVATION</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_PROFILED</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_LINEAGE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_ENRICHMENT</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_ACCESS</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_GUARDRAIL</code>
       </span>
     </span>
@@ -154,11 +186,13 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>observation_id</code> <span class="metadata-table-card__key-separator">+</span> <code>partition_value</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_data_profiled/" aria-label="Open METADATA_DATA_PROFILED schema">
@@ -176,14 +210,22 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>profile_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">2 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_PROFILED_FREQUENCY</code>
+      </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_PROFILED_FREQUENCY</code>
         <code>METADATA_DATA_LINEAGE</code>
       </span>
     </span>
@@ -204,11 +246,13 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>frequency_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_PROFILED</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_data_lineage/" aria-label="Open METADATA_DATA_LINEAGE schema">
@@ -226,11 +270,19 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>lineage_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_PROFILED</code>
+      </span>
+    </span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_enrichment/" aria-label="Open METADATA_ENRICHMENT schema">
@@ -248,11 +300,13 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>enrichment_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_data_access/" aria-label="Open METADATA_DATA_ACCESS schema">
@@ -270,11 +324,13 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>access_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_guardrail/" aria-label="Open METADATA_GUARDRAIL schema">
@@ -292,9 +348,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>guardrail_rule_id</code> <span class="metadata-table-card__key-separator">+</span> <code>guardrail_version</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">1 table</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
@@ -319,9 +378,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>guardrail_result_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">1 table</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_GUARDRAIL</code>
+      </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
@@ -346,11 +408,13 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span><code>guardrail_row_result_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-header">
-      <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_GUARDRAIL_RESULTS</code>
+      </span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
   </span>
 </a>
 </div>
