@@ -78,6 +78,35 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert warnings == []
 
 
+def test_contract_versions_freeze_catalogue_processing_independently():
+    """Keep earlier payloads unchanged when current Catalogue processing changes."""
+    sources = _sources()
+    kwargs = {
+        "contract_id": _contract_id("agreement", "orders"),
+        "agreement": _agreement(),
+        "table_id": "orders",
+        "usages": ["analytics"],
+        "tables": sources,
+        "environment_name": "dev",
+    }
+    sources["METADATA_DATA_CATALOGUE"][0].update(
+        write_strategy="overwrite", write_strategy_parameters_json="{}"
+    )
+    version_one, _ = _assemble_payload(contract_version=1, **kwargs)
+
+    sources["METADATA_DATA_CATALOGUE"][0].update(
+        write_strategy="scd1",
+        write_strategy_parameters_json='{"key_columns":["order_id"]}',
+    )
+    version_two, _ = _assemble_payload(contract_version=2, **kwargs)
+
+    assert version_one["table"]["processing"] == {"write_strategy": "overwrite"}
+    assert version_two["table"]["processing"] == {
+        "write_strategy": "scd1",
+        "key_columns": ["order_id"],
+    }
+
+
 def test_payload_rejects_inactive_or_unknown_table():
     """Contract only current active logical Catalogue tables."""
     sources = _sources()

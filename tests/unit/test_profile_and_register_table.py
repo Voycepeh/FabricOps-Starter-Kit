@@ -784,6 +784,7 @@ def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_remo
     )
 
     assert captured["matched"]["data_type"] == "source.data_type"
+    assert captured["matched"]["write_strategy"] == "coalesce(source.write_strategy, target.write_strategy)"
     assert captured["matched"]["is_active"] == "true"
     assert "metadata_level = 'column'" in captured["missing_condition"]
     assert captured["missing"] == {"is_active": "false"}
@@ -827,7 +828,13 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
                 if key in stored:
                     current = stored[key]
                     for name, expression in self.matched.items():
-                        current[name] = True if expression == "true" else row[expression.removeprefix("source.")]
+                        if expression == "true":
+                            current[name] = True
+                        elif expression.startswith("coalesce(source."):
+                            source_name = expression.removeprefix("coalesce(source.").split(",", 1)[0]
+                            current[name] = row[source_name] if row[source_name] is not None else current[name]
+                        else:
+                            current[name] = row[expression.removeprefix("source.")]
                 else:
                     stored[key] = row
             for key, row in stored.items():
@@ -854,7 +861,7 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
 
     schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
 
-    def register(columns):
+    def register(columns, *, write_strategy=None, parameters_json=None):
         now = datetime(2026, 8, 1)
         audit_values = {
             "_committed_by": "catalogue-lifecycle-test",
@@ -881,6 +888,8 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
             "first_profiled_at": now,
             "last_profiled_at": now,
             "is_active": True,
+            "write_strategy": write_strategy,
+            "write_strategy_parameters_json": parameters_json,
             **{name: audit_values[name] for name in required_audit_fields},
         })
         rows = [{**common, "metadata_level": "table"}]
@@ -902,6 +911,19 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
         )
 
     amount_id = build_column_id(table_id, "amount")
+    table_key = ("dev", "table", table_id, "")
+    register([("id", "bigint"), ("amount", "decimal(18,2)")], write_strategy="overwrite", parameters_json="{}")
+    assert stored[table_key]["write_strategy"] == "overwrite"
+    register(
+        [("id", "bigint"), ("amount", "decimal(18,2)")],
+        write_strategy="scd1",
+        parameters_json='{"key_columns":["id"]}',
+    )
+    assert stored[table_key]["write_strategy"] == "scd1"
+    register([("id", "bigint"), ("amount", "decimal(18,2)")])
+    assert stored[table_key]["write_strategy"] == "scd1"
+    assert stored[table_key]["write_strategy_parameters_json"] == '{"key_columns":["id"]}'
+
     register([("id", "bigint"), ("amount", "decimal(18,2)")])
     register([("id", "bigint"), ("amount", "double"), ("customer_id", "string")])
     assert stored[("dev", "column", table_id, amount_id)]["data_type"] == "double"

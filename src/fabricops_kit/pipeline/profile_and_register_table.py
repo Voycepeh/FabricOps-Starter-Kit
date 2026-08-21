@@ -495,8 +495,10 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "table_name": "source.table_name",
                 "column_name": "source.column_name",
                 "data_type": "source.data_type",
-                "write_strategy": "source.write_strategy",
-                "write_strategy_parameters_json": "source.write_strategy_parameters_json",
+                "write_strategy": "coalesce(source.write_strategy, target.write_strategy)",
+                "write_strategy_parameters_json": (
+                    "coalesce(source.write_strategy_parameters_json, target.write_strategy_parameters_json)"
+                ),
                 "last_profiled_at": "source.last_profiled_at",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
