@@ -7,7 +7,7 @@ See the frequency distribution captured for a profiled column.
 * [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
 * [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md)
 
-## Related templates / solutions
+## Used in Workflow Template
 
 * [`02_pipeline`](../../notebook-templates.md) — Profiling
 * [`02_pipeline / optional 99_explore`](../../notebook-templates.md) — Profiling
@@ -33,22 +33,22 @@ via `profile_id` + `profile_snapshot_id`
 
 ## Implemented schema
 
-| Column | Data type | Managed by | Description |
-| --- | --- | --- | --- |
-| `frequency_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `frequency_id`. |
-| `profile_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `profile_id`. |
-| `profile_snapshot_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `profile_snapshot_id`. |
-| `value` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `value`. |
-| `frequency_count` | `long` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `frequency_count`. |
-| `frequency_percent` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `frequency_percent`. |
-| `frequency_rank` | `integer` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `frequency_rank`. |
-| `profiled_row_count` | `long` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `profiled_row_count`. |
-| `profiled_non_null_count` | `long` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `profiled_non_null_count`. |
-| `_committed_by` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Description |
+| --- | --- | --- |
+| `frequency_id` | `string` | Identifier stored for `frequency_id`. |
+| `profile_id` | `string` | Identifier stored for `profile_id`. |
+| `profile_snapshot_id` | `string` | Identifier stored for `profile_snapshot_id`. |
+| `value` | `string` | Metadata Data Profiled Frequency field `value`. |
+| `frequency_count` | `long` | Metadata Data Profiled Frequency field `frequency_count`. |
+| `frequency_percent` | `double` | Metadata Data Profiled Frequency field `frequency_percent`. |
+| `frequency_rank` | `integer` | Metadata Data Profiled Frequency field `frequency_rank`. |
+| `profiled_row_count` | `long` | Metadata Data Profiled Frequency field `profiled_row_count`. |
+| `profiled_non_null_count` | `long` | Metadata Data Profiled Frequency field `profiled_non_null_count`. |
+| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |

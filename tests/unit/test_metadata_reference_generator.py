@@ -79,8 +79,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         page = first_pages[f"{slug}.md"]
         assert "## Writer functions" in page
         assert page.index("## Writer functions") < page.index("## Model")
-        assert "## Related templates / solutions" in page
-        assert page.index("## Related templates / solutions") < page.index("## Model")
+        assert "## Used in Workflow Template" in page
+        assert page.index("## Used in Workflow Template") < page.index("## Model")
         assert "## Model" in page
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
@@ -90,7 +90,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "| Business columns |" in page
         assert "| Audit columns |" in page
         assert "## Implemented schema" in page
-        assert "| Column | Data type | Managed by | Description |" in page
+        assert "| Column | Data type | Description |" in page
+        assert "Managed by" not in page
 
     catalogue_card = first_landing.split(
         'aria-label="Open METADATA_DATA_CATALOGUE schema">', 1

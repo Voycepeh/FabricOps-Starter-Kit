@@ -4541,7 +4541,7 @@ def generate_metadata_reference_pages() -> None:
                 or ["No public writer function is traced in the current implementation."]
             ),
             "",
-            "## Related templates / solutions",
+            "## Used in Workflow Template",
             "",
             *(
                 [
@@ -4572,14 +4572,13 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
-            "| Column | Data type | Managed by | Description |",
-            "| --- | --- | --- | --- |",
+            "| Column | Data type | Description |",
+            "| --- | --- | --- |",
         ]
         for row in rows:
             column = str(row["name"])
             lines.append(
                 f"| `{column}` | `{row['type']}` | "
-                f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
                 f"{_metadata_field_description(table_name, column)} |"
             )
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
