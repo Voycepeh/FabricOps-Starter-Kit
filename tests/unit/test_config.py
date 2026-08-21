@@ -878,6 +878,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "schema_name",
         "table_name",
         "column_name",
+        "data_type",
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
@@ -890,7 +891,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "_metadata_lakehouse_name",
         "_activity_id",
     ]
-    assert profiling_fields.isdisjoint(catalogue_names)
+    assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
     assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
     assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "environment_name", "data_type"}.issubset(profiled_names)

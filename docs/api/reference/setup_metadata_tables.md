@@ -31,7 +31,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:114`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L114-L451">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L114-L452">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -163,22 +163,23 @@ Detailed table contents:
   ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
   ``start_date``, ``expiry_date``, ``business_purpose``,
   ``custom_fields_json``, and the standard audit fields.
-- ``METADATA_DATA_CONTRACT`` stores ``agreement_id``,
-  ``metadata_table_key``, ``schema_fingerprint``, and the standard audit
-  fields. ``_activity_id`` groups one saved inventory and ``_committed_at``
-  orders inventory saves.
-- ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
-  ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
-  ``store_type``, ``layer``, ``schema_name``, ``table_name``,
-  ``column_name``, ``data_type``, and the standard audit fields.
-- ``METADATA_DATA_PROFILED`` stores ``metadata_table_key``,
-  ``metadata_column_key``, ``environment_name``, ``store_type``, ``layer``,
-  ``schema_name``, ``table_name``, ``column_name``, ``data_type``,
+- ``METADATA_DATA_CONTRACT`` stores one immutable, versioned governed-table
+  definition through ``contract_id``, ``contract_version``, the exact
+  ``agreement_id`` and ``agreement_version``, ``table_id``,
+  ``contract_payload_json``, lifecycle status, activation state, and the
+  standard audit fields.
+- ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
+  ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,
+  physical table context, ``column_name``, ``data_type``, profiling dates,
+  activation state, and the standard audit fields.
+- ``METADATA_DATA_PROFILED`` stores ``profile_id``,
+  ``profile_snapshot_id``, ``table_id``, ``column_id``,
+  ``environment_name``, ``data_type``,
   ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,
   ``distinct_count``, ``distinct_percent``, ``mean_value``,
   ``stddev_value``, ``min_value``, ``percentile_25_value``,
   ``median_value``, ``percentile_75_value``, ``max_value``,
-  ``schema_fingerprint``, ``profiled_at``, and the standard audit fields.
+  and the standard audit fields.
 - ``METADATA_DATA_PROFILED_FREQUENCY`` stores one flattened row per
   distinct profiled value with ``metadata_column_key``, value, count,
   percentage, rank, profiled row totals, ``profiled_at``, and audit fields.

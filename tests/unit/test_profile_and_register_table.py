@@ -28,6 +28,7 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     _replace_frequency_rows,
     _resolve_physical_identity,
     _schema_fingerprint,
+    _upsert_catalogue_identities,
     profile_and_register_table,
 )
 
@@ -460,9 +461,9 @@ def test_profiled_schema_matches_stage2_contract():
 
 def test_catalogue_schema_is_environment_aware_asset_contract():
     assert metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames() == CATALOGUE_COLUMNS
-    assert CATALOGUE_COLUMNS[:12] == [
+    assert CATALOGUE_COLUMNS[:13] == [
         "metadata_level", "table_id", "column_id", "environment_name", "store_type", "layer",
-        "schema_name", "table_name", "column_name", "first_profiled_at", "last_profiled_at", "is_active",
+        "schema_name", "table_name", "column_name", "data_type", "first_profiled_at", "last_profiled_at", "is_active",
     ]
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(CATALOGUE_COLUMNS)
 
@@ -482,6 +483,39 @@ def test_catalogue_dataframe_contains_table_and_column_assets(spark_session, mon
     table_id = profiled.collect()[0].table_id
     assert {row.table_id for row in rows} == {table_id}
     assert {row.environment_name for row in rows} == {"dev"}
+    assert {
+        row.column_name: row.data_type for row in rows if row.metadata_level == "column"
+    } == {field.name: field.dataType.simpleString() for field in source.schema.fields}
+
+
+
+def test_catalogue_datatype_change_preserves_identity_and_active_state(spark_session):
+    table_id = build_table_id("lakehouse", "raw", None, "customers")
+    profile_schema = metadata_table_schema_registry()[PROFILED_TABLE]
+    base = {name: None for name in profile_schema.fieldNames()}
+    base.update({
+        "profile_id": "profile-id", "profile_snapshot_id": "snapshot", "table_id": table_id,
+        "column_id": build_column_id(table_id, "value"), "environment_name": "dev",
+        "data_type": "long", "_committed_by": "tester", "_committed_at": datetime(2026, 1, 1),
+        "_workspace_id": "workspace", "_workspace_name": "Workspace", "_notebook_id": "notebook",
+        "_notebook_name": "Notebook", "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
+    })
+    profiled = spark_session.createDataFrame([base], schema=profile_schema)
+    numeric_source = spark_session.createDataFrame([(1,)], ["value"])
+    string_source = spark_session.createDataFrame([("1",)], ["value"])
+
+    numeric = _catalogue_dataframe_from_profiled(
+        profiled, source_df=numeric_source, store_type="lakehouse", layer="raw",
+        schema_name=None, table_name="customers",
+    ).filter("metadata_level = 'column'").first()
+    string = _catalogue_dataframe_from_profiled(
+        profiled, source_df=string_source, store_type="lakehouse", layer="raw",
+        schema_name=None, table_name="customers",
+    ).filter("metadata_level = 'column'").first()
+
+    assert numeric.column_id == string.column_id == build_column_id(table_id, "value")
+    assert (numeric.data_type, string.data_type) == ("bigint", "string")
+    assert numeric.is_active is True and string.is_active is True
 
 
 def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
@@ -651,3 +685,60 @@ def test_profile_and_register_table_frequency_profile_df_missing_selected_column
             frequency_columns=["country"],
             frequency_profile_df=alternate,
         )
+
+
+def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_removed(monkeypatch):
+    """Keep changed columns active while deactivating only missing source identities."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    captured = {}
+
+    class CatalogueFrame:
+        def select(self, *_names):
+            return self
+
+        def first(self):
+            return {"environment_name": "dev", "table_id": "table-1"}
+
+        def alias(self, _name):
+            return self
+
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, _source, condition):
+            captured["merge_condition"] = condition
+            return self
+
+        def whenMatchedUpdate(self, *, set):
+            captured["matched"] = set
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def whenNotMatchedBySourceUpdate(self, *, condition, set):
+            captured["missing_condition"] = condition
+            captured["missing"] = set
+            return self
+
+        def execute(self):
+            captured["executed"] = True
+
+    delta_module = ModuleType("delta")
+    delta_tables = ModuleType("delta.tables")
+    delta_tables.DeltaTable = SimpleNamespace(forPath=lambda _spark, _path: Merge())
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/catalogue"))
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+
+    _upsert_catalogue_identities(
+        catalogue_df=CatalogueFrame(), config=object(), env="dev", spark_session=object(),
+    )
+
+    assert captured["matched"]["data_type"] == "source.data_type"
+    assert captured["matched"]["is_active"] == "true"
+    assert "metadata_level = 'column'" in captured["missing_condition"]
+    assert captured["missing"] == {"is_active": "false"}
+    assert captured["executed"] is True

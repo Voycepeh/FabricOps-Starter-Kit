@@ -16,6 +16,47 @@ from fabricops_kit.widgets.shared import _prepare_selected_guardrail_views, data
 pytestmark = pytest.mark.unit
 
 
+class _CatalogueWidget:
+    """Local minimal observable widget double for catalogue rendering."""
+
+    def __init__(self, value=None, options=None, children=None, **kwargs):
+        if children is None and isinstance(value, (list, tuple)):
+            children, value = value, None
+        self._value = value
+        self.options = list(options or [])
+        self.children = list(children or [])
+        self.description = kwargs.get("description", "")
+        self.placeholder = kwargs.get("placeholder", "")
+        self.layout = kwargs.get("layout")
+        self.callbacks = []
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        old = self._value
+        self._value = value
+        if old != value:
+            for callback in list(self.callbacks):
+                callback({"name": "value", "old": old, "new": value})
+
+    def observe(self, callback, names=None):
+        self.callbacks.append(callback)
+
+    def add_class(self, _name):
+        return None
+
+
+class _CatalogueWidgets:
+    Text = Dropdown = HTML = VBox = HBox = GridBox = _CatalogueWidget
+
+    class Layout:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+
 def test_public_catalogue_widget_is_the_only_catalogue_viewer():
     """The consolidated catalogue widget is exported from the package root."""
     assert callable(fabricops_kit.widget_view_catalogue)
@@ -241,15 +282,6 @@ def test_catalogue_inventory_reads_table_level_normalized_rows(spark_session):
 def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(monkeypatch, spark_session):
     """Reader shapes normalized catalogue/profile/frequency tables without changing their schemas."""
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
-    from tests.unit.test_widget_register_data_contract import _FakeWidgets
-
-    _FakeWidgets.Dropdown = _FakeWidgets.Select
-
-    class FakeHTML(_FakeWidgets.HTML):
-        def __init__(self, value="", **kwargs):
-            super().__init__(value=value, **kwargs)
-
-    _FakeWidgets.HTML = FakeHTML
     displayed = []
     fake_display = types.ModuleType("IPython.display")
     fake_display.display = displayed.append
@@ -257,7 +289,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     fake_ipython.display = fake_display
     monkeypatch.setitem(sys.modules, "IPython", fake_ipython)
     monkeypatch.setitem(sys.modules, "IPython.display", fake_display)
-    monkeypatch.setattr(module.widget_shared, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(module.widget_shared, "require_ipywidgets", lambda: _CatalogueWidgets)
 
     old_snapshot = datetime(2026, 7, 30)
     latest_snapshot = datetime(2026, 7, 31)

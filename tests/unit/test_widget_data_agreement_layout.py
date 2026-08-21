@@ -55,33 +55,63 @@ def _render_steward(monkeypatch, *, custom_fields=None, stewards=None):
     return steward_widget.widget_render_data_steward(spark=object())
 
 
-def _render_contract(monkeypatch):
+def _render_contract(monkeypatch, *, writer=None):
+    class Frame:
+        def __init__(self, rows):
+            self.rows = list(rows)
+
+        def collect(self):
+            return list(self.rows)
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):
+            return Frame(rows)
+
+    audit = {"_committed_at": "2026-08-03", "_activity_id": "activity-1"}
+    tables = {
+        "METADATA_DATA_AGREEMENT": Frame([{
+            "agreement_id": "agreement-1", "agreement_version": "1.0.0",
+            "agreement_name": "Orders Agreement", "domain": "sales",
+            "business_purpose": "Reporting", "provider_steward_id": "provider",
+            "recipient_steward_id": "recipient", "approved_usage_json": '["reporting"]', **audit,
+        }]),
+        "METADATA_DATA_STEWARD": Frame([
+            {"steward_id": "provider", "steward_name": "Provider", "is_active": True, **audit},
+            {"steward_id": "recipient", "steward_name": "Recipient", "is_active": True, **audit},
+        ]),
+        "METADATA_DATA_CATALOGUE": Frame([
+            {"metadata_level": "table", "table_id": "table-1", "column_id": None,
+             "environment_name": "dev", "store_type": "lakehouse", "layer": "curated",
+             "schema_name": "sales", "table_name": "orders", "is_active": True, **audit},
+            {"metadata_level": "column", "table_id": "table-1", "column_id": "column-1",
+             "column_name": "example_column", "data_type": "string", "environment_name": "dev",
+             "is_active": True, **audit},
+        ]),
+        "METADATA_ENRICHMENT": Frame([]),
+        "METADATA_GUARDRAIL": Frame([]),
+        "METADATA_DATA_CONTRACT": Frame([]),
+    }
+    class SelectMultiple(_FakeWidget):
+        def __init__(self, value=(), options=None, **kwargs):
+            super().__init__(value=None, options=options, **kwargs)
+            self.value = tuple(value)
+
+    _FakeWidgets.SelectMultiple = SelectMultiple
     monkeypatch.setattr(contract_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(contract_widget, "resolve_fabric_context", lambda **kwargs: ({}, "dev", {}))
-    monkeypatch.setattr(contract_widget, "get_spark_session", lambda value=None: value)
-    monkeypatch.setattr(contract_widget, "read_lakehouse_table_core", lambda *args, **kwargs: object())
-    monkeypatch.setattr(
-        contract_widget,
-        "_latest_catalogue_rows",
-        lambda *args: [{
-            "metadata_table_key": "dataset-1", "schema_fingerprint": "fingerprint",
-            "store_type": "Lakehouse", "layer": "curated", "schema_name": "sales",
-            "table_name": "orders",
-        }],
-    )
-    monkeypatch.setattr(
-        contract_widget,
-        "_catalogue_schema_rows",
-        lambda *args: [{
-            "metadata_column_key": "column-1",
-            "column_name": "example_column",
-            "data_type": "string",
-        }],
-    )
-    monkeypatch.setattr(contract_widget, "_latest_inventory", lambda *args: (None, []))
-    monkeypatch.setattr(contract_widget, "_display_widget", lambda value: None)
+    monkeypatch.setattr(contract_widget, "get_spark_session", lambda value=None: Spark())
+    monkeypatch.setattr(contract_widget, "read_lakehouse_table_core", lambda name, **kwargs: tables[name])
+    monkeypatch.setattr(contract_widget, "write_lakehouse_table_core", writer or (lambda *args, **kwargs: None))
+    monkeypatch.setattr(contract_widget, "build_runtime_audit_fields", lambda **kwargs: {
+        "_committed_by": "tester", "_committed_at": "2026-08-03",
+        "_workspace_id": "workspace", "_workspace_name": "Workspace",
+        "_notebook_id": "notebook", "_notebook_name": "Notebook",
+        "_metadata_lakehouse_name": "Metadata", "_activity_id": "activity-1",
+    })
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
     return contract_widget.widget_register_data_contract(
-        agreement_id="agreement-1", metadata_ids=["dataset-1"], spark_session=object()
+        agreement_id="agreement-1", agreement_version="1.0.0", table_id="table-1",
+        approved_usages=["reporting"], spark_session=object(),
     )
 
 
@@ -327,47 +357,35 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
 
 
 def test_contract_form_uses_labelled_shared_sections(monkeypatch):
-    """Compose contract inventory controls as a responsive, unclipped form."""
+    """Compose one-table contract controls with shared responsive form sections."""
     state = _render_contract(monkeypatch)
     controls = state["_controls"]
-    text = _visible_text(controls["container"])
+    page = controls["page"]
+    text = _visible_text(page)
 
     for label in (
-        "Data Agreement → Data Contract → Authorised tables", "Contract details",
-        "Related catalogue datasets", "Save contract", "Save result",
-        "Search catalogue", "Existing inventory",
+        "Prepare Data Contract", "Data Agreement", "Governed table",
+        "Approved usages", "1. Agreement and table", "2. Approved usage",
+        "3. Governance review", "Save draft Data Contract",
     ):
         assert label in text
-    assert "Dataset-level delivery promise" in text
-    assert "Parent Data Agreement" in text
-    assert "schema fingerprints" in text
-    assert "machine-readable technical terms" not in text
-    assert "Optional" not in text
     assert controls["save"].click_callbacks
-    assert controls["container"].layout.kwargs["height"] == "auto"
+    assert page.layout.kwargs["width"] == "100%"
+    assert page.layout.kwargs["height"] == "auto"
+    assert page.layout.kwargs["overflow"] == "visible"
     assert "execution_output" not in controls
     assert "execution_log_section" not in controls
-
-    landscape = controls["container"].children[1]
-    catalogue_section = next(
-        child for child in landscape.children[1].children
-        if "Related catalogue datasets" in _visible_text(child)
-    )
-    catalogue_selector_layout = catalogue_section.children[2].layout
-    assert catalogue_selector_layout.kwargs["align_items"] == "flex-start"
 
 
 def test_contract_save_preserves_complete_notebook_stdout(monkeypatch, capsys):
     """Leave the technical Lakehouse destination on ordinary notebook stdout."""
     message = "Writing Lakehouse table to abfss://container@account.dfs.core.windows.net/path"
-    monkeypatch.setattr(contract_widget, "_append_inventory", lambda **kwargs: print(message))
-    monkeypatch.setattr(
-        contract_widget,
-        "build_runtime_audit_fields",
-        lambda **kwargs: {"_activity_id": "activity-1", "_committed_at": "2026-08-03"},
-    )
-    state = _render_contract(monkeypatch)
+
+    def write(*args, **kwargs):
+        print(message)
+
+    state = _render_contract(monkeypatch, writer=write)
     state["_controls"]["save"].click_callbacks[0](None)
 
     assert message in capsys.readouterr().out
-    assert "Saved inventory" in state["_controls"]["status"].value
+    assert "Saved draft" in state["_controls"]["status"].value
