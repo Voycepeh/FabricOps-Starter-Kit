@@ -24,6 +24,7 @@ from .io import (
     read_warehouse_query,
     read_warehouse_table,
     write_lakehouse_table,
+    write_incremental_lakehouse_table,
     write_warehouse_table,
 )
 from .pipeline import (
@@ -32,6 +33,7 @@ from .pipeline import (
     check_freshness,
     check_schema,
     observe_table,
+    plan_incremental_processing,
     profile_and_register_table,
     profile_dataframe,
     profile_frequency_distribution,
@@ -52,6 +54,7 @@ CONFIG_EXPORTS = (
 IO_EXPORTS = (
     "read_lakehouse_table",
     "write_lakehouse_table",
+    "write_incremental_lakehouse_table",
     "read_lakehouse_csv",
     "read_lakehouse_parquet",
     "read_lakehouse_excel",
@@ -69,6 +72,7 @@ PIPELINE_EXPORTS = (
     "profile_dataframe",
     "profile_frequency_distribution",
     "observe_table",
+    "plan_incremental_processing",
 )
 
 WIDGET_EXPORTS = (

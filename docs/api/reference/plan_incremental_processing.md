@@ -1,4 +1,4 @@
-# `check_changes`
+# `plan_incremental_processing`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,22 +7,22 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Describe deterministic partition and logical-row source changes.
+Select incremental source scope and an explicit target maintenance strategy.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:259`
+`fabricops_kit/pipeline/plan_incremental_processing.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L259-L296">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/plan_incremental_processing.py#L10-L115">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage notes
 
@@ -36,7 +36,13 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_changes(observation) -> dict
+def plan_incremental_processing(
+    changes_result: dict,
+    write_strategy: str,
+    partition_column: str | None=None,
+    key_columns: list[str] | tuple[str, ...] | None=None,
+    effective_column: str | None=None,
+) -> dict:
 ```
 
 </div>
@@ -45,10 +51,9 @@ def check_changes(observation) -> dict
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table("orders", target="source", schema="dbo")
->>> result = check_changes(observation)
->>> result["changed"]
-True
+>>> plan = plan_incremental_processing(result, "merge", key_columns=["order_id"])
+>>> plan["read_strategy"]
+'incremental'
 
 </div>
 
@@ -56,25 +61,27 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
+| `changes_result` | `dict` | Yes | Structured result returned by :func:`check_changes`. |
+| `write_strategy` | `str` | Yes | Target strategy: ``overwrite``, ``append``, ``merge``, or ``scd2``. |
+| `partition_column` | `str \| None` | No | Explicit target partition column. It must represent the same identity as the observed source partition column. |
+| `key_columns` | `list[str] \| tuple[str, ...] \| None` | No | Business keys required by ``merge`` and ``scd2``. |
+| `effective_column` | `str \| None` | No | Incoming sequence/effective column required by ``scd2``. |
 
 ## Returns
 
-Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.
+Plain dictionary describing read scope and target write semantics.
 
 ## Raises / Errors
 
 ValueError
-    If configuration is invalid or logical keys are null, missing, or
-    duplicated.
+    If the evidence or requested strategy is unsafe or incomplete.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Production resolves source-change expectations from the active frozen Data
-Contract. Development uses mutable authoring metadata, and change detection
-itself is unchanged.
+This function only plans work. It does not read business data or write a
+target. Removed partitions are never translated into implicit deletes.
 
 </div>
 

@@ -8,6 +8,7 @@ from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_changes import check_changes
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.observe_table import observe_table
+from fabricops_kit.pipeline.plan_incremental_processing import plan_incremental_processing
 from fabricops_kit.pipeline.shared import (
     enforce_freshness,
     enforce_profile_behavior,
@@ -20,6 +21,7 @@ __all__ = [
     "check_changes",
     "check_dq",
     "observe_table",
+    "plan_incremental_processing",
     "enforce_freshness",
     "enforce_profile_behavior",
     "stop_if_failed",

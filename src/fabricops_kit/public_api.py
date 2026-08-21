@@ -24,6 +24,8 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_changes",
+    "fabricops_kit.pipeline.plan_incremental_processing.plan_incremental_processing",
+    "fabricops_kit.io.write_incremental_lakehouse_table.write_incremental_lakehouse_table",
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.observe_table.observe_table",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
