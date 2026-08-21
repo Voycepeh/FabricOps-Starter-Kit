@@ -256,14 +256,15 @@ def test_catalogue_inventory_reads_table_level_normalized_rows(spark_session):
     """Inventory uses normalized table rows instead of rebuilding physical context from profile rows."""
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     rows = [
-        ("table", "table-id", None, "dev", "lakehouse", "raw", "sales", "orders", None),
-        ("column", "table-id", "column-id", "dev", "lakehouse", "raw", "sales", "orders", "id"),
-        ("table", "other-id", None, "prod", "lakehouse", "curated", "sales", "orders", None),
+        ("table", "table-id", None, "dev", "lakehouse", "raw", "sales", "orders", None, True),
+        ("column", "table-id", "column-id", "dev", "lakehouse", "raw", "sales", "orders", "id", True),
+        ("table", "inactive-id", None, "dev", "lakehouse", "raw", "sales", "old_orders", None, False),
+        ("table", "other-id", None, "prod", "lakehouse", "curated", "sales", "orders", None, True),
     ]
     catalogue = spark_session.createDataFrame(
         rows,
         "metadata_level string, table_id string, column_id string, environment_name string, store_type string, "
-        "layer string, schema_name string, table_name string, column_name string",
+        "layer string, schema_name string, table_name string, column_name string, is_active boolean",
     ).withColumn("last_profiled_at", __import__("pyspark.sql.functions", fromlist=["lit"]).lit(None).cast("timestamp"))
 
     inventory = module._collect_catalogue_inventory(catalogue, "dev")
@@ -296,7 +297,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     later_snapshot = datetime(2026, 8, 1)
     catalogue_schema = (
         "metadata_level string, table_id string, column_id string, environment_name string, store_type string, "
-        "layer string, schema_name string, table_name string, column_name string, first_profiled_at timestamp, "
+        "layer string, schema_name string, table_name string, column_name string, data_type string, first_profiled_at timestamp, "
         "last_profiled_at timestamp, is_active boolean, _committed_at timestamp"
     )
     profile_schema = (
@@ -313,11 +314,11 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     )
     tables = {
         "METADATA_DATA_CATALOGUE": spark_session.createDataFrame([
-            ("table", "dataset-key", None, "dev", "lakehouse", "raw", "sales", "orders", None, old_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "dataset-key", "column-country", "dev", "lakehouse", "raw", "sales", "orders", "Country", old_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "dataset-key", "column-comment", "dev", "lakehouse", "raw", "sales", "orders", "Comment", old_snapshot, latest_snapshot, True, latest_snapshot),
-            ("table", "unprofiled-key", None, "dev", "lakehouse", "curated", "sales", "customers", None, latest_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "unprofiled-key", "column-customer", "dev", "lakehouse", "curated", "sales", "customers", "customer_id", latest_snapshot, latest_snapshot, True, latest_snapshot),
+            ("table", "dataset-key", None, "dev", "lakehouse", "raw", "sales", "orders", None, None, old_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "dataset-key", "column-country", "dev", "lakehouse", "raw", "sales", "orders", "Country", "string", old_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "dataset-key", "column-comment", "dev", "lakehouse", "raw", "sales", "orders", "Comment", "string", old_snapshot, latest_snapshot, False, latest_snapshot),
+            ("table", "unprofiled-key", None, "dev", "lakehouse", "curated", "sales", "customers", None, None, latest_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "unprofiled-key", "column-customer", "dev", "lakehouse", "curated", "sales", "customers", "customer_id", "bigint", latest_snapshot, latest_snapshot, True, latest_snapshot),
         ], catalogue_schema),
         "METADATA_DATA_PROFILED": spark_session.createDataFrame([
             ("old-country", "snapshot-old", "dataset-key", "column-country", "dev", "string", 4, 4, 0, 0.0, 2, 50.0, None, None, "DE", None, None, None, "SG", old_snapshot, old_snapshot),
@@ -384,7 +385,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     assert selection["profile_id"] == "profile-country"
     assert set(views) == {"catalogue", "profile", "frequency", "guardrail_results", "guardrail_row_results"}
     assert views["catalogue"].columns == [
-        "metadata_level", "table_name", "column_name", "store_type", "layer", "schema_name",
+        "metadata_level", "table_name", "column_name", "data_type", "store_type", "layer", "schema_name",
         "first_profiled_at", "last_profiled_at", "is_active", "table_id", "column_id",
     ]
     assert views["profile"].columns[:6] == [
@@ -392,6 +393,8 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     ]
     assert views["profile"].columns[-4:] == ["profile_id", "profile_snapshot_id", "column_id", "table_id"]
     assert {row.column_name for row in views["profile"].collect()} == {"Country", "Comment"}
+    assert state["_controls"]["profile_id"].options == [("Country", "profile-country")]
+    assert {row.column_name for row in views["catalogue"].collect()} == {None, "Country", "Comment"}
     assert views["frequency"].columns == [
         "column_name", "value", "frequency_count", "frequency_percent", "frequency_rank",
         "profiled_row_count", "profiled_non_null_count", "profiled_at", "frequency_id", "profile_id",

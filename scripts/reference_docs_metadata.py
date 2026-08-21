@@ -160,7 +160,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [{"cardinality": "1:N", "statement": "One stable contract_id has monotonically increasing immutable contract_version rows."}],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "See the tables and columns FabricOps has observed.",
+        "purpose": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
         "grain": "One table or column asset in one environment.",
         "primary_key": ["environment_name", "table_id", "column_id"],
         "foreign_keys": [],
