@@ -65,6 +65,7 @@ EXPECTED_V1_CALLABLES = [
     'widget_author_guardrails',
     'widget_view_catalogue',
     'widget_register_data_contract',
+    'widget_activate_data_contract',
     'widget_author_dq_rules',
 ]
 
@@ -83,6 +84,8 @@ def test_widget_public_callables_live_under_widgets_package():
         'widget_author_dq_rules',
         'widget_author_guardrails',
         'widget_view_catalogue',
+        'widget_register_data_contract',
+        'widget_activate_data_contract',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -106,6 +109,8 @@ def test_widget_modules_do_not_call_public_widget_functions():
         'widget_author_dq_rules',
         'widget_author_guardrails',
         'widget_view_catalogue',
+        'widget_register_data_contract',
+        'widget_activate_data_contract',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',

@@ -172,6 +172,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
         {
             "rule_id": "amount_positive",
             "guardrail_rule_id": "amount_positive",
+            "guardrail_version": 1,
             "rule_key": "orders|amount_positive",
             "rule_type": "value_range",
             "columns": ["amount"],
