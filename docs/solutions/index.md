@@ -10,7 +10,6 @@ The FabricOps Solution Bank shows practical data problems already solved by the 
 | [Table-level Data Lineage capture in an ETL pipeline](capture-data-lineage.md) | Trace how data moves from source to target alongside the transformation code that actually performs the ETL, rather than documenting lineage separately. |
 | [Enrich Data Catalogue metadata with business context](enrich-data-catalogue.md) | Profiling can discover the physical table and column structure, but business meaning needs to be added intentionally. Enrichment keeps that authored context separate from observed Data Catalogue evidence. |
 | [ETL Guardrails](etl-guardrails.md) | Check schema, freshness, source changes, and data quality as part of an ETL run so problems can be detected before the pipeline continues. |
-| [Incremental processing](incremental-processing.md) | Turn Change Guardrail evidence into a scoped Lakehouse read and an explicit overwrite, append, merge, or SCD Type 2 target write. |
 | [Assemble a complete Data Contract for a governed table](assemble-data-contract.md) | Mutable Governance metadata can continue to evolve while a versioned Data Contract freezes the exact governed definition for one table. |
 | [Validate with a frozen Data Contract](validate-with-data-contract.md) | Development can test current authoring Guardrails or an exact frozen contract version, while Production always evaluates the one active Data Contract for that table. |
 

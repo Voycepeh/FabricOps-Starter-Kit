@@ -22,12 +22,12 @@ def plan_incremental_processing(
     changes_result : dict
         Structured result returned by :func:`check_changes`.
     write_strategy : str
-        Target strategy: ``overwrite``, ``append``, ``merge``, or ``scd2``.
+        Target strategy: ``overwrite``, ``append``, ``scd1``, or ``scd2``.
     partition_column : str, optional
         Explicit target partition column. It must represent the same identity
         as the observed source partition column.
     key_columns : list of str or tuple of str, optional
-        Business keys required by ``merge`` and ``scd2``.
+        Business keys required by ``scd1`` and ``scd2``.
     effective_column : str, optional
         Incoming sequence/effective column required by ``scd2``.
 
@@ -49,22 +49,22 @@ def plan_incremental_processing(
 
     Examples
     --------
-    >>> plan = plan_incremental_processing(result, "merge", key_columns=["order_id"])
+    >>> plan = plan_incremental_processing(result, "scd1", key_columns=["order_id"])
     >>> plan["read_strategy"]
     'incremental'
 
     See Also
     --------
-    check_changes, write_incremental_lakehouse_table
+    check_changes, read_lakehouse_table
 
     """
     if not isinstance(changes_result, dict) or "changed" not in changes_result:
         raise ValueError("changes_result must be the structured result returned by check_changes().")
     strategy = str(write_strategy or "").strip().lower()
-    if strategy not in {"overwrite", "append", "merge", "scd2"}:
-        raise ValueError("write_strategy must be one of: overwrite, append, merge, scd2.")
+    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+        raise ValueError("write_strategy must be one of: overwrite, append, scd1, scd2.")
     keys = list(key_columns or [])
-    if strategy in {"merge", "scd2"} and not keys:
+    if strategy in {"scd1", "scd2"} and not keys:
         raise ValueError(f"{strategy} requires key_columns.")
     if strategy == "scd2" and not effective_column:
         raise ValueError("scd2 requires effective_column.")

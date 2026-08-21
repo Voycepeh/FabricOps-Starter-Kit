@@ -444,5 +444,15 @@
     "called_only_internally_by_public_helper": [],
     "has_standalone_reference_page": true,
     "decision": "advanced_public_helper"
+  },
+  {
+    "function": "plan_incremental_processing",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "advanced_public_helper"
   }
 ]

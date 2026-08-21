@@ -18,18 +18,18 @@ def result(**values):
     return {**base, **values}
 
 
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "merge", "scd2"])
+@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_first_observation_is_full(strategy):
-    kwargs = {"key_columns": ["id"]} if strategy in {"merge", "scd2"} else {}
+    kwargs = {"key_columns": ["id"]} if strategy in {"scd1", "scd2"} else {}
     if strategy == "scd2":
         kwargs["effective_column"] = "modified_at"
     plan = plan_incremental_processing(result(first_observation=True), strategy, **kwargs)
     assert plan["read_strategy"] == "full"
 
 
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "merge", "scd2"])
+@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_unchanged_skips(strategy):
-    kwargs = {"key_columns": ["id"]} if strategy in {"merge", "scd2"} else {}
+    kwargs = {"key_columns": ["id"]} if strategy in {"scd1", "scd2"} else {}
     if strategy == "scd2":
         kwargs["effective_column"] = "modified_at"
     assert plan_incremental_processing(result(changed=False), strategy, **kwargs)["read_strategy"] == "skip"
@@ -53,14 +53,14 @@ def test_overwrite_partition_and_full_fallback():
 
 def test_keys_and_effective_column_are_required():
     with pytest.raises(ValueError, match="key_columns"):
-        plan_incremental_processing(result(), "merge")
+        plan_incremental_processing(result(), "scd1")
     with pytest.raises(ValueError, match="effective_column"):
         plan_incremental_processing(result(), "scd2", key_columns=["id"])
 
 
-@pytest.mark.parametrize("strategy", ["append", "merge", "scd2"])
+@pytest.mark.parametrize("strategy", ["append", "scd1", "scd2"])
 def test_removed_partitions_are_rejected(strategy):
-    kwargs = {"key_columns": ["id"]} if strategy in {"merge", "scd2"} else {}
+    kwargs = {"key_columns": ["id"]} if strategy in {"scd1", "scd2"} else {}
     if strategy == "scd2":
         kwargs["effective_column"] = "modified_at"
     with pytest.raises(ValueError, match="removed"):

@@ -102,7 +102,7 @@ def test_reference_catalogue_rows_include_only_public_inventory_functions() -> N
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"run_table_guardrails", "FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage", "widget_pipeline_bootstrap", "write_pipeline_run_summary"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 27
+    assert len(_catalogue_row_names()) == 28
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:

@@ -7,7 +7,6 @@ from .read_lakehouse_table import read_lakehouse_table
 from .read_warehouse_query import read_warehouse_query
 from .read_warehouse_table import read_warehouse_table
 from .write_lakehouse_table import write_lakehouse_table
-from .write_incremental_lakehouse_table import write_incremental_lakehouse_table
 from .write_warehouse_table import write_warehouse_table
 
 __all__ = [
@@ -18,6 +17,5 @@ __all__ = [
     "read_warehouse_query",
     "read_warehouse_table",
     "write_lakehouse_table",
-    "write_incremental_lakehouse_table",
     "write_warehouse_table",
 ]

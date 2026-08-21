@@ -39,7 +39,6 @@ nav:
       - Automatic Data Lineage: solutions/capture-data-lineage.md
       - Enrich Data Catalogue: solutions/enrich-data-catalogue.md
       - ETL Guardrails: solutions/etl-guardrails.md
-      - Incremental processing: solutions/incremental-processing.md
       - Assemble a Data Contract: solutions/assemble-data-contract.md
       - Validate with a Data Contract: solutions/validate-with-data-contract.md
   - Notebook Templates: notebook-templates.md

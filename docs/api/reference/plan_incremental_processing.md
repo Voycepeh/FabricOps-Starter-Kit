@@ -51,7 +51,7 @@ def plan_incremental_processing(
 
 <div class="reference-example-usage" markdown="1">
 
->>> plan = plan_incremental_processing(result, "merge", key_columns=["order_id"])
+>>> plan = plan_incremental_processing(result, "scd1", key_columns=["order_id"])
 >>> plan["read_strategy"]
 'incremental'
 
@@ -62,9 +62,9 @@ def plan_incremental_processing(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `changes_result` | `dict` | Yes | Structured result returned by :func:`check_changes`. |
-| `write_strategy` | `str` | Yes | Target strategy: ``overwrite``, ``append``, ``merge``, or ``scd2``. |
+| `write_strategy` | `str` | Yes | Target strategy: ``overwrite``, ``append``, ``scd1``, or ``scd2``. |
 | `partition_column` | `str \| None` | No | Explicit target partition column. It must represent the same identity as the observed source partition column. |
-| `key_columns` | `list[str] \| tuple[str, ...] \| None` | No | Business keys required by ``merge`` and ``scd2``. |
+| `key_columns` | `list[str] \| tuple[str, ...] \| None` | No | Business keys required by ``scd1`` and ``scd2``. |
 | `effective_column` | `str \| None` | No | Incoming sequence/effective column required by ``scd2``. |
 
 ## Returns
