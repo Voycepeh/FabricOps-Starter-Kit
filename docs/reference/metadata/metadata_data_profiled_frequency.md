@@ -10,17 +10,8 @@ See the frequency distribution captured for a profiled column.
 
 **Relationships:**
 
-* `profile_id` → `METADATA_DATA_PROFILED.profile_id` (**N:1**). Physical Frequency rows link back to the Profile that owns the logical distribution through profile_id.
-* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). Profile and Frequency are produced together in the same profiling snapshot.
-* **1:1**: Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
-| Audit columns | 8 |
+`METADATA_DATA_PROFILED` **(1 → 1)**
+via `profile_id` + `profile_snapshot_id`
 
 ## Implemented schema
 

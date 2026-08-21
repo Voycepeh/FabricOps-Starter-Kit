@@ -10,16 +10,7 @@ Know who is responsible for the data.
 
 **Relationships:**
 
-* **1:N**: One Data Steward can appear as the provider steward on many Data Agreement versions.
-* **1:N**: One Data Steward can appear as the recipient steward on many Data Agreement versions.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 14 |
-| Business columns | 6 |
-| Audit columns | 8 |
+No immediate table relationship is defined in the current implementation.
 
 ## Implemented schema
 
@@ -39,7 +30,3 @@ Know who is responsible for the data.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)

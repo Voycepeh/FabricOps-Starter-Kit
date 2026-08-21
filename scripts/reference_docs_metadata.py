@@ -186,7 +186,7 @@ METADATA_TABLE_MODELS = {
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical Catalogue column over time."},
         ],
         "relationships": [
-            {"cardinality": "1:1", "statement": "One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row."},
+            {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id", "profile_snapshot_id"], "cardinality": "1:1", "statement": "One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row."},
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
@@ -198,7 +198,7 @@ METADATA_TABLE_MODELS = {
             {"local_field": "profile_snapshot_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_snapshot_id", "cardinality": "N:1", "statement": "Profile and Frequency are produced together in the same profiling snapshot."},
         ],
         "relationships": [
-            {"cardinality": "1:1", "statement": "Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage."},
+            {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id", "profile_snapshot_id"], "cardinality": "1:1", "statement": "Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage."},
         ],
     },
     "METADATA_DATA_LINEAGE": {

@@ -10,15 +10,8 @@ See what FabricOps previously observed about the source data.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many source observations can belong to one logical Catalogue table identity in an environment.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 16 |
-| Business columns | 8 |
-| Audit columns | 8 |
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
 ## Implemented schema
 
@@ -40,7 +33,3 @@ See what FabricOps previously observed about the source data.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`observe_table`](../../api/reference/observe_table.md)

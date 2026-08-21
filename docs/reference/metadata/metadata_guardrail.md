@@ -10,17 +10,8 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many Guardrail rules can belong to one logical Catalogue table identity in an environment.
-* `column_id` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty.
-* **1:N**: One Guardrail revision can produce many Guardrail Results across pipeline runs through guardrail_rule_id and guardrail_version.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 19 |
-| Business columns | 11 |
-| Audit columns | 8 |
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id` + `column_id`
 
 ## Implemented schema
 
@@ -45,8 +36,3 @@ Define the expectations the data used in the ETL pipeline should meet.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
-* [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)

@@ -10,15 +10,8 @@ See who has row-level access to the data.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many RLS assignments can reference the same logical Catalogue table identity in an environment.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 15 |
-| Business columns | 7 |
-| Audit columns | 8 |
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
 ## Implemented schema
 

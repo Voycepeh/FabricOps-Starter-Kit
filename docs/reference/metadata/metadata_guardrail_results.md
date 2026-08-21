@@ -10,16 +10,8 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 **Relationships:**
 
-* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one configured Guardrail rule.
-* **1:N**: One Guardrail Result can have many failed-record Guardrail Row Results through guardrail_result_id.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 18 |
-| Business columns | 10 |
-| Audit columns | 8 |
+`METADATA_GUARDRAIL` **(N → 1)**
+via `guardrail_rule_id`
 
 ## Implemented schema
 
@@ -43,10 +35,3 @@ See whether the expectations of the data in the ETL pipeline run are met.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`check_schema`](../../api/reference/check_schema.md)
-* [`check_freshness`](../../api/reference/check_freshness.md)
-* [`check_changes`](../../api/reference/check_changes.md)
-* [`check_dq`](../../api/reference/check_dq.md)

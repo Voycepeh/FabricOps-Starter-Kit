@@ -10,17 +10,8 @@ Define why the data is shared, with whom, and under what conditions.
 
 **Relationships:**
 
-* `provider_steward_id` → `METADATA_DATA_STEWARD.steward_id` (**N:1**). Each Data Agreement version has one provider steward; one steward can provide many agreement versions.
-* `recipient_steward_id` → `METADATA_DATA_STEWARD.steward_id` (**N:1**). Each Data Agreement version has one recipient steward; one steward can receive many agreement versions.
-* **1:N**: One Data Agreement lifecycle can govern many Data Contract rows through agreement_id.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
-| Audit columns | 8 |
+`METADATA_DATA_STEWARD` **(N → 1)**
+via `provider_steward_id` + `recipient_steward_id`
 
 ## Implemented schema
 
@@ -46,7 +37,3 @@ Define why the data is shared, with whom, and under what conditions.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)

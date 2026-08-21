@@ -10,18 +10,11 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 **Relationships:**
 
-* `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Together with agreement_version, identifies the exact parent Data Agreement version.
-* `agreement_version` → `METADATA_DATA_AGREEMENT.agreement_version` (**N:1**). Together with agreement_id, identifies the exact parent Data Agreement version.
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Each Data Contract governs one logical Catalogue table.
-* **1:N**: One stable contract_id has monotonically increasing immutable contract_version rows.
+`METADATA_DATA_AGREEMENT` **(N → 1)**
+via `agreement_id` + `agreement_version`
 
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 16 |
-| Business columns | 8 |
-| Audit columns | 8 |
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
 ## Implemented schema
 

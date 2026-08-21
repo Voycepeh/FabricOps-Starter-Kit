@@ -10,16 +10,11 @@ See where the data came from and where it ends up.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many lineage participation records can refer to the same logical Catalogue table identity.
-* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). The lineage participation is recorded for the same profiling execution identified by profile_snapshot_id.
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id`
 
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 13 |
-| Business columns | 5 |
-| Audit columns | 8 |
+`METADATA_DATA_PROFILED` **(N → 1)**
+via `profile_snapshot_id`
 
 ## Implemented schema
 
@@ -38,7 +33,3 @@ See where the data came from and where it ends up.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)

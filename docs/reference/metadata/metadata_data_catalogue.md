@@ -10,15 +10,7 @@ The current structural registry of known table and column assets. table_id ident
 
 **Relationships:**
 
-* **1:N**: A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 21 |
-| Business columns | 13 |
-| Audit columns | 8 |
+No immediate table relationship is defined in the current implementation.
 
 ## Implemented schema
 
@@ -45,8 +37,3 @@ The current structural registry of known table and column assets. table_id ident
 | `_notebook_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
-* [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)

@@ -10,17 +10,11 @@ See the column-level profile metrics captured for a dataset snapshot.
 
 **Relationships:**
 
-* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many column profile snapshots can describe the same logical Catalogue table over time.
-* `column_id` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Many profile snapshots can describe the same logical Catalogue column over time.
-* **1:1**: One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row.
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `table_id` + `column_id`
 
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 27 |
-| Business columns | 19 |
-| Audit columns | 8 |
+`METADATA_DATA_PROFILED_FREQUENCY` **(1 → 1)**
+via `profile_id` + `profile_snapshot_id`
 
 ## Implemented schema
 
@@ -53,9 +47,3 @@ See the column-level profile metrics captured for a dataset snapshot.
 | `_notebook_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
-* [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
-* [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)

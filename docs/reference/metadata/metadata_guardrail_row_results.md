@@ -10,15 +10,8 @@ See the individual records that failed a Data Quality rule.
 
 **Relationships:**
 
-* `guardrail_result_id` → `METADATA_GUARDRAIL_RESULTS.guardrail_result_id` (**N:1**). Many failed records can belong to one Guardrail Result.
-
-## Column summary
-
-| Column category | Count |
-| --- | ---: |
-| Total columns | 14 |
-| Business columns | 6 |
-| Audit columns | 8 |
+`METADATA_GUARDRAIL_RESULTS` **(N → 1)**
+via `guardrail_result_id`
 
 ## Implemented schema
 
@@ -38,7 +31,3 @@ See the individual records that failed a Data Quality rule.
 | `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
-## Related function reference
-
-* [`check_dq`](../../api/reference/check_dq.md)
