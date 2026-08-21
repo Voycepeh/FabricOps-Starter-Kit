@@ -810,6 +810,19 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
 
     def register(columns):
         now = datetime(2026, 8, 1)
+        audit_values = {
+            "_committed_by": "catalogue-lifecycle-test",
+            "_committed_at": now,
+            "_workspace_id": "workspace-test-id",
+            "_workspace_name": "Test Workspace",
+            "_notebook_id": "notebook-test-id",
+            "_notebook_name": "Catalogue Lifecycle Test",
+            "_metadata_lakehouse_name": "metadata_test",
+            "_activity_id": "activity-test-id",
+        }
+        required_audit_fields = {
+            field.name for field in schema.fields if not field.nullable and field.name in AUDIT_COLUMNS
+        }
         common = {
             name: None for name in schema.fieldNames()
         }
@@ -822,7 +835,7 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
             "first_profiled_at": now,
             "last_profiled_at": now,
             "is_active": True,
-            "_committed_at": now,
+            **{name: audit_values[name] for name in required_audit_fields},
         })
         rows = [{**common, "metadata_level": "table"}]
         rows.extend(
