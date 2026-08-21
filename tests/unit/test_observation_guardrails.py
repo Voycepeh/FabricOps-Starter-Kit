@@ -142,7 +142,7 @@ def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypa
 def test_observation_checks_pass_development_contract_context_to_rule_loader(monkeypatch):
     """Route freshness and changes through the shared context-aware rule loader."""
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    context = {"data_contract_id": "contract-a", "data_contract_version": 2}
+    context = {"data_contract_overrides": {"table-a": {"contract_id": "contract-a", "contract_version": 2}}}
     captured = {}
 
     configure_freshness(monkeypatch)

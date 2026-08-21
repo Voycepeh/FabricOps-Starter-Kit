@@ -149,7 +149,7 @@ def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeyp
     monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame([selected]))
     rules = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders", metadata_table_key="runtime-orders",
-        context={"data_contract_id": "contract", "data_contract_version": 2},
+        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
     ).collect()
     assert rules[0]["guardrail_rule_id"] == "frozen-rule"
 
@@ -157,8 +157,8 @@ def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeyp
 @pytest.mark.parametrize(
     "context",
     [
-        {"data_contract_id": "contract"},
-        {"data_contract_version": 2},
+        {"data_contract_overrides": {"orders": {"contract_id": "contract"}}},
+        {"data_contract_overrides": {"orders": {"contract_version": 2}}},
     ],
 )
 def test_development_partial_override_fails_without_guessing(monkeypatch, context):
@@ -168,7 +168,7 @@ def test_development_partial_override_fails_without_guessing(monkeypatch, contex
         lambda *args, **kwargs: pytest.fail("partial overrides must fail before metadata reads"),
     )
     with pytest.raises(ValueError, match="requires both"):
-        pipeline_shared.load_table_guardrail_rules({}, "dev", spark_session=_Spark(), context=context)
+        pipeline_shared.load_table_guardrail_rules({}, "dev", spark_session=_Spark(), table_id="orders", context=context)
 
 
 def test_development_exact_override_validates_status_table_and_identity(monkeypatch):
@@ -177,7 +177,7 @@ def test_development_exact_override_validates_status_table_and_identity(monkeypa
     monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame(rows))
     kwargs = {
         "spark_session": _Spark(), "table_id": "orders", "metadata_table_key": "runtime-orders",
-        "context": {"data_contract_id": "contract", "data_contract_version": 2},
+        "context": {"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
     }
     with pytest.raises(ValueError, match="Rejected"):
         pipeline_shared.load_table_guardrail_rules({}, "dev", **kwargs)
@@ -207,17 +207,24 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     assert dev_default.collect()[0]["guardrail_rule_id"] == "rule-b"
     dev_selected = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
-        context={"data_contract_id": "contract", "data_contract_version": 1},
+        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
     ).collect()
     assert dev_selected[0]["guardrail_rule_id"] == "rule-a"
+
+    # The table-keyed selection must not leak into another table workflow.
+    dev_other_table = pipeline_shared.load_table_guardrail_rules(
+        {}, "dev", spark_session=_Spark(), table_id="customers",
+        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
+    ).collect()
+    assert dev_other_table[0]["guardrail_rule_id"] == "rule-b"
 
     authoring._rows[0]["guardrail_rule_id"] = "rule-c"
     assert pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
-        context={"data_contract_id": "contract", "data_contract_version": 1},
+        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
     ).collect()[0]["guardrail_rule_id"] == "rule-a"
     prod = pipeline_shared.load_table_guardrail_rules(
         {}, "prod", spark_session=_Spark(), table_id="orders",
-        context={"data_contract_id": "ignored", "data_contract_version": 99},
+        context={"data_contract_overrides": {"orders": {"contract_id": "ignored", "contract_version": 99}}},
     ).collect()
     assert prod[0]["guardrail_rule_id"] == "rule-a"

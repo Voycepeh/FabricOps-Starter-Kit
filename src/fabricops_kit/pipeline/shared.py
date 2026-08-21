@@ -2016,12 +2016,18 @@ def load_table_guardrail_rules(
         )
         return spark_session.createDataFrame(rows) if rows else []
     runtime_context = context or {}
-    contract_id = str(runtime_context.get("data_contract_id") or "").strip()
-    raw_version = runtime_context.get("data_contract_version")
+    overrides = runtime_context.get("data_contract_overrides") or {}
+    if not isinstance(overrides, Mapping):
+        raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
+    selected_override = overrides.get(table_id) or {}
+    if not isinstance(selected_override, Mapping):
+        raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
+    contract_id = str(selected_override.get("contract_id") or "").strip()
+    raw_version = selected_override.get("contract_version")
     contract_version = str(raw_version or "").strip()
     if bool(contract_id) != bool(contract_version):
         raise ValueError(
-            "Development Data Contract override requires both data_contract_id and data_contract_version."
+            "Development Data Contract override requires both contract_id and contract_version."
         )
     if contract_id:
         if not table_id:
@@ -3310,7 +3316,7 @@ def check_dq_runtime(
             config, env, store_type=store_type, layer=target,
             schema_name=schema_name, table_name=table_name, spark_session=spark_session,
         )
-        if env == "prod" or bool(str((context or {}).get("data_contract_id") or "").strip())
+        if env == "prod" or bool((context or {}).get("data_contract_overrides"))
         else ""
     )
     metadata_df = load_table_guardrail_rules(
