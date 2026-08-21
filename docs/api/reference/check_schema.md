@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:19`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L19-L111">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L19-L116">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -76,6 +76,15 @@ ValueError
     exists for the resolved table.
 SchemaDriftError
     If an active blocking schema guardrail rejects the checked schema.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+When Governance has activated a Data Contract for the resolved table,
+the frozen contract rule is used instead of mutable authoring metadata.
+
+</div>
 
 ## See also
 

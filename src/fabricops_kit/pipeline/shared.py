@@ -288,6 +288,7 @@ PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
 
@@ -1830,8 +1831,85 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
     candidates.sort(key=lambda row: (int(_catalogue_value(row, "configuration_version") or 0), _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at"))), reverse=True)
     return candidates[0]
 
-def load_table_guardrail_rules(config, env: str, *, spark_session=None):
-    """Load guardrail intent from the configured metadata target."""
+def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Return and minimally validate one frozen Data Contract payload."""
+    try:
+        payload = json.loads(str(row.get("contract_payload_json") or ""))
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("Active Data Contract contract_payload_json is invalid JSON.") from exc
+    contract = payload.get("contract") if isinstance(payload, dict) else None
+    table = payload.get("table") if isinstance(payload, dict) else None
+    if not isinstance(contract, dict) or not isinstance(table, dict):
+        raise ValueError("Active Data Contract payload must identify its contract and table.")
+    if str(contract.get("contract_id") or "") != str(row.get("contract_id") or ""):
+        raise ValueError("Active Data Contract payload contract_id does not match its version row.")
+    if int(contract.get("contract_version") or 0) != int(row.get("contract_version") or 0):
+        raise ValueError("Active Data Contract payload contract_version does not match its version row.")
+    if str(table.get("table_id") or "") != str(row.get("table_id") or ""):
+        raise ValueError("Active Data Contract payload table_id does not match its version row.")
+    return payload
+
+
+def resolve_active_data_contract(config, env: str, table_id: str, *, spark_session=None, required: bool = True) -> dict[str, Any] | None:
+    """Resolve the unambiguous active frozen contract for one logical table."""
+    try:
+        frame = read_lakehouse_table_core(
+            DATA_CONTRACT_TABLE, target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session, context={"config": config, "env": env},
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc) and not required:
+            return None
+        if is_table_not_found_error(exc):
+            raise ValueError("No Data Contracts exist; Governance must register and activate one first.") from exc
+        raise
+    rows = [_row_to_dict(row) for row in frame.collect()]
+    matching = [row for row in rows if str(row.get("table_id") or "") == str(table_id)]
+    active = [row for row in matching if row.get("is_active") is True and str(row.get("status") or "").lower() == "active"]
+    if len(active) > 1:
+        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
+    if not active:
+        if required or matching:
+            raise ValueError(f"No active Data Contract exists for {table_id!r}; Governance must activate one first.")
+        return None
+    row = dict(active[0])
+    row["contract_payload"] = _contract_payload(row)
+    return row
+
+
+def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str) -> list[dict[str, Any]]:
+    """Adapt frozen contract Guardrails to the existing runtime rule shape."""
+    payload = contract.get("contract_payload") or _contract_payload(contract)
+    table_id = str(contract.get("table_id") or "")
+    rules = payload.get("guardrails")
+    if not isinstance(rules, list):
+        raise ValueError("Active Data Contract guardrails must be a list.")
+    adapted = []
+    for raw in rules:
+        if not isinstance(raw, dict):
+            raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
+        params = raw.get("rule_parameters") or {}
+        adapted.append({
+            **raw,
+            "metadata_table_key": table_id,
+            "environment_name": environment_name,
+            "rule_parameters_json": json.dumps(params, sort_keys=True),
+            "is_active": True,
+            "activation_state": "active",
+            "review_status": "governance_approved",
+            "configuration_version": int(raw.get("guardrail_version") or 1),
+        })
+    return adapted
+
+
+def load_table_guardrail_rules(config, env: str, *, spark_session=None, table_id: str = ""):
+    """Load frozen contract intent when active, otherwise mutable authoring intent."""
+    if table_id:
+        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
+        if contract is not None:
+            rows = contract_guardrail_rows(contract, environment_name=env)
+            return spark_session.createDataFrame(rows) if rows else []
     try:
         return read_lakehouse_table_core(
             GUARDRAIL_TABLE, target="metadata",
@@ -3016,6 +3094,8 @@ def _load_active_dq_rules(metadata_df, metadata_table_key: str, env: str | None 
     if "metadata_table_key" not in columns:
         raise ValueError("DQ metadata must include metadata_table_key for canonical table scoping.")
     latest = metadata_df.filter(F.col("metadata_table_key") == metadata_table_key)
+    if "guardrail_type" in columns:
+        latest = latest.filter(F.lower(F.col("guardrail_type")).isin("dq", "quality"))
     if env is not None and "environment_name" in columns:
         latest = latest.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
@@ -3061,6 +3141,7 @@ def _load_active_dq_rules(metadata_df, metadata_table_key: str, env: str | None 
             {
                 "rule_id": str(row.get("rule_id") or ""),
                 "guardrail_rule_id": str(row.get("guardrail_rule_id") or row.get("rule_id") or ""),
+                "guardrail_version": int(row.get("guardrail_version") or row.get("configuration_version") or 1),
                 "rule_key": str(row.get("rule_key") or row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
@@ -3097,8 +3178,14 @@ def check_dq_runtime(
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
-    metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
-    rules = _load_active_dq_rules(metadata_df, metadata_table_key, env=env, dataset_name=dataset_name or None)
+    metadata_df = load_table_guardrail_rules(
+        config, env, spark_session=spark_session, table_id=metadata_table_key,
+    )
+    rules = (
+        []
+        if isinstance(metadata_df, list) and not metadata_df
+        else _load_active_dq_rules(metadata_df, metadata_table_key, env=env, dataset_name=dataset_name or None)
+    )
     checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
     result = _summarize_dq_guardrail(checks)
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
@@ -3135,6 +3222,7 @@ def check_dq_runtime(
         summary_rows.append({
             "guardrail_result_id": result_ids[rule["rule_id"]],
             "guardrail_rule_id": rule["guardrail_rule_id"],
+            "guardrail_version": rule["guardrail_version"],
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],

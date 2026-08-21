@@ -52,6 +52,11 @@ def check_schema(
     SchemaDriftError
         If an active blocking schema guardrail rejects the checked schema.
 
+    Notes
+    -----
+    When Governance has activated a Data Contract for the resolved table,
+    the frozen contract rule is used instead of mutable authoring metadata.
+
     Examples
     --------
     >>> result = check_schema("orders", target="source", schema="dbo")
@@ -82,7 +87,7 @@ def check_schema(
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
-    rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
+    rules_df = load_table_guardrail_rules(config, env, spark_session=spark, table_id=metadata_table_key)
     selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,
         environment_name=env,

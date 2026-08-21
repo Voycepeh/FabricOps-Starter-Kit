@@ -184,6 +184,7 @@ def _observation_changes(observation) -> dict:
         config,
         env,
         spark_session=getattr(observation, "sparkSession", None),
+        table_id=table_id,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
@@ -273,6 +274,11 @@ def check_changes(observation) -> dict:
     ValueError
         If configuration is invalid or logical keys are null, missing, or
         duplicated.
+
+    Notes
+    -----
+    When an active Data Contract exists, source-change expectations are
+    resolved from its frozen Guardrails; change detection itself is unchanged.
     
     Examples
     --------

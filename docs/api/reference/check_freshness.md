@@ -14,7 +14,7 @@ Check whether source timing satisfies direct or approved freshness intent.
 
 `fabricops_kit/pipeline/check_freshness.py:38`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L38-L131">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L38-L136">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,6 +63,15 @@ Structured freshness evidence and continuation decision.
 ## Raises / Errors
 
 Not documented yet
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+When an active Data Contract exists, freshness and observation-column
+expectations are resolved from its frozen Guardrails.
+
+</div>
 
 ## See also
 

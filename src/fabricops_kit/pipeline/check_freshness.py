@@ -48,6 +48,11 @@ def check_freshness(observation) -> dict:
     dict
         Structured freshness evidence and continuation decision. Governed
         observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.
+
+    Notes
+    -----
+    When an active Data Contract exists, freshness and observation-column
+    expectations are resolved from its frozen Guardrails.
     
     Examples
     --------
@@ -76,7 +81,7 @@ def check_freshness(observation) -> dict:
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
-    rules_df = load_table_guardrail_rules(config, env, spark_session=spark_session)
+    rules_df = load_table_guardrail_rules(config, env, spark_session=spark_session, table_id=table_id)
     freshness_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="freshness",
