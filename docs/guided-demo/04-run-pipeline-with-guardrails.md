@@ -1,90 +1,58 @@
 # Step 4: Rerun the Development pipeline with Guardrails
 
-**Rerun `02_pipeline` in Engineering Development so the Guardrails authored in Step 3 are loaded, evaluated, and recorded before critical publication steps.**
+**Rerun `02_pipeline` in Engineering Development so the current Governance-authored Guardrails are evaluated and recorded before critical pipeline steps.**
 
-The guarded pipeline keeps the same read, profile, transform, profile, and write pattern from Step 2, then adds Guardrail retrieval, evaluation, severity handling, and continuation decisions.
+Development uses current authoring Guardrails by default. After a Data Contract exists, the same notebook can instead select one exact frozen Data Contract version for a table and rerun the same checks against those frozen expectations.
 
-## Guardrail workflow
+## Before you begin
 
-```text
-read
-→ profile source
-→ load source Guardrails
-→ evaluate source Guardrails
-→ transform
-→ profile target
-→ load target Guardrails
-→ evaluate target Guardrails
-→ decide whether the pipeline can continue
-→ write target when allowed
-→ register Guardrail Results and Data Lineage
-```
+Confirm that:
+
+- Step 3 has authored the required Schema, Freshness, Changes, and DQ Guardrails
+- the table is already registered in the Data Catalogue
+- `02_pipeline` is using the Engineering Development `00_env_config`
 
 ## What to do
 
-1. Read the source DataFrame.
-2. Profile and register the source.
-3. Load the active source Guardrails authored by Governance.
-4. Evaluate source Guardrails.
-5. Stop or continue based on severity and continuation results.
-6. Apply transformation logic.
-7. Profile and register the target.
-8. Load active target Guardrails.
-9. Evaluate target Guardrails before publication.
-10. Write the target only when blocking checks permit continuation.
-11. Persist Guardrail Results and runtime evidence.
+1. Open `02_pipeline` in Engineering Development.
+2. Keep `widget_select_data_contract()` on **Current authoring Guardrails** for this first guarded rerun.
+3. Run `observe_table()` for the governed source.
+4. Run `check_schema()`, `check_freshness()`, and `check_changes()` before the full source read.
+5. Read the source only when the pre-read checks allow continuation.
+6. Run `check_dq()` on the source DataFrame.
+7. Profile and register the source, apply the visible transformation, and continue the normal Development target flow.
+8. Run the target Schema and DQ checks and review the recorded Guardrail Results.
 
-## Normal pipeline evidence still applies
+## Where Development rules come from
 
-A guarded run still writes the normal pipeline evidence:
+**Development uses the current authoring Guardrails unless an exact Data Contract version is selected for that table.**
+
+| Development validation source | Rule source |
+| --- | --- |
+| Current authoring Guardrails | Current rules in `METADATA_GUARDRAIL` |
+| Selected Data Contract version | Frozen Guardrails inside that version's `contract_payload_json` |
+
+The selection is table-scoped. Selecting a contract for one `table_id` does not apply that contract to another table.
+
+## Guardrail Results still record runtime evidence
+
+A guarded run continues to write the normal evidence produced by the pipeline:
 
 | Evidence area | Purpose |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Physical table and column identity snapshots. |
-| `METADATA_DATA_PROFILED` | Statistical and schema evidence per column. |
-| `METADATA_DATA_LINEAGE` | Runtime source and target participation evidence. |
-| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation outcomes and continuation decisions. |
+| `METADATA_DATA_CATALOGUE` | Current table and column identity. |
+| `METADATA_DATA_PROFILED` | Current profiling evidence. |
+| `METADATA_DATA_LINEAGE` | Runtime source and target participation. |
+| `METADATA_GUARDRAIL_RESULTS` | Guardrail outcomes and continuation decisions. |
+| `METADATA_GUARDRAIL_ROW_RESULTS` | Failed-row evidence where a DQ rule records row-level failures. |
 
-!!! note "Guardrails add enforcement evidence"
+!!! note "Checks do not choose the processing strategy"
 
-    Guardrails do not replace Data Catalogue, Data Profiled, Data Profiled Frequency, or Data Lineage records. They add executable expectations and runtime outcomes around the normal pipeline workflow.
-
-## Where rules come from
-
-`02_pipeline` retrieves active Guardrail definitions from `METADATA_GUARDRAIL`. Runtime does not invent its own rules.
-
-These records describe the Guardrail type, table or column scope, parameters, severity, activation state, and audit context.
-
-## Profile mode and enforcement mode
-
-| Mode | User outcome |
-| --- | --- |
-| Profile mode | Records observations without blocking publication. |
-| Enforcement mode | Evaluates continuation and can block publication when required. |
-
-Typical severity behaviour:
-
-- **Warning** records an issue but normally allows continuation.
-- **Error** blocks the next critical step when the Guardrail fails.
-
-## Source and target enforcement points
-
-| Run point | What happens | Why it matters |
-| --- | --- | --- |
-| After source read and profiling | Evaluate active source expectations. | Catch upstream issues before transformation. |
-| Transformation | Apply deterministic business logic in visible notebook cells. | Keep the output explainable and repeatable. |
-| Before target write | Evaluate active target expectations. | Prevent unsafe or non-compliant publication. |
-| After checks pass | Write outputs and persist metadata evidence. | Preserve a reviewable execution trail. |
-
-??? info "What Guardrail Results contain"
-
-    `METADATA_GUARDRAIL_RESULTS` stores the runtime outcome of evaluated Guardrails, including rule identity, execution scope, Guardrail classification, status, continuation decision, severity, reason, expected and actual values, result payloads, and standard audit information.
-
-    Statuses may represent pass, warning, fail, or skipped outcomes depending on the evaluated rule and severity. The key operational result is whether the notebook can continue past the guarded point.
+    `check_schema()`, `check_freshness()`, `check_changes()`, and `check_dq()` judge whether the observed data satisfies the selected expectations. They do not decide incremental read predicates, merge behaviour, or remediation.
 
 ## Expected result
 
-You should now have a Development pipeline that evaluates approved Guardrails and records Guardrail Results while preserving the normal Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage evidence.
+You should now have a Development pipeline that evaluates the current authored Guardrails and records the resulting evidence. After Step 5 creates a Data Contract, you can return to this notebook and use `widget_select_data_contract()` to test an exact frozen version without changing the four check calls.
 
 **Previous:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)  
-**Next:** [Step 5: Create the Data Contract and prepare for promotion](05-create-data-contract.md)
+**Next:** [Step 5: Create and activate the Data Contract](05-create-data-contract.md)

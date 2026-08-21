@@ -28,8 +28,8 @@ nav:
       - Step 2 - Run Development Pipeline: guided-demo/02-run-pipeline.md
       - Step 3 - Review and Author Guardrails: guided-demo/03-enrich-guardrails.md
       - Step 4 - Validate Guardrails: guided-demo/04-run-pipeline-with-guardrails.md
-      - Step 5 - Create Data Contract: guided-demo/05-create-data-contract.md
-      - Step 6 - Promote to Production: guided-demo/06-promote-to-production.md
+      - Step 5 - Create and Activate Data Contract: guided-demo/05-create-data-contract.md
+      - Step 6 - Run Production with Active Contract: guided-demo/06-promote-to-production.md
       - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
   - Solution Bank:
       - Overview: solutions/index.md
@@ -37,7 +37,10 @@ nav:
       - Warehouse SQL in PySpark: solutions/warehouse-query.md
       - Profile and understand data: solutions/profile-data.md
       - Automatic Data Lineage: solutions/capture-data-lineage.md
+      - Enrich Data Catalogue: solutions/enrich-data-catalogue.md
       - ETL Guardrails: solutions/etl-guardrails.md
+      - Assemble a Data Contract: solutions/assemble-data-contract.md
+      - Validate with a Data Contract: solutions/validate-with-data-contract.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md
