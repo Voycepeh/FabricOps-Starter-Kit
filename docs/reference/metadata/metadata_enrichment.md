@@ -13,6 +13,14 @@ Add business and governance context to the data.
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id` + `column_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 15 |
+| Business columns | 7 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

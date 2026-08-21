@@ -13,6 +13,14 @@ See the individual records that failed a Data Quality rule.
 `METADATA_GUARDRAIL_RESULTS` **(N → 1)**
 via `guardrail_result_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 14 |
+| Business columns | 6 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

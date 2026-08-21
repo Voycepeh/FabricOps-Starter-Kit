@@ -16,6 +16,14 @@ via `table_id` + `column_id`
 `METADATA_DATA_PROFILED_FREQUENCY` **(1 → 1)**
 via `profile_id` + `profile_snapshot_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 27 |
+| Business columns | 19 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

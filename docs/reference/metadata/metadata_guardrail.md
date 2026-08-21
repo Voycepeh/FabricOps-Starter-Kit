@@ -13,6 +13,14 @@ Define the expectations the data used in the ETL pipeline should meet.
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id` + `column_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 19 |
+| Business columns | 11 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

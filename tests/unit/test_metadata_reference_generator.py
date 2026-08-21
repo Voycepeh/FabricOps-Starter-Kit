@@ -81,7 +81,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
         assert "**Relationships:**" in page
-        assert "## Column summary" not in page
+        assert "## Column summary" in page
+        assert "| Total columns |" in page
+        assert "| Business columns |" in page
+        assert "| Audit columns |" in page
         assert "## Implemented schema" in page
         assert "| Column | Data type | Managed by | Description |" in page
 

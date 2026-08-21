@@ -13,6 +13,14 @@ See the frequency distribution captured for a profiled column.
 `METADATA_DATA_PROFILED` **(1 → 1)**
 via `profile_id` + `profile_snapshot_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 17 |
+| Business columns | 9 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

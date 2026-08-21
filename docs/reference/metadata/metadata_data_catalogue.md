@@ -12,6 +12,14 @@ The current structural registry of known table and column assets. table_id ident
 
 No immediate table relationship is defined in the current implementation.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 21 |
+| Business columns | 13 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

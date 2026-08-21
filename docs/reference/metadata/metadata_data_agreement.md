@@ -13,6 +13,14 @@ Define why the data is shared, with whom, and under what conditions.
 `METADATA_DATA_STEWARD` **(N → 1)**
 via `provider_steward_id` + `recipient_steward_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 20 |
+| Business columns | 12 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

@@ -16,6 +16,14 @@ via `table_id`
 `METADATA_DATA_PROFILED` **(N → 1)**
 via `profile_snapshot_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 13 |
+| Business columns | 5 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

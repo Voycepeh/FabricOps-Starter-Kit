@@ -4366,6 +4366,7 @@ def _metadata_column_counts(
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import (
+        AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
@@ -4470,6 +4471,7 @@ def generate_metadata_reference_pages() -> None:
 
     table_purposes, column_owners = parse_metadata_reference_contract()
     public_callable_set = public_callable_names()
+    audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
 
@@ -4478,6 +4480,7 @@ def generate_metadata_reference_pages() -> None:
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
         rows = metadata_table_schema_rows(registry[table_name])
+        column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
         lines = [
             f"# {table_name}",
             "",
@@ -4492,6 +4495,14 @@ def generate_metadata_reference_pages() -> None:
             "**Relationships:**",
             "",
             *_relationship_lines(table_name),
+            "",
+            "## Column summary",
+            "",
+            "| Column category | Count |",
+            "| --- | ---: |",
+            f"| Total columns | {column_counts['total']} |",
+            f"| Business columns | {column_counts['business']} |",
+            f"| Audit columns | {column_counts['audit']} |",
             "",
             "## Implemented schema",
             "",

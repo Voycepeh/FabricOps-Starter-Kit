@@ -13,6 +13,14 @@ See what FabricOps previously observed about the source data.
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 16 |
+| Business columns | 8 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

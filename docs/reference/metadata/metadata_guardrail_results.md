@@ -13,6 +13,14 @@ See whether the expectations of the data in the ETL pipeline run are met.
 `METADATA_GUARDRAIL` **(N → 1)**
 via `guardrail_rule_id`
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 18 |
+| Business columns | 10 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

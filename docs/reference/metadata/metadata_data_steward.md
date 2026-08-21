@@ -12,6 +12,14 @@ Know who is responsible for the data.
 
 No immediate table relationship is defined in the current implementation.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 14 |
+| Business columns | 6 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
