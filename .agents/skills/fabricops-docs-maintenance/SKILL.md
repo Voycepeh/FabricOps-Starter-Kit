@@ -22,12 +22,11 @@ Classify the requested content before creating or moving files:
 1. Repository landing/navigation: `README.md` or `docs/index.md`.
 2. Product definition: `docs/maintainer/product-definition.md` for what FabricOps is, its original product intent, audience, positioning, scope, and product-level boundaries.
 3. High-level workflow explanation: `docs/how-fabricops-works.md` for how the complete FabricOps workflow fits together without implementation-level detail.
-4. Guided implementation: `docs/guided-demo.md` and `docs/guided-demo/` for what users do, run, configure, and observe when applying FabricOps.
-5. Solution rationale and deeper technical guidance: `docs/solutions/` for reusable patterns, design choices, trade-offs, edge cases, and problem-specific solutions.
-6. User implementation guidance not owned by the Guided Demo: `docs/notebook-templates.md` or another existing canonical implementation page.
-7. Maintainer procedure: `docs/maintainer/`, except where a more specific ownership rule applies.
-8. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
-9. Release-specific reference: `docs/releases/`, `docs/releases/manifests/`, and release generators.
+4. Guided implementation: `docs/guided-demo.md` and `docs/guided-demo/` for what users do, run, configure, and observe when applying FabricOps. Put contextual rationale, design choices, trade-offs, caveats, and edge cases beside the relevant implementation step in focused collapsible blocks when they help users understand why the workflow is designed that way.
+5. User implementation guidance not owned by the Guided Demo: `docs/notebook-templates.md` or another existing canonical implementation page.
+6. Maintainer procedure: `docs/maintainer/`, except where a more specific ownership rule applies.
+7. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
+8. Release-specific reference: `docs/releases/`, `docs/releases/manifests/`, and release generators.
 
 Update the canonical destination for the classification instead of creating another overlapping page.
 
@@ -37,11 +36,10 @@ Use the reader's question to determine where content belongs:
 
 - **Product Definition — “What is FabricOps?”** Preserve the original product intent, scope, audience, positioning, and boundaries. Do not turn this into an implementation guide.
 - **How FabricOps Works — “How does the workflow fit together?”** Explain the complete operating flow at a high level so a reader can understand the system without implementation detail.
-- **Guided Demo — “How do I implement and run it?”** Show the practical sequence, user actions, configuration, notebook steps, and expected results.
-- **Solution Bank — “Why is it designed this way, and what are the deeper patterns?”** Explain rationale, design choices, trade-offs, reusable technical patterns, edge cases, and problem-specific solutions.
+- **Guided Demo — “How do I implement and run it, and why does this step work this way?”** Show the practical sequence, user actions, configuration, notebook steps, and expected results. Keep optional rationale, design trade-offs, caveats, and edge cases in collapsible `???` blocks beside the step where the reader encounters them.
 - **Function Reference — “What exactly does this callable do?”** Keep exact parameters, return contracts, side effects, failure behaviour, examples, and callable-specific guidance in generated reference documentation.
 
-Cross-link between these layers instead of repeating the same explanation. Overview pages should stay high level, implementation pages should stay actionable, rationale pages should explain design decisions, and reference pages should remain exact.
+Cross-link between these layers instead of repeating the same explanation. Overview pages should stay high level, implementation pages should stay actionable while carrying optional contextual rationale, and reference pages should remain exact.
 
 Before creating a new page, confirm that the topic cannot be added cleanly to one of these existing owners. Prefer strengthening an existing canonical page over adding another conceptual layer.
 
@@ -63,7 +61,7 @@ Use these patterns deliberately:
 - Keep paragraphs compact. If a paragraph contains multiple responsibilities, stages, or decisions, split it into subsections, bullets, or a table.
 - Prefer descriptive headings such as `## Engineering Production` over unlabeled transitions buried inside prose.
 - Use Material admonitions such as `!!! note`, `!!! important`, and `!!! warning` for information that should stand out. Keep them focused and avoid turning every paragraph into a box.
-- Use `??? info` or another collapsible detail block for background explanation, exceptions, troubleshooting, or optional detail that would otherwise interrupt the main reading flow.
+- Use `??? info` or another collapsible detail block for background explanation, rationale, trade-offs, exceptions, troubleshooting, or optional detail that would otherwise interrupt the main reading flow.
 - Use tables for comparisons and ownership matrices, not for long narrative content.
 - Use numbered steps for actions that must be performed in order.
 - Use code blocks for code, commands, paths, and compact flow notation. Do not use code blocks as generic prose callouts.
@@ -87,7 +85,7 @@ Short purpose or outcome.
 Previous / Next
 ```
 
-Use additional sections only where the step genuinely needs them. Long technical explanation should sit under a descriptive subsection or collapsible block rather than forming a wall of text.
+Use additional sections only where the step genuinely needs them. Long technical explanation should sit under a descriptive subsection or collapsible block rather than forming a wall of text. Prefer putting design rationale and trade-offs next to the action they explain instead of creating a separate standalone rationale page.
 
 ### Maintainer page pattern
 
@@ -100,7 +98,7 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 - `AGENTS.md`, especially documentation, generated-artifact, and verification rules.
 - `README.md` for concise repository navigation.
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
-- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/solutions/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
+- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
 - `docs/maintainer/product-definition.md` before changing product positioning, scope, audience, or product-level intent.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
 - `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.
@@ -113,9 +111,9 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 2. Classify the content by reader intent and identify its canonical owner before editing.
 3. Search for the existing canonical page or section before adding a new page.
 4. Move or consolidate content into the canonical destination; remove duplicate explanations rather than maintaining two copies.
-5. Cross-link to implementation, rationale, or reference detail instead of copying content across documentation layers.
+5. Cross-link to implementation or reference detail instead of copying content across documentation layers.
 6. Keep the root `README.md` concise and navigation-focused.
-7. Treat guided demos as user-facing operating guides where appropriate.
+7. Treat guided demos as user-facing operating guides and place useful optional rationale beside the relevant action in collapsible detail blocks.
 8. Put maintainer-only procedures in `docs/maintainer/` unless a more specific ownership rule applies.
 9. Improve scanning with headings, bold lead sentences, compact paragraphs, tables, focused admonitions, and collapsible secondary detail before introducing new custom HTML components.
 10. Preserve useful existing images when restructuring pages; remove only assets that are unused, public-safe to remove, and not referenced.
@@ -129,8 +127,9 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 
 ## Constraints
 
-- Do not duplicate explanations across the homepage, Product Definition, How FabricOps Works, Guided Demo, Solution Bank, function pages, and maintainer reference.
+- Do not duplicate explanations across the homepage, Product Definition, How FabricOps Works, Guided Demo, function pages, and maintainer reference.
 - Do not create a new conceptual page when an existing documentation owner can hold the topic cleanly.
+- Prefer contextual collapsible rationale inside the Guided Demo over a separate standalone solution/rationale page when the design choice is best understood at a specific workflow step.
 - Do not create visual noise with excessive cards, admonitions, emojis, or decorative components. FabricOps remains a lightweight starter kit and the documentation should feel lightweight too.
 - Do not manually edit generated callable reference pages under `docs/api/reference/`, `docs/reference/index.md`, or dashboard HTML in `docs/assets/public-function-call-flows-dashboard.html` for a docs cleanup PR.
 - Do not independently edit `docs/maintainer/index.md` when the intended change belongs to the release workflow source skill.
