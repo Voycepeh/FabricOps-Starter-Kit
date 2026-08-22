@@ -54,12 +54,7 @@ FabricOps consists of:
 
   <a class="fabricops-landing-card" href="guided-demo/">
     <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the step-by-step guide to set up, configure, and perform the engineering + governance workflow.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="solutions/">
-    <span class="fabricops-landing-card__title">Solution Bank</span>
-    <span class="fabricops-landing-card__body">See practical problems already solved by FabricOps and the notebook workflows and functions that implement them.</span>
+    <span class="fabricops-landing-card__body">Follow the step-by-step guide and expand the technical notes to understand why FabricOps uses each pattern.</span>
   </a>
 
   <a class="fabricops-landing-card" href="releases/">

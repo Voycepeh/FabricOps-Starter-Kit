@@ -22,6 +22,12 @@ Confirm that `00_env_config` defines these stores:
 
 For simplicity, the demo uses the `demo` schema for managed Lakehouse and Warehouse tables.
 
+??? info "Why FabricOps routes Fabric items through `00_env_config`"
+
+    A notebook may need to read from one Lakehouse or Warehouse and write to another. Hardcoding Fabric item paths and connection details throughout the notebook makes that pipeline harder to maintain and harder to promote between Development and Production.
+
+    FabricOps keeps environment-specific routing in `00_env_config`. The same notebook can therefore resolve configured source, unified, product, and metadata stores at runtime while keeping the pipeline code focused on the data operation itself.
+
 ## 1. Upload the demo files
 
 Upload the demo files to the Source Lakehouse under:
@@ -74,6 +80,12 @@ Use the **User defined transformation** section in `02_pipeline` for visible pro
 
 ![Transform DataFrame](../assets/02/Transform_DF.png)
 
+??? info "Why FabricOps keeps transformation logic visible"
+
+    FabricOps standardizes the governed boundaries around ETL rather than replacing business transformation logic. Joins, filters, derivations, aggregations, enrichment, and reshaping stay visible and project-owned in the notebook.
+
+    This keeps the starter kit lightweight: FabricOps governs how inputs are resolved and checked, how evidence is recorded, and how outputs are prepared and persisted without forcing business logic into a separate orchestration abstraction.
+
 ### Write and profile the target
 
 Run the Lakehouse target write section to write into the Unified Lakehouse and register the target evidence.
@@ -91,6 +103,14 @@ You can then inspect the written table and compact profile summary.
 !!! note "Frequency profiling"
 
     Frequency rows for eligible columns are created and persisted by the profiling workflow. Displaying `target_profile_df` shows the compact profile summary, not the full frequency table.
+
+??? info "Why profiling and lineage are part of the pipeline"
+
+    `profile_and_register_table()` makes profiling repeatable and records the resulting Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and basic table-level Data Lineage evidence alongside the pipeline activity.
+
+    This avoids maintaining a separate manual lineage process and keeps observed metadata tied to the same source and target activity that produced it. Automatic frequency profiling also avoids noisy output for mostly unique columns unless the caller explicitly selects them.
+
+    A profile represents the DataFrame supplied to the function. On governed incremental runs, a partial source slice must not replace the registered profile of the complete physical source table; Step 4 explains that completeness rule where incremental processing is introduced.
 
 ## 6. Read CSV and write to a Warehouse
 
@@ -117,6 +137,12 @@ Use `read_warehouse_query()` or `read_warehouse_table()` to read the Warehouse t
 ![Read Warehouse](../assets/02/Read_WH.png)
 
 For Spark-heavy processing, Lakehouse data is often more natural because the data is already available to Spark without an additional Warehouse query path.
+
+??? info "Why FabricOps supports Warehouse SQL inside a PySpark pipeline"
+
+    Useful Warehouse logic may already exist as SQL. `read_warehouse_query()` lets the notebook execute that SQL against the configured Warehouse and continue with the result as a Spark DataFrame instead of forcing teams to rewrite appropriate SQL only to enter the PySpark workflow.
+
+    FabricOps remains Lakehouse-first for Spark-heavy processing because Delta data is directly available to Spark, while Warehouse reads use an additional SQL/TDS query path. The interoperability is intentional, but the two stores do not have identical execution characteristics.
 
 ??? info "Why the demo also shows parallel processing"
 
