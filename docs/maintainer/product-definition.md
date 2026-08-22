@@ -38,6 +38,59 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | Consumption | Project-Specific Consumer workspaces consume approved Production data for project-level AI, BI, analysis, and data science. |
 | One-off analysis | Important `99_explore` work must be preserved when reproducibility is required. |
 
+## Canonical `02_pipeline` operating model
+
+FabricOps standardizes the governed boundaries around ETL without taking ownership of the engineer's business transformation logic.
+
+**0. Environment → E. Extract → T. Transform → L. Load**
+
+### 0. Environment
+
+`00_env_config` establishes whether the pipeline is running in Engineering Development or Engineering Production and therefore which governed definitions apply.
+
+- **Development** supports current authoring and testing, including testing a selected Data Contract.
+- **Production** uses the approved active Data Contract as the governed runtime definition.
+
+### E. Extract
+
+Extract establishes the governed source inputs before transformation.
+
+For one or more source table IDs, the pipeline:
+
+- defines the source tables in play and whether each read is full or incremental
+- resolves the applicable source Guardrails from the selected or active Data Contract, or from current Guardrail metadata during Development authoring
+- checks source schema, freshness, and change state before the business-data read
+- reads each source table into a DataFrame using the prepared read scope
+- runs data-quality checks on the DataFrame being processed
+- profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage evidence
+
+A partial or incremental source DataFrame is processing scope, not a complete table profile. It must not replace the latest valid full-table source profile.
+
+### T. Transform
+
+Transform is intentionally user-defined.
+
+The engineer applies the business logic required to turn validated source DataFrames into one or more target DataFrames. FabricOps governs the inputs and outputs around this step without prescribing the transformation itself.
+
+### L. Load
+
+Load establishes the governed target outputs and persists them.
+
+For one or more target table IDs, the pipeline:
+
+- defines the target tables in play
+- resolves the applicable target Guardrails and governed load strategy from the selected or active Data Contract, or from current Development authoring
+- validates target schema and data quality before persistence
+- records DQ outcomes so written data can be traced back to the relevant Guardrail Results evidence
+- prepares the DataFrame for the governed load strategy and adds FabricOps audit, lifecycle, and other required technical columns
+- writes the target using the applicable governed load behaviour
+- reads the persisted target back as a complete table
+- profiles and registers that complete persisted target, updating the relevant Data Profiled and Data Lineage evidence
+
+The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
+
+**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, metadata, profiling, lineage, and governed persistence while leaving transformation logic with the engineer.
+
 ## Canonical workflow
 
 **Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
