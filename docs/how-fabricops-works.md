@@ -1,8 +1,33 @@
 # How FabricOps works
 
+<style>
+.md-typeset .fabricops-section-block {
+  margin: 1.25rem 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.md-typeset .fabricops-section-block > :first-child {
+  margin-top: 0;
+}
+
+.md-typeset .fabricops-section-block > :last-child {
+  margin-bottom: 0;
+}
+</style>
+
+<div class="fabricops-section-block" markdown>
+
 **FabricOps connects Governance, Engineering Development, Engineering Production, and project-specific consumer workspaces through one governed workflow.**
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
+
+</div>
+
+<div class="fabricops-section-block" markdown>
 
 ## Workspace model
 
@@ -25,6 +50,10 @@ Teams may create multiple project-specific consumer workspaces for exploration, 
 
     Consumer workspaces do not reproduce the production pipeline or maintain their own production copies of the source, unified, or product lakehouses. Engineering Production remains the trusted Production source.
 
+</div>
+
+<div class="fabricops-section-block" markdown>
+
 ## FabricOps uses PySpark mainly
 
 **PySpark is the standard for repeatable `02_pipeline` workflows.**
@@ -32,6 +61,10 @@ Teams may create multiple project-specific consumer workspaces for exploration, 
 Spark has startup overhead, and pandas may be better suited to smaller one-off analyses. FabricOps uses PySpark because it supports larger datasets and provides a consistent engineering pattern for maintenance and handover.
 
 This does not prevent teams from using pandas or other tools for appropriate exploration.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
 
 ## The governance and engineering loop workflow
 
@@ -73,6 +106,58 @@ Promote the validated `02_pipeline` ETL workflow from Engineering Development to
 
 Use `99_explore` to consume approved Production data directly for analytics, AI, BI, or downstream project use.
 
+</div>
+
+<div class="fabricops-section-block" markdown>
+
+## The ETL model inside `02_pipeline`
+
+FabricOps standardizes the boundaries around ETL with a simple operating model:
+
+**0. Environment → E. Extract → T. Transform → L. Load**
+
+!!! abstract "0. Environment"
+
+    - Determine Development or Production from `00_env_config`.
+    - **Development:** use current authoring or a selected Data Contract.
+    - **Production:** use the approved active Data Contract.
+
+!!! info "E. Extract"
+
+    - Define one or more source table IDs.
+    - Resolve source Guardrails and Data Contract context, or Guardrail metadata in Development.
+    - Check schema, freshness, and change state.
+    - Read each source using the required **full or incremental** read strategy.
+    - Run Data Quality checks.
+    - Profile and register only when the DataFrame represents the **full physical table**.
+    - Record Data Lineage and Data Profile evidence.
+
+!!! abstract "T. Transform"
+
+    - Apply user-defined business transformation.
+    - Join, derive, aggregate, enrich, and reshape as required.
+    - FabricOps governs the inputs and outputs, not the business logic.
+
+!!! success "L. Load"
+
+    - Define one or more target table IDs.
+    - Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition.
+    - Check schema and Data Quality.
+    - Attach Data Quality result linkage for runtime evidence.
+    - Add audit and technical columns.
+    - Prepare load-strategy execution.
+    - Write the target table.
+    - Read back the full persisted target.
+    - Profile and register the full written table into Data Lineage and Data Profile records.
+
+!!! note "Full-table profiling"
+
+    Incremental processing may use a partial source slice for execution, but a partial DataFrame must not replace the registered profile of the full physical table.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
+
 ## Metadata stored supporting the workflow
 
 **The Data Catalogue sits at the centre of the FabricOps metadata model.**
@@ -95,6 +180,10 @@ A Data Contract links authorised Data Catalogue tables and their schema fingerpr
 
     `02_pipeline` writes Data Catalogue and Data Profiled records. `01_governance` reads those records for Enrichment, Guardrail definition, and Data Contract preparation. Governance does not create a second copy of those observed records.
 
+</div>
+
+<div class="fabricops-section-block" markdown>
+
 ## How the implemented pieces connect
 
 **Engineering records what happened. Governance defines what is allowed. Production exposes the approved result.**
@@ -106,6 +195,10 @@ Governance reads the Data Catalogue and Data Profiled records, then writes appro
 Governance then creates the Data Contract. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, where AI and BI analytics consume approved Production data.
 
 Downstream users therefore receive more than a table. Where relevant, they can inspect its Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
 
 ## Development and Production
 
@@ -121,6 +214,10 @@ Contains approved, stable, recurring pipelines and durable outputs. A recurring 
 
     All promoted `02_pipeline` notebooks should be tied to a Data Contract.
 
+</div>
+
+<div class="fabricops-section-block" markdown>
+
 ## Consumer workspaces
 
 Project-specific consumer workspaces provide a separate environment for exploration, AI, and BI consumption. Teams use `99_explore` in their own workspace to consume approved data from Engineering Production without changing or duplicating the production pipeline.
@@ -132,3 +229,5 @@ There may be multiple consumer workspaces, with each workspace aligned to a spec
     Important `99_explore` work should be preserved when reproducibility is required. Consumer notebooks support analysis and experimentation, but they should not become an alternative production pipeline.
 
     Repeatable data preparation that needs to be operationalised should be incorporated into the governed Engineering Development and Engineering Production workflow.
+
+</div>
