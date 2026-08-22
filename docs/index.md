@@ -2,88 +2,73 @@
 
 # FabricOps documentation
 
-FabricOps is a lightweight starter kit that connects:
+FabricOps is a plug-and-play, lightweight starter kit for governed, quality-checked Microsoft Fabric notebook workflows across:
 
 **Governance → Data engineering → AI and BI analytics**
-
-Governance defines ownership and approval. Data engineering develops pipelines and records how data was prepared and checked. Approved pipelines are promoted from Engineering Development to Engineering Production, where AI and BI analytics can use approved Production data.
-
-<section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
-
-## What is FabricOps?
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
-
-- Governance
-- Data engineering
-- AI and BI analytics
-
-</section>
-
-By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
-
-The workflow connects:
-
-- **Governance:** Data Stewards, Data Agreements, Enrichment, Guardrails, and Data Contracts.
-- **Data engineering:** ETL, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Guardrail Results, and Development-to-Production promotion.
-- **AI and BI analytics:** approved Production data for Power BI, fabric data agents, data analysis, and data science.
+FabricOps builds governance and metadata collection into the engineering workflow instead of treating them as after-the-fact documentation. Engineering develops and validates reusable pipelines, Engineering Production runs against governed definitions, and AI and BI consumers use the resulting Production data foundation.
 
 ## What is included?
 
-FabricOps consists of:
+FabricOps includes:
 
-- A Python package containing out-of-the-box helper and orchestrator functions
-- Standardized Python notebook templates that weave these functions into reusable workflows
-- A set of shared metadata tables that connects governance and engineering activities
-- A guided demo to help teams understand and adopt the workflow quickly
-- Technical documentation for the notebook templates, metadata tables, and individual functions
+- a Python package of notebook-facing helper and orchestrator functions
+- standardized notebook templates for Governance, Engineering, and exploration workflows
+- a shared metadata model connecting observed Engineering evidence with Governance intent
+- a Guided Demo with practical steps and expandable technical rationale
+- generated technical references for functions, metadata tables, and data-quality rules
 
 </div>
 
-## Quick Links
+## Start here
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
-    <span class="fabricops-landing-card__title">How FabricOps Works</span>
-    <span class="fabricops-landing-card__body">Understand the workspace, notebook and metadata architecture, engineering + governance workflow and development production promotion.</span>
+    <span class="fabricops-landing-card__title">How FabricOps works</span>
+    <span class="fabricops-landing-card__body">See how the workspaces, Governance, Engineering, ETL, metadata, and Production flow fit together.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="maintainer/product-definition/">
+    <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
+    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for terminology, decisions, responsibilities, and boundaries.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
-    <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the step-by-step guide and expand the technical notes to understand why FabricOps uses each pattern.</span>
+    <span class="fabricops-landing-card__title">Step-by-step Guided Demo</span>
+    <span class="fabricops-landing-card__body">Follow the workflow in order, with expandable notes explaining the important technical choices.</span>
   </a>
 
   <a class="fabricops-landing-card" href="releases/">
-    <span class="fabricops-landing-card__title">Releases</span>
-    <span class="fabricops-landing-card__body">View published releases and their included assets.</span>
+    <span class="fabricops-landing-card__title">Official releases</span>
+    <span class="fabricops-landing-card__body">View published FabricOps releases and the assets included in each version.</span>
   </a>
 </div>
 
-## Technical lookup
+## FabricOps Assets
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="notebook-templates/">
     <span class="fabricops-landing-card__title">4 Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Download the latest notebooks here.</span>
+    <span class="fabricops-landing-card__body">Download the latest reusable FabricOps notebook templates.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>25</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Search and read the function documentations.</span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>29</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
+    <span class="fabricops-landing-card__body">Search the notebook-facing FabricOps callable reference.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>13</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Read every metadata table's purpose, schema, and know which functions write to them.</span>
+    <span class="fabricops-landing-card__body">Review each metadata table, its schema, purpose, and writer ownership.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
     <span class="fabricops-landing-card__title">11 data quality rule types</span>
-    <span class="fabricops-landing-card__body">Explore supported data quality rules that can be used as guardrails.</span>
+    <span class="fabricops-landing-card__body">Explore the supported Data Quality rules available for Guardrails.</span>
   </a>
 </div>
 
@@ -92,16 +77,11 @@ FabricOps consists of:
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
-    <span class="fabricops-landing-card__body">Monitor public function architecture violations, their underlying call flows and nested functions for optimization and code cleanliness.</span>
+    <span class="fabricops-landing-card__body">Inspect callable architecture, call flows, nested functions, and architecture violations.</span>
   </a>
 
   <a class="fabricops-landing-card" href="maintainer/">
     <span class="fabricops-landing-card__title">Maintainer Guide</span>
-    <span class="fabricops-landing-card__body">Based on the skills, a human-readable version of the repository maintenance and release workflow.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="maintainer/product-definition/">
-    <span class="fabricops-landing-card__title">Product Definition</span>
-    <span class="fabricops-landing-card__body">The original foundational product terminology, responsibilities, and workflow used as truth.</span>
+    <span class="fabricops-landing-card__body">Follow the repository maintenance and release workflow.</span>
   </a>
 </div>
