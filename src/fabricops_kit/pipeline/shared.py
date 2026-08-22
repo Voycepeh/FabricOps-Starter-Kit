@@ -7,7 +7,12 @@ from functools import reduce
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from ..io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from ..io.shared import (
+    configured_lakehouse_schema,
+    read_lakehouse_table_core,
+    resolve_configured_lakehouse_table,
+    write_lakehouse_table_core,
+)
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
@@ -2016,8 +2021,9 @@ def resolve_table_processing_definition(
     *,
     spark_session=None,
     context: Mapping[str, Any] | None = None,
+    authored_processing: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Resolve current or frozen table processing through the contract-source model."""
+    """Resolve authored or frozen table processing through the contract-source model."""
     runtime_context = context or {}
     contract = None
     if env == "prod":
@@ -2047,28 +2053,130 @@ def resolve_table_processing_definition(
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
         }
-    frame = read_lakehouse_table_core(
-        CATALOGUE_TABLE, target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        spark_session=spark_session, context=context or {"config": config, "env": env},
-    )
-    rows = [_row_to_dict(row) for row in frame.collect()]
-    matches = [
-        row for row in rows
-        if str(row.get("table_id") or "") == table_id
-        and str(row.get("environment_name") or "") == env
-        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
-        and row.get("is_active") is not False
-    ]
-    if len(matches) != 1:
-        raise ValueError(f"Current Catalogue must contain exactly one active table row for {table_id!r}.")
-    row = matches[0]
-    try:
-        parameters = json.loads(str(row.get("load_strategy_parameters_json") or "{}"))
-    except json.JSONDecodeError as exc:
-        raise ValueError("Catalogue load_strategy_parameters_json is invalid JSON.") from exc
-    definition = _validated_processing({"load_strategy": row.get("load_strategy"), **parameters})
+    if authored_processing is None:
+        raise ValueError("Development current authoring requires an authored processing definition.")
+    definition = _validated_processing(dict(authored_processing))
     return {**definition, "source": "current_authoring"}
+
+
+def _resolve_processing_scope(changes: Mapping[str, Any], processing: Mapping[str, Any]) -> dict[str, Any]:
+    """Combine source-change evidence and one resolved load definition."""
+    strategy = _validated_processing(dict(processing))["load_strategy"]
+    if not changes.get("changed"):
+        return {"read_strategy": "skip", "partition_column": changes.get("partition_column"), "partition_values": []}
+    if changes.get("first_observation"):
+        return {"read_strategy": "full", "partition_column": changes.get("partition_column"), "partition_values": []}
+
+    new = list(changes.get("new_partitions") or [])
+    changed = list(changes.get("changed_partitions") or [])
+    reappeared = list(changes.get("reappeared_partitions") or [])
+    removed = list(changes.get("removed_partitions") or [])
+    partition_column = str(changes.get("partition_column") or "").strip() or None
+    existing_changes = [*changed, *reappeared]
+
+    if removed:
+        if strategy == "overwrite" and not processing.get("partition_column"):
+            return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
+        raise ValueError(f"{strategy} cannot safely apply removed source partitions without explicit delete semantics.")
+    if strategy == "append" and existing_changes:
+        raise ValueError("append is unsafe when an existing source partition changed or reappeared.")
+
+    affected = [*new, *existing_changes]
+    if not affected or not partition_column:
+        return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
+    if strategy == "overwrite" and processing.get("partition_column") != partition_column:
+        return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
+    return {"read_strategy": "incremental", "partition_column": partition_column, "partition_values": affected}
+
+
+def _sql_literal(value: Any) -> str:
+    """Return a Delta predicate literal for a primitive partition value."""
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, int | float):
+        return str(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _apply_load_strategy(
+    df,
+    *,
+    table_name: str,
+    target: str,
+    schema: str | None,
+    processing: Mapping[str, Any],
+    scope: Mapping[str, Any],
+    context: Mapping[str, Any] | None = None,
+) -> None:
+    """Apply one already-resolved governed load definition to a Lakehouse target."""
+    strategy = _validated_processing(dict(processing))["load_strategy"]
+    read_strategy = scope.get("read_strategy")
+    if read_strategy == "skip":
+        return
+    if read_strategy not in {"full", "incremental"}:
+        raise ValueError("Processing scope must use skip, full, or incremental.")
+    values = list(scope.get("partition_values") or [])
+    if read_strategy == "incremental" and not values:
+        raise ValueError("Incremental processing requires at least one affected partition value.")
+
+    if strategy == "append":
+        write_lakehouse_table_core(df, table_name, target=target, schema=schema, mode="append", context=context)
+        return
+    if strategy == "overwrite":
+        if read_strategy == "full":
+            write_lakehouse_table_core(df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            return
+        partition_column = processing.get("partition_column")
+        if not partition_column or partition_column != scope.get("partition_column"):
+            raise ValueError("Incremental overwrite requires matching safe target partition configuration.")
+        predicate = f"`{str(partition_column).replace('`', '``')}` IN ({', '.join(_sql_literal(v) for v in values)})"
+        write_lakehouse_table_core(
+            df, table_name, target=target, schema=schema, mode="overwrite", context=context,
+            options={"replaceWhere": predicate},
+        )
+        return
+
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    keys = list(processing["key_columns"])
+    duplicate = df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
+    if duplicate:
+        raise ValueError("Incoming target scope contains duplicate business keys.")
+    if not DeltaTable.isDeltaTable(df.sparkSession, path):
+        initial = df
+        if strategy == "scd2":
+            initial = initial.withColumn("_fabricops_is_current", F.lit(True)).withColumn(
+                "_fabricops_effective_to", F.lit(None).cast("timestamp")
+            )
+        write_lakehouse_table_core(initial, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        return
+    delta = DeltaTable.forPath(df.sparkSession, path)
+    condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
+    if strategy == "scd1":
+        delta.alias("target").merge(df.alias("source"), condition).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+        return
+
+    effective = str(processing["effective_column"])
+    tracked = list(processing.get("tracked_columns") or [
+        name for name in df.columns
+        if name not in {*keys, effective, *_DEFAULT_PROFILE_EXCLUDE_COLUMNS}
+        and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ])
+    current_column, end_column = "_fabricops_is_current", "_fabricops_effective_to"
+    change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
+    expire = (
+        delta.alias("target").merge(df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
+        .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
+    )
+    expire.execute()
+    current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
+    incoming = df.join(current, on=keys, how="left_anti").withColumn(current_column, F.lit(True)).withColumn(end_column, F.lit(None).cast("timestamp"))
+    if incoming.limit(1).count():
+        write_lakehouse_table_core(incoming, table_name, target=target, schema=schema, mode="append", context=context)
 
 
 def load_table_guardrail_rules(

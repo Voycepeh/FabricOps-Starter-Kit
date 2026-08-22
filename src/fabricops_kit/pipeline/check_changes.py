@@ -222,6 +222,7 @@ def _observation_changes(observation) -> dict:
         "removed_partitions": removed,
         "reappeared_partitions": reappeared,
         "affected_partitions": [*new, *changed, *removed, *reappeared],
+        "partition_column": parameters.get("partition_column"),
         "source_pattern": source_pattern,
         "pattern_semantics": pattern_result["pattern_semantics"],
         "append_violation_count": pattern_result["append_violation_count"],

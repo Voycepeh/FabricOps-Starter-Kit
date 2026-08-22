@@ -253,15 +253,28 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     assert "`observe_table()` is evidence collection, not a guardrail" in source
 
 
-@pytest.mark.parametrize(
-    ("writer", "reader"),
-    [
-        ("write_lakehouse_table", "read_lakehouse_table"),
-        ("write_warehouse_table", "read_warehouse_table"),
-    ],
-)
-def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
+def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
+    """Resolve once after source Guardrails and reuse the result for read and write."""
+    source = "\n".join(value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    assert 'TARGET_LOAD_STRATEGY = "scd1"' in source
+    assert 'TARGET_LOAD_PARAMETERS = {"key_columns": ["student_id"]}' in source
+    assert source.count("resolve_table_processing_definition(") == 1
+    assert source.index("changes_result = check_changes(") < source.index("processing = resolve_table_processing_definition(")
+    assert source.index("dq_result = check_dq(") < source.index("processing = resolve_table_processing_definition(")
+    assert '_resolve_processing_scope(changes_result, processing)' in source
+    assert 'processing_scope["read_strategy"] == "skip"' in source
+    assert 'processing_scope["read_strategy"] == "incremental"' in source
+    assert "processing=processing" in source
+    assert "scope=processing_scope" in source
+    assert 'processing["source"] == "current_authoring"' in source
+    assert "load_strategy=TARGET_LOAD_STRATEGY" in source
+    assert "load_strategy_parameters=TARGET_LOAD_PARAMETERS" in source
+    assert "write_strategy" not in source
+
+
+def test_02_pipeline_orders_warehouse_target_validation_by_environment():
     """Dev publishes evidence before guardrails; prod validates before publication."""
+    writer, reader = "write_warehouse_table", "read_warehouse_table"
     matching_cells = [
         source
         for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
