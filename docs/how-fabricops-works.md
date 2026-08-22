@@ -33,6 +33,46 @@ Spark has startup overhead, and pandas may be better suited to smaller one-off a
 
 This does not prevent teams from using pandas or other tools for appropriate exploration.
 
+## The governance and engineering loop workflow
+
+**FabricOps uses a governed loop between Governance and Engineering Development before a validated pipeline is promoted to Engineering Production.**
+
+![FabricOps role workflow](assets/fabricops-role-workflow.png)
+
+Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the notebooks from [Notebook Templates](notebook-templates.md).
+
+### 0. Set up the operating environment
+
+Create the Fabric workspaces, configure `00_env_config` in each workspace, and create the Governance metadata tables.
+
+### 1. Governance — Create Data Stewards and Data Agreements
+
+In `01_governance`, create the Data Stewards and establish Data Agreements between two accountable stewards.
+
+### 2. Engineering — ETL, profile the data, and build the Data Catalogue
+
+In Engineering Development, run `02_pipeline` to perform ETL, profile the data, and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
+
+### 3. Governance — Enrich the Data Catalogue and define Guardrails
+
+Return to `01_governance` to read the Data Catalogue and Data Profiled records written by `02_pipeline`, write Enrichment, and define Guardrails for the ETL workflow.
+
+### 4. Engineering — Re-validate the ETL workflow with Guardrails
+
+Rerun `02_pipeline` with the approved Guardrails and confirm that warning, blocking, and validation behaviour works as intended.
+
+### 5. Governance — Create the Data Contract and prepare for promotion
+
+In `01_governance`, create the Data Contract linking the governed Data Catalogues to the Data Agreement, then finalise the ETL contract and governance sign-off in preparation for promotion and release management.
+
+### 6. Engineering — Promote to Production
+
+Promote the validated `02_pipeline` ETL workflow from Engineering Development to Engineering Production.
+
+### 7. Consumer — Use approved Production data directly
+
+Use `99_explore` to consume approved Production data directly for analytics, AI, BI, or downstream project use.
+
 ## The ETL model inside `02_pipeline`
 
 FabricOps standardizes the boundaries around ETL with a simple operating model:
@@ -76,46 +116,6 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 !!! note "Full-table profiling"
 
     Incremental processing may use a partial source slice for execution, but a partial DataFrame must not replace the registered profile of the full physical table.
-
-## The governance and engineering loop workflow
-
-**FabricOps uses a governed loop between Governance and Engineering Development before a validated pipeline is promoted to Engineering Production.**
-
-![FabricOps role workflow](assets/fabricops-role-workflow.png)
-
-Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the notebooks from [Notebook Templates](notebook-templates.md).
-
-### 0. Set up the operating environment
-
-Create the Fabric workspaces, configure `00_env_config` in each workspace, and create the Governance metadata tables.
-
-### 1. Governance — Create Data Stewards and Data Agreements
-
-In `01_governance`, create the Data Stewards and establish Data Agreements between two accountable stewards.
-
-### 2. Engineering — ETL, profile the data, and build the Data Catalogue
-
-In Engineering Development, run `02_pipeline` to perform ETL, profile the data, and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
-
-### 3. Governance — Enrich the Data Catalogue and define Guardrails
-
-Return to `01_governance` to read the Data Catalogue and Data Profiled records written by `02_pipeline`, write Enrichment, and define Guardrails for the ETL workflow.
-
-### 4. Engineering — Re-validate the ETL workflow with Guardrails
-
-Rerun `02_pipeline` with the approved Guardrails and confirm that warning, blocking, and validation behaviour works as intended.
-
-### 5. Governance — Create the Data Contract and prepare for promotion
-
-In `01_governance`, create the Data Contract linking the governed Data Catalogues to the Data Agreement, then finalise the ETL contract and governance sign-off in preparation for promotion and release management.
-
-### 6. Engineering — Promote to Production
-
-Promote the validated `02_pipeline` ETL workflow from Engineering Development to Engineering Production.
-
-### 7. Consumer — Use approved Production data directly
-
-Use `99_explore` to consume approved Production data directly for analytics, AI, BI, or downstream project use.
 
 ## Metadata stored supporting the workflow
 
