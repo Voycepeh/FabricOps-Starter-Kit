@@ -20,13 +20,30 @@ Do not use this skill to manually maintain generated callable reference pages, r
 Classify the requested content before creating or moving files:
 
 1. Repository landing/navigation: `README.md` or `docs/index.md`.
-2. User implementation guidance: `docs/how-fabricops-works.md` or `docs/notebook-templates.md`.
-3. Guided demonstration: `docs/guided-demo.md` or `docs/guided-demo/`.
-4. Maintainer procedure: `docs/maintainer/`.
-5. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
-6. Release-specific reference: `docs/releases/`, `docs/releases/manifests/`, and release generators.
+2. Product definition: `docs/maintainer/product-definition.md` for what FabricOps is, its original product intent, audience, positioning, scope, and product-level boundaries.
+3. High-level workflow explanation: `docs/how-fabricops-works.md` for how the complete FabricOps workflow fits together without implementation-level detail.
+4. Guided implementation: `docs/guided-demo.md` and `docs/guided-demo/` for what users do, run, configure, and observe when applying FabricOps.
+5. Solution rationale and deeper technical guidance: `docs/solutions/` for reusable patterns, design choices, trade-offs, edge cases, and problem-specific solutions.
+6. User implementation guidance not owned by the Guided Demo: `docs/notebook-templates.md` or another existing canonical implementation page.
+7. Maintainer procedure: `docs/maintainer/`, except where a more specific ownership rule applies.
+8. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
+9. Release-specific reference: `docs/releases/`, `docs/releases/manifests/`, and release generators.
 
 Update the canonical destination for the classification instead of creating another overlapping page.
+
+## Documentation ownership model
+
+Use the reader's question to determine where content belongs:
+
+- **Product Definition — “What is FabricOps?”** Preserve the original product intent, scope, audience, positioning, and boundaries. Do not turn this into an implementation guide.
+- **How FabricOps Works — “How does the workflow fit together?”** Explain the complete operating flow at a high level so a reader can understand the system without implementation detail.
+- **Guided Demo — “How do I implement and run it?”** Show the practical sequence, user actions, configuration, notebook steps, and expected results.
+- **Solution Bank — “Why is it designed this way, and what are the deeper patterns?”** Explain rationale, design choices, trade-offs, reusable technical patterns, edge cases, and problem-specific solutions.
+- **Function Reference — “What exactly does this callable do?”** Keep exact parameters, return contracts, side effects, failure behaviour, examples, and callable-specific guidance in generated reference documentation.
+
+Cross-link between these layers instead of repeating the same explanation. Overview pages should stay high level, implementation pages should stay actionable, rationale pages should explain design decisions, and reference pages should remain exact.
+
+Before creating a new page, confirm that the topic cannot be added cleanly to one of these existing owners. Prefer strengthening an existing canonical page over adding another conceptual layer.
 
 ## Documentation readability pattern
 
@@ -83,7 +100,8 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 - `AGENTS.md`, especially documentation, generated-artifact, and verification rules.
 - `README.md` for concise repository navigation.
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
-- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
+- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/solutions/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
+- `docs/maintainer/product-definition.md` before changing product positioning, scope, audience, or product-level intent.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
 - `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.
 - Existing images under `docs/assets/` before deleting or replacing them.
@@ -92,24 +110,27 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 ## Implementation workflow
 
 1. Define Context, Task, Constraints, Expected output, and Verification.
-2. Search for the existing canonical page or section before adding a new page.
-3. Move or consolidate content into the canonical destination; remove duplicate explanations rather than maintaining two copies.
-4. Keep the root `README.md` concise and navigation-focused.
-5. Treat guided demos as user-facing operating guides where appropriate.
-6. Put maintainer-only procedures in `docs/maintainer/`.
-7. Improve scanning with headings, bold lead sentences, compact paragraphs, tables, focused admonitions, and collapsible secondary detail before introducing new custom HTML components.
-8. Preserve useful existing images when restructuring pages; remove only assets that are unused, public-safe to remove, and not referenced.
-9. Do not touch the homepage or documentation navigation unless the task explicitly requires it or a moved page would break navigation.
-10. Update `mkdocs.yml` only when navigation, page paths, or included docs files actually change.
-11. For generated callable documentation, update source docstrings or metadata instead of editing generated pages directly.
-12. For metadata reference work, inspect `metadata_schemas.py` and the generator first, update schema/ownership source metadata, regenerate, and never manually fix an individual metadata page.
-13. Metadata schema pages must not document Spark nullability and must use exact column-level writer ownership rather than generic component labels.
-14. Run the metadata-page freshness validation for explicitly scoped metadata generator/reference work and commit only `docs/reference/metadata.md` plus `docs/reference/metadata/*.md`.
-15. For the Maintainer Release Guide, update `.agents/skills/fabricops-release/SKILL.md` first and keep the published guide synchronised from that source.
+2. Classify the content by reader intent and identify its canonical owner before editing.
+3. Search for the existing canonical page or section before adding a new page.
+4. Move or consolidate content into the canonical destination; remove duplicate explanations rather than maintaining two copies.
+5. Cross-link to implementation, rationale, or reference detail instead of copying content across documentation layers.
+6. Keep the root `README.md` concise and navigation-focused.
+7. Treat guided demos as user-facing operating guides where appropriate.
+8. Put maintainer-only procedures in `docs/maintainer/` unless a more specific ownership rule applies.
+9. Improve scanning with headings, bold lead sentences, compact paragraphs, tables, focused admonitions, and collapsible secondary detail before introducing new custom HTML components.
+10. Preserve useful existing images when restructuring pages; remove only assets that are unused, public-safe to remove, and not referenced.
+11. Do not touch the homepage or documentation navigation unless the task explicitly requires it or a moved page would break navigation.
+12. Update `mkdocs.yml` only when navigation, page paths, or included docs files actually change.
+13. For generated callable documentation, update source docstrings or metadata instead of editing generated pages directly.
+14. For metadata reference work, inspect `metadata_schemas.py` and the generator first, update schema/ownership source metadata, regenerate, and never manually fix an individual metadata page.
+15. Metadata schema pages must not document Spark nullability and must use exact column-level writer ownership rather than generic component labels.
+16. Run the metadata-page freshness validation for explicitly scoped metadata generator/reference work and commit only `docs/reference/metadata.md` plus `docs/reference/metadata/*.md`.
+17. For the Maintainer Release Guide, update `.agents/skills/fabricops-release/SKILL.md` first and keep the published guide synchronised from that source.
 
 ## Constraints
 
-- Do not duplicate explanations across the homepage, implementation guide, guided demos, function pages, and maintainer reference.
+- Do not duplicate explanations across the homepage, Product Definition, How FabricOps Works, Guided Demo, Solution Bank, function pages, and maintainer reference.
+- Do not create a new conceptual page when an existing documentation owner can hold the topic cleanly.
 - Do not create visual noise with excessive cards, admonitions, emojis, or decorative components. FabricOps remains a lightweight starter kit and the documentation should feel lightweight too.
 - Do not manually edit generated callable reference pages under `docs/api/reference/`, `docs/reference/index.md`, or dashboard HTML in `docs/assets/public-function-call-flows-dashboard.html` for a docs cleanup PR.
 - Do not independently edit `docs/maintainer/index.md` when the intended change belongs to the release workflow source skill.
@@ -133,6 +154,7 @@ Also review:
 - desktop and mobile readability of changed human-facing pages when practical
 - internal links in changed Markdown files
 - heading hierarchy and table-of-contents usefulness
+- documentation ownership: each changed topic has one canonical owner and other layers link instead of duplicating it
 - `git diff -- docs/api/reference docs/reference/index.md docs/assets/public-function-call-flows-dashboard.html` to confirm generated API pages and dashboard output were not unintentionally modified
 - `git diff -- README.md docs mkdocs.yml AGENTS.md .agents/skills/fabricops-docs-maintenance/SKILL.md` for duplicated explanations or unintended navigation changes
 - release-skill and published-release-guide synchronisation when the release guide is in scope
