@@ -35,47 +35,47 @@ This does not prevent teams from using pandas or other tools for appropriate exp
 
 ## The ETL model inside `02_pipeline`
 
-FabricOps uses a simple engineering model inside `02_pipeline`:
+FabricOps standardizes the boundaries around ETL with a simple operating model:
 
 **0. Environment → E. Extract → T. Transform → L. Load**
 
-### 0. Environment
+!!! abstract "0. Environment"
 
-`00_env_config` establishes whether the pipeline is running in Development or Production and resolves the configured Fabric stores.
+    - Determine Development or Production from `00_env_config`.
+    - **Development:** use current authoring or a selected Data Contract.
+    - **Production:** use the approved active Data Contract.
 
-- **Development** can use current authoring for Guardrails and processing definitions, or test a selected Data Contract where needed.
-- **Production** uses the approved active Data Contract as the governed runtime definition.
+!!! abstract "E. Extract"
 
-### E. Extract
+    - Define one or more source table IDs.
+    - Resolve source Guardrails and Data Contract context, or Guardrail metadata in Development.
+    - Check schema, freshness, and change state.
+    - Read each source using the required **full or incremental** read strategy.
+    - Run Data Quality checks.
+    - Profile and register only when the DataFrame represents the **full physical table**.
+    - Record Data Lineage and Data Profile evidence.
 
-For one or more source table IDs, Engineering:
+!!! info "T. Transform"
 
-- resolves the applicable Guardrails from the Data Contract, or from the Guardrail metadata in Development
-- determines the source read strategy as full or incremental
-- checks schema, freshness, and change state before reading where possible
-- reads the source table into a DataFrame using the resolved read strategy
-- evaluates Data Quality Guardrails on the DataFrame
-- profiles and registers the source only when the DataFrame represents the complete physical table, writing the observed profile and lineage evidence into FabricOps metadata
+    - Apply user-defined business transformation.
+    - Join, derive, aggregate, enrich, and reshape as required.
+    - FabricOps governs the inputs and outputs, not the business logic.
 
-An incremental source DataFrame is a processing slice and must not replace the registered full-table source profile.
+!!! abstract "L. Load"
 
-### T. Transform
+    - Define one or more target table IDs.
+    - Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition.
+    - Check schema and Data Quality.
+    - Attach Data Quality result linkage for runtime evidence.
+    - Add audit and technical columns.
+    - Prepare load-strategy execution.
+    - Write the target table.
+    - Read back the full persisted target.
+    - Profile and register the full written table into Data Lineage and Data Profile records.
 
-Transformation is user-defined business logic. FabricOps does not prescribe how the engineer joins, derives, aggregates, enriches, or reshapes the data.
+!!! note "Full-table profiling"
 
-### L. Load
-
-For one or more target table IDs, Engineering:
-
-- resolves the target load strategy and Guardrails from the Data Contract, or from the Guardrail metadata in Development
-- checks the transformed DataFrame against target schema and Data Quality Guardrails
-- records the Data Quality outcome so it can be linked back to the corresponding Guardrail Results evidence
-- prepares the DataFrame according to the governed load strategy and adds required audit and technical columns
-- writes the target table
-- reads the persisted target table back as a full DataFrame
-- profiles and registers the complete persisted target, including the resulting profile and lineage evidence
-
-This keeps the business transformation flexible while standardizing the governed checks, metadata evidence, and target write behavior around it.
+    Incremental processing may use a partial source slice for execution, but a partial DataFrame must not replace the registered profile of the full physical table.
 
 ## The governance and engineering loop workflow
 
