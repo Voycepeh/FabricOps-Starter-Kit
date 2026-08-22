@@ -26,6 +26,21 @@ It helps these teams quickly set up and adopt an out-of-the-box workflow within 
 
 This gives AI and BI consumers a stable, governed, and reusable Production data foundation.
 
+## Canonical workflow
+
+**Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
+
+| Step | Stage | Canonical workflow step |
+| --- | --- | --- |
+| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
+| 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
+| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
+| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
+| 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
+| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. Governance currently selects one saved version as active through a manual interim activation step. |
+| 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production. |
+| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
+
 ## Canonical operating decisions
 
 | Area | Canonical decision |
@@ -90,21 +105,6 @@ For one or more target table IDs, the pipeline:
 The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
 
 **FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, metadata, profiling, lineage, and governed persistence while leaving transformation logic with the engineer.
-
-## Canonical workflow
-
-**Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
-
-| Step | Stage | Canonical workflow step |
-| --- | --- | --- |
-| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
-| 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
-| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
-| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
-| 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
-| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. Governance currently selects one saved version as active through a manual interim activation step. |
-| 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production. |
-| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
 
 ## Product components
 
