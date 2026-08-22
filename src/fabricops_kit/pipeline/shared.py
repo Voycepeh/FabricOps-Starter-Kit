@@ -37,6 +37,7 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_business_key_hash",
     "_row_hash",
     "pipeline_ts",
+    "ingested_at_utc",
     "notebook_name",
     "loaded_by",
     "p_bucket",
@@ -2007,11 +2008,38 @@ def _validated_processing(processing: Any) -> dict[str, Any]:
     strategy = str(processing.get("load_strategy") or "").strip().lower()
     if strategy not in {"overwrite", "append", "scd1", "scd2"}:
         raise ValueError("Processing definition has an invalid load_strategy.")
-    if strategy in {"scd1", "scd2"} and not processing.get("key_columns"):
+    definition = {**processing, "load_strategy": strategy}
+    allowed = {
+        "overwrite": {"load_strategy", "partition_column", "source", "contract_id", "contract_version"},
+        "append": {"load_strategy", "source", "contract_id", "contract_version"},
+        "scd1": {"load_strategy", "key_columns", "source", "contract_id", "contract_version"},
+        "scd2": {
+            "load_strategy", "key_columns", "effective_column", "tracked_columns",
+            "source", "contract_id", "contract_version",
+        },
+    }[strategy]
+    unexpected = sorted(set(definition) - allowed)
+    if unexpected:
+        raise ValueError(f"Processing definition for {strategy} contains unsupported fields: {', '.join(unexpected)}.")
+    for name in ("key_columns", "tracked_columns"):
+        if name not in definition:
+            continue
+        values = definition[name]
+        if not isinstance(values, list | tuple) or not values or any(
+            not isinstance(value, str) or not value.strip() for value in values
+        ):
+            raise ValueError(f"Processing definition {name} must be a non-empty sequence of column names.")
+        definition[name] = [value.strip() for value in values]
+    if strategy in {"scd1", "scd2"} and "key_columns" not in definition:
         raise ValueError(f"Processing definition for {strategy} requires key_columns.")
-    if strategy == "scd2" and not processing.get("effective_column"):
+    for name in ("partition_column", "effective_column"):
+        if name in definition and (not isinstance(definition[name], str) or not definition[name].strip()):
+            raise ValueError(f"Processing definition {name} must be a non-empty column name.")
+        if name in definition:
+            definition[name] = definition[name].strip()
+    if strategy == "scd2" and "effective_column" not in definition:
         raise ValueError("Processing definition for scd2 requires effective_column.")
-    return {**processing, "load_strategy": strategy}
+    return definition
 
 
 def resolve_table_processing_definition(
@@ -2083,6 +2111,11 @@ def _resolve_processing_scope(changes: Mapping[str, Any], processing: Mapping[st
 
     affected = [*new, *existing_changes]
     if not affected or not partition_column:
+        if strategy == "append":
+            raise ValueError(
+                "append requires a non-empty, partition-scoped additive source change; "
+                "a full-source append is unsafe."
+            )
         return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
     if strategy == "overwrite" and processing.get("partition_column") != partition_column:
         return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
@@ -2098,6 +2131,22 @@ def _sql_literal(value: Any) -> str:
     if isinstance(value, int | float):
         return str(value)
     return "'" + str(value).replace("'", "''") + "'"
+
+
+def _resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
+    """Return explicit or default business columns used to detect SCD2 changes."""
+    explicit = processing.get("tracked_columns")
+    if explicit:
+        return list(explicit)
+    excluded = {
+        *processing["key_columns"],
+        processing["effective_column"],
+        *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
+    }
+    return [
+        name for name in columns
+        if name not in excluded and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ]
 
 
 def _apply_load_strategy(
@@ -2161,11 +2210,7 @@ def _apply_load_strategy(
         return
 
     effective = str(processing["effective_column"])
-    tracked = list(processing.get("tracked_columns") or [
-        name for name in df.columns
-        if name not in {*keys, effective, *_DEFAULT_PROFILE_EXCLUDE_COLUMNS}
-        and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
-    ])
+    tracked = _resolve_scd2_tracked_columns(list(df.columns), processing)
     current_column, end_column = "_fabricops_is_current", "_fabricops_effective_to"
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     expire = (

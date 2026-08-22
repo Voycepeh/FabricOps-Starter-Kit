@@ -155,7 +155,20 @@ def test_removed_partition_rejects_implicit_delete(strategy):
         )
 
 
-def test_changed_without_usable_scope_falls_back_to_full():
-    scope = shared._resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
+def test_changed_without_usable_scope_uses_full_for_safe_overwrite():
+    scope = shared._resolve_processing_scope(changes(partition_column=None), {"load_strategy": "overwrite"})
     assert scope["read_strategy"] == "full"
     assert scope["partition_values"] == []
+
+
+def test_append_changed_without_usable_scope_rejects_full_append():
+    with pytest.raises(ValueError, match="full-source append is unsafe"):
+        shared._resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
+
+
+def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():
+    tracked = shared._resolve_scd2_tracked_columns(
+        ["student_id", "name", "status", "effective_at", "ingested_at_utc", "_fabricops_created_at", "loaded_at"],
+        {"key_columns": ["student_id"], "effective_column": "effective_at"},
+    )
+    assert tracked == ["name", "status"]
