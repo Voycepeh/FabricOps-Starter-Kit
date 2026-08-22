@@ -238,34 +238,36 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     """Keep the cheap pre-read and row-level post-read source boundary explicit."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    observation = source.index("observation_df = observe_table(")
+    observation = source.index("read_prep = read_pipeline_prep(")
     schema_check = source.index("schema_result = check_schema(", observation)
     freshness_check = source.index("freshness_result = check_freshness(", schema_check)
-    changes_check = source.index("changes_result = check_changes(", freshness_check)
     full_read = source.index("source_df = read_lakehouse_table(", observation)
-    row_checks = source.index("Run row-level DQ guardrails", full_read)
+    row_checks = source.index("dq_result = check_dq(", full_read)
     profile = source.index("source_profile_df = profile_and_register_table(", row_checks)
 
-    assert observation < schema_check < freshness_check < changes_check < full_read < row_checks < profile
+    assert observation < schema_check < freshness_check < full_read < row_checks < profile
     assert 'SOURCE_TARGET = "source"' in source
     assert 'SOURCE_SCHEMA = "dbo"' in source
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
-    assert "`observe_table()` is evidence collection, not a guardrail" in source
+    assert "read_pipeline_prep" in source
 
 
 def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
-    """Resolve once after source Guardrails and reuse the result for read and write."""
+    """Use public prep boundaries while keeping physical IO and Guardrails visible."""
     source = "\n".join(value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert 'TARGET_LOAD_STRATEGY = "scd1"' in source
     assert 'TARGET_LOAD_PARAMETERS = {"key_columns": ["student_id"]}' in source
-    assert source.count("resolve_table_processing_definition(") == 1
-    assert source.index("changes_result = check_changes(") < source.index("processing = resolve_table_processing_definition(")
-    assert source.index("dq_result = check_dq(") < source.index("processing = resolve_table_processing_definition(")
-    assert '_resolve_processing_scope(changes_result, processing)' in source
-    assert 'processing_scope["read_strategy"] == "skip"' in source
-    assert 'processing_scope["read_strategy"] == "incremental"' in source
-    assert "processing=processing" in source
-    assert "scope=processing_scope" in source
+    assert source.count("read_pipeline_prep(") == 1
+    assert source.count("write_pipeline_prep(") == 1
+    assert "from fabricops_kit.pipeline.shared" not in source
+    assert "_resolve_processing_scope" not in source
+    assert "_apply_load_strategy" not in source
+    assert source.index("read_pipeline_prep(") < source.index("source_df = read_lakehouse_table(")
+    assert source.index("check_schema(") < source.index("source_df = read_lakehouse_table(")
+    assert 'read_prep["read_strategy"] == "skip"' in source
+    assert 'read_prep["read_strategy"] == "incremental"' in source
+    assert 'processing=write_prep["processing"]' in source
+    assert 'processing_scope=write_prep["scope"]' in source
     assert 'processing["source"] == "current_authoring"' in source
     assert "load_strategy=TARGET_LOAD_STRATEGY" in source
     assert "load_strategy_parameters=TARGET_LOAD_PARAMETERS" in source

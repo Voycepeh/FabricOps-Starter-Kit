@@ -82,6 +82,7 @@ def _previous_observation(history, *, table_id: str, environment_name: str, comm
 
 
 def _observation_changes(observation) -> dict:
+    """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")

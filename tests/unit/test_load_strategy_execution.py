@@ -16,8 +16,8 @@ pytestmark = pytest.mark.unit
 def _capture_writes(monkeypatch):
     calls = []
     monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
-    monkeypatch.setattr(shared, "_resolve_target_audit_fields", lambda _context: {})
-    monkeypatch.setattr(shared, "_add_target_audit_fields", lambda df, _audit: df)
+    monkeypatch.setattr(shared, "resolve_target_audit_fields", lambda _context: {})
+    monkeypatch.setattr(shared, "add_target_audit_fields", lambda df, _audit: df)
     return calls
 
 
@@ -33,7 +33,7 @@ AUDIT = {
 
 def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    shared._apply_load_strategy(
+    shared.execute_lakehouse_processing(
         object(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "overwrite"}, scope={"read_strategy": "full"},
     )
@@ -43,7 +43,7 @@ def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
 
 def test_incremental_overwrite_uses_replace_where(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    shared._apply_load_strategy(
+    shared.execute_lakehouse_processing(
         object(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "overwrite", "partition_column": "business_date"},
         scope={
@@ -58,7 +58,7 @@ def test_incremental_overwrite_uses_replace_where(monkeypatch):
 def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatch):
     calls = _capture_writes(monkeypatch)
     with pytest.raises(ValueError, match="matching safe target partition"):
-        shared._apply_load_strategy(
+        shared.execute_lakehouse_processing(
             object(), table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "overwrite", "partition_column": "other_date"},
             scope={
@@ -71,7 +71,7 @@ def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatc
 
 def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    shared._apply_load_strategy(
+    shared.execute_lakehouse_processing(
         object(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "append"},
         scope={"read_strategy": "incremental", "partition_values": ["2026-08-21"]},
@@ -82,7 +82,7 @@ def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
 def test_incremental_execution_never_accepts_an_empty_scope(monkeypatch):
     calls = _capture_writes(monkeypatch)
     with pytest.raises(ValueError, match="at least one affected"):
-        shared._apply_load_strategy(
+        shared.execute_lakehouse_processing(
             object(), table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "append"},
             scope={"read_strategy": "incremental", "partition_values": []},
@@ -96,11 +96,11 @@ def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spar
     resolutions = []
     monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
     monkeypatch.setattr(
-        shared, "_resolve_target_audit_fields",
+        shared, "resolve_target_audit_fields",
         lambda context: resolutions.append(context) or AUDIT,
     )
     incoming = spark_session.createDataFrame([(1, "active"), (2, "inactive")], ["student_id", "status"])
-    shared._apply_load_strategy(
+    shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": strategy},
         scope={"read_strategy": "full", "partition_values": []},
@@ -118,7 +118,7 @@ def test_target_audit_resolution_reuses_canonical_audit_builder(monkeypatch):
         **AUDIT, "_workspace_name": "Workspace", "_metadata_lakehouse_name": "Metadata",
     })
     context = {"config": "config", "env": "dev", "activity_id": "activity-1"}
-    assert shared._resolve_target_audit_fields(context) == AUDIT
+    assert shared.resolve_target_audit_fields(context) == AUDIT
     assert calls == [{"config": "config", "env": "dev", "runtime_context": context}]
 
 
@@ -130,10 +130,12 @@ def _install_delta(monkeypatch, delta_table):
     monkeypatch.setitem(sys.modules, "delta", package)
     monkeypatch.setitem(sys.modules, "delta.tables", tables)
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "/target"))
-    monkeypatch.setattr(shared, "_resolve_target_audit_fields", lambda _context: AUDIT)
+    monkeypatch.setattr(shared, "resolve_target_audit_fields", lambda _context: AUDIT)
 
 
 def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, spark_session):
+    from pyspark.sql import functions as F
+
     class MissingDelta:
         @staticmethod
         def isDeltaTable(_spark, _path):
@@ -144,8 +146,10 @@ def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, 
     monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
     incoming = spark_session.createDataFrame(
         [(1, "active", "2026-08-22")], ["student_id", "status", "effective_at"]
-    )
-    shared._apply_load_strategy(
+    ).withColumn("_effective_from", F.col("effective_at")).withColumn(
+        "_effective_to", F.lit(None).cast("string")
+    ).withColumn("_is_current", F.lit(True))
+    shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
         scope={"read_strategy": "full"}, context={},
@@ -166,7 +170,7 @@ def test_scd_duplicate_incoming_business_keys_are_rejected(monkeypatch, spark_se
     _install_delta(monkeypatch, MissingDelta)
     incoming = spark_session.createDataFrame([(1, "a"), (1, "b")], ["student_id", "status"])
     with pytest.raises(ValueError, match="duplicate business keys"):
-        shared._apply_load_strategy(
+        shared.execute_lakehouse_processing(
             incoming, table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
             scope={"read_strategy": "full"}, context={},
@@ -208,7 +212,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
     incoming = spark_session.createDataFrame(
         [(1, "active", "old-audit")], ["student_id", "status", "_committed_by"]
     )
-    shared._apply_load_strategy(
+    shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
         scope={"read_strategy": "full"}, context={},

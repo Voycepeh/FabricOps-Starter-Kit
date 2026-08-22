@@ -38,7 +38,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L285">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L301">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -72,6 +72,8 @@ def write_lakehouse_table(
     options=None,
     verbose=True,
     context=None,
+    processing=None,
+    processing_scope=None,
 ):
 ```
 
@@ -169,6 +171,8 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
+| `processing` | `dict` | No | Governed execution definition and scope returned by :func:`write_pipeline_prep`. When supplied, FabricOps performs the prepared append, overwrite, SCD1, or SCD2 mutation internally. |
+| `processing_scope` | `—` | No | Not documented yet |
 
 ## Returns
 
@@ -310,7 +314,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 18 |
+| Live-critical dependencies | 34 |
 
 ### Release history
 
@@ -322,10 +326,18 @@ Side effects
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
@@ -340,6 +352,14 @@ Side effects
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
+<li><code>fabricops_kit.pipeline.shared._business_change_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._resolve_scd2_tracked_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
+<li><code>fabricops_kit.pipeline.shared._validated_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
+<li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 </ul>
 
 

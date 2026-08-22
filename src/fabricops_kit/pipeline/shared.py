@@ -2101,41 +2101,6 @@ def resolve_table_processing_definition(
     return {**definition, "source": "current_authoring"}
 
 
-def _resolve_processing_scope(changes: Mapping[str, Any], processing: Mapping[str, Any]) -> dict[str, Any]:
-    """Combine source-change evidence and one resolved load definition."""
-    strategy = _validated_processing(dict(processing))["load_strategy"]
-    if not changes.get("changed"):
-        return {"read_strategy": "skip", "partition_column": changes.get("partition_column"), "partition_values": []}
-    if changes.get("first_observation"):
-        return {"read_strategy": "full", "partition_column": changes.get("partition_column"), "partition_values": []}
-
-    new = list(changes.get("new_partitions") or [])
-    changed = list(changes.get("changed_partitions") or [])
-    reappeared = list(changes.get("reappeared_partitions") or [])
-    removed = list(changes.get("removed_partitions") or [])
-    partition_column = str(changes.get("partition_column") or "").strip() or None
-    existing_changes = [*changed, *reappeared]
-
-    if removed:
-        if strategy == "overwrite" and not processing.get("partition_column"):
-            return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
-        raise ValueError(f"{strategy} cannot safely apply removed source partitions without explicit delete semantics.")
-    if strategy == "append" and existing_changes:
-        raise ValueError("append is unsafe when an existing source partition changed or reappeared.")
-
-    affected = [*new, *existing_changes]
-    if not affected or not partition_column:
-        if strategy == "append":
-            raise ValueError(
-                "append requires a non-empty, partition-scoped additive source change; "
-                "a full-source append is unsafe."
-            )
-        return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
-    if strategy == "overwrite" and processing.get("partition_column") != partition_column:
-        return {"read_strategy": "full", "partition_column": partition_column, "partition_values": []}
-    return {"read_strategy": "incremental", "partition_column": partition_column, "partition_values": affected}
-
-
 def _sql_literal(value: Any) -> str:
     """Return a Delta predicate literal for a primitive partition value."""
     if value is None:
@@ -2180,7 +2145,7 @@ def _business_change_columns(columns: list[str], key_columns: list[str]) -> list
     ]
 
 
-def _resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, Any]:
+def resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, Any]:
     """Resolve one compact, run-consistent audit record for business target rows."""
     runtime_context = dict(context or {})
     values = build_runtime_audit_fields(
@@ -2191,7 +2156,7 @@ def _resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str,
     return {name: values[name] for name in _TARGET_AUDIT_COLUMNS}
 
 
-def _add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
+def add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
     """Add resolved operational audit literals to incoming target rows."""
     from pyspark.sql import functions as F
 
@@ -2201,7 +2166,7 @@ def _add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
     return result
 
 
-def _apply_load_strategy(
+def execute_lakehouse_processing(
     df,
     *,
     table_name: str,
@@ -2222,8 +2187,10 @@ def _apply_load_strategy(
     if read_strategy == "incremental" and not values:
         raise ValueError("Incremental processing requires at least one affected partition value.")
 
-    audit_fields = _resolve_target_audit_fields(context)
-    persisted_df = _add_target_audit_fields(df, audit_fields)
+    columns = set(getattr(df, "columns", ()))
+    persisted_df = df
+    if not set(_TARGET_AUDIT_COLUMNS) <= columns:
+        persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
     if strategy == "append":
         write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
@@ -2251,16 +2218,7 @@ def _apply_load_strategy(
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        initial = persisted_df
-        if strategy == "scd2":
-            effective = str(processing["effective_column"])
-            effective_type = persisted_df.schema[effective].dataType
-            initial = (
-                initial.withColumn("_effective_from", F.col(effective))
-                .withColumn("_effective_to", F.lit(None).cast(effective_type))
-                .withColumn("_is_current", F.lit(True))
-            )
-        write_lakehouse_table_core(initial, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
         return
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
@@ -2274,7 +2232,6 @@ def _apply_load_strategy(
         return
 
     effective = str(processing["effective_column"])
-    effective_type = persisted_df.schema[effective].dataType
     tracked = _resolve_scd2_tracked_columns(list(df.columns), processing)
     current_column, end_column = "_is_current", "_effective_to"
     current_rows = delta.toDF().where(F.col(current_column))
@@ -2287,12 +2244,7 @@ def _apply_load_strategy(
     )
     expire.execute()
     current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
-    incoming = (
-        persisted_df.join(current, on=keys, how="left_anti")
-        .withColumn("_effective_from", F.col(effective))
-        .withColumn(end_column, F.lit(None).cast(effective_type))
-        .withColumn(current_column, F.lit(True))
-    )
+    incoming = persisted_df.join(current, on=keys, how="left_anti")
     if incoming.limit(1).count():
         write_lakehouse_table_core(incoming, table_name, target=target, schema=schema, mode="append", context=context)
 

@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.pipeline import shared
+from fabricops_kit.pipeline.read_pipeline_prep import _resolve_processing_scope
 
 pytestmark = pytest.mark.unit
 
@@ -103,7 +104,7 @@ def changes(**overrides):
 
 @pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_first_observation_is_full(strategy):
-    assert shared._resolve_processing_scope(
+    assert _resolve_processing_scope(
         changes(first_observation=True), {"load_strategy": strategy, **processing_parameters(strategy)}
     )["read_strategy"] == "full"
 
@@ -119,12 +120,12 @@ def processing_parameters(strategy):
 
 
 def test_no_change_is_skip():
-    assert shared._resolve_processing_scope(changes(changed=False), {"load_strategy": "append"})["read_strategy"] == "skip"
+    assert _resolve_processing_scope(changes(changed=False), {"load_strategy": "append"})["read_strategy"] == "skip"
 
 
 @pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_new_partition_is_incremental(strategy):
-    scope = shared._resolve_processing_scope(
+    scope = _resolve_processing_scope(
         changes(new_partitions=["2026-08-21"]),
         {"load_strategy": strategy, **processing_parameters(strategy)},
     )
@@ -134,12 +135,12 @@ def test_new_partition_is_incremental(strategy):
 @pytest.mark.parametrize("field", ["changed_partitions", "reappeared_partitions"])
 def test_append_rejects_existing_partition_changes(field):
     with pytest.raises(ValueError, match="append is unsafe"):
-        shared._resolve_processing_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"})
+        _resolve_processing_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"})
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])
 def test_scd_existing_partition_change_is_incremental(strategy):
-    scope = shared._resolve_processing_scope(
+    scope = _resolve_processing_scope(
         changes(changed_partitions=["2026-08-21"]),
         {"load_strategy": strategy, **processing_parameters(strategy)},
     )
@@ -149,21 +150,21 @@ def test_scd_existing_partition_change_is_incremental(strategy):
 @pytest.mark.parametrize("strategy", ["append", "scd1", "scd2"])
 def test_removed_partition_rejects_implicit_delete(strategy):
     with pytest.raises(ValueError, match="delete semantics"):
-        shared._resolve_processing_scope(
+        _resolve_processing_scope(
             changes(removed_partitions=["2026-08-21"]),
             {"load_strategy": strategy, **processing_parameters(strategy)},
         )
 
 
 def test_changed_without_usable_scope_uses_full_for_safe_overwrite():
-    scope = shared._resolve_processing_scope(changes(partition_column=None), {"load_strategy": "overwrite"})
+    scope = _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "overwrite"})
     assert scope["read_strategy"] == "full"
     assert scope["partition_values"] == []
 
 
 def test_append_changed_without_usable_scope_rejects_full_append():
     with pytest.raises(ValueError, match="full-source append is unsafe"):
-        shared._resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
+        _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
 
 
 def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():

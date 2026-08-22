@@ -136,7 +136,7 @@ def _persist(
     return frame
 
 
-def observe_table(
+def _observe_table_core(
     table_name: str,
     *,
     target: str = "source",
@@ -281,3 +281,24 @@ def observe_table(
         context=context,
         metadata_schema=metadata_schema,
     )
+
+
+def observe_table(table_name: str, *, target: str = "source", schema: str | None = None) -> Any:
+    """Collect, persist, and return lightweight source-table evidence.
+
+    Parameters
+    ----------
+    table_name : str
+        Table name within the configured source target.
+    target : str, default="source"
+        Configured Lakehouse or Warehouse source target.
+    schema : str or None, default=None
+        Optional configured source schema.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        Canonical compact observation evidence persisted by FabricOps.
+
+    """
+    return _observe_table_core(table_name, target=target, schema=schema)

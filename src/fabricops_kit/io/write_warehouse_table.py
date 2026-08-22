@@ -22,6 +22,7 @@ def write_warehouse_table(
     repartition_by=None,
     options: dict[str, Any] | None = None,
     context: dict[str, Any] | None = None,
+    processing: dict[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric Warehouse table.
 
@@ -81,6 +82,10 @@ def write_warehouse_table(
         identity settings.
     context : dict[str, Any], optional
         Active Fabric context override.
+    processing : dict, optional
+        Governed processing definition returned by
+        :func:`write_pipeline_prep`. Warehouse SCD strategies currently fail
+        explicitly because they require a governed Warehouse MERGE path.
 
     Returns
     -------
@@ -236,6 +241,8 @@ def write_warehouse_table(
 
     """
     validate_dataframe_writer(df)
+    if processing and processing.get("load_strategy") in {"scd1", "scd2"}:
+        raise ValueError("Governed Warehouse SCD execution is not supported yet.")
     df = repartition_dataframe_for_write(df, repartition_by)
 
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(

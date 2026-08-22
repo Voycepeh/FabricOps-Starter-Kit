@@ -1,4 +1,4 @@
-# `observe_table`
+# `write_pipeline_prep`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,22 +7,22 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Record compact count and change-value bounds before expensive source work.
+Prepare governed target write inputs and technical fields without physically writing.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:286`
+`fabricops_kit/pipeline/write_pipeline_prep.py:26`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L286-L304">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L26-L112">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage notes
 
@@ -36,11 +36,11 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def observe_table(
-    table_name: str,
-    target: str='source',
-    schema: str | None=None,
-) -> Any:
+def write_pipeline_prep(
+    df,
+    read_prep: dict[str, Any],
+    target: str='unified',
+) -> dict[str, Any]:
 ```
 
 </div>
@@ -49,9 +49,9 @@ def observe_table(
 
 <div class="reference-example-usage" markdown="1">
 
-```python
-observation = observe_table(target=SOURCE_TARGET, schema=SOURCE_SCHEMA, table_name=SOURCE_TABLE_NAME, partition_column="business_date", change_column="modified_at")
-```
+>>> write_prep = write_pipeline_prep(transformed_df, read_prep, target="unified")
+>>> write_prep["mode"]
+'append'
 
 </div>
 
@@ -59,17 +59,30 @@ observation = observe_table(target=SOURCE_TARGET, schema=SOURCE_SCHEMA, table_na
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Table name within the configured source target. |
-| `target` | `str` | No | Configured Lakehouse or Warehouse source target. |
-| `schema` | `str \| None` | No | Optional configured source schema. |
+| `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
+| `read_prep` | `dict[str, Any]` | Yes | Exact result returned by :func:`read_pipeline_prep`. Its canonical ``processing`` definition is reused without contract re-resolution. |
+| `target` | `str` | No | Configured Lakehouse or Warehouse target used to prepare physical writer settings. |
 
 ## Returns
 
-Compact count, minimum and maximum change-value observations plus changed partitions and a restricted read predicate.
+Audited DataFrame, writer mode/options, canonical processing, and prepared execution scope.
 
 ## Raises / Errors
 
-Not documented yet
+ValueError
+    If preparation is incomplete or an unsafe target/strategy combination
+    is requested.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+FabricOps resolves one run-level audit record and adds only compact target
+provenance fields. This function does not call a Lakehouse or Warehouse
+writer. Warehouse SCD execution is explicitly unsupported until a governed
+Warehouse MERGE implementation is available.
+
+</div>
 
 ## See also
 

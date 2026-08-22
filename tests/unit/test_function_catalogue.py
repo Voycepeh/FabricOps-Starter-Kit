@@ -102,7 +102,7 @@ def test_reference_catalogue_rows_include_only_public_inventory_functions() -> N
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"run_table_guardrails", "FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage", "widget_pipeline_bootstrap", "write_pipeline_run_summary"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 27
+    assert len(_catalogue_row_names()) == 29
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -162,6 +162,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     audit_names.add("profile_frequency_distribution")
     audit_names.add("profile_and_register_table")
     audit_names.add("observe_table")
+    audit_names.update({"read_pipeline_prep", "write_pipeline_prep"})
     audit_names.discard("widget_pipeline_bootstrap")
     audit_names.discard("write_pipeline_run_summary")
     audit_names.discard("widget_render_agreement_evidence")
