@@ -28,6 +28,28 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
 
     Governance does not create another copy of the Data Catalogue or Data Profiled records. It reads Engineering evidence and adds Enrichment and Guardrail intent around it.
 
+??? info "Why FabricOps separates observed evidence from authored Governance metadata"
+
+    Profiling can discover the physical table and column structure, but it cannot discover business meaning, stewardship intent, classifications, or the rules that Governance wants Engineering to enforce.
+
+    FabricOps therefore keeps the responsibilities separate:
+
+    ```text
+    Engineering observation
+    → Data Catalogue / Data Profiled / Data Lineage / Guardrail Results
+
+    Governance authoring
+    → Enrichment / Guardrails / Data Agreement / Data Contract
+    ```
+
+    This avoids rewriting observed facts as manually maintained Governance records. Enrichment attaches business context to the canonical Data Catalogue identity, while Guardrails define executable intent around that observed asset.
+
+??? info "Why table Guardrails and DQ rules are authored separately"
+
+    Schema, Freshness, and Changes Guardrails operate at the table boundary and can often be evaluated before reading all business rows. DQ rules evaluate the actual DataFrame and may also record row-level failures.
+
+    Keeping those authoring paths separate makes the distinction visible: table observation and structural checks are not the same thing as row-level data-quality validation, even though both contribute to the governed ETL run.
+
 ## Expected result
 
 You should now have:
