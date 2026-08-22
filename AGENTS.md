@@ -148,7 +148,7 @@ Ordinary source PRs must regenerate and commit the affected generated individual
 - `docs/reference/index.md`
 - `docs/reference/function-call-graph.md`
 
-Typical changes that require regeneration include public callable source changes; docstring changes that affect generated documentation; callable source-location, public export, callable relationship, or call-flow changes; lifecycle, category, usage-note, or example changes in `scripts/reference_docs_metadata.py`; and generator changes that alter these outputs. Do not regenerate or commit the individual reference artifacts when a change cannot affect them.
+Typical changes that require regeneration include public callable source changes; docstring changes that affect generated documentation; callable source-location, public export, callable relationship, or call-flow changes; lifecycle, category, usage-note, or example changes in `scripts/reference_docs_metadata.py`; and generator changes that alter these outputs. Do not regenerate or commit the individual reference artifacts when a change cannot affect generated content.
 
 Generate the individual reference artifacts with:
 
@@ -193,11 +193,10 @@ Give each topic one canonical home based on what the reader is trying to learn. 
 
 - **Product Definition** owns what FabricOps is: the original product intent, scope, audience, positioning, and product-level boundaries.
 - **How FabricOps Works** owns the high-level explanation of how the complete FabricOps workflow fits together. It should be understandable without implementation-level detail.
-- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow.
-- **Solution Bank** owns rationale and deeper technical guidance: design choices, reusable patterns, trade-offs, edge cases, and problem-specific solutions.
+- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow. Put useful technical rationale, trade-offs, caveats, and edge cases beside the relevant step in focused collapsible blocks instead of creating a separate rationale layer.
 - **Function Reference** owns exact callable contracts: parameters, returns, side effects, failure behaviour, and callable-specific usage guidance.
 
-Cross-link between these layers instead of copying the same explanation into several pages. Keep overview pages high level, implementation pages actionable, rationale pages explanatory, and reference pages exact.
+Cross-link between these layers instead of copying the same explanation into several pages. Keep overview pages high level, Guided Demo pages actionable with optional contextual rationale, and reference pages exact.
 
 ### Human-facing documentation readability
 
@@ -207,7 +206,7 @@ Human-facing pages should be scannable before they are read in detail. Use the d
 - Start major sections with a short bold summary sentence when it helps readers understand the point quickly.
 - Break long prose into descriptive `##` and `###` sections, bullets, numbered steps, or compact tables.
 - Use Material admonitions only for important notes, warnings, and rules. Avoid excessive boxes.
-- Use collapsible `???` detail blocks for optional background, exceptions, troubleshooting, and long secondary explanations.
+- Use collapsible `???` detail blocks for optional background, exceptions, troubleshooting, rationale, trade-offs, and long secondary explanations.
 - Do not repeat a diagram's full meaning in several paragraphs directly below it.
 - Procedure pages should normally end with an expected result and a clear next step.
 - Prefer existing Markdown and MkDocs Material patterns before adding custom HTML or decorative components.
