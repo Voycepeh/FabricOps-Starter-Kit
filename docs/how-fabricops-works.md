@@ -45,7 +45,7 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
     - **Development:** use current authoring or a selected Data Contract.
     - **Production:** use the approved active Data Contract.
 
-!!! abstract "E. Extract"
+!!! info "E. Extract"
 
     - Define one or more source table IDs.
     - Resolve source Guardrails and Data Contract context, or Guardrail metadata in Development.
@@ -55,13 +55,13 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
     - Profile and register only when the DataFrame represents the **full physical table**.
     - Record Data Lineage and Data Profile evidence.
 
-!!! info "T. Transform"
+!!! abstract "T. Transform"
 
     - Apply user-defined business transformation.
     - Join, derive, aggregate, enrich, and reshape as required.
     - FabricOps governs the inputs and outputs, not the business logic.
 
-!!! abstract "L. Load"
+!!! success "L. Load"
 
     - Define one or more target table IDs.
     - Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition.
