@@ -251,6 +251,21 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
     assert "read_pipeline_prep" in source
 
+    prep_cell = next(
+        value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
+        if "read_prep = read_pipeline_prep(" in value
+    )
+    tree = ast.parse(prep_cell)
+    skip_if = next(
+        node for node in tree.body
+        if isinstance(node, ast.If)
+        and "read_strategy" in ast.unparse(node.test)
+        and "skip" in ast.unparse(node.test)
+    )
+    assert "read_lakehouse_table(" not in "\n".join(ast.unparse(node) for node in skip_if.body)
+    assert "read_lakehouse_table(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
+    assert "check_dq(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
+
 
 def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
     """Use public prep boundaries while keeping physical IO and Guardrails visible."""
