@@ -187,6 +187,18 @@ Validation builds do not make generated files on `main` current unless those fil
 - `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
 - `Managed by` entries should identify exact source functions when traceable.
 
+### Documentation ownership
+
+Give each topic one canonical home based on what the reader is trying to learn. Before adding a page or expanding an existing one, classify the content and update the canonical owner instead of creating overlapping explanations.
+
+- **Product Definition** owns what FabricOps is: the original product intent, scope, audience, positioning, and product-level boundaries.
+- **How FabricOps Works** owns the high-level explanation of how the complete FabricOps workflow fits together. It should be understandable without implementation-level detail.
+- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow.
+- **Solution Bank** owns rationale and deeper technical guidance: design choices, reusable patterns, trade-offs, edge cases, and problem-specific solutions.
+- **Function Reference** owns exact callable contracts: parameters, returns, side effects, failure behaviour, and callable-specific usage guidance.
+
+Cross-link between these layers instead of copying the same explanation into several pages. Keep overview pages high level, implementation pages actionable, rationale pages explanatory, and reference pages exact.
+
 ### Human-facing documentation readability
 
 Human-facing pages should be scannable before they are read in detail. Use the documentation-maintenance skill for the full pattern, and apply these repository-wide defaults:
