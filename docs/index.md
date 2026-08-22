@@ -24,51 +24,51 @@ FabricOps includes:
 
 </div>
 
-## Quick Links
+## Start here
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
-    <span class="fabricops-landing-card__title">How FabricOps Works</span>
-    <span class="fabricops-landing-card__body">Understand the workspace model, Governance and Engineering workflow, ETL operating model, metadata flow, and Production consumption pattern.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="guided-demo/">
-    <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the step-by-step workflow and expand the technical notes to understand why FabricOps uses each pattern.</span>
+    <span class="fabricops-landing-card__title">How FabricOps works</span>
+    <span class="fabricops-landing-card__body">See how the workspaces, Governance, Engineering, ETL, metadata, and Production flow fit together.</span>
   </a>
 
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
-    <span class="fabricops-landing-card__title">Product Definition</span>
-    <span class="fabricops-landing-card__body">Read the source of truth for FabricOps terminology, operating decisions, responsibilities, and product boundaries.</span>
+    <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
+    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for terminology, decisions, responsibilities, and boundaries.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="guided-demo/">
+    <span class="fabricops-landing-card__title">Step-by-step Guided Demo</span>
+    <span class="fabricops-landing-card__body">Follow the workflow in order, with expandable notes explaining the important technical choices.</span>
   </a>
 
   <a class="fabricops-landing-card" href="releases/">
-    <span class="fabricops-landing-card__title">Releases</span>
-    <span class="fabricops-landing-card__body">View published releases and their included assets.</span>
+    <span class="fabricops-landing-card__title">Official releases</span>
+    <span class="fabricops-landing-card__body">View published FabricOps releases and the assets included in each version.</span>
   </a>
 </div>
 
-## Technical lookup
+## FabricOps Assets
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="notebook-templates/">
     <span class="fabricops-landing-card__title">4 Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Download the latest notebook templates.</span>
+    <span class="fabricops-landing-card__body">Download the latest reusable FabricOps notebook templates.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>29</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Search the notebook-facing callable reference.</span>
+    <span class="fabricops-landing-card__body">Search the notebook-facing FabricOps callable reference.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>13</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Review each metadata table's purpose, schema, and writer ownership.</span>
+    <span class="fabricops-landing-card__body">Review each metadata table, its schema, purpose, and writer ownership.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
     <span class="fabricops-landing-card__title">11 data quality rule types</span>
-    <span class="fabricops-landing-card__body">Explore the supported DQ rules available for Guardrails.</span>
+    <span class="fabricops-landing-card__body">Explore the supported Data Quality rules available for Guardrails.</span>
   </a>
 </div>
 
@@ -77,7 +77,7 @@ FabricOps includes:
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
-    <span class="fabricops-landing-card__body">Inspect public callable architecture, call flows, nested functions, and architecture violations.</span>
+    <span class="fabricops-landing-card__body">Inspect callable architecture, call flows, nested functions, and architecture violations.</span>
   </a>
 
   <a class="fabricops-landing-card" href="maintainer/">
