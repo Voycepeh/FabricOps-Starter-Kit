@@ -54,6 +54,20 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_dq_failed_rules",
 }
 _DEFAULT_PROFILE_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
+_TARGET_AUDIT_COLUMNS = (
+    "_committed_at",
+    "_committed_by",
+    "_activity_id",
+    "_workspace_id",
+    "_notebook_id",
+    "_notebook_name",
+)
+_SCD2_LIFECYCLE_COLUMNS = ("_effective_from", "_effective_to", "_is_current")
+_TARGET_TECHNICAL_COLUMNS = {
+    *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
+    *_TARGET_AUDIT_COLUMNS,
+    *_SCD2_LIFECYCLE_COLUMNS,
+}
 
 
 def resolve_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
@@ -2137,16 +2151,54 @@ def _resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, A
     """Return explicit or default business columns used to detect SCD2 changes."""
     explicit = processing.get("tracked_columns")
     if explicit:
+        invalid = sorted(
+            name for name in explicit
+            if name not in columns
+            or name in {*processing["key_columns"], processing["effective_column"], *_TARGET_TECHNICAL_COLUMNS}
+            or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+        )
+        if invalid:
+            raise ValueError(f"SCD2 tracked_columns must contain only business columns: {', '.join(invalid)}.")
         return list(explicit)
     excluded = {
         *processing["key_columns"],
         processing["effective_column"],
-        *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
+        *_TARGET_TECHNICAL_COLUMNS,
     }
     return [
         name for name in columns
         if name not in excluded and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
     ]
+
+
+def _business_change_columns(columns: list[str], key_columns: list[str]) -> list[str]:
+    """Return non-key business columns eligible for SCD change detection."""
+    return [
+        name for name in columns
+        if name not in {*key_columns, *_TARGET_TECHNICAL_COLUMNS}
+        and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ]
+
+
+def _resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Resolve one compact, run-consistent audit record for business target rows."""
+    runtime_context = dict(context or {})
+    values = build_runtime_audit_fields(
+        config=runtime_context.get("config"),
+        env=runtime_context.get("env"),
+        runtime_context=runtime_context,
+    )
+    return {name: values[name] for name in _TARGET_AUDIT_COLUMNS}
+
+
+def _add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
+    """Add resolved operational audit literals to incoming target rows."""
+    from pyspark.sql import functions as F
+
+    result = df
+    for name in _TARGET_AUDIT_COLUMNS:
+        result = result.withColumn(name, F.lit(audit_fields[name]))
+    return result
 
 
 def _apply_load_strategy(
@@ -2170,19 +2222,22 @@ def _apply_load_strategy(
     if read_strategy == "incremental" and not values:
         raise ValueError("Incremental processing requires at least one affected partition value.")
 
+    audit_fields = _resolve_target_audit_fields(context)
+    persisted_df = _add_target_audit_fields(df, audit_fields)
+
     if strategy == "append":
-        write_lakehouse_table_core(df, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
         if read_strategy == "full":
-            write_lakehouse_table_core(df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
             return
         partition_column = processing.get("partition_column")
         if not partition_column or partition_column != scope.get("partition_column"):
             raise ValueError("Incremental overwrite requires matching safe target partition configuration.")
         predicate = f"`{str(partition_column).replace('`', '``')}` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table_core(
-            df, table_name, target=target, schema=schema, mode="overwrite", context=context,
+            persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
             options={"replaceWhere": predicate},
         )
         return
@@ -2192,34 +2247,52 @@ def _apply_load_strategy(
 
     _store, _table, _schema, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
     keys = list(processing["key_columns"])
-    duplicate = df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
+    duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        initial = df
+        initial = persisted_df
         if strategy == "scd2":
-            initial = initial.withColumn("_fabricops_is_current", F.lit(True)).withColumn(
-                "_fabricops_effective_to", F.lit(None).cast("timestamp")
+            effective = str(processing["effective_column"])
+            effective_type = persisted_df.schema[effective].dataType
+            initial = (
+                initial.withColumn("_effective_from", F.col(effective))
+                .withColumn("_effective_to", F.lit(None).cast(effective_type))
+                .withColumn("_is_current", F.lit(True))
             )
         write_lakehouse_table_core(initial, table_name, target=target, schema=schema, mode="overwrite", context=context)
         return
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
     if strategy == "scd1":
-        delta.alias("target").merge(df.alias("source"), condition).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+        business_columns = _business_change_columns(list(df.columns), keys)
+        change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
+        (
+            delta.alias("target").merge(persisted_df.alias("source"), condition)
+            .whenMatchedUpdateAll(condition=change).whenNotMatchedInsertAll().execute()
+        )
         return
 
     effective = str(processing["effective_column"])
+    effective_type = persisted_df.schema[effective].dataType
     tracked = _resolve_scd2_tracked_columns(list(df.columns), processing)
-    current_column, end_column = "_fabricops_is_current", "_fabricops_effective_to"
+    current_column, end_column = "_is_current", "_effective_to"
+    current_rows = delta.toDF().where(F.col(current_column))
+    if current_rows.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
+        raise RuntimeError("SCD2 target contains multiple current records for one or more business keys.")
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     expire = (
-        delta.alias("target").merge(df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
+        delta.alias("target").merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
         .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
     )
     expire.execute()
     current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
-    incoming = df.join(current, on=keys, how="left_anti").withColumn(current_column, F.lit(True)).withColumn(end_column, F.lit(None).cast("timestamp"))
+    incoming = (
+        persisted_df.join(current, on=keys, how="left_anti")
+        .withColumn("_effective_from", F.col(effective))
+        .withColumn(end_column, F.lit(None).cast(effective_type))
+        .withColumn(current_column, F.lit(True))
+    )
     if incoming.limit(1).count():
         write_lakehouse_table_core(incoming, table_name, target=target, schema=schema, mode="append", context=context)
 

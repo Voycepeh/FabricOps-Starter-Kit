@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+import sys
+from types import ModuleType
+
 import pytest
 
 from fabricops_kit.pipeline import shared
@@ -13,7 +16,19 @@ pytestmark = pytest.mark.unit
 def _capture_writes(monkeypatch):
     calls = []
     monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(shared, "_resolve_target_audit_fields", lambda _context: {})
+    monkeypatch.setattr(shared, "_add_target_audit_fields", lambda df, _audit: df)
     return calls
+
+
+AUDIT = {
+    "_committed_at": "2026-08-22T00:00:00+00:00",
+    "_committed_by": "engineer@example.com",
+    "_activity_id": "activity-1",
+    "_workspace_id": "workspace-1",
+    "_notebook_id": "notebook-1",
+    "_notebook_name": "02_pipeline",
+}
 
 
 def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
@@ -73,3 +88,142 @@ def test_incremental_execution_never_accepts_an_empty_scope(monkeypatch):
             scope={"read_strategy": "incremental", "partition_values": []},
         )
     assert calls == []
+
+
+@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append")])
+def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spark_session, strategy, mode):
+    calls = []
+    resolutions = []
+    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        shared, "_resolve_target_audit_fields",
+        lambda context: resolutions.append(context) or AUDIT,
+    )
+    incoming = spark_session.createDataFrame([(1, "active"), (2, "inactive")], ["student_id", "status"])
+    shared._apply_load_strategy(
+        incoming, table_name="students", target="unified", schema="dbo",
+        processing={"load_strategy": strategy},
+        scope={"read_strategy": "full", "partition_values": []},
+        context={"activity_id": "activity-1"},
+    )
+    rows = calls[0][0][0].collect()
+    assert calls[0][1]["mode"] == mode
+    assert resolutions == [{"activity_id": "activity-1"}]
+    assert all({name: row[name] for name in AUDIT} == AUDIT for row in rows)
+
+
+def test_target_audit_resolution_reuses_canonical_audit_builder(monkeypatch):
+    calls = []
+    monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: calls.append(kwargs) or {
+        **AUDIT, "_workspace_name": "Workspace", "_metadata_lakehouse_name": "Metadata",
+    })
+    context = {"config": "config", "env": "dev", "activity_id": "activity-1"}
+    assert shared._resolve_target_audit_fields(context) == AUDIT
+    assert calls == [{"config": "config", "env": "dev", "runtime_context": context}]
+
+
+def _install_delta(monkeypatch, delta_table):
+    package = ModuleType("delta")
+    tables = ModuleType("delta.tables")
+    tables.DeltaTable = delta_table
+    package.tables = tables
+    monkeypatch.setitem(sys.modules, "delta", package)
+    monkeypatch.setitem(sys.modules, "delta.tables", tables)
+    monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "/target"))
+    monkeypatch.setattr(shared, "_resolve_target_audit_fields", lambda _context: AUDIT)
+
+
+def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, spark_session):
+    class MissingDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return False
+
+    calls = []
+    _install_delta(monkeypatch, MissingDelta)
+    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    incoming = spark_session.createDataFrame(
+        [(1, "active", "2026-08-22")], ["student_id", "status", "effective_at"]
+    )
+    shared._apply_load_strategy(
+        incoming, table_name="students", target="unified", schema="dbo",
+        processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
+        scope={"read_strategy": "full"}, context={},
+    )
+    row = calls[0][0][0].collect()[0].asDict()
+    assert row["_effective_from"] == "2026-08-22"
+    assert row["_effective_to"] is None
+    assert row["_is_current"] is True
+    assert {name: row[name] for name in AUDIT} == AUDIT
+
+
+def test_scd_duplicate_incoming_business_keys_are_rejected(monkeypatch, spark_session):
+    class MissingDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return False
+
+    _install_delta(monkeypatch, MissingDelta)
+    incoming = spark_session.createDataFrame([(1, "a"), (1, "b")], ["student_id", "status"])
+    with pytest.raises(ValueError, match="duplicate business keys"):
+        shared._apply_load_strategy(
+            incoming, table_name="students", target="unified", schema="dbo",
+            processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
+            scope={"read_strategy": "full"}, context={},
+        )
+
+
+def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypatch, spark_session):
+    recorded = {}
+
+    class Merge:
+        def whenMatchedUpdateAll(self, *, condition):
+            recorded["change"] = condition
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            recorded["insert"] = True
+            return self
+
+        def execute(self):
+            recorded["executed"] = True
+
+    class ExistingDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return True
+
+        @staticmethod
+        def forPath(_spark, _path):
+            return ExistingDelta()
+
+        def alias(self, _name):
+            return self
+
+        def merge(self, _source, condition):
+            recorded["keys"] = condition
+            return Merge()
+
+    _install_delta(monkeypatch, ExistingDelta)
+    incoming = spark_session.createDataFrame(
+        [(1, "active", "old-audit")], ["student_id", "status", "_committed_by"]
+    )
+    shared._apply_load_strategy(
+        incoming, table_name="students", target="unified", schema="dbo",
+        processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
+        scope={"read_strategy": "full"}, context={},
+    )
+    assert recorded == {
+        "keys": "target.`student_id` <=> source.`student_id`",
+        "change": "NOT (target.`status` <=> source.`status`)",
+        "insert": True,
+        "executed": True,
+    }
+
+
+def test_scd2_explicit_tracking_rejects_technical_columns():
+    with pytest.raises(ValueError, match="only business columns"):
+        shared._resolve_scd2_tracked_columns(
+            ["student_id", "status", "effective_at", "_committed_at"],
+            {"key_columns": ["student_id"], "effective_column": "effective_at", "tracked_columns": ["_committed_at"]},
+        )
