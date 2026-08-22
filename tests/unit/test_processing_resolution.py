@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.pipeline import shared
+from fabricops_kit.pipeline.read_pipeline_prep import _resolve_processing_scope
 
 pytestmark = pytest.mark.unit
 
@@ -40,9 +41,11 @@ def catalogue(strategy="overwrite"):
     }])
 
 
-def test_development_uses_current_catalogue(monkeypatch):
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: catalogue())
-    resolved = shared.resolve_table_processing_definition(object(), "dev", "students")
+def test_development_uses_current_notebook_authoring_without_catalogue(monkeypatch):
+    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
+    resolved = shared.resolve_table_processing_definition(
+        object(), "dev", "students", authored_processing={"load_strategy": "overwrite"}
+    )
     assert resolved == {"load_strategy": "overwrite", "source": "current_authoring"}
 
 
@@ -51,10 +54,16 @@ def test_development_override_uses_frozen_contract(monkeypatch):
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students",
         context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
+        authored_processing={"load_strategy": "append"},
     )
     assert resolved["load_strategy"] == "scd1"
     assert resolved["source"] == "data_contract"
     assert resolved["contract_version"] == 3
+
+
+def test_development_current_authoring_requires_notebook_definition():
+    with pytest.raises(ValueError, match="authored processing"):
+        shared.resolve_table_processing_definition(object(), "dev", "students")
 
 
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
@@ -78,3 +87,89 @@ def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, 
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: frozen)
     with pytest.raises(ValueError):
         shared.resolve_table_processing_definition(object(), "prod", "students")
+
+
+def changes(**overrides):
+    return {
+        "changed": True,
+        "first_observation": False,
+        "new_partitions": [],
+        "changed_partitions": [],
+        "removed_partitions": [],
+        "reappeared_partitions": [],
+        "partition_column": "business_date",
+        **overrides,
+    }
+
+
+@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
+def test_first_observation_is_full(strategy):
+    assert _resolve_processing_scope(
+        changes(first_observation=True), {"load_strategy": strategy, **processing_parameters(strategy)}
+    )["read_strategy"] == "full"
+
+
+def processing_parameters(strategy):
+    if strategy == "overwrite":
+        return {"partition_column": "business_date"}
+    if strategy == "scd1":
+        return {"key_columns": ["student_id"]}
+    if strategy == "scd2":
+        return {"key_columns": ["student_id"], "effective_column": "modified_at"}
+    return {}
+
+
+def test_no_change_is_skip():
+    assert _resolve_processing_scope(changes(changed=False), {"load_strategy": "append"})["read_strategy"] == "skip"
+
+
+@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
+def test_new_partition_is_incremental(strategy):
+    scope = _resolve_processing_scope(
+        changes(new_partitions=["2026-08-21"]),
+        {"load_strategy": strategy, **processing_parameters(strategy)},
+    )
+    assert scope == {"read_strategy": "incremental", "partition_column": "business_date", "partition_values": ["2026-08-21"]}
+
+
+@pytest.mark.parametrize("field", ["changed_partitions", "reappeared_partitions"])
+def test_append_rejects_existing_partition_changes(field):
+    with pytest.raises(ValueError, match="append is unsafe"):
+        _resolve_processing_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"})
+
+
+@pytest.mark.parametrize("strategy", ["scd1", "scd2"])
+def test_scd_existing_partition_change_is_incremental(strategy):
+    scope = _resolve_processing_scope(
+        changes(changed_partitions=["2026-08-21"]),
+        {"load_strategy": strategy, **processing_parameters(strategy)},
+    )
+    assert scope["read_strategy"] == "incremental"
+
+
+@pytest.mark.parametrize("strategy", ["append", "scd1", "scd2"])
+def test_removed_partition_rejects_implicit_delete(strategy):
+    with pytest.raises(ValueError, match="delete semantics"):
+        _resolve_processing_scope(
+            changes(removed_partitions=["2026-08-21"]),
+            {"load_strategy": strategy, **processing_parameters(strategy)},
+        )
+
+
+def test_changed_without_usable_scope_uses_full_for_safe_overwrite():
+    scope = _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "overwrite"})
+    assert scope["read_strategy"] == "full"
+    assert scope["partition_values"] == []
+
+
+def test_append_changed_without_usable_scope_rejects_full_append():
+    with pytest.raises(ValueError, match="full-source append is unsafe"):
+        _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
+
+
+def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():
+    tracked = shared._resolve_scd2_tracked_columns(
+        ["student_id", "name", "status", "effective_at", "ingested_at_utc", "_fabricops_created_at", "loaded_at"],
+        {"key_columns": ["student_id"], "effective_column": "effective_at"},
+    )
+    assert tracked == ["name", "status"]

@@ -7,7 +7,12 @@ from functools import reduce
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from ..io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from ..io.shared import (
+    configured_lakehouse_schema,
+    read_lakehouse_table_core,
+    resolve_configured_lakehouse_table,
+    write_lakehouse_table_core,
+)
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
@@ -32,6 +37,7 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_business_key_hash",
     "_row_hash",
     "pipeline_ts",
+    "ingested_at_utc",
     "notebook_name",
     "loaded_by",
     "p_bucket",
@@ -48,6 +54,20 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_dq_failed_rules",
 }
 _DEFAULT_PROFILE_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
+_TARGET_AUDIT_COLUMNS = (
+    "_committed_at",
+    "_committed_by",
+    "_activity_id",
+    "_workspace_id",
+    "_notebook_id",
+    "_notebook_name",
+)
+_SCD2_LIFECYCLE_COLUMNS = ("_effective_from", "_effective_to", "_is_current")
+_TARGET_TECHNICAL_COLUMNS = {
+    *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
+    *_TARGET_AUDIT_COLUMNS,
+    *_SCD2_LIFECYCLE_COLUMNS,
+}
 
 
 def resolve_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
@@ -2002,11 +2022,38 @@ def _validated_processing(processing: Any) -> dict[str, Any]:
     strategy = str(processing.get("load_strategy") or "").strip().lower()
     if strategy not in {"overwrite", "append", "scd1", "scd2"}:
         raise ValueError("Processing definition has an invalid load_strategy.")
-    if strategy in {"scd1", "scd2"} and not processing.get("key_columns"):
+    definition = {**processing, "load_strategy": strategy}
+    allowed = {
+        "overwrite": {"load_strategy", "partition_column", "source", "contract_id", "contract_version"},
+        "append": {"load_strategy", "source", "contract_id", "contract_version"},
+        "scd1": {"load_strategy", "key_columns", "source", "contract_id", "contract_version"},
+        "scd2": {
+            "load_strategy", "key_columns", "effective_column", "tracked_columns",
+            "source", "contract_id", "contract_version",
+        },
+    }[strategy]
+    unexpected = sorted(set(definition) - allowed)
+    if unexpected:
+        raise ValueError(f"Processing definition for {strategy} contains unsupported fields: {', '.join(unexpected)}.")
+    for name in ("key_columns", "tracked_columns"):
+        if name not in definition:
+            continue
+        values = definition[name]
+        if not isinstance(values, list | tuple) or not values or any(
+            not isinstance(value, str) or not value.strip() for value in values
+        ):
+            raise ValueError(f"Processing definition {name} must be a non-empty sequence of column names.")
+        definition[name] = [value.strip() for value in values]
+    if strategy in {"scd1", "scd2"} and "key_columns" not in definition:
         raise ValueError(f"Processing definition for {strategy} requires key_columns.")
-    if strategy == "scd2" and not processing.get("effective_column"):
+    for name in ("partition_column", "effective_column"):
+        if name in definition and (not isinstance(definition[name], str) or not definition[name].strip()):
+            raise ValueError(f"Processing definition {name} must be a non-empty column name.")
+        if name in definition:
+            definition[name] = definition[name].strip()
+    if strategy == "scd2" and "effective_column" not in definition:
         raise ValueError("Processing definition for scd2 requires effective_column.")
-    return {**processing, "load_strategy": strategy}
+    return definition
 
 
 def resolve_table_processing_definition(
@@ -2016,8 +2063,9 @@ def resolve_table_processing_definition(
     *,
     spark_session=None,
     context: Mapping[str, Any] | None = None,
+    authored_processing: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Resolve current or frozen table processing through the contract-source model."""
+    """Resolve authored or frozen table processing through the contract-source model."""
     runtime_context = context or {}
     contract = None
     if env == "prod":
@@ -2047,28 +2095,158 @@ def resolve_table_processing_definition(
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
         }
-    frame = read_lakehouse_table_core(
-        CATALOGUE_TABLE, target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        spark_session=spark_session, context=context or {"config": config, "env": env},
-    )
-    rows = [_row_to_dict(row) for row in frame.collect()]
-    matches = [
-        row for row in rows
-        if str(row.get("table_id") or "") == table_id
-        and str(row.get("environment_name") or "") == env
-        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
-        and row.get("is_active") is not False
-    ]
-    if len(matches) != 1:
-        raise ValueError(f"Current Catalogue must contain exactly one active table row for {table_id!r}.")
-    row = matches[0]
-    try:
-        parameters = json.loads(str(row.get("load_strategy_parameters_json") or "{}"))
-    except json.JSONDecodeError as exc:
-        raise ValueError("Catalogue load_strategy_parameters_json is invalid JSON.") from exc
-    definition = _validated_processing({"load_strategy": row.get("load_strategy"), **parameters})
+    if authored_processing is None:
+        raise ValueError("Development current authoring requires an authored processing definition.")
+    definition = _validated_processing(dict(authored_processing))
     return {**definition, "source": "current_authoring"}
+
+
+def _sql_literal(value: Any) -> str:
+    """Return a Delta predicate literal for a primitive partition value."""
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, int | float):
+        return str(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
+    """Return explicit or default business columns used to detect SCD2 changes."""
+    explicit = processing.get("tracked_columns")
+    if explicit:
+        invalid = sorted(
+            name for name in explicit
+            if name not in columns
+            or name in {*processing["key_columns"], processing["effective_column"], *_TARGET_TECHNICAL_COLUMNS}
+            or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+        )
+        if invalid:
+            raise ValueError(f"SCD2 tracked_columns must contain only business columns: {', '.join(invalid)}.")
+        return list(explicit)
+    excluded = {
+        *processing["key_columns"],
+        processing["effective_column"],
+        *_TARGET_TECHNICAL_COLUMNS,
+    }
+    return [
+        name for name in columns
+        if name not in excluded and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ]
+
+
+def _business_change_columns(columns: list[str], key_columns: list[str]) -> list[str]:
+    """Return non-key business columns eligible for SCD change detection."""
+    return [
+        name for name in columns
+        if name not in {*key_columns, *_TARGET_TECHNICAL_COLUMNS}
+        and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+    ]
+
+
+def resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Resolve one compact, run-consistent audit record for business target rows."""
+    runtime_context = dict(context or {})
+    values = build_runtime_audit_fields(
+        config=runtime_context.get("config"),
+        env=runtime_context.get("env"),
+        runtime_context=runtime_context,
+    )
+    return {name: values[name] for name in _TARGET_AUDIT_COLUMNS}
+
+
+def add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
+    """Add resolved operational audit literals to incoming target rows."""
+    from pyspark.sql import functions as F
+
+    result = df
+    for name in _TARGET_AUDIT_COLUMNS:
+        result = result.withColumn(name, F.lit(audit_fields[name]))
+    return result
+
+
+def execute_lakehouse_processing(
+    df,
+    *,
+    table_name: str,
+    target: str,
+    schema: str | None,
+    processing: Mapping[str, Any],
+    scope: Mapping[str, Any],
+    context: Mapping[str, Any] | None = None,
+) -> None:
+    """Apply one already-resolved governed load definition to a Lakehouse target."""
+    strategy = _validated_processing(dict(processing))["load_strategy"]
+    read_strategy = scope.get("read_strategy")
+    if read_strategy == "skip":
+        return
+    if read_strategy not in {"full", "incremental"}:
+        raise ValueError("Processing scope must use skip, full, or incremental.")
+    values = list(scope.get("partition_values") or [])
+    if read_strategy == "incremental" and not values:
+        raise ValueError("Incremental processing requires at least one affected partition value.")
+
+    columns = set(getattr(df, "columns", ()))
+    persisted_df = df
+    if not set(_TARGET_AUDIT_COLUMNS) <= columns:
+        persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
+
+    if strategy == "append":
+        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
+        return
+    if strategy == "overwrite":
+        if read_strategy == "full":
+            write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            return
+        partition_column = processing.get("partition_column")
+        if not partition_column or partition_column != scope.get("partition_column"):
+            raise ValueError("Incremental overwrite requires matching safe target partition configuration.")
+        predicate = f"`{str(partition_column).replace('`', '``')}` IN ({', '.join(_sql_literal(v) for v in values)})"
+        write_lakehouse_table_core(
+            persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
+            options={"replaceWhere": predicate},
+        )
+        return
+
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    keys = list(processing["key_columns"])
+    duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
+    if duplicate:
+        raise ValueError("Incoming target scope contains duplicate business keys.")
+    if not DeltaTable.isDeltaTable(df.sparkSession, path):
+        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        return
+    delta = DeltaTable.forPath(df.sparkSession, path)
+    condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
+    if strategy == "scd1":
+        business_columns = _business_change_columns(list(df.columns), keys)
+        change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
+        (
+            delta.alias("target").merge(persisted_df.alias("source"), condition)
+            .whenMatchedUpdateAll(condition=change).whenNotMatchedInsertAll().execute()
+        )
+        return
+
+    effective = str(processing["effective_column"])
+    tracked = _resolve_scd2_tracked_columns(list(df.columns), processing)
+    current_column, end_column = "_is_current", "_effective_to"
+    current_rows = delta.toDF().where(F.col(current_column))
+    if current_rows.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
+        raise RuntimeError("SCD2 target contains multiple current records for one or more business keys.")
+    change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
+    expire = (
+        delta.alias("target").merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
+        .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
+    )
+    expire.execute()
+    current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
+    incoming = persisted_df.join(current, on=keys, how="left_anti")
+    if incoming.limit(1).count():
+        write_lakehouse_table_core(incoming, table_name, target=target, schema=schema, mode="append", context=context)
 
 
 def load_table_guardrail_rules(

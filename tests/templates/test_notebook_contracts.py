@@ -238,30 +238,61 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     """Keep the cheap pre-read and row-level post-read source boundary explicit."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    observation = source.index("observation_df = observe_table(")
+    observation = source.index("read_prep = read_pipeline_prep(")
     schema_check = source.index("schema_result = check_schema(", observation)
     freshness_check = source.index("freshness_result = check_freshness(", schema_check)
-    changes_check = source.index("changes_result = check_changes(", freshness_check)
     full_read = source.index("source_df = read_lakehouse_table(", observation)
-    row_checks = source.index("Run row-level DQ guardrails", full_read)
+    row_checks = source.index("dq_result = check_dq(", full_read)
     profile = source.index("source_profile_df = profile_and_register_table(", row_checks)
 
-    assert observation < schema_check < freshness_check < changes_check < full_read < row_checks < profile
+    assert observation < schema_check < freshness_check < full_read < row_checks < profile
     assert 'SOURCE_TARGET = "source"' in source
     assert 'SOURCE_SCHEMA = "dbo"' in source
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
-    assert "`observe_table()` is evidence collection, not a guardrail" in source
+    assert "read_pipeline_prep" in source
+
+    prep_cell = next(
+        value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
+        if "read_prep = read_pipeline_prep(" in value
+    )
+    tree = ast.parse(prep_cell)
+    skip_if = next(
+        node for node in tree.body
+        if isinstance(node, ast.If)
+        and "read_strategy" in ast.unparse(node.test)
+        and "skip" in ast.unparse(node.test)
+    )
+    assert "read_lakehouse_table(" not in "\n".join(ast.unparse(node) for node in skip_if.body)
+    assert "read_lakehouse_table(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
+    assert "check_dq(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
 
 
-@pytest.mark.parametrize(
-    ("writer", "reader"),
-    [
-        ("write_lakehouse_table", "read_lakehouse_table"),
-        ("write_warehouse_table", "read_warehouse_table"),
-    ],
-)
-def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
+def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
+    """Use public prep boundaries while keeping physical IO and Guardrails visible."""
+    source = "\n".join(value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    assert 'TARGET_LOAD_STRATEGY = "scd1"' in source
+    assert 'TARGET_LOAD_PARAMETERS = {"key_columns": ["student_id"]}' in source
+    assert source.count("read_pipeline_prep(") == 1
+    assert source.count("write_pipeline_prep(") == 1
+    assert "from fabricops_kit.pipeline.shared" not in source
+    assert "_resolve_processing_scope" not in source
+    assert "_apply_load_strategy" not in source
+    assert source.index("read_pipeline_prep(") < source.index("source_df = read_lakehouse_table(")
+    assert source.index("check_schema(") < source.index("source_df = read_lakehouse_table(")
+    assert 'read_prep["read_strategy"] == "skip"' in source
+    assert 'read_prep["read_strategy"] == "incremental"' in source
+    assert 'load_strategy=write_prep["load_strategy"]' in source
+    assert 'load_strategy_parameters=write_prep["load_strategy_parameters"]' in source
+    assert 'processing_scope=write_prep["scope"]' in source
+    assert 'processing["source"] == "current_authoring"' in source
+    assert "load_strategy=TARGET_LOAD_STRATEGY" in source
+    assert "load_strategy_parameters=TARGET_LOAD_PARAMETERS" in source
+    assert "write_strategy" not in source
+
+
+def test_02_pipeline_orders_warehouse_target_validation_by_environment():
     """Dev publishes evidence before guardrails; prod validates before publication."""
+    writer, reader = "write_warehouse_table", "read_warehouse_table"
     matching_cells = [
         source
         for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
