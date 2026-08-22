@@ -92,7 +92,7 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
             .withColumn("_is_current", F.lit(True))
         )
 
-    mode = "overwrite" if strategy == "overwrite" else "append"
+    mode = strategy if strategy in {"overwrite", "append"} else None
     options: dict[str, Any] = {}
     if store_kind == "lakehouse" and strategy == "overwrite" and read_strategy == "incremental":
         options["replaceWhere"] = _replace_where(
@@ -102,6 +102,12 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
         "df": prepared_df,
         "mode": mode,
         "options": options,
+        "load_strategy": strategy,
+        "load_strategy_parameters": {
+            name: value
+            for name, value in processing.items()
+            if name not in {"load_strategy", "source", "contract_id", "contract_version"}
+        },
         "processing": processing,
         "scope": {
             "read_strategy": read_strategy,

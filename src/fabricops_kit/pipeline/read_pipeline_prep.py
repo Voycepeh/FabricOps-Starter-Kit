@@ -133,6 +133,10 @@ def read_pipeline_prep(
         authored_processing={"load_strategy": load_strategy, **(load_strategy_parameters or {})},
     )
     scope = _resolve_processing_scope(changes, processing)
-    if store_type == "warehouse" and processing["load_strategy"] == "overwrite":
+    if (
+        store_type == "warehouse"
+        and processing["load_strategy"] == "overwrite"
+        and scope["read_strategy"] == "incremental"
+    ):
         scope = {"read_strategy": "full", "partition_column": None, "partition_values": []}
     return {"observation": observation, "changes": changes, "processing": processing, **scope}

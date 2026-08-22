@@ -25,7 +25,8 @@ def write_lakehouse_table(
     options=None,
     verbose=True,
     context=None,
-    processing=None,
+    load_strategy=None,
+    load_strategy_parameters=None,
     processing_scope=None,
 ):
     """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
@@ -94,10 +95,14 @@ def write_lakehouse_table(
         Whether to print the resolved output path before writing.
     context : dict[str, Any], optional
         Active Fabric context override.
-    processing, processing_scope : dict, optional
-        Governed execution definition and scope returned by
-        :func:`write_pipeline_prep`. When supplied, FabricOps performs the
-        prepared append, overwrite, SCD1, or SCD2 mutation internally.
+    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
+        Governed target-maintenance strategy returned by
+        :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be
+        ``None`` because the physical action is a Delta merge, not an append.
+    load_strategy_parameters : dict, optional
+        Governed strategy parameters returned by :func:`write_pipeline_prep`.
+    processing_scope : dict, optional
+        Prepared skip, full, or incremental execution scope.
 
     Returns
     -------
@@ -281,16 +286,23 @@ def write_lakehouse_table(
 
     """
     validate_dataframe_writer(df)
-    if processing is not None:
+    if load_strategy is not None:
         if processing_scope is None:
-            raise ValueError("processing_scope is required with processing.")
-        from fabricops_kit.pipeline.shared import execute_lakehouse_processing
+            raise ValueError("processing_scope is required with load_strategy.")
+        strategy = str(load_strategy).strip().lower()
+        if strategy in {"scd1", "scd2"}:
+            if mode is not None:
+                raise ValueError("mode must be None for governed SCD execution; SCD strategies use Delta merge semantics.")
+            from fabricops_kit.pipeline.shared import execute_lakehouse_processing
 
-        execute_lakehouse_processing(
-            df, table_name=table_name, target=target, schema=schema,
-            processing=processing, scope=processing_scope, context=context,
-        )
-        return
+            execute_lakehouse_processing(
+                df, table_name=table_name, target=target, schema=schema,
+                processing={"load_strategy": strategy, **(load_strategy_parameters or {})},
+                scope=processing_scope, context=context,
+            )
+            return
+        if strategy not in {"overwrite", "append"} or mode != strategy:
+            raise ValueError("Governed overwrite/append load_strategy must match the physical writer mode.")
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         target, table_name, schema, context=context
     )

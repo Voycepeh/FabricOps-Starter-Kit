@@ -12,6 +12,7 @@ pytestmark = pytest.mark.unit
 
 read_module = import_module("fabricops_kit.pipeline.read_pipeline_prep")
 write_module = import_module("fabricops_kit.pipeline.write_pipeline_prep")
+lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
 
 
 def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
@@ -59,7 +60,8 @@ def test_read_prep_warehouse_overwrite_forces_full_scope(monkeypatch):
         "partition_column": "snapshot_date",
     })
     monkeypatch.setattr(read_module, "resolve_table_processing_definition", lambda *args, **kwargs: {
-        "load_strategy": "overwrite", "source": "data_contract", "contract_id": "c", "contract_version": 1,
+        "load_strategy": "overwrite", "partition_column": "snapshot_date",
+        "source": "data_contract", "contract_id": "c", "contract_version": 1,
     })
     result = read_module.read_pipeline_prep(
         "student_source", "students", source_target="warehouse", source_schema="dbo",
@@ -69,7 +71,7 @@ def test_read_prep_warehouse_overwrite_forces_full_scope(monkeypatch):
     assert result["partition_column"] is None
 
 
-@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", "append")])
+@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])
 def test_write_prep_adds_audit_and_reuses_exact_processing(monkeypatch, spark_session, strategy, mode):
     processing = {"load_strategy": strategy}
     if strategy == "scd1":
@@ -87,6 +89,7 @@ def test_write_prep_adds_audit_and_reuses_exact_processing(monkeypatch, spark_se
     assert result["processing"] is processing
     assert result["mode"] == mode
     assert result["options"] == {}
+    assert result["load_strategy"] == strategy
     assert "_committed_at" in result["df"].columns
 
 
@@ -106,3 +109,43 @@ def test_write_prep_adds_scd2_lifecycle_and_rejects_warehouse_scd(monkeypatch, s
     monkeypatch.setattr(write_module, "get_store", lambda *_args: SimpleNamespace(kind="warehouse"))
     with pytest.raises(ValueError, match="Warehouse scd2"):
         write_module.write_pipeline_prep(frame, read_prep, target="warehouse")
+
+
+def test_read_prep_preserves_warehouse_overwrite_skip(monkeypatch):
+    observation = SimpleNamespace(sparkSession="spark")
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "prod", {}))
+    monkeypatch.setattr(read_module, "get_store", lambda *_args: SimpleNamespace(kind="warehouse", schema="dbo"))
+    monkeypatch.setattr(read_module, "resolve_warehouse_table_location", lambda *_args: ("dbo", "students", "dbo.students"))
+    monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
+    monkeypatch.setattr(read_module, "_observation_changes", lambda _value: {
+        "changed": False, "first_observation": False, "new_partitions": [],
+        "changed_partitions": [], "removed_partitions": [], "reappeared_partitions": [],
+        "partition_column": "snapshot_date",
+    })
+    monkeypatch.setattr(read_module, "resolve_table_processing_definition", lambda *args, **kwargs: {
+        "load_strategy": "overwrite", "source": "data_contract", "contract_id": "c", "contract_version": 1,
+    })
+    result = read_module.read_pipeline_prep(
+        "student_source", "students", source_target="warehouse", source_schema="dbo",
+        target="warehouse", schema="dbo", load_strategy="append",
+    )
+    assert result["read_strategy"] == "skip"
+
+
+def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypatch):
+    calls = []
+    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
+    shared = import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(shared, "execute_lakehouse_processing", lambda *args, **kwargs: calls.append((args, kwargs)))
+    lakehouse_writer.write_lakehouse_table(
+        object(), "students", mode=None, load_strategy="scd1",
+        load_strategy_parameters={"key_columns": ["student_id"]},
+        processing_scope={"read_strategy": "full", "partition_values": []},
+    )
+    assert calls[0][1]["processing"] == {"load_strategy": "scd1", "key_columns": ["student_id"]}
+    with pytest.raises(ValueError, match="mode must be None"):
+        lakehouse_writer.write_lakehouse_table(
+            object(), "students", mode="append", load_strategy="scd1",
+            load_strategy_parameters={"key_columns": ["student_id"]},
+            processing_scope={"read_strategy": "full", "partition_values": []},
+        )

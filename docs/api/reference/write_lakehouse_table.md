@@ -38,7 +38,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L301">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L313">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -72,7 +72,8 @@ def write_lakehouse_table(
     options=None,
     verbose=True,
     context=None,
-    processing=None,
+    load_strategy=None,
+    load_strategy_parameters=None,
     processing_scope=None,
 ):
 ```
@@ -171,8 +172,9 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
-| `processing` | `dict` | No | Governed execution definition and scope returned by :func:`write_pipeline_prep`. When supplied, FabricOps performs the prepared append, overwrite, SCD1, or SCD2 mutation internally. |
-| `processing_scope` | `—` | No | Not documented yet |
+| `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append. |
+| `load_strategy_parameters` | `dict` | No | Governed strategy parameters returned by :func:`write_pipeline_prep`. |
+| `processing_scope` | `dict` | No | Prepared skip, full, or incremental execution scope. |
 
 ## Returns
 

@@ -266,7 +266,8 @@ def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
     assert source.index("check_schema(") < source.index("source_df = read_lakehouse_table(")
     assert 'read_prep["read_strategy"] == "skip"' in source
     assert 'read_prep["read_strategy"] == "incremental"' in source
-    assert 'processing=write_prep["processing"]' in source
+    assert 'load_strategy=write_prep["load_strategy"]' in source
+    assert 'load_strategy_parameters=write_prep["load_strategy_parameters"]' in source
     assert 'processing_scope=write_prep["scope"]' in source
     assert 'processing["source"] == "current_authoring"' in source
     assert "load_strategy=TARGET_LOAD_STRATEGY" in source

@@ -37,7 +37,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L251">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L253">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -67,7 +67,8 @@ def write_warehouse_table(
     repartition_by=None,
     options: dict[str, Any] | None=None,
     context: dict[str, Any] | None=None,
-    processing: dict[str, Any] | None=None,
+    load_strategy: str | None=None,
+    load_strategy_parameters: dict[str, Any] | None=None,
 ):
 ```
 
@@ -142,7 +143,8 @@ and Warehouse ingestion limits.
 | `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
-| `processing` | `dict[str, Any] \| None` | No | Governed processing definition returned by :func:`write_pipeline_prep`. Warehouse SCD strategies currently fail explicitly because they require a governed Warehouse MERGE path. |
+| `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. Reserved for target-specific execution; Warehouse SCD strategies currently fail explicitly. |
 
 ## Returns
 

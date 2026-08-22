@@ -2857,7 +2857,7 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 301,
+      "source_end_line": 313,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 16,
       "supports_live_contract": true,
@@ -2890,7 +2890,7 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 251,
+      "source_end_line": 253,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 15,
       "supports_live_contract": true,
@@ -3771,7 +3771,7 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 138,
+      "source_end_line": 142,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
       "source_start_line": 50,
       "supports_live_contract": false,
@@ -6510,7 +6510,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 112,
+      "source_end_line": 118,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 26,
       "supports_live_contract": false,
@@ -60539,7 +60539,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 138,
+          "source_end_line": 142,
           "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
           "source_start_line": 50,
           "supports_live_contract": false,
@@ -80052,7 +80052,7 @@
         "large_width_or_depth"
       ],
       "signature": "def read_pipeline_prep(source_table_name: str, target_table_name: str, *, source_target: str='source', source_schema: str | None=None, target: str='unified', schema: str | None=None, load_strategy: str, load_strategy_parameters: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 138,
+      "source_end_line": 142,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
       "source_start_line": 50,
       "summary": "Prepare governed source observation and read scope without reading business data.",
@@ -120966,7 +120966,7 @@
             "0.1.0",
             "0.2.0"
           ],
-          "source_end_line": 301,
+          "source_end_line": 313,
           "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
           "source_start_line": 16,
           "supports_live_contract": true,
@@ -123821,16 +123821,22 @@
           "type": "dict[str, Any], optional"
         },
         {
-          "description": "Governed execution definition and scope returned by :func:`write_pipeline_prep`. When supplied, FabricOps performs the prepared append, overwrite, SCD1, or SCD2 mutation internally.",
-          "name": "processing",
+          "description": "Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append.",
+          "name": "load_strategy",
+          "required": "No",
+          "type": "{\"overwrite\", \"append\", \"scd1\", \"scd2\"}, optional"
+        },
+        {
+          "description": "Governed strategy parameters returned by :func:`write_pipeline_prep`.",
+          "name": "load_strategy_parameters",
           "required": "No",
           "type": "dict, optional"
         },
         {
-          "description": "Not documented yet",
+          "description": "Prepared skip, full, or incremental execution scope.",
           "name": "processing_scope",
           "required": "No",
-          "type": ""
+          "type": "dict, optional"
         }
       ],
       "public_import_path": "fabricops_kit.write_lakehouse_table",
@@ -123872,8 +123878,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None, processing=None, processing_scope=None)",
-      "source_end_line": 301,
+      "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None, load_strategy=None, load_strategy_parameters=None, processing_scope=None)",
+      "source_end_line": 313,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 16,
       "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table.",
@@ -123920,7 +123926,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 112,
+          "source_end_line": 118,
           "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
           "source_start_line": 26,
           "supports_live_contract": false,
@@ -124697,7 +124703,7 @@
       "scope": 15,
       "signals": [],
       "signature": "def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str='unified') -> dict[str, Any]",
-      "source_end_line": 112,
+      "source_end_line": 118,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 26,
       "summary": "Prepare governed target write inputs without physically writing the target.",
@@ -124755,7 +124761,7 @@
             "0.1.0",
             "0.2.0"
           ],
-          "source_end_line": 251,
+          "source_end_line": 253,
           "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
           "source_start_line": 15,
           "supports_live_contract": true,
@@ -125475,8 +125481,14 @@
           "type": "dict[str, Any] | None"
         },
         {
-          "description": "Governed processing definition returned by :func:`write_pipeline_prep`. Warehouse SCD strategies currently fail explicitly because they require a governed Warehouse MERGE path.",
-          "name": "processing",
+          "description": "Governed strategy returned by :func:`write_pipeline_prep`.",
+          "name": "load_strategy",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Governed strategy parameters. Reserved for target-specific execution; Warehouse SCD strategies currently fail explicitly.",
+          "name": "load_strategy_parameters",
           "required": "No",
           "type": "dict[str, Any] | None"
         }
@@ -125504,8 +125516,8 @@
       "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
       "scope": 16,
       "signals": [],
-      "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None, processing: dict[str, Any] | None=None)",
-      "source_end_line": 251,
+      "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None)",
+      "source_end_line": 253,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 15,
       "summary": "Write a Spark DataFrame to a configured Fabric Warehouse table.",
