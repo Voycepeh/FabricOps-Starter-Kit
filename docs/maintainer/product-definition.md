@@ -71,6 +71,10 @@ FabricOps standardizes the governed boundaries around ETL without taking ownersh
 - **Development** supports current authoring and testing, including testing a selected Data Contract.
 - **Production** uses the approved active Data Contract as the governed runtime definition.
 
+![Development and Production runtime resolution](../assets/fabricops-runtime-resolution.svg)
+
+The environment changes the allowed source of the governed runtime definition, but the resolved result is one consistent definition used through the run for Guardrails and processing or load behaviour.
+
 ### E. Extract
 
 Extract establishes the governed source inputs before transformation.
