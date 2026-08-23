@@ -4,11 +4,11 @@ See what FabricOps previously observed about the source data.
 
 ## Writer functions
 
-* [`observe_table`](../../api/reference/observe_table.md)
+No public writer function is traced in the current implementation.
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 
