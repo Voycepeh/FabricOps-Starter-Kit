@@ -59,9 +59,9 @@ Use it to:
 - transform the data
 - profile source and target tables
 - write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records
-- read approved Enrichment and Guardrails
+- read current authored Enrichment and Guardrails in Development, or frozen definitions from a selected or active Data Contract
 - evaluate Guardrails and write Guardrail Results
-- write the approved target output
+- write the governed target output
 
 Develop and validate this notebook in Engineering Development, then promote the validated notebook to Engineering Production.
 
@@ -73,11 +73,11 @@ Develop and validate this notebook in Engineering Development, then promote the 
 
 ## `99_explore`
 
-**Supports project-specific exploration of approved data and FabricOps metadata.**
+**Supports project-specific exploration of governed Production data and FabricOps metadata.**
 
 Use it to:
 
-- inspect approved datasets
+- inspect governed Production datasets
 - test analysis or transformation ideas
 - investigate data-quality issues
 - explore Data Catalogue, Data Profiled, Data Lineage, Enrichment, Guardrail, and Guardrail Results records
@@ -95,4 +95,4 @@ Use it to:
 
 ## Next step
 
-Follow the [Guided Demo](guided-demo.md) to create the Data Agreement, run the Development pipeline, define Guardrails, re-validate the pipeline, create the Data Contract, promote to Production, and consume approved Production data.
+Follow the [Guided Demo](guided-demo.md) to create the Data Agreement, run the Development pipeline, define Guardrails, re-validate the pipeline, create the Data Contract, promote to Production, and consume governed Production data.
