@@ -120,7 +120,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/metadata.md
+          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md
           git diff --cached --name-only
           git commit -m "Synchronize references after observe_table cleanup"
           git push origin HEAD:cleanup-internalize-observe-table
