@@ -8,6 +8,7 @@ from scripts import generated_artifact_metadata as metadata
 
 
 def test_sync_home_public_function_count_uses_generated_reference_count(tmp_path: Path) -> None:
+    """Sync the home-page count from the generated Function Reference count."""
     reference_index = tmp_path / "reference.md"
     reference_index.write_text(
         '<strong class="reference-kpi-value">28</strong>\n'
@@ -35,6 +36,7 @@ def test_function_reference_metadata_update_triggers_home_count_sync(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
+    """Trigger home-page synchronization after function-reference generation metadata updates."""
     sync_calls: list[bool] = []
     monkeypatch.setattr(
         metadata,
