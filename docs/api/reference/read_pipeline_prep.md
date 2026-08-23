@@ -19,10 +19,10 @@ Prepare governed source observation and read scope without reading business data
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">02_pipeline</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -89,8 +89,8 @@ ValueError
 
 <div class="reference-docstring-notes" markdown="1">
 
-This function observes the source but does not physically read its business
-DataFrame and does not write the governed target.
+This function observes the source internally but does not physically read
+its business DataFrame and does not write the governed target.
 
 </div>
 

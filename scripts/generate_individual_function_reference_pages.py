@@ -214,7 +214,7 @@ METADATA_RELATED_FUNCTIONS = {
         "check_schema", "check_freshness", "check_changes", "check_dq",
     ],
     "METADATA_GUARDRAIL_ROW_RESULTS": ["check_dq"],
-    "METADATA_SOURCE_OBSERVATION": ["observe_table"],
+    "METADATA_SOURCE_OBSERVATION": ["read_pipeline_prep"],
     "METADATA_GUARDRAIL": [
         "widget_author_guardrails",
         "widget_author_dq_rules",

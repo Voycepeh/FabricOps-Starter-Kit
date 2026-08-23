@@ -93,8 +93,8 @@ def read_pipeline_prep(
 
     Notes
     -----
-    This function observes the source but does not physically read its business
-    DataFrame and does not write the governed target.
+    This function observes the source internally but does not physically read
+    its business DataFrame and does not write the governed target.
 
     Examples
     --------
@@ -107,7 +107,7 @@ def read_pipeline_prep(
 
     See Also
     --------
-    write_pipeline_prep, observe_table, check_changes, read_lakehouse_table
+    write_pipeline_prep, check_changes, read_lakehouse_table
 
     """
     config, env, context = resolve_fabric_context()

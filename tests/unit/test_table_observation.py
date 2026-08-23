@@ -55,15 +55,15 @@ def run(monkeypatch, current, *, kind="warehouse", persist_spy=None, **arguments
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
     call = dict(table_name="orders", target="source", schema="dbo")
     call.update(arguments)
-    result = module.observe_table(**call)
+    result = module._observe_table_core(**call)
     return result, queries, persisted
 
 
-def test_observe_table_returns_persisted_evidence_without_judgement(monkeypatch):
+def test_observe_table_core_returns_persisted_evidence_without_judgement(monkeypatch):
     result, _, persisted = run(monkeypatch, [evidence()])
     assert isinstance(result, Frame)
     assert result.collect() == persisted
-    source = inspect.getsource(module.observe_table)
+    source = inspect.getsource(module._observe_table_core)
     for decision in ("new_partitions", "changed_partitions", "removed_partitions", "requires_read", "read_predicate"):
         assert decision not in source
     assert "_load_previous" not in inspect.getsource(module)
@@ -110,14 +110,14 @@ def test_invalid_identity_and_columns(monkeypatch, kwargs):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (_ for _ in ()).throw(AssertionError()))
     values = dict(table_name="orders") | kwargs
     with pytest.raises(ValueError):
-        module.observe_table(**values)
+        module._observe_table_core(**values)
 
 
 def test_warehouse_requires_schema(monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse"))
     with pytest.raises(ValueError, match="schema is required"):
-        module.observe_table(table_name="orders")
+        module._observe_table_core(table_name="orders")
 
 
 def test_invalid_active_change_rule_has_actionable_error(monkeypatch):
@@ -128,7 +128,7 @@ def test_invalid_active_change_rule_has_actionable_error(monkeypatch):
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
     monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": "not-json"})
     with pytest.raises(ValueError, match="Active source-change rule is invalid: partition_column is missing"):
-        module.observe_table(table_name="orders")
+        module._observe_table_core(table_name="orders")
 
 
 def test_table_id_is_deterministic_and_independent_of_observation_columns(monkeypatch):
@@ -139,8 +139,13 @@ def test_table_id_is_deterministic_and_independent_of_observation_columns(monkey
     assert captured[0]["observation_id"] != captured[1]["observation_id"]
 
 
-def test_public_signature_has_no_legacy_or_runtime_plumbing():
-    assert str(inspect.signature(module.observe_table)) == "(table_name: 'str', *, target: 'str' = 'source', schema: 'str | None' = None) -> 'Any'"
+def test_observe_table_is_not_public():
+    import fabricops_kit
+
+    assert not hasattr(module, "observe_table")
+    assert not hasattr(fabricops_kit, "observe_table")
+    assert "observe_table" not in fabricops_kit.__all__
+    assert "observe_table" not in fabricops_kit.pipeline.__all__
 
 
 def test_observe_source_is_not_exported():
@@ -168,7 +173,7 @@ def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
     monkeypatch.setattr(module, "_observe_lakehouse", lambda *args, **kwargs: captured.append(args) or [{**evidence(), "is_present": True}])
     identities = []
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: identities.append(kwargs) or Frame(rows))
-    module.observe_table(table_name="orders", target="source", schema="dbo")
+    module._observe_table_core(table_name="orders", target="source", schema="dbo")
     assert captured[0][:3] == ("orders", "source", "dbo")
     assert identities[0]["table_id"] == build_table_id("lakehouse", "source", "dbo", "orders")
 
@@ -213,7 +218,7 @@ def test_failed_observation_does_not_persist(monkeypatch):
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("source failed")))
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: persisted.extend(rows))
     with pytest.raises(RuntimeError, match="source failed"):
-        module.observe_table(table_name="orders")
+        module._observe_table_core(table_name="orders")
     assert persisted == []
 
 
