@@ -6,13 +6,25 @@ from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
+import re
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED_ARTIFACT_METADATA_PATH = ROOT / "docs" / "reference" / "_data" / "generated-artifacts.json"
+REFERENCE_INDEX_PATH = ROOT / "docs" / "reference" / "index.md"
+HOME_INDEX_PATH = ROOT / "docs" / "index.md"
 SCHEMA = "fabricops_generated_artifact_timestamps_v1"
 SINGAPORE_TZ = ZoneInfo("Asia/Singapore")
 PRESERVE_TIMESTAMPS_ENV = "FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS"
+PUBLIC_FUNCTION_REFERENCE_ARTIFACT_KEY = "individual_function_reference_pages"
+REFERENCE_PUBLIC_FUNCTION_COUNT_RE = re.compile(
+    r'<strong class="reference-kpi-value">(?P<count>\d+)</strong>\s*'
+    r'<span class="reference-kpi-title">Public functions</span>'
+)
+HOME_PUBLIC_FUNCTION_COUNT_RE = re.compile(
+    r'(?P<start><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT -->).*?'
+    r'(?P<end><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->)'
+)
 
 
 def format_sgt_timestamp(value: datetime) -> str:
@@ -60,6 +72,35 @@ def _artifact_timestamps(artifact: object) -> tuple[str, str] | None:
     return None
 
 
+def sync_home_public_function_count(
+    reference_index_path: Path = REFERENCE_INDEX_PATH,
+    home_index_path: Path = HOME_INDEX_PATH,
+) -> int:
+    """Sync the home-page public-function count from the generated reference index."""
+    reference_text = reference_index_path.read_text(encoding="utf-8")
+    reference_match = REFERENCE_PUBLIC_FUNCTION_COUNT_RE.search(reference_text)
+    if reference_match is None:
+        raise RuntimeError(
+            f"Could not find the generated public-function count in {reference_index_path.relative_to(ROOT)}."
+        )
+    public_function_count = int(reference_match.group("count"))
+
+    home_text = home_index_path.read_text(encoding="utf-8")
+    home_match = HOME_PUBLIC_FUNCTION_COUNT_RE.search(home_text)
+    if home_match is None:
+        raise RuntimeError(
+            f"Could not find the public-function count marker in {home_index_path.relative_to(ROOT)}."
+        )
+    replacement = (
+        f'{home_match.group("start")}<strong>{public_function_count}</strong>'
+        f'<span> public callable functions</span>{home_match.group("end")}'
+    )
+    updated_home_text = HOME_PUBLIC_FUNCTION_COUNT_RE.sub(replacement, home_text, count=1)
+    if updated_home_text != home_text:
+        home_index_path.write_text(updated_home_text, encoding="utf-8")
+    return public_function_count
+
+
 def update_generated_artifact_metadata(
     artifact_key: str,
     label: str,
@@ -94,6 +135,8 @@ def update_generated_artifact_metadata(
     ):
         payload["last_generated_at_utc"] = generated_at_utc
         payload["last_generated_at_sgt"] = generated_at_sgt
+    if artifact_key == PUBLIC_FUNCTION_REFERENCE_ARTIFACT_KEY:
+        sync_home_public_function_count()
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
