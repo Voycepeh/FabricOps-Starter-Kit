@@ -2,69 +2,76 @@
 
 **Run `02_pipeline` in Engineering Production and let FabricOps resolve the one active Data Contract for each governed table automatically.**
 
-This step demonstrates the implemented Production validation and processing behaviour. It does not implement the external approval or Development-to-Production promotion workflow.
+The Production runtime behaviour below is implemented but remains **Preview** in the Guided Demo until the complete promotion-to-run path is revalidated end to end in Fabric.
+
+## High-level flow
+
+```text
+Production environment
+→ Resolve active Data Contract
+→ Resolve frozen Guardrails + processing
+→ Prepare source scope
+→ Validate source
+→ Transform
+→ Validate target
+→ Governed write
+→ Full read-back + profile
+```
 
 ## Before you begin
 
-Confirm that:
+Confirm that the governed table has exactly one active Data Contract version, the required `02_pipeline` and Production data are already available in Engineering Production through the organisation's current Fabric process, and the notebook uses the Production `00_env_config`.
 
-- the governed table has exactly one active Data Contract version
-- the required `02_pipeline` and Production data are already available in Engineering Production through your current Fabric process
-- the notebook uses the Production `00_env_config`
+??? info "Preview — Resolve the active Data Contract automatically"
 
-## What to do
+    Open `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
 
-1. Open `02_pipeline` in Engineering Production.
-2. Confirm the source, unified, and product targets resolve to the expected Production Fabric items.
-3. Run the Data Contract selector area. In Production it is read only and shows the active Data Contract version for the table.
-4. Use `read_pipeline_prep()` so FabricOps resolves the active contract's frozen processing definition and prepares the source scope as `skip`, `full`, or `incremental`.
-5. Run the source Schema, Freshness, and Changes Guardrails before the business-data read.
-6. Read the source using the prepared scope and run source DQ on the DataFrame being processed.
-7. Register a source profile only when the DataFrame represents the complete physical source table.
-8. Apply the visible transformation logic.
-9. Run target Schema and DQ checks before changing the Production target.
-10. Use `write_pipeline_prep()` and continue with the Production write only when the Guardrail continuation decisions allow it.
-11. Read the persisted target back in full and profile/register the complete persisted target.
+    Run the Data Contract selector area. In Production it is read only and shows the active Data Contract version for the table.
 
-## Production rule and processing source
+    Production never falls back to mutable authoring metadata.
 
-**Production never falls back to mutable authoring metadata.**
+    ```text
+    physical Production table
+    → canonical Data Catalogue table_id
+    → exactly one active Data Contract
+    → frozen Guardrails + frozen target processing
+    ```
 
-For each governed table FabricOps resolves:
+    If no active contract exists, or more than one active version exists for the same table, the governed Production run fails.
 
-```text
-physical Production table
-→ canonical Data Catalogue table_id
-→ exactly one active Data Contract
-→ frozen Guardrails + frozen target processing
-→ checks + governed read/write preparation
-```
+??? info "Preview — Prepare and validate the Production source"
 
-If no active Data Contract exists, the governed Production run fails. If more than one active version exists for the same table, FabricOps treats that as a Data Contract integrity error.
+    Use `read_pipeline_prep()` so FabricOps resolves the active contract's frozen processing definition and prepares the source scope as `skip`, `full`, or `incremental`.
 
-!!! important "Production selection is automatic"
+    Run source Schema, Freshness, and Changes Guardrails before the business-data read. Read the source using the prepared scope and run DQ on the DataFrame being processed.
 
-    Do not manually choose a draft, superseded, or other historical Data Contract version in Production. Manual contract selection exists only for Development testing.
+    Register a source profile only when that DataFrame represents the complete physical source table.
 
-??? info "Why Production fails closed instead of falling back to current authoring"
+???+ success "Live — Apply the visible transformation"
 
-    Current Governance authoring may already contain changes intended for a future contract version. Silently falling back to that mutable state would allow Production behaviour to change without activating a new frozen contract.
+    Apply the normal project-owned transformation logic. The Production runtime uses the same visible transformation section as Development.
 
-    FabricOps therefore requires exactly one active contract and fails when that invariant is not satisfied. The failure is intentional: an explicit governance/configuration problem is safer than an implicit change to Production policy.
+??? info "Preview — Validate and write the Production target"
 
-??? info "Why the same frozen processing definition controls both read and write preparation"
+    Run target Schema and DQ checks before changing the Production target.
 
-    The active contract freezes not only Guardrails but also the governed target processing definition. FabricOps resolves that definition once when preparing the run and reuses it for target-write preparation.
+    Use `write_pipeline_prep()` and continue with the Production write only when the Guardrail continuation decisions allow it. The same frozen processing definition resolved for the source scope is reused for target-write preparation.
 
-    This keeps the source scope and target maintenance behaviour aligned under the same approved contract version. Unsupported combinations are rejected rather than being silently translated into a different write strategy.
+??? info "Preview — Read back and register the complete target"
+
+    Read the persisted target back in full and profile/register the complete persisted target.
+
+    The active contract therefore controls the governed runtime boundary while the physical read, transformation, writer, and persisted target remain visible in `02_pipeline`.
+
+??? note "Planned — Promotion into Engineering Production"
+
+    This demo currently assumes the Production notebook and data are already available through the organisation's current Fabric process.
+
+    The canonical **Promote** stage is planned to use an approved organisational mechanism, which may be Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
 
 ## Expected result
 
-You should now have a Production run where the same Guardrail functions and processing-preparation functions automatically use the frozen definition from the table's active Data Contract.
-
-!!! note "Approval and promotion are still deferred"
-
-    This demo assumes the Production notebook and data are already available through your current Fabric process. The end-to-end Fabric approval and promotion workflow will be added later when it can be configured and demonstrated in the Fabric GUI.
+You should understand how the Preview Production runtime resolves one active frozen Data Contract and applies that contract's Guardrails and processing definition around the same canonical ETL lifecycle.
 
 **Previous:** [Step 5: Create and activate the Data Contract](05-create-data-contract.md)  
 **Next:** [Step 7: Consume Production data](99-explore-via-notebook.md)
