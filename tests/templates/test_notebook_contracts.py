@@ -266,6 +266,31 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     assert "read_lakehouse_table(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
     assert "check_dq(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
 
+    run_body = skip_if.orelse
+    incremental_if = next(
+        node for node in run_body
+        if isinstance(node, ast.If) and "incremental" in ast.unparse(node.test)
+    )
+    full_if = next(
+        node for node in run_body
+        if isinstance(node, ast.If) and "full" in ast.unparse(node.test)
+    )
+    assert "source_df.where(" in ast.unparse(incremental_if)
+    assert "profile_and_register_table(" not in ast.unparse(incremental_if)
+    assert "profile_and_register_table(" in ast.unparse(full_if.body)
+    assert "source_profile_df = None" in ast.unparse(full_if.orelse)
+
+
+def test_02_pipeline_profiles_complete_persisted_target_after_every_write():
+    """Keep target profiling after the governed write and complete target read."""
+    source = _notebook_source("02_pipeline.ipynb")
+
+    write = source.index("write_lakehouse_table(")
+    persisted_read = source.index("target_df = read_lakehouse_table(", write)
+    target_profile = source.index("target_profile_df = profile_and_register_table(", persisted_read)
+
+    assert write < persisted_read < target_profile
+
 
 def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
     """Use public prep boundaries while keeping physical IO and Guardrails visible."""
