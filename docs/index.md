@@ -2,7 +2,7 @@
 
 # FabricOps documentation
 
-FabricOps is a plug-and-play, lightweight starter kit for governed, quality-checked Microsoft Fabric notebook workflows across:
+FabricOps is a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
 
 **Governance → Data engineering → AI and BI analytics**
 
@@ -10,7 +10,11 @@ FabricOps is a plug-and-play, lightweight starter kit for governed, quality-chec
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps builds governance and metadata collection into the engineering workflow instead of treating them as after-the-fact documentation. Engineering develops and validates reusable pipelines, Engineering Production runs against governed definitions, and AI and BI consumers use the resulting Production data foundation.
+FabricOps gives teams a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself.
+
+Instead of rebuilding governance and documentation afterwards, FabricOps is designed to write the relevant data products and supporting evidence into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables while the workflow runs. That includes Catalogue metadata, profiling, lineage, Guardrail results, governed processing context, and Data Contracts where those capabilities are implemented.
+
+The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
 ## What is included?
 
@@ -21,6 +25,7 @@ FabricOps includes:
 - a shared metadata model connecting observed Engineering evidence with Governance intent
 - a Guided Demo with practical steps and expandable technical rationale
 - generated technical references for functions, metadata tables, and data-quality rules
+- a planned future direction for AI-augmented Governance and Engineering workflows built on the structured context FabricOps captures
 
 </div>
 
@@ -34,7 +39,7 @@ FabricOps includes:
 
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
     <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
-    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for terminology, decisions, responsibilities, and boundaries.</span>
+    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for terminology, decisions, boundaries, and future direction.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
