@@ -1,8 +1,24 @@
 # FabricOps Guided Demo
 
-**The Guided Demo is the step-by-step execution path from initial Fabric preparation to Data Contract-backed validation in Development and Production.**
+**The Guided Demo is the step-by-step execution path from initial Fabric preparation to governed Development, Production, and downstream consumption.**
 
 Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) for the notebook downloads.
+
+## How to read the demo
+
+Every action page uses the same maturity pattern so you can scan the complete workflow without expanding every implementation detail.
+
+???+ success "Live — validated demo component"
+
+    Expanded by default. These components are part of the currently validated Guided Demo path.
+
+??? info "Preview — implemented capability"
+
+    Collapsed by default. These components are implemented and part of the intended FabricOps workflow, but are not yet part of the fully validated baseline demo path.
+
+??? note "Planned — workflow direction"
+
+    Collapsed by default. These items describe planned operating workflow that is not yet implemented end to end in the demo.
 
 ## Required execution sequence
 
@@ -11,7 +27,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 | 0A | Governance, Engineering Development, Engineering Production, and any required Project-Specific Consumer workspaces | — | [Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) |
 | 0B | Governance, Engineering Development, and Engineering Production | `00_env_config` | [Set up the operating environment](guided-demo/00B-run-environment-setup.md) |
 | 1. Governance — Create Data Stewards and Data Agreements | Governance | `01_governance` | [Create data stewards and a data agreement](guided-demo/01-create-agreement.md) |
-| 2. Engineering — ETL, profile data, and build the Data Catalogue | Engineering Development | `02_pipeline` | [Run the first Development pipeline](guided-demo/02-run-pipeline.md) |
+| 2. Engineering — ETL, profile data, and build the Data Catalogue | Engineering Development | `02_pipeline` | [Run the Development pipeline](guided-demo/02-run-pipeline.md) |
 | 3. Governance — Enrich the Data Catalogue and define Guardrails | Governance | `01_governance` | [Enrich catalogue evidence and define Guardrails](guided-demo/03-enrich-guardrails.md) |
 | 4. Engineering — Validate with current or frozen Guardrails | Engineering Development | `02_pipeline` | [Rerun the Development pipeline with Guardrails](guided-demo/04-run-pipeline-with-guardrails.md) |
 | 5. Governance — Assemble and activate a Data Contract | Governance | `01_governance` | [Create and activate the Data Contract](guided-demo/05-create-data-contract.md) |
@@ -20,36 +36,33 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 
 ## Workflow overview
 
-**Governance and Engineering Development work in a loop until the table is ready to be frozen into a Data Contract. Production then evaluates Guardrails from the one active Data Contract for that table.**
+**Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-### Preparation
+???+ success "Live — Preparation and baseline engineering"
 
-Step 0 is split into two stages:
+    Step 0A prepares Fabric artifacts. Step 0B configures `00_env_config`. Step 1 establishes Data Stewards and a Data Agreement. Step 2 executes the currently validated IO, transformation, profiling, registration, and lineage patterns inside the canonical `02_pipeline` lifecycle.
 
-- **0A** creates the required Fabric workspaces, lakehouses, warehouses, Environment, installed FabricOps wheel, and copied notebook templates.
-- **0B** configures `00_env_config` and creates or validates the Governance metadata tables.
+???+ success "Live — Governance authoring"
 
-### Development validation
+    Step 3 reads Engineering evidence, adds Enrichment, and authors Guardrails for the governed workflow.
 
-Development normally evaluates the current authored Guardrails in `METADATA_GUARDRAIL`. After a Data Contract exists, `widget_select_data_contract()` can select an exact frozen Data Contract version for that table so the same `check_schema()`, `check_freshness()`, `check_changes()`, and `check_dq()` calls can test the frozen expectations before Production use.
+??? info "Preview — Guarded Development lifecycle"
 
-### Data Contract and Production validation
+    Step 4 applies the newer governed runtime path around the same visible ETL flow: source observation, schema/freshness/change checks, `skip`/`full`/`incremental` preparation, DQ checks, governed target preparation, and selected frozen Data Contract testing.
 
-Step 5 assembles one versioned Data Contract for one governed `table_id` and uses the current manual activation widget to choose the version Production is authorised to use. Step 6 demonstrates the implemented Production rule: each governed table resolves exactly one active Data Contract and evaluates the frozen Guardrails from that contract.
+??? info "Preview — Data Contract activation and Production runtime"
 
-!!! note "Approval and promotion are deferred"
+    Step 5 creates the versioned Data Contract and currently uses manual activation for the Production version. Step 6 demonstrates active-contract Production resolution and frozen Guardrail/processing behaviour.
 
-    FabricOps does not yet provide the end-to-end approval and Development-to-Production promotion workflow in this demo. Use your current Fabric process to make the Production notebook and data available. We will return to approval and promotion when the Fabric GUI workflow is ready to be configured and demonstrated end to end.
+??? note "Planned — Promotion workflow"
 
-### Consumption
+    The canonical **Promote** stage remains part of FabricOps. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process. The current demo assumes the Production notebook and data are made available through the organisation's current Fabric process.
 
-After Production outputs are available, Step 7 uses `99_explore` in one or more Project-Specific Consumer workspaces for exploration, AI, and BI consumption.
+???+ success "Live — Consumption"
 
-!!! note "Consumer workspaces stay downstream"
-
-    Consumer workspaces read Engineering Production data. They do not replace or duplicate the governed Production pipeline.
+    Step 7 uses `99_explore` in a Project-Specific Consumer workspace to read governed Production data for exploration, AI, BI, and analysis without duplicating the Production engineering workflow.
 
 ## Start the demo
 
