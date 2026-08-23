@@ -50,7 +50,10 @@ def _preview_payload(notebook_name: str, cell_id: str) -> str:
     assert isinstance(expression, ast.Expr)
     assert isinstance(expression.value, ast.Constant)
     assert isinstance(expression.value.value, str)
-    return expression.value.value
+    payload_lines = expression.value.value.splitlines()
+    if payload_lines and payload_lines[0].lstrip().startswith("PREVIEW "):
+        payload_lines = payload_lines[1:]
+    return "\n".join(payload_lines).lstrip()
 
 
 def _portable_python_source(source: str) -> str | None:
@@ -346,7 +349,7 @@ def test_02_pipeline_maturity_contract_keeps_live_expanded_and_preview_disabled(
     by_id = {cell.get("id"): cell for cell in notebook.cells}
 
     preview_ids = {"preview-extract", "preview-load", "preview-review"}
-    live_ids = {"run-env", "imports", "read-csv", "transform", "live-lakehouse-load"}
+    live_ids = {"run-env", "imports", "read-csv", "transform"}
 
     for cell_id in preview_ids:
         cell = by_id[cell_id]
@@ -363,4 +366,12 @@ def test_02_pipeline_maturity_contract_keeps_live_expanded_and_preview_disabled(
         assert cell.cell_type == "code"
         assert cell.metadata.get("collapsed") is False
 
+    live_lakehouse_load = next(
+        cell
+        for cell in notebook.cells
+        if cell.cell_type == "code"
+        and "write_lakehouse_table(" in cell.source
+        and "write_pipeline_prep(" not in cell.source
+    )
+    assert live_lakehouse_load.metadata.get("collapsed") is False
     assert "write_warehouse_table(" in _notebook_source("02_pipeline.ipynb")
