@@ -36,7 +36,6 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import re
 
           metadata_path = Path("scripts/reference_docs_metadata.py")
           text = metadata_path.read_text(encoding="utf-8")
@@ -49,24 +48,19 @@ jobs:
               '"fabricops_kit.pipeline.observe_table.observe_table"': '"fabricops_kit.pipeline.observe_table._observe_table_core"',
           }
           for old, new in replacements.items():
-              count = text.count(old)
-              if count == 0:
+              if old not in text:
                   raise SystemExit(f"Expected metadata text not found: {old}")
               text = text.replace(old, new)
 
-          pattern = re.compile(
-              r"\n \{'kind': 'function',\n"
-              r"  'module': 'pipeline',\n"
-              r"  'function_type': 'callable',\n"
-              r"  'summary_override': 'Record compact count and change-value bounds before expensive source work\.',\n"
-              r"  'symbol_name': 'observe_table',\n"
-              r".*?"
-              r"  'related_functions': \['read_warehouse_query', 'read_lakehouse_table', 'check_changes'\]\},",
-              re.S,
-          )
-          text, removed = pattern.subn("", text, count=1)
-          if removed != 1:
-              raise SystemExit(f"Expected to remove one observe_table PUBLIC_SYMBOL_DOCS entry, removed={removed}")
+          marker = "  'symbol_name': 'observe_table',"
+          marker_index = text.find(marker)
+          if marker_index < 0:
+              raise SystemExit("observe_table PUBLIC_SYMBOL_DOCS marker not found")
+          entry_start = text.rfind("\n {'kind': 'function',", 0, marker_index)
+          entry_end = text.find("\n {'kind': 'function',", marker_index)
+          if entry_start < 0 or entry_end < 0:
+              raise SystemExit("Could not isolate observe_table PUBLIC_SYMBOL_DOCS entry")
+          text = text[:entry_start] + text[entry_end:]
 
           if text == original:
               raise SystemExit("No metadata changes were made")
