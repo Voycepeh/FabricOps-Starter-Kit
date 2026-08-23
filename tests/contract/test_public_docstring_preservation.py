@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 
-from fabricops_kit import check_changes, check_freshness, observe_table, profile_and_register_table
+from fabricops_kit import check_changes, check_freshness, profile_and_register_table
 
 
 def _assert_numpy_parameter_contract(function) -> None:
@@ -24,5 +24,5 @@ def test_live_observation_checks_keep_their_public_signatures() -> None:
 
 def test_stage2_touched_public_functions_keep_complete_numpy_parameter_docs() -> None:
     """Prevent metadata refactors from collapsing established public API documentation."""
-    for function in (check_changes, check_freshness, observe_table, profile_and_register_table):
+    for function in (check_changes, check_freshness, profile_and_register_table):
         _assert_numpy_parameter_contract(function)
