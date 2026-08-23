@@ -1,12 +1,14 @@
-# Step 2: Run the Common Pipeline Patterns
+# Step 2: Run the Development pipeline
 
-**Use `02_pipeline` in Engineering Development to demonstrate FabricOps file, Lakehouse, Warehouse, profiling, and metadata-registration patterns.**
+**Use `02_pipeline` in Engineering Development to execute the canonical FabricOps pipeline shape while demonstrating the currently validated IO, transformation, profiling, and metadata-registration patterns.**
+
+The notebook follows one lifecycle even when some newer governed components are still Preview:
 
 ```text
-Files → Lakehouse and Warehouse
-Lakehouse → transformation → Warehouse
-Warehouse → SQL query → Lakehouse
+0. Environment → E. Extract → T. Transform → L. Load
 ```
+
+The Live blocks below are the currently validated Step 2 path. Preview blocks show where the newer governed runtime fits without requiring those components for this baseline run.
 
 ## Before you begin
 
@@ -16,141 +18,136 @@ Confirm that `00_env_config` defines these stores:
 
 | Layer | Item type | Purpose |
 | --- | --- | --- |
-| `source` | Lakehouse | Stores the source files and receives the final Demo 3 output. |
-| `unified` | Lakehouse | Receives the Lakehouse table created in Demo 1. |
-| `product` | Warehouse | Receives the Warehouse tables created in Demo 1 and Demo 2. |
+| `source` | Lakehouse | Stores the source files and receives the final demo output where required. |
+| `unified` | Lakehouse | Receives the Lakehouse table created in the Lakehouse example. |
+| `product` | Warehouse | Receives the Warehouse examples. |
 
 For simplicity, the demo uses the `demo` schema for managed Lakehouse and Warehouse tables.
 
-??? info "Why FabricOps routes Fabric items through `00_env_config`"
+???+ success "Live — 0. Environment: open and configure `02_pipeline`"
 
-    A notebook may need to read from one Lakehouse or Warehouse and write to another. Hardcoding Fabric item paths and connection details throughout the notebook makes that pipeline harder to maintain and harder to promote between Development and Production.
+    Upload the demo files to the Source Lakehouse under `Files/DemoData/` and open `02_pipeline` in Engineering Development.
 
-    FabricOps keeps environment-specific routing in `00_env_config`. The same notebook can therefore resolve configured source, unified, product, and metadata stores at runtime while keeping the pipeline code focused on the data operation itself.
+    Attach the same Fabric Environment used by `00_env_config`, restart the notebook session if required, then run the setup and FabricOps import cells.
 
-## 1. Upload the demo files
+    ![Config](../assets/02/Config.png)
 
-Upload the demo files to the Source Lakehouse under:
+    FabricOps keeps environment-specific routing in `00_env_config` so the same notebook can resolve configured source, unified, product, and metadata stores without hardcoding Fabric item paths throughout the pipeline.
 
-```text
-Files/DemoData/
-├── excel_file_demo.xlsx
-├── lakehouse_data_demo.csv
-├── parquet_file.parquet
-└── warehouse_data_demo.csv
-```
+## E. Extract
 
-The files are available from [`templates/DemoData/`](../../templates/DemoData/).
+???+ success "Live — Read Excel from the Source Lakehouse"
 
-![Upload demo files](../assets/02/Upload_Files.png)
+    Use `read_lakehouse_excel()` for an Excel workbook stored in the Source Lakehouse `Files` area.
 
-## 2. Open and configure `02_pipeline`
+    ![Read Excel](../assets/02/Read_Excel.png)
 
-Open `02_pipeline` in Engineering Development.
+    ![Profile Excel](../assets/02/Read_Excel_Profile.png)
 
-Attach the same Fabric Environment used by `00_env_config`, restart the notebook session if required, then run the setup and FabricOps import cells.
+    The helper reads the worksheet into a Spark DataFrame that can then be profiled or transformed.
 
-![Config](../assets/02/Config.png)
+???+ success "Live — Read Parquet from the Source Lakehouse"
 
-## 3. Read the Excel file
+    Use `read_lakehouse_parquet()` for the Parquet file stored in the Source Lakehouse `Files` area.
 
-Use `read_lakehouse_excel()` for an Excel workbook stored in the Source Lakehouse `Files` area.
+    ![Read Parquet](../assets/02/Read_Parquet.png)
 
-![Read Excel](../assets/02/Read_Excel.png)
+???+ success "Live — Read CSV for a Lakehouse target"
 
-![Profile Excel](../assets/02/Read_Excel_Profile.png)
+    Use `read_lakehouse_csv()` to read the CSV intended for the Lakehouse demo.
 
-The helper reads the worksheet into a Spark DataFrame that can then be profiled or transformed.
+    ![Read CSV for Lakehouse](../assets/02/Read_CSV_LH_DEMO.png)
 
-## 4. Read the Parquet file
+???+ success "Live — Read CSV for a Warehouse target"
 
-Use `read_lakehouse_parquet()` for the Parquet file stored in the Source Lakehouse `Files` area.
+    Use `read_lakehouse_csv()` to read the CSV intended for the Warehouse demo.
 
-![Read Parquet](../assets/02/Read_Parquet.png)
+    ![Read CSV for Warehouse](../assets/02/Read_CSV_WH_DEMO.png)
 
-## 5. Read CSV, transform, and write to a Lakehouse
+???+ success "Live — Read a Warehouse table or SQL query"
 
-Use `read_lakehouse_csv()` to read the CSV intended for the Lakehouse demo.
+    Use `read_warehouse_table()` for a complete named Warehouse table or `read_warehouse_query()` when the pipeline should execute caller-provided SQL.
 
-![Read CSV for Lakehouse](../assets/02/Read_CSV_LH_DEMO.png)
+    ![Read Warehouse](../assets/02/Read_WH.png)
 
-### Apply transformation logic
+    A filtered, joined, or aggregated query result should not be registered as the complete profile of one physical source table. For Spark-heavy processing, Lakehouse data is normally more direct because Delta data is already available to Spark while Warehouse reads use an additional SQL/TDS path.
 
-Use the **User defined transformation** section in `02_pipeline` for visible project-specific transformations.
+??? info "Preview — Governed source preparation and incremental read"
 
-![Transform DataFrame](../assets/02/Transform_DF.png)
+    The canonical `02_pipeline` also contains the newer governed recurring path used in later steps.
 
-??? info "Why FabricOps keeps transformation logic visible"
+    For each governed source/target flow, `read_pipeline_prep()` combines source observation with the governed target processing definition and resolves:
 
-    FabricOps standardizes the governed boundaries around ETL rather than replacing business transformation logic. Joins, filters, derivations, aggregations, enrichment, and reshaping stay visible and project-owned in the notebook.
+    ```text
+    source observation + governed target processing
+    → skip / full / incremental
+    ```
 
-    This keeps the starter kit lightweight: FabricOps governs how inputs are resolved and checked, how evidence is recorded, and how outputs are prepared and persisted without forcing business logic into a separate orchestration abstraction.
+    The Preview path then runs source Schema, Freshness, and Changes checks before the physical business-data read, performs the explicit full or incremental read, runs DQ on the DataFrame being processed, and refreshes the registered source profile only when the DataFrame represents the complete physical source table.
 
-### Write and profile the target
+    A partial or incremental source slice is valid processing scope but must not replace the latest complete source-table profile.
 
-Run the Lakehouse target write section to write into the Unified Lakehouse and register the target evidence.
+## T. Transform
 
-![Write Lakehouse](../assets/02/Write_LH.png)
+???+ success "Live — Apply user-defined transformation"
 
-!!! tip "Partitioning"
+    Use the **User defined transformation** section in `02_pipeline` for visible project-specific transformations.
 
-    `partition_by` and `repartition_by` can help with large workloads, but they should be used only when they fit the data shape. A poor partition key can create many small files and make reads and writes slower.
+    ![Transform DataFrame](../assets/02/Transform_DF.png)
 
-You can then inspect the written table and compact profile summary.
+    FabricOps governs the boundaries around ETL rather than replacing business transformation logic. Joins, filters, derivations, aggregations, enrichment, and reshaping remain visible and project-owned in the notebook.
 
-![Read written Lakehouse table](../assets/02/Read_Written_LH.png)
+## L. Load
 
-!!! note "Frequency profiling"
+???+ success "Live — Write, read back, and profile a Lakehouse target"
 
-    Frequency rows for eligible columns are created and persisted by the profiling workflow. Displaying `target_profile_df` shows the compact profile summary, not the full frequency table.
+    Run the Lakehouse target write section to write into the Unified Lakehouse.
 
-??? info "Why profiling and lineage are part of the pipeline"
+    ![Write Lakehouse](../assets/02/Write_LH.png)
 
-    `profile_and_register_table()` makes profiling repeatable and records the resulting Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and basic table-level Data Lineage evidence alongside the pipeline activity.
+    Read the persisted target back and profile/register the complete physical target.
 
-    This avoids maintaining a separate manual lineage process and keeps observed metadata tied to the same source and target activity that produced it. Automatic frequency profiling also avoids noisy output for mostly unique columns unless the caller explicitly selects them.
+    ![Read written Lakehouse table](../assets/02/Read_Written_LH.png)
 
-    A profile represents the DataFrame supplied to the function. On governed incremental runs, a partial source slice must not replace the registered profile of the complete physical source table; Step 4 explains that completeness rule where incremental processing is introduced.
+    `profile_and_register_table()` records Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and basic table-level Data Lineage evidence alongside the pipeline activity.
 
-## 6. Read CSV and write to a Warehouse
+    !!! tip "Partitioning"
 
-Use `read_lakehouse_csv()` to read the CSV intended for the Warehouse demo.
+        `partition_by` and `repartition_by` can help with large workloads, but they should be used only when they fit the data shape. A poor partition key can create many small files and make reads and writes slower.
 
-![Read CSV for Warehouse](../assets/02/Read_CSV_WH_DEMO.png)
+    !!! note "Frequency profiling"
 
-Create the target Warehouse schema first:
+        Frequency rows for eligible columns are created and persisted by the profiling workflow. Displaying `target_profile_df` shows the compact profile summary, not the full frequency table.
 
-```sql
-CREATE SCHEMA demo
-```
+???+ success "Live — Write, read back, and profile a Warehouse target"
 
-![Create Warehouse schema](../assets/02/create_schema.png)
+    Create the target Warehouse schema first when required:
 
-Then run the Warehouse target write section. For the demo, the source DataFrame can be written directly without an additional transformation.
+    ```sql
+    CREATE SCHEMA demo
+    ```
 
-![Write Warehouse](../assets/02/Write_WH.png)
+    ![Create Warehouse schema](../assets/02/create_schema.png)
 
-## 7. Read from Warehouse and write back to Lakehouse
+    Then run the Warehouse target write section. For the baseline demo, the source DataFrame can be written directly without an additional transformation.
 
-Use `read_warehouse_query()` or `read_warehouse_table()` to read the Warehouse table created earlier.
+    ![Write Warehouse](../assets/02/Write_WH.png)
 
-![Read Warehouse](../assets/02/Read_WH.png)
+???+ success "Live — Read from Warehouse and write back to Lakehouse"
 
-For Spark-heavy processing, Lakehouse data is often more natural because the data is already available to Spark without an additional Warehouse query path.
+    Use `read_warehouse_query()` or `read_warehouse_table()` to read the Warehouse table and continue the result through Spark processing into a Lakehouse target.
 
-??? info "Why FabricOps supports Warehouse SQL inside a PySpark pipeline"
+    This example also demonstrates optional repartitioning before a Lakehouse write. Parallel processing can help on larger datasets but adds overhead on small datasets, so test it against the real workload.
 
-    Useful Warehouse logic may already exist as SQL. `read_warehouse_query()` lets the notebook execute that SQL against the configured Warehouse and continue with the result as a Spark DataFrame instead of forcing teams to rewrite appropriate SQL only to enter the PySpark workflow.
+    ![Write Lakehouse in parallel](../assets/02/Write_LH_Parallel.png)
 
-    FabricOps remains Lakehouse-first for Spark-heavy processing because Delta data is directly available to Spark, while Warehouse reads use an additional SQL/TDS query path. The interoperability is intentional, but the two stores do not have identical execution characteristics.
+??? info "Preview — Target Guardrails and governed load preparation"
 
-??? info "Why the demo also shows parallel processing"
+    In the newer governed lifecycle, target Schema and DQ checks run on the transformed target DataFrame before persistence. `write_pipeline_prep()` then reuses the same processing definition resolved by `read_pipeline_prep()`, adds the governed audit/lifecycle fields, and prepares the explicit physical writer settings.
 
-    This step also demonstrates repartitioning before a Lakehouse write. Parallel processing can help on larger datasets, but it adds overhead on small datasets. Test the pattern against the real workload instead of assuming more partitions are always faster.
+    The target is still written with the normal FabricOps Lakehouse or Warehouse writer. After persistence, the complete target is read back and profiled/registered. This keeps the physical IO visible while Governance controls the processing boundary.
 
-![Write Lakehouse in parallel](../assets/02/Write_LH_Parallel.png)
-
-## Functions demonstrated
+## Functions demonstrated in the Live Step 2 path
 
 | Function | Available since | Demonstrated purpose |
 | --- | --- | --- |
@@ -164,10 +161,13 @@ For Spark-heavy processing, Lakehouse data is often more natural because the dat
 | `write_warehouse_table()` | FabricOps v0.1.0 | Write a Spark DataFrame to a Warehouse table. |
 | `profile_dataframe()` | FabricOps v0.2.0 | Generate column-level profiling statistics for a DataFrame. |
 | `profile_frequency_distribution()` | FabricOps v0.2.0 | Generate value-frequency distributions for selected DataFrame columns. |
-| `profile_and_register_table()` | FabricOps v0.2.0 | Profile a table and register the resulting profile metadata in the FabricOps metadata model. |
+| `profile_and_register_table()` | FabricOps v0.2.0 | Profile a complete physical table and register its metadata evidence. |
 
 ## Expected result
 
-You should now have demonstrated the standard FabricOps IO and profiling patterns across files, Lakehouse, and Warehouse targets, with Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage evidence written by the pipeline workflow.
+You should now have executed the validated baseline through the same canonical `Environment → Extract → Transform → Load` structure used by the newer governed lifecycle, with Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage evidence written by the pipeline workflow.
 
+The collapsed Preview blocks show the exact places where incremental preparation, Guardrails, contract selection, and governed load preparation extend this flow in later steps.
+
+**Previous:** [Step 1: Create Data Stewards and Data Agreements](01-create-agreement.md)  
 **Next:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)
