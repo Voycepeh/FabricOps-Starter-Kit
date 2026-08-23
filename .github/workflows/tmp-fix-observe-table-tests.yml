@@ -36,6 +36,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import re
 
           for path_text in (
               "tests/unit/test_governance_review_migration.py",
@@ -43,10 +44,10 @@ jobs:
           ):
               path = Path(path_text)
               text = path.read_text(encoding="utf-8")
-              old = "        'observe_table',\n"
-              if old not in text:
-                  raise SystemExit(f"Expected observe_table entry not found in {path}")
-              path.write_text(text.replace(old, "", 1), encoding="utf-8")
+              updated, count = re.subn(r"(?m)^\s*['\"]observe_table['\"],\s*\n", "", text, count=1)
+              if count != 1:
+                  raise SystemExit(f"Expected one observe_table entry in {path}, found {count}")
+              path.write_text(updated, encoding="utf-8")
 
           path = Path("tests/templates/test_notebook_contracts.py")
           text = path.read_text(encoding="utf-8")
