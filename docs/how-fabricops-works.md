@@ -35,8 +35,8 @@
 | --------- | --------------- | ------------------ |
 | Governance | Manage data stewards, data agreements, data contracts, catalogue enrichment, and guardrails | Development and Production metadata lakehouses |
 | Engineering Development | Explore data and develop, profile, test, and review repeatable pipelines | Source, unified, and product lakehouses or warehouses |
-| Engineering Production | Run approved and stable production pipelines on the required operational schedule | Production source, unified, and product lakehouses or warehouses |
-| Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the production engineering workflow | Consumes approved data from the Engineering Production workspace |
+| Engineering Production | Run governed and stable production pipelines on the required operational schedule | Production source, unified, and product lakehouses or warehouses |
+| Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the production engineering workflow | Consumes governed data from the Engineering Production workspace |
 
 ### Core workspaces
 
@@ -44,7 +44,7 @@ Governance, Engineering Development, and Engineering Production establish the sh
 
 ### Project-Specific Consumer workspaces
 
-Teams may create multiple project-specific consumer workspaces for exploration, AI, and BI consumption. Each workspace uses `99_explore` to read approved data from Engineering Production into its own project environment.
+Teams may create multiple project-specific consumer workspaces for exploration, AI, and BI consumption. Each workspace uses `99_explore` to read governed data from Engineering Production into its own project environment.
 
 !!! note "Trusted Production source"
 
@@ -92,7 +92,7 @@ Return to `01_governance` to read the Data Catalogue and Data Profiled records w
 
 ### 4. Engineering — Re-validate the ETL workflow with Guardrails
 
-Rerun `02_pipeline` with the approved Guardrails and confirm that warning, blocking, and validation behaviour works as intended.
+Rerun `02_pipeline` with the current authored Guardrails, or with Guardrails from a selected frozen Data Contract, and confirm that warning, blocking, and validation behaviour works as intended.
 
 ### 5. Governance — Create the Data Contract and prepare for promotion
 
@@ -102,9 +102,9 @@ In `01_governance`, create the Data Contract linking the governed Data Catalogue
 
 Promote the validated `02_pipeline` ETL workflow from Engineering Development to Engineering Production.
 
-### 7. Consumer — Use approved Production data directly
+### 7. Consumer — Use governed Production data directly
 
-Use `99_explore` to consume approved Production data directly for analytics, AI, BI, or downstream project use.
+Use `99_explore` to consume governed Production data directly for analytics, AI, BI, or downstream project use.
 
 </div>
 
@@ -120,7 +120,7 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
     - Determine Development or Production from `00_env_config`.
     - **Development:** use current authoring or a selected Data Contract.
-    - **Production:** use the approved active Data Contract.
+    - **Production:** use the active Data Contract.
 
 !!! info "E. Extract"
 
@@ -186,13 +186,13 @@ A Data Contract links authorised Data Catalogue tables and their schema fingerpr
 
 ## How the implemented pieces connect
 
-**Engineering records what happened. Governance defines what is allowed. Production exposes the approved result.**
+**Engineering records what happened. Governance defines what is allowed. Production exposes the governed result.**
 
 `02_pipeline` performs ETL, profiles source and target data, and writes Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
 
-Governance reads the Data Catalogue and Data Profiled records, then writes approved Enrichment and Guardrail records. `02_pipeline` reads those records, evaluates the Guardrails, and writes Guardrail Results.
+Governance reads the Data Catalogue and Data Profiled records, then writes Enrichment and Guardrail records. `02_pipeline` reads those records, evaluates the Guardrails, and writes Guardrail Results.
 
-Governance then creates the Data Contract. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, where AI and BI analytics consume approved Production data.
+Governance then creates the Data Contract. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, where AI and BI analytics consume governed Production data.
 
 Downstream users therefore receive more than a table. Where relevant, they can inspect its Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
 
@@ -208,7 +208,7 @@ Used for exploration, development, profiling, testing, and review. Development d
 
 ### Engineering Production
 
-Contains approved, stable, recurring pipelines and durable outputs. A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
+Contains governed, stable, recurring pipelines and durable outputs. A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
 
 !!! important "Production rule"
 
@@ -220,7 +220,7 @@ Contains approved, stable, recurring pipelines and durable outputs. A recurring 
 
 ## Consumer workspaces
 
-Project-specific consumer workspaces provide a separate environment for exploration, AI, and BI consumption. Teams use `99_explore` in their own workspace to consume approved data from Engineering Production without changing or duplicating the production pipeline.
+Project-specific consumer workspaces provide a separate environment for exploration, AI, and BI consumption. Teams use `99_explore` in their own workspace to consume governed data from Engineering Production without changing or duplicating the production pipeline.
 
 There may be multiple consumer workspaces, with each workspace aligned to a specific project, analytical product, or business use case.
 
