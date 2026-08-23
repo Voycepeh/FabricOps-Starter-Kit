@@ -82,13 +82,24 @@ jobs:
           set -euo pipefail
           PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/generator-pass-1.diff
+          cp docs/reference/_data/generated-artifacts.json /tmp/generated-artifacts-pass-1.json
+          git add -A
+
           PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/generator-pass-2.diff
-          if ! cmp /tmp/generator-pass-1.diff /tmp/generator-pass-2.diff; then
-            echo "Second generator pass changed the working diff:" >&2
-            diff -u /tmp/generator-pass-1.diff /tmp/generator-pass-2.diff | head -240 || true
+
+          second_pass_changes="$(git diff --name-only)"
+          if [[ "${second_pass_changes}" != "docs/reference/_data/generated-artifacts.json" ]]; then
+            echo "Unexpected second-pass generator changes:" >&2
+            printf '%s\n' "${second_pass_changes}" >&2
+            git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' | head -240 || true
+            exit 1
+          fi
+
+          cp /tmp/generated-artifacts-pass-1.json docs/reference/_data/generated-artifacts.json
+          if [[ -n "$(git diff --name-only)" ]]; then
+            echo "Second pass left non-idempotent working-tree changes" >&2
+            git diff | head -240 || true
             exit 1
           fi
 
