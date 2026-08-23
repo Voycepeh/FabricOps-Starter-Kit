@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 570" role="img" aria-labelledby="title desc">
+  <title id="title">How the FabricOps 02_pipeline runtime fits together</title>
+  <desc id="desc">Environment resolution and governed definitions feed Extract and Load boundaries around a user-defined Transform step. Full-table profiling and Data Quality execution persist exact FabricOps metadata records.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7a8793"/>
+    </marker>
+    <style>
+      .title{font:600 28px Arial,sans-serif;fill:#24313d}.kicker{font:700 11px 'Courier New',monospace;letter-spacing:1.5px;fill:#0f8f83}.node{fill:#fff;stroke:#aeb9c2;stroke-width:1.5}.focal{fill:#e8f6f3;stroke:#0f8f83;stroke-width:2}.store{fill:#f6f8f9;stroke:#c7d0d7;stroke-width:1.5}.name{font:600 18px Arial,sans-serif;fill:#24313d}.sub{font:12px 'Courier New',monospace;fill:#6b7783}.small{font:12px Arial,sans-serif;fill:#687580}.line{fill:none;stroke:#7a8793;stroke-width:1.7;marker-end:url(#arrow)}.dash{fill:none;stroke:#9aa5ae;stroke-width:1.3;stroke-dasharray:5 4;marker-end:url(#arrow)}.zone{fill:#24313d;fill-opacity:.018;stroke:#24313d;stroke-opacity:.12;stroke-width:1}.zoneLabel{font:700 10px 'Courier New',monospace;letter-spacing:1.2px;fill:#7a8793}.accentText{font:600 13px Arial,sans-serif;fill:#075f59}.note{font:italic 15px Georgia,serif;fill:#52606c}
+    </style>
+  </defs>
+  <rect width="1200" height="570" fill="#ffffff"/>
+  <text x="55" y="52" class="kicker">FABRICOPS RUNTIME</text>
+  <text x="55" y="86" class="title">How 02_pipeline fits together</text>
+  <text x="55" y="113" class="note">FabricOps governs the ETL boundaries; business transformation remains visible and user-owned.</text>
+
+  <rect x="54" y="145" width="1092" height="180" rx="8" class="zone"/>
+  <rect x="72" y="139" width="124" height="20" fill="#fff"/>
+  <text x="82" y="153" class="zoneLabel">PRIMARY FLOW</text>
+
+  <path d="M220 235 H292" class="line"/>
+  <path d="M502 235 H570" class="line"/>
+  <path d="M720 235 H786" class="line"/>
+  <path d="M996 235 H1062" class="line"/>
+
+  <rect x="78" y="190" width="142" height="90" rx="7" class="node"/>
+  <text x="149" y="224" text-anchor="middle" class="name">00_env_config</text>
+  <text x="149" y="248" text-anchor="middle" class="sub">environment + stores</text>
+
+  <rect x="292" y="180" width="210" height="110" rx="7" class="focal"/>
+  <text x="397" y="216" text-anchor="middle" class="name">Extract boundary</text>
+  <text x="397" y="241" text-anchor="middle" class="sub">read_pipeline_prep</text>
+  <text x="397" y="262" text-anchor="middle" class="sub">read + checks + source DQ</text>
+
+  <rect x="570" y="190" width="150" height="90" rx="7" class="node"/>
+  <text x="645" y="224" text-anchor="middle" class="name">Transform</text>
+  <text x="645" y="248" text-anchor="middle" class="sub">user-defined logic</text>
+
+  <rect x="786" y="180" width="210" height="110" rx="7" class="focal"/>
+  <text x="891" y="216" text-anchor="middle" class="name">Load boundary</text>
+  <text x="891" y="241" text-anchor="middle" class="sub">target DQ + write_pipeline_prep</text>
+  <text x="891" y="262" text-anchor="middle" class="sub">governed write behaviour</text>
+
+  <rect x="1062" y="190" width="112" height="90" rx="7" class="node"/>
+  <text x="1118" y="220" text-anchor="middle" class="name">Persisted</text>
+  <text x="1118" y="242" text-anchor="middle" class="name">target</text>
+  <text x="1118" y="264" text-anchor="middle" class="sub">read back full</text>
+
+  <rect x="307" y="356" width="265" height="143" rx="7" class="store"/>
+  <text x="330" y="383" class="kicker">PROFILE + REGISTER</text>
+  <text x="330" y="414" class="name">Full physical table only</text>
+  <text x="330" y="440" class="small">Source: only on a full read</text>
+  <text x="330" y="462" class="small">Target: after write + full read-back</text>
+  <text x="330" y="486" class="accentText">Incremental source slices are never full profiles.</text>
+
+  <rect x="658" y="348" width="452" height="158" rx="7" class="store"/>
+  <text x="684" y="377" class="kicker">PERSISTED FABRICOPS METADATA</text>
+  <text x="684" y="410" class="name">Exact records written by the workflow</text>
+  <text x="684" y="438" class="sub">METADATA_DATA_CATALOGUE</text>
+  <text x="684" y="460" class="sub">METADATA_DATA_PROFILED + METADATA_DATA_PROFILED_FREQUENCY</text>
+  <text x="684" y="482" class="sub">METADATA_DATA_LINEAGE + METADATA_GUARDRAIL_RESULTS</text>
+
+  <path d="M397 290 V330 Q397 338 405 338 H438 V356" class="dash"/>
+  <path d="M1118 280 V326 Q1118 338 1106 338 H552 Q540 338 540 350 V356" class="dash"/>
+  <path d="M572 427 H658" class="line"/>
+  <path d="M891 290 V324 Q891 336 879 336 H856 V348" class="dash"/>
+
+  <rect x="410" y="128" width="420" height="54" rx="7" class="store"/>
+  <text x="620" y="151" text-anchor="middle" class="name">Governed definition</text>
+  <text x="620" y="171" text-anchor="middle" class="sub">Guardrails + processing/load strategy from authoring or Data Contract</text>
+  <path d="M520 182 V190" class="line"/>
+  <path d="M720 155 H758 Q770 155 770 167 V168 Q770 180 782 180 H786" class="dash"/>
+</svg>
