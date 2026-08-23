@@ -86,7 +86,11 @@ jobs:
           PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           git diff > /tmp/generator-pass-2.diff
-          cmp /tmp/generator-pass-1.diff /tmp/generator-pass-2.diff
+          if ! cmp /tmp/generator-pass-1.diff /tmp/generator-pass-2.diff; then
+            echo "Second generator pass changed the working diff:" >&2
+            diff -u /tmp/generator-pass-1.diff /tmp/generator-pass-2.diff | head -240 || true
+            exit 1
+          fi
 
       - name: Validate focused cleanup
         shell: bash
