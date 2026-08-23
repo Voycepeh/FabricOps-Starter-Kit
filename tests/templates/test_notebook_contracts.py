@@ -51,6 +51,8 @@ def _preview_payload(notebook_name: str, cell_id: str) -> str:
     assert isinstance(expression.value, ast.Constant)
     assert isinstance(expression.value.value, str)
     payload_lines = expression.value.value.splitlines()
+    while payload_lines and not payload_lines[0].strip():
+        payload_lines = payload_lines[1:]
     if payload_lines and payload_lines[0].lstrip().startswith("PREVIEW "):
         payload_lines = payload_lines[1:]
     return "\n".join(payload_lines).lstrip()
