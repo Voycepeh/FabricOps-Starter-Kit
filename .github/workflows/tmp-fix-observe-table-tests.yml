@@ -1,0 +1,79 @@
+name: Temporary observe_table test cleanup
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: cleanup-internalize-observe-table
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Remove stale observe_table test expectations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          for path_text in (
+              "tests/unit/test_governance_review_migration.py",
+              "tests/unit/test_metadata.py",
+          ):
+              path = Path(path_text)
+              text = path.read_text(encoding="utf-8")
+              old = "        'observe_table',\n"
+              if old not in text:
+                  raise SystemExit(f"Expected observe_table entry not found in {path}")
+              path.write_text(text.replace(old, "", 1), encoding="utf-8")
+
+          path = Path("tests/templates/test_notebook_contracts.py")
+          text = path.read_text(encoding="utf-8")
+          old_doc = '    """Keep one table-scoped selector ahead of unchanged public check calls."""'
+          new_doc = '    """Keep one table-scoped selector ahead of governed prep and public checks."""'
+          old_checks = '    checks = [source.index(f"{name}(", selector) for name in ("check_schema", "check_freshness", "check_changes", "check_dq")]'
+          new_checks = '    checks = [source.index(f"{name}(", selector) for name in ("read_pipeline_prep", "check_schema", "check_freshness", "check_dq")]'
+          if old_doc not in text or old_checks not in text:
+              raise SystemExit("Expected stale notebook contract text not found")
+          text = text.replace(old_doc, new_doc, 1).replace(old_checks, new_checks, 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Validate affected tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff check tests/templates/test_notebook_contracts.py tests/unit/test_governance_review_migration.py tests/unit/test_metadata.py
+          uv run pytest tests/templates/test_notebook_contracts.py::test_02_pipeline_selects_validation_source_before_guardrail_execution tests/unit/test_governance_review_migration.py::test_public_callable_list_includes_guardrail_authoring_widgets tests/unit/test_metadata.py::test_public_callable_list_includes_guardrail_authoring_helpers_after_metadata_cleanup
+
+      - name: Commit test synchronization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/templates/test_notebook_contracts.py tests/unit/test_governance_review_migration.py tests/unit/test_metadata.py
+          git diff --cached --name-only
+          git commit -m "Update tests for internal source observation"
+          git push origin HEAD:cleanup-internalize-observe-table
