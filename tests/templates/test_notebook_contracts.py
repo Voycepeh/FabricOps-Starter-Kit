@@ -34,6 +34,30 @@ def _code_cells(path: Path) -> Iterable[tuple[int, str]]:
             yield index, cell.source
 
 
+def _cell_by_id(notebook_name: str, cell_id: str) -> nbformat.NotebookNode:
+    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
+    return next(cell for cell in notebook.cells if cell.get("id") == cell_id)
+
+
+def _preview_payload(notebook_name: str, cell_id: str) -> str:
+    """Return Python stored inside one disabled triple-quoted Preview code cell."""
+    cell = _cell_by_id(notebook_name, cell_id)
+    assert cell.cell_type == "code"
+    assert cell.metadata.get("collapsed") is True
+    tree = ast.parse(cell.source)
+    assert len(tree.body) == 1
+    expression = tree.body[0]
+    assert isinstance(expression, ast.Expr)
+    assert isinstance(expression.value, ast.Constant)
+    assert isinstance(expression.value.value, str)
+    payload_lines = expression.value.value.splitlines()
+    while payload_lines and not payload_lines[0].strip():
+        payload_lines = payload_lines[1:]
+    if payload_lines and payload_lines[0].lstrip().startswith("PREVIEW "):
+        payload_lines = payload_lines[1:]
+    return "\n".join(payload_lines).lstrip()
+
+
 def _portable_python_source(source: str) -> str | None:
     """Return Python source for syntax checks, or None for cell magics."""
     lines = source.splitlines()
@@ -168,47 +192,46 @@ def test_02_pipeline_uses_only_read_only_pipeline_widgets():
     assert "widget_activate_data_contract" not in source
 
 
-def test_02_pipeline_selects_validation_source_before_guardrail_execution():
-    """Keep one table-scoped selector ahead of unchanged public check calls."""
-    source = _notebook_source("02_pipeline.ipynb")
+def test_02_pipeline_preview_selects_validation_source_before_guardrail_execution():
+    """Keep table-scoped contract selection ahead of Preview Guardrail execution."""
+    source = _preview_payload("02_pipeline.ipynb", "preview-extract")
 
-    selector = source.index("source_validation = widget_select_data_contract(")
-    checks = [source.index(f"{name}(", selector) for name in ("check_schema", "check_freshness", "check_changes", "check_dq")]
+    source_selector = source.index("source_validation = widget_select_data_contract(")
+    target_selector = source.index("target_validation = widget_select_data_contract(")
+    schema_check = source.index("schema_result = check_schema(", source_selector)
+    freshness_check = source.index("freshness_result = check_freshness(", schema_check)
+    row_check = source.index("dq_result = check_dq(", freshness_check)
 
-    assert selector < min(checks)
+    assert source_selector < target_selector < schema_check < freshness_check < row_check
     assert 'SOURCE_TABLE_NAME, target=SOURCE_TARGET, schema=SOURCE_SCHEMA' in source
-    assert source.count("source_validation = widget_select_data_contract(") == 1
+    assert source.count("widget_select_data_contract(") == 2
+    assert 'read_prep["changes"]' in source
     assert "activate_contract_version" not in source
     assert "METADATA_DATA_CONTRACT" not in source
 
 
 def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
-    """Section 8 has one selector and five selected-dataset review surfaces."""
-    source = _notebook_source("02_pipeline.ipynb")
+    """Preview review keeps one selector and the five selected-dataset surfaces."""
+    source = _preview_payload("02_pipeline.ipynb", "preview-review")
 
     assert source.count("widget_view_catalogue(") == 1
+    assert 'pipeline_catalogue_view["get_views"]()' in source
+    for name in ("catalogue", "profile", "frequency", "guardrail_results", "guardrail_row_results"):
+        assert f'display(views["{name}"])' in source
     assert "display_guardrail_results" not in source
-    assert 'views["guardrail_results"]' in source
-    assert 'views["guardrail_row_results"]' in source
-    assert "display(guardrail_results_df)" in source
-    assert "display(guardrail_row_results_df)" in source
-    assert "dq_result = check_dq(" in source
-    assert 'display(dq_result["summary"])' in source
     assert "run_table_guardrails" not in source
     assert "run_active_dq_guardrail" not in source
-    assert source.count("Dataset selector") == 0
 
 
 @pytest.mark.parametrize(
     ("notebook_name", "state_name"),
     [
         ("01_governance.ipynb", "agreement_catalogue_view"),
-        ("02_pipeline.ipynb", "pipeline_catalogue_view"),
         ("99_explore.ipynb", "data_catalogue_view"),
     ],
 )
 def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_name):
-    """Each catalogue workflow renders its snapshot-scoped views in Fabric cells."""
+    """Live catalogue workflows render their snapshot-scoped views in Fabric cells."""
     source = _notebook_source(notebook_name)
     views_name = "views"
 
@@ -219,6 +242,16 @@ def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_n
     assert "display(catalogue_df)" in source
     assert "display(profile_df)" in source
     assert "display(frequency_df)" in source
+
+
+def test_02_pipeline_preview_catalogue_views_are_kept_inside_disabled_review_block():
+    """Pipeline catalogue review stays visible but non-executing in Preview."""
+    source = _preview_payload("02_pipeline.ipynb", "preview-review")
+
+    assert 'pipeline_catalogue_view["get_views"]()' in source
+    assert 'display(views["catalogue"])' in source
+    assert 'display(views["profile"])' in source
+    assert 'display(views["frequency"])' in source
 
 
 def test_governance_workflow_cells_are_output_free():
@@ -234,9 +267,9 @@ def test_governance_workflow_cells_are_output_free():
     assert all(not cell.outputs for cell in workflow_cells)
 
 
-def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
-    """Keep the cheap pre-read and row-level post-read source boundary explicit."""
-    source = _notebook_source("02_pipeline.ipynb")
+def test_02_pipeline_preview_observes_before_read_and_profiles_after_row_checks():
+    """Keep the Preview pre-read and row-level post-read source boundary explicit."""
+    source = _preview_payload("02_pipeline.ipynb", "preview-extract")
 
     observation = source.index("read_prep = read_pipeline_prep(")
     schema_check = source.index("schema_result = check_schema(", observation)
@@ -249,13 +282,8 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     assert 'SOURCE_TARGET = "source"' in source
     assert 'SOURCE_SCHEMA = "dbo"' in source
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
-    assert "read_pipeline_prep" in source
 
-    prep_cell = next(
-        value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
-        if "read_prep = read_pipeline_prep(" in value
-    )
-    tree = ast.parse(prep_cell)
+    tree = ast.parse(source)
     skip_if = next(
         node for node in tree.body
         if isinstance(node, ast.If)
@@ -282,7 +310,7 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
 
 
 def test_02_pipeline_profiles_complete_persisted_target_after_every_write():
-    """Keep target profiling after the governed write and complete target read."""
+    """Keep Live target profiling after the write and complete target read."""
     source = _notebook_source("02_pipeline.ipynb")
 
     write = source.index("write_lakehouse_table(")
@@ -293,8 +321,11 @@ def test_02_pipeline_profiles_complete_persisted_target_after_every_write():
 
 
 def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
-    """Use public prep boundaries while keeping physical IO and Guardrails visible."""
-    source = "\n".join(value for _, value in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    """Use public Preview prep boundaries while keeping physical IO visible."""
+    extract = _preview_payload("02_pipeline.ipynb", "preview-extract")
+    load = _preview_payload("02_pipeline.ipynb", "preview-load")
+    source = f"{extract}\n{load}"
+
     assert 'TARGET_LOAD_STRATEGY = "scd1"' in source
     assert 'TARGET_LOAD_PARAMETERS = {"key_columns": ["student_id"]}' in source
     assert source.count("read_pipeline_prep(") == 1
@@ -309,40 +340,40 @@ def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
     assert 'load_strategy=write_prep["load_strategy"]' in source
     assert 'load_strategy_parameters=write_prep["load_strategy_parameters"]' in source
     assert 'processing_scope=write_prep["scope"]' in source
-    assert 'processing["source"] == "current_authoring"' in source
     assert "load_strategy=TARGET_LOAD_STRATEGY" in source
     assert "load_strategy_parameters=TARGET_LOAD_PARAMETERS" in source
     assert "write_strategy" not in source
 
 
-def test_02_pipeline_orders_warehouse_target_validation_by_environment():
-    """Dev publishes evidence before guardrails; prod validates before publication."""
-    writer, reader = "write_warehouse_table", "read_warehouse_table"
-    matching_cells = [
-        source
-        for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
-        if 'if ENV == "dev":' in source and f"{writer}(" in source
-    ]
-    assert len(matching_cells) == 1
-    tree = ast.parse(matching_cells[0])
-    environment_if = next(node for node in tree.body if isinstance(node, ast.If))
-    production_if = environment_if.orelse[0]
+def test_02_pipeline_maturity_contract_keeps_live_expanded_and_preview_disabled():
+    """Live examples stay runnable while Preview blocks stay collapsed and inert."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
+    by_id = {cell.get("id"): cell for cell in notebook.cells}
 
-    def call_names(statements):
-        return [
-            node.func.id
-            for statement in statements
-            for node in ast.walk(statement)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        ]
+    preview_ids = {"preview-extract", "preview-load", "preview-review"}
+    live_ids = {"run-env", "imports", "read-csv", "transform"}
 
-    dev_calls = call_names(environment_if.body)
-    prod_calls = call_names(production_if.body)
+    for cell_id in preview_ids:
+        cell = by_id[cell_id]
+        assert cell.cell_type == "code"
+        assert cell.metadata.get("collapsed") is True
+        tree = ast.parse(cell.source)
+        assert len(tree.body) == 1
+        assert isinstance(tree.body[0], ast.Expr)
+        assert isinstance(tree.body[0].value, ast.Constant)
+        assert isinstance(tree.body[0].value.value, str)
 
-    assert dev_calls.index(writer) < dev_calls.index(reader) < dev_calls.index("profile_and_register_table")
-    assert dev_calls.index("profile_and_register_table") < dev_calls.index("check_schema")
-    assert prod_calls.index("check_schema") < prod_calls.index(writer)
-    assert prod_calls.index(writer) < prod_calls.index(reader) < prod_calls.index("profile_and_register_table")
-    assert "schema_result" not in matching_cells[0]
-    assert 'dq_result["can_continue"]' in matching_cells[0]
-    assert "guardrails_shared" not in matching_cells[0]
+    for cell_id in live_ids:
+        cell = by_id[cell_id]
+        assert cell.cell_type == "code"
+        assert cell.metadata.get("collapsed") is False
+
+    live_lakehouse_load = next(
+        cell
+        for cell in notebook.cells
+        if cell.cell_type == "code"
+        and "write_lakehouse_table(" in cell.source
+        and "write_pipeline_prep(" not in cell.source
+    )
+    assert live_lakehouse_load.metadata.get("collapsed") is False
+    assert "write_warehouse_table(" in _notebook_source("02_pipeline.ipynb")

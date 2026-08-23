@@ -4,77 +4,70 @@
 
 Complete [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md) first.
 
-Run `00_env_config` in Governance, Engineering Development, and Engineering Production.
+## High-level flow
 
-## 1. Open `00_env_config`
+```text
+Open config → Attach Environment → Configure paths → Review widgets → Set up metadata → Reuse context
+```
 
-Open the copied `00_env_config` notebook in the target workspace.
+???+ success "Live — Open `00_env_config`"
 
-Before running it, confirm that the notebook uses the Fabric Environment containing the FabricOps wheel.
+    Open the copied `00_env_config` notebook in the target workspace. Run it in Governance, Engineering Development, and Engineering Production.
 
-## 2. Attach the Fabric Environment
+???+ success "Live — Attach the Fabric Environment"
 
-1. Open the notebook.
-2. Select the Fabric Environment containing the FabricOps wheel.
-3. Restart the notebook session after changing the Environment or its libraries.
+    1. Open the notebook.
+    2. Select the Fabric Environment containing the FabricOps wheel.
+    3. Restart the notebook session after changing the Environment or its libraries.
 
-You can skip this when the workspace default Environment already contains the correct FabricOps package.
+    You can skip this when the workspace default Environment already contains the correct FabricOps package.
 
-![Fabric notebook Environment selection example](../assets/00B/fabric-example-set-notebook-environment.png)
+    ![Fabric notebook Environment selection example](../assets/00B/fabric-example-set-notebook-environment.png)
 
-## 3. Configure Fabric item paths
+???+ success "Live — Configure Fabric item paths"
 
-Update `ENV_PATHS` for the active environment so FabricOps can resolve the required workspaces and Fabric items.
+    Update `ENV_PATHS` for the active environment so FabricOps can resolve the required workspaces and Fabric items.
 
-A Fabric item URL contains the workspace ID and item ID, which can be used to populate the configuration.
+    A Fabric item URL contains the workspace ID and item ID, which can be used to populate the configuration.
 
-![Path config](../assets/00B/00_config_paths.png)
+    ![Path config](../assets/00B/00_config_paths.png)
 
-!!! note "Why this configuration exists"
+    !!! note "Why this configuration exists"
 
-    A Fabric notebook can only have one default Lakehouse or Warehouse attached at a time. FabricOps avoids hardcoding cross-workspace paths in every notebook by centralising them in `00_env_config`.
+        A Fabric notebook can only have one default Lakehouse or Warehouse attached at a time. FabricOps avoids hardcoding cross-workspace paths in every notebook by centralising them in `00_env_config`.
 
-## 4. Review widget settings
+???+ success "Live — Review widget settings"
 
-Change widget settings only when you need different:
+    Change widget settings only when you need different dropdown options or additional custom fields.
 
-- dropdown options for predefined fields
-- additional custom fields
+    Custom fields are stored as JSON and do not create additional physical table columns.
 
-Custom fields are stored as JSON and do not create additional physical table columns.
+    ![Widget config](../assets/00B/00_config_widgets_config_setup.png)
 
-![Widget config](../assets/00B/00_config_widgets_config_setup.png)
+???+ success "Live — Set up metadata tables"
 
-## 5. Set up metadata tables
+    Complete this block in the Governance workspace.
 
-Complete this step in the Governance workspace.
+    1. Confirm that the `metadata` target points to the correct metadata Lakehouse.
+    2. Run the metadata setup cell.
+    3. Allow the setup to create or validate the required metadata tables.
+    4. Leave the setup cell unchanged during normal Guided Demo runs.
 
-1. Confirm that the `metadata` target points to the correct metadata Lakehouse.
-2. Run the metadata setup cell.
-3. Allow the setup to create or validate the required metadata tables.
-4. Leave the setup cell unchanged during normal Guided Demo runs.
+    ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
+    The cell should complete without errors and confirm that the metadata tables are ready.
 
-The cell should complete without errors and confirm that the metadata tables are ready.
+    ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 
-![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
+???+ success "Live — Confirm reusable context"
 
-## 6. Confirm reusable context
+    `00_env_config` prepares reusable context for downstream FabricOps functions and notebooks.
 
-`00_env_config` prepares reusable context for downstream FabricOps functions and notebooks.
-
-![For Downstream Usage](../assets/00B/00_config_resuable_context.png)
+    ![For Downstream Usage](../assets/00B/00_config_resuable_context.png)
 
 ## Expected result
 
-`00_env_config` is ready when:
-
-- the Fabric Environment is attached
-- the FabricOps package can be imported
-- runtime and path settings are configured
-- required metadata tables have been created or validated
-- `FABRIC_CONTEXT["env"]` and `FABRIC_CONTEXT["config"]` are available
+`00_env_config` is ready when the Fabric Environment is attached, package imports work, paths and runtime settings are configured, metadata tables exist, and `FABRIC_CONTEXT["env"]` plus `FABRIC_CONTEXT["config"]` are available.
 
 **Previous:** [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md)  
 **Next:** [Step 1: Create Data Stewards and Data Agreements](01-create-agreement.md)
