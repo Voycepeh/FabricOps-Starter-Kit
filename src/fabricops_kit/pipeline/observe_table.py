@@ -191,6 +191,7 @@ def _observe_table_core(
     :func:`profile_and_register_table`. It is independent of Development or
     Production; ``environment_name`` keeps those operational observations
     separate without requiring a pre-existing catalogue row.
+
     """
     table_value = _identifier(table_name, "table_name")
     target_value = str(target or "").strip().lower()
