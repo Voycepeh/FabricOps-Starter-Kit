@@ -28,6 +28,14 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
 
     FabricOps keeps environment-specific routing in `00_env_config`. The same notebook can therefore resolve configured source, unified, product, and metadata stores at runtime while keeping the pipeline code focused on the data operation itself.
 
+## How `02_pipeline` fits together
+
+FabricOps keeps business transformation visible while governing the Extract and Load boundaries around it.
+
+![How the FabricOps 02_pipeline runtime fits together](../assets/fabricops-pipeline-runtime.svg)
+
+The profiling path writes the exact FabricOps records used by the workflow: **Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage**. Data Quality execution writes **Guardrail Results** separately. A source is registered as a full profile only when the DataFrame represents the complete physical source table; a target is profiled after the persisted target is read back in full.
+
 ## 1. Upload the demo files
 
 Upload the demo files to the Source Lakehouse under:
