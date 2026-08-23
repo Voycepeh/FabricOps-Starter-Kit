@@ -132,6 +132,10 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
     - Profile and register only when the DataFrame represents the **full physical table**.
     - Record Data Lineage and Data Profile evidence.
 
+!!! note "Warehouse sources should land in the Source Lakehouse first"
+
+    For large or repeatedly processed Warehouse sources, use the Warehouse primarily as an ingestion boundary. Land the required full or incremental extract into the Source Lakehouse as Delta, then perform profiling, Data Quality checks, transformations, and governed processing from the Lakehouse. This keeps repeated Spark processing in OneLake and avoids using the external Warehouse as the normal processing layer.
+
 !!! abstract "T. Transform"
 
     - Apply user-defined business transformation.
