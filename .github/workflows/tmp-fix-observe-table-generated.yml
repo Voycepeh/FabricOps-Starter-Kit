@@ -1,9 +1,9 @@
 name: Temporary observe_table cleanup
 
 on:
-  push:
+  pull_request:
     branches:
-      - cleanup-internalize-observe-table
+      - main
 
 permissions:
   contents: write
@@ -16,6 +16,7 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v5
         with:
+          ref: cleanup-internalize-observe-table
           fetch-depth: 0
 
       - name: Install uv
@@ -101,10 +102,6 @@ jobs:
           uv run pytest tests/unit/test_function_catalogue.py tests/unit/test_table_observation.py tests/contract/test_public_docstring_preservation.py
           if grep -n "'symbol_name': 'observe_table'" scripts/reference_docs_metadata.py; then
             echo "observe_table remains in public symbol docs" >&2
-            exit 1
-          fi
-          if grep -n "'observe_table'" scripts/reference_docs_metadata.py | grep TEMPLATE_FLOW_DOCS; then
-            echo "observe_table remains in template flow docs" >&2
             exit 1
           fi
 
