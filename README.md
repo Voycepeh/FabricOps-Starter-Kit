@@ -1,10 +1,14 @@
 # FabricOps Starter Kit
 
-FabricOps, short for **Fabric Operations**, is a plug-and-play, lightweight starter kit that helps governance, data engineering, and AI or BI analytics teams quickly set up and adopt an out-of-the-box workflow within Microsoft Fabric.
+FabricOps, short for **Fabric Operations**, is a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
 
-It combines a Python package containing helper and orchestrator functions, standardized Python notebook templates, a shared metadata model, and a guided demo.
+It gives teams a ready-to-adopt workflow across **Governance → Data engineering → AI and BI analytics**, using standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.
 
-By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines. This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
+The goal is to make the desired data practice executable. Instead of treating governance, metadata, quality checks, profiling, lineage, and contract context as separate documentation work, FabricOps builds them into the planned workflow so the relevant data products and supporting evidence are written into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables as the work is performed.
+
+This creates a governed Production data foundation that can be understood, validated, promoted, reused, and consumed without rebuilding its context afterwards.
+
+FabricOps is also designed to support future **AI-augmented Governance and Engineering workflows** using the structured context it already captures—for example Enrichment suggestions, Data Quality and Guardrail authoring, contract review, pipeline review, failure explanation, impact analysis, governed discovery, and consumer context preparation. These remain future direction unless separately implemented and documented.
 
 <div align="center">
 
