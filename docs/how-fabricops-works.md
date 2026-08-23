@@ -38,6 +38,12 @@
 | Engineering Production | Run approved and stable production pipelines on the required operational schedule | Production source, unified, and product lakehouses or warehouses |
 | Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the production engineering workflow | Consumes approved data from the Engineering Production workspace |
 
+### Where data and metadata are persisted
+
+FabricOps separates business-data persistence from workflow-metadata persistence. Engineering writes business data to its configured Lakehouses or Warehouses, while the workflow writes metadata to the matching Development or Production metadata Lakehouse in Governance.
+
+![How FabricOps persists data and metadata across workspaces](assets/fabricops-workspace-persistence.svg)
+
 ### Core workspaces
 
 Governance, Engineering Development, and Engineering Production establish the shared governance and engineering workflow used to create, validate, govern, and operate data pipelines.
@@ -186,7 +192,9 @@ A Data Contract links authorised Data Catalogue tables and their schema fingerpr
 
 ## How the implemented pieces connect
 
-**Engineering records what happened. Governance defines what is allowed. Production exposes the approved result.**
+**Engineering records observed facts. Governance authors governed expectations. A Data Contract freezes the definition that Production resolves.**
+
+![Governance intent meets Engineering observations](assets/fabricops-governance-engineering-contract.svg)
 
 `02_pipeline` performs ETL, profiles source and target data, and writes Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
 
