@@ -169,11 +169,11 @@ def test_02_pipeline_uses_only_read_only_pipeline_widgets():
 
 
 def test_02_pipeline_selects_validation_source_before_guardrail_execution():
-    """Keep one table-scoped selector ahead of unchanged public check calls."""
+    """Keep one table-scoped selector ahead of governed prep and public checks."""
     source = _notebook_source("02_pipeline.ipynb")
 
     selector = source.index("source_validation = widget_select_data_contract(")
-    checks = [source.index(f"{name}(", selector) for name in ("check_schema", "check_freshness", "check_changes", "check_dq")]
+    checks = [source.index(f"{name}(", selector) for name in ("read_pipeline_prep", "check_schema", "check_freshness", "check_dq")]
 
     assert selector < min(checks)
     assert 'SOURCE_TABLE_NAME, target=SOURCE_TARGET, schema=SOURCE_SCHEMA' in source
