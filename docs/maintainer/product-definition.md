@@ -84,6 +84,8 @@ For one or more source table IDs, the pipeline:
 - runs data-quality checks on the DataFrame being processed
 - profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage evidence
 
+The governed preparation and check functions are table-scoped. Engineers compose multiple governed source and target flows by repeating the same pattern for each relevant table relationship, so one `02_pipeline` can contain multiple reads, transformations, and writes without requiring a single multi-table orchestration call.
+
 A partial or incremental source DataFrame is processing scope, not a complete table profile. It must not replace the latest valid full-table source profile.
 
 ### T. Transform
@@ -91,6 +93,8 @@ A partial or incremental source DataFrame is processing scope, not a complete ta
 Transform is intentionally user-defined.
 
 The engineer applies the business logic required to turn validated source DataFrames into one or more target DataFrames. FabricOps governs the inputs and outputs around this step without prescribing the transformation itself.
+
+When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, processing scope, and persistence behaviour.
 
 ### L. Load
 
@@ -106,6 +110,8 @@ For one or more target table IDs, the pipeline:
 - writes the target using the applicable governed load behaviour
 - reads the persisted target back as a complete table
 - profiles and registers that complete persisted target, updating the relevant Data Profiled and Data Lineage evidence
+
+Each governed target is prepared and written under its own resolved processing definition. The same table-scoped pattern can therefore be repeated for multiple targets in one notebook.
 
 The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
 
