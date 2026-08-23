@@ -6,25 +6,45 @@ Public-facing documentation may shorten, visualize, or reorganize this content, 
 
 ## What is FabricOps?
 
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
+FabricOps, short for Fabric Operations, is a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
+
+It gives teams a ready-to-adopt operating workflow across three main roles:
 
 - Governance
 - Data engineering
 - AI and BI analytics
 
-It helps these teams quickly set up and adopt an out-of-the-box workflow within Microsoft Fabric.
+FabricOps combines planned workflows, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself rather than reconstructed afterwards.
+
+The templates and functions guide users through the intended workflow while writing the relevant data products and supporting evidence into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables. This includes governed context such as Data Agreements, Catalogue metadata, profiling, lineage, Enrichment, Guardrails, Guardrail Results, and Data Contracts where those capabilities are implemented in the workflow.
 
 ### What FabricOps includes
 
 - a Python package containing helper and orchestrator functions
 - standardized Python notebook templates that weave those functions into reusable workflows
-- a shared metadata model connecting Governance and Engineering activities
+- a shared metadata model connecting Governance intent with Engineering evidence
+- an operating model for Engineering Development, Engineering Production, Governance, and Project-Specific Consumer workspaces
 - a Guided Demo for learning and adopting the workflow
-- technical documentation for notebook templates, metadata tables, and individual functions
+- technical documentation for notebook templates, metadata tables, data-quality rules, and individual functions
 
-**The core product idea is to build governance and metadata collection into the engineering workflow instead of treating them as after-the-fact documentation.**
+**The core product idea is to make the desired data practice executable.** Governance, metadata capture, quality checks, profiling, lineage, contract context, and governed persistence are designed into the planned workflow instead of being treated as separate after-the-fact documentation tasks.
 
 This gives AI and BI consumers a stable, governed, and reusable Production data foundation.
+
+## Canonical workflow
+
+**Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
+
+| Step | Stage | Canonical workflow step |
+| --- | --- | --- |
+| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
+| 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
+| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
+| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
+| 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
+| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. Governance currently selects one saved version as active through a manual interim activation step. |
+| 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production. |
+| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
 
 ## Canonical operating decisions
 
@@ -91,21 +111,6 @@ The governed load strategy controls how the target is maintained. It does not de
 
 **FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, metadata, profiling, lineage, and governed persistence while leaving transformation logic with the engineer.
 
-## Canonical workflow
-
-**Set up → Govern → Engineer → Govern → Validate → Contract → Promote → Consume**
-
-| Step | Stage | Canonical workflow step |
-| --- | --- | --- |
-| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
-| 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
-| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
-| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
-| 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
-| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. Governance currently selects one saved version as active through a manual interim activation step. |
-| 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production. |
-| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
-
 ## Product components
 
 ### Python package
@@ -114,23 +119,34 @@ Provides reusable FabricOps helpers and orchestrators for Fabric notebook workfl
 
 ### Notebook templates
 
-Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing evidence, and exploring approved data.
+Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing evidence, and exploring approved data. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
 
 ### Shared metadata model
 
 Connects Governance intent with Engineering evidence. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table; one version can be manually selected as active, and Production checks resolve their expectations from that active version. External approval and automated promotion remain future work.
 
+The metadata model is not only documentation. It is the persistent context that allows Governance, Engineering, Production validation, downstream consumers, and future AI-assisted workflows to reason from the same recorded evidence and decisions.
+
 ### Guided Demo and technical documentation
 
-The Guided Demo owns maintained execution instructions. Technical documentation owns detailed notebook, metadata, and Python API contracts.
+The Guided Demo owns maintained execution instructions and contextual implementation rationale. Technical documentation owns detailed notebook, metadata, and Python API contracts.
 
-## AI-assisted data work
+## Future product direction: AI-augmented workflows
 
-**FabricOps prepares governed context that AI-assisted workflows can use, but it is not itself an AI model or agent framework.**
+**AI-assisted FabricOps workflows should augment governed human decisions, not replace them.** FabricOps is not itself an AI model or agent framework. Its opportunity is to use the structured context already captured through the workflow to make Governance, Engineering, and Consumption faster and more consistent.
 
-Its standardized notebooks, FabricOps helper and orchestrator functions, metadata tables, and approved Production data can provide useful context for AI-assisted Engineering, Governance, analytics, and data science work.
+Potential future AI-augmented workflows include:
 
-Future improvements may explore reusable instructions or resources that help AI assistants work more consistently with the existing FabricOps workflow.
+- **Enrichment suggestions:** propose business names, descriptions, classifications, sensitivity or PII hints, domains, and usage notes from schema, profile, and governed context for steward review.
+- **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
+- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails or processing definitions, and identify items requiring explicit review before activation.
+- **Pipeline review:** inspect the planned `02_pipeline` flow and its resolved metadata to identify missing validation, profiling, lineage, or unsafe processing patterns before Production.
+- **Failure explanation:** turn Guardrail Results and runtime evidence into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
+- **Change-impact analysis:** use contracts, lineage, profile history, and source observations to explain likely downstream impact before a source, target, or processing definition changes.
+- **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.
+- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for `99_explore`, BI, Data Agents, analytics, and data science work.
+
+These capabilities are future direction unless separately implemented and documented. Human owners remain responsible for approval, activation, promotion, and Production decisions.
 
 ## Future product direction: analysis preservation
 
@@ -149,7 +165,7 @@ Engineering Development is intentionally disposable. When important `99_explore`
 | Documentation home | Product introduction and navigation. |
 | How FabricOps Works | Architecture and operating model. |
 | Notebook Templates | Notebook responsibilities and downloads. |
-| Guided Demo | Maintained execution instructions. |
+| Guided Demo | Maintained execution instructions and contextual rationale. |
 | Metadata and function reference | Detailed technical contracts. |
 
 !!! important "Canonical terminology rule"
