@@ -25,7 +25,7 @@ As the workflow runs, it records Data Agreements, Catalogue metadata, profiles, 
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
-FabricOps provides the governed skeleton of the data practice. Engineers and analysts can still use Copilot, AI Functions, and other AI assistance for project-specific coding, testing, documentation, and analysis, while the core FabricOps workflow stays deterministic and reviewable.
+FabricOps provides the governed skeleton of the data practice, abstracting important but repetitive or complex foundations into standardized workflows, reusable functions, metadata structures, and guardrails. This lets engineers and analysts focus on project-specific work and use Copilot, AI Functions, or other AI assistance to write the code, tests, documentation, and analysis that do not need to be standardized. Humans decide what the data should do and what “good” looks like; FabricOps keeps the shared Production foundation deterministic, reviewable, and consistent.
 
 ## Choose your path
 
