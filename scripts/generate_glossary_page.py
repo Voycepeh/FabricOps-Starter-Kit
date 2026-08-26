@@ -14,32 +14,53 @@ GLOSSARY_PAGE_PATH = ROOT / "docs" / "glossary.md"
 GLOSSARY_GROUPS = [
     (
         "FabricOps concepts",
-        "The small set of ideas that describe FabricOps as a governed Data Engineering practice.",
+        (
+            "These terms describe how FabricOps implements its Data Engineering and Governance practice. "
+            "Where a broader industry concept exists, the definitions here describe how FabricOps uses it."
+        ),
         [
             "FabricOps Starter Kit",
-            "metadata",
             "governance as code",
             "configuration-driven engineering",
+            "data agreement",
+            "enrichment",
+            "guardrails",
+            "enforcement",
+            "guardrail result",
+            "data contract",
+            "full dataset",
+            "incremental watermark",
+            "incremental partition",
+            "incremental subset",
+        ],
+    ),
+    (
+        "Microsoft Fabric concepts",
+        (
+            "Microsoft owns these product terms. FabricOps follows Microsoft Fabric terminology "
+            "and links to Microsoft Learn as the source of truth."
+        ),
+        [
+            "Microsoft Fabric",
+            "workspace",
+            "Lakehouse",
+            "Warehouse",
+            "notebook",
         ],
     ),
     (
         "Governance concepts",
         (
-            "Terms encountered as Governance establishes ownership, expectations, "
-            "rules, controls, and Production approval."
+            "Established data-governance and security concepts. FabricOps keeps their standard meaning "
+            "and only adds implementation context where relevant."
         ),
         [
             "data steward",
-            "data agreement",
-            "enrichment",
+            "metadata",
             "data sensitivity",
             "PII",
             "data access",
             "data quality",
-            "guardrails",
-            "enforcement",
-            "guardrail result",
-            "data contract",
             "access control",
             "row-level security",
             "object-level security",
@@ -48,24 +69,15 @@ GLOSSARY_GROUPS = [
     (
         "Engineering concepts",
         (
-            "Terms encountered as Engineering sets up Fabric, builds pipelines, "
-            "profiles data, and applies governed processing."
+            "Established data-engineering concepts. FabricOps keeps their standard meaning "
+            "and states any FabricOps-specific constraint explicitly."
         ),
         [
-            "Microsoft Fabric",
-            "workspace",
-            "Lakehouse",
-            "Warehouse",
-            "notebook",
             "configuration",
             "pipeline",
             "PySpark",
             "profile",
             "schema",
-            "full dataset",
-            "incremental watermark",
-            "incremental partition",
-            "incremental subset",
             "watermark",
             "parallel processing",
             "data modelling",
@@ -157,14 +169,15 @@ def build_glossary_page() -> str:
         "# FabricOps glossary",
         "",
         (
-            "Use this page when a FabricOps, Governance, or Engineering term is "
-            "unfamiliar. Definitions come from the canonical "
-            "`docs/reference/_data/glossary.json` source."
+            "Use this page as the repository source of truth for FabricOps, Microsoft Fabric, "
+            "Governance, and Data Engineering terminology."
         ),
         "",
         (
-            "The order follows the FabricOps operating workflow so you can learn "
-            "terminology close to where it appears in the Guided Demo."
+            "Definitions are grounded first in the current FabricOps implementation. Microsoft Fabric "
+            "terms follow Microsoft terminology and link to Microsoft Learn. Established Governance and "
+            "Engineering terms keep their standard meaning unless FabricOps explicitly documents a "
+            "narrower implementation."
         ),
         "",
     ]
@@ -184,7 +197,8 @@ def build_glossary_page() -> str:
             entry = by_term[term]
             aliases = [str(alias) for alias in entry.get("aliases", [])]
             summary = (
-                f"<summary><strong>{_text(_display_name(term))}</strong> — {_text(entry['short_definition'])}</summary>"
+                f"<summary><strong>{_text(_display_name(term))}</strong> — "
+                f"{_text(entry['short_definition'])}</summary>"
             )
             lines.extend(
                 [
@@ -193,6 +207,13 @@ def build_glossary_page() -> str:
                     f"<p>{_text(entry['long_definition'])}</p>",
                 ]
             )
+            learn_url = str(entry.get("learn_url") or "").strip()
+            if learn_url:
+                lines.append(
+                    f'<p><strong>Microsoft Learn:</strong> '
+                    f'<a href="{html.escape(learn_url, quote=True)}">'
+                    "Official definition and documentation</a></p>"
+                )
             if aliases:
                 lines.append(f"<p><strong>Also known as:</strong> {_text(', '.join(aliases))}</p>")
             lines.extend(["</details>", ""])
