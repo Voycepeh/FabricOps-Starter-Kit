@@ -14,11 +14,11 @@ AI can now help teams write PySpark, SQL, Python, tests, and documentation very 
 
 **Humans decide what the data should do and what “good” looks like. FabricOps provides the structure, workflow, and guardrails. AI helps accelerate the coding, testing, documentation, and repetitive engineering work.**
 
-FabricOps gives teams a ready-made skeleton for a Data Engineering and Governance practice, so they can spend less time rebuilding the same foundations and more time on the engineering and analytics work that is specific to their project. Teams can use Copilot or other AI assistants available to them without making the core FabricOps runtime depend on those tools.
+FabricOps gives teams a ready-made skeleton for a Data Engineering and Governance practice, so they can spend less time rebuilding the same foundations and more time on the engineering and analytics work that is specific to their project. Teams can use Microsoft Fabric capabilities such as Copilot, AI Functions, or other AI assistance available in their environment without making the core FabricOps runtime depend on external tooling.
 
-This design also came from a practical constraint: the Production environment FabricOps originated from runs inside Microsoft Fabric without general internet access. The core workflow therefore had to be self-sufficient inside Fabric rather than depend on external services or AI being available at runtime.
+FabricOps was also born from a practical constraint: the Production environment it originated from runs inside Microsoft Fabric, while users may have no general internet access from their local machine to external tools or services beyond Fabric. The framework was therefore designed to be self-contained within Microsoft Fabric, including its reusable functions, metadata structures, validation patterns, and notebook workflow, while still allowing teams to benefit from Fabric-native AI capabilities where available.
 
-**Use AI where it helps you move faster. Keep the Production foundation deterministic, reviewable, and able to run without it.**
+**Use AI where it helps you move faster. Keep the Production foundation deterministic, reviewable, and self-contained within Fabric.**
 
 FabricOps is also designed to support future **AI-augmented Governance and Engineering workflows** using the structured context it already captures—for example Enrichment suggestions, Data Quality and Guardrail authoring, contract review, pipeline review, failure explanation, impact analysis, governed discovery, and consumer context preparation. These remain future direction unless separately implemented and documented.
 
