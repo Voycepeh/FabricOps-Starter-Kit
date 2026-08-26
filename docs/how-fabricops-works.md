@@ -33,12 +33,29 @@
 
 *These are the high-level FabricOps concepts. You do not need to learn the full glossary before reading this page.*
 
-- **FabricOps Starter Kit**: a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
-- **Metadata**: information about the data. In FabricOps this includes its structure, Profile, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreement, Data Contract, and other information used to understand and govern it.
-- **Governance as Code**: defining governance rules in a structured, version-controlled form that can be applied consistently.
-- **Configuration-driven Engineering**: controlling repeatable engineering behaviour through configuration instead of rewriting pipeline code.
+- **[FabricOps Starter Kit](glossary.md#fabricops-starter-kit)**: a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
+- **[Metadata](glossary.md#metadata)**: information about the data. In FabricOps this includes its structure, Profile, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreement, Data Contract, and other information used to understand and govern it.
+- **[Governance as Code](glossary.md#governance-as-code)**: defining governance rules in a structured, version-controlled form that can be applied consistently.
+- **[Configuration-driven Engineering](glossary.md#configuration-driven-engineering)**: controlling repeatable engineering behaviour through configuration instead of rewriting pipeline code.
 
 As unfamiliar terms appear, use the [FabricOps Glossary](glossary.md). It follows the operating workflow and separates FabricOps, Governance, and Engineering concepts.
+
+### Key glossary terms in the workflow
+
+These terms appear repeatedly as Governance and Engineering move from agreement through Development, validation, Data Contract activation, Production, and consumption.
+
+| Term | FabricOps meaning |
+| ---- | ----------------- |
+| **[Data Steward](glossary.md#data-steward)** | The person or role responsible for reviewing and maintaining the governance context for data. |
+| **[Data Agreement](glossary.md#data-agreement)** | The governed record that establishes who is sharing what data, with whom, and why. |
+| **[Profile](glossary.md#profile)** | A summary of the data at a point in time. |
+| **[Enrichment](glossary.md#enrichment)** | Business and governance information added to the Data Catalogue after technical metadata has been captured. |
+| **[Guardrails](glossary.md#guardrails)** | Governed rules FabricOps applies to data and pipelines. |
+| **[Enforcement](glossary.md#enforcement)** | Applying active Guardrails during a pipeline run and acting on the result. |
+| **[Guardrail Result](glossary.md#guardrail-result)** | The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run. |
+| **[Data Contract](glossary.md#data-contract)** | The approved definition of what is expected from governed Production data. |
+| **[Configuration](glossary.md#configuration)** | Settings that define how FabricOps or a pipeline should behave without changing the underlying code. |
+| **[Data Quality](glossary.md#data-quality)** | Whether data meets the expectations required for its intended use. |
 
 </div>
 
@@ -127,15 +144,17 @@ Governance reads the Data Catalogue and Data Profiled records, then writes Enric
 
 Development data and temporary notebooks may be cleaned regularly, so teams should avoid treating the workspace as durable Production storage.
 
-### Data Contract
+### Data Agreement and Data Contract
 
-A Data Contract is the approved definition of the structure, meaning, quality expectations, ownership, processing expectations, and governance requirements for governed Production data.
+A [Data Agreement](glossary.md#data-agreement) establishes the governed context before Engineering proceeds. It captures who is sharing what data, with whom, and why.
 
-In Governance, `01_governance` assembles the Data Contract from the governed workflow and activates the Production version. This is where Governance as Code and Configuration-driven Engineering connect to the Production workflow: governance rules are structured and version-controlled, while repeatable engineering behaviour is controlled through configuration.
+A [Data Contract](glossary.md#data-contract) is the approved definition of the structure, meaning, quality expectations, ownership, processing expectations, and governance requirements for governed Production data.
+
+In Governance, `01_governance` assembles and activates the Data Contract after the Development and Governance loop. This is where the approved governance rules are represented in the structured, version-controlled form described by [Governance as Code](glossary.md#governance-as-code), while Production behaviour is resolved through the [Configuration-driven Engineering](glossary.md#configuration-driven-engineering) model.
 
 ### Engineering Production
 
-Engineering Production contains governed, stable, recurring pipelines and durable outputs. In Production, `02_pipeline` uses the active Data Contract and runs against the approved Production configuration.
+Engineering Production contains governed, stable, recurring pipelines and durable outputs. In Production, `02_pipeline` uses the active Data Contract.
 
 A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
 
@@ -195,17 +214,13 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
     Incremental processing may use a partial source slice for execution, but a partial DataFrame must not replace the registered profile of the full physical table.
 
-</div>
+??? info "Why FabricOps uses PySpark mainly"
 
-<div class="fabricops-section-block" markdown>
+    **[PySpark](glossary.md#pyspark) is the standard for repeatable `02_pipeline` workflows.**
 
-## FabricOps uses PySpark mainly
+    Spark has startup overhead, and pandas may be better suited to smaller one-off analyses. FabricOps uses PySpark because it supports larger datasets and provides a consistent engineering pattern for maintenance and handover.
 
-**PySpark is the standard for repeatable `02_pipeline` workflows.**
-
-Spark has startup overhead, and pandas may be better suited to smaller one-off analyses. FabricOps uses PySpark because it supports larger datasets and provides a consistent engineering pattern for maintenance and handover.
-
-This does not prevent teams from using pandas or other tools for appropriate exploration.
+    This does not prevent teams from using pandas or other tools for appropriate exploration.
 
 </div>
 
@@ -216,6 +231,8 @@ This does not prevent teams from using pandas or other tools for appropriate exp
 **The Data Catalogue sits at the centre of the FabricOps metadata model.**
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
+
+The metadata model shows how the records introduced through the workflow connect. [Metadata](glossary.md#metadata) includes the information used to understand and govern the data, while the individual metadata tables record specific Governance and Engineering information.
 
 ??? info "Read how the metadata records connect"
 
