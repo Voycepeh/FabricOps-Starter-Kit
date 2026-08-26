@@ -11,8 +11,6 @@ import mkdocs_gen_files
 ROOT = Path(__file__).resolve().parents[1]
 GLOSSARY_PATH = ROOT / "docs" / "reference" / "_data" / "glossary.json"
 
-# The public glossary follows the FabricOps operating flow rather than exposing
-# the lower-level storage taxonomy used by the canonical JSON source.
 GLOSSARY_GROUPS = [
     (
         "FabricOps concepts",
@@ -117,10 +115,17 @@ def _build_glossary_page() -> str:
     missing = sorted(set(ordered_terms) - set(by_term))
     unassigned = sorted(set(by_term) - set(ordered_terms))
     duplicates = sorted({term for term in ordered_terms if ordered_terms.count(term) > 1})
-    if missing or unassigned or duplicates:
+    category_mismatches = sorted(
+        (term, str(by_term[term]["category"]), group_name)
+        for group_name, _, terms in GLOSSARY_GROUPS
+        for term in terms
+        if term in by_term and str(by_term[term]["category"]) != group_name
+    )
+    if missing or unassigned or duplicates or category_mismatches:
         raise RuntimeError(
-            "Glossary groups must cover every canonical term exactly once. "
-            f"Missing={missing}; unassigned={unassigned}; duplicates={duplicates}."
+            "Glossary groups must cover every canonical term exactly once and match its canonical category. "
+            f"Missing={missing}; unassigned={unassigned}; duplicates={duplicates}; "
+            f"category_mismatches={category_mismatches}."
         )
 
     lines = [
@@ -160,7 +165,7 @@ def _build_glossary_page() -> str:
             )
         lines.extend(["</details>", ""])
 
-    return "\n".join(line for line in lines if line != "") + "\n"
+    return "\n".join(lines).rstrip() + "\n"
 
 
 with mkdocs_gen_files.open("glossary.md", "w") as glossary_file:
