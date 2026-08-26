@@ -12,6 +12,7 @@ theme:
     - navigation.top
     - toc.follow
     - content.code.copy
+    - content.tooltips
   palette:
     - scheme: default
       primary: custom
@@ -72,6 +73,7 @@ nav:
       - Public API & Architecture: maintainer/public-api-architecture.md
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
   - md_in_html
@@ -86,6 +88,7 @@ markdown_extensions:
 hooks:
   - docs/copy_markdown_variants.py
   - docs/breadcrumbs.py
+  - docs/glossary_tooltips.py
 
 plugins:
   - search
