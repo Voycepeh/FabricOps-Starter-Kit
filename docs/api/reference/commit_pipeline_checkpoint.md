@@ -1,4 +1,4 @@
-# `write_pipeline_prep`
+# `commit_pipeline_checkpoint`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Prepare governed target write inputs and technical fields without physically writing.
+Commit a prepared watermark after the governed target write succeeds.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:27`
+`fabricops_kit/pipeline/commit_pipeline_checkpoint.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L27-L116">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/commit_pipeline_checkpoint.py#L16-L105">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,11 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def write_pipeline_prep(
-    df,
-    read_prep: dict[str, Any],
-    target: str='unified',
-) -> dict[str, Any]:
+def commit_pipeline_checkpoint(read_prep: dict[str, Any]) -> dict[str, Any] | None
 ```
 
 </div>
@@ -49,9 +45,13 @@ def write_pipeline_prep(
 
 <div class="reference-example-usage" markdown="1">
 
->>> write_prep = write_pipeline_prep(transformed_df, read_prep, target="unified")
->>> write_prep["mode"]
-'append'
+>>> write_lakehouse_table(
+...     write_prep["df"], "bookings",
+...     mode=write_prep["mode"], options=write_prep["options"],
+... )
+>>> committed = commit_pipeline_checkpoint(read_prep)
+>>> committed is None or committed["watermark_column"] == "modified_datetime"
+True
 
 </div>
 
@@ -59,28 +59,32 @@ def write_pipeline_prep(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `read_prep` | `dict[str, Any]` | Yes | Exact result returned by :func:`read_pipeline_prep`. Its canonical ``processing`` definition is reused without contract re-resolution. |
-| `target` | `str` | No | Configured Lakehouse or Warehouse target used to prepare physical writer settings. |
+| `read_prep` | `dict[str, Any]` | Yes | Exact result returned by :func:`read_pipeline_prep`. Call this function only after transformation, Guardrails, and the physical target write have all succeeded. |
 
 ## Returns
 
-Audited DataFrame, writer mode/options, canonical processing, and prepared execution scope.
+The committed checkpoint record, or None when no watermark candidate exists.
 
 ## Raises / Errors
 
 ValueError
-    If preparation is incomplete or an unsafe target/strategy combination
-    is requested.
+    If the preparation result contains an invalid watermark candidate or
+    inconsistent source identity.
+RuntimeError
+    If Fabric configuration, Spark, or metadata persistence is unavailable.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-FabricOps resolves one run-level audit record and adds only compact target
-provenance fields. This function does not call a Lakehouse or Warehouse
-writer. Warehouse SCD execution is explicitly unsupported until a governed
-Warehouse MERGE implementation is available.
+This is the explicit success boundary for watermark processing.
+``read_pipeline_prep`` never advances successful state. If a target write
+raises, do not call this function; the previous successful checkpoint then
+remains unchanged and the same bounded range is prepared on retry.
+
+Metadata and business targets may be separate Fabric items, so the target
+write and checkpoint append cannot form one cross-item transaction. Target
+writes used with watermark retries must therefore be idempotent.
 
 </div>
 

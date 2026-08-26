@@ -62,10 +62,15 @@ GLOSSARY_GROUPS = [
             "PySpark",
             "profile",
             "schema",
-            "incremental load",
+            "full dataset",
+            "incremental watermark",
+            "incremental partition",
+            "incremental subset",
+            "watermark",
             "parallel processing",
             "data modelling",
-            "partitioning",
+            "partition",
+            "physical partitioning",
             "append",
             "overwrite",
             "slowly changing dimensions",
@@ -96,10 +101,15 @@ DISPLAY_NAMES = {
     "configuration": "Configuration",
     "pipeline": "Pipeline",
     "parallel processing": "Parallel Processing",
-    "incremental load": "Incremental Load",
+    "full dataset": "Full Dataset",
+    "incremental watermark": "Incremental Watermark",
+    "incremental partition": "Incremental Partition",
+    "incremental subset": "Incremental Subset",
+    "watermark": "Watermark",
     "data modelling": "Data Modelling",
     "schema": "Schema",
-    "partitioning": "Partitioning",
+    "partition": "Partition",
+    "physical partitioning": "Physical Partitioning",
     "append": "Append",
     "overwrite": "Overwrite",
     "slowly changing dimensions": "Slowly Changing Dimensions (SCD)",
@@ -126,9 +136,7 @@ def build_glossary_page() -> str:
     ordered_terms = [term for _, _, terms in GLOSSARY_GROUPS for term in terms]
     missing = sorted(set(ordered_terms) - set(by_term))
     unassigned = sorted(set(by_term) - set(ordered_terms))
-    duplicates = sorted(
-        {term for term in ordered_terms if ordered_terms.count(term) > 1}
-    )
+    duplicates = sorted({term for term in ordered_terms if ordered_terms.count(term) > 1})
     category_mismatches = sorted(
         (term, str(by_term[term]["category"]), group_name)
         for group_name, _, terms in GLOSSARY_GROUPS
@@ -176,8 +184,7 @@ def build_glossary_page() -> str:
             entry = by_term[term]
             aliases = [str(alias) for alias in entry.get("aliases", [])]
             summary = (
-                f"<summary><strong>{_text(_display_name(term))}</strong> — "
-                f"{_text(entry['short_definition'])}</summary>"
+                f"<summary><strong>{_text(_display_name(term))}</strong> — {_text(entry['short_definition'])}</summary>"
             )
             lines.extend(
                 [
@@ -187,10 +194,7 @@ def build_glossary_page() -> str:
                 ]
             )
             if aliases:
-                lines.append(
-                    "<p><strong>Also known as:</strong> "
-                    f"{_text(', '.join(aliases))}</p>"
-                )
+                lines.append(f"<p><strong>Also known as:</strong> {_text(', '.join(aliases))}</p>")
             lines.extend(["</details>", ""])
         lines.extend(["</details>", ""])
 

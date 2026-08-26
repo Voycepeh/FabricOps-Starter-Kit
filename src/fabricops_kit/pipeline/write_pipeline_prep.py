@@ -10,6 +10,7 @@ from fabricops_kit.pipeline.shared import add_target_audit_fields, resolve_targe
 
 def _replace_where(partition_column: str, values: list[Any]) -> str:
     """Return a safely quoted Delta partition-replacement predicate."""
+
     def literal(value: Any) -> str:
         if value is None:
             return "NULL"
@@ -70,8 +71,11 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     processing = read_prep.get("processing")
     if not isinstance(processing, dict):
         raise ValueError("read_prep must contain the resolved processing definition.")
-    read_strategy = read_prep.get("read_strategy")
-    if read_strategy == "skip":
+    read_mode = read_prep.get("read_mode")
+    scope = read_prep.get("scope")
+    if read_mode not in {"skip", "full_dataset", "incremental_subset"} or not isinstance(scope, dict):
+        raise ValueError("read_prep must contain a canonical read_mode and scope.")
+    if read_mode == "skip":
         raise ValueError("A skipped pipeline run has no target write to prepare.")
     config, env, context = resolve_fabric_context()
     store_kind = str(get_store(config, env, target).kind).strip().lower()
@@ -94,10 +98,8 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
 
     mode = strategy if strategy in {"overwrite", "append"} else None
     options: dict[str, Any] = {}
-    if store_kind == "lakehouse" and strategy == "overwrite" and read_strategy == "incremental":
-        options["replaceWhere"] = _replace_where(
-            str(read_prep["partition_column"]), list(read_prep.get("partition_values") or [])
-        )
+    if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
+        options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
     return {
         "df": prepared_df,
         "mode": mode,
@@ -109,10 +111,6 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
             if name not in {"load_strategy", "source", "contract_id", "contract_version"}
         },
         "processing": processing,
-        "scope": {
-            "read_strategy": read_strategy,
-            "partition_column": read_prep.get("partition_column"),
-            "partition_values": list(read_prep.get("partition_values") or []),
-        },
+        "scope": {"read_mode": read_mode, "scope": scope},
         "target_kind": store_kind,
     }

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.pipeline import shared
-from fabricops_kit.pipeline.read_pipeline_prep import _resolve_processing_scope
+from fabricops_kit.pipeline.read_pipeline_prep import _partition_scope
 
 pytestmark = pytest.mark.unit
 
@@ -104,9 +104,9 @@ def changes(**overrides):
 
 @pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_first_observation_is_full(strategy):
-    assert _resolve_processing_scope(
-        changes(first_observation=True), {"load_strategy": strategy, **processing_parameters(strategy)}
-    )["read_strategy"] == "full"
+    assert _partition_scope(
+        changes(first_observation=True), {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date"
+    )["read_mode"] == "full_dataset"
 
 
 def processing_parameters(strategy):
@@ -120,51 +120,45 @@ def processing_parameters(strategy):
 
 
 def test_no_change_is_skip():
-    assert _resolve_processing_scope(changes(changed=False), {"load_strategy": "append"})["read_strategy"] == "skip"
+    assert _partition_scope(changes(changed=False), {"load_strategy": "append"}, "business_date")["read_mode"] == "skip"
 
 
 @pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
 def test_new_partition_is_incremental(strategy):
-    scope = _resolve_processing_scope(
+    scope = _partition_scope(
         changes(new_partitions=["2026-08-21"]),
-        {"load_strategy": strategy, **processing_parameters(strategy)},
+        {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
     )
-    assert scope == {"read_strategy": "incremental", "partition_column": "business_date", "partition_values": ["2026-08-21"]}
+    assert scope == {"read_mode": "incremental_subset", "scope": {"type": "partition", "column": "business_date", "values": ["2026-08-21"]}}
 
 
 @pytest.mark.parametrize("field", ["changed_partitions", "reappeared_partitions"])
 def test_append_rejects_existing_partition_changes(field):
     with pytest.raises(ValueError, match="append is unsafe"):
-        _resolve_processing_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"})
+        _partition_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"}, "business_date")
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])
 def test_scd_existing_partition_change_is_incremental(strategy):
-    scope = _resolve_processing_scope(
+    scope = _partition_scope(
         changes(changed_partitions=["2026-08-21"]),
-        {"load_strategy": strategy, **processing_parameters(strategy)},
+        {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
     )
-    assert scope["read_strategy"] == "incremental"
+    assert scope["read_mode"] == "incremental_subset"
 
 
 @pytest.mark.parametrize("strategy", ["append", "scd1", "scd2"])
 def test_removed_partition_rejects_implicit_delete(strategy):
     with pytest.raises(ValueError, match="delete semantics"):
-        _resolve_processing_scope(
+        _partition_scope(
             changes(removed_partitions=["2026-08-21"]),
-            {"load_strategy": strategy, **processing_parameters(strategy)},
+            {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
         )
 
 
-def test_changed_without_usable_scope_uses_full_for_safe_overwrite():
-    scope = _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "overwrite"})
-    assert scope["read_strategy"] == "full"
-    assert scope["partition_values"] == []
-
-
-def test_append_changed_without_usable_scope_rejects_full_append():
-    with pytest.raises(ValueError, match="full-source append is unsafe"):
-        _resolve_processing_scope(changes(partition_column=None), {"load_strategy": "append"})
+def test_partition_strategy_requires_change_rule_on_same_column():
+    with pytest.raises(ValueError, match="active change rule"):
+        _partition_scope(changes(partition_column=None), {"load_strategy": "overwrite"}, "business_date")
 
 
 def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():

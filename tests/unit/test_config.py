@@ -812,7 +812,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "failed"
-    assert len(result["failed_tables"]) == 13
+    assert len(result["failed_tables"]) == 14
     assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
@@ -820,7 +820,7 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 13
+    assert len(tables) == 14
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_CONTRACT" in tables

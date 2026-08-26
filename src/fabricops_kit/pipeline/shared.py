@@ -2234,14 +2234,15 @@ def execute_lakehouse_processing(
 ) -> None:
     """Apply one already-resolved governed load definition to a Lakehouse target."""
     strategy = _validated_processing(dict(processing))["load_strategy"]
-    read_strategy = scope.get("read_strategy")
-    if read_strategy == "skip":
+    read_mode = scope.get("read_mode")
+    runtime_scope = scope.get("scope")
+    if read_mode == "skip":
         return
-    if read_strategy not in {"full", "incremental"}:
-        raise ValueError("Processing scope must use skip, full, or incremental.")
-    values = list(scope.get("partition_values") or [])
-    if read_strategy == "incremental" and not values:
-        raise ValueError("Incremental processing requires at least one affected partition value.")
+    if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(runtime_scope, Mapping):
+        raise ValueError("Processing scope must use skip, full_dataset, or incremental_subset.")
+    values = list(runtime_scope.get("values") or [])
+    if read_mode == "incremental_subset" and runtime_scope.get("type") == "partition" and not values:
+        raise ValueError("Incremental partition processing requires at least one affected partition value.")
 
     columns = set(getattr(df, "columns", ()))
     persisted_df = df
@@ -2252,11 +2253,11 @@ def execute_lakehouse_processing(
         write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
-        if read_strategy == "full":
+        if read_mode == "full_dataset":
             write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
             return
         partition_column = processing.get("partition_column")
-        if not partition_column or partition_column != scope.get("partition_column"):
+        if not partition_column or partition_column != runtime_scope.get("column"):
             raise ValueError("Incremental overwrite requires matching safe target partition configuration.")
         predicate = f"`{str(partition_column).replace('`', '``')}` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table_core(

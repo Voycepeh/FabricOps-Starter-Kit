@@ -83,18 +83,96 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
 
 ??? info "Preview — Governed source preparation and incremental read"
 
-    The canonical `02_pipeline` also contains the newer governed recurring path used in later steps.
+    **Answer three separate questions: how to identify source data, what to read now, and how to apply the result.**
 
-    For each governed source/target flow, `read_pipeline_prep()` combines source observation with the governed target processing definition and resolves:
+    ### Choose how the source should be read
 
-    ```text
-    source observation + governed target processing
-    → skip / full / incremental
+    The engineer configures one explicit source strategy:
+
+    | Source strategy | What it means | Typical example |
+    | --- | --- | --- |
+    | `full_dataset` | Read the complete source every run. | Small CSV or reference table. |
+    | `incremental_watermark` | Read rows newer than the last successfully committed checkpoint. | Warehouse table with `modified_datetime`. |
+    | `incremental_partition` | Read whole logical data buckets that are new or changed. | Lakehouse snapshots by `snapshot_date`. |
+
+    `incremental_watermark` and `incremental_partition` are both incremental strategies. They differ in how FabricOps identifies affected source data: **which rows changed since the last successful checkpoint** versus **which whole data buckets changed**.
+
+    ```python
+    SOURCE_READ_STRATEGY = "full_dataset"
+
+    SOURCE_READ_STRATEGY = "incremental_watermark"
+    SOURCE_WATERMARK_COLUMN = "modified_datetime"
+
+    SOURCE_READ_STRATEGY = "incremental_partition"
+    SOURCE_PARTITION_COLUMN = "snapshot_date"
     ```
 
-    The Preview path then runs source Schema, Freshness, and Changes checks before the physical business-data read, performs the explicit full or incremental read, runs DQ on the DataFrame being processed, and refreshes the registered source profile only when the DataFrame represents the complete physical source table.
+    ### Understand the runtime read mode
 
-    A partial or incremental source slice is valid processing scope but must not replace the latest complete source-table profile.
+    FabricOps then resolves what this execution needs:
+
+    | Runtime mode | Meaning |
+    | --- | --- |
+    | `skip` | Nothing needs processing this run. |
+    | `full_dataset` | Read the complete physical source. |
+    | `incremental_subset` | Read only the affected part of the source. |
+
+    For example, a watermark with no newer value resolves to `skip`; the first partition observation resolves to `full_dataset`; and changed or new partitions resolve to `incremental_subset`. The source strategy is not the runtime read mode. Target strategies (`overwrite`, `append`, `scd1`, and `scd2`) answer the separate third question: how should the processed DataFrame be applied?
+
+    ### Watermark example: changed rows
+
+    Consider Fabric Warehouse `dbo.Bookings`, configured with `incremental_watermark` on `modified_datetime`. If the previous successful watermark is `2026-08-26 10:00` and FabricOps captures `2026-08-26 12:00` as the current upper watermark, the bounded subset is:
+
+    ```text
+    modified_datetime > 2026-08-26 10:00
+    AND modified_datetime <= 2026-08-26 12:00
+    ```
+
+    The interval is `(lower_bound, upper_bound]`. Rows arriving after 12:00 belong to the next execution. On a first run, FabricOps reads the full dataset and retains the captured upper value only as a candidate. After the target write succeeds, call `commit_pipeline_checkpoint(read_prep)` to advance the successful watermark. If transformation, Guardrails, or target persistence fails, do not call it: the successful watermark remains unchanged and a retry starts from the last successful checkpoint. Source observation describes what a source looked like, while the successful watermark records how far a completed pipeline processed.
+
+    !!! warning "Watermarks must be unique as well as increasing"
+
+        A watermark value must be non-null and globally unique for every source row. FabricOps validates this before preparing the range. A timestamp shared by two rows is unsafe: another row could arrive later with the already committed timestamp and fall outside the next `(lower, upper]` interval. Use a source-provided increasing sequence or another column that is both strictly increasing and unique; otherwise choose `incremental_partition`. Target writes used with checkpoint retries must also be idempotent because business and metadata targets cannot share one cross-item transaction.
+
+    ### Partition example: affected buckets
+
+    Consider Lakehouse `student_snapshot`, configured with `incremental_partition` on `snapshot_date`:
+
+    ```text
+    25 Aug → unchanged
+    26 Aug → changed
+    27 Aug → new
+    ```
+
+    FabricOps prepares the complete 26 Aug and 27 Aug buckets. This model suits daily or monthly snapshots, historical corrections, late-arriving records, and independent processing by date or month because an older affected bucket can be reopened.
+
+    | | `incremental_watermark` | `incremental_partition` |
+    | --- | --- | --- |
+    | Unit | Rows in a watermark range | Whole affected data buckets |
+    | Typical column | `modified_datetime` | `snapshot_date` |
+    | Retry | Start at the last successful checkpoint | Reprocess affected partitions |
+    | Late arrivals | Requires a reliable modified value | Strong fit when old buckets can reopen |
+    | Historical correction | Must update the watermark value | Reprocess the old partition |
+    | Parallel date processing | Possible | Natural |
+
+    Use this quick guide when choosing a strategy:
+
+    | Situation | Recommended source strategy |
+    | --- | --- |
+    | Small or reference data | `full_dataset` |
+    | Transactional source with a reliable unique increasing ID | `incremental_watermark` |
+    | Large fact or history table with natural logical partitions | `incremental_partition` |
+    | Daily, monthly, or snapshot delivery | `incremental_partition` |
+    | Historical periods can be corrected | `incremental_partition` |
+    | API or SQL stream without useful partitions | `incremental_watermark` |
+
+    At large scale, prefer `incremental_partition` when the source naturally supports stable date, snapshot, batch, or similar logical partitions. This avoids repeatedly evaluating the complete source and lets FabricOps process only affected buckets. Large data does not always require partition processing: a large transactional source can still use `incremental_watermark` when it has an efficient, non-null, globally unique increasing value and logical partitions are not a natural fit. A modified timestamp is suitable only when the source guarantees those properties. Neither strategy is universally better.
+
+    A late row with `business_date = 25 Aug` and `modified_datetime = 27 Aug` is found by a watermark on `modified_datetime`. A strict watermark can miss it if the source assigns an old value behind the successful checkpoint. Partition processing can reopen 25 Aug when FabricOps actually detects that bucket as affected; it does not imply that every old bucket is always reread.
+
+    !!! important "Keep source profiles complete"
+
+        A complete `full_dataset` DataFrame may refresh the canonical registered source profile. An `incremental_subset` may be profiled diagnostically, but it must not replace the complete physical source profile.
 
 ## T. Transform
 
@@ -123,6 +201,8 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
     !!! tip "Partitioning"
 
         `partition_by` and `repartition_by` can help with large workloads, but they should be used only when they fit the data shape. A poor partition key can create many small files and make reads and writes slower.
+
+        `partition_by` controls physical Lakehouse storage layout. `incremental_partition` controls which logical source data buckets FabricOps processes. A table can be physically partitioned by `event_date` while using `incremental_watermark` on `modified_datetime`.
 
     !!! note "Frequency profiling"
 
