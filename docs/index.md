@@ -16,6 +16,15 @@ Instead of rebuilding governance and documentation afterwards, FabricOps records
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
+## Four ideas behind FabricOps
+
+- **FabricOps Starter Kit** — a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
+- **Metadata** — structured information that records what the data is, what happened to it, and what rules apply.
+- **Governance as Code** — governance rules expressed in structured, repeatable form so they can be reviewed and consistently applied.
+- **Configuration-driven Engineering** — reusable pipeline behaviour controlled through configuration instead of repeatedly rewriting implementation code.
+
+You do not need to learn every term upfront. Use the [FabricOps Glossary](glossary.md) when you encounter an unfamiliar FabricOps, Governance, or Engineering concept.
+
 ## What is included?
 
 FabricOps includes:
@@ -37,14 +46,19 @@ FabricOps includes:
     <span class="fabricops-landing-card__body">See how the workspaces, Governance, Engineering, ETL, metadata, and Production flow fit together.</span>
   </a>
 
+  <a class="fabricops-landing-card" href="glossary/">
+    <span class="fabricops-landing-card__title">FabricOps Glossary</span>
+    <span class="fabricops-landing-card__body">Look up FabricOps, Governance, and Engineering concepts as you encounter them.</span>
+  </a>
+
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
     <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
-    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for terminology, decisions, boundaries, and future direction.</span>
+    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for product meaning, operating decisions, boundaries, and future direction.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
     <span class="fabricops-landing-card__title">Step-by-step Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the workflow in order, with expandable notes explaining the important technical choices.</span>
+    <span class="fabricops-landing-card__body">Follow the workflow in order, with step-specific concept links and expandable technical rationale.</span>
   </a>
 
   <a class="fabricops-landing-card" href="releases/">
