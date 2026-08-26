@@ -12,13 +12,10 @@ Read a table from a configured Fabric warehouse target.
 
 <div class="reference-docstring-intro" markdown="1">
 
-This is equivalent to ``SELECT * FROM schema.table_name``. The function
-returns every column and every row exposed by the resolved Warehouse table.
-It does not automatically apply a ``WHERE`` filter, select a subset of
-columns, apply a row limit, aggregate the data, or sample the data. The
-configured Warehouse target is resolved from ``00_env_config``, and the
-read uses the Microsoft Fabric Warehouse Spark connector rather than native
-Delta access.
+Without a processing scope, this is equivalent to
+``SELECT * FROM schema.table_name``. With a governed watermark or
+partition scope, FabricOps generates a validated single-table predicate
+and executes it in Warehouse before rows are transferred to Spark.
 
 Use this callable only for intentional full-table extracts such as small
 lookup tables, reference tables, smoke tests, or cases where every row and
@@ -44,9 +41,9 @@ table because notebook cells can hit runtime limits.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/read_warehouse_table.py:10`
+`fabricops_kit/io/read_warehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L87">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L16-L110">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -73,6 +70,7 @@ def read_warehouse_table(
     target: str='warehouse',
     spark_session=None,
     context: dict[str, Any] | None=None,
+    processing_scope: dict[str, Any] | None=None,
     **options,
 ):
 ```
@@ -97,7 +95,8 @@ student_df = read_warehouse_table("dbo", "student_enrolment", target="warehouse"
 | `table_name` | `str` | Yes | Physical Warehouse table name for the source table. |
 | `target` | `str` | No | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
+| `processing_scope` | `dict[str, Any] \| None` | No | Runtime scope returned in ``read_pipeline_prep(...)["scope"]``. Watermark and partition predicates are executed in Warehouse before rows reach Spark. ``skip`` raises without resolving or reading the business table. Omit this argument for the existing complete read. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
 ## Returns
 
@@ -127,6 +126,8 @@ delegates to the Fabric Warehouse Spark connector. Conceptual example:
 
 ``df = read_warehouse_table(schema="dbo", table_name="DimDepartment")``
 
+``source_df = read_warehouse_table(schema="dbo", table_name="Bookings", processing_scope=read_prep["scope"])``
+
 Use ``read_warehouse_query`` instead when you need selected columns, row
 filtering, aggregation, joins, row limits, or other caller-controlled SQL
 pushdown before Spark receives rows.
@@ -150,7 +151,7 @@ pushdown before Spark receives rows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 15 |
+| Live-critical dependencies | 18 |
 
 ### Release history
 
@@ -172,11 +173,14 @@ pushdown before Spark receives rows.
 <li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._warehouse_sql_literal</code></li>
+<li><code>fabricops_kit.io.shared.build_warehouse_scoped_query</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.validate_processing_scope</code></li>
 </ul>
 
 

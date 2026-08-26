@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_delta_path, resolve_configured_lakehouse_table
+from .shared import (
+    apply_lakehouse_processing_scope,
+    get_spark_session,
+    read_delta_path,
+    resolve_configured_lakehouse_table,
+    validate_processing_scope,
+)
 
 
 def read_lakehouse_table(
@@ -14,17 +20,15 @@ def read_lakehouse_table(
     schema: str | None = None,
     spark_session=None,
     context: dict[str, Any] | None = None,
+    processing_scope: dict[str, Any] | None = None,
     **options,
 ):
     """Resolve a configured Lakehouse Delta table and return a Spark DataFrame.
 
-    This function represents a complete read of the resolved Delta table and
-    returns all rows and columns in that table. It does not automatically
-    filter rows, select a subset of columns, aggregate data, apply a row
-    limit, or sample the data. It is conceptually similar to a full-table read
-    such as ``SELECT * FROM schema.table_name``, but the implementation
-    resolves the Lakehouse Delta path and uses Spark's Delta reader rather than
-    executing SQL.
+    By default, this function represents a complete read of the resolved Delta
+    table. When ``processing_scope`` is supplied, FabricOps applies its
+    governed watermark or logical-partition filter directly to the lazy Delta
+    read plan.
 
     The returned Spark DataFrame is lazy. Calling ``read_lakehouse_table``
     constructs the DataFrame plan, and Spark reads data only when a downstream
@@ -57,6 +61,12 @@ def read_lakehouse_table(
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
+    processing_scope : dict[str, Any], optional
+        Runtime scope returned in ``read_pipeline_prep(...)["scope"]``. A
+        watermark scope reads ``(lower_bound, upper_bound]`` and a partition
+        scope reads only its listed logical partition values. ``skip`` raises
+        before the Delta table is resolved or read. Omit this argument to keep
+        the existing complete-table behavior.
     **options
         Additional Spark Delta ``DataFrameReader`` options forwarded to the
         Delta reader. These options do not provide FabricOps-level filtering or
@@ -65,9 +75,15 @@ def read_lakehouse_table(
     Returns
     -------
     pyspark.sql.DataFrame
-        A lazy Spark DataFrame representing all rows and columns in the
-        resolved Lakehouse Delta table. The data is evaluated when a downstream
-        Spark action runs.
+        A lazy Spark DataFrame representing the governed rows and all columns
+        in the resolved Lakehouse Delta table. The data is evaluated when a
+        downstream Spark action runs.
+
+    Raises
+    ------
+    ValueError
+        If ``processing_scope`` is malformed or resolves the source to
+        ``skip``.
 
     Notes
     -----
@@ -84,9 +100,11 @@ def read_lakehouse_table(
 
     ``recent_orders_df = orders_df.select("order_id", "customer_id", "order_date", "amount").where("order_date >= '2026-01-01'")``
 
-    ``read_lakehouse_table`` itself does not accept filtering or projection
-    arguments, but Spark may push compatible downstream filters and
-    projections into the Delta scan during execution.
+    ``source_df = read_lakehouse_table(table_name="orders", processing_scope=read_prep["scope"])``
+
+    Governed watermark scopes use ``column > lower_bound`` and
+    ``column <= upper_bound``. Spark may push these filters and compatible
+    downstream projections into the Delta scan during execution.
 
     This function does not read through the Warehouse SQL connector, execute a
     SQL query, write or copy the table, register metadata, create the table,
@@ -94,7 +112,11 @@ def read_lakehouse_table(
     DataFrame.
 
     """
+    scope = None if processing_scope is None else validate_processing_scope(processing_scope)
+    if scope is not None and scope["type"] == "skip":
+        raise ValueError("The current source was resolved to skip and must not be read.")
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         target, table_name, schema, context=context
     )
-    return read_delta_path(get_spark_session(spark_session), path, options=options)
+    dataframe = read_delta_path(get_spark_session(spark_session), path, options=options)
+    return dataframe if scope is None else apply_lakehouse_processing_scope(dataframe, scope)
