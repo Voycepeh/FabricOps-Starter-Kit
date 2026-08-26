@@ -26,7 +26,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 Before introducing, renaming, redefining, or broadly replacing a term:
 
 - check the glossary first and use the canonical term, category, meaning, aliases, and preferred usage
-- preserve the distinction between **FabricOps concepts**, supporting **Microsoft Fabric basics**, **Data engineering basics**, **Security and access basics**, and **File and configuration basics**
+- preserve the three public glossary categories: **FabricOps concepts**, **Governance concepts**, and **Engineering concepts**; **Data Quality** is a Governance concept even when Engineering executes DQ checks
 - prefer the specific FabricOps table, record, field, strategy, rule, or result name when one exists instead of vague alternatives such as `evidence`, `context`, `processing metadata`, or `data products`
 - treat aliases as search and comprehension aids, not additional canonical concepts; for example, **policy as code** is an alias of **governance as code**
 - update the glossary in the same focused PR when an intentional product or implementation change creates, removes, or materially changes a canonical concept
@@ -207,9 +207,10 @@ Validation builds do not make generated files on `main` current unless those fil
 
 Give each topic one canonical home based on what the reader is trying to learn. Before adding a page or expanding an existing one, classify the content and update the canonical owner instead of creating overlapping explanations.
 
-- **Product Definition** owns what FabricOps is: the original product intent, scope, audience, positioning, and product-level boundaries.
+- **Product Definition** owns what FabricOps is: the original product intent, scope, audience, positioning, operating decisions, and product-level boundaries.
+- **Glossary** owns canonical user-facing term definitions and the **FabricOps concepts / Governance concepts / Engineering concepts** grouping.
 - **How FabricOps Works** owns the high-level explanation of how the complete FabricOps workflow fits together. It should be understandable without implementation-level detail.
-- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow. Put useful technical rationale, trade-offs, caveats, and edge cases beside the relevant step in focused collapsible blocks instead of creating a separate rationale layer.
+- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow. Put useful technical rationale, trade-offs, caveats, and edge cases beside the relevant step in focused collapsible blocks instead of creating a separate rationale layer. Each action page should surface only the glossary concepts needed for that step rather than requiring users to read the full glossary first.
 - **Function Reference** owns exact callable contracts: parameters, returns, side effects, failure behaviour, and callable-specific usage guidance.
 
 Cross-link between these layers instead of copying the same explanation into several pages. Keep overview pages high level, Guided Demo pages actionable with optional contextual rationale, and reference pages exact.
