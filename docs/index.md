@@ -16,6 +16,8 @@ Instead of rebuilding governance and documentation afterwards, FabricOps records
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
+FabricOps provides the governed skeleton of the data practice while engineers and analysts can use Copilot, AI Functions, or other AI assistance available in Microsoft Fabric to accelerate project-specific coding, testing, documentation, and analysis. Humans decide what the data should do and what “good” looks like; the core FabricOps workflow remains deterministic, reviewable, and self-contained within Fabric even when local machines do not have general internet access to external tooling.
+
 ## Four ideas behind FabricOps
 
 - **FabricOps Starter Kit** — a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
