@@ -6,13 +6,11 @@ This step uses the newer governed runtime path. The components are implemented b
 
 !!! info "Key concepts for this step"
 
-    [**Guardrails**](../glossary.md#guardrails) — the governed rules authored in Step 3.  
-    [**Enforcement**](../glossary.md#enforcement) — applying those active rules during execution and acting on the result.  
-    [**Guardrail Result**](../glossary.md#guardrail-result) — the recorded pass, warning, or failure produced when a Guardrail is evaluated.  
-    [**Incremental Load**](../glossary.md#incremental-load) — processing only the new or changed source scope when that is the governed safe choice.  
-    [**Data Quality**](../glossary.md#data-quality) — a Governance concept here: Engineering executes the governed DQ expectations against the DataFrame.
+    **Guardrails**, **Enforcement**, **Guardrail Result**, **Full Dataset**, **Incremental Subset**, and **Data Quality** are the key concepts for this step.
 
-    These concepts explain why this is more than a normal pipeline rerun.
+    The source strategy is configured separately as **Full Dataset**, **Incremental Watermark**, or **Incremental Partition**. The runtime read mode then resolves to `skip`, Full Dataset, or Incremental Subset.
+
+    Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
 
 ## High-level flow
 
@@ -20,7 +18,7 @@ This step uses the newer governed runtime path. The components are implemented b
 Select rule source
 → Prepare source scope
 → Pre-read Guardrails
-→ Full / incremental read
+→ Full Dataset / Incremental Subset read
 → DQ + complete-source profiling rule
 → Transform
 → Target Guardrails
@@ -47,11 +45,11 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
 ??? info "Preview — Prepare the source scope"
 
-    Use `read_pipeline_prep()` to observe the source, resolve the governed target processing definition, and prepare the source scope as `skip`, `full`, or `incremental`.
+    Use `read_pipeline_prep()` to observe the source, resolve the governed target processing definition, and prepare the source runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
 
     ```text
-    source observation + governed target strategy
-    → skip / full / incremental
+    configured source strategy + source observation + governed target strategy
+    → skip / full_dataset / incremental_subset
     ```
 
     A `skip` run performs no business-data read, transformation, or target write.
@@ -60,13 +58,13 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Run `check_schema()`, `check_freshness()`, and `check_changes()` before the business-data read. Stop when a blocking result does not allow continuation.
 
-    Source Observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines those recorded observations with the governed target processing definition to decide the safe processing scope.
+    Source Observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines those recorded observations with the configured source strategy and governed target processing definition to decide the safe processing scope.
 
-??? info "Preview — Read full or incremental source and run DQ"
+??? info "Preview — Read the resolved source scope and run DQ"
 
     Read the source using the prepared scope. Run `check_dq()` on the DataFrame that is actually being processed.
 
-    Profile and register the source only when that DataFrame represents the **complete physical source table**. An incremental slice is valid processing scope but must not replace the latest complete source profile.
+    Profile and register the source only when that DataFrame represents the **complete physical source table**. An Incremental Subset is valid processing scope but must not replace the latest complete source profile.
 
 ???+ success "Live — Apply the visible transformation"
 
