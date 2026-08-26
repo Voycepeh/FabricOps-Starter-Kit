@@ -3,8 +3,8 @@
     "term": "FabricOps Starter Kit",
     "aliases": [],
     "category": "FabricOps concepts",
-    "short_definition": "Governed, quality-checked Microsoft Fabric notebook workflows for profiling, review, guardrails, enforcement, and handover.",
-    "long_definition": "Governed, quality-checked Microsoft Fabric notebook workflows for profiling, review, guardrails, enforcement, and handover.",
+    "short_definition": "A plug-and-play Data Engineering and Governance practice for Microsoft Fabric.",
+    "long_definition": "A plug-and-play Data Engineering and Governance practice for Microsoft Fabric, implemented through a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.",
     "preferred_usage": "Use as the public project name.",
     "avoid_usage": "full data product platform"
   },
@@ -15,54 +15,10 @@
       "profiling"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.",
-    "long_definition": "Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.",
-    "preferred_usage": "Use profile/profiles for measured facts.",
+    "short_definition": "A summary of the data at a point in time.",
+    "long_definition": "A summary of the data at a point in time. It shows things like row count, columns, data types, nulls, distinct values, minimum and maximum values, and value distributions. In FabricOps, this is stored in Data Profiled and Data Profiled Frequency metadata.",
+    "preferred_usage": "Use profile for a summary of the data at a point in time.",
     "avoid_usage": "profile evidence; catalogue evidence"
-  },
-  {
-    "term": "source data",
-    "aliases": [
-      "source table"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.",
-    "long_definition": "Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.",
-    "preferred_usage": "Use source data for inputs readers inspect or transform.",
-    "avoid_usage": "source table when file inputs are possible"
-  },
-  {
-    "term": "pipeline output",
-    "aliases": [
-      "pipeline outputs",
-      "output",
-      "target output"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "A DataFrame or table produced by a pipeline and checked before publishing.",
-    "long_definition": "A DataFrame or table produced by a pipeline and checked before publishing.",
-    "preferred_usage": "Use pipeline output/pipeline outputs for produced data.",
-    "avoid_usage": "governed outputs"
-  },
-  {
-    "term": "target DataFrame",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "The in-memory Spark DataFrame produced by pipeline logic before it is written.",
-    "long_definition": "The in-memory Spark DataFrame produced by pipeline logic before it is written.",
-    "preferred_usage": "Use only when distinguishing in-memory Spark data from a written table.",
-    "avoid_usage": "target output when DataFrame precision is needed"
-  },
-  {
-    "term": "target table",
-    "aliases": [
-      "target tables"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "A written table produced by a pipeline output.",
-    "long_definition": "A written table produced by a pipeline output.",
-    "preferred_usage": "Use only for persisted table outputs.",
-    "avoid_usage": "target DataFrame when written-table precision is needed"
   },
   {
     "term": "enrichment",
@@ -71,9 +27,9 @@
       "enrich metadata"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.",
-    "long_definition": "Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.",
-    "preferred_usage": "Use enrichment for reviewed descriptive metadata.",
+    "short_definition": "Business and governance information added to the Data Catalogue after the technical metadata has been captured.",
+    "long_definition": "Business and governance information added to the Data Catalogue after the technical metadata has been captured. It includes things like descriptions, ownership, sensitivity, classification, and how the data is intended to be used.",
+    "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
     "avoid_usage": "metadata enrichment"
   },
   {
@@ -82,9 +38,9 @@
       "guardrail"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.",
-    "long_definition": "Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.",
-    "preferred_usage": "Use guardrails for governed checks; use singular only for grammar.",
+    "short_definition": "Governed rules FabricOps applies to data and pipelines.",
+    "long_definition": "Guardrails are the governed rules FabricOps applies to data and pipelines. Today, they can check things like schema, freshness, profile behaviour, change over time, and data quality. Guardrails can also be extended to governance requirements, for example sensitive data requiring stricter handling or PII requiring masking or restricted access.",
+    "preferred_usage": "Use guardrails for governed rules applied to data and pipelines; use singular only for grammar.",
     "avoid_usage": "guardrail governance"
   },
   {
@@ -94,183 +50,10 @@
       "enforce"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Running active guardrails and deciding whether a pipeline can continue, warn, or stop.",
-    "long_definition": "Running active guardrails and deciding whether a pipeline can continue, warn, or stop.",
-    "preferred_usage": "Use enforcement for runtime checks.",
+    "short_definition": "Applying active Guardrails during a pipeline run and acting on the result.",
+    "long_definition": "Enforcement is when FabricOps applies the active Guardrails during a pipeline run and acts on the result. Depending on the Guardrail, the pipeline can continue, continue with a warning, or stop.",
+    "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
     "avoid_usage": "runtime enforcement"
-  },
-  {
-    "term": "can_continue",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Boolean result that tells downstream notebook code whether processing can keep running.",
-    "long_definition": "Boolean result that tells downstream notebook code whether processing can keep running.",
-    "preferred_usage": "Use as the returned field name.",
-    "avoid_usage": "continue flag"
-  },
-  {
-    "term": "metadata lakehouse",
-    "aliases": [
-      "metadata target",
-      "metadata route"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Configured Fabric Lakehouse target where FabricOps stores metadata tables.",
-    "long_definition": "Configured Fabric Lakehouse target where FabricOps stores metadata tables.",
-    "preferred_usage": "Use metadata lakehouse for configured metadata storage.",
-    "avoid_usage": "metadata target; metadata route"
-  },
-  {
-    "term": "metadata tables",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "FabricOps tables that store profiles, guardrail intent, runtime outcomes, agreements, lineage, and operating evidence.",
-    "long_definition": "FabricOps tables that store profiles, guardrail intent, runtime outcomes, agreements, lineage, and operating evidence.",
-    "preferred_usage": "Use metadata tables for the collection.",
-    "avoid_usage": "metadata stores"
-  },
-  {
-    "term": "notebook registry",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
-    "long_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
-    "preferred_usage": "Use notebook registry for the inventory.",
-    "avoid_usage": "notebook catalogue"
-  },
-  {
-    "term": "notebook template",
-    "aliases": [
-      "notebook templates",
-      "starter notebook",
-      "starter notebooks"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Reusable starter notebook workflow that shows how to run a FabricOps phase.",
-    "long_definition": "Reusable starter notebook workflow that shows where and how FabricOps helpers are used for a FabricOps phase such as environment setup, agreement selection, pipeline execution, governance review, or exploration.",
-    "preferred_usage": "Use notebook template for reusable starter notebook workflows.",
-    "avoid_usage": "notebook registry when the reusable notebook file is meant"
-  },
-  {
-    "term": "agreement selection",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Notebook workflow step that selects the data agreement and steward context for review or execution.",
-    "long_definition": "Notebook workflow step that selects the data agreement and steward context for review or execution.",
-    "preferred_usage": "Use agreement selection for the workflow step.",
-    "avoid_usage": "contract picker"
-  },
-  {
-    "term": "guardrail target selection",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Notebook workflow step that chooses the profiled table or pipeline output whose guardrails will be reviewed.",
-    "long_definition": "Notebook workflow step that chooses the profiled table or pipeline output whose guardrails will be reviewed.",
-    "preferred_usage": "Use guardrail target selection for the workflow step.",
-    "avoid_usage": "target picker"
-  },
-  {
-    "term": "profile mode",
-    "aliases": [
-      "profile behavior"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Configured behavior mode for profile guardrails: static_data, changing_data, or skip.",
-    "long_definition": "Configured behavior mode for profile guardrails: static_data, changing_data, or skip.",
-    "preferred_usage": "Use profile mode when describing static_data/changing_data/skip.",
-    "avoid_usage": "profile behavior mode"
-  },
-  {
-    "term": "static_data",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode for data expected to remain stable against an approved baseline.",
-    "long_definition": "Profile mode for data expected to remain stable against an approved baseline.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "static data"
-  },
-  {
-    "term": "changing_data",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode for data expected to change by watermark group.",
-    "long_definition": "Profile mode for data expected to change by watermark group.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "changing data"
-  },
-  {
-    "term": "skip",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode that records a profile without enforcing profile behavior.",
-    "long_definition": "Profile mode that records a profile without enforcing profile behavior.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "skip enforcement"
-  },
-  {
-    "term": "active pending governance review",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Activation state for a guardrail that is active but still awaiting governance review.",
-    "long_definition": "Activation state for a guardrail that is active but still awaiting governance review.",
-    "preferred_usage": "Use when documenting rule lifecycle states.",
-    "avoid_usage": "pending active"
-  },
-  {
-    "term": "self-approved",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Review state showing a rule or agreement was approved by the same operating context that proposed it.",
-    "long_definition": "Review state showing a rule or agreement was approved by the same operating context that proposed it.",
-    "preferred_usage": "Use as the literal review state.",
-    "avoid_usage": "auto approved"
-  },
-  {
-    "term": "governance-approved",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Review state showing an authorized governance reviewer approved the evidence or intent.",
-    "long_definition": "Review state showing an authorized governance reviewer approved the evidence or intent.",
-    "preferred_usage": "Use as the literal review state.",
-    "avoid_usage": "approved by governance"
-  },
-  {
-    "term": "superseded",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Lifecycle state showing a newer record replaced an older record.",
-    "long_definition": "Lifecycle state showing a newer record replaced an older record.",
-    "preferred_usage": "Use superseded for replaced records.",
-    "avoid_usage": "deprecated"
-  },
-  {
-    "term": "activation_state",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata field that records whether a rule or record is active, inactive, or pending review.",
-    "long_definition": "Metadata field that records whether a rule or record is active, inactive, or pending review.",
-    "preferred_usage": "Use as the field name.",
-    "avoid_usage": "activation state when referring to column"
-  },
-  {
-    "term": "review_state",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata field that records review outcome such as self-approved or governance-approved.",
-    "long_definition": "Metadata field that records review outcome such as self-approved or governance-approved.",
-    "preferred_usage": "Use as the field name.",
-    "avoid_usage": "review status"
-  },
-  {
-    "term": "run summary",
-    "aliases": [
-      "run summaries"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Concise record of a pipeline run, including status, checks, and handover signals.",
-    "long_definition": "Concise record of a pipeline run, including status, checks, and handover signals.",
-    "preferred_usage": "Use run summary/run summaries.",
-    "avoid_usage": "pipeline summary"
   },
   {
     "term": "guardrail result",
@@ -278,19 +61,10 @@
       "guardrail results"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Runtime outcome from evaluating a guardrail, including pass/fail/warn details.",
-    "long_definition": "Runtime outcome from evaluating a guardrail, including pass/fail/warn details.",
-    "preferred_usage": "Use guardrail result/guardrail results.",
+    "short_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.",
+    "long_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run. It records whether the check passed, warned, or failed, what was checked, and whether the pipeline is allowed to continue.",
+    "preferred_usage": "Use guardrail result for what happened when FabricOps applied a Guardrail.",
     "avoid_usage": "rule result"
-  },
-  {
-    "term": "lineage relationship",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Recorded link between source data, transformations, and pipeline outputs.",
-    "long_definition": "Recorded link between source data, transformations, and pipeline outputs.",
-    "preferred_usage": "Use lineage relationship when documenting stored lineage.",
-    "avoid_usage": "dependency edge"
   },
   {
     "term": "data contract",
@@ -989,15 +763,6 @@
     "long_definition": "Table that stores lineage relationships between sources, transformations, and outputs.",
     "preferred_usage": "Use as literal table name.",
     "avoid_usage": "lineage table"
-  },
-  {
-    "term": "METADATA_NOTEBOOK_REGISTRY",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores notebook registry entries for handover and operations.",
-    "long_definition": "Table that stores notebook registry entries for handover and operations.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "notebook registry table"
   },
   {
     "term": "METADATA_DATA_ACCESS",
