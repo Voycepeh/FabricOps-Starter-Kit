@@ -8,6 +8,16 @@ The goal is to make the desired data practice executable. Instead of treating go
 
 This creates a governed Production data foundation that can be understood, validated, promoted, reused, and consumed without rebuilding its context afterwards.
 
+<div align="center">
+
+[![Documentation Home](https://img.shields.io/badge/Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+
+[![Notebook Templates](https://img.shields.io/badge/Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates/)
+
+[![View Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
+
+</div>
+
 ## Built for AI-assisted engineering
 
 AI can now help teams write PySpark, SQL, Python, tests, and documentation very quickly. Much of FabricOps itself was built with AI assistance and then reviewed against the intended workflow and product rules.
@@ -22,12 +32,3 @@ FabricOps was also born from a practical constraint: the Production environment 
 
 FabricOps is also designed to support future **AI-augmented Governance and Engineering workflows** using the structured context it already captures—for example Enrichment suggestions, Data Quality and Guardrail authoring, contract review, pipeline review, failure explanation, impact analysis, governed discovery, and consumer context preparation. These remain future direction unless separately implemented and documented.
 
-<div align="center">
-
-[![Documentation Home](https://img.shields.io/badge/Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-
-[![Notebook Templates](https://img.shields.io/badge/Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates/)
-
-[![View Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
-
-</div>
