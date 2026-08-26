@@ -4,6 +4,16 @@
 
 This step uses the newer governed runtime path. The components are implemented but remain **Preview** in the Guided Demo until the complete flow is revalidated end to end in Fabric.
 
+!!! info "Key concepts for this step"
+
+    [**Guardrails**](../glossary.md#guardrails) — the governed rules authored in Step 3.  
+    [**Enforcement**](../glossary.md#enforcement) — applying those active rules during execution and acting on the result.  
+    [**Guardrail Result**](../glossary.md#guardrail-result) — the recorded pass, warning, or failure produced when a Guardrail is evaluated.  
+    [**Incremental Load**](../glossary.md#incremental-load) — processing only the new or changed source scope when that is the governed safe choice.  
+    [**Data Quality**](../glossary.md#data-quality) — a Governance concept here: Engineering executes the governed DQ expectations against the DataFrame.
+
+    These concepts explain why this is more than a normal pipeline rerun.
+
 ## High-level flow
 
 ```text
@@ -50,7 +60,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Run `check_schema()`, `check_freshness()`, and `check_changes()` before the business-data read. Stop when a blocking result does not allow continuation.
 
-    Source observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines that evidence with the governed target processing definition to decide the safe processing scope.
+    Source Observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines those recorded observations with the governed target processing definition to decide the safe processing scope.
 
 ??? info "Preview — Read full or incremental source and run DQ"
 
@@ -74,17 +84,17 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     The governed load strategy controls how the target is maintained. `overwrite`, `append`, `scd1`, and `scd2` are processing definitions rather than arbitrary last-minute writer modes. Unsupported or ambiguous combinations fail or fall back to a safe full scope rather than guessing.
 
-??? info "Preview — Review runtime evidence"
+??? info "Preview — Review runtime records"
 
-    A guarded run writes the normal evidence produced by the pipeline:
+    A guarded run writes the normal records produced by the pipeline:
 
-    | Evidence area | Purpose |
+    | Metadata area | Purpose |
     | --- | --- |
     | `METADATA_DATA_CATALOGUE` | Current table and column identity from complete registered profiles. |
-    | `METADATA_DATA_PROFILED` | Complete registered profiling evidence. |
+    | `METADATA_DATA_PROFILED` | Complete registered profiling records. |
     | `METADATA_DATA_LINEAGE` | Runtime source and target participation recorded by the profiling workflow. |
     | `METADATA_GUARDRAIL_RESULTS` | Guardrail outcomes and continuation decisions. |
-    | `METADATA_GUARDRAIL_ROW_RESULTS` | Failed-row evidence where a DQ rule records row-level failures. |
+    | `METADATA_GUARDRAIL_ROW_RESULTS` | Failed-row records where a DQ rule records row-level failures. |
 
 ## Expected result
 
