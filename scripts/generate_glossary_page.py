@@ -113,6 +113,10 @@ def _display_name(term: str) -> str:
     return DISPLAY_NAMES.get(term, term)
 
 
+def _text(value: object) -> str:
+    return html.escape(str(value), quote=False)
+
+
 def build_glossary_page() -> str:
     """Return the generated glossary Markdown."""
     entries = json.loads(GLOSSARY_DATA_PATH.read_text(encoding="utf-8"))
@@ -161,8 +165,8 @@ def build_glossary_page() -> str:
             [
                 "<details>",
                 "<summary>",
-                f"<strong>{html.escape(group_name)}</strong><br>",
-                f"<span>{html.escape(subtitle)}</span>",
+                f"<strong>{_text(group_name)}</strong><br>",
+                f"<span>{_text(subtitle)}</span>",
                 "</summary>",
                 "",
             ]
@@ -174,17 +178,17 @@ def build_glossary_page() -> str:
             if aliases:
                 alias_text = (
                     "<p><strong>Also known as:</strong> "
-                    f"{html.escape(', '.join(aliases))}</p>"
+                    f"{_text(', '.join(aliases))}</p>"
                 )
             summary = (
-                f"<summary><strong>{html.escape(_display_name(term))}</strong> — "
-                f"{html.escape(str(entry['short_definition']))}</summary>"
+                f"<summary><strong>{_text(_display_name(term))}</strong> — "
+                f"{_text(entry['short_definition'])}</summary>"
             )
             lines.extend(
                 [
                     f'<details id="{_slug(term)}">',
                     summary,
-                    f"<p>{html.escape(str(entry['long_definition']))}</p>",
+                    f"<p>{_text(entry['long_definition'])}</p>",
                     alias_text,
                     "</details>",
                     "",
