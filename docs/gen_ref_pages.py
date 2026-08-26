@@ -24,7 +24,10 @@ GLOSSARY_GROUPS = [
     ),
     (
         "Governance concepts",
-        "Terms encountered as Governance establishes ownership, expectations, rules, controls, and Production approval.",
+        (
+            "Terms encountered as Governance establishes ownership, expectations, "
+            "rules, controls, and Production approval."
+        ),
         [
             "data steward",
             "data agreement",
@@ -44,7 +47,10 @@ GLOSSARY_GROUPS = [
     ),
     (
         "Engineering concepts",
-        "Terms encountered as Engineering sets up Fabric, builds pipelines, profiles data, and applies governed processing.",
+        (
+            "Terms encountered as Engineering sets up Fabric, builds pipelines, "
+            "profiles data, and applies governed processing."
+        ),
         [
             "Microsoft Fabric",
             "workspace",
@@ -114,7 +120,9 @@ def _build_glossary_page() -> str:
     ordered_terms = [term for _, _, terms in GLOSSARY_GROUPS for term in terms]
     missing = sorted(set(ordered_terms) - set(by_term))
     unassigned = sorted(set(by_term) - set(ordered_terms))
-    duplicates = sorted({term for term in ordered_terms if ordered_terms.count(term) > 1})
+    duplicates = sorted(
+        {term for term in ordered_terms if ordered_terms.count(term) > 1}
+    )
     category_mismatches = sorted(
         (term, str(by_term[term]["category"]), group_name)
         for group_name, _, terms in GLOSSARY_GROUPS
@@ -123,7 +131,8 @@ def _build_glossary_page() -> str:
     )
     if missing or unassigned or duplicates or category_mismatches:
         raise RuntimeError(
-            "Glossary groups must cover every canonical term exactly once and match its canonical category. "
+            "Glossary groups must cover every canonical term exactly once and "
+            "match its canonical category. "
             f"Missing={missing}; unassigned={unassigned}; duplicates={duplicates}; "
             f"category_mismatches={category_mismatches}."
         )
@@ -131,10 +140,16 @@ def _build_glossary_page() -> str:
     lines = [
         "# FabricOps glossary",
         "",
-        "Use this page when a FabricOps, Governance, or Engineering term is unfamiliar. "
-        "The definitions come directly from the canonical `docs/reference/_data/glossary.json` source.",
+        (
+            "Use this page when a FabricOps, Governance, or Engineering term is "
+            "unfamiliar. The definitions come directly from the canonical "
+            "`docs/reference/_data/glossary.json` source."
+        ),
         "",
-        "The order follows the FabricOps operating workflow so you can learn terminology close to where it appears in the Guided Demo.",
+        (
+            "The order follows the FabricOps operating workflow so you can learn "
+            "terminology close to where it appears in the Guided Demo."
+        ),
         "",
     ]
 
@@ -152,11 +167,20 @@ def _build_glossary_page() -> str:
         for term in terms:
             entry = by_term[term]
             aliases = [str(alias) for alias in entry.get("aliases", [])]
-            alias_text = f"<p><strong>Also known as:</strong> {html.escape(', '.join(aliases))}</p>" if aliases else ""
+            alias_text = ""
+            if aliases:
+                alias_text = (
+                    "<p><strong>Also known as:</strong> "
+                    f"{html.escape(', '.join(aliases))}</p>"
+                )
+            summary = (
+                f"<summary><strong>{html.escape(_display_name(term))}</strong> — "
+                f"{html.escape(str(entry['short_definition']))}</summary>"
+            )
             lines.extend(
                 [
                     f'<details id="{_slug(term)}">',
-                    f"<summary><strong>{html.escape(_display_name(term))}</strong> — {html.escape(str(entry['short_definition']))}</summary>",
+                    summary,
                     f"<p>{html.escape(str(entry['long_definition']))}</p>",
                     alias_text,
                     "</details>",
