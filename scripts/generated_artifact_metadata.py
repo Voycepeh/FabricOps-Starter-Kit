@@ -76,7 +76,7 @@ def sync_home_public_function_count(
     reference_index_path: Path = REFERENCE_INDEX_PATH,
     home_index_path: Path = HOME_INDEX_PATH,
 ) -> int:
-    """Sync the home-page public-function count from the generated reference index."""
+    """Sync the home-page public-function count when the homepage exposes it."""
     reference_text = reference_index_path.read_text(encoding="utf-8")
     reference_match = REFERENCE_PUBLIC_FUNCTION_COUNT_RE.search(reference_text)
     if reference_match is None:
@@ -88,9 +88,7 @@ def sync_home_public_function_count(
     home_text = home_index_path.read_text(encoding="utf-8")
     home_match = HOME_PUBLIC_FUNCTION_COUNT_RE.search(home_text)
     if home_match is None:
-        raise RuntimeError(
-            f"Could not find the public-function count marker in {home_index_path.relative_to(ROOT)}."
-        )
+        return public_function_count
     replacement = (
         f'{home_match.group("start")}<strong>{public_function_count}</strong>'
         f'<span> public callable functions</span>{home_match.group("end")}'
