@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:586`
+`fabricops_kit/pipeline/profile_and_register_table.py:572`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L586-L945">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L572-L942">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -55,8 +55,9 @@ For profiling-related pipeline functions, the output captures the important deta
 def profile_and_register_table(
     df,
     profile_role,
-    target,
-    table_name,
+    table=None,
+    target=None,
+    table_name=None,
     schema=None,
     load_strategy=None,
     load_strategy_parameters=None,
@@ -85,8 +86,9 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. The helper does not sample, re-read, or mutate this DataFrame. |
 | `profile_role` | `{"source", "target"}` | Yes | Records whether the profiled asset participated in the notebook activity as an input or an output: ``source`` for an activity input and ``target`` for an activity output. The value is recorded as ``pipeline_role`` in ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``. |
-| `target` | `str` | Yes | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. |
-| `table_name` | `str` | Yes | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. |
+| `table` | `mapping` | No | Canonical resolved table identity returned as ``read_pipeline_prep()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity. |
+| `target` | `str` | No | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. Required when ``table`` is not supplied. |
+| `table_name` | `str` | No | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. Required when ``table`` is not supplied. |
 | `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
 | `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Current target load strategy. Valid only when ``profile_role="target"``. |
 | `load_strategy_parameters` | `dict` | No | Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` requires ``key_columns`` and ``effective_column`` and optionally accepts ``tracked_columns``; ``overwrite`` optionally accepts ``partition_column``; ``append`` accepts no parameters. |
@@ -292,7 +294,7 @@ compatibility or automatic migration layer is provided.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 61 |
+| Live-critical dependencies | 62 |
 
 ### Release history
 
@@ -351,18 +353,19 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._require_non_empty_string</code></li>
-<li><code>fabricops_kit.pipeline.profile_and_register_table._resolve_physical_identity</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._selected_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_lineage_event</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_frequency_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_processing_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_resolved_identity</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 </ul>
 

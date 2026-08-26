@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import build_table_id, get_store, resolve_fabric_context
-from fabricops_kit.io.shared import resolve_lakehouse_table_location, resolve_warehouse_table_location
+from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.check_changes import _observation_changes
 from fabricops_kit.pipeline.observe_table import _observe_table_core
-from fabricops_kit.pipeline.shared import resolve_table_processing_definition
+from fabricops_kit.pipeline.shared import resolve_physical_table_identity, resolve_table_processing_definition
 
 
 def _resolve_processing_scope(changes: Mapping[str, Any], processing: Mapping[str, Any]) -> dict[str, Any]:
@@ -83,8 +82,11 @@ def read_pipeline_prep(
     Returns
     -------
     dict
-        Observation and change evidence, resolved processing, and the prepared
-        ``skip``, ``full``, or ``incremental`` source-read scope.
+        Canonical ``source`` and ``target`` table identities, observation and
+        change evidence, resolved processing, and the prepared ``skip``,
+        ``full``, or ``incremental`` source-read scope. Each identity contains
+        ``table_id``, ``target``, normalized ``schema`` and ``table_name``, and
+        ``store_kind``. The active environment remains separate.
 
     Raises
     ------
@@ -104,6 +106,8 @@ def read_pipeline_prep(
     ... )
     >>> prep["read_strategy"] in {"skip", "full", "incremental"}
     True
+    >>> prep["target"]["table_name"]
+    'students'
 
     See Also
     --------
@@ -111,32 +115,36 @@ def read_pipeline_prep(
 
     """
     config, env, context = resolve_fabric_context()
-    store = get_store(config, env, target)
-    store_type = str(store.kind).strip().lower()
-    if store_type == "lakehouse":
-        table_name, schema_name, _path = resolve_lakehouse_table_location(store, target_table_name, schema)
-    elif store_type == "warehouse":
-        schema_name, table_name, _object = resolve_warehouse_table_location(
-            store, schema or getattr(store, "schema", None), target_table_name
-        )
-    else:
-        raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
-    table_id = build_table_id(store_type, target, schema_name, table_name)
-    observation = _observe_table_core(source_table_name, target=source_target, schema=source_schema)
+    source_identity = resolve_physical_table_identity(
+        config, env, target=source_target, schema=source_schema, table_name=source_table_name
+    )
+    target_identity = resolve_physical_table_identity(
+        config, env, target=target, schema=schema, table_name=target_table_name
+    )
+    observation = _observe_table_core(
+        source_identity["table_name"], target=source_identity["target"], schema=source_identity["schema"]
+    )
     changes = _observation_changes(observation)
     processing = resolve_table_processing_definition(
         config,
         env,
-        table_id,
+        target_identity["table_id"],
         spark_session=getattr(observation, "sparkSession", None),
         context=context,
         authored_processing={"load_strategy": load_strategy, **(load_strategy_parameters or {})},
     )
     scope = _resolve_processing_scope(changes, processing)
     if (
-        store_type == "warehouse"
+        target_identity["store_kind"] == "warehouse"
         and processing["load_strategy"] == "overwrite"
         and scope["read_strategy"] == "incremental"
     ):
         scope = {"read_strategy": "full", "partition_column": None, "partition_values": []}
-    return {"observation": observation, "changes": changes, "processing": processing, **scope}
+    return {
+        "source": source_identity,
+        "target": target_identity,
+        "observation": observation,
+        "changes": changes,
+        "processing": processing,
+        **scope,
+    }

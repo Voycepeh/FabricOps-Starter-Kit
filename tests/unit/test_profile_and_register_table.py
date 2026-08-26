@@ -27,12 +27,12 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     _catalogue_dataframe_from_profiled,
     _processing_definition,
     _replace_frequency_rows,
-    _resolve_physical_identity,
     _schema_fingerprint,
     _upsert_catalogue_identities,
     _validate_processing_columns,
     profile_and_register_table,
 )
+from fabricops_kit.pipeline.shared import resolve_physical_table_identity
 
 
 @pytest.mark.parametrize(
@@ -249,6 +249,7 @@ def test_profile_and_register_table_signature_requires_profile_role():
     assert list(parameters) == [
         "df",
         "profile_role",
+        "table",
         "target",
         "table_name",
         "schema",
@@ -263,24 +264,29 @@ def test_profile_and_register_table_signature_requires_profile_role():
 
 
 def test_resolved_identity_uses_active_environment_and_configured_lakehouse(monkeypatch):
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     store = FabricStore("dev", "workspace", "item", "Unified", "lakehouse", True, "dbo")
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
     monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
-    identity = _resolve_physical_identity(
-        profile_role=" Source ", target=" Unified ", schema=None, table_name="customers"
+    identity = resolve_physical_table_identity(
+        object(), "dev", target=" Unified ", schema=None, table_name="customers"
     )
-    assert identity[:5] == ("source", "unified", "customers", "dbo", "lakehouse")
-    assert identity[6] == "dev"
+    assert identity == {
+        "table_id": build_table_id("lakehouse", "unified", "dbo", "customers"),
+        "target": "unified", "schema": "dbo", "table_name": "customers", "store_kind": "lakehouse",
+    }
 
 
 def test_resolved_identity_uses_configured_warehouse_default(monkeypatch):
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     store = FabricStore("dev", "workspace", "item", "Product", "warehouse", schema="sales")
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
     monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
-    identity = _resolve_physical_identity(profile_role="target", target="product", schema=None, table_name="orders")
-    assert identity[1:5] == ("product", "orders", "sales", "warehouse")
+    identity = resolve_physical_table_identity(
+        object(), "dev", target="product", schema=None, table_name="orders"
+    )
+    assert identity["target"] == "product"
+    assert identity["table_name"] == "orders"
+    assert identity["schema"] == "sales"
+    assert identity["store_kind"] == "warehouse"
 
 
 @pytest.mark.parametrize(
@@ -292,11 +298,10 @@ def test_resolved_identity_uses_configured_warehouse_default(monkeypatch):
     ],
 )
 def test_resolved_identity_rejects_invalid_configured_store(monkeypatch, store, message):
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
     with pytest.raises(ValueError, match=message):
-        _resolve_physical_identity(profile_role="source", target="source", schema=None, table_name="orders")
+        resolve_physical_table_identity(object(), "dev", target="source", schema=None, table_name="orders")
 
 
 @pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
@@ -331,6 +336,42 @@ def test_profile_and_register_table_derives_physical_identity_into_catalogue(
     assert (table_row.environment_name, table_row.store_type, table_row.layer, table_row.schema_name) == (
         "dev", kind, target, schema or ""
     )
+
+
+def test_profile_and_register_table_reuses_canonical_identity(spark_session, monkeypatch, registered):
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
+    identity = {
+        "table_id": build_table_id("lakehouse", "raw", None, "customers"),
+        "target": "raw",
+        "schema": None,
+        "table_name": "customers",
+        "store_kind": "lakehouse",
+    }
+    result = profile_and_register_table(
+        _source_df(spark_session), profile_role="source", table=identity, frequency_columns=[]
+    )
+    assert {row.table_id for row in result.collect()} == {identity["table_id"]}
+
+
+@pytest.mark.parametrize(
+    ("identity", "message"),
+    [
+        ({"table_id": "wrong"}, "missing required fields"),
+        (
+            {
+                "table_id": "wrong", "target": "raw", "schema": None,
+                "table_name": "customers", "store_kind": "lakehouse",
+            },
+            "table_id is inconsistent",
+        ),
+    ],
+)
+def test_profile_and_register_table_rejects_invalid_canonical_identity(
+    spark_session, registered, identity, message
+):
+    with pytest.raises(ValueError, match=message):
+        profile_and_register_table(_source_df(spark_session), profile_role="source", table=identity)
 
 
 @pytest.mark.parametrize(

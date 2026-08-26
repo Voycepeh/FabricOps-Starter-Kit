@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:50`
+`fabricops_kit/pipeline/read_pipeline_prep.py:49`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L50-L142">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L49-L150">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -60,6 +60,8 @@ def read_pipeline_prep(
 ... )
 >>> prep["read_strategy"] in {"skip", "full", "incremental"}
 True
+>>> prep["target"]["table_name"]
+'students'
 
 </div>
 
