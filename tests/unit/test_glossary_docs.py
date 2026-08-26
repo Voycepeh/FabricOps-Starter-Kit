@@ -5,8 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from scripts.generate_glossary_page import build_glossary_page
+
 ROOT = Path(__file__).parents[2]
 GLOSSARY_PATH = ROOT / "docs" / "reference" / "_data" / "glossary.json"
+GLOSSARY_PAGE_PATH = ROOT / "docs" / "glossary.md"
 REQUIRED_FIELDS = {
     "term",
     "aliases",
@@ -121,6 +124,11 @@ def test_glossary_terms_follow_workflow_categories() -> None:
     actual = {str(entry["term"]): str(entry["category"]) for entry in _glossary()}
 
     assert actual == EXPECTED_CATEGORY_BY_TERM
+
+
+def test_generated_glossary_page_is_current() -> None:
+    """Keep the committed human-facing glossary synchronized with its source."""
+    assert GLOSSARY_PAGE_PATH.read_text(encoding="utf-8") == build_glossary_page()
 
 
 def test_data_quality_is_a_governance_concept() -> None:
