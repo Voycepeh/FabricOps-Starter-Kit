@@ -15,6 +15,17 @@ write_module = import_module("fabricops_kit.pipeline.write_pipeline_prep")
 lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
 
 
+def _identity(*_args, target, schema, table_name):
+    kind = "warehouse" if target == "warehouse" else "lakehouse"
+    return {
+        "table_id": f"{kind}:{target}:{schema}:{table_name}",
+        "target": target,
+        "schema": schema,
+        "table_name": table_name,
+        "store_kind": kind,
+    }
+
+
 def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
     observation = SimpleNamespace(sparkSession="spark")
     changes = {
@@ -24,8 +35,7 @@ def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
     }
     processing_calls = []
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {"data_contract_overrides": {}}))
-    monkeypatch.setattr(read_module, "get_store", lambda *_args: SimpleNamespace(kind="lakehouse"))
-    monkeypatch.setattr(read_module, "resolve_lakehouse_table_location", lambda *_args: ("students", "dbo", "/target"))
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", _identity)
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
     monkeypatch.setattr(read_module, "_observation_changes", lambda value: changes if value is observation else pytest.fail())
     monkeypatch.setattr(
@@ -42,6 +52,8 @@ def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
     assert result["changes"] is changes
     assert result["read_strategy"] == "incremental"
     assert result["partition_values"] == ["2026-08-22"]
+    assert result["source"]["table_name"] == "student_source"
+    assert result["target"]["table_name"] == "students"
     assert len(processing_calls) == 1
     assert processing_calls[0][1]["authored_processing"] == {
         "load_strategy": "scd1", "key_columns": ["student_id"],
@@ -51,8 +63,7 @@ def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
 def test_read_prep_warehouse_overwrite_forces_full_scope(monkeypatch):
     observation = SimpleNamespace(sparkSession="spark")
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "prod", {}))
-    monkeypatch.setattr(read_module, "get_store", lambda *_args: SimpleNamespace(kind="warehouse", schema="dbo"))
-    monkeypatch.setattr(read_module, "resolve_warehouse_table_location", lambda *_args: ("dbo", "students", "dbo.students"))
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", _identity)
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
     monkeypatch.setattr(read_module, "_observation_changes", lambda _value: {
         "changed": True, "first_observation": False, "new_partitions": ["2026-08-22"],
@@ -114,8 +125,7 @@ def test_write_prep_adds_scd2_lifecycle_and_rejects_warehouse_scd(monkeypatch, s
 def test_read_prep_preserves_warehouse_overwrite_skip(monkeypatch):
     observation = SimpleNamespace(sparkSession="spark")
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "prod", {}))
-    monkeypatch.setattr(read_module, "get_store", lambda *_args: SimpleNamespace(kind="warehouse", schema="dbo"))
-    monkeypatch.setattr(read_module, "resolve_warehouse_table_location", lambda *_args: ("dbo", "students", "dbo.students"))
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", _identity)
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
     monkeypatch.setattr(read_module, "_observation_changes", lambda _value: {
         "changed": False, "first_observation": False, "new_partitions": [],

@@ -5,21 +5,23 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.shared import build_column_id, build_table_id
+from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import get_store, resolve_fabric_context
+from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
-    resolve_lakehouse_table_location,
-    resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
-from fabricops_kit.pipeline.shared import build_frequency_distribution_dataframe, build_profile_dataframe
+from fabricops_kit.pipeline.shared import (
+    build_frequency_distribution_dataframe,
+    build_profile_dataframe,
+    resolve_physical_table_identity,
+)
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 PROFILED_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
@@ -127,46 +129,27 @@ def _schema_fingerprint(df: Any) -> str:
     ).hexdigest()
 
 
-def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, table_name: Any):
-    """Resolve and validate one configured physical table identity."""
-    normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
-    normalized_target = _require_non_empty_string(target, "target").lower()
-    normalized_table = _require_non_empty_string(table_name, "table_name")
-    config, env, context = resolve_fabric_context()
-    store = get_store(config, env, normalized_target)
-    store_kind = str(getattr(store, "kind", "")).strip().lower()
-
-    if store_kind == "lakehouse":
-        if schema == "":
-            raise ValueError("schema must be a non-empty identifier when supplied.")
-        if getattr(store, "schema_enabled", False) and schema is None and not getattr(store, "schema", None):
-            raise ValueError(
-                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
-                "pass schema or configure a default schema."
-            )
-        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(store, normalized_table, schema)
-        if getattr(store, "schema_enabled", False) and normalized_schema is None:
-            raise ValueError(
-                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
-                "pass schema or configure a default schema."
-            )
-    elif store_kind == "warehouse":
-        configured_schema = schema if schema is not None else getattr(store, "schema", None)
-        if configured_schema is None or not str(configured_schema).strip():
-            raise ValueError(
-                f"schema is required for Warehouse target '{normalized_target}'; "
-                "pass schema or configure a default schema."
-            )
-        normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
-            store, configured_schema, normalized_table
-        )
-    else:
+def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[str, str | None]:
+    """Validate a caller-supplied identity against the active Fabric config."""
+    if not isinstance(table, Mapping):
+        raise ValueError("table must be a canonical table identity mapping.")
+    required = {"table_id", "target", "schema", "table_name", "store_kind"}
+    missing = sorted(required - set(table))
+    if missing:
+        raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
+    resolved = resolve_physical_table_identity(
+        config,
+        env,
+        target=table["target"],
+        schema=table["schema"],
+        table_name=table["table_name"],
+    )
+    supplied = {name: table[name] for name in required}
+    if supplied != resolved:
         raise ValueError(
-            f"Target '{normalized_target}' has unsupported store kind {store_kind or '<blank>'!r}; "
-            "supported kinds are: lakehouse, warehouse."
+            "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
         )
-
-    return normalized_role, normalized_target, normalized_table, normalized_schema, store_kind, config, env, context
+    return resolved
 
 
 def _lineage_id(*, activity_id: str, table_id: str, profile_snapshot_id: str, pipeline_role: str) -> str:
@@ -587,8 +570,9 @@ def profile_and_register_table(
     df,
     *,
     profile_role,
-    target,
-    table_name,
+    table=None,
+    target=None,
+    table_name=None,
     schema=None,
     load_strategy=None,
     load_strategy_parameters=None,
@@ -621,13 +605,19 @@ def profile_and_register_table(
         ``target`` for an activity output. The value is recorded as ``pipeline_role`` in
         ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
         ``METADATA_DATA_CATALOGUE``.
-    target : str
+    table : mapping, optional
+        Canonical resolved table identity returned as ``read_pipeline_prep()``
+        ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
+        and ``table_name`` to reuse the already resolved identity.
+    target : str, optional
         Configured FabricStore target key. Its normalized key becomes the
         physical identity's layer and its store kind determines whether the
-        asset is a Lakehouse or Warehouse table.
-    table_name : str
+        asset is a Lakehouse or Warehouse table. Required when ``table`` is
+        not supplied.
+    table_name : str, optional
         Physical table name of the business asset being profiled. This
-        identifies the asset and does not redirect metadata writes.
+        identifies the asset and does not redirect metadata writes. Required
+        when ``table`` is not supplied.
     schema : str, optional
         Physical schema name, or ``None`` to use the configured store default.
         Classic or schema-disabled Lakehouses preserve ``None``.
@@ -838,16 +828,20 @@ def profile_and_register_table(
     compatibility or automatic migration layer is provided.
 
     """
-    (
-        normalized_profile_role,
-        normalized_target,
-        normalized_table,
-        normalized_schema,
-        normalized_store_type,
-        config,
-        env,
-        context,
-    ) = _resolve_physical_identity(profile_role=profile_role, target=target, schema=schema, table_name=table_name)
+    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
+    config, env, context = resolve_fabric_context()
+    if table is not None:
+        if target is not None or schema is not None or table_name is not None:
+            raise ValueError("table cannot be combined with target, schema, or table_name.")
+        identity = _validate_resolved_identity(table, config=config, env=env)
+    else:
+        identity = resolve_physical_table_identity(
+            config, env, target=target, schema=schema, table_name=table_name
+        )
+    normalized_target = identity["target"]
+    normalized_table = identity["table_name"]
+    normalized_schema = identity["schema"]
+    normalized_store_type = identity["store_kind"]
     normalized_load_strategy, write_parameters_json = _processing_definition(
         normalized_profile_role, load_strategy, load_strategy_parameters
     )
@@ -860,7 +854,7 @@ def profile_and_register_table(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     profile_df = build_profile_dataframe(df)
-    table_id = build_table_id(normalized_store_type, normalized_target, normalized_schema, normalized_table)
+    table_id = identity["table_id"]
     profile_snapshot_id = str(uuid4())
     profiled_df = _canonical_profiled_dataframe(
         profile_df,

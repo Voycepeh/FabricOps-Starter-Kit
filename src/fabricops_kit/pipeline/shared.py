@@ -11,10 +11,12 @@ from ..io.shared import (
     configured_lakehouse_schema,
     read_lakehouse_table_core,
     resolve_configured_lakehouse_table,
+    resolve_lakehouse_table_location,
+    resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.shared import build_metadata_table_key
+from ..config.shared import build_metadata_table_key, build_table_id, get_store
 from ..config.metadata_schemas import coerce_metadata_row_types
 
 
@@ -68,6 +70,60 @@ _TARGET_TECHNICAL_COLUMNS = {
     *_TARGET_AUDIT_COLUMNS,
     *_SCD2_LIFECYCLE_COLUMNS,
 }
+
+
+def resolve_physical_table_identity(
+    config: Any,
+    env: str,
+    *,
+    target: Any,
+    schema: Any,
+    table_name: Any,
+) -> dict[str, str | None]:
+    """Resolve one configured table to its canonical physical identity."""
+    if not isinstance(target, str) or not target.strip():
+        raise ValueError("target must be a non-empty string.")
+    if not isinstance(table_name, str) or not table_name.strip():
+        raise ValueError("table_name must be a non-empty string.")
+    normalized_target = target.strip().lower()
+    store = get_store(config, env, normalized_target)
+    store_kind = str(getattr(store, "kind", "")).strip().lower()
+    if store_kind == "lakehouse":
+        if getattr(store, "schema_enabled", False) and schema is None and not getattr(store, "schema", None):
+            raise ValueError(
+                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(
+            store, table_name, schema
+        )
+        if getattr(store, "schema_enabled", False) and normalized_schema is None:
+            raise ValueError(
+                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+    elif store_kind == "warehouse":
+        configured_schema = schema if schema is not None else getattr(store, "schema", None)
+        if configured_schema is None or not str(configured_schema).strip():
+            raise ValueError(
+                f"schema is required for Warehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+        normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
+            store, configured_schema, table_name
+        )
+    else:
+        raise ValueError(
+            f"Target '{normalized_target}' has unsupported store kind {store_kind or '<blank>'!r}; "
+            "supported kinds are: lakehouse, warehouse."
+        )
+    return {
+        "table_id": build_table_id(store_kind, normalized_target, normalized_schema, normalized_table),
+        "target": normalized_target,
+        "schema": normalized_schema,
+        "table_name": normalized_table,
+        "store_kind": store_kind,
+    }
 
 
 def resolve_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
