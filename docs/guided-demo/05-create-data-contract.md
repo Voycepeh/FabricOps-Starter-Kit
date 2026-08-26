@@ -4,17 +4,14 @@
 
 !!! info "Key concepts for this step"
 
-    [**Data Agreement**](../glossary.md#data-agreement) — the governed relationship and intent established before Engineering begins.  
-    [**Data Contract**](../glossary.md#data-contract) — the approved Production-facing definition frozen for one governed table.  
-    [**Guardrails**](../glossary.md#guardrails) — the governed rules included in the contract definition.  
-    [**Governance as Code**](../glossary.md#governance-as-code) — the broader idea behind freezing governed rules and expectations into structured, reviewable form.
+    **Data Agreement**, **Data Contract**, **Guardrails**, and **Governance as Code** explain what is being frozen and why Production should resolve a saved version rather than mutable authoring.
 
-    These concepts explain what is being frozen and why Production should resolve a saved version rather than mutable authoring.
+    A Data Agreement records the provider-to-recipient Data Steward relationship. A Data Contract is table-centric: one contract lifecycle is tied to one governed `table_id` under one exact Data Agreement version. Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
 
 ## High-level flow
 
 ```text
-Review governed metadata → Freeze Data Contract version → Activate Production version → Optional frozen Development test
+Review governed metadata → Freeze one table-level Data Contract version → Activate Production version → Optional frozen Development test
 ```
 
 ## Before you begin
@@ -30,27 +27,27 @@ Confirm that the relevant Data Agreement exists, the table is registered in the 
     5. Review the frozen contract preview, including table structure, Enrichment, Guardrails, target processing definition, Data Stewards, and governed usages.
     6. Save the Data Contract. FabricOps appends a new draft version for that table lifecycle.
 
-    The Data Contract freezes the selected Data Agreement version, Data Stewards, one governed `table_id` and structure, Enrichment, Guardrails and exact versions, target load strategy and parameters, and governed usages.
+    The Data Contract freezes the selected Data Agreement version, Data Stewards, one governed `table_id` and structure, Enrichment, active Guardrails and their versions, target load strategy and parameters, and governed usages.
 
     Guardrail Results and row-level failure records remain runtime records and are not frozen into the contract.
 
 ???+ success "Live — Understand the one-table contract boundary"
 
-    Each Data Contract lifecycle governs one canonical `table_id`. Multiple historical versions may exist for that table.
+    Each Data Contract lifecycle governs one canonical `table_id`. Multiple historical versions may exist for that table, and one Data Agreement can support multiple table-level Data Contracts.
 
     ```text
-    Data Agreement
-    + Data Stewards
-    + Data Catalogue structure
+    exact Data Agreement version
+    + provider and recipient Data Stewards
+    + one Data Catalogue table_id and schema
     + Enrichment
-    + Guardrails
+    + active Guardrails
     + target processing
     + governed usages
             ↓
-    versioned Data Contract
+    immutable Data Contract version
     ```
 
-    Production uses a frozen contract definition rather than mutable Governance authoring.
+    Production uses a frozen table-level contract definition rather than mutable Governance authoring.
 
 ??? info "Preview — Manually activate the Production Data Contract"
 
@@ -62,8 +59,9 @@ Confirm that the relevant Data Agreement exists, the table is registered in the 
 
     After the contract exists, return to `02_pipeline` in Engineering Development and use `widget_select_data_contract()` for the same table.
 
-    - **Current authoring** uses mutable Governance Guardrails plus the Development-authored target processing definition.
-    - **Data Contract vN** makes the same checks and processing preparation use the frozen Guardrails and processing definition from that exact contract version.
+    **Current authoring** uses mutable Governance Guardrails plus the Development-authored target processing definition.
+
+    **Data Contract vN** makes the same checks and processing preparation use the frozen Guardrails and processing definition from that exact contract version.
 
     The selector is read only. It does not activate or change the Data Contract.
 
