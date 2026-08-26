@@ -59,8 +59,8 @@ Hover over a glossary term for its canonical short definition. Use the [FabricOp
 | Workspace | Primary Purpose | Main Fabric Stores |
 | --------- | --------------- | ------------------ |
 | Governance | Manage Data Stewards, Data Agreements, Data Contracts, Catalogue Enrichment, and Guardrails | Development and Production metadata Lakehouses |
-| Engineering Development | Explore data and develop, profile, test, and review repeatable pipelines | Source, unified, and product Lakehouses or Warehouses |
-| Engineering Production | Run governed and stable Production pipelines on the required operational schedule | Production source, unified, and product Lakehouses or Warehouses |
+| Engineering Development | Explore data and develop, profile, test, and review repeatable pipelines | Configured Development data layers using Lakehouses, Warehouses, or both |
+| Engineering Production | Run governed and stable Production pipelines on the required operational schedule | Configured Production data layers using Lakehouses, Warehouses, or both |
 | Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the Production engineering workflow | Consumes governed data from the Engineering Production workspace |
 
 ??? info "Read more about the workspace model"
@@ -75,7 +75,24 @@ Hover over a glossary term for its canonical short definition. Use the [FabricOp
 
     **Trusted Production source**
 
-    Consumer workspaces do not reproduce the Production pipeline or maintain their own Production copies of the source, unified, or product stores. Engineering Production remains the trusted Production source.
+    Consumer workspaces do not reproduce the Production pipeline or maintain their own Production copies of the governed data layers. Engineering Production remains the trusted Production source.
+
+### Data layers and Medallion Architecture
+
+FabricOps adopts the Microsoft Fabric **Medallion Architecture** principle of progressively refining data from raw to validated and enriched to curated consumption-ready forms.
+
+Microsoft describes the familiar layers as **Bronze → Silver → Gold**. FabricOps does not require those literal store names. The `00_env_config` notebook defines the logical stores available to a project, so teams can use `bronze` / `silver` / `gold`, keep the starter example names `source` / `unified` / `product`, or introduce additional organisation-specific layers where the architecture needs them.
+
+The starter configuration maps approximately like this:
+
+| Starter example | Medallion role | Typical intent |
+| --- | --- | --- |
+| `source` | Bronze | Land source-oriented or raw data. |
+| `unified` | Silver | Standardize, validate, integrate, or enrich data. |
+| `product` | Gold | Publish curated data for downstream analytics, AI, and BI. |
+| `metadata` | Not a Medallion layer | Store FabricOps governance and engineering metadata. |
+
+This mapping is an example, not a fixed FabricOps contract. `REQUIRED_TARGETS` and `ENV_PATHS` in `00_env_config` define the store keys the project uses, while `FabricStore` records the actual Fabric item behind each key.
 
 </div>
 
@@ -181,9 +198,9 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
     Run Data Quality checks on the DataFrame actually being processed. Profile and register only when the DataFrame represents the complete physical table, then write the applicable Data Profiled and Data Lineage records.
 
-??? note "Warehouse sources should land in the Source Lakehouse first"
+??? note "Warehouse sources should normally land in the configured raw/source layer first"
 
-    For large or repeatedly processed Warehouse sources, use the Warehouse primarily as an ingestion boundary. Land the required full or incremental extract into the Source Lakehouse as Delta, then perform profiling, Data Quality checks, transformations, and governed processing from the Lakehouse. This keeps repeated Spark processing in OneLake and avoids using the external Warehouse as the normal processing layer.
+    For large or repeatedly processed Warehouse sources, use the Warehouse primarily as an ingestion boundary. Land the required full or incremental extract into the configured raw/source layer as Delta, then perform profiling, Data Quality checks, transformations, and governed processing from the Lakehouse. This keeps repeated Spark processing in OneLake and avoids using the external Warehouse as the normal processing layer.
 
 !!! abstract "T. Transform"
 
