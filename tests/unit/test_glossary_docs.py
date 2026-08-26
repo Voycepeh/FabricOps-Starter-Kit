@@ -58,6 +58,43 @@ REQUIRED_TERMS = {
     "access control",
     "configuration",
 }
+EXPECTED_CATEGORY_BY_TERM = {
+    "FabricOps Starter Kit": "FabricOps concepts",
+    "metadata": "FabricOps concepts",
+    "governance as code": "FabricOps concepts",
+    "configuration-driven engineering": "FabricOps concepts",
+    "data steward": "Governance concepts",
+    "data agreement": "Governance concepts",
+    "enrichment": "Governance concepts",
+    "data sensitivity": "Governance concepts",
+    "PII": "Governance concepts",
+    "data access": "Governance concepts",
+    "data quality": "Governance concepts",
+    "guardrails": "Governance concepts",
+    "enforcement": "Governance concepts",
+    "guardrail result": "Governance concepts",
+    "data contract": "Governance concepts",
+    "access control": "Governance concepts",
+    "row-level security": "Governance concepts",
+    "object-level security": "Governance concepts",
+    "Microsoft Fabric": "Engineering concepts",
+    "workspace": "Engineering concepts",
+    "Lakehouse": "Engineering concepts",
+    "Warehouse": "Engineering concepts",
+    "notebook": "Engineering concepts",
+    "configuration": "Engineering concepts",
+    "pipeline": "Engineering concepts",
+    "PySpark": "Engineering concepts",
+    "profile": "Engineering concepts",
+    "schema": "Engineering concepts",
+    "incremental load": "Engineering concepts",
+    "parallel processing": "Engineering concepts",
+    "data modelling": "Engineering concepts",
+    "partitioning": "Engineering concepts",
+    "append": "Engineering concepts",
+    "overwrite": "Engineering concepts",
+    "slowly changing dimensions": "Engineering concepts",
+}
 
 
 def _glossary() -> list[dict[str, object]]:
@@ -77,6 +114,13 @@ def test_glossary_schema_categories_and_required_terms() -> None:
         assert isinstance(entry["aliases"], list), entry["term"]
         assert str(entry["short_definition"]).strip(), entry["term"]
         assert str(entry["long_definition"]).strip(), entry["term"]
+
+
+def test_glossary_terms_follow_workflow_categories() -> None:
+    """Keep the public glossary aligned to FabricOps, Governance, and Engineering."""
+    actual = {str(entry["term"]): str(entry["category"]) for entry in _glossary()}
+
+    assert actual == EXPECTED_CATEGORY_BY_TERM
 
 
 def test_data_quality_is_a_governance_concept() -> None:
