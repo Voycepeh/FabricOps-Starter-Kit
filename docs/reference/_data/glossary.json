@@ -324,15 +324,6 @@
     "avoid_usage": "owner when stewardship is meant"
   },
   {
-    "term": "agreement evidence",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Metadata that proves which agreement context was selected, reviewed, or used.",
-    "long_definition": "Metadata that proves which agreement context was selected, reviewed, or used.",
-    "preferred_usage": "Use agreement evidence for stored agreement proof.",
-    "avoid_usage": "agreement logs"
-  },
-  {
     "term": "ownership",
     "aliases": [],
     "category": "Data governance concepts",
@@ -1034,15 +1025,6 @@
     "long_definition": "Table that stores data steward records and responsibilities.",
     "preferred_usage": "Use as literal table name.",
     "avoid_usage": "stewards table"
-  },
-  {
-    "term": "METADATA_AGREEMENT_EVIDENCE",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores evidence linking agreement selection and review context to runs or decisions.",
-    "long_definition": "Table that stores evidence linking agreement selection and review context to runs or decisions.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "agreement evidence table"
   },
   {
     "term": "stage",
