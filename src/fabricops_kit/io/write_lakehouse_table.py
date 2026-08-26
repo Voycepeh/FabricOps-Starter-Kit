@@ -317,7 +317,7 @@ def write_lakehouse_table(
             if completion_context is not None:
                 from fabricops_kit.pipeline.shared import complete_source_processing
 
-                complete_source_processing(completion_context)
+                complete_source_processing(completion_context, context=context)
             return
         if strategy not in {"overwrite", "append"} or mode != strategy:
             raise ValueError("Governed overwrite/append load_strategy must match the physical writer mode.")
@@ -332,4 +332,4 @@ def write_lakehouse_table(
     if completion_context is not None:
         from fabricops_kit.pipeline.shared import complete_source_processing
 
-        complete_source_processing(completion_context)
+        complete_source_processing(completion_context, context=context)

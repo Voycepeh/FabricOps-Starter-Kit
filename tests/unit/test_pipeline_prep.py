@@ -98,7 +98,7 @@ def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
         "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
         "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
     }
-    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda **_kwargs: ("config", "dev", {}))
     monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: audit)
     monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
         createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
@@ -124,7 +124,7 @@ def test_checkpoint_persistence_failure_surfaces_after_physical_write(monkeypatc
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
     monkeypatch.setattr(lakehouse_writer, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "path"))
     monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: events.append("write"))
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context: (_ for _ in ()).throw(RuntimeError("checkpoint failed")))
+    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: (_ for _ in ()).throw(RuntimeError("checkpoint failed")))
     with pytest.raises(RuntimeError, match="checkpoint failed"):
         lakehouse_writer.write_lakehouse_table(object(), "target", verbose=False, completion_context={"sources": []})
     assert events == ["write"]
@@ -274,7 +274,7 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
 def test_lakehouse_governed_completion_runs_after_each_supported_write(monkeypatch, strategy):
     events = []
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda context: events.append(("complete", context)))
+    monkeypatch.setattr(shared_module, "complete_source_processing", lambda completion, **_kwargs: events.append(("complete", completion)))
     completion = {"sources": [{"type": "watermark"}]}
     if strategy in {"scd1", "scd2"}:
         monkeypatch.setattr(import_module("fabricops_kit.pipeline.shared"), "execute_lakehouse_processing", lambda *args, **kwargs: events.append(("write", strategy)))
@@ -301,7 +301,7 @@ def test_warehouse_completion_runs_after_supported_write(monkeypatch, mode):
     monkeypatch.setattr(warehouse_writer, "repartition_dataframe_for_write", lambda df, _value: df)
     monkeypatch.setattr(warehouse_writer, "resolve_configured_warehouse_table", lambda *args, **kwargs: ("store", "dbo", "target", "dbo.target"))
     monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: events.append("write"))
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context: events.append("complete"))
+    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: events.append("complete"))
     warehouse_writer.write_warehouse_table(object(), "dbo", "target", mode=mode, completion_context={"sources": []})
     assert events == ["write", "complete"]
 
@@ -311,7 +311,7 @@ def test_writer_failure_never_attempts_completion(monkeypatch):
     monkeypatch.setattr(warehouse_writer, "repartition_dataframe_for_write", lambda df, _value: df)
     monkeypatch.setattr(warehouse_writer, "resolve_configured_warehouse_table", lambda *args, **kwargs: ("store", "dbo", "target", "dbo.target"))
     monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context: pytest.fail("completion"))
+    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: pytest.fail("completion"))
     with pytest.raises(RuntimeError, match="write failed"):
         warehouse_writer.write_warehouse_table(object(), "dbo", "target", completion_context={"sources": []})
 
@@ -320,7 +320,7 @@ def test_ungoverned_writer_does_not_resolve_completion_state(monkeypatch):
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
     monkeypatch.setattr(lakehouse_writer, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "path"))
     monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: None)
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context: pytest.fail("checkpoint"))
+    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: pytest.fail("checkpoint"))
     lakehouse_writer.write_lakehouse_table(object(), "target", verbose=False)
 
 
@@ -334,3 +334,69 @@ def test_partition_retry_compares_with_last_successful_observation():
         observation_id="successful",
     )
     assert [row["observation_id"] for row in previous] == ["successful"]
+
+
+def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch):
+    explicit_context = {"config": "prod-config", "env": "prod", "marker": "explicit"}
+    resolved_context = {**explicit_context, "resolved": True}
+    observed = {}
+
+    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
+    monkeypatch.setattr(
+        lakehouse_writer,
+        "resolve_configured_lakehouse_table",
+        lambda *args, context=None, **kwargs: (
+            observed.setdefault("target_context", context), None, None, "prod-path"
+        ),
+    )
+    monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: None)
+
+    def resolve_context(*, context=None, **_kwargs):
+        observed["completion_input_context"] = context
+        assert context is explicit_context
+        return "prod-config", "prod", resolved_context
+
+    monkeypatch.setattr(shared_module, "resolve_fabric_context", resolve_context)
+    monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: {
+        "_committed_by": "engineer", "_committed_at": "2026-08-26T12:01:00",
+        "_workspace_id": "workspace", "_workspace_name": "workspace",
+        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
+        "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
+    })
+    monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
+        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
+    ))
+    monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda config, env, _target: (
+        observed.setdefault("metadata_identity", (config, env)) or "metadata"
+    ))
+    monkeypatch.setattr(
+        shared_module,
+        "write_lakehouse_table_core",
+        lambda *_args, context=None, **_kwargs: observed.setdefault("checkpoint_context", context),
+    )
+
+    lakehouse_writer.write_lakehouse_table(
+        object(),
+        "target",
+        context=explicit_context,
+        completion_context={"sources": [{
+            "type": "watermark",
+            "source": {"table_id": "lakehouse:source:dbo:bookings"},
+            "source_processing": {
+                "read_strategy": "incremental_watermark",
+                "watermark_column": "modified_datetime",
+            },
+            "candidate": {
+                "status": "candidate",
+                "column": "modified_datetime",
+                "value": "2026-08-26 12:00",
+            },
+        }]},
+        verbose=False,
+    )
+
+    assert observed["target_context"] is explicit_context
+    assert observed["completion_input_context"] is explicit_context
+    assert observed["metadata_identity"] == ("prod-config", "prod")
+    assert observed["checkpoint_context"] is resolved_context

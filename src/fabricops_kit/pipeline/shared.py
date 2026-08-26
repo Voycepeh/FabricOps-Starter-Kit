@@ -77,15 +77,19 @@ _PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
 _WATERMARK_CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
 
 
-def complete_source_processing(completion_context: Mapping[str, Any] | None) -> None:
-    """Persist governed source progress after a physical target publication."""
+def complete_source_processing(
+    completion_context: Mapping[str, Any] | None,
+    *,
+    context: dict[str, Any] | None = None,
+) -> None:
+    """Persist governed source progress using the physical writer's Fabric context."""
     if completion_context is None:
         return
     sources = completion_context.get("sources") if isinstance(completion_context, Mapping) else None
     if not isinstance(sources, list):
         raise ValueError("completion_context must contain a sources list from write_pipeline_prep().")
-    config, env, context = resolve_fabric_context()
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    config, env, resolved_context = resolve_fabric_context(context=context)
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
     spark = get_spark_session()
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     from ..config.metadata_schemas import metadata_table_schema_registry
@@ -135,7 +139,7 @@ def complete_source_processing(completion_context: Mapping[str, Any] | None) -> 
             table_name,
             target="metadata",
             schema=metadata_schema,
-            context=context,
+            context=resolved_context,
             mode="append",
         )
 
