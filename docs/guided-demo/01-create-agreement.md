@@ -4,6 +4,14 @@
 
 The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to control form fields and widget behaviour.
 
+!!! info "Key concepts for this step"
+
+    [**Data Steward**](../glossary.md#data-steward) — the accountable role that maintains the governance context for data.  
+    [**Data Agreement**](../glossary.md#data-agreement) — the governed record that establishes who is sharing what data, with whom, and why.  
+    [**Metadata**](../glossary.md#metadata) — the structured information FabricOps records so later Governance and Engineering steps can work from the same context.
+
+    These are the only glossary concepts you need before starting this step.
+
 ## High-level flow
 
 ```text
@@ -32,7 +40,7 @@ Confirm that the correct Fabric Environment is attached, `00_env_config` has bee
 
 ???+ success "Live — Understand what comes next"
 
-    At this stage the agreement exists before the Data Catalogue has been created. Step 5 returns to `01_governance` after `02_pipeline` has produced Engineering evidence and links the governed Data Catalogue to the Data Agreement through a Data Contract.
+    At this stage the agreement exists before the Data Catalogue has been created. Step 5 returns to `01_governance` after `02_pipeline` has produced Data Catalogue, Data Profiled, and Data Lineage records and links the governed Data Catalogue to the Data Agreement through a Data Contract.
 
 ## Expected result
 
