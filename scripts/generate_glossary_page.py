@@ -46,6 +46,7 @@ GLOSSARY_GROUPS = [
             "lakehouse",
             "warehouse",
             "notebook",
+            "medallion-architecture",
         ],
     ),
     (
@@ -109,6 +110,7 @@ DISPLAY_NAMES = {
     "lakehouse": "Lakehouse",
     "warehouse": "Warehouse",
     "notebook": "Notebook",
+    "medallion-architecture": "Medallion Architecture",
     "metadata": "Metadata",
     "data-steward": "Data Steward",
     "data-sensitivity": "Data Sensitivity",
