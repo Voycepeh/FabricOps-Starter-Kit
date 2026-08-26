@@ -106,7 +106,7 @@ def read_pipeline_prep(
     ... )
     >>> prep["read_strategy"] in {"skip", "full", "incremental"}
     True
-    >>> prep["target"]["table_name"]
+    >>> prep["target"].get("table_name")
     'students'
 
     See Also
