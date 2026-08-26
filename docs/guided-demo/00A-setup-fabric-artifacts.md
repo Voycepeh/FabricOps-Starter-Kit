@@ -4,6 +4,15 @@
 
 This is normally a one-time setup that you adapt to your own Fabric environment.
 
+!!! info "Key concepts for this step"
+
+    [**Microsoft Fabric**](../glossary.md#microsoft-fabric) — the analytics platform FabricOps runs on.  
+    [**Workspace**](../glossary.md#workspace) — the Fabric boundary used to organise and secure related items.  
+    [**Lakehouse**](../glossary.md#lakehouse) — the Fabric store commonly used with Spark and Delta tables.  
+    [**Warehouse**](../glossary.md#warehouse) — the Fabric relational store used for SQL analytics and warehousing.
+
+    These are the only glossary concepts you need before starting this step.
+
 ## High-level flow
 
 ```text
@@ -67,7 +76,7 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
     | --- | --- |
     | `00_env_config` | Configures workspaces, Lakehouses, Warehouse, metadata routing, audit settings, and runtime settings. |
     | `01_governance` | Manages Data Steward, Data Agreement, Data Contract, Enrichment, Guardrail, and review workflows. |
-    | `02_pipeline` | Runs the canonical Environment → Extract → Transform → Load workflow, including IO, profiling, Guardrails, and evidence. |
+    | `02_pipeline` | Runs the canonical Environment → Extract → Transform → Load workflow, including IO, profiling, Guardrails, and recorded metadata. |
     | `99_explore` | Uses governed Production data for project exploration, AI, or BI work. |
 
     !!! tip "Naming your copies"
