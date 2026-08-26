@@ -4,7 +4,7 @@ FabricOps, short for **Fabric Operations**, is a plug-and-play Data Engineering 
 
 It gives teams a ready-to-adopt workflow across **Governance → Data engineering → AI and BI analytics**, using standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.
 
-The goal is to make the desired data practice executable. Instead of treating governance, metadata, quality checks, profiling, lineage, and contract context as separate documentation work, FabricOps builds them into the planned workflow so the relevant data products and supporting evidence are written into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables as the work is performed.
+The goal is to make the desired data practice executable. Instead of treating governance, metadata, quality checks, profiling, lineage, and contract context as separate documentation work, FabricOps builds them into the planned workflow. As the work is performed, FabricOps records Data Agreements, Catalogue metadata, profiles, lineage, Enrichment, Guardrails and their results, processing context, and Data Contracts in the configured Fabric workspaces and metadata tables where those capabilities are implemented.
 
 This creates a governed Production data foundation that can be understood, validated, promoted, reused, and consumed without rebuilding its context afterwards.
 
