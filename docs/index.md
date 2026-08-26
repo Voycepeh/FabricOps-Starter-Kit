@@ -17,6 +17,16 @@ A structured workflow for governing, engineering, validating, promoting, and con
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
+## Why FabricOps
+
+FabricOps captures Governance and Engineering activity as part of the workflow itself, using reusable functions, notebook templates, and a shared metadata model.
+
+As the workflow runs, it records Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails, Guardrail Results, and Data Contracts instead of rebuilding governance documentation afterwards.
+
+The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
+
+FabricOps provides the governed skeleton of the data practice. Engineers and analysts can still use Copilot, AI Functions, and other AI assistance for project-specific coding, testing, documentation, and analysis, while the core FabricOps workflow stays deterministic and reviewable.
+
 ## Choose your path
 
 <div class="fabricops-card-grid">
