@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import Any
+from typing import Any, Mapping
 import re
 import tempfile
 
@@ -430,3 +430,97 @@ def convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)
             print(f"done: {local_out_path}")
     except Exception as exc:
         print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
+
+
+def validate_processing_scope(processing_scope: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate and normalize a governed physical-read scope."""
+    if not isinstance(processing_scope, Mapping):
+        raise ValueError("processing_scope must be a mapping with a supported scope type.")
+    scope_type = str(processing_scope.get("type") or "").strip()
+    if scope_type not in {"skip", "full_dataset", "watermark", "partition"}:
+        raise ValueError("processing_scope type must be one of: skip, full_dataset, watermark, partition.")
+    if scope_type in {"skip", "full_dataset"}:
+        return {"type": scope_type}
+
+    raw_column = processing_scope.get("column")
+    if raw_column is None or not str(raw_column).strip():
+        raise ValueError(f"{scope_type} processing_scope requires column.")
+    try:
+        column = _normalize_table_name(raw_column)
+    except ValueError as exc:
+        raise ValueError(f"{scope_type} processing_scope column must be a simple identifier.") from exc
+    if scope_type == "watermark":
+        if "lower_bound" not in processing_scope or processing_scope["lower_bound"] is None:
+            raise ValueError("watermark processing_scope requires lower_bound.")
+        if "upper_bound" not in processing_scope or processing_scope["upper_bound"] is None:
+            raise ValueError("watermark processing_scope requires upper_bound.")
+        return {
+            "type": scope_type,
+            "column": column,
+            "lower_bound": processing_scope["lower_bound"],
+            "upper_bound": processing_scope["upper_bound"],
+        }
+
+    values = processing_scope.get("values")
+    if not isinstance(values, (list, tuple)) or not values:
+        raise ValueError("partition processing_scope requires a non-empty values list or tuple.")
+    if any(value is None for value in values):
+        raise ValueError("partition processing_scope values must not contain None.")
+    return {"type": scope_type, "column": column, "values": list(values)}
+
+
+def apply_lakehouse_processing_scope(dataframe, processing_scope: Mapping[str, Any]):
+    """Apply a validated governed scope to a lazy Lakehouse DataFrame."""
+    scope = validate_processing_scope(processing_scope)
+    if scope["type"] == "skip":
+        raise ValueError("The current source was resolved to skip and must not be read.")
+    if scope["type"] == "full_dataset":
+        return dataframe
+    functions = import_module("pyspark.sql.functions")
+    column = functions.col(scope["column"])
+    if scope["type"] == "watermark":
+        return dataframe.where((column > functions.lit(scope["lower_bound"])) & (column <= functions.lit(scope["upper_bound"])))
+    return dataframe.where(column.isin(scope["values"]))
+
+
+def _warehouse_sql_literal(value: Any) -> str:
+    """Return one safely encoded SQL literal for a governed scope value."""
+    from datetime import date, datetime
+    from decimal import Decimal
+    import math
+    if isinstance(value, bool):
+        return "1" if value else "0"
+    if isinstance(value, (int, Decimal)) and not isinstance(value, bool):
+        return str(value)
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError("processing_scope numeric values must be finite.")
+        return repr(value)
+    if isinstance(value, datetime):
+        text = value.isoformat(sep=" ")
+    elif isinstance(value, date):
+        text = value.isoformat()
+    elif isinstance(value, str):
+        text = value
+    else:
+        raise ValueError(f"Unsupported processing_scope value type: {type(value).__name__}.")
+    return "'" + text.replace("'", "''") + "'"
+
+
+def build_warehouse_scoped_query(schema: str, table_name: str, processing_scope: Mapping[str, Any]) -> str | None:
+    """Build a validated single-table Warehouse query for a governed scope."""
+    schema_value = _normalize_schema_name(schema)
+    table_value = _normalize_table_name(table_name)
+    scope = validate_processing_scope(processing_scope)
+    if scope["type"] == "skip":
+        raise ValueError("The current source was resolved to skip and must not be read.")
+    if scope["type"] == "full_dataset":
+        return None
+    column = scope["column"]
+    source = f"[{schema_value}].[{table_value}]"
+    if scope["type"] == "watermark":
+        lower = _warehouse_sql_literal(scope["lower_bound"])
+        upper = _warehouse_sql_literal(scope["upper_bound"])
+        return f"SELECT * FROM {source} WHERE [{column}] > {lower} AND [{column}] <= {upper}"
+    values = ", ".join(_warehouse_sql_literal(value) for value in scope["values"])
+    return f"SELECT * FROM {source} WHERE [{column}] IN ({values})"
