@@ -50,9 +50,9 @@
       "enforce"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Applying active Guardrails during a pipeline run and acting on the result.",
-    "long_definition": "Enforcement is when FabricOps applies the active Guardrails during a pipeline run and acts on the result. Depending on the Guardrail, the pipeline can continue, continue with a warning, or stop.",
-    "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
+    "short_definition": "Applying active guardrails during a pipeline run and acting on the result.",
+    "long_definition": "Enforcement is when FabricOps applies the active guardrails during a pipeline run and acts on the result. Depending on the guardrail, the pipeline can continue, continue with a warning, or stop.",
+    "preferred_usage": "Use enforcement for applying active guardrails during execution.",
     "avoid_usage": "runtime enforcement"
   },
   {
@@ -61,9 +61,9 @@
       "guardrail results"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.",
-    "long_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run. It records whether the check passed, warned, or failed, what was checked, and whether the pipeline is allowed to continue.",
-    "preferred_usage": "Use guardrail result for what happened when FabricOps applied a Guardrail.",
+    "short_definition": "The recorded outcome after FabricOps evaluates a guardrail during a pipeline run.",
+    "long_definition": "The recorded outcome after FabricOps evaluates a guardrail during a pipeline run. It records whether the check passed, warned, or failed, what was checked, and whether the pipeline is allowed to continue.",
+    "preferred_usage": "Use guardrail result for what happened when FabricOps applied a guardrail.",
     "avoid_usage": "rule result"
   },
   {
