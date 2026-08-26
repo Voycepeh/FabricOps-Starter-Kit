@@ -177,6 +177,15 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
+    "METADATA_SOURCE_WATERMARK_CHECKPOINT": {
+        "purpose": "Record how far a successfully completed watermark pipeline has processed.",
+        "grain": "One successfully committed watermark for one source table and watermark column.",
+        "primary_key": ["environment_name", "table_id", "watermark_column", "_committed_at"],
+        "foreign_keys": [
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many successful checkpoint revisions can belong to one logical source table identity."},
+        ],
+        "relationships": [],
+    },
     "METADATA_DATA_PROFILED": {
         "purpose": "See the column-level profile metrics captured for a dataset snapshot.",
         "grain": "One observed column in one profiling snapshot.",
@@ -272,6 +281,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CATALOGUE",
     "METADATA_SOURCE_OBSERVATION",
+    "METADATA_SOURCE_WATERMARK_CHECKPOINT",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
@@ -511,6 +521,10 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.observe_table._observe_table_core",
             "fabricops_kit.config.shared.build_metadata_table_key",
         ],
+    },
+    "METADATA_SOURCE_WATERMARK_CHECKPOINT": {
+        "__default__": ["fabricops_kit.pipeline.read_pipeline_prep._checkpoint_value"],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
 }
 

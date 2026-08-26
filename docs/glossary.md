@@ -190,10 +190,31 @@ The order follows the FabricOps operating workflow so you can learn terminology 
 <p><strong>Also known as:</strong> schemas</p>
 </details>
 
-<details id="incremental-load">
-<summary><strong>Incremental Load</strong> — Processing only new or changed data instead of reprocessing everything.</summary>
-<p>An Incremental Load processes only the new or changed portion of a source since the previous successful processing point, reducing unnecessary reads and writes compared with a full load.</p>
-<p><strong>Also known as:</strong> incremental loading</p>
+<details id="full-dataset">
+<summary><strong>Full Dataset</strong> — A source processing strategy that reads the complete physical source dataset for every run.</summary>
+<p>A source processing strategy that reads the complete physical source dataset for every run.</p>
+</details>
+
+<details id="incremental-watermark">
+<summary><strong>Incremental Watermark</strong> — A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.</summary>
+<p>A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.</p>
+<p><strong>Also known as:</strong> watermark-based incremental loading</p>
+</details>
+
+<details id="incremental-partition">
+<summary><strong>Incremental Partition</strong> — A source processing strategy that processes whole logical data buckets, such as days, months, or snapshots, when those buckets are new or changed.</summary>
+<p>A source processing strategy that processes whole logical data buckets, such as days, months, or snapshots, when those buckets are new or changed.</p>
+<p><strong>Also known as:</strong> partition-based incremental loading</p>
+</details>
+
+<details id="incremental-subset">
+<summary><strong>Incremental Subset</strong> — The runtime read mode used when FabricOps determines that only part of the source needs to be processed for the current run.</summary>
+<p>The runtime read mode used when FabricOps determines that only part of the source needs to be processed for the current run.</p>
+</details>
+
+<details id="watermark">
+<summary><strong>Watermark</strong> — A checkpoint value that records how far a successful incremental source load has processed.</summary>
+<p>A checkpoint value that records how far a successful incremental source load has processed.</p>
 </details>
 
 <details id="parallel-processing">
@@ -207,10 +228,15 @@ The order follows the FabricOps operating workflow so you can learn terminology 
 <p><strong>Also known as:</strong> data modeling</p>
 </details>
 
-<details id="partitioning">
-<summary><strong>Partitioning</strong> — Organizing data into separate groups for storage or processing.</summary>
-<p>Partitioning divides data into groups, often using a column such as date, so engines can process or replace only the relevant parts rather than scanning or rewriting the entire dataset.</p>
-<p><strong>Also known as:</strong> partition</p>
+<details id="partition">
+<summary><strong>Partition</strong> — A logical data bucket such as a day, month, or snapshot that can be processed or reprocessed as a whole.</summary>
+<p>A logical data bucket such as a day, month, or snapshot that can be processed or reprocessed as a whole.</p>
+</details>
+
+<details id="physical-partitioning">
+<summary><strong>Physical Partitioning</strong> — How a Lakehouse table is physically organized for storage and pruning. This is separate from FabricOps incremental partition source processing.</summary>
+<p>How a Lakehouse table is physically organized for storage and pruning. This is separate from FabricOps incremental partition source processing.</p>
+<p><strong>Also known as:</strong> partition_by</p>
 </details>
 
 <details id="append">

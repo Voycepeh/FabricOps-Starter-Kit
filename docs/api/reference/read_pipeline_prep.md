@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:49`
+`fabricops_kit/pipeline/read_pipeline_prep.py:202`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L49-L150">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L202-L334">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,6 +39,9 @@ For profiling-related pipeline functions, the output captures the important deta
 def read_pipeline_prep(
     source_table_name: str,
     target_table_name: str,
+    source_read_strategy: str,
+    source_watermark_column: str | None=None,
+    source_partition_column: str | None=None,
     source_target: str='source',
     source_schema: str | None=None,
     target: str='unified',
@@ -55,13 +58,13 @@ def read_pipeline_prep(
 <div class="reference-example-usage" markdown="1">
 
 >>> prep = read_pipeline_prep(
-...     "student_enrolment", "students", source_schema="dbo", schema="dbo",
-...     load_strategy="scd1", load_strategy_parameters={"key_columns": ["student_id"]},
+...     "bookings", "bookings_curated", source_schema="dbo", schema="dbo",
+...     source_read_strategy="incremental_watermark",
+...     source_watermark_column="modified_datetime", load_strategy="scd1",
+...     load_strategy_parameters={"key_columns": ["booking_id"]},
 ... )
->>> prep["read_strategy"] in {"skip", "full", "incremental"}
+>>> prep["read_mode"] in {"skip", "full_dataset", "incremental_subset"}
 True
->>> prep["target"].get("table_name")
-'students'
 
 </div>
 
@@ -69,14 +72,17 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `source_table_name` | `str` | Yes | Physical source table to observe before its visible notebook read. |
-| `target_table_name` | `str` | Yes | Governed target table whose processing definition controls this run. |
+| `source_table_name` | `str` | Yes | Physical source table to prepare. |
+| `target_table_name` | `str` | Yes | Governed target table whose target processing definition controls this run. |
+| `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
+| `source_watermark_column` | `str \| None` | No | Checkpoint column required by ``incremental_watermark``. |
+| `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
 | `source_target` | `str` | No | Configured source Lakehouse or Warehouse target. |
 | `source_schema` | `str \| None` | No | Optional source schema. |
 | `target` | `str` | No | Configured governed target. |
 | `schema` | `str \| None` | No | Optional governed target schema. |
-| `load_strategy` | `str` | Yes | Current Development-authored target strategy. Frozen contract processing overrides it for selected Development and active Production contracts. |
-| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters owned by the authored load strategy. |
+| `load_strategy` | `str` | Yes | Independent target application strategy. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters owned by the target strategy. |
 
 ## Returns
 
@@ -85,14 +91,17 @@ Observation and change evidence, canonical processing, and skip, full, or increm
 ## Raises / Errors
 
 ValueError
-    If identities, contract processing, or processing scope are invalid.
+    If source configuration, checkpoint state, contract processing, or the
+    resulting processing scope is invalid.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-This function observes the source internally but does not physically read
-its business DataFrame and does not write the governed target.
+Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
+The successful checkpoint remains unchanged until a later post-write commit
+succeeds. Partition subsets reuse FabricOps source observation and change
+detection; full-dataset reads do not observe the source merely to skip it.
 
 </div>
 
