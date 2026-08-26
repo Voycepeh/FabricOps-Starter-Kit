@@ -16,13 +16,13 @@ It gives teams a ready-to-adopt operating workflow across three main roles:
 
 FabricOps combines planned workflows, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself rather than reconstructed afterwards.
 
-The templates and functions guide users through the intended workflow while writing the relevant data products and supporting evidence into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables. This includes governed context such as Data Agreements, Catalogue metadata, profiling, lineage, Enrichment, Guardrails, Guardrail Results, and Data Contracts where those capabilities are implemented in the workflow.
+The templates and functions guide users through the intended workflow while recording Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails and their results, and Data Contracts in the configured Fabric workspaces and metadata tables where those capabilities are implemented.
 
 ### What FabricOps includes
 
 - a Python package containing helper and orchestrator functions
 - standardized Python notebook templates that weave those functions into reusable workflows
-- a shared metadata model connecting Governance intent with Engineering evidence
+- a shared metadata model connecting Governance intent with recorded profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, and Guardrail Results
 - an operating model for Engineering Development, Engineering Production, Governance, and Project-Specific Consumer workspaces
 - a Guided Demo for learning and adopting the workflow
 - technical documentation for notebook templates, metadata tables, data-quality rules, and individual functions
@@ -39,8 +39,8 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | --- | --- | --- |
 | 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
 | 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
-| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, and supporting Engineering evidence. |
-| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the evidence written by `02_pipeline`, add Enrichment, and define Guardrails. |
+| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, Data Catalogue creation, Data Lineage, source observation, and resolution of read and load strategies. |
+| 3 | Governance — Enrich the Data Catalogue and define Guardrails | In `01_governance`, read the Catalogue metadata, profiles, Data Lineage, source observations, and governed load strategy definitions produced or resolved through `02_pipeline`, add Enrichment, and define Guardrails. |
 | 4 | Engineering — Re-validate ETL with Guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
 | 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, assemble one complete, versioned Data Contract per governed table from an exact Data Agreement version and the governed metadata already produced through FabricOps. Governance currently selects one saved version as active through a manual interim activation step. |
 | 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Engineering Development to Engineering Production through the organisation's approved promotion mechanism. The standardised FabricOps promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process. |
@@ -82,7 +82,7 @@ For one or more source table IDs, the pipeline:
 - checks source schema, freshness, and change state before the business-data read
 - reads each source table into a DataFrame using the prepared read scope
 - runs data-quality checks on the DataFrame being processed
-- profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage evidence
+- profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage metadata
 
 The governed preparation and check functions are table-scoped. Engineers compose multiple governed source and target flows by repeating the same pattern for each relevant table relationship, so one `02_pipeline` can contain multiple reads, transformations, and writes without requiring a single multi-table orchestration call.
 
@@ -94,7 +94,7 @@ Transform is intentionally user-defined.
 
 The engineer applies the business logic required to turn validated source DataFrames into one or more target DataFrames. FabricOps governs the inputs and outputs around this step without prescribing the transformation itself.
 
-When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, processing scope, and persistence behaviour.
+When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, read scope, load strategy, and persistence behaviour.
 
 ### L. Load
 
@@ -105,17 +105,17 @@ For one or more target table IDs, the pipeline:
 - defines the target tables in play
 - resolves the applicable target Guardrails and governed load strategy from the selected or active Data Contract, or from current Development authoring
 - validates target schema and data quality before persistence
-- records DQ outcomes so written data can be traced back to the relevant Guardrail Results evidence
+- records DQ outcomes so written data can be traced back to the relevant Guardrail Results
 - prepares the DataFrame for the governed load strategy and adds FabricOps audit, lifecycle, and other required technical columns
 - writes the target using the applicable governed load behaviour
 - reads the persisted target back as a complete table
-- profiles and registers that complete persisted target, updating the relevant Data Profiled and Data Lineage evidence
+- profiles and registers that complete persisted target, updating the relevant Data Profiled and Data Lineage metadata
 
-Each governed target is prepared and written under its own resolved processing definition. The same table-scoped pattern can therefore be repeated for multiple targets in one notebook.
+Each governed target is prepared and written using its resolved load strategy and parameters. The same table-scoped pattern can therefore be repeated for multiple targets in one notebook.
 
 The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
 
-**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, metadata, profiling, lineage, and governed persistence while leaving transformation logic with the engineer.
+**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, read-strategy resolution, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
 
 ## Product components
 
@@ -125,13 +125,13 @@ Provides reusable FabricOps helpers and orchestrators for Fabric notebook workfl
 
 ### Notebook templates
 
-Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing evidence, and exploring approved data. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
+Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing Data Catalogue, profile, lineage, source observation, Guardrail Result, and contract records, and exploring approved data. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
 
 ### Shared metadata model
 
-Connects Governance intent with Engineering evidence. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table; one version can be manually selected as active, and Production checks resolve their expectations from that active version. A standardised approval and promotion mechanism remains planned. Candidate implementation paths are Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
+Connects Governance intent with recorded Engineering metadata. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Source Observation, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table, including the applicable processing definition such as load strategy and parameters; one version can be manually selected as active, and Production checks resolve their expectations from that active version. A standardised approval and promotion mechanism remains planned. Candidate implementation paths are Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
 
-The metadata model is not only documentation. It is the persistent context that allows Governance, Engineering, Production validation, downstream consumers, and future AI-assisted workflows to reason from the same recorded evidence and decisions.
+The metadata model is not only documentation. It is the persistent context that allows Governance, Engineering, Production validation, downstream consumers, and future AI-assisted workflows to reason from the recorded Catalogue structure, profiles, lineage, source observations, Guardrail definitions and results, Data Agreements, Data Contracts, and governance decisions.
 
 ### Guided Demo and technical documentation
 
@@ -145,10 +145,10 @@ Potential future AI-augmented workflows include:
 
 - **Enrichment suggestions:** propose business names, descriptions, classifications, sensitivity or PII hints, domains, and usage notes from schema, profile, and governed context for steward review.
 - **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
-- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails or processing definitions, and identify items requiring explicit review before activation.
-- **Pipeline review:** inspect the planned `02_pipeline` flow and its resolved metadata to identify missing validation, profiling, lineage, or unsafe processing patterns before Production.
-- **Failure explanation:** turn Guardrail Results and runtime evidence into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
-- **Change-impact analysis:** use contracts, lineage, profile history, and source observations to explain likely downstream impact before a source, target, or processing definition changes.
+- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, read strategy, load strategy, or load-strategy parameters, and identify items requiring explicit review before activation.
+- **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, resolved read strategy, applicable Guardrails, and governed load strategy to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.
+- **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
+- **Change-impact analysis:** use contracts, lineage, profile history, source observations, read strategies, and load strategies to explain likely downstream impact before a source, target, or governed execution definition changes.
 - **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.
 - **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for `99_explore`, BI, Data Agents, analytics, and data science work.
 

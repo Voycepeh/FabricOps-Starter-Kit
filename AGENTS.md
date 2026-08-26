@@ -19,6 +19,22 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_GUARDRAIL_RULES` stores approved guardrail intent.
   - `METADATA_GUARDRAIL_RESULTS` stores runtime outcomes.
 
+## Canonical terminology and glossary
+
+`docs/reference/_data/glossary.json` is the canonical source for FabricOps terminology used across documentation, code-facing descriptions, examples, tests, generated metadata text, diagrams, and agent-authored content.
+
+Before introducing, renaming, redefining, or broadly replacing a term:
+
+- check the glossary first and use the canonical term, category, meaning, aliases, and preferred usage
+- preserve the distinction between **FabricOps concepts**, supporting **Microsoft Fabric basics**, **Data engineering basics**, **Security and access basics**, and **File and configuration basics**
+- prefer the specific FabricOps table, record, field, strategy, rule, or result name when one exists instead of vague alternatives such as `evidence`, `context`, `processing metadata`, or `data products`
+- treat aliases as search and comprehension aids, not additional canonical concepts; for example, **policy as code** is an alias of **governance as code**
+- update the glossary in the same focused PR when an intentional product or implementation change creates, removes, or materially changes a canonical concept
+- do not preserve obsolete glossary terms merely for backwards compatibility unless migration support is explicitly requested
+- if implementation and glossary disagree, verify the authoritative implementation first, then update the glossary rather than documenting stale behaviour
+
+Terminology changes do not authorize unrelated code, schema, generated-reference, or dashboard changes. Keep the PR scoped to directly affected artifacts.
+
 ## Default task approach
 
 For substantial tasks, resolve:

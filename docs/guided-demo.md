@@ -28,7 +28,7 @@ Every action page uses the same maturity pattern so you can scan the complete wo
 | 0B | Governance, Engineering Development, and Engineering Production | `00_env_config` | [Set up the operating environment](guided-demo/00B-run-environment-setup.md) |
 | 1. Governance — Create Data Stewards and Data Agreements | Governance | `01_governance` | [Create data stewards and a data agreement](guided-demo/01-create-agreement.md) |
 | 2. Engineering — ETL, profile data, and build the Data Catalogue | Engineering Development | `02_pipeline` | [Run the Development pipeline](guided-demo/02-run-pipeline.md) |
-| 3. Governance — Enrich the Data Catalogue and define Guardrails | Governance | `01_governance` | [Enrich catalogue evidence and define Guardrails](guided-demo/03-enrich-guardrails.md) |
+| 3. Governance — Enrich the Data Catalogue and define Guardrails | Governance | `01_governance` | [Enrich the Data Catalogue and define Guardrails](guided-demo/03-enrich-guardrails.md) |
 | 4. Engineering — Validate with current or frozen Guardrails | Engineering Development | `02_pipeline` | [Rerun the Development pipeline with Guardrails](guided-demo/04-run-pipeline-with-guardrails.md) |
 | 5. Governance — Assemble and activate a Data Contract | Governance | `01_governance` | [Create and activate the Data Contract](guided-demo/05-create-data-contract.md) |
 | 6. Engineering — Run Production against the active Data Contract | Engineering Production | `02_pipeline` | [Run Production with the active Data Contract](guided-demo/06-promote-to-production.md) |
@@ -46,7 +46,7 @@ Every action page uses the same maturity pattern so you can scan the complete wo
 
 ???+ success "Live — Governance authoring"
 
-    Step 3 reads Engineering evidence, adds Enrichment, and authors Guardrails for the governed workflow.
+    Step 3 reads Data Catalogue, Data Profiled, and Data Lineage records written by Engineering, adds Enrichment, and authors Guardrails for the governed workflow.
 
 ??? info "Preview — Guarded Development lifecycle"
 

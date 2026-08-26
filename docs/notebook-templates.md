@@ -36,7 +36,7 @@ Run it in each workspace before using the other FabricOps notebooks.
 Use it to:
 
 - create Data Stewards and Data Agreements
-- review Data Catalogue and Data Profiled evidence written by `02_pipeline`
+- review Data Catalogue, Data Profiled, and Data Lineage records written by `02_pipeline`
 - add Enrichment
 - define Guardrails
 - create the Data Contract before promotion

@@ -3,1054 +3,315 @@
     "term": "FabricOps Starter Kit",
     "aliases": [],
     "category": "FabricOps concepts",
-    "short_definition": "Governed, quality-checked Microsoft Fabric notebook workflows for profiling, review, guardrails, enforcement, and handover.",
-    "long_definition": "Governed, quality-checked Microsoft Fabric notebook workflows for profiling, review, guardrails, enforcement, and handover.",
+    "short_definition": "A plug-and-play Data Engineering and Governance practice for Microsoft Fabric.",
+    "long_definition": "A plug-and-play Data Engineering and Governance practice for Microsoft Fabric, implemented through a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.",
     "preferred_usage": "Use as the public project name.",
     "avoid_usage": "full data product platform"
   },
   {
     "term": "profile",
-    "aliases": [
-      "profiles",
-      "profiling"
-    ],
+    "aliases": ["profiles", "profiling"],
     "category": "FabricOps concepts",
-    "short_definition": "Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.",
-    "long_definition": "Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.",
-    "preferred_usage": "Use profile/profiles for measured facts.",
+    "short_definition": "A summary of the data at a point in time.",
+    "long_definition": "A Profile is a summary of the data at a point in time. It shows things like row count, columns, data types, nulls, distinct values, minimum and maximum values, and value distributions. In FabricOps, this is stored in Data Profiled and Data Profiled Frequency metadata.",
+    "preferred_usage": "Use profile for a summary of the data at a point in time.",
     "avoid_usage": "profile evidence; catalogue evidence"
   },
   {
-    "term": "source data",
-    "aliases": [
-      "source table"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.",
-    "long_definition": "Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.",
-    "preferred_usage": "Use source data for inputs readers inspect or transform.",
-    "avoid_usage": "source table when file inputs are possible"
-  },
-  {
-    "term": "pipeline output",
-    "aliases": [
-      "pipeline outputs",
-      "output",
-      "target output"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "A DataFrame or table produced by a pipeline and checked before publishing.",
-    "long_definition": "A DataFrame or table produced by a pipeline and checked before publishing.",
-    "preferred_usage": "Use pipeline output/pipeline outputs for produced data.",
-    "avoid_usage": "governed outputs"
-  },
-  {
-    "term": "target DataFrame",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "The in-memory Spark DataFrame produced by pipeline logic before it is written.",
-    "long_definition": "The in-memory Spark DataFrame produced by pipeline logic before it is written.",
-    "preferred_usage": "Use only when distinguishing in-memory Spark data from a written table.",
-    "avoid_usage": "target output when DataFrame precision is needed"
-  },
-  {
-    "term": "target table",
-    "aliases": [
-      "target tables"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "A written table produced by a pipeline output.",
-    "long_definition": "A written table produced by a pipeline output.",
-    "preferred_usage": "Use only for persisted table outputs.",
-    "avoid_usage": "target DataFrame when written-table precision is needed"
-  },
-  {
     "term": "enrichment",
-    "aliases": [
-      "metadata enrichment",
-      "enrich metadata"
-    ],
+    "aliases": ["metadata enrichment", "enrich metadata"],
     "category": "FabricOps concepts",
-    "short_definition": "Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.",
-    "long_definition": "Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.",
-    "preferred_usage": "Use enrichment for reviewed descriptive metadata.",
-    "avoid_usage": "metadata enrichment"
+    "short_definition": "Business and governance information added to the Data Catalogue after technical metadata has been captured.",
+    "long_definition": "Enrichment is the business and governance information added to the Data Catalogue after the technical metadata has been captured. It includes descriptions, ownership, sensitivity, classification, and how the data is intended to be used.",
+    "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
+    "avoid_usage": "metadata enrichment when enrichment is sufficient"
   },
   {
     "term": "guardrails",
-    "aliases": [
-      "guardrail"
-    ],
+    "aliases": ["guardrail"],
     "category": "FabricOps concepts",
-    "short_definition": "Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.",
-    "long_definition": "Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.",
-    "preferred_usage": "Use guardrails for governed checks; use singular only for grammar.",
+    "short_definition": "Governed rules FabricOps applies to data and pipelines.",
+    "long_definition": "Guardrails are the governed rules FabricOps applies to data and pipelines. Today, they can check schema, freshness, profile behaviour, change over time, and data quality. In future they can also cover governance requirements such as stricter handling for sensitive data, masking or restricted access for PII, and additional controls for specific classifications.",
+    "preferred_usage": "Use guardrails for governed rules applied to data and pipelines; use singular only for grammar.",
     "avoid_usage": "guardrail governance"
   },
   {
     "term": "enforcement",
-    "aliases": [
-      "runtime enforcement",
-      "enforce"
-    ],
+    "aliases": ["runtime enforcement", "enforce"],
     "category": "FabricOps concepts",
-    "short_definition": "Running active guardrails and deciding whether a pipeline can continue, warn, or stop.",
-    "long_definition": "Running active guardrails and deciding whether a pipeline can continue, warn, or stop.",
-    "preferred_usage": "Use enforcement for runtime checks.",
-    "avoid_usage": "runtime enforcement"
-  },
-  {
-    "term": "can_continue",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Boolean result that tells downstream notebook code whether processing can keep running.",
-    "long_definition": "Boolean result that tells downstream notebook code whether processing can keep running.",
-    "preferred_usage": "Use as the returned field name.",
-    "avoid_usage": "continue flag"
-  },
-  {
-    "term": "metadata lakehouse",
-    "aliases": [
-      "metadata target",
-      "metadata route"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Configured Fabric Lakehouse target where FabricOps stores metadata tables.",
-    "long_definition": "Configured Fabric Lakehouse target where FabricOps stores metadata tables.",
-    "preferred_usage": "Use metadata lakehouse for configured metadata storage.",
-    "avoid_usage": "metadata target; metadata route"
-  },
-  {
-    "term": "metadata tables",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "FabricOps tables that store profiles, guardrail intent, runtime outcomes, agreements, lineage, and operating evidence.",
-    "long_definition": "FabricOps tables that store profiles, guardrail intent, runtime outcomes, agreements, lineage, and operating evidence.",
-    "preferred_usage": "Use metadata tables for the collection.",
-    "avoid_usage": "metadata stores"
-  },
-  {
-    "term": "notebook registry",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
-    "long_definition": "Metadata inventory of notebooks and responsibilities used for handover and operating context.",
-    "preferred_usage": "Use notebook registry for the inventory.",
-    "avoid_usage": "notebook catalogue"
-  },
-  {
-    "term": "notebook template",
-    "aliases": [
-      "notebook templates",
-      "starter notebook",
-      "starter notebooks"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Reusable starter notebook workflow that shows how to run a FabricOps phase.",
-    "long_definition": "Reusable starter notebook workflow that shows where and how FabricOps helpers are used for a FabricOps phase such as environment setup, agreement selection, pipeline execution, governance review, or exploration.",
-    "preferred_usage": "Use notebook template for reusable starter notebook workflows.",
-    "avoid_usage": "notebook registry when the reusable notebook file is meant"
-  },
-  {
-    "term": "agreement selection",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Notebook workflow step that selects the data agreement and steward context for review or execution.",
-    "long_definition": "Notebook workflow step that selects the data agreement and steward context for review or execution.",
-    "preferred_usage": "Use agreement selection for the workflow step.",
-    "avoid_usage": "contract picker"
-  },
-  {
-    "term": "guardrail target selection",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Notebook workflow step that chooses the profiled table or pipeline output whose guardrails will be reviewed.",
-    "long_definition": "Notebook workflow step that chooses the profiled table or pipeline output whose guardrails will be reviewed.",
-    "preferred_usage": "Use guardrail target selection for the workflow step.",
-    "avoid_usage": "target picker"
-  },
-  {
-    "term": "profile mode",
-    "aliases": [
-      "profile behavior"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Configured behavior mode for profile guardrails: static_data, changing_data, or skip.",
-    "long_definition": "Configured behavior mode for profile guardrails: static_data, changing_data, or skip.",
-    "preferred_usage": "Use profile mode when describing static_data/changing_data/skip.",
-    "avoid_usage": "profile behavior mode"
-  },
-  {
-    "term": "static_data",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode for data expected to remain stable against an approved baseline.",
-    "long_definition": "Profile mode for data expected to remain stable against an approved baseline.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "static data"
-  },
-  {
-    "term": "changing_data",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode for data expected to change by watermark group.",
-    "long_definition": "Profile mode for data expected to change by watermark group.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "changing data"
-  },
-  {
-    "term": "skip",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Profile mode that records a profile without enforcing profile behavior.",
-    "long_definition": "Profile mode that records a profile without enforcing profile behavior.",
-    "preferred_usage": "Use as the literal mode value.",
-    "avoid_usage": "skip enforcement"
-  },
-  {
-    "term": "active pending governance review",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Activation state for a guardrail that is active but still awaiting governance review.",
-    "long_definition": "Activation state for a guardrail that is active but still awaiting governance review.",
-    "preferred_usage": "Use when documenting rule lifecycle states.",
-    "avoid_usage": "pending active"
-  },
-  {
-    "term": "self-approved",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Review state showing a rule or agreement was approved by the same operating context that proposed it.",
-    "long_definition": "Review state showing a rule or agreement was approved by the same operating context that proposed it.",
-    "preferred_usage": "Use as the literal review state.",
-    "avoid_usage": "auto approved"
-  },
-  {
-    "term": "governance-approved",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Review state showing an authorized governance reviewer approved the evidence or intent.",
-    "long_definition": "Review state showing an authorized governance reviewer approved the evidence or intent.",
-    "preferred_usage": "Use as the literal review state.",
-    "avoid_usage": "approved by governance"
-  },
-  {
-    "term": "superseded",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Lifecycle state showing a newer record replaced an older record.",
-    "long_definition": "Lifecycle state showing a newer record replaced an older record.",
-    "preferred_usage": "Use superseded for replaced records.",
-    "avoid_usage": "deprecated"
-  },
-  {
-    "term": "activation_state",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata field that records whether a rule or record is active, inactive, or pending review.",
-    "long_definition": "Metadata field that records whether a rule or record is active, inactive, or pending review.",
-    "preferred_usage": "Use as the field name.",
-    "avoid_usage": "activation state when referring to column"
-  },
-  {
-    "term": "review_state",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Metadata field that records review outcome such as self-approved or governance-approved.",
-    "long_definition": "Metadata field that records review outcome such as self-approved or governance-approved.",
-    "preferred_usage": "Use as the field name.",
-    "avoid_usage": "review status"
-  },
-  {
-    "term": "run summary",
-    "aliases": [
-      "run summaries"
-    ],
-    "category": "FabricOps concepts",
-    "short_definition": "Concise record of a pipeline run, including status, checks, and handover signals.",
-    "long_definition": "Concise record of a pipeline run, including status, checks, and handover signals.",
-    "preferred_usage": "Use run summary/run summaries.",
-    "avoid_usage": "pipeline summary"
+    "short_definition": "Applying active Guardrails during a pipeline run and acting on the result.",
+    "long_definition": "Enforcement is when FabricOps applies the active Guardrails during a pipeline run and acts on the result. Depending on the Guardrail, the pipeline can continue, continue with a warning, or stop.",
+    "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
+    "avoid_usage": "runtime enforcement when enforcement is sufficient"
   },
   {
     "term": "guardrail result",
-    "aliases": [
-      "guardrail results"
-    ],
+    "aliases": ["guardrail results"],
     "category": "FabricOps concepts",
-    "short_definition": "Runtime outcome from evaluating a guardrail, including pass/fail/warn details.",
-    "long_definition": "Runtime outcome from evaluating a guardrail, including pass/fail/warn details.",
-    "preferred_usage": "Use guardrail result/guardrail results.",
+    "short_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.",
+    "long_definition": "A Guardrail Result is the recorded outcome after FabricOps evaluates a Guardrail during a pipeline run. It records whether the check passed, warned, or failed, what was checked, and whether the pipeline is allowed to continue.",
+    "preferred_usage": "Use guardrail result for what happened when FabricOps applied a Guardrail.",
     "avoid_usage": "rule result"
   },
   {
-    "term": "lineage relationship",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Recorded link between source data, transformations, and pipeline outputs.",
-    "long_definition": "Recorded link between source data, transformations, and pipeline outputs.",
-    "preferred_usage": "Use lineage relationship when documenting stored lineage.",
-    "avoid_usage": "dependency edge"
-  },
-  {
-    "term": "data contract",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Documented expectations for data structure, meaning, quality, ownership, and use.",
-    "long_definition": "Documented expectations for data structure, meaning, quality, ownership, and use.",
-    "preferred_usage": "Use when describing formal expectations.",
-    "avoid_usage": "informal agreement"
-  },
-  {
-    "term": "data agreement",
-    "aliases": [
-      "data agreements"
-    ],
-    "category": "Data governance concepts",
-    "short_definition": "FabricOps agreement record that captures ownership, steward context, usage, and expectations.",
-    "long_definition": "FabricOps agreement record that captures ownership, steward context, usage, and expectations.",
-    "preferred_usage": "Use data agreement for FabricOps workflow context.",
-    "avoid_usage": "contract when agreement is meant"
-  },
-  {
     "term": "data steward",
-    "aliases": [
-      "data stewards"
-    ],
-    "category": "Data governance concepts",
-    "short_definition": "Person or role accountable for reviewing and maintaining data context and decisions.",
-    "long_definition": "Person or role accountable for reviewing and maintaining data context and decisions.",
-    "preferred_usage": "Use data steward for accountable reviewer role.",
+    "aliases": ["data stewards"],
+    "category": "FabricOps concepts",
+    "short_definition": "The person or role responsible for reviewing and maintaining the governance context for data.",
+    "long_definition": "A Data Steward is the person or role responsible for reviewing and maintaining the governance context for data, including its meaning, ownership, sensitivity, intended use, and governance decisions.",
+    "preferred_usage": "Use data steward for the accountable governance role in FabricOps.",
     "avoid_usage": "owner when stewardship is meant"
   },
   {
-    "term": "agreement evidence",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Metadata that proves which agreement context was selected, reviewed, or used.",
-    "long_definition": "Metadata that proves which agreement context was selected, reviewed, or used.",
-    "preferred_usage": "Use agreement evidence for stored agreement proof.",
-    "avoid_usage": "agreement logs"
+    "term": "data agreement",
+    "aliases": ["data agreements"],
+    "category": "FabricOps concepts",
+    "short_definition": "The governed record that establishes who is sharing what data, with whom, and why.",
+    "long_definition": "A Data Agreement establishes the governed context for a dataset before engineering proceeds. It captures the parties involved, steward context, intended use, and expectations that guide the FabricOps workflow.",
+    "preferred_usage": "Use data agreement for the governed agreement that starts the FabricOps workflow.",
+    "avoid_usage": "data contract when the earlier agreement stage is meant"
   },
   {
-    "term": "ownership",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Accountability for a dataset, rule, agreement, or decision.",
-    "long_definition": "Accountability for a dataset, rule, agreement, or decision.",
-    "preferred_usage": "Use ownership for accountability.",
-    "avoid_usage": "owner text"
-  },
-  {
-    "term": "business meaning",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Plain-language explanation of what data represents and why it matters.",
-    "long_definition": "Plain-language explanation of what data represents and why it matters.",
-    "preferred_usage": "Use business meaning in enrichment guidance.",
-    "avoid_usage": "business description"
-  },
-  {
-    "term": "usage context",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Explanation of how data is expected to be used and by whom.",
-    "long_definition": "Explanation of how data is expected to be used and by whom.",
-    "preferred_usage": "Use usage context in enrichment guidance.",
-    "avoid_usage": "use case only"
-  },
-  {
-    "term": "sensitivity",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Indication of how carefully data should be handled based on risk or confidentiality.",
-    "long_definition": "Indication of how carefully data should be handled based on risk or confidentiality.",
-    "preferred_usage": "Use sensitivity for handling concern.",
-    "avoid_usage": "PII only when specific"
-  },
-  {
-    "term": "classification",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Controlled label for data type, sensitivity, or governance grouping.",
-    "long_definition": "Controlled label for data type, sensitivity, or governance grouping.",
-    "preferred_usage": "Use classification for controlled labels.",
-    "avoid_usage": "class label"
-  },
-  {
-    "term": "governance review",
-    "aliases": [
-      "governance reviews"
-    ],
-    "category": "Data governance concepts",
-    "short_definition": "Human review of profiles, enrichment, guardrails, agreements, and lifecycle decisions.",
-    "long_definition": "Human review of profiles, enrichment, guardrails, agreements, and lifecycle decisions.",
-    "preferred_usage": "Use governance review for reviewer workflow.",
-    "avoid_usage": "guardrail governance"
-  },
-  {
-    "term": "approval",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Decision that accepts evidence, intent, or a lifecycle change.",
-    "long_definition": "Decision that accepts evidence, intent, or a lifecycle change.",
-    "preferred_usage": "Use approval as general decision term.",
-    "avoid_usage": "acceptance when approval is meant"
-  },
-  {
-    "term": "rejection",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Decision that declines evidence, intent, or a lifecycle change.",
-    "long_definition": "Decision that declines evidence, intent, or a lifecycle change.",
-    "preferred_usage": "Use rejection as general decision term.",
-    "avoid_usage": "denial"
-  },
-  {
-    "term": "replacement",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Lifecycle action that creates a newer approved record for an older one.",
-    "long_definition": "Lifecycle action that creates a newer approved record for an older one.",
-    "preferred_usage": "Use replacement for intentional succession.",
-    "avoid_usage": "overwrite when governance state changes"
-  },
-  {
-    "term": "deactivation",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Lifecycle action that makes an active rule or record inactive.",
-    "long_definition": "Lifecycle action that makes an active rule or record inactive.",
-    "preferred_usage": "Use deactivation for turning off governed intent.",
-    "avoid_usage": "delete when record remains"
-  },
-  {
-    "term": "lifecycle",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Sequence of states a governed record moves through from proposal to review, activation, replacement, or deactivation.",
-    "long_definition": "Sequence of states a governed record moves through from proposal to review, activation, replacement, or deactivation.",
-    "preferred_usage": "Use lifecycle for governed state movement.",
-    "avoid_usage": "status flow"
-  },
-  {
-    "term": "audit",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Reviewable trail of evidence, decisions, and runtime outcomes.",
-    "long_definition": "Reviewable trail of evidence, decisions, and runtime outcomes.",
-    "preferred_usage": "Use audit for traceability.",
-    "avoid_usage": "logging only"
+    "term": "data contract",
+    "aliases": ["data contracts"],
+    "category": "FabricOps concepts",
+    "short_definition": "The approved definition of what is expected from governed Production data.",
+    "long_definition": "A Data Contract is the approved definition of the structure, meaning, quality expectations, ownership, processing expectations, and governance requirements for governed Production data.",
+    "preferred_usage": "Use data contract for the approved Production-facing contract.",
+    "avoid_usage": "data agreement when the approved Production contract is meant"
   },
   {
     "term": "metadata",
     "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Data that describes datasets, rules, agreements, lineage, and operations.",
-    "long_definition": "Data that describes datasets, rules, agreements, lineage, and operations.",
-    "preferred_usage": "Use metadata for descriptive and operational records.",
-    "avoid_usage": "data about data jargon when possible"
+    "category": "FabricOps concepts",
+    "short_definition": "Information about the data.",
+    "long_definition": "Metadata is information about the data. In FabricOps this includes its structure, Profile, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreement, Data Contract, and other information used to understand and govern it.",
+    "preferred_usage": "Use metadata for information that describes or governs data.",
+    "avoid_usage": "evidence or context when the specific metadata can be named"
   },
   {
-    "term": "evidence",
-    "aliases": [
-      "catalogue evidence",
-      "profile evidence",
-      "accepted catalogue profile evidence"
-    ],
-    "category": "Data governance concepts",
-    "short_definition": "Stored proof that a profile, decision, result, or relationship existed at a point in time.",
-    "long_definition": "Stored proof that a profile, decision, result, or relationship existed at a point in time.",
-    "preferred_usage": "Use evidence for reviewable proof.",
-    "avoid_usage": "catalogue evidence in narrative docs"
+    "term": "configuration-driven engineering",
+    "aliases": ["config-driven engineering"],
+    "category": "FabricOps concepts",
+    "short_definition": "Controlling repeatable engineering behaviour through configuration instead of rewriting pipeline code.",
+    "long_definition": "Configuration-driven Engineering means defining reusable pipeline behaviour through configuration so teams can change settings, targets, strategies, and governed parameters without duplicating or rewriting the underlying engineering logic.",
+    "preferred_usage": "Use configuration-driven engineering for engineering behaviour controlled by configuration.",
+    "avoid_usage": "hard-coded engineering when configuration is the intended control"
   },
   {
-    "term": "review history",
+    "term": "governance as code",
+    "aliases": ["policy as code"],
+    "category": "FabricOps concepts",
+    "short_definition": "Defining governance rules in a structured, version-controlled form that can be applied consistently.",
+    "long_definition": "Governance as Code means defining governance rules in a structured, version-controlled way so they can be reviewed, repeated, and applied consistently by FabricOps. This can include Guardrails, data quality rules, sensitivity and PII requirements, access rules, approvals, governance states, and other policies that can be expressed as configuration or executable checks.",
+    "preferred_usage": "Use governance as code as the umbrella term; treat policy as code as an alias within this concept.",
+    "avoid_usage": "policy as code as a separate FabricOps concept"
+  },
+  {
+    "term": "data access",
     "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "Chronological record of governance review decisions and changes.",
-    "long_definition": "Chronological record of governance review decisions and changes.",
-    "preferred_usage": "Use review history for decision chronology.",
-    "avoid_usage": "approval history only"
+    "category": "FabricOps concepts",
+    "short_definition": "The governed definition of who is allowed to access data and under what conditions.",
+    "long_definition": "Data Access describes who is allowed to access governed data and the conditions or restrictions that apply. It provides the governance context that can be implemented through platform security controls such as RLS, OLS, permissions, or other access mechanisms.",
+    "preferred_usage": "Use data access for the governed access requirement, not a specific technical security implementation.",
+    "avoid_usage": "RLS or OLS when the broader access requirement is meant"
   },
   {
-    "term": "support readiness",
-    "aliases": [],
-    "category": "Data governance concepts",
-    "short_definition": "State showing whether enough context exists for operations and handover.",
-    "long_definition": "State showing whether enough context exists for operations and handover.",
-    "preferred_usage": "Use support readiness for handover confidence.",
-    "avoid_usage": "operational maturity"
+    "term": "data sensitivity",
+    "aliases": ["sensitivity"],
+    "category": "FabricOps concepts",
+    "short_definition": "How carefully data should be handled based on its confidentiality or risk.",
+    "long_definition": "Data Sensitivity describes how carefully data should be handled based on confidentiality, privacy, business risk, or regulatory requirements. It can influence access, masking, sharing, and other governance controls.",
+    "preferred_usage": "Use data sensitivity for the handling classification of governed data.",
+    "avoid_usage": "PII when the broader sensitivity concept is meant"
+  },
+  {
+    "term": "PII",
+    "aliases": ["personally identifiable information"],
+    "category": "FabricOps concepts",
+    "short_definition": "Data that can identify or be linked to an individual.",
+    "long_definition": "PII, or personally identifiable information, is data that can identify or be linked to an individual. In a governed workflow it may require additional controls such as restricted access, masking, or stricter handling.",
+    "preferred_usage": "Use PII after personally identifiable information is clear from context.",
+    "avoid_usage": "sensitive data when specifically referring to personal identifiers"
   },
   {
     "term": "Microsoft Fabric",
     "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Microsoft analytics platform used as the runtime for FabricOps notebooks and storage targets.",
-    "long_definition": "Microsoft analytics platform used as the runtime for FabricOps notebooks and storage targets.",
-    "preferred_usage": "Use full name on first mention.",
+    "category": "Microsoft Fabric basics",
+    "short_definition": "Microsoft's analytics platform used as the runtime for FabricOps.",
+    "long_definition": "Microsoft Fabric is the analytics platform FabricOps runs on, providing workspaces, Lakehouses, Warehouses, notebooks, Spark, SQL, and other data capabilities.",
+    "preferred_usage": "Use the full product name on first mention.",
     "avoid_usage": "Fabric alone when ambiguous"
   },
   {
     "term": "workspace",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Microsoft Fabric container for notebooks, Lakehouses, Warehouses, and other items.",
-    "long_definition": "Microsoft Fabric container for notebooks, Lakehouses, Warehouses, and other items.",
-    "preferred_usage": "Use workspace generically.",
+    "aliases": ["workspaces"],
+    "category": "Microsoft Fabric basics",
+    "short_definition": "A Microsoft Fabric container for related data and analytics items.",
+    "long_definition": "A Workspace is a Microsoft Fabric container used to organize and secure related items such as notebooks, Lakehouses, Warehouses, semantic models, and reports.",
+    "preferred_usage": "Use workspace for the Fabric organizational and security boundary.",
     "avoid_usage": "tenant"
   },
   {
-    "term": "Governance workspace",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Workspace pattern for governance notebooks and metadata review activities.",
-    "long_definition": "Workspace pattern for governance notebooks and metadata review activities.",
-    "preferred_usage": "Use as environment role name.",
-    "avoid_usage": "governance area"
-  },
-  {
-    "term": "Engineering Dev workspace",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Workspace pattern for development engineering workflows.",
-    "long_definition": "Workspace pattern for development engineering workflows.",
-    "preferred_usage": "Use as environment role name.",
-    "avoid_usage": "dev workspace if ambiguous"
-  },
-  {
-    "term": "Engineering Prod workspace",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Workspace pattern for production engineering workflows.",
-    "long_definition": "Workspace pattern for production engineering workflows.",
-    "preferred_usage": "Use as environment role name.",
-    "avoid_usage": "prod workspace if ambiguous"
-  },
-  {
     "term": "Lakehouse",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Fabric item that stores files and Delta tables for Spark workloads.",
-    "long_definition": "Fabric item that stores files and Delta tables for Spark workloads.",
-    "preferred_usage": "Use Lakehouse for Fabric item type.",
+    "aliases": ["Lakehouses"],
+    "category": "Microsoft Fabric basics",
+    "short_definition": "A Fabric data store that combines data-lake storage with managed tables for analytics and Spark workloads.",
+    "long_definition": "A Lakehouse in Microsoft Fabric stores files and managed Delta tables in OneLake and is commonly used with Spark, notebooks, and SQL analytics endpoints.",
+    "preferred_usage": "Use Lakehouse for the Microsoft Fabric item type.",
     "avoid_usage": "lake house"
   },
   {
     "term": "Warehouse",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Fabric item that provides SQL warehouse storage and querying.",
-    "long_definition": "Fabric item that provides SQL warehouse storage and querying.",
-    "preferred_usage": "Use Warehouse for Fabric item type.",
+    "aliases": ["Warehouses"],
+    "category": "Microsoft Fabric basics",
+    "short_definition": "A Fabric relational data store designed for SQL analytics and warehousing workloads.",
+    "long_definition": "A Warehouse in Microsoft Fabric provides relational tables and SQL-based querying for structured analytics and data warehousing workloads.",
+    "preferred_usage": "Use Warehouse for the Microsoft Fabric item type.",
     "avoid_usage": "SQL database when Fabric Warehouse is meant"
   },
   {
-    "term": "source_lakehouse",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Configured source Lakehouse target key.",
-    "long_definition": "Configured source Lakehouse target key.",
-    "preferred_usage": "Use as the literal config target.",
-    "avoid_usage": "source lakehouse in code context"
-  },
-  {
-    "term": "unified_lakehouse",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Configured unified Lakehouse target key.",
-    "long_definition": "Configured unified Lakehouse target key.",
-    "preferred_usage": "Use as the literal config target.",
-    "avoid_usage": "unified lakehouse in code context"
-  },
-  {
-    "term": "product_warehouse",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Configured product Warehouse target key.",
-    "long_definition": "Configured product Warehouse target key.",
-    "preferred_usage": "Use as the literal config target.",
-    "avoid_usage": "product warehouse in code context"
-  },
-  {
-    "term": "Fabric item target",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Configured Fabric item that a helper reads from or writes to.",
-    "long_definition": "Configured Fabric item that a helper reads from or writes to.",
-    "preferred_usage": "Use when docs discuss target config generally.",
-    "avoid_usage": "Fabric target when item precision needed"
-  },
-  {
-    "term": "Fabric environment",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Named environment configuration that maps notebooks to workspace and item targets.",
-    "long_definition": "Named environment configuration that maps notebooks to workspace and item targets.",
-    "preferred_usage": "Use for environment-specific config.",
-    "avoid_usage": "environment alone if ambiguous"
-  },
-  {
-    "term": "wheel",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Python package artifact installed into a notebook session.",
-    "long_definition": "Python package artifact installed into a notebook session.",
-    "preferred_usage": "Use wheel for package artifact.",
-    "avoid_usage": "whl except filename"
-  },
-  {
-    "term": "notebook session",
-    "aliases": [
-      "notebook sessions"
-    ],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Running notebook execution context with installed packages and Spark resources.",
-    "long_definition": "Running notebook execution context with installed packages and Spark resources.",
-    "preferred_usage": "Use notebook session for runtime context.",
-    "avoid_usage": "kernel when Spark context matters"
-  },
-  {
-    "term": "Fabric notebook",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Notebook running in Microsoft Fabric.",
-    "long_definition": "Notebook running in Microsoft Fabric.",
-    "preferred_usage": "Use Fabric notebook for notebook runtime.",
-    "avoid_usage": "Jupyter notebook when Fabric-specific"
-  },
-  {
-    "term": "Spark session",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Spark execution session used by Fabric notebooks for distributed DataFrame work.",
-    "long_definition": "Spark execution session used by Fabric notebooks for distributed DataFrame work.",
-    "preferred_usage": "Use Spark session for Spark runtime object.",
-    "avoid_usage": "spark context unless specific"
-  },
-  {
-    "term": "Delta table",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Table stored in Delta format and read by Spark or Fabric engines.",
-    "long_definition": "Table stored in Delta format and read by Spark or Fabric engines.",
-    "preferred_usage": "Use Delta table for storage format.",
-    "avoid_usage": "table when format matters"
-  },
-  {
-    "term": "Lakehouse schema",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Named schema area inside a Lakehouse for organizing tables.",
-    "long_definition": "Named schema area inside a Lakehouse for organizing tables.",
-    "preferred_usage": "Use Lakehouse schema for schema location.",
-    "avoid_usage": "database when Fabric schema meant"
-  },
-  {
-    "term": "Files path",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Path under the Lakehouse Files area.",
-    "long_definition": "Path under the Lakehouse Files area.",
-    "preferred_usage": "Use Files path for Lakehouse file locations.",
-    "avoid_usage": "file path when Fabric Files matters"
-  },
-  {
-    "term": "table path",
-    "aliases": [],
-    "category": "Microsoft Fabric concepts",
-    "short_definition": "Path or identifier for a managed table location.",
-    "long_definition": "Path or identifier for a managed table location.",
-    "preferred_usage": "Use table path for table locations.",
-    "avoid_usage": "path when table context matters"
+    "term": "notebook",
+    "aliases": ["notebooks", "Fabric notebook"],
+    "category": "Microsoft Fabric basics",
+    "short_definition": "An interactive Fabric document for running code, data processing, analysis, and engineering workflows.",
+    "long_definition": "A Notebook is an interactive Microsoft Fabric document where users can run Python, PySpark, SQL, and other supported code for data engineering, analysis, experimentation, and operational workflows.",
+    "preferred_usage": "Use notebook for the Fabric notebook users work in.",
+    "avoid_usage": "Jupyter notebook when the Fabric runtime matters"
   },
   {
     "term": "pipeline",
-    "aliases": [
-      "pipelines"
-    ],
-    "category": "Data engineering concepts",
-    "short_definition": "Sequence of steps that reads source data, transforms it, checks it, and writes outputs.",
-    "long_definition": "Sequence of steps that reads source data, transforms it, checks it, and writes outputs.",
-    "preferred_usage": "Use pipeline for end-to-end processing.",
-    "avoid_usage": "workflow if processing pipeline meant"
+    "aliases": ["pipelines"],
+    "category": "Data engineering basics",
+    "short_definition": "A sequence of steps that moves, transforms, checks, and writes data.",
+    "long_definition": "A Pipeline is a repeatable sequence of data-processing steps that can read source data, transform it, apply checks, and write results to a target.",
+    "preferred_usage": "Use pipeline for an end-to-end data-processing flow.",
+    "avoid_usage": "workflow when a data pipeline is specifically meant"
   },
   {
-    "term": "runtime",
+    "term": "PySpark",
     "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Execution period and environment where notebook or pipeline code runs.",
-    "long_definition": "Execution period and environment where notebook or pipeline code runs.",
-    "preferred_usage": "Use runtime for execution context.",
-    "avoid_usage": "run time unless prose needs it"
+    "category": "Data engineering basics",
+    "short_definition": "The Python API for Apache Spark.",
+    "long_definition": "PySpark lets Python code use Apache Spark to process data across a distributed compute engine. It is commonly used in Fabric notebooks for large-scale transformations and data engineering.",
+    "preferred_usage": "Use PySpark when referring to Python code running on Spark.",
+    "avoid_usage": "Python when Spark execution is the important distinction"
   },
   {
-    "term": "source",
-    "aliases": [
-      "sources"
-    ],
-    "category": "Data engineering concepts",
-    "short_definition": "Input side of a data flow.",
-    "long_definition": "Input side of a data flow.",
-    "preferred_usage": "Use source for generic input side.",
-    "avoid_usage": "upstream when source is clearer"
+    "term": "parallel processing",
+    "aliases": [],
+    "category": "Data engineering basics",
+    "short_definition": "Processing multiple parts of a workload at the same time.",
+    "long_definition": "Parallel Processing divides work so multiple tasks or data partitions can be processed at the same time, which can reduce elapsed processing time when the workload and compute resources support it.",
+    "preferred_usage": "Use parallel processing for concurrent work across tasks, partitions, or workers.",
+    "avoid_usage": "multithreading when the broader distributed-processing concept is meant"
   },
   {
-    "term": "target",
-    "aliases": [
-      "targets"
-    ],
-    "category": "Data engineering concepts",
-    "short_definition": "Output side of a data flow.",
-    "long_definition": "Output side of a data flow.",
-    "preferred_usage": "Use target for generic output side.",
-    "avoid_usage": "destination when target is clearer"
+    "term": "incremental load",
+    "aliases": ["incremental loading"],
+    "category": "Data engineering basics",
+    "short_definition": "Processing only new or changed data instead of reprocessing everything.",
+    "long_definition": "An Incremental Load processes only the new or changed portion of a source since the previous successful processing point, reducing unnecessary reads and writes compared with a full load.",
+    "preferred_usage": "Use incremental load for processing only the required new or changed data.",
+    "avoid_usage": "append when the read strategy rather than write behaviour is meant"
   },
   {
-    "term": "DataFrame",
-    "aliases": [
-      "DataFrames"
-    ],
-    "category": "Data engineering concepts",
-    "short_definition": "Spark tabular data structure held in memory during processing.",
-    "long_definition": "Spark tabular data structure held in memory during processing.",
-    "preferred_usage": "Use DataFrame for Spark object.",
-    "avoid_usage": "data frame"
+    "term": "slowly changing dimensions",
+    "aliases": ["SCD", "slowly changing dimension"],
+    "category": "Data engineering basics",
+    "short_definition": "Patterns for handling changes to descriptive records over time.",
+    "long_definition": "Slowly Changing Dimensions are data-modelling patterns for handling changes to descriptive records. Common approaches include SCD Type 1, which replaces the previous value, and SCD Type 2, which keeps history by creating versioned records.",
+    "preferred_usage": "Use slowly changing dimensions when discussing SCD patterns; introduce SCD before using the abbreviation alone.",
+    "avoid_usage": "incremental load when the history-management pattern is meant"
+  },
+  {
+    "term": "data modelling",
+    "aliases": ["data modeling"],
+    "category": "Data engineering basics",
+    "short_definition": "Organizing data structures and relationships so data can be stored, understood, and used effectively.",
+    "long_definition": "Data Modelling is the practice of designing tables, fields, keys, relationships, and structures so data supports its intended analytical, operational, or reporting use.",
+    "preferred_usage": "Use data modelling for the design of data structures and relationships.",
+    "avoid_usage": "schema when the broader model design is meant"
   },
   {
     "term": "schema",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Column names and data types for a DataFrame or table.",
-    "long_definition": "Column names and data types for a DataFrame or table.",
-    "preferred_usage": "Use schema for structure.",
+    "aliases": ["schemas"],
+    "category": "Data engineering basics",
+    "short_definition": "The defined structure of data, including its columns and data types.",
+    "long_definition": "A Schema describes the structure of a dataset or table, including column names, data types, and other structural expectations.",
+    "preferred_usage": "Use schema for the defined structure of data.",
     "avoid_usage": "layout when schema is meant"
   },
   {
-    "term": "freshness",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Measure of whether data is recent enough for its expected use.",
-    "long_definition": "Measure of whether data is recent enough for its expected use.",
-    "preferred_usage": "Use freshness for recency checks.",
-    "avoid_usage": "timeliness when check is freshness"
-  },
-  {
-    "term": "watermark",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Column or value used to group or measure incremental data recency.",
-    "long_definition": "Column or value used to group or measure incremental data recency.",
-    "preferred_usage": "Use watermark for incremental grouping/recency.",
-    "avoid_usage": "timestamp only when generic"
-  },
-  {
-    "term": "DQ",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Short form of data quality.",
-    "long_definition": "Short form of data quality.",
-    "preferred_usage": "Use DQ only after data quality is clear.",
-    "avoid_usage": "quality only when ambiguous"
-  },
-  {
-    "term": "data quality rule",
-    "aliases": [
-      "DQ rule",
-      "DQ rules"
-    ],
-    "category": "Data engineering concepts",
-    "short_definition": "Executable expectation that checks data values, completeness, or relationships.",
-    "long_definition": "Executable expectation that checks data values, completeness, or relationships.",
-    "preferred_usage": "Use data quality rule in narrative; DQ rule after introduced.",
-    "avoid_usage": "rule when ambiguous"
-  },
-  {
-    "term": "lineage",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Trace of how data moves from sources through transformations to targets.",
-    "long_definition": "Trace of how data moves from sources through transformations to targets.",
-    "preferred_usage": "Use lineage for data movement trace.",
-    "avoid_usage": "dependency list when lineage meant"
-  },
-  {
-    "term": "transformation",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Logic that changes source data into pipeline outputs.",
-    "long_definition": "Logic that changes source data into pipeline outputs.",
-    "preferred_usage": "Use transformation for data-changing logic.",
-    "avoid_usage": "mapping if broader"
-  },
-  {
-    "term": "deterministic logic",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Logic that produces the same result for the same inputs.",
-    "long_definition": "Logic that produces the same result for the same inputs.",
-    "preferred_usage": "Use deterministic logic for reproducible behavior.",
-    "avoid_usage": "AI-generated logic when deterministic matters"
-  },
-  {
-    "term": "row count",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Number of rows in a DataFrame or table.",
-    "long_definition": "Number of rows in a DataFrame or table.",
-    "preferred_usage": "Use row count for counts.",
-    "avoid_usage": "records when exact rows meant"
-  },
-  {
-    "term": "null",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Missing or unknown value in a column.",
-    "long_definition": "Missing or unknown value in a column.",
-    "preferred_usage": "Use null for missing values.",
-    "avoid_usage": "blank when null meant"
-  },
-  {
-    "term": "distinct value",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Unique value observed in a column.",
-    "long_definition": "Unique value observed in a column.",
-    "preferred_usage": "Use distinct value/distinct values.",
-    "avoid_usage": "unique value when DQ unique rule meant"
-  },
-  {
-    "term": "distribution",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Shape or frequency of values in data.",
-    "long_definition": "Shape or frequency of values in data.",
-    "preferred_usage": "Use distribution for value spread.",
-    "avoid_usage": "profile summary when distribution meant"
+    "term": "data quality",
+    "aliases": ["DQ"],
+    "category": "Data engineering basics",
+    "short_definition": "Whether data meets the expectations required for its intended use.",
+    "long_definition": "Data Quality describes whether data meets expected rules for things such as completeness, validity, consistency, uniqueness, accuracy, and other requirements needed for its intended use.",
+    "preferred_usage": "Use data quality in narrative text; use DQ after the meaning is established.",
+    "avoid_usage": "quality alone when data quality is meant"
   },
   {
     "term": "partitioning",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Organizing data into partitions for storage or processing.",
-    "long_definition": "Organizing data into partitions for storage or processing.",
-    "preferred_usage": "Use partitioning for partition design.",
-    "avoid_usage": "sharding"
-  },
-  {
-    "term": "repartitioning",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Changing DataFrame partitions before processing or writing.",
-    "long_definition": "Changing DataFrame partitions before processing or writing.",
-    "preferred_usage": "Use repartitioning for Spark partition changes.",
-    "avoid_usage": "partitioning when action is repartition"
+    "aliases": ["partition"],
+    "category": "Data engineering basics",
+    "short_definition": "Organizing data into separate groups for storage or processing.",
+    "long_definition": "Partitioning divides data into groups, often using a column such as date, so engines can process or replace only the relevant parts rather than scanning or rewriting the entire dataset.",
+    "preferred_usage": "Use partitioning for physical or logical data partition design.",
+    "avoid_usage": "parallel processing when the data organization itself is meant"
   },
   {
     "term": "append",
     "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Write mode that adds rows to existing data.",
-    "long_definition": "Write mode that adds rows to existing data.",
-    "preferred_usage": "Use append for write mode.",
-    "avoid_usage": "add when mode meant"
+    "category": "Data engineering basics",
+    "short_definition": "A write strategy that adds new rows without replacing existing rows.",
+    "long_definition": "Append adds new rows to an existing target while leaving existing rows unchanged. It is appropriate only when incoming data is additive and existing records do not need to be changed or removed.",
+    "preferred_usage": "Use append for the additive target write strategy.",
+    "avoid_usage": "incremental load when the read scope rather than write strategy is meant"
   },
   {
     "term": "overwrite",
     "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Write mode that replaces existing data.",
-    "long_definition": "Write mode that replaces existing data.",
-    "preferred_usage": "Use overwrite for write mode.",
-    "avoid_usage": "replace when write mode meant"
+    "category": "Data engineering basics",
+    "short_definition": "A write strategy that replaces existing target data.",
+    "long_definition": "Overwrite replaces existing target data with the newly prepared data. Depending on the implementation, it can replace a whole table or only a governed partition scope.",
+    "preferred_usage": "Use overwrite for the replacement target write strategy.",
+    "avoid_usage": "SCD Type 1 when record-level matching and updates are meant"
   },
   {
-    "term": "CSV",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Comma-separated values file format.",
-    "long_definition": "Comma-separated values file format.",
-    "preferred_usage": "Use CSV for the file format.",
-    "avoid_usage": "csv in prose"
+    "term": "row-level security",
+    "aliases": ["RLS"],
+    "category": "Security and access basics",
+    "short_definition": "A security method that controls which rows of data a user can see.",
+    "long_definition": "Row-Level Security limits the rows returned to a user based on identity, role, or access rules while allowing the same table or model to serve different audiences.",
+    "preferred_usage": "Use row-level security on first mention; use RLS after it is established.",
+    "avoid_usage": "role-level security"
   },
   {
-    "term": "Excel",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Spreadsheet workbook file format read by supported helpers.",
-    "long_definition": "Spreadsheet workbook file format read by supported helpers.",
-    "preferred_usage": "Use Excel for workbook format.",
-    "avoid_usage": "xlsx unless extension needed"
+    "term": "object-level security",
+    "aliases": ["OLS"],
+    "category": "Security and access basics",
+    "short_definition": "A security method that controls whether a user can see specific tables or columns.",
+    "long_definition": "Object-Level Security restricts access to specific data objects, such as tables or columns, so unauthorized users cannot see those objects even when they can access the wider model or dataset.",
+    "preferred_usage": "Use object-level security on first mention; use OLS after it is established.",
+    "avoid_usage": "row-level security when the restriction applies to tables or columns"
   },
   {
-    "term": "Parquet",
+    "term": "access control",
     "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Columnar file format commonly used in data lake workloads.",
-    "long_definition": "Columnar file format commonly used in data lake workloads.",
-    "preferred_usage": "Use Parquet for file format.",
-    "avoid_usage": "parquet in prose"
-  },
-  {
-    "term": "JSON",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Structured text format for objects and arrays.",
-    "long_definition": "Structured text format for objects and arrays.",
-    "preferred_usage": "Use JSON for format.",
-    "avoid_usage": "json in prose"
-  },
-  {
-    "term": "YAML",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Human-readable structured configuration format.",
-    "long_definition": "Human-readable structured configuration format.",
-    "preferred_usage": "Use YAML for format.",
-    "avoid_usage": "yml unless extension needed"
+    "category": "Security and access basics",
+    "short_definition": "The rules and mechanisms that determine who can access data or system resources.",
+    "long_definition": "Access Control is the broader set of rules and mechanisms used to decide who can access datasets, tables, columns, workspaces, files, or other resources and what actions they are allowed to perform.",
+    "preferred_usage": "Use access control for the broad security concept; use RLS or OLS when a specific mechanism is meant.",
+    "avoid_usage": "data access when discussing the technical enforcement mechanism rather than the governed requirement"
   },
   {
     "term": "configuration",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Settings that control environment targets, behavior, and helper options.",
-    "long_definition": "Settings that control environment targets, behavior, and helper options.",
-    "preferred_usage": "Use configuration for settings.",
-    "avoid_usage": "config in narrative docs"
-  },
-  {
-    "term": "parameter",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Named input that changes helper or notebook behavior.",
-    "long_definition": "Named input that changes helper or notebook behavior.",
-    "preferred_usage": "Use parameter for inputs.",
-    "avoid_usage": "argument when user-facing docs mean parameter"
-  },
-  {
-    "term": "flag",
-    "aliases": [],
-    "category": "File and configuration concepts",
-    "short_definition": "Boolean or enum setting that turns behavior on, off, or into a mode.",
-    "long_definition": "Boolean or enum setting that turns behavior on, off, or into a mode.",
-    "preferred_usage": "Use flag for switches.",
-    "avoid_usage": "toggle if flag meant"
-  },
-  {
-    "term": "dashboard",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Visual summary of metrics, status, or review evidence.",
-    "long_definition": "Visual summary of metrics, status, or review evidence.",
-    "preferred_usage": "Use dashboard for visual summary.",
-    "avoid_usage": "report when dashboard meant"
-  },
-  {
-    "term": "METADATA_DATA_CATALOGUE",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores profiles and descriptive metadata about observed datasets and pipeline outputs.",
-    "long_definition": "Table that stores profiles and descriptive metadata about observed datasets and pipeline outputs.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "data catalogue shorthand"
-  },
-  {
-    "term": "METADATA_ENRICHMENT_RULES",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores approved enrichment controls and allowed values.",
-    "long_definition": "Table that stores approved enrichment controls and allowed values.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "enrichment rules table"
-  },
-  {
-    "term": "METADATA_GUARDRAIL_RULES",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores approved guardrail and data quality rule intent.",
-    "long_definition": "Table that stores approved guardrail and data quality rule intent.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "guardrail rules table"
-  },
-  {
-    "term": "METADATA_GUARDRAIL_RESULTS",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores runtime guardrail outcomes from pipeline enforcement.",
-    "long_definition": "Table that stores runtime guardrail outcomes from pipeline enforcement.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "guardrail results table"
-  },
-  {
-    "term": "METADATA_PIPELINE_RUNS",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores run summaries for pipeline executions.",
-    "long_definition": "Table that stores run summaries for pipeline executions.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "pipeline runs table"
-  },
-  {
-    "term": "METADATA_DATA_LINEAGE_TABLE",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores lineage relationships between sources, transformations, and outputs.",
-    "long_definition": "Table that stores lineage relationships between sources, transformations, and outputs.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "lineage table"
-  },
-  {
-    "term": "METADATA_NOTEBOOK_REGISTRY",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores notebook registry entries for handover and operations.",
-    "long_definition": "Table that stores notebook registry entries for handover and operations.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "notebook registry table"
-  },
-  {
-    "term": "METADATA_DATA_ACCESS",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores data access context for governed datasets.",
-    "long_definition": "Table that stores data access context for governed datasets.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "access table"
-  },
-  {
-    "term": "METADATA_DATA_AGREEMENTS",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores data agreements and lifecycle states.",
-    "long_definition": "Table that stores data agreements and lifecycle states.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "agreements table"
-  },
-  {
-    "term": "METADATA_DATA_STEWARDS",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores data steward records and responsibilities.",
-    "long_definition": "Table that stores data steward records and responsibilities.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "stewards table"
-  },
-  {
-    "term": "METADATA_AGREEMENT_EVIDENCE",
-    "aliases": [],
-    "category": "Metadata table names",
-    "short_definition": "Table that stores evidence linking agreement selection and review context to runs or decisions.",
-    "long_definition": "Table that stores evidence linking agreement selection and review context to runs or decisions.",
-    "preferred_usage": "Use as literal table name.",
-    "avoid_usage": "agreement evidence table"
-  },
-  {
-    "term": "stage",
-    "aliases": [],
-    "category": "Data engineering concepts",
-    "short_definition": "Named part of a pipeline such as source, transformation, or target.",
-    "long_definition": "Named part of a pipeline such as source, transformation, or target.",
-    "preferred_usage": "Use stage for the part of a pipeline being checked.",
-    "avoid_usage": "phase when stage is the configured term"
+    "aliases": ["config"],
+    "category": "File and configuration basics",
+    "short_definition": "Settings that define how FabricOps or a pipeline should behave without changing the underlying code.",
+    "long_definition": "Configuration is the set of named settings used to control environment targets, processing choices, rules, parameters, and other behaviour without rewriting the implementation.",
+    "preferred_usage": "Use configuration in narrative text; use config in code-oriented shorthand.",
+    "avoid_usage": "hard-coded values when behaviour should be configurable"
   }
 ]

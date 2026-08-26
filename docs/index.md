@@ -12,7 +12,7 @@ FabricOps is a plug-and-play Data Engineering and Governance practice for Micros
 
 FabricOps gives teams a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself.
 
-Instead of rebuilding governance and documentation afterwards, FabricOps is designed to write the relevant data products and supporting evidence into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables while the workflow runs. That includes Catalogue metadata, profiling, lineage, Guardrail results, governed processing context, and Data Contracts where those capabilities are implemented.
+Instead of rebuilding governance and documentation afterwards, FabricOps records Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails and their results, and Data Contracts as the workflow runs.
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
@@ -22,7 +22,7 @@ FabricOps includes:
 
 - a Python package of notebook-facing helper and orchestrator functions
 - standardized notebook templates for Governance, Engineering, and exploration workflows
-- a shared metadata model connecting observed Engineering evidence with Governance intent
+- a shared metadata model connecting Governance intent with recorded profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, and Guardrail Results
 - a Guided Demo with practical steps and expandable technical rationale
 - generated technical references for functions, metadata tables, and data-quality rules
 - a planned future direction for AI-augmented Governance and Engineering workflows built on the structured context FabricOps captures
