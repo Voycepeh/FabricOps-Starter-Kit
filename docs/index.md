@@ -6,105 +6,88 @@ FabricOps is a plug-and-play Data Engineering and Governance practice for Micros
 
 **Governance → Data engineering → AI and BI analytics**
 
+A structured workflow for governing, engineering, validating, promoting, and consuming data in Microsoft Fabric.
+
+<div class="fabricops-cta" markdown="1">
+[Start the Guided Demo](guided-demo/){ .md-button .md-button--primary }
+[See how FabricOps works](how-fabricops-works/){ .md-button }
+</div>
+
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps gives teams a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself.
+## Why FabricOps
 
-Instead of rebuilding governance and documentation afterwards, FabricOps records Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails and their results, and Data Contracts as the workflow runs.
+FabricOps captures Governance and Engineering activity as part of the workflow itself, using reusable functions, notebook templates, and a shared metadata model.
+
+As the workflow runs, it records Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails, Guardrail Results, and Data Contracts instead of rebuilding governance documentation afterwards.
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
-## Four ideas behind FabricOps
+FabricOps provides the governed skeleton of the data practice, abstracting important but repetitive or complex foundations into standardized workflows, reusable functions, metadata structures, and guardrails. This lets engineers and analysts focus on project-specific work and use Copilot, AI Functions, or other AI assistance to write the code, tests, documentation, and analysis that do not need to be standardized. Humans decide what the data should do and what “good” looks like; FabricOps keeps the shared Production foundation deterministic, reviewable, and consistent.
 
-- **FabricOps Starter Kit** — a plug-and-play Data Engineering and Governance practice for Microsoft Fabric.
-- **Metadata** — structured information that records what the data is, what happened to it, and what rules apply.
-- **Governance as Code** — governance rules expressed in structured, repeatable form so they can be reviewed and consistently applied.
-- **Configuration-driven Engineering** — reusable pipeline behaviour controlled through configuration instead of repeatedly rewriting implementation code.
-
-You do not need to learn every term upfront. Use the [FabricOps Glossary](glossary.md) when you encounter an unfamiliar FabricOps, Governance, or Engineering concept.
-
-## What is included?
-
-FabricOps includes:
-
-- a Python package of notebook-facing helper and orchestrator functions
-- standardized notebook templates for Governance, Engineering, and exploration workflows
-- a shared metadata model connecting Governance intent with recorded profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, and Guardrail Results
-- a Guided Demo with practical steps and expandable technical rationale
-- generated technical references for functions, metadata tables, and data-quality rules
-- a planned future direction for AI-augmented Governance and Engineering workflows built on the structured context FabricOps captures
-
-</div>
-
-## Start here
+## Choose your path
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
-    <span class="fabricops-landing-card__title">How FabricOps works</span>
-    <span class="fabricops-landing-card__body">See how the workspaces, Governance, Engineering, ETL, metadata, and Production flow fit together.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="maintainer/product-definition/">
-    <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
-    <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for product meaning, operating decisions, boundaries, and future direction.</span>
+    <span class="fabricops-landing-card__title">Learn how FabricOps works</span>
+    <span class="fabricops-landing-card__body">See how Governance, Engineering, ETL, metadata, Production, and consumption fit together.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
-    <span class="fabricops-landing-card__title">Step-by-step Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the workflow in order, with step-specific concept links and expandable technical rationale.</span>
+    <span class="fabricops-landing-card__title">Try FabricOps</span>
+    <span class="fabricops-landing-card__body">Follow the workflow step by step with practical actions, concept links, and expected results.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="glossary/">
+    <span class="fabricops-landing-card__title">Understand a term</span>
+    <span class="fabricops-landing-card__body">Look up FabricOps, Governance, and Engineering terminology as you encounter it.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="notebook-templates/">
+    <span class="fabricops-landing-card__title">Get the notebook templates</span>
+    <span class="fabricops-landing-card__body">Download the reusable Governance, Engineering, and exploration notebook templates.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/">
+    <span class="fabricops-landing-card__title">Use the Python helpers</span>
+    <span class="fabricops-landing-card__body">Search the notebook-facing public callable reference and exact function contracts.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/metadata/">
+    <span class="fabricops-landing-card__title">Understand the metadata model</span>
+    <span class="fabricops-landing-card__body">Review the shared metadata tables, schemas, purpose, and ownership.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/dq-rules/">
+    <span class="fabricops-landing-card__title">Explore Data Quality rules</span>
+    <span class="fabricops-landing-card__body">Review the supported Data Quality rule types used by FabricOps Guardrails.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="function-call-graph/">
+    <span class="fabricops-landing-card__title">Inspect the Function Call Graph</span>
+    <span class="fabricops-landing-card__body">Explore callable architecture, call flows, nested functions, and architecture violations.</span>
+  </a>
+</div>
+
+## Explore FabricOps
+
+<div class="fabricops-card-grid">
+  <a class="fabricops-landing-card" href="maintainer/product-definition/">
+    <span class="fabricops-landing-card__title">Product Definition</span>
+    <span class="fabricops-landing-card__body">Understand the product intent, scope, operating decisions, boundaries, and future direction.</span>
   </a>
 
   <a class="fabricops-landing-card" href="releases/">
     <span class="fabricops-landing-card__title">Official releases</span>
     <span class="fabricops-landing-card__body">View published FabricOps releases and the assets included in each version.</span>
   </a>
-</div>
-
-## Understand FabricOps terminology
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="glossary/">
-    <span class="fabricops-landing-card__title">FabricOps Glossary</span>
-    <span class="fabricops-landing-card__body">Quickly look up FabricOps, Governance, and Engineering concepts as you encounter them.</span>
-  </a>
-</div>
-
-## FabricOps Assets
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="notebook-templates/">
-    <span class="fabricops-landing-card__title">4 Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Download the latest reusable FabricOps notebook templates.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>29</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Search the notebook-facing FabricOps callable reference.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>13</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Review each metadata table, its schema, purpose, and writer ownership.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/dq-rules/">
-    <span class="fabricops-landing-card__title">11 data quality rule types</span>
-    <span class="fabricops-landing-card__body">Explore the supported Data Quality rules available for Guardrails.</span>
-  </a>
-</div>
-
-## Maintain FabricOps
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="function-call-graph/">
-    <span class="fabricops-landing-card__title">Function Call Graph</span>
-    <span class="fabricops-landing-card__body">Inspect callable architecture, call flows, nested functions, and architecture violations.</span>
-  </a>
 
   <a class="fabricops-landing-card" href="maintainer/">
     <span class="fabricops-landing-card__title">Maintainer Guide</span>
     <span class="fabricops-landing-card__body">Follow the repository maintenance and release workflow.</span>
   </a>
+</div>
+
 </div>
