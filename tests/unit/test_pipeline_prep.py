@@ -11,6 +11,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 read_module = import_module("fabricops_kit.pipeline.read_pipeline_prep")
+commit_module = import_module("fabricops_kit.pipeline.commit_pipeline_checkpoint")
 write_module = import_module("fabricops_kit.pipeline.write_pipeline_prep")
 lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
 
@@ -47,19 +48,84 @@ def test_full_dataset_does_not_observe_or_read_checkpoint(monkeypatch):
 ])
 def test_watermark_scope_is_bounded_and_candidate_is_not_committed(monkeypatch, previous, upper, expected_mode):
     monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: previous)
-    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: (upper, "string"))
+    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
+        "upper_watermark": upper, "data_type": "string", "row_count": 1,
+        "non_null_count": 1, "distinct_count": 1,
+    })
     monkeypatch.setattr(read_module, "_coerce_checkpoint", lambda value, *_args, **_kwargs: value)
     result = read_module._watermark_scope(
         {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
         config="config", env="dev", spark_session="spark", context={},
     )
     assert result["read_mode"] == expected_mode
-    assert result["candidate_checkpoint"]["status"] == "candidate"
+    if expected_mode == "skip":
+        assert result["candidate_checkpoint"] is None
+    else:
+        assert result["candidate_checkpoint"]["status"] == "candidate"
     if expected_mode == "incremental_subset":
         assert result["scope"]["lower_inclusive"] is False
         assert result["scope"]["upper_inclusive"] is True
         assert result["scope"]["lower_bound"] == previous
         assert result["scope"]["upper_bound"] == upper
+
+
+def test_watermark_rejects_duplicate_values_that_can_hide_late_rows(monkeypatch):
+    monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: "2026-08-26 10:00")
+    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
+        "upper_watermark": "2026-08-26 12:00", "data_type": "string", "row_count": 2,
+        "non_null_count": 2, "distinct_count": 1,
+    })
+    with pytest.raises(ValueError, match="globally unique"):
+        read_module._watermark_scope(
+            {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
+            config="config", env="dev", spark_session="spark", context={},
+        )
+
+
+def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
+    committed = []
+    candidate = {
+        "source": {"table_id": "warehouse:source:dbo:bookings"},
+        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_datetime"},
+        "candidate_checkpoint": {"status": "candidate", "column": "modified_datetime", "value": "2026-08-26 12:00"},
+    }
+    audit = {
+        "_committed_by": "engineer", "_committed_at": "2026-08-26T12:01:00",
+        "_workspace_id": "workspace", "_workspace_name": "workspace",
+        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
+        "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
+    }
+    monkeypatch.setattr(commit_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(commit_module, "build_runtime_audit_fields", lambda **_kwargs: audit)
+    monkeypatch.setattr(commit_module, "get_spark_session", lambda: SimpleNamespace(
+        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
+    ))
+    monkeypatch.setattr(commit_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(commit_module, "configured_lakehouse_schema", lambda *_args: "metadata")
+    monkeypatch.setattr(commit_module, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: committed.extend(frame["rows"]))
+
+    def run(writer):
+        writer()
+        return commit_module.commit_pipeline_checkpoint(candidate)
+
+    with pytest.raises(RuntimeError, match="target failed"):
+        run(lambda: (_ for _ in ()).throw(RuntimeError("target failed")))
+    assert committed == []
+
+    record = run(lambda: None)
+    assert record["watermark_value"] == "2026-08-26 12:00"
+    assert committed == [record]
+
+    monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: committed[-1]["watermark_value"])
+    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
+        "upper_watermark": "2026-08-26 13:00", "data_type": "string", "row_count": 2,
+        "non_null_count": 2, "distinct_count": 2,
+    })
+    monkeypatch.setattr(read_module, "_coerce_checkpoint", lambda value, *_args, **_kwargs: value)
+    next_scope = read_module._watermark_scope(
+        candidate["source"], "modified_datetime", config="config", env="dev", spark_session="spark", context={}
+    )
+    assert next_scope["scope"]["lower_bound"] == "2026-08-26 12:00"
 
 
 def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):

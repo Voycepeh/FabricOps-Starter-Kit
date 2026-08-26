@@ -4,11 +4,13 @@ Record how far a successfully completed watermark pipeline has processed.
 
 ## Writer functions
 
+* [`commit_pipeline_checkpoint`](../../api/reference/commit_pipeline_checkpoint.md)
 * [`read_pipeline_prep`](../../api/reference/read_pipeline_prep.md)
 
 ## Used in Workflow Template
 
 * [`02_pipeline`](../../notebook-templates.md) — Source preparation
+* [`02_pipeline`](../../notebook-templates.md) — Target persistence
 
 ## Model
 

@@ -197,7 +197,7 @@ The order follows the FabricOps operating workflow so you can learn terminology 
 
 <details id="incremental-watermark">
 <summary><strong>Incremental Watermark</strong> — A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.</summary>
-<p>A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.</p>
+<p>A source processing strategy that uses a non-null, strictly increasing, globally unique checkpoint column to process rows newer than the last successfully committed watermark.</p>
 <p><strong>Also known as:</strong> watermark-based incremental loading</p>
 </details>
 
@@ -214,7 +214,7 @@ The order follows the FabricOps operating workflow so you can learn terminology 
 
 <details id="watermark">
 <summary><strong>Watermark</strong> — A checkpoint value that records how far a successful incremental source load has processed.</summary>
-<p>A checkpoint value that records how far a successful incremental source load has processed.</p>
+<p>A strictly increasing, globally unique checkpoint value that records how far a successful incremental source load has processed.</p>
 </details>
 
 <details id="parallel-processing">

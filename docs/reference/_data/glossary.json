@@ -365,8 +365,8 @@
     ],
     "category": "Engineering concepts",
     "short_definition": "A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.",
-    "long_definition": "A source processing strategy that uses a checkpoint column to process rows newer than the last successfully committed watermark.",
-    "preferred_usage": "Use incremental watermark for row-level ranges based on a reliable checkpoint column.",
+    "long_definition": "A source processing strategy that uses a non-null, strictly increasing, globally unique checkpoint column to process rows newer than the last successfully committed watermark.",
+    "preferred_usage": "Use incremental watermark for row-level ranges based on a strictly increasing, globally unique checkpoint column.",
     "avoid_usage": "incremental without explaining how changes are identified"
   },
   {
@@ -394,7 +394,7 @@
     "aliases": [],
     "category": "Engineering concepts",
     "short_definition": "A checkpoint value that records how far a successful incremental source load has processed.",
-    "long_definition": "A checkpoint value that records how far a successful incremental source load has processed.",
+    "long_definition": "A strictly increasing, globally unique checkpoint value that records how far a successful incremental source load has processed.",
     "preferred_usage": "Use watermark for the last successfully committed checkpoint value.",
     "avoid_usage": "source observation"
   },

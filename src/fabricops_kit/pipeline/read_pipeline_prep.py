@@ -115,10 +115,15 @@ def _checkpoint_value(config: Any, env: str, table_id: str, column: str, *, spar
 
 def _source_upper_watermark(
     identity: Mapping[str, Any], column: str, *, spark_session: Any, context: Any
-) -> tuple[Any, str]:
-    """Capture the current upper watermark without loading a Warehouse table."""
+) -> dict[str, Any]:
+    """Capture and validate a unique upper watermark without loading a Warehouse table."""
     if identity["store_kind"] == "warehouse":
-        query = f"SELECT MAX([{column}]) AS upper_watermark FROM [{identity['schema']}].[{identity['table_name']}]"
+        query = (
+            f"SELECT MAX([{column}]) AS upper_watermark, COUNT_BIG(*) AS row_count, "
+            f"COUNT_BIG([{column}]) AS non_null_count, "
+            f"COUNT_BIG(DISTINCT [{column}]) AS distinct_count "
+            f"FROM [{identity['schema']}].[{identity['table_name']}]"
+        )
         frame = read_warehouse_query_core(
             query, target=str(identity["target"]), spark_session=spark_session, context=context
         )
@@ -134,11 +139,22 @@ def _source_upper_watermark(
         )
         if column not in source.columns:
             raise ValueError(f"Watermark column {column!r} does not exist in the source.")
-        frame = source.select(F.max(F.col(column)).alias("upper_watermark"))
+        frame = source.agg(
+            F.max(F.col(column)).alias("upper_watermark"),
+            F.count(F.lit(1)).alias("row_count"),
+            F.count(F.col(column)).alias("non_null_count"),
+            F.count_distinct(F.col(column)).alias("distinct_count"),
+        )
     fields = {field.name: field.dataType.simpleString() for field in frame.schema.fields}
     rows = frame.collect()
-    upper = None if not rows else rows[0]["upper_watermark"]
-    return upper, fields.get("upper_watermark", "unknown")
+    values = {} if not rows else rows[0].asDict(recursive=True)
+    return {
+        "upper_watermark": values.get("upper_watermark"),
+        "data_type": fields.get("upper_watermark", "unknown"),
+        "row_count": int(values.get("row_count") or 0),
+        "non_null_count": int(values.get("non_null_count") or 0),
+        "distinct_count": int(values.get("distinct_count") or 0),
+    }
 
 
 def _coerce_checkpoint(value: Any, data_type: str, *, spark_session: Any) -> Any:
@@ -167,7 +183,16 @@ def _watermark_scope(
     previous_value = _checkpoint_value(
         config, env, str(identity["table_id"]), column, spark_session=spark_session, context=context
     )
-    upper, data_type = _source_upper_watermark(identity, column, spark_session=spark_session, context=context)
+    state = _source_upper_watermark(identity, column, spark_session=spark_session, context=context)
+    upper = state["upper_watermark"]
+    data_type = state["data_type"]
+    if state["non_null_count"] != state["row_count"]:
+        raise ValueError("Watermark values must be non-null for every source row.")
+    if state["distinct_count"] != state["row_count"]:
+        raise ValueError(
+            "incremental_watermark requires a strictly increasing, globally unique watermark value for every row; "
+            "duplicate values could cause late-arriving rows to be skipped."
+        )
     if upper is None:
         if previous_value is None:
             return {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}, "candidate_checkpoint": None}
@@ -182,7 +207,7 @@ def _watermark_scope(
         if upper < previous:
             raise ValueError("Current upper watermark is earlier than the last successful checkpoint.")
         if upper == previous:
-            return {"read_mode": "skip", "scope": {"type": "skip"}, "candidate_checkpoint": candidate}
+            return {"read_mode": "skip", "scope": {"type": "skip"}, "candidate_checkpoint": None}
     except TypeError as exc:
         raise ValueError("Stored checkpoint type does not match the source watermark type.") from exc
     return {

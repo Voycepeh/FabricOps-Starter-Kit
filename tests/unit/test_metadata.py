@@ -151,6 +151,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'profile_dataframe',
         'profile_frequency_distribution',
         'read_pipeline_prep',
+        'commit_pipeline_checkpoint',
         'write_pipeline_prep',
         'widget_render_data_steward',
         'widget_render_data_agreement',

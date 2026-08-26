@@ -128,7 +128,11 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
     AND modified_datetime <= 2026-08-26 12:00
     ```
 
-    The interval is `(lower_bound, upper_bound]`. Rows arriving after 12:00 belong to the next execution. On a first run, FabricOps reads the full dataset and retains the captured upper value only as a candidate. If transformation, Guardrails, or target persistence fails, the successful watermark does not advance; a retry starts from the last successful checkpoint. Source observation describes what a source looked like, while the successful watermark records how far a completed pipeline processed.
+    The interval is `(lower_bound, upper_bound]`. Rows arriving after 12:00 belong to the next execution. On a first run, FabricOps reads the full dataset and retains the captured upper value only as a candidate. After the target write succeeds, call `commit_pipeline_checkpoint(read_prep)` to advance the successful watermark. If transformation, Guardrails, or target persistence fails, do not call it: the successful watermark remains unchanged and a retry starts from the last successful checkpoint. Source observation describes what a source looked like, while the successful watermark records how far a completed pipeline processed.
+
+    !!! warning "Watermarks must be unique as well as increasing"
+
+        A watermark value must be non-null and globally unique for every source row. FabricOps validates this before preparing the range. A timestamp shared by two rows is unsafe: another row could arrive later with the already committed timestamp and fall outside the next `(lower, upper]` interval. Use a source-provided increasing sequence or another column that is both strictly increasing and unique; otherwise choose `incremental_partition`. Target writes used with checkpoint retries must also be idempotent because business and metadata targets cannot share one cross-item transaction.
 
     ### Partition example: affected buckets
 
@@ -151,7 +155,7 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
     | Historical correction | Must update the watermark value | Reprocess the old partition |
     | Parallel date processing | Possible | Natural |
 
-    Prefer a watermark for a transactional Warehouse, SQL, or API source with a trustworthy modified timestamp or increasing value and row-level changes. Prefer partitions when deliveries naturally arrive as days, months, or snapshots and whole periods are expected to be reprocessed. Neither is universally better.
+    Prefer a watermark for a transactional Warehouse, SQL, or API source with a non-null, strictly increasing, globally unique value and row-level changes. A modified timestamp is suitable only when the source guarantees those properties. Prefer partitions when deliveries naturally arrive as days, months, or snapshots and whole periods are expected to be reprocessed. Neither is universally better.
 
     A late row with `business_date = 25 Aug` and `modified_datetime = 27 Aug` is found by a watermark on `modified_datetime`. A strict watermark can miss it if the source assigns an old value behind the successful checkpoint. Partition processing can reopen 25 Aug when FabricOps actually detects that bucket as affected; it does not imply that every old bucket is always reread.
 

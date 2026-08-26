@@ -80,7 +80,7 @@ FabricOps includes:
   </a>
 
   <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>28</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>29</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
     <span class="fabricops-landing-card__body">Search the notebook-facing FabricOps callable reference.</span>
   </a>
 

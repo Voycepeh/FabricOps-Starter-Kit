@@ -215,7 +215,7 @@ METADATA_RELATED_FUNCTIONS = {
     ],
     "METADATA_GUARDRAIL_ROW_RESULTS": ["check_dq"],
     "METADATA_SOURCE_OBSERVATION": ["read_pipeline_prep"],
-    "METADATA_SOURCE_WATERMARK_CHECKPOINT": ["read_pipeline_prep"],
+    "METADATA_SOURCE_WATERMARK_CHECKPOINT": ["read_pipeline_prep", "commit_pipeline_checkpoint"],
     "METADATA_GUARDRAIL": [
         "widget_author_guardrails",
         "widget_author_dq_rules",
