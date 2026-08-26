@@ -1,8 +1,8 @@
 # FabricOps product definition
 
-**This is the maintainer-facing source of truth for FabricOps terminology, operating model, and product decisions.**
+**This is the maintainer-facing source of truth for the FabricOps operating model, product meaning, boundaries, and product decisions.**
 
-Public-facing documentation may shorten, visualize, or reorganize this content, but it must not introduce a conflicting product story or change the workflow meaning without first updating this page.
+Public-facing documentation may shorten, visualize, or reorganize this content, but it must not introduce a conflicting product story or change the workflow meaning without first updating this page. Canonical term definitions are maintained in `docs/reference/_data/glossary.json` and surfaced through the [FabricOps Glossary](../glossary.md).
 
 ## What is FabricOps?
 
@@ -17,6 +17,15 @@ It gives teams a ready-to-adopt operating workflow across three main roles:
 FabricOps combines planned workflows, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself rather than reconstructed afterwards.
 
 The templates and functions guide users through the intended workflow while recording Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails and their results, and Data Contracts in the configured Fabric workspaces and metadata tables where those capabilities are implemented.
+
+### Four high-level FabricOps concepts
+
+- [**FabricOps Starter Kit**](../glossary.md#fabricops-starter-kit) — the overall governed Data Engineering and Governance practice.
+- [**Metadata**](../glossary.md#metadata) — the structured information that connects Governance intent with Engineering activity.
+- [**Governance as Code**](../glossary.md#governance-as-code) — governance rules expressed in structured, repeatable form so they can be reviewed and consistently applied.
+- [**Configuration-driven Engineering**](../glossary.md#configuration-driven-engineering) — reusable engineering behaviour controlled through configuration rather than repeatedly rewriting implementation code.
+
+The [FabricOps Glossary](../glossary.md) carries the detailed FabricOps, Governance, and Engineering definitions. This page stays focused on what the product is and how it is intended to operate.
 
 ### What FabricOps includes
 
@@ -135,7 +144,7 @@ The metadata model is not only documentation. It is the persistent context that 
 
 ### Guided Demo and technical documentation
 
-The Guided Demo owns maintained execution instructions and contextual implementation rationale. Technical documentation owns detailed notebook, metadata, and Python API contracts.
+The Guided Demo owns maintained execution instructions and contextual implementation rationale. Technical documentation owns detailed notebook, metadata, and Python API contracts. The Glossary owns user-facing term definitions and organizes them into FabricOps, Governance, and Engineering concepts.
 
 ## Future product direction: AI-augmented workflows
 
@@ -166,14 +175,15 @@ Engineering Development is intentionally disposable. When important `99_explore`
 
 | Page | Owns |
 | --- | --- |
-| Product Definition | Canonical terminology, workflow, and product meaning. |
+| Product Definition | Canonical product meaning, operating workflow, boundaries, and product decisions. |
+| Glossary | Canonical user-facing term definitions and the FabricOps / Governance / Engineering concept grouping. |
 | README | Repository orientation. |
 | Documentation home | Product introduction and navigation. |
 | How FabricOps Works | Architecture and operating model. |
 | Notebook Templates | Notebook responsibilities and downloads. |
-| Guided Demo | Maintained execution instructions and contextual rationale. |
+| Guided Demo | Maintained execution instructions, step-specific concept guidance, and contextual rationale. |
 | Metadata and function reference | Detailed technical contracts. |
 
 !!! important "Canonical terminology rule"
 
-    Public pages may shorten or reorganize the Product Definition, but they must not introduce a conflicting workflow or terminology.
+    Durable term definitions come from `docs/reference/_data/glossary.json`. Public pages may shorten a definition for context, but they must use the canonical term and must not introduce a conflicting meaning. Product workflow and operating decisions remain governed by this Product Definition.

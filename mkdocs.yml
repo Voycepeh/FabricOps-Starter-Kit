@@ -20,6 +20,7 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
+  - Glossary: glossary.md
   - Guided Demo:
       - Overview: guided-demo.md
       - Step 0A - Prepare Fabric Artifacts: guided-demo/00A-setup-fabric-artifacts.md

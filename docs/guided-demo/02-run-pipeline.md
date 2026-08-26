@@ -8,6 +8,15 @@ The notebook follows one lifecycle even when some newer governed components are 
 0. Environment → E. Extract → T. Transform → L. Load
 ```
 
+!!! info "Key concepts for this step"
+
+    [**Pipeline**](../glossary.md#pipeline) — a repeatable sequence that reads, transforms, checks, and writes data.  
+    [**Profile**](../glossary.md#profile) — a point-in-time summary of the data and its structure.  
+    [**Schema**](../glossary.md#schema) — the expected columns and data types of a table or DataFrame.  
+    [**Data Quality**](../glossary.md#data-quality) — the governed expectations the data must meet for its intended use.
+
+    These concepts are enough for the baseline run. Open the [Glossary](../glossary.md) only when another term becomes relevant.
+
 The Live blocks below are the currently validated Step 2 path. Preview blocks show where the newer governed runtime fits without requiring those components for this baseline run.
 
 ## Before you begin
@@ -109,7 +118,7 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
 
     ![Read written Lakehouse table](../assets/02/Read_Written_LH.png)
 
-    `profile_and_register_table()` records Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and basic table-level Data Lineage evidence alongside the pipeline activity.
+    `profile_and_register_table()` records Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and basic table-level Data Lineage records alongside the pipeline activity.
 
     !!! tip "Partitioning"
 
@@ -161,11 +170,11 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
 | `write_warehouse_table()` | FabricOps v0.1.0 | Write a Spark DataFrame to a Warehouse table. |
 | `profile_dataframe()` | FabricOps v0.2.0 | Generate column-level profiling statistics for a DataFrame. |
 | `profile_frequency_distribution()` | FabricOps v0.2.0 | Generate value-frequency distributions for selected DataFrame columns. |
-| `profile_and_register_table()` | FabricOps v0.2.0 | Profile a complete physical table and register its metadata evidence. |
+| `profile_and_register_table()` | FabricOps v0.2.0 | Profile a complete physical table and register its metadata. |
 
 ## Expected result
 
-You should now have executed the validated baseline through the same canonical `Environment → Extract → Transform → Load` structure used by the newer governed lifecycle, with Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage evidence written by the pipeline workflow.
+You should now have executed the validated baseline through the same canonical `Environment → Extract → Transform → Load` structure used by the newer governed lifecycle, with Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records written by the pipeline workflow.
 
 The collapsed Preview blocks show the exact places where incremental preparation, Guardrails, contract selection, and governed load preparation extend this flow in later steps.
 

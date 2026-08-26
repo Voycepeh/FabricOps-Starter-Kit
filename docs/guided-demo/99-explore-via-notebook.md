@@ -2,6 +2,14 @@
 
 **Use `99_explore` in a Project-Specific Consumer workspace to read Engineering Production data without changing or duplicating the governed Production pipeline.**
 
+!!! info "Key concepts for this step"
+
+    [**Data Access**](../glossary.md#data-access) — the governed definition of who may access data and under what conditions.  
+    [**Workspace**](../glossary.md#workspace) — the Fabric boundary that keeps project-specific exploration separate from Engineering Production.  
+    [**Profile**](../glossary.md#profile) — a point-in-time summary you can generate when the project needs to inspect the returned data.
+
+    These concepts are enough to understand the consumer boundary in this step.
+
 ## High-level flow
 
 ```text
