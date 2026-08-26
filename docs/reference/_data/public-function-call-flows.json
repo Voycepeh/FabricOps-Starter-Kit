@@ -53898,7 +53898,7 @@
       "depth": 8,
       "direct_call_count": 6,
       "discontinued_in": null,
-      "examples": ">>> prep = read_pipeline_prep(\n...     \"student_enrolment\", \"students\", source_schema=\"dbo\", schema=\"dbo\",\n...     load_strategy=\"scd1\", load_strategy_parameters={\"key_columns\": [\"student_id\"]},\n... )\n>>> prep[\"read_strategy\"] in {\"skip\", \"full\", \"incremental\"}\nTrue\n>>> prep[\"target\"][\"table_name\"]\n'students'",
+      "examples": ">>> prep = read_pipeline_prep(\n...     \"student_enrolment\", \"students\", source_schema=\"dbo\", schema=\"dbo\",\n...     load_strategy=\"scd1\", load_strategy_parameters={\"key_columns\": [\"student_id\"]},\n... )\n>>> prep[\"read_strategy\"] in {\"skip\", \"full\", \"incremental\"}\nTrue\n>>> prep[\"target\"].get(\"table_name\")\n'students'",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
