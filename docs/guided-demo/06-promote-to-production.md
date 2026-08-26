@@ -4,6 +4,15 @@
 
 The Production runtime behaviour below is implemented but remains **Preview** in the Guided Demo until the complete promotion-to-run path is revalidated end to end in Fabric.
 
+!!! info "Key concepts for this step"
+
+    [**Data Contract**](../glossary.md#data-contract) — the frozen governed definition Production is allowed to resolve.  
+    [**Enforcement**](../glossary.md#enforcement) — applying the frozen Guardrails during the Production run.  
+    [**Guardrail Result**](../glossary.md#guardrail-result) — the recorded outcome of each evaluated rule.  
+    [**Data Quality**](../glossary.md#data-quality) — the governed quality expectations Engineering executes before changing Production data.
+
+    These concepts are enough to understand why Production resolves a frozen contract instead of mutable Development authoring.
+
 ## High-level flow
 
 ```text
