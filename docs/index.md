@@ -12,7 +12,7 @@ FabricOps is a plug-and-play Data Engineering and Governance practice for Micros
 
 FabricOps gives teams a planned operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model so Governance and Engineering activity is captured as part of the work itself.
 
-Instead of rebuilding governance and documentation afterwards, FabricOps is designed to write the relevant data products and supporting evidence into the configured Fabric workspaces, Lakehouses, Warehouses, and metadata tables while the workflow runs. That includes Catalogue metadata, profiling, lineage, Guardrail results, governed processing context, and Data Contracts where those capabilities are implemented.
+Instead of rebuilding governance and documentation afterwards, FabricOps records Data Agreements, Catalogue metadata, profiles, lineage, Enrichment, Guardrails and their results, processing context, and Data Contracts as the workflow runs.
 
 The result is a Production data foundation that can be understood, validated, promoted, reused, and consumed with its Governance and Engineering context intact.
 
@@ -22,7 +22,7 @@ FabricOps includes:
 
 - a Python package of notebook-facing helper and orchestrator functions
 - standardized notebook templates for Governance, Engineering, and exploration workflows
-- a shared metadata model connecting observed Engineering evidence with Governance intent
+- a shared metadata model connecting Governance intent with recorded profiles, lineage, Guardrail Results, and processing context
 - a Guided Demo with practical steps and expandable technical rationale
 - generated technical references for functions, metadata tables, and data-quality rules
 - a planned future direction for AI-augmented Governance and Engineering workflows built on the structured context FabricOps captures
@@ -76,6 +76,52 @@ FabricOps includes:
     <span class="fabricops-landing-card__body">Explore the supported Data Quality rules available for Guardrails.</span>
   </a>
 </div>
+
+## Key FabricOps terms
+
+These are the terms most useful when first reading the workflow. The repository's canonical terminology remains maintained in `docs/reference/_data/glossary.json`.
+
+<details>
+<summary><strong>Data Agreement</strong></summary>
+<p>A FabricOps agreement record that captures ownership, steward context, usage, and expectations.</p>
+</details>
+
+<details>
+<summary><strong>Data Catalogue</strong></summary>
+<p>The recorded structural metadata for governed tables and columns that Engineering creates and Governance can enrich.</p>
+</details>
+
+<details>
+<summary><strong>Profile</strong></summary>
+<p>Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.</p>
+</details>
+
+<details>
+<summary><strong>Enrichment</strong></summary>
+<p>Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.</p>
+</details>
+
+<details>
+<summary><strong>Guardrails</strong></summary>
+<p>Approved checks that evaluate schema, freshness, profile behavior, or Data Quality expectations during a pipeline run.</p>
+</details>
+
+<details>
+<summary><strong>Guardrail Result</strong></summary>
+<p>The runtime outcome from evaluating a Guardrail, including pass, fail, or warning details.</p>
+</details>
+
+<details>
+<summary><strong>Data Contract</strong></summary>
+<p>The versioned governed expectations for a table that Production checks resolve and execute against.</p>
+</details>
+
+<details>
+<summary><strong>Production data</strong></summary>
+<p>Approved persisted outputs in Engineering Production that downstream AI, BI, analytics, and data science consumers can use.</p>
+</details>
+
+For table-level schemas and writer ownership, see the [metadata reference](reference/metadata/).
 
 ## Maintain FabricOps
 
