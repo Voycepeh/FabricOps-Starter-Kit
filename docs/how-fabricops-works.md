@@ -27,6 +27,60 @@
 
 </div>
 
+??? info "Key FabricOps concepts — optional quick reference"
+
+    These are the core terms most useful when first reading the workflow. The canonical definitions and supporting Microsoft Fabric, Data Engineering, security, and configuration terms are maintained in `docs/reference/_data/glossary.json`.
+
+    <details>
+    <summary><strong>FabricOps Starter Kit</strong></summary>
+    <p>A plug-and-play Data Engineering and Governance practice for Microsoft Fabric.</p>
+    </details>
+
+    <details>
+    <summary><strong>Profile</strong></summary>
+    <p>A summary of the data at a point in time, including structure, row counts, nulls, distinct values, ranges, and distributions.</p>
+    </details>
+
+    <details>
+    <summary><strong>Enrichment</strong></summary>
+    <p>Business and governance information added to the Data Catalogue after technical metadata has been captured.</p>
+    </details>
+
+    <details>
+    <summary><strong>Guardrails</strong></summary>
+    <p>The governed rules FabricOps applies to data and pipelines.</p>
+    </details>
+
+    <details>
+    <summary><strong>Enforcement</strong></summary>
+    <p>Applying active Guardrails during a pipeline run and acting on the result by continuing, warning, or stopping.</p>
+    </details>
+
+    <details>
+    <summary><strong>Guardrail Result</strong></summary>
+    <p>The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.</p>
+    </details>
+
+    <details>
+    <summary><strong>Data Steward</strong></summary>
+    <p>The person or role responsible for reviewing and maintaining the governance context for data.</p>
+    </details>
+
+    <details>
+    <summary><strong>Data Agreement</strong></summary>
+    <p>The governed record that establishes who is sharing what data, with whom, and why.</p>
+    </details>
+
+    <details>
+    <summary><strong>Data Contract</strong></summary>
+    <p>The approved definition of what is expected from governed Production data.</p>
+    </details>
+
+    <details>
+    <summary><strong>Metadata</strong></summary>
+    <p>Information about the data, including its structure, Profile, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreement, and Data Contract.</p>
+    </details>
+
 <div class="fabricops-section-block" markdown>
 
 ## Workspace model
