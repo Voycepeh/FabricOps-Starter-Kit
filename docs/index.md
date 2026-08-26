@@ -46,11 +46,6 @@ FabricOps includes:
     <span class="fabricops-landing-card__body">See how the workspaces, Governance, Engineering, ETL, metadata, and Production flow fit together.</span>
   </a>
 
-  <a class="fabricops-landing-card" href="glossary/">
-    <span class="fabricops-landing-card__title">FabricOps Glossary</span>
-    <span class="fabricops-landing-card__body">Look up FabricOps, Governance, and Engineering concepts as you encounter them.</span>
-  </a>
-
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
     <span class="fabricops-landing-card__title">What we envisioned FabricOps to be</span>
     <span class="fabricops-landing-card__body">Read the Product Definition: the source of truth for product meaning, operating decisions, boundaries, and future direction.</span>
@@ -64,6 +59,15 @@ FabricOps includes:
   <a class="fabricops-landing-card" href="releases/">
     <span class="fabricops-landing-card__title">Official releases</span>
     <span class="fabricops-landing-card__body">View published FabricOps releases and the assets included in each version.</span>
+  </a>
+</div>
+
+## Understand FabricOps terminology
+
+<div class="fabricops-card-grid">
+  <a class="fabricops-landing-card" href="glossary/">
+    <span class="fabricops-landing-card__title">FabricOps Glossary</span>
+    <span class="fabricops-landing-card__body">Quickly look up FabricOps, Governance, and Engineering concepts as you encounter them.</span>
   </a>
 </div>
 
