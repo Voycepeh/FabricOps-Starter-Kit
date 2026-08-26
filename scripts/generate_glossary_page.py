@@ -98,6 +98,7 @@ DISPLAY_NAMES = {
     "parallel processing": "Parallel Processing",
     "incremental load": "Incremental Load",
     "data modelling": "Data Modelling",
+    "schema": "Schema",
     "partitioning": "Partitioning",
     "append": "Append",
     "overwrite": "Overwrite",
