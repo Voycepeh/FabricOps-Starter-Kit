@@ -11,7 +11,7 @@
   {
     "term": "profile",
     "aliases": ["profiles", "profiling"],
-    "category": "FabricOps concepts",
+    "category": "Engineering concepts",
     "short_definition": "A summary of the data at a point in time.",
     "long_definition": "A Profile is a summary of the data at a point in time. It shows things like row count, columns, data types, nulls, distinct values, minimum and maximum values, and value distributions. In FabricOps, this is stored in Data Profiled and Data Profiled Frequency metadata.",
     "preferred_usage": "Use profile for a summary of the data at a point in time.",
@@ -20,7 +20,7 @@
   {
     "term": "enrichment",
     "aliases": ["metadata enrichment", "enrich metadata"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "Business and governance information added to the Data Catalogue after technical metadata has been captured.",
     "long_definition": "Enrichment is the business and governance information added to the Data Catalogue after the technical metadata has been captured. It includes descriptions, ownership, sensitivity, classification, and how the data is intended to be used.",
     "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
@@ -29,7 +29,7 @@
   {
     "term": "guardrails",
     "aliases": ["guardrail"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "Governed rules FabricOps applies to data and pipelines.",
     "long_definition": "Guardrails are the governed rules FabricOps applies to data and pipelines. Today, they can check schema, freshness, profile behaviour, change over time, and data quality. In future they can also cover governance requirements such as stricter handling for sensitive data, masking or restricted access for PII, and additional controls for specific classifications.",
     "preferred_usage": "Use guardrails for governed rules applied to data and pipelines; use singular only for grammar.",
@@ -38,7 +38,7 @@
   {
     "term": "enforcement",
     "aliases": ["runtime enforcement", "enforce"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "Applying active Guardrails during a pipeline run and acting on the result.",
     "long_definition": "Enforcement is when FabricOps applies the active Guardrails during a pipeline run and acts on the result. Depending on the Guardrail, the pipeline can continue, continue with a warning, or stop.",
     "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
@@ -47,7 +47,7 @@
   {
     "term": "guardrail result",
     "aliases": ["guardrail results"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.",
     "long_definition": "A Guardrail Result is the recorded outcome after FabricOps evaluates a Guardrail during a pipeline run. It records whether the check passed, warned, or failed, what was checked, and whether the pipeline is allowed to continue.",
     "preferred_usage": "Use guardrail result for what happened when FabricOps applied a Guardrail.",
@@ -56,7 +56,7 @@
   {
     "term": "data steward",
     "aliases": ["data stewards"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "The person or role responsible for reviewing and maintaining the governance context for data.",
     "long_definition": "A Data Steward is the person or role responsible for reviewing and maintaining the governance context for data, including its meaning, ownership, sensitivity, intended use, and governance decisions.",
     "preferred_usage": "Use data steward for the accountable governance role in FabricOps.",
@@ -65,7 +65,7 @@
   {
     "term": "data agreement",
     "aliases": ["data agreements"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "The governed record that establishes who is sharing what data, with whom, and why.",
     "long_definition": "A Data Agreement establishes the governed context for a dataset before engineering proceeds. It captures the parties involved, steward context, intended use, and expectations that guide the FabricOps workflow.",
     "preferred_usage": "Use data agreement for the governed agreement that starts the FabricOps workflow.",
@@ -74,7 +74,7 @@
   {
     "term": "data contract",
     "aliases": ["data contracts"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "The approved definition of what is expected from governed Production data.",
     "long_definition": "A Data Contract is the approved definition of the structure, meaning, quality expectations, ownership, processing expectations, and governance requirements for governed Production data.",
     "preferred_usage": "Use data contract for the approved Production-facing contract.",
@@ -110,7 +110,7 @@
   {
     "term": "data access",
     "aliases": [],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "The governed definition of who is allowed to access data and under what conditions.",
     "long_definition": "Data Access describes who is allowed to access governed data and the conditions or restrictions that apply. It provides the governance context that can be implemented through platform security controls such as RLS, OLS, permissions, or other access mechanisms.",
     "preferred_usage": "Use data access for the governed access requirement, not a specific technical security implementation.",
@@ -119,7 +119,7 @@
   {
     "term": "data sensitivity",
     "aliases": ["sensitivity"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "How carefully data should be handled based on its confidentiality or risk.",
     "long_definition": "Data Sensitivity describes how carefully data should be handled based on confidentiality, privacy, business risk, or regulatory requirements. It can influence access, masking, sharing, and other governance controls.",
     "preferred_usage": "Use data sensitivity for the handling classification of governed data.",
@@ -128,7 +128,7 @@
   {
     "term": "PII",
     "aliases": ["personally identifiable information"],
-    "category": "FabricOps concepts",
+    "category": "Governance concepts",
     "short_definition": "Data that can identify or be linked to an individual.",
     "long_definition": "PII, or personally identifiable information, is data that can identify or be linked to an individual. In a governed workflow it may require additional controls such as restricted access, masking, or stricter handling.",
     "preferred_usage": "Use PII after personally identifiable information is clear from context.",
@@ -137,7 +137,7 @@
   {
     "term": "Microsoft Fabric",
     "aliases": [],
-    "category": "Microsoft Fabric basics",
+    "category": "Engineering concepts",
     "short_definition": "Microsoft's analytics platform used as the runtime for FabricOps.",
     "long_definition": "Microsoft Fabric is the analytics platform FabricOps runs on, providing workspaces, Lakehouses, Warehouses, notebooks, Spark, SQL, and other data capabilities.",
     "preferred_usage": "Use the full product name on first mention.",
@@ -146,7 +146,7 @@
   {
     "term": "workspace",
     "aliases": ["workspaces"],
-    "category": "Microsoft Fabric basics",
+    "category": "Engineering concepts",
     "short_definition": "A Microsoft Fabric container for related data and analytics items.",
     "long_definition": "A Workspace is a Microsoft Fabric container used to organize and secure related items such as notebooks, Lakehouses, Warehouses, semantic models, and reports.",
     "preferred_usage": "Use workspace for the Fabric organizational and security boundary.",
@@ -155,7 +155,7 @@
   {
     "term": "Lakehouse",
     "aliases": ["Lakehouses"],
-    "category": "Microsoft Fabric basics",
+    "category": "Engineering concepts",
     "short_definition": "A Fabric data store that combines data-lake storage with managed tables for analytics and Spark workloads.",
     "long_definition": "A Lakehouse in Microsoft Fabric stores files and managed Delta tables in OneLake and is commonly used with Spark, notebooks, and SQL analytics endpoints.",
     "preferred_usage": "Use Lakehouse for the Microsoft Fabric item type.",
@@ -164,7 +164,7 @@
   {
     "term": "Warehouse",
     "aliases": ["Warehouses"],
-    "category": "Microsoft Fabric basics",
+    "category": "Engineering concepts",
     "short_definition": "A Fabric relational data store designed for SQL analytics and warehousing workloads.",
     "long_definition": "A Warehouse in Microsoft Fabric provides relational tables and SQL-based querying for structured analytics and data warehousing workloads.",
     "preferred_usage": "Use Warehouse for the Microsoft Fabric item type.",
@@ -173,7 +173,7 @@
   {
     "term": "notebook",
     "aliases": ["notebooks", "Fabric notebook"],
-    "category": "Microsoft Fabric basics",
+    "category": "Engineering concepts",
     "short_definition": "An interactive Fabric document for running code, data processing, analysis, and engineering workflows.",
     "long_definition": "A Notebook is an interactive Microsoft Fabric document where users can run Python, PySpark, SQL, and other supported code for data engineering, analysis, experimentation, and operational workflows.",
     "preferred_usage": "Use notebook for the Fabric notebook users work in.",
@@ -182,7 +182,7 @@
   {
     "term": "pipeline",
     "aliases": ["pipelines"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "A sequence of steps that moves, transforms, checks, and writes data.",
     "long_definition": "A Pipeline is a repeatable sequence of data-processing steps that can read source data, transform it, apply checks, and write results to a target.",
     "preferred_usage": "Use pipeline for an end-to-end data-processing flow.",
@@ -191,7 +191,7 @@
   {
     "term": "PySpark",
     "aliases": [],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "The Python API for Apache Spark.",
     "long_definition": "PySpark lets Python code use Apache Spark to process data across a distributed compute engine. It is commonly used in Fabric notebooks for large-scale transformations and data engineering.",
     "preferred_usage": "Use PySpark when referring to Python code running on Spark.",
@@ -200,7 +200,7 @@
   {
     "term": "parallel processing",
     "aliases": [],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "Processing multiple parts of a workload at the same time.",
     "long_definition": "Parallel Processing divides work so multiple tasks or data partitions can be processed at the same time, which can reduce elapsed processing time when the workload and compute resources support it.",
     "preferred_usage": "Use parallel processing for concurrent work across tasks, partitions, or workers.",
@@ -209,7 +209,7 @@
   {
     "term": "incremental load",
     "aliases": ["incremental loading"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "Processing only new or changed data instead of reprocessing everything.",
     "long_definition": "An Incremental Load processes only the new or changed portion of a source since the previous successful processing point, reducing unnecessary reads and writes compared with a full load.",
     "preferred_usage": "Use incremental load for processing only the required new or changed data.",
@@ -218,7 +218,7 @@
   {
     "term": "slowly changing dimensions",
     "aliases": ["SCD", "slowly changing dimension"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "Patterns for handling changes to descriptive records over time.",
     "long_definition": "Slowly Changing Dimensions are data-modelling patterns for handling changes to descriptive records. Common approaches include SCD Type 1, which replaces the previous value, and SCD Type 2, which keeps history by creating versioned records.",
     "preferred_usage": "Use slowly changing dimensions when discussing SCD patterns; introduce SCD before using the abbreviation alone.",
@@ -227,7 +227,7 @@
   {
     "term": "data modelling",
     "aliases": ["data modeling"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "Organizing data structures and relationships so data can be stored, understood, and used effectively.",
     "long_definition": "Data Modelling is the practice of designing tables, fields, keys, relationships, and structures so data supports its intended analytical, operational, or reporting use.",
     "preferred_usage": "Use data modelling for the design of data structures and relationships.",
@@ -236,7 +236,7 @@
   {
     "term": "schema",
     "aliases": ["schemas"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "The defined structure of data, including its columns and data types.",
     "long_definition": "A Schema describes the structure of a dataset or table, including column names, data types, and other structural expectations.",
     "preferred_usage": "Use schema for the defined structure of data.",
@@ -245,7 +245,7 @@
   {
     "term": "data quality",
     "aliases": ["DQ"],
-    "category": "Data engineering basics",
+    "category": "Governance concepts",
     "short_definition": "Whether data meets the expectations required for its intended use.",
     "long_definition": "Data Quality describes whether data meets expected rules for things such as completeness, validity, consistency, uniqueness, accuracy, and other requirements needed for its intended use.",
     "preferred_usage": "Use data quality in narrative text; use DQ after the meaning is established.",
@@ -254,7 +254,7 @@
   {
     "term": "partitioning",
     "aliases": ["partition"],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "Organizing data into separate groups for storage or processing.",
     "long_definition": "Partitioning divides data into groups, often using a column such as date, so engines can process or replace only the relevant parts rather than scanning or rewriting the entire dataset.",
     "preferred_usage": "Use partitioning for physical or logical data partition design.",
@@ -263,7 +263,7 @@
   {
     "term": "append",
     "aliases": [],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "A write strategy that adds new rows without replacing existing rows.",
     "long_definition": "Append adds new rows to an existing target while leaving existing rows unchanged. It is appropriate only when incoming data is additive and existing records do not need to be changed or removed.",
     "preferred_usage": "Use append for the additive target write strategy.",
@@ -272,7 +272,7 @@
   {
     "term": "overwrite",
     "aliases": [],
-    "category": "Data engineering basics",
+    "category": "Engineering concepts",
     "short_definition": "A write strategy that replaces existing target data.",
     "long_definition": "Overwrite replaces existing target data with the newly prepared data. Depending on the implementation, it can replace a whole table or only a governed partition scope.",
     "preferred_usage": "Use overwrite for the replacement target write strategy.",
@@ -281,7 +281,7 @@
   {
     "term": "row-level security",
     "aliases": ["RLS"],
-    "category": "Security and access basics",
+    "category": "Governance concepts",
     "short_definition": "A security method that controls which rows of data a user can see.",
     "long_definition": "Row-Level Security limits the rows returned to a user based on identity, role, or access rules while allowing the same table or model to serve different audiences.",
     "preferred_usage": "Use row-level security on first mention; use RLS after it is established.",
@@ -290,7 +290,7 @@
   {
     "term": "object-level security",
     "aliases": ["OLS"],
-    "category": "Security and access basics",
+    "category": "Governance concepts",
     "short_definition": "A security method that controls whether a user can see specific tables or columns.",
     "long_definition": "Object-Level Security restricts access to specific data objects, such as tables or columns, so unauthorized users cannot see those objects even when they can access the wider model or dataset.",
     "preferred_usage": "Use object-level security on first mention; use OLS after it is established.",
@@ -299,7 +299,7 @@
   {
     "term": "access control",
     "aliases": [],
-    "category": "Security and access basics",
+    "category": "Governance concepts",
     "short_definition": "The rules and mechanisms that determine who can access data or system resources.",
     "long_definition": "Access Control is the broader set of rules and mechanisms used to decide who can access datasets, tables, columns, workspaces, files, or other resources and what actions they are allowed to perform.",
     "preferred_usage": "Use access control for the broad security concept; use RLS or OLS when a specific mechanism is meant.",
@@ -308,7 +308,7 @@
   {
     "term": "configuration",
     "aliases": ["config"],
-    "category": "File and configuration basics",
+    "category": "Engineering concepts",
     "short_definition": "Settings that define how FabricOps or a pipeline should behave without changing the underlying code.",
     "long_definition": "Configuration is the set of named settings used to control environment targets, processing choices, rules, parameters, and other behaviour without rewriting the implementation.",
     "preferred_usage": "Use configuration in narrative text; use config in code-oriented shorthand.",
