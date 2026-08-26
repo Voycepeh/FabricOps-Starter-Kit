@@ -186,6 +186,15 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
+    "METADATA_SOURCE_PARTITION_CHECKPOINT": {
+        "purpose": "Record which source partition observation was successfully published downstream.",
+        "grain": "One successfully processed observation for one source table.",
+        "primary_key": ["environment_name", "table_id", "_committed_at"],
+        "foreign_keys": [
+            {"local_field": "observation_id", "referenced_table": "METADATA_SOURCE_OBSERVATION", "referenced_field": "observation_id", "cardinality": "N:1", "statement": "Each checkpoint identifies the descriptive source observation successfully published by that run."},
+        ],
+        "relationships": [],
+    },
     "METADATA_DATA_PROFILED": {
         "purpose": "See the column-level profile metrics captured for a dataset snapshot.",
         "grain": "One observed column in one profiling snapshot.",
@@ -281,6 +290,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CATALOGUE",
     "METADATA_SOURCE_OBSERVATION",
+    "METADATA_SOURCE_PARTITION_CHECKPOINT",
     "METADATA_SOURCE_WATERMARK_CHECKPOINT",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -525,9 +535,16 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_SOURCE_WATERMARK_CHECKPOINT": {
         "__default__": [
             "fabricops_kit.pipeline.read_pipeline_prep._checkpoint_value",
-            "fabricops_kit.pipeline.commit_pipeline_checkpoint.commit_pipeline_checkpoint",
+            "fabricops_kit.pipeline.shared.complete_source_processing",
         ],
-        "__audit__": ["fabricops_kit.pipeline.commit_pipeline_checkpoint.commit_pipeline_checkpoint"],
+        "__audit__": ["fabricops_kit.pipeline.shared.complete_source_processing"],
+    },
+    "METADATA_SOURCE_PARTITION_CHECKPOINT": {
+        "__default__": [
+            "fabricops_kit.pipeline.read_pipeline_prep._successful_partition_observation_id",
+            "fabricops_kit.pipeline.shared.complete_source_processing",
+        ],
+        "__audit__": ["fabricops_kit.pipeline.shared.complete_source_processing"],
     },
 }
 

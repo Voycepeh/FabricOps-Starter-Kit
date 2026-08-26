@@ -9,6 +9,7 @@ from typing import Any, Mapping
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from ..io.shared import (
     configured_lakehouse_schema,
+    get_spark_session,
     read_lakehouse_table_core,
     resolve_configured_lakehouse_table,
     resolve_lakehouse_table_location,
@@ -70,6 +71,73 @@ _TARGET_TECHNICAL_COLUMNS = {
     *_TARGET_AUDIT_COLUMNS,
     *_SCD2_LIFECYCLE_COLUMNS,
 }
+
+
+_PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
+_WATERMARK_CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
+
+
+def complete_source_processing(completion_context: Mapping[str, Any] | None) -> None:
+    """Persist governed source progress after a physical target publication."""
+    if completion_context is None:
+        return
+    sources = completion_context.get("sources") if isinstance(completion_context, Mapping) else None
+    if not isinstance(sources, list):
+        raise ValueError("completion_context must contain a sources list from write_pipeline_prep().")
+    config, env, context = resolve_fabric_context()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    spark = get_spark_session()
+    metadata_schema = configured_lakehouse_schema(config, env, "metadata")
+    from ..config.metadata_schemas import metadata_table_schema_registry
+
+    for source in sources:
+        kind = source.get("type") if isinstance(source, Mapping) else None
+        if kind == "watermark":
+            identity = source.get("source")
+            processing = source.get("source_processing")
+            candidate = source.get("candidate")
+            if (
+                not isinstance(identity, Mapping)
+                or not isinstance(processing, Mapping)
+                or not isinstance(candidate, Mapping)
+                or processing.get("read_strategy") != "incremental_watermark"
+                or candidate.get("status") != "candidate"
+                or candidate.get("column") != processing.get("watermark_column")
+                or candidate.get("value") is None
+            ):
+                raise ValueError("Invalid governed watermark completion context.")
+            table_name = _WATERMARK_CHECKPOINT_TABLE
+            record = {
+                "environment_name": env,
+                "table_id": identity.get("table_id"),
+                "watermark_column": candidate["column"],
+                "watermark_value": str(candidate["value"]),
+                **audit,
+            }
+        elif kind == "partition":
+            if source.get("environment_name") != env or not source.get("table_id") or not source.get("observation_id"):
+                raise ValueError("Invalid governed partition completion context.")
+            table_name = _PARTITION_CHECKPOINT_TABLE
+            record = {
+                "environment_name": env,
+                "table_id": source["table_id"],
+                "observation_id": source["observation_id"],
+                **audit,
+            }
+        else:
+            raise ValueError("Unknown governed source completion type.")
+        frame = spark.createDataFrame(
+            [coerce_metadata_row_types(table_name, record)],
+            schema=metadata_table_schema_registry()[table_name],
+        )
+        write_lakehouse_table_core(
+            frame,
+            table_name,
+            target="metadata",
+            schema=metadata_schema,
+            context=context,
+            mode="append",
+        )
 
 
 def resolve_physical_table_identity(

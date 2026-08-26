@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     get_spark_session,
@@ -18,6 +18,7 @@ from fabricops_kit.pipeline.shared import resolve_physical_table_identity, resol
 
 
 _CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
+_PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
 _SOURCE_STRATEGIES = {"full_dataset", "incremental_watermark", "incremental_partition"}
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -111,6 +112,31 @@ def _checkpoint_value(config: Any, env: str, table_id: str, column: str, *, spar
         .collect()
     )
     return None if not rows else rows[0]["watermark_value"]
+
+
+def _successful_partition_observation_id(
+    config: Any, env: str, table_id: str, *, spark_session: Any, context: Any
+) -> str | None:
+    """Return the observation from the last successfully published partition run."""
+    try:
+        frame = read_lakehouse_table_core(
+            _PARTITION_CHECKPOINT_TABLE,
+            target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session,
+            context=context,
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return None
+        raise
+    rows = (
+        frame.where((frame.environment_name == env) & (frame.table_id == table_id))
+        .orderBy(frame._committed_at.desc())
+        .limit(1)
+        .collect()
+    )
+    return None if not rows else str(rows[0]["observation_id"])
 
 
 def _source_upper_watermark(
@@ -340,7 +366,14 @@ def read_pipeline_prep(
         observation = _observe_table_core(
             source_identity["table_name"], target=source_identity["target"], schema=source_identity["schema"]
         )
-        changes = _observation_changes(observation)
+        successful_observation_id = _successful_partition_observation_id(
+            config,
+            env,
+            str(source_identity["table_id"]),
+            spark_session=getattr(observation, "sparkSession", None) or get_spark_session(),
+            context=context,
+        )
+        changes = _observation_changes(observation, successful_observation_id=successful_observation_id)
         runtime = _partition_scope(changes, processing, source_processing["partition_column"])
         if (
             target_identity["store_kind"] == "warehouse"

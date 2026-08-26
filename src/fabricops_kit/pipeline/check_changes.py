@@ -41,7 +41,9 @@ def _is_source_observation(observation) -> bool:
     return _OBSERVATION_COLUMNS <= columns
 
 
-def _previous_observation(history, *, table_id: str, environment_name: str, committed_at) -> list[dict[str, Any]]:
+def _previous_observation(
+    history, *, table_id: str, environment_name: str, committed_at, observation_id: str | None = None
+) -> list[dict[str, Any]]:
     """Return the latest earlier observation for this table and environment."""
     if hasattr(history, "where") and hasattr(history, "agg"):
         from pyspark.sql import functions as F
@@ -51,6 +53,8 @@ def _previous_observation(history, *, table_id: str, environment_name: str, comm
             & (F.col("environment_name") == environment_name)
             & (F.col("_committed_at") < F.lit(committed_at))
         )
+        if observation_id is not None:
+            comparable = comparable.where(F.col("observation_id") == observation_id)
         timestamp_rows = comparable.agg(F.max("_committed_at").alias("previous_committed_at")).collect()
         previous_at = timestamp_rows[0]["previous_committed_at"] if timestamp_rows else None
         if previous_at is None:
@@ -76,12 +80,13 @@ def _previous_observation(history, *, table_id: str, environment_name: str, comm
         if str(row.get("table_id") or "") == table_id
         and str(row.get("environment_name") or "") == environment_name
         and row.get("_committed_at") < committed_at
+        and (observation_id is None or str(row.get("observation_id") or "") == observation_id)
     ]
     previous_at = max((row["_committed_at"] for row in candidates), default=None)
     return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
-def _observation_changes(observation) -> dict:
+def _observation_changes(observation, *, successful_observation_id: str | None = None) -> dict:
     """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
     if not current:
@@ -126,6 +131,7 @@ def _observation_changes(observation) -> dict:
             table_id=table_id,
             environment_name=environment_name,
             committed_at=committed_at,
+            observation_id=successful_observation_id,
         )
     except Exception as exc:
         if not is_table_not_found_error(exc):
@@ -212,6 +218,9 @@ def _observation_changes(observation) -> dict:
     )
     has_changes = not previous or bool(new or changed or removed or reappeared)
     result = {
+        "table_id": table_id,
+        "environment_name": environment_name,
+        "observation_id": observation_id,
         "status": "changed" if has_changes else "unchanged",
         "can_continue": True,
         "check_type": "changes",

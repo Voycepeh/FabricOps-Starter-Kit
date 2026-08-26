@@ -1,6 +1,6 @@
-# METADATA_SOURCE_WATERMARK_CHECKPOINT
+# METADATA_SOURCE_PARTITION_CHECKPOINT
 
-Record how far a successfully completed watermark pipeline has processed.
+Record which source partition observation was successfully published downstream.
 
 ## Writer functions
 
@@ -12,21 +12,21 @@ Record how far a successfully completed watermark pipeline has processed.
 
 ## Model
 
-**Grain:** One successfully committed watermark for one source table and watermark column.
+**Grain:** One successfully processed observation for one source table.
 
-**Primary key:** `environment_name` + `table_id` + `watermark_column` + `_committed_at`
+**Primary key:** `environment_name` + `table_id` + `_committed_at`
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id`
+`METADATA_SOURCE_OBSERVATION` **(N → 1)**
+via `observation_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 12 |
-| Business columns | 4 |
+| Total columns | 11 |
+| Business columns | 3 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -35,8 +35,7 @@ via `table_id`
 | --- | --- | --- |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `table_id` | `string` | Identifier for the accessed table or object. |
-| `watermark_column` | `string` | Metadata Source Watermark Checkpoint field `watermark_column`. |
-| `watermark_value` | `string` | Metadata Source Watermark Checkpoint field `watermark_value`. |
+| `observation_id` | `string` | Identifier stored for `observation_id`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
