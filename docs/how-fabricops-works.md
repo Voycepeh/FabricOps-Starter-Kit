@@ -130,7 +130,7 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
     - Read each source using the required **full or incremental** read strategy.
     - Run Data Quality checks.
     - Profile and register only when the DataFrame represents the **full physical table**.
-    - Record Data Lineage and Data Profile evidence.
+    - Write Data Profiled and Data Lineage records.
 
 !!! note "Warehouse sources should land in the Source Lakehouse first"
 
@@ -147,7 +147,7 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
     - Define one or more target table IDs.
     - Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition.
     - Check schema and Data Quality.
-    - Attach Data Quality result linkage for runtime evidence.
+    - Attach the relevant Guardrail Result linkage to the written data.
     - Add audit and technical columns.
     - Prepare load-strategy execution.
     - Write the target table.
