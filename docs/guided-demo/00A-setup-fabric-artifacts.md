@@ -9,7 +9,8 @@ This is normally a one-time setup that you adapt to your own Fabric environment.
     [**Microsoft Fabric**](../glossary.md#microsoft-fabric) — the analytics platform FabricOps runs on.  
     [**Workspace**](../glossary.md#workspace) — the Fabric boundary used to organise and secure related items.  
     [**Lakehouse**](../glossary.md#lakehouse) — the Fabric store commonly used with Spark and Delta tables.  
-    [**Warehouse**](../glossary.md#warehouse) — the Fabric relational store used for SQL analytics and warehousing.
+    [**Warehouse**](../glossary.md#warehouse) — the Fabric relational store used for SQL analytics and warehousing.  
+    [**Medallion Architecture**](../glossary.md#medallion-architecture) — the Bronze, Silver, and Gold layered architecture pattern used by Microsoft Fabric guidance.
 
     These are the only glossary concepts you need before starting this step.
 
@@ -39,23 +40,25 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
 
     **Engineering Development**
 
-    Create:
+    The Guided Demo uses three example data stores:
 
     - a source Lakehouse
     - a unified Lakehouse
     - a product Warehouse
 
-    For the Guided Demo we use the names `source`, `unified`, and `product`.
+    These example names map approximately to **Bronze → Silver → Gold** as `source → unified → product`. They are not mandatory FabricOps names. Your own `00_env_config` can use `bronze`, `silver`, and `gold` directly, keep `source`, `unified`, and `product`, or define additional organisation-specific layers as required.
+
+    For this Guided Demo, keep the example names `source`, `unified`, and `product` so the remaining steps match the supplied configuration and screenshots.
 
     **Engineering Production**
 
-    Create the same Lakehouse and Warehouse names used in Engineering Development so promotion does not require path renaming.
+    Create the same configured store names used in Engineering Development so promotion does not require path renaming.
 
     ![Fabric workspace setup example](../assets/00A/Objects.png)
 
     ??? info "Background reading"
 
-        If you want more context before choosing your own storage layout, review the Microsoft guidance on medallion architecture and the Fabric Lakehouse versus Warehouse decision guide.
+        See Medallion Architecture in the [FabricOps Glossary](../glossary.md#medallion-architecture) for the Microsoft Learn source and the FabricOps naming approach.
 
 ???+ success "Live — Create a Fabric Environment and install the FabricOps wheel"
 
@@ -96,6 +99,6 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
 
 ## Expected result
 
-You should now have the required workspaces, stores, Fabric Environment, editable notebook copies, and demo data files.
+You should now have the required workspaces, configured stores, Fabric Environment, editable notebook copies, and demo data files.
 
 **Next:** [Step 0B: Set up the operating environment](00B-run-environment-setup.md).
