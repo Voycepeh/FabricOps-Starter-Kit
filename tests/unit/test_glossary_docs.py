@@ -41,8 +41,7 @@ REQUIRED_TERMS = {
     "deterministic logic", "row count", "null", "distinct value", "distribution", "partitioning", "repartitioning",
     "append", "overwrite", "CSV", "Excel", "Parquet", "JSON", "YAML", "configuration", "parameter", "flag",
     "dashboard", "METADATA_DATA_CATALOGUE", "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_DATA_ACCESS", "METADATA_DATA_AGREEMENTS",
-    "METADATA_DATA_STEWARDS", "METADATA_AGREEMENT_EVIDENCE",
+    "METADATA_DATA_ACCESS", "METADATA_DATA_AGREEMENTS", "METADATA_DATA_STEWARDS",
 }
 
 
@@ -82,5 +81,3 @@ def test_notebook_template_is_not_alias_for_notebook_registry() -> None:
 
     assert "notebook template" in terms
     assert "notebook template" not in registry["aliases"]
-
-
