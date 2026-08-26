@@ -18,10 +18,8 @@ REQUIRED_FIELDS = {
 }
 REQUIRED_CATEGORIES = {
     "FabricOps concepts",
-    "Microsoft Fabric basics",
-    "Data engineering basics",
-    "Security and access basics",
-    "File and configuration basics",
+    "Governance concepts",
+    "Engineering concepts",
 }
 REQUIRED_TERMS = {
     "FabricOps Starter Kit",
@@ -72,13 +70,20 @@ def test_glossary_schema_categories_and_required_terms() -> None:
     terms = {str(entry["term"]) for entry in entries}
     categories = {str(entry["category"]) for entry in entries}
 
-    assert REQUIRED_CATEGORIES <= categories
+    assert categories == REQUIRED_CATEGORIES
     assert REQUIRED_TERMS <= terms
     for entry in entries:
         assert REQUIRED_FIELDS <= set(entry), entry.get("term")
         assert isinstance(entry["aliases"], list), entry["term"]
         assert str(entry["short_definition"]).strip(), entry["term"]
         assert str(entry["long_definition"]).strip(), entry["term"]
+
+
+def test_data_quality_is_a_governance_concept() -> None:
+    """Keep Data Quality grouped with the governed expectations FabricOps applies."""
+    data_quality = next(entry for entry in _glossary() if entry["term"] == "data quality")
+
+    assert data_quality["category"] == "Governance concepts"
 
 
 def test_glossary_has_no_duplicate_singular_plural_guardrail_entries() -> None:
