@@ -4,6 +4,14 @@
 
 Complete [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md) first.
 
+!!! info "Key concepts for this step"
+
+    [**Configuration**](../glossary.md#configuration) — named settings that control environment targets, processing choices, and runtime behaviour.  
+    [**Configuration-driven Engineering**](../glossary.md#configuration-driven-engineering) — reusable engineering behaviour controlled through configuration rather than rewritten code.  
+    [**Notebook**](../glossary.md#notebook) — the Fabric document used to run the FabricOps setup and workflow code.
+
+    These are the only glossary concepts you need before starting this step.
+
 ## High-level flow
 
 ```text
