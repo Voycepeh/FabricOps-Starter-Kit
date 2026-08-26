@@ -83,6 +83,8 @@ def resolve_physical_table_identity(
     """Resolve one configured table to its canonical physical identity."""
     if not isinstance(target, str) or not target.strip():
         raise ValueError("target must be a non-empty string.")
+    if not isinstance(table_name, str) or not table_name.strip():
+        raise ValueError("table_name must be a non-empty string.")
     normalized_target = target.strip().lower()
     store = get_store(config, env, normalized_target)
     store_kind = str(getattr(store, "kind", "")).strip().lower()

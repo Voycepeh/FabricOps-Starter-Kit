@@ -9,7 +9,7 @@ from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.shared import build_column_id, build_table_id
+from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import (
@@ -129,30 +129,27 @@ def _schema_fingerprint(df: Any) -> str:
     ).hexdigest()
 
 
-def _validate_resolved_identity(table: Any) -> dict[str, str | None]:
-    """Validate a caller-supplied canonical table identity mapping."""
+def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[str, str | None]:
+    """Validate a caller-supplied identity against the active Fabric config."""
     if not isinstance(table, Mapping):
         raise ValueError("table must be a canonical table identity mapping.")
     required = {"table_id", "target", "schema", "table_name", "store_kind"}
     missing = sorted(required - set(table))
     if missing:
         raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
-    target = _require_non_empty_string(table["target"], "table.target").lower()
-    table_name = _require_non_empty_string(table["table_name"], "table.table_name")
-    store_kind = _normalize_choice(table["store_kind"], "table.store_kind", {"lakehouse", "warehouse"})
-    schema = table["schema"]
-    if schema is not None:
-        schema = _require_non_empty_string(schema, "table.schema")
-    expected_id = build_table_id(store_kind, target, schema, table_name)
-    if table["table_id"] != expected_id:
-        raise ValueError("table.table_id is inconsistent with its canonical physical identity fields.")
-    return {
-        "table_id": expected_id,
-        "target": target,
-        "schema": schema,
-        "table_name": table_name,
-        "store_kind": store_kind,
-    }
+    resolved = resolve_physical_table_identity(
+        config,
+        env,
+        target=table["target"],
+        schema=table["schema"],
+        table_name=table["table_name"],
+    )
+    supplied = {name: table[name] for name in required}
+    if supplied != resolved:
+        raise ValueError(
+            "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
+        )
+    return resolved
 
 
 def _lineage_id(*, activity_id: str, table_id: str, profile_snapshot_id: str, pipeline_role: str) -> str:
@@ -836,7 +833,7 @@ def profile_and_register_table(
     if table is not None:
         if target is not None or schema is not None or table_name is not None:
             raise ValueError("table cannot be combined with target, schema, or table_name.")
-        identity = _validate_resolved_identity(table)
+        identity = _validate_resolved_identity(table, config=config, env=env)
     else:
         identity = resolve_physical_table_identity(
             config, env, target=target, schema=schema, table_name=table_name

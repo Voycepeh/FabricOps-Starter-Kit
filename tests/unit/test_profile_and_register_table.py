@@ -170,7 +170,7 @@ def registered(monkeypatch):
         lambda: (resolved_context["config"], resolved_context["env"], resolved_context),
     )
     monkeypatch.setattr(
-        module,
+        importlib.import_module("fabricops_kit.pipeline.shared"),
         "get_store",
         lambda config, env, target: FabricStore(
             env=env,
@@ -363,7 +363,23 @@ def test_profile_and_register_table_reuses_canonical_identity(spark_session, mon
                 "table_id": "wrong", "target": "raw", "schema": None,
                 "table_name": "customers", "store_kind": "lakehouse",
             },
-            "table_id is inconsistent",
+            "inconsistent with the canonical identity",
+        ),
+        (
+            {
+                "table_id": build_table_id("warehouse", "raw", "dbo", "customers"),
+                "target": "raw", "schema": "dbo", "table_name": "customers",
+                "store_kind": "warehouse",
+            },
+            "inconsistent with the canonical identity",
+        ),
+        (
+            {
+                "table_id": build_table_id("lakehouse", "raw", None, "sales.orders"),
+                "target": "raw", "schema": None, "table_name": "sales.orders",
+                "store_kind": "lakehouse",
+            },
+            "table must be a simple table name",
         ),
     ],
 )
