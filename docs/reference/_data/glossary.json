@@ -185,6 +185,17 @@
     "source_url": "https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook"
   },
   {
+    "id": "medallion-architecture",
+    "term": "medallion architecture",
+    "aliases": ["medallion architecture design"],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A layered data architecture that progressively improves data from Bronze raw data through Silver validated and enriched data to Gold curated data.",
+    "long_definition": "In Microsoft Fabric, Medallion Architecture organizes data into Bronze, Silver, and Gold layers so data becomes progressively more reliable and useful as it moves from raw ingestion through validation and enrichment to curated consumption. Fabric implementations can use Lakehouses, Warehouses, or a combination of Fabric data stores for these layers.",
+    "preferred_usage": "Use medallion architecture for the Microsoft Fabric Bronze, Silver, and Gold layered architecture pattern.",
+    "avoid_usage": "treating Bronze, Silver, and Gold as mandatory FabricOps store names",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture"
+  },
+  {
     "id": "metadata",
     "term": "metadata",
     "aliases": [],
