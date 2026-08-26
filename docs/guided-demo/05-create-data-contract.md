@@ -2,10 +2,19 @@
 
 **Use `01_governance` to assemble one versioned Data Contract for one governed table, then use the current interim activation mechanism to choose the version Production is authorised to resolve.**
 
+!!! info "Key concepts for this step"
+
+    [**Data Agreement**](../glossary.md#data-agreement) — the governed relationship and intent established before Engineering begins.  
+    [**Data Contract**](../glossary.md#data-contract) — the approved Production-facing definition frozen for one governed table.  
+    [**Guardrails**](../glossary.md#guardrails) — the governed rules included in the contract definition.  
+    [**Governance as Code**](../glossary.md#governance-as-code) — the broader idea behind freezing governed rules and expectations into structured, reviewable form.
+
+    These concepts explain what is being frozen and why Production should resolve a saved version rather than mutable authoring.
+
 ## High-level flow
 
 ```text
-Review governed evidence → Freeze Data Contract version → Activate Production version → Optional frozen Development test
+Review governed metadata → Freeze Data Contract version → Activate Production version → Optional frozen Development test
 ```
 
 ## Before you begin
@@ -23,7 +32,7 @@ Confirm that the relevant Data Agreement exists, the table is registered in the 
 
     The Data Contract freezes the selected Data Agreement version, Data Stewards, one governed `table_id` and structure, Enrichment, Guardrails and exact versions, target load strategy and parameters, and governed usages.
 
-    Guardrail Results and row-level failure evidence remain runtime evidence and are not frozen into the contract.
+    Guardrail Results and row-level failure records remain runtime records and are not frozen into the contract.
 
 ???+ success "Live — Understand the one-table contract boundary"
 
