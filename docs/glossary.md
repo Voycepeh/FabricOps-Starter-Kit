@@ -126,6 +126,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> notebooks, Fabric notebook</p>
 </details>
 
+<details id="medallion-architecture">
+<summary><strong>Medallion Architecture</strong> — A layered data architecture that progressively improves data from Bronze raw data through Silver validated and enriched data to Gold curated data.</summary>
+<p>In Microsoft Fabric, Medallion Architecture organizes data into Bronze, Silver, and Gold layers so data becomes progressively more reliable and useful as it moves from raw ingestion through validation and enrichment to curated consumption. Fabric implementations can use Lakehouses, Warehouses, or a combination of Fabric data stores for these layers.</p>
+<p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture">Official documentation</a></p>
+<p><strong>Also known as:</strong> medallion architecture design</p>
+</details>
+
 </details>
 
 <details>
