@@ -6,12 +6,9 @@ The Production runtime behaviour below is implemented but remains **Preview** in
 
 !!! info "Key concepts for this step"
 
-    [**Data Contract**](../glossary.md#data-contract) — the frozen governed definition Production is allowed to resolve.  
-    [**Enforcement**](../glossary.md#enforcement) — applying the frozen Guardrails during the Production run.  
-    [**Guardrail Result**](../glossary.md#guardrail-result) — the recorded outcome of each evaluated rule.  
-    [**Data Quality**](../glossary.md#data-quality) — the governed quality expectations Engineering executes before changing Production data.
+    **Data Contract**, **Enforcement**, **Guardrail Result**, and **Data Quality** explain why Production resolves a frozen table-level contract instead of mutable Development authoring.
 
-    These concepts are enough to understand why Production resolves a frozen contract instead of mutable Development authoring.
+    Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
 
 ## High-level flow
 
@@ -50,11 +47,13 @@ Confirm that the governed table has exactly one active Data Contract version, th
 
 ??? info "Preview — Prepare and validate the Production source"
 
-    Use `read_pipeline_prep()` so FabricOps resolves the active contract's frozen processing definition and prepares the source scope as `skip`, `full`, or `incremental`.
+    Use `read_pipeline_prep()` so FabricOps resolves the active contract's frozen processing definition and the configured source-read strategy, then prepares the runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
+
+    The source-read strategy itself is Full Dataset, Incremental Watermark, or Incremental Partition. The source strategy and runtime read mode are separate concepts.
 
     Run source Schema, Freshness, and Changes Guardrails before the business-data read. Read the source using the prepared scope and run DQ on the DataFrame being processed.
 
-    Register a source profile only when that DataFrame represents the complete physical source table.
+    Register a source Profile only when that DataFrame represents the complete physical source table. An Incremental Subset must not replace the latest complete Profile.
 
 ???+ success "Live — Apply the visible transformation"
 
@@ -70,7 +69,7 @@ Confirm that the governed table has exactly one active Data Contract version, th
 
     Read the persisted target back in full and profile/register the complete persisted target.
 
-    The active contract therefore controls the governed runtime boundary while the physical read, transformation, writer, and persisted target remain visible in `02_pipeline`.
+    The active Data Contract therefore controls the governed runtime boundary while the physical read, transformation, writer, and persisted target remain visible in `02_pipeline`.
 
 ??? note "Planned — Promotion into Engineering Production"
 

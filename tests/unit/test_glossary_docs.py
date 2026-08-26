@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
-from scripts.generate_glossary_page import build_glossary_page
+from docs.glossary_tooltips import glossary_tooltip_definitions, resolve_glossary_links
+from scripts.generate_glossary_page import DISPLAY_NAMES, build_glossary_page
 
 ROOT = Path(__file__).parents[2]
-GLOSSARY_PATH = ROOT / "docs" / "reference" / "_data" / "glossary.json"
-GLOSSARY_PAGE_PATH = ROOT / "docs" / "glossary.md"
+DOCS_PATH = ROOT / "docs"
+GLOSSARY_PATH = DOCS_PATH / "reference" / "_data" / "glossary.json"
+GLOSSARY_PAGE_PATH = DOCS_PATH / "glossary.md"
+GLOSSARY_REFERENCE_PATTERN = re.compile(r"glossary\.md#(?P<entry_id>[a-z0-9-]+)")
 REQUIRED_FIELDS = {
     "id",
     "term",
@@ -103,6 +107,42 @@ def test_glossary_ids_are_unique_and_stable_keys() -> None:
 def test_generated_glossary_page_is_current() -> None:
     """Keep the committed human-facing glossary synchronized with its source."""
     assert GLOSSARY_PAGE_PATH.read_text(encoding="utf-8") == build_glossary_page()
+
+
+def test_glossary_tooltips_use_canonical_short_definitions() -> None:
+    """Derive tooltip text from glossary data rather than hard-coded documentation prose."""
+    definitions = glossary_tooltip_definitions()
+    for entry in _glossary():
+        entry_id = str(entry["id"])
+        display_name = DISPLAY_NAMES.get(entry_id, str(entry["term"]))
+        assert definitions[display_name] == str(entry["short_definition"])
+
+
+def test_all_documented_glossary_ids_resolve() -> None:
+    """Keep glossary references structural: every referenced ID must exist canonically."""
+    valid_ids = {str(entry["id"]) for entry in _glossary()}
+    unknown: list[tuple[str, str]] = []
+    for path in DOCS_PATH.rglob("*.md"):
+        for entry_id in GLOSSARY_REFERENCE_PATTERN.findall(path.read_text(encoding="utf-8")):
+            if entry_id not in valid_ids:
+                unknown.append((str(path.relative_to(ROOT)), entry_id))
+
+    assert unknown == []
+
+
+def test_glossary_reference_rendering_removes_duplicate_definition_and_link() -> None:
+    """Render an ID-backed key-concept reference as a tooltip term, not another glossary link."""
+    markdown = (
+        "    [**Data Steward**](../glossary.md#data-steward) — locally copied definition.  \n"
+        "A [Data Contract](glossary.md#data-contract) controls this table."
+    )
+
+    rendered = resolve_glossary_links(markdown)
+
+    assert "glossary.md#" not in rendered
+    assert "locally copied definition" not in rendered
+    assert "**Data Steward**" in rendered
+    assert "Data Contract controls this table" in rendered
 
 
 def test_data_quality_is_a_data_governance_concept() -> None:
