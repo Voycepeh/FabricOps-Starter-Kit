@@ -174,12 +174,6 @@ def build_glossary_page() -> str:
         for term in terms:
             entry = by_term[term]
             aliases = [str(alias) for alias in entry.get("aliases", [])]
-            alias_text = ""
-            if aliases:
-                alias_text = (
-                    "<p><strong>Also known as:</strong> "
-                    f"{_text(', '.join(aliases))}</p>"
-                )
             summary = (
                 f"<summary><strong>{_text(_display_name(term))}</strong> — "
                 f"{_text(entry['short_definition'])}</summary>"
@@ -189,11 +183,14 @@ def build_glossary_page() -> str:
                     f'<details id="{_slug(term)}">',
                     summary,
                     f"<p>{_text(entry['long_definition'])}</p>",
-                    alias_text,
-                    "</details>",
-                    "",
                 ]
             )
+            if aliases:
+                lines.append(
+                    "<p><strong>Also known as:</strong> "
+                    f"{_text(', '.join(aliases))}</p>"
+                )
+            lines.extend(["</details>", ""])
         lines.extend(["</details>", ""])
 
     return "\n".join(lines).rstrip() + "\n"
