@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import re
+
 from scripts.generate_glossary_page import DISPLAY_NAMES, load_glossary_entries
+
+GLOSSARY_LINK_PATTERN = re.compile(
+    r"\[(?P<label>[^\]]+)\]\((?:\.\./)*glossary\.md#(?P<entry_id>[a-z0-9-]+)\)"
+)
 
 
 def glossary_tooltip_definitions() -> dict[str, str]:
@@ -27,6 +33,19 @@ def glossary_tooltip_definitions() -> dict[str, str]:
     return definitions
 
 
+def resolve_glossary_links(markdown: str) -> str:
+    """Render glossary-ID links as plain terms so the tooltip supplies the definition."""
+    valid_ids = {str(entry["id"]) for entry in load_glossary_entries()}
+
+    def replace(match: re.Match[str]) -> str:
+        entry_id = match.group("entry_id")
+        if entry_id not in valid_ids:
+            raise RuntimeError(f"Unknown glossary id referenced by documentation: {entry_id}")
+        return match.group("label")
+
+    return GLOSSARY_LINK_PATTERN.sub(replace, markdown)
+
+
 def build_glossary_tooltip_markdown() -> str:
     """Return Python-Markdown abbreviation definitions from canonical glossary data."""
     return "\n".join(
@@ -35,6 +54,7 @@ def build_glossary_tooltip_markdown() -> str:
 
 
 def on_page_markdown(markdown: str, **_kwargs) -> str:
-    """Append canonical glossary abbreviations to every rendered documentation page."""
+    """Resolve glossary references and append canonical tooltip definitions."""
+    rendered = resolve_glossary_links(markdown)
     tooltip_markdown = build_glossary_tooltip_markdown()
-    return f"{markdown.rstrip()}\n\n{tooltip_markdown}\n"
+    return f"{rendered.rstrip()}\n\n{tooltip_markdown}\n"
