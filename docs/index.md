@@ -79,46 +79,56 @@ FabricOps includes:
 
 ## Key FabricOps terms
 
-These are the terms most useful when first reading the workflow. The repository's canonical terminology remains maintained in `docs/reference/_data/glossary.json`.
+These are the core terms most useful when first reading the workflow. The canonical definitions and supporting Microsoft Fabric, Data Engineering, security, and configuration terms are maintained in `docs/reference/_data/glossary.json`.
 
 <details>
-<summary><strong>Data Agreement</strong></summary>
-<p>A FabricOps agreement record that captures ownership, steward context, usage, and expectations.</p>
-</details>
-
-<details>
-<summary><strong>Data Catalogue</strong></summary>
-<p>The recorded structural metadata for governed tables and columns that Engineering creates and Governance can enrich.</p>
+<summary><strong>FabricOps Starter Kit</strong></summary>
+<p>A plug-and-play Data Engineering and Governance practice for Microsoft Fabric.</p>
 </details>
 
 <details>
 <summary><strong>Profile</strong></summary>
-<p>Reusable measurements about source data or pipeline outputs, such as schema, row count, nulls, distinct values, and distributions.</p>
+<p>A summary of the data at a point in time, including structure, row counts, nulls, distinct values, ranges, and distributions.</p>
 </details>
 
 <details>
 <summary><strong>Enrichment</strong></summary>
-<p>Reviewed descriptive metadata that adds business meaning, ownership, sensitivity, classification, and usage context.</p>
+<p>Business and governance information added to the Data Catalogue after technical metadata has been captured.</p>
 </details>
 
 <details>
 <summary><strong>Guardrails</strong></summary>
-<p>Approved checks that evaluate schema, freshness, profile behavior, or Data Quality expectations during a pipeline run.</p>
+<p>The governed rules FabricOps applies to data and pipelines.</p>
+</details>
+
+<details>
+<summary><strong>Enforcement</strong></summary>
+<p>Applying active Guardrails during a pipeline run and acting on the result by continuing, warning, or stopping.</p>
 </details>
 
 <details>
 <summary><strong>Guardrail Result</strong></summary>
-<p>The runtime outcome from evaluating a Guardrail, including pass, fail, or warning details.</p>
+<p>The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.</p>
+</details>
+
+<details>
+<summary><strong>Data Steward</strong></summary>
+<p>The person or role responsible for reviewing and maintaining the governance context for data.</p>
+</details>
+
+<details>
+<summary><strong>Data Agreement</strong></summary>
+<p>The governed record that establishes who is sharing what data, with whom, and why.</p>
 </details>
 
 <details>
 <summary><strong>Data Contract</strong></summary>
-<p>The versioned governed expectations for a table that Production checks resolve and execute against.</p>
+<p>The approved definition of what is expected from governed Production data.</p>
 </details>
 
 <details>
-<summary><strong>Production data</strong></summary>
-<p>Approved persisted outputs in Engineering Production that downstream AI, BI, analytics, and data science consumers can use.</p>
+<summary><strong>Metadata</strong></summary>
+<p>Information about the data, including its structure, Profile, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreement, and Data Contract.</p>
 </details>
 
 For table-level schemas and writer ownership, see the [metadata reference](reference/metadata/).
