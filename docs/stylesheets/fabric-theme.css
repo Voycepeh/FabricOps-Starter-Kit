@@ -105,6 +105,58 @@
   margin: 0;
 }
 
+.md-typeset .fabricops-primary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 1.75rem;
+}
+
+.md-typeset .fabricops-primary-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 7.5rem;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid rgba(15, 143, 131, 0.35);
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, rgba(15, 143, 131, 0.13), rgba(71, 215, 172, 0.08));
+  box-shadow: 0 0.18rem 0.65rem rgba(15, 143, 131, 0.08);
+  color: var(--md-default-fg-color);
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.md-typeset .fabricops-primary-card:hover,
+.md-typeset .fabricops-primary-card:focus {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 0.3rem 0.9rem rgba(15, 143, 131, 0.18);
+  color: var(--md-default-fg-color);
+  transform: translateY(-0.06rem);
+}
+
+.md-typeset .fabricops-primary-card:focus-visible {
+  outline: 0.15rem solid var(--md-accent-fg-color);
+  outline-offset: 0.15rem;
+}
+
+.md-typeset .fabricops-primary-card__title {
+  display: block;
+  color: var(--md-primary-fg-color);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.md-typeset .fabricops-primary-card__body {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--md-default-fg-color);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .md-typeset .fabricops-delivery-model {
   margin: 1.5rem 0 2rem;
 }
@@ -162,6 +214,11 @@
   outline-offset: 0.15rem;
 }
 
+.md-typeset .fabricops-landing-card--wide {
+  grid-column: 1 / -1;
+  min-height: 6.75rem;
+}
+
 .md-typeset .fabricops-landing-card__title {
   display: block;
   min-height: 2.65rem;
@@ -200,16 +257,22 @@
 }
 
 @media screen and (max-width: 768px) {
+  .md-typeset .fabricops-primary-grid,
   .md-typeset .fabricops-card-grid {
     grid-template-columns: 1fr;
   }
 
+  .md-typeset .fabricops-primary-card,
   .md-typeset .fabricops-landing-card {
     min-height: 0;
   }
 
   .md-typeset .fabricops-landing-card__title {
     min-height: 0;
+  }
+
+  .md-typeset .fabricops-landing-card--wide {
+    grid-column: auto;
   }
 }
 
