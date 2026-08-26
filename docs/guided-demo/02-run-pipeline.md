@@ -155,7 +155,18 @@ For simplicity, the demo uses the `demo` schema for managed Lakehouse and Wareho
     | Historical correction | Must update the watermark value | Reprocess the old partition |
     | Parallel date processing | Possible | Natural |
 
-    Prefer a watermark for a transactional Warehouse, SQL, or API source with a non-null, strictly increasing, globally unique value and row-level changes. A modified timestamp is suitable only when the source guarantees those properties. Prefer partitions when deliveries naturally arrive as days, months, or snapshots and whole periods are expected to be reprocessed. Neither is universally better.
+    Use this quick guide when choosing a strategy:
+
+    | Situation | Recommended source strategy |
+    | --- | --- |
+    | Small or reference data | `full_dataset` |
+    | Transactional source with a reliable unique increasing ID | `incremental_watermark` |
+    | Large fact or history table with natural logical partitions | `incremental_partition` |
+    | Daily, monthly, or snapshot delivery | `incremental_partition` |
+    | Historical periods can be corrected | `incremental_partition` |
+    | API or SQL stream without useful partitions | `incremental_watermark` |
+
+    At large scale, prefer `incremental_partition` when the source naturally supports stable date, snapshot, batch, or similar logical partitions. This avoids repeatedly evaluating the complete source and lets FabricOps process only affected buckets. Large data does not always require partition processing: a large transactional source can still use `incremental_watermark` when it has an efficient, non-null, globally unique increasing value and logical partitions are not a natural fit. A modified timestamp is suitable only when the source guarantees those properties. Neither strategy is universally better.
 
     A late row with `business_date = 25 Aug` and `modified_datetime = 27 Aug` is found by a watermark on `modified_datetime`. A strict watermark can miss it if the source assigns an old value behind the successful checkpoint. Partition processing can reopen 25 Aug when FabricOps actually detects that bucket as affected; it does not imply that every old bucket is always reread.
 
