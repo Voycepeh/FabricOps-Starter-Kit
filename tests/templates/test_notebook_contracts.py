@@ -179,48 +179,108 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "METADATA_SCHEMA" not in source
 
 
-def test_02_pipeline_uses_only_read_only_pipeline_widgets():
-    """Verify the pipeline uses scoped, read-only widgets only."""
+def test_02_pipeline_uses_public_cloneable_governed_blocks():
+    """The canonical template keeps governed source, transform, and target steps visible."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    assert "widget_view_catalogue" in source
-    assert "widget_select_data_contract" in source
-    assert 'mode="pipeline"' in source
-    assert "widget_view_data_contract" not in source
-    assert "widget_author_" not in source
-    assert "widget_enrich_" not in source
-    assert "widget_activate_data_contract" not in source
+    assert _cell_by_id("02_pipeline.ipynb", "source-prepare").source.count("read_pipeline_prep(") == 1
+    assert _cell_by_id("02_pipeline.ipynb", "target-prepare").source.count("write_pipeline_prep(") == 1
+    assert 'processing_scope=read_prep["scope"]' in source
+    assert 'completion_context=write_prep["completion"]' in source
+    assert "run_pipeline(" not in source
+    assert "build_table_id(" not in source
+    assert "commit_pipeline_checkpoint(" not in source
+    assert "from fabricops_kit.pipeline.shared" not in source
+    assert "from fabricops_kit.io.shared" not in source
 
 
-def test_02_pipeline_preview_selects_validation_source_before_guardrail_execution():
-    """Keep table-scoped contract selection ahead of Preview Guardrail execution."""
-    source = _preview_payload("02_pipeline.ipynb", "preview-extract")
+def test_02_pipeline_uses_canonical_source_strategy_and_read_mode_terms():
+    """Keep configured strategies distinct from execution-time read modes."""
+    source = _notebook_source("02_pipeline.ipynb")
 
-    source_selector = source.index("source_validation = widget_select_data_contract(")
-    target_selector = source.index("target_validation = widget_select_data_contract(")
-    schema_check = source.index("schema_result = check_schema(", source_selector)
-    freshness_check = source.index("freshness_result = check_freshness(", schema_check)
-    row_check = source.index("dq_result = check_dq(", freshness_check)
-
-    assert source_selector < target_selector < schema_check < freshness_check < row_check
-    assert 'SOURCE_TABLE_NAME, target=SOURCE_TARGET, schema=SOURCE_SCHEMA' in source
-    assert source.count("widget_select_data_contract(") == 2
-    assert 'read_prep["changes"]' in source
-    assert "activate_contract_version" not in source
-    assert "METADATA_DATA_CONTRACT" not in source
+    for strategy in ("full_dataset", "incremental_watermark", "incremental_partition"):
+        assert strategy in source
+    for read_mode in ("skip", "full_dataset", "incremental_subset"):
+        assert read_mode in source
+    assert 'read_prep["read_strategy"]' not in source
+    assert "source_1_df.where(" not in source
+    assert ".isin(" not in source
 
 
-def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
-    """Preview review keeps one selector and the five selected-dataset surfaces."""
-    source = _preview_payload("02_pipeline.ipynb", "preview-review")
+def test_02_pipeline_skips_physical_and_downstream_work_safely():
+    """The runnable path must not read, transform, or publish after a skip decision."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
+    by_id = {cell.get("id"): cell for cell in notebook.cells}
 
-    assert source.count("widget_view_catalogue(") == 1
-    assert 'pipeline_catalogue_view["get_views"]()' in source
-    for name in ("catalogue", "profile", "frequency", "guardrail_results", "guardrail_row_results"):
-        assert f'display(views["{name}"])' in source
-    assert "display_guardrail_results" not in source
-    assert "run_table_guardrails" not in source
-    assert "run_active_dq_guardrail" not in source
+    prepare = by_id["source-prepare"].source
+    read = by_id["source-read"].source
+    transform = by_id["transform"].source
+    target_prepare = by_id["target-prepare"].source
+    publish = by_id["target-publish"].source
+
+    assert 'SHOULD_RUN = read_prep["read_mode"] != "skip"' in prepare
+    assert "if not SHOULD_RUN:" in read
+    assert "read_lakehouse_table(" in read
+    assert "if SHOULD_RUN:" in transform
+    assert "if SHOULD_RUN:" in target_prepare
+    assert "if SHOULD_RUN:" in publish
+
+
+def test_02_pipeline_profiles_full_sources_without_registering_incremental_slices():
+    """Only a complete physical source can replace the canonical source profile."""
+    source = _cell_by_id("02_pipeline.ipynb", "source-quality").source
+    tree = ast.parse(source)
+
+    mode_if = next(
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.If) and "read_mode" in ast.unparse(node.test)
+    )
+    assert "full_dataset" in ast.unparse(mode_if.test)
+    assert "profile_and_register_table(" in ast.unparse(mode_if.body)
+    assert "incremental_subset" in ast.unparse(mode_if.orelse)
+    assert "profile_dataframe(" in ast.unparse(mode_if.orelse)
+    assert "profile_and_register_table(" not in ast.unparse(mode_if.orelse)
+
+
+def test_02_pipeline_passes_all_prepared_lakehouse_writer_values():
+    """Publication consumes the exact governed preparation fields, including completion."""
+    source = _cell_by_id("02_pipeline.ipynb", "target-publish").source
+
+    for argument in (
+        'mode=write_prep["mode"]',
+        'options=write_prep["options"]',
+        'load_strategy=write_prep["load_strategy"]',
+        'load_strategy_parameters=write_prep["load_strategy_parameters"]',
+        'processing_scope=write_prep["scope"]',
+        'completion_context=write_prep["completion"]',
+    ):
+        assert argument in source
+
+
+def test_02_pipeline_keeps_main_governed_path_runnable():
+    """The canonical workflow is expanded rather than stored in disabled Preview strings."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
+    governed_ids = {
+        "source-config", "source-prepare", "source-read", "source-quality",
+        "transform", "target-prepare", "target-publish",
+    }
+    by_id = {cell.get("id"): cell for cell in notebook.cells}
+
+    for cell_id in governed_ids:
+        cell = by_id[cell_id]
+        assert cell.cell_type == "code"
+        assert cell.metadata.get("collapsed") is False
+        tree = ast.parse(cell.source)
+        assert not (
+            len(tree.body) == 1
+            and isinstance(tree.body[0], ast.Expr)
+            and isinstance(tree.body[0].value, ast.Constant)
+            and isinstance(tree.body[0].value.value, str)
+        )
+
+    source = _notebook_source("02_pipeline.ipynb")
+    assert "Preview —" not in source
+    assert "write_warehouse_table(" in source
 
 
 @pytest.mark.parametrize(
@@ -243,17 +303,6 @@ def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_n
     assert "display(profile_df)" in source
     assert "display(frequency_df)" in source
 
-
-def test_02_pipeline_preview_catalogue_views_are_kept_inside_disabled_review_block():
-    """Pipeline catalogue review stays visible but non-executing in Preview."""
-    source = _preview_payload("02_pipeline.ipynb", "preview-review")
-
-    assert 'pipeline_catalogue_view["get_views"]()' in source
-    assert 'display(views["catalogue"])' in source
-    assert 'display(views["profile"])' in source
-    assert 'display(views["frequency"])' in source
-
-
 def test_governance_workflow_cells_are_output_free():
     """Committed Governance workflow cells do not retain Fabric execution state."""
     notebook = _load_notebook(NOTEBOOK_DIR / "01_governance.ipynb")
@@ -265,115 +314,3 @@ def test_governance_workflow_cells_are_output_free():
     assert workflow_cells
     assert all(cell.execution_count is None for cell in workflow_cells)
     assert all(not cell.outputs for cell in workflow_cells)
-
-
-def test_02_pipeline_preview_observes_before_read_and_profiles_after_row_checks():
-    """Keep the Preview pre-read and row-level post-read source boundary explicit."""
-    source = _preview_payload("02_pipeline.ipynb", "preview-extract")
-
-    observation = source.index("read_prep = read_pipeline_prep(")
-    schema_check = source.index("schema_result = check_schema(", observation)
-    freshness_check = source.index("freshness_result = check_freshness(", schema_check)
-    full_read = source.index("source_df = read_lakehouse_table(", observation)
-    row_checks = source.index("dq_result = check_dq(", full_read)
-    profile = source.index("source_profile_df = profile_and_register_table(", row_checks)
-
-    assert observation < schema_check < freshness_check < full_read < row_checks < profile
-    assert 'SOURCE_TARGET = "source"' in source
-    assert 'SOURCE_SCHEMA = "dbo"' in source
-    assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
-
-    tree = ast.parse(source)
-    skip_if = next(
-        node for node in tree.body
-        if isinstance(node, ast.If)
-        and "read_strategy" in ast.unparse(node.test)
-        and "skip" in ast.unparse(node.test)
-    )
-    assert "read_lakehouse_table(" not in "\n".join(ast.unparse(node) for node in skip_if.body)
-    assert "read_lakehouse_table(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
-    assert "check_dq(" in "\n".join(ast.unparse(node) for node in skip_if.orelse)
-
-    run_body = skip_if.orelse
-    incremental_if = next(
-        node for node in run_body
-        if isinstance(node, ast.If) and "incremental" in ast.unparse(node.test)
-    )
-    full_if = next(
-        node for node in run_body
-        if isinstance(node, ast.If) and "full" in ast.unparse(node.test)
-    )
-    assert "source_df.where(" in ast.unparse(incremental_if)
-    assert "profile_and_register_table(" not in ast.unparse(incremental_if)
-    assert "profile_and_register_table(" in ast.unparse(full_if.body)
-    assert "source_profile_df = None" in ast.unparse(full_if.orelse)
-
-
-def test_02_pipeline_profiles_complete_persisted_target_after_every_write():
-    """Keep Live target profiling after the write and complete target read."""
-    source = _notebook_source("02_pipeline.ipynb")
-
-    write = source.index("write_lakehouse_table(")
-    persisted_read = source.index("target_df = read_lakehouse_table(", write)
-    target_profile = source.index("target_profile_df = profile_and_register_table(", persisted_read)
-
-    assert write < persisted_read < target_profile
-
-
-def test_02_pipeline_uses_one_governed_lakehouse_processing_definition():
-    """Use public Preview prep boundaries while keeping physical IO visible."""
-    extract = _preview_payload("02_pipeline.ipynb", "preview-extract")
-    load = _preview_payload("02_pipeline.ipynb", "preview-load")
-    source = f"{extract}\n{load}"
-
-    assert 'TARGET_LOAD_STRATEGY = "scd1"' in source
-    assert 'TARGET_LOAD_PARAMETERS = {"key_columns": ["student_id"]}' in source
-    assert source.count("read_pipeline_prep(") == 1
-    assert source.count("write_pipeline_prep(") == 1
-    assert "from fabricops_kit.pipeline.shared" not in source
-    assert "_resolve_processing_scope" not in source
-    assert "_apply_load_strategy" not in source
-    assert source.index("read_pipeline_prep(") < source.index("source_df = read_lakehouse_table(")
-    assert source.index("check_schema(") < source.index("source_df = read_lakehouse_table(")
-    assert 'read_prep["read_strategy"] == "skip"' in source
-    assert 'read_prep["read_strategy"] == "incremental"' in source
-    assert 'load_strategy=write_prep["load_strategy"]' in source
-    assert 'load_strategy_parameters=write_prep["load_strategy_parameters"]' in source
-    assert 'processing_scope=write_prep["scope"]' in source
-    assert "load_strategy=TARGET_LOAD_STRATEGY" in source
-    assert "load_strategy_parameters=TARGET_LOAD_PARAMETERS" in source
-    assert "write_strategy" not in source
-
-
-def test_02_pipeline_maturity_contract_keeps_live_expanded_and_preview_disabled():
-    """Live examples stay runnable while Preview blocks stay collapsed and inert."""
-    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
-    by_id = {cell.get("id"): cell for cell in notebook.cells}
-
-    preview_ids = {"preview-extract", "preview-load", "preview-review"}
-    live_ids = {"run-env", "imports", "read-csv", "transform"}
-
-    for cell_id in preview_ids:
-        cell = by_id[cell_id]
-        assert cell.cell_type == "code"
-        assert cell.metadata.get("collapsed") is True
-        tree = ast.parse(cell.source)
-        assert len(tree.body) == 1
-        assert isinstance(tree.body[0], ast.Expr)
-        assert isinstance(tree.body[0].value, ast.Constant)
-        assert isinstance(tree.body[0].value.value, str)
-
-    for cell_id in live_ids:
-        cell = by_id[cell_id]
-        assert cell.cell_type == "code"
-        assert cell.metadata.get("collapsed") is False
-
-    live_lakehouse_load = next(
-        cell
-        for cell in notebook.cells
-        if cell.cell_type == "code"
-        and "write_lakehouse_table(" in cell.source
-        and "write_pipeline_prep(" not in cell.source
-    )
-    assert live_lakehouse_load.metadata.get("collapsed") is False
-    assert "write_warehouse_table(" in _notebook_source("02_pipeline.ipynb")
