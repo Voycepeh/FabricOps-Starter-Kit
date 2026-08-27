@@ -207,6 +207,17 @@ def test_02_pipeline_uses_canonical_source_strategy_and_read_mode_terms():
     assert ".isin(" not in source
 
 
+def test_02_pipeline_product_source_uses_the_warehouse_reader():
+    """Keep the configured product Warehouse aligned with the main physical reader."""
+    config = _cell_by_id("02_pipeline.ipynb", "source-config").source
+    read = _cell_by_id("02_pipeline.ipynb", "source-read").source
+
+    assert 'SOURCE_TARGET = "product"' in config
+    assert "source_1_df = read_warehouse_table(" in read
+    assert "source_1_df = read_lakehouse_table(" not in read
+    assert 'processing_scope=read_prep["scope"]' in read
+
+
 def test_02_pipeline_skips_physical_and_downstream_work_safely():
     """The runnable path must not read, transform, or publish after a skip decision."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
@@ -220,7 +231,7 @@ def test_02_pipeline_skips_physical_and_downstream_work_safely():
 
     assert 'SHOULD_RUN = read_prep["read_mode"] != "skip"' in prepare
     assert "if not SHOULD_RUN:" in read
-    assert "read_lakehouse_table(" in read
+    assert "read_warehouse_table(" in read
     assert "if SHOULD_RUN:" in transform
     assert "if SHOULD_RUN:" in target_prepare
     assert "if SHOULD_RUN:" in publish
