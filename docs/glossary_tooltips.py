@@ -2,9 +2,27 @@
 
 from __future__ import annotations
 
+import importlib.util
 import re
+from pathlib import Path
+from types import ModuleType
 
-from scripts.generate_glossary_page import DISPLAY_NAMES, load_glossary_entries
+GENERATOR_PATH = Path(__file__).resolve().parents[1] / "scripts" / "generate_glossary_page.py"
+
+
+def _load_glossary_generator() -> ModuleType:
+    """Load the glossary generator by file path so MkDocs does not depend on repo-root imports."""
+    spec = importlib.util.spec_from_file_location("fabricops_glossary_generator", GENERATOR_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load glossary generator from {GENERATOR_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_GLOSSARY_GENERATOR = _load_glossary_generator()
+DISPLAY_NAMES = _GLOSSARY_GENERATOR.DISPLAY_NAMES
+load_glossary_entries = _GLOSSARY_GENERATOR.load_glossary_entries
 
 GLOSSARY_LINK_PATTERN = re.compile(
     r"\[(?P<label>[^\]]+)\]\((?:\.\./)*glossary\.md#(?P<entry_id>[a-z0-9-]+)\)"
