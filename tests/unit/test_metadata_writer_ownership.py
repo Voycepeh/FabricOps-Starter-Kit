@@ -18,7 +18,6 @@ def _function_source(path: str, function_name: str) -> str:
     raise AssertionError(f"{function_name} not found in {path}")
 
 
-
 def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
     """Verify widget modules do not depend on retired agreement/governance owners."""
     blocked_modules = {"fabricops_kit.data_agreement", "fabricops_kit.governance_review", "fabricops_kit.data_agreement_shared", "fabricops_kit.governance_shared"}
@@ -42,8 +41,6 @@ def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
                         violations.append(f"{path}:{node.lineno} imports {alias.name}")
 
     assert violations == []
-
-
 
 
 def test_widget_sources_do_not_use_dynamic_legacy_imports():
@@ -92,38 +89,6 @@ def _calls_write_lakehouse_table_core(source: str) -> bool:
     return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table_core" for node in ast.walk(tree))
 
 
-
-def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
-    """Verify catalogue type casts do not include retired result fields."""
-    source = _function_source("pipeline/shared.py", "_normalize_catalogue_evidence_types")
-
-    for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "run_timestamp"):
-        assert profile_field in source
-    for result_field in (
-        "dq_failed_row_percent",
-        "dq_rule_count",
-        "dq_failed_rule_count",
-        "dq_warning_rule_count",
-        "dq_error_rule_count",
-        "dq_failed_row_count",
-        "stability_check_enabled",
-        "freshness_can_continue",
-        "stability_can_continue",
-    ):
-        assert result_field not in source
-
-def test_catalogue_writer_targets_profiled_only():
-    """Verify legacy evidence writer writes observed evidence to profiled only."""
-    source = _function_source("pipeline/shared.py", "write_catalogue_evidence")
-
-    assert _calls_write_lakehouse_table_core(source)
-    assert "metadata_table: str = PROFILED_TABLE" in source
-    assert "GUARDRAIL_TABLE" not in source
-    assert "GUARDRAIL_RESULTS_TABLE" not in source
-    for result_field in ("freshness_status", "stability_status", "dq_status", "source_schema_check", "target_schema_check"):
-        assert result_field not in source
-
-
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
     for path, function_name in [("pipeline/shared.py", "write_guardrail_result_row")]:
@@ -131,29 +96,6 @@ def test_runtime_result_writers_target_guardrail_results_only():
         assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
         assert "GUARDRAIL_TABLE" not in source
-
-
-def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
-    """Verify profile behavior enforcement writes outcomes to results, not catalogue."""
-    source = _function_source("pipeline/shared.py", "enforce_profile_behavior")
-
-    assert "write_guardrail_result_row" in source
-    assert "profile_evidence_rows" in source
-    assert '"METADATA_DATA_CATALOGUE"' not in source
-
-
-
-def test_runtime_enforcement_functions_route_outcomes_to_results():
-    """Verify runtime guardrails expose result-table outcome writes."""
-    dq_source = _function_source("pipeline/shared.py", "run_active_dq_guardrail")
-    pipeline_source = _function_source("pipeline/shared.py", "orchestrate_table_guardrails")
-
-    assert "write_guardrail_result_row" in dq_source
-    assert "write_results" in dq_source
-    assert 'guardrail_type="dq"' in dq_source
-    for guardrail_type in ('"schema"', '"freshness"', '"dq"'):
-        assert guardrail_type in pipeline_source
-    assert "write_guardrail_result_row" in pipeline_source
 
 
 def test_guardrail_result_writer_has_single_shared_implementation():

@@ -12,26 +12,8 @@ import fabricops_kit
 import fabricops_kit.pipeline as pipeline
 from fabricops_kit.pipeline import shared as pipeline_shared
 widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
-from tests.helpers import framework_config
 
 pytestmark = pytest.mark.unit
-
-
-@pytest.fixture(autouse=True)
-def _canonical_audit(monkeypatch):
-    """Provide deterministic canonical audit fields for pipeline helper tests."""
-    audit = {
-        "_workspace_id": "workspace-id",
-        "_workspace_name": "workspace",
-        "_notebook_id": "notebook-id",
-        "_notebook_name": "02_pipeline",
-        "_activity_id": "activity-id",
-        "_committed_by": "user",
-        "_committed_at": "2026-01-01T00:00:00+00:00",
-        "_metadata_lakehouse_name": "lh_metadata_dev",
-    }
-    monkeypatch.setattr(pipeline_shared, "_runtime_audit_fields", lambda *args, **kwargs: dict(audit))
-
 
 
 class FakeSpark:
@@ -57,6 +39,10 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     assert "run_table_guardrails" not in fabricops_kit.__all__
     assert not hasattr(fabricops_kit, "run_table_guardrails")
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
+    for deleted_name in ("enforce_freshness", "enforce_profile_behavior"):
+        assert deleted_name not in pipeline.__all__
+        assert not hasattr(pipeline, deleted_name)
+        assert not hasattr(pipeline_shared, deleted_name)
     assert "write_pipeline_lineage" not in fabricops_kit.__all__
     assert "write_pipeline_run_summary" not in fabricops_kit.__all__
     for removed_name in {
@@ -102,89 +88,11 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     assert not hasattr(pipeline, "_source_read_type")
 
 
-
-
 def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
     """Verify summary status treats baseline created as passed and skipped as nonblocking."""
     assert pipeline_shared._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
     assert pipeline_shared._summary_status({"s1": {"status": "skipped"}}) == "skipped"
     assert pipeline_shared._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
-
-
-def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_boolean_columns(spark_session):
-    """Verify normalize catalogue evidence types casts only catalogue-owned fields."""
-    evidence = spark_session.createDataFrame(
-        [
-            {
-                "row_count": 3,
-                "null_count": 0,
-                "distinct_count": 3,
-                "null_percent": 0,
-                "distinct_percent": 100,
-                "run_timestamp": "2026-01-01T00:00:00",
-                "dataset_name": "orders",
-            }
-        ]
-    )
-
-    normalized = pipeline_shared._normalize_catalogue_evidence_types(evidence)
-    dtypes = dict(normalized.dtypes)
-
-    for column_name in ["row_count", "null_count", "distinct_count"]:
-        assert dtypes[column_name] == "bigint"
-    for column_name in ["null_percent", "distinct_percent"]:
-        assert dtypes[column_name] == "double"
-    assert dtypes["run_timestamp"] == "timestamp"
-    assert dtypes["dataset_name"] == "string"
-
-
-
-def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
-    """Verify private guardrail evidence definitions excludes dataframes and resolves target fields."""
-    definitions = pipeline_shared._build_guardrail_evidence_definitions(
-        [
-            {
-                "key": "target_01",
-                "df": object(),
-                "table_name": "orders_curated",
-                "stage": "target",
-                "target_layer": "product",
-                "target_kind": "warehouse",
-                "write_mode": "overwrite",
-                "fabric_store_target": "product",
-            }
-        ]
-    )
-
-    assert definitions == {
-        "target_01": {
-            "key": "target_01",
-            "table_name": "orders_curated",
-            "stage": "target",
-            "target_layer": "product",
-            "target_kind": "warehouse",
-            "write_mode": "overwrite",
-            "fabric_store_target": "product",
-            "layer": "product",
-            "kind": "warehouse",
-            "mode": "overwrite",
-        }
-    }
-
-
-def test_private_guardrail_evidence_definitions_defaults_fabric_store_target():
-    """Verify missing FabricStore target defaults to source for evidence."""
-    definitions = pipeline_shared._build_guardrail_evidence_definitions([{"key": "source_01", "table_name": "orders"}])
-    assert definitions["source_01"]["fabric_store_target"] == "source"
-
-
-
-
-
-
-
-
-
 
 
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
@@ -224,25 +132,3 @@ def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     assert missing["status"] == "failed"
     assert missing["can_continue"] is False
     assert missing["missing_columns"] == ["status"]
-
-
-def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
-    """Verify freshness guardrail blocks or warns by severity."""
-    from fabricops_kit.pipeline.shared import enforce_freshness
-
-    current_df = spark_session.createDataFrame([("2026-06-14",), ("2026-06-13",)], "business_date string")
-    stale_df = spark_session.createDataFrame([("2026-06-01",), ("2026-06-02",)], "business_date string")
-
-    current = enforce_freshness(current_df, "business_date", 1, severity="blocking", reference_date="2026-06-14")
-    assert current["status"] == "passed"
-    assert current["can_continue"] is True
-    assert current["latest_value"] == "2026-06-14"
-
-    stale_blocking = enforce_freshness(stale_df, "business_date", 1, severity="blocking", reference_date="2026-06-14")
-    assert stale_blocking["status"] == "failed"
-    assert stale_blocking["can_continue"] is False
-    assert stale_blocking["required_min_value"] == "2026-06-13"
-
-    stale_warning = enforce_freshness(stale_df, "business_date", 1, severity="warning", reference_date="2026-06-14")
-    assert stale_warning["status"] == "warning"
-    assert stale_warning["can_continue"] is True
