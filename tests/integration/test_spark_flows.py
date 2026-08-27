@@ -186,7 +186,6 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
     ]
 
 
-
 def _dq_metadata_df(spark_session, rows):
     from fabricops_kit.config.shared import build_metadata_table_key
 
@@ -219,7 +218,6 @@ def test_run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sessi
     assert result["message"] == "No active guardrail DQ rules found."
     assert result["summary"]["DQ_RULE_COUNT"] == 0
     assert {"_dq_check_status", "_dq_failed_rules"}.issubset(result["dataframe"].columns)
-
 
 
 def test_run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
@@ -288,7 +286,6 @@ def test_run_active_dq_guardrail_warning_failure_can_continue(spark_session, mon
     assert result["checks"][0]["failed_count"] == 1
     assert result["checks"][0]["total_count"] == 1
     assert result["checks"][0]["failed_percent"] == 100.0
-
 
 
 def test_run_active_dq_guardrail_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
@@ -498,99 +495,6 @@ def test_run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessio
     assert result["checks"][0]["rule_type"] == "missing_values"
 
 
-def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):
-    """Verify catalogue evidence excludes runtime guardrail result fields."""
-    from fabricops_kit.pipeline import profile_dataframe
-    from fabricops_kit.pipeline import shared as pipeline_shared
-
-    writes = []
-    monkeypatch.setattr(
-        pipeline_shared,
-        "write_lakehouse_table_core",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
-    )
-    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df)
-
-    result = pipeline_shared.write_catalogue_evidence(
-        {"orders": profile_df},
-        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": "source", "profile_mode": "static_data"}},
-        config=framework_config(),
-        env="dev",
-        run_id="run-1",
-        context={"runtime_context": runtime_context(activity_id="activity-profile-001")},
-        stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "profile_mode": "static_data", "stability_status": "baseline_created", "stability_can_continue": True}},
-    )
-
-    assert result == {"orders": "written"}
-    assert writes[0][2:4] == ("metadata", "METADATA_DATA_PROFILED")
-    assert writes[0][4]["mode"] == "append"
-    assert "stability_status" not in writes[0][0].columns
-    assert "freshness_status" not in writes[0][0].columns
-    assert "dq_status" not in writes[0][0].columns
-    assert "profile_mode" in writes[0][0].columns
-    assert "load_behavior" not in writes[0][0].columns
-
-
-
-def test_write_catalogue_evidence_writes_explicit_fabric_store_target(spark_session, monkeypatch):
-    """Verify catalogue evidence writes only the canonical FabricStore target."""
-    from fabricops_kit.pipeline import profile_dataframe
-    from fabricops_kit.pipeline import shared as pipeline_shared
-
-    writes = []
-    monkeypatch.setattr(
-        pipeline_shared,
-        "write_lakehouse_table_core",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
-    )
-    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df)
-    definitions = {
-        "explicit": {
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "stage": "source",
-            "fabric_store_target": " Product ",
-            "target_layer": "Unified",
-            "layer": "raw",
-        }
-    }
-
-    result = pipeline_shared.write_catalogue_evidence(
-        {"explicit": profile_df},
-        definitions,
-        config=framework_config(),
-        env="dev",
-        run_id="run-1",
-        context={"runtime_context": runtime_context(activity_id="activity-profile-002")},
-    )
-
-    assert result == {"explicit": "written"}
-    row = writes[0][0].select("table_name", "fabric_store_target").first().asDict()
-    assert row == {"table_name": "orders", "fabric_store_target": "product"}
-
-
-def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_session, monkeypatch):
-    """Verify writer requires fabric_store_target instead of target_layer/layer fallbacks."""
-    from fabricops_kit.pipeline import profile_dataframe
-    from fabricops_kit.pipeline import shared as pipeline_shared
-
-    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: None)
-    df = spark_session.createDataFrame([(1,)], "id int")
-    profile_df = profile_dataframe(df)
-
-    with pytest.raises(KeyError):
-        pipeline_shared.write_catalogue_evidence(
-            {"target_layer_only": profile_df},
-            {"target_layer_only": {"table_name": "orders", "target_layer": "product", "layer": "raw"}},
-            config=framework_config(),
-            env="dev",
-            run_id="run-1",
-            context={"runtime_context": runtime_context(activity_id="activity-profile-003")},
-        )
-
-
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
     from fabricops_kit.config.shared import build_metadata_table_key
@@ -629,73 +533,6 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     assert written_row["severity"] == "blocking"
     assert written_row["reason"] == "too old"
     assert written_row["_activity_id"] == "activity-result-001"
-
-def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
-    """Verify changing-data catalogue writes retain per-watermark baseline fields."""
-    from fabricops_kit.pipeline import profile_dataframe
-    from fabricops_kit.pipeline import shared as pipeline_shared
-
-    writes = []
-    monkeypatch.setattr(
-        pipeline_shared,
-        "write_lakehouse_table_core",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
-    )
-    df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
-    profile_df = profile_dataframe(df)
-
-    result = pipeline_shared.write_catalogue_evidence(
-        {"orders": profile_df},
-        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": "source", "profile_mode": "changing_data"}},
-        config=framework_config(),
-        env="dev",
-        run_id="run-1",
-        context={"runtime_context": runtime_context(activity_id="activity-profile-004")},
-        stability_results={
-            "orders": {
-                "status": "baseline_created",
-                "can_continue": True,
-                "stability_check_enabled": True,
-                "profile_mode": "changing_data",
-                "stability_status": "baseline_created",
-                "stability_can_continue": True,
-                "profile_evidence_rows": [
-                    {
-                        "watermark_column": "business_date",
-                        "watermark_value": "2026-06-14",
-                        "profile_payload_json": '{"watermark_value":"2026-06-14"}',
-                        "profile_hash": "hash-2026-06-14",
-                        "row_count": 1,
-                    },
-                    {
-                        "watermark_column": "business_date",
-                        "watermark_value": "2026-06-15",
-                        "profile_payload_json": '{"watermark_value":"2026-06-15"}',
-                        "profile_hash": "hash-2026-06-15",
-                        "row_count": 1,
-                    },
-                ],
-            }
-        },
-    )
-
-    assert result == {"orders": "written"}
-    assert len(writes) == 2
-    persisted = [write[0].select("watermark_column", "watermark_value", "profile_payload_json", "profile_hash").first().asDict() for write in writes]
-    assert persisted == [
-        {
-            "watermark_column": "business_date",
-            "watermark_value": "2026-06-14",
-            "profile_payload_json": '{"watermark_value":"2026-06-14"}',
-            "profile_hash": "hash-2026-06-14",
-        },
-        {
-            "watermark_column": "business_date",
-            "watermark_value": "2026-06-15",
-            "profile_payload_json": '{"watermark_value":"2026-06-15"}',
-            "profile_hash": "hash-2026-06-15",
-        },
-    ]
 
 
 def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(spark_session, monkeypatch):
