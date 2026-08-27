@@ -24,6 +24,7 @@ def write_warehouse_table(
     context: dict[str, Any] | None = None,
     load_strategy: str | None = None,
     load_strategy_parameters: dict[str, Any] | None = None,
+    completion_context: dict[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric Warehouse table.
 
@@ -88,6 +89,11 @@ def write_warehouse_table(
     load_strategy_parameters : dict, optional
         Governed strategy parameters. Reserved for target-specific execution;
         Warehouse SCD strategies currently fail explicitly.
+    completion_context : dict, optional
+        Governed source-completion context returned by
+        :func:`write_pipeline_prep`. Source progress is committed only after
+        the Warehouse connector write succeeds. Calls that omit it have no
+        checkpoint effects.
 
     Returns
     -------
@@ -97,6 +103,13 @@ def write_warehouse_table(
 
     Notes
     -----
+    Governed completion
+        When ``completion_context`` is supplied, the Warehouse connector write
+        completes before source progress is committed. A connector exception
+        prevents the commit. If checkpoint persistence fails after target
+        publication, that exception is surfaced and a retry may replay
+        already-published source rows.
+
     Parallel processing and write concurrency
         Spark processes DataFrame partitions concurrently. Before invoking the
         Warehouse connector, ``write_warehouse_table`` can repartition the
@@ -251,3 +264,7 @@ def write_warehouse_table(
         target, schema, table_name, context=context
     )
     write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
+    if completion_context is not None:
+        from fabricops_kit.pipeline.shared import complete_source_processing
+
+        complete_source_processing(completion_context, context=context)

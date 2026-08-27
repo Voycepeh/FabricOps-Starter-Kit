@@ -42,7 +42,8 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     -------
     dict
         Audited target DataFrame, physical writer mode/options, the unchanged
-        resolved processing definition, and its prepared scope.
+        resolved processing definition, its prepared scope, and an optional
+        governed completion context for the physical writer.
 
     Raises
     ------
@@ -54,8 +55,10 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     -----
     FabricOps resolves one run-level audit record and adds only compact target
     provenance fields. This function does not call a Lakehouse or Warehouse
-    writer. Warehouse SCD execution is explicitly unsupported until a governed
-    Warehouse MERGE implementation is available.
+    writer or commit source progress. The completion context has no effect
+    unless explicitly passed to a FabricOps writer. Warehouse SCD execution is
+    explicitly unsupported until a governed Warehouse MERGE implementation is
+    available.
 
     Examples
     --------
@@ -100,6 +103,24 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     options: dict[str, Any] = {}
     if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
         options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
+    completion_sources = []
+    candidate = read_prep.get("candidate_checkpoint")
+    if candidate is not None:
+        completion_sources.append({
+            "type": "watermark",
+            "source": read_prep.get("source"),
+            "source_processing": read_prep.get("source_processing"),
+            "candidate": candidate,
+        })
+    observation = read_prep.get("observation")
+    changes = read_prep.get("changes")
+    if observation is not None and isinstance(changes, dict):
+        completion_sources.append({
+            "type": "partition",
+            "table_id": changes.get("table_id"),
+            "environment_name": changes.get("environment_name"),
+            "observation_id": changes.get("observation_id"),
+        })
     return {
         "df": prepared_df,
         "mode": mode,
@@ -113,4 +134,5 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
         "processing": processing,
         "scope": {"read_mode": read_mode, "scope": scope},
         "target_kind": store_kind,
+        "completion": {"sources": completion_sources} if completion_sources else None,
     }

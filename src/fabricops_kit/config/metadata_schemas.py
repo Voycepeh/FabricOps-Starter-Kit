@@ -20,6 +20,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_GUARDRAIL_ROW_RESULTS",
     "METADATA_SOURCE_OBSERVATION",
     "METADATA_SOURCE_WATERMARK_CHECKPOINT",
+    "METADATA_SOURCE_PARTITION_CHECKPOINT",
 ]
 
 AUDIT_SCHEMA_FIELDS = [
@@ -306,6 +307,15 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("table_id", "string", False),
                 ("watermark_column", "string", False),
                 ("watermark_value", "string", False),
+                *audit,
+            ],
+        ),
+        "METADATA_SOURCE_PARTITION_CHECKPOINT": build_metadata_schema(
+            "METADATA_SOURCE_PARTITION_CHECKPOINT",
+            [
+                ("environment_name", "string", False),
+                ("table_id", "string", False),
+                ("observation_id", "string", False),
                 *audit,
             ],
         ),
