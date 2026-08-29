@@ -23,11 +23,17 @@ nav:
   - How FabricOps Works: how-fabricops-works.md
   - Glossary: glossary.md
   - Guided Demo:
-      - Overview: guided-demo.md
+      - Learning Path: guided-demo.md
       - Step 0A - Prepare Fabric Artifacts: guided-demo/00A-setup-fabric-artifacts.md
       - Step 0B - Set Up Environment: guided-demo/00B-run-environment-setup.md
       - Step 1 - Create Agreement: guided-demo/01-create-agreement.md
-      - Step 2 - Run Development Pipeline: guided-demo/02-run-pipeline.md
+      - "Module 2 - Engineer and Run a Pipeline":
+          - Overview: guided-demo/02-run-pipeline.md
+          - "Unit 1 - Understand the Template": guided-demo/02-run-pipeline/understand-template.md
+          - "Unit 2 - Run the Baseline ETL": guided-demo/02-run-pipeline/run-baseline-etl.md
+          - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
+          - "Unit 4 - Transform and Load": guided-demo/02-run-pipeline/transform-and-load.md
+          - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md
       - Step 3 - Review and Author Guardrails: guided-demo/03-enrich-guardrails.md
       - Step 4 - Validate Guardrails: guided-demo/04-run-pipeline-with-guardrails.md
       - Step 5 - Create and Activate Data Contract: guided-demo/05-create-data-contract.md
