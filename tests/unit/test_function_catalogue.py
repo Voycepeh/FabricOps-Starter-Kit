@@ -70,23 +70,6 @@ def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
     assert 'data-callable-name="validate_schema_rule"' not in page
 
 
-def _audit_rows() -> list[dict[str, object]]:
-    """Return generated callable surface audit rows."""
-    import json
-
-    return json.loads((ROOT / "docs" / "reference" / "_data" / "callable-surface-audit.json").read_text(encoding="utf-8"))
-
-
-def _core_template_called_public() -> set[str]:
-    """Return exported functions classified as core template-called public functions."""
-    return {
-        str(row["function"])
-        for row in _audit_rows()
-        if row["decision"] == "template_called_public"
-        and str(row["function"]) != "widget_render_agreement_evidence"
-    }
-
-
 def _public_inventory_function_names() -> set[str]:
     """Return dashboard public function names used by generated references."""
     data = json.loads((ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
@@ -100,9 +83,7 @@ def _catalogue_row_names() -> set[str]:
 
 def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
-    assert (_core_template_called_public() - {"run_table_guardrails", "FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage", "widget_pipeline_bootstrap", "write_pipeline_run_summary"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 29
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -113,8 +94,8 @@ def test_public_inventory_functions_have_standalone_pages() -> None:
         assert (api_reference_dir / f"{name}.md").exists(), name
 
 
-def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
-    """Verify audited advanced public helpers keep standalone function pages."""
+def test_public_inventory_has_no_extra_or_missing_standalone_pages() -> None:
+    """Verify standalone pages exactly match the current public inventory."""
     api_reference_dir = ROOT / "docs" / "api" / "reference"
     page_names = {path.stem for path in api_reference_dir.glob("*.md")}
     assert page_names == _public_inventory_function_names()
@@ -148,44 +129,16 @@ def test_functions_with_blank_starter_path_are_not_counted() -> None:
     assert 'data-callable-starter-path="—"' not in page
 
 
-def test_root_exports_match_callable_surface_audit() -> None:
-    """Verify root exports match callable surface audit rows."""
+def test_root_function_exports_match_public_call_flow_inventory() -> None:
+    """Verify package-root function exports match the current call-flow inventory."""
+    import inspect
+
     import fabricops_kit
 
-    audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
-    audit_names.discard("write_pipeline_lineage")
-    audit_names.discard("run_table_guardrails")
-    audit_names.update({"widget_view_catalogue", "widget_view_catalogue", "widget_view_catalogue"})
-    audit_names.add("widget_register_data_contract")
-    audit_names.add("widget_activate_data_contract")
-    audit_names.add("widget_select_data_contract")
-    audit_names.add("profile_frequency_distribution")
-    audit_names.add("profile_and_register_table")
-    audit_names.update({"read_pipeline_prep", "write_pipeline_prep", "commit_pipeline_checkpoint"})
-    audit_names.discard("widget_pipeline_bootstrap")
-    audit_names.discard("write_pipeline_run_summary")
-    audit_names.discard("widget_render_agreement_evidence")
-    assert set(fabricops_kit.__all__) == audit_names
-
-
-def test_convert_to_internal_audit_rows_are_not_root_exports() -> None:
-    """Verify convert-to-internal audit decisions are not root exports."""
-    import fabricops_kit
-
-    internal_names = {str(row["function"]) for row in _audit_rows() if row["decision"] == "convert_to_internal"}
-    assert internal_names.isdisjoint(set(fabricops_kit.__all__))
-
-
-def test_example_template_only_helpers_do_not_inflate_public_catalogue() -> None:
-    """Verify example-template-only helpers stay out of the public catalogue."""
-    example_template_only = {
-        str(row["function"])
-        for row in _audit_rows()
-        if row["directly_called_in_example_templates"] and not row["directly_called_in_core_templates"]
+    root_function_exports = {
+        name for name in fabricops_kit.__all__ if inspect.isfunction(getattr(fabricops_kit, name))
     }
-
-    assert example_template_only.isdisjoint(_core_template_called_public())
-    assert example_template_only.isdisjoint(_catalogue_row_names())
+    assert root_function_exports == _public_inventory_function_names()
 
 
 def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> None:
@@ -200,3 +153,8 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
 def test_retired_function_taxonomy_audit_is_removed() -> None:
     """Verify the old taxonomy audit artifact is no longer generated."""
     assert not (ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json").exists()
+
+
+def test_retired_callable_surface_audit_is_removed() -> None:
+    """Verify the obsolete parallel callable inventory remains retired."""
+    assert not (ROOT / "docs" / "reference" / "_data" / "callable-surface-audit.json").exists()
