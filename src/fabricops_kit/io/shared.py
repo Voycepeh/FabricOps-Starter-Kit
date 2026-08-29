@@ -434,6 +434,26 @@ def _warehouse_null_safe_difference(columns: list[str], left: str, right: str) -
     )
 
 
+def _drop_warehouse_stage_best_effort(
+    spark_obj,
+    store: FabricStore,
+    schema_name: str,
+    stage_name: str,
+    *,
+    options: dict[str, Any] | None = None,
+) -> None:
+    """Try to remove a failed run's Warehouse staging table."""
+    qstage = f"{_quoted_warehouse_identifier(schema_name)}.{_quoted_warehouse_identifier(stage_name)}"
+    sql = f"""IF OBJECT_ID(N'{schema_name}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstage};
+SELECT CAST(1 AS int) AS fabricops_stage_cleanup_attempted;"""
+    try:
+        execute_warehouse_sql(spark_obj, store, sql, options=options)
+    except Exception:
+        # Cleanup is deliberately secondary: callers must receive the original
+        # staging or target-mutation error even when this attempt also fails.
+        pass
+
+
 def execute_warehouse_processing(
     df,
     *,
@@ -481,7 +501,6 @@ def execute_warehouse_processing(
     )
     stage_name = f"_fabricops_scd_{uuid4().hex}"
     stage_object = _build_warehouse_object_name(store.name, schema_value, stage_name)
-    write_warehouse_synapsesql(df, store, stage_object, mode="overwrite", options=options)
 
     qschema = _quoted_warehouse_identifier(schema_value)
     qtarget = f"{qschema}.{_quoted_warehouse_identifier(table_value)}"
@@ -564,7 +583,18 @@ IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 IF OBJECT_ID(N'{schema_value}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstage};
 THROW;
 END CATCH;"""
-    execute_warehouse_sql(df.sparkSession, store, sql, options=options)
+    try:
+        write_warehouse_synapsesql(df, store, stage_object, mode="overwrite", options=options)
+        execute_warehouse_sql(df.sparkSession, store, sql, options=options)
+    except Exception:
+        _drop_warehouse_stage_best_effort(
+            df.sparkSession,
+            store,
+            schema_value,
+            stage_name,
+            options=options,
+        )
+        raise
 
 
 def read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):

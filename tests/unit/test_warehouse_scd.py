@@ -109,6 +109,93 @@ def test_scd2_rejects_duplicate_keys_and_missing_lifecycle_columns(monkeypatch, 
         )
 
 
+def test_staging_write_failure_attempts_cleanup(monkeypatch, spark_session):
+    """A partially created staging table is cleaned after connector failure."""
+    frame = spark_session.createDataFrame([(1, "Ada")], ["customer_id", "name"])
+    statements = []
+    monkeypatch.setattr(
+        io_shared,
+        "resolve_configured_warehouse_table",
+        lambda *_args, **_kwargs: (_store(), "dbo", "customers", "product.dbo.customers"),
+    )
+    monkeypatch.setattr(
+        io_shared,
+        "write_warehouse_synapsesql",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("staging failed")),
+    )
+    monkeypatch.setattr(
+        io_shared,
+        "execute_warehouse_sql",
+        lambda _spark, _store, sql, **_kwargs: statements.append(sql),
+    )
+
+    with pytest.raises(RuntimeError, match="staging failed"):
+        io_shared.execute_warehouse_processing(
+            frame, schema="dbo", table_name="customers", target="warehouse",
+            processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
+        )
+
+    assert len(statements) == 1
+    assert "DROP TABLE [dbo].[_fabricops_scd_" in statements[0]
+    assert "fabricops_stage_cleanup_attempted" in statements[0]
+
+
+def test_merge_failure_attempts_cleanup(monkeypatch, spark_session):
+    """A failed transactional mutation gets a second cleanup attempt."""
+    frame = spark_session.createDataFrame([(1, "Ada")], ["customer_id", "name"])
+    statements = []
+    monkeypatch.setattr(
+        io_shared,
+        "resolve_configured_warehouse_table",
+        lambda *_args, **_kwargs: (_store(), "dbo", "customers", "product.dbo.customers"),
+    )
+    monkeypatch.setattr(io_shared, "write_warehouse_synapsesql", lambda *_args, **_kwargs: None)
+
+    def execute(_spark, _store, sql, **_kwargs):
+        statements.append(sql)
+        if len(statements) == 1:
+            raise RuntimeError("merge failed")
+
+    monkeypatch.setattr(io_shared, "execute_warehouse_sql", execute)
+
+    with pytest.raises(RuntimeError, match="merge failed"):
+        io_shared.execute_warehouse_processing(
+            frame, schema="dbo", table_name="customers", target="warehouse",
+            processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
+        )
+
+    assert len(statements) == 2
+    assert "BEGIN TRANSACTION" in statements[0]
+    assert "fabricops_stage_cleanup_attempted" in statements[1]
+
+
+def test_cleanup_failure_preserves_original_mutation_error(monkeypatch, spark_session):
+    """Cleanup failure never replaces the original Warehouse mutation error."""
+    frame = spark_session.createDataFrame([(1, "Ada")], ["customer_id", "name"])
+    calls = []
+    monkeypatch.setattr(
+        io_shared,
+        "resolve_configured_warehouse_table",
+        lambda *_args, **_kwargs: (_store(), "dbo", "customers", "product.dbo.customers"),
+    )
+    monkeypatch.setattr(io_shared, "write_warehouse_synapsesql", lambda *_args, **_kwargs: None)
+
+    def execute(_spark, _store, _sql, **_kwargs):
+        calls.append("execute")
+        if len(calls) == 1:
+            raise RuntimeError("original merge failure")
+        raise RuntimeError("cleanup failure")
+
+    monkeypatch.setattr(io_shared, "execute_warehouse_sql", execute)
+
+    with pytest.raises(RuntimeError, match="original merge failure"):
+        io_shared.execute_warehouse_processing(
+            frame, schema="dbo", table_name="customers", target="warehouse",
+            processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
+        )
+    assert calls == ["execute", "execute"]
+
+
 def test_writer_scd_completion_is_strictly_after_mutation(monkeypatch):
     """Successful mutation precedes completion exactly once."""
     events = []

@@ -163,7 +163,10 @@ def write_warehouse_table(
         connector, executes the requested connector write mode, and returns
         ``None``. Governed SCD strategies use a unique run-scoped Warehouse
         staging table and transactional T-SQL target mutation; append and
-        overwrite continue to use the direct ``synapsesql`` write path.
+        overwrite continue to use the direct ``synapsesql`` write path. The
+        transaction drops its staging table, and failures also trigger a
+        best-effort Python-side cleanup attempt without masking the original
+        publication error.
 
     Performance notes
         Repartitioning can improve write throughput when the existing

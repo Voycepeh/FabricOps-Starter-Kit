@@ -37,7 +37,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L291">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L294">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -228,7 +228,10 @@ Implementation sequence
     connector, executes the requested connector write mode, and returns
     ``None``. Governed SCD strategies use a unique run-scoped Warehouse
     staging table and transactional T-SQL target mutation; append and
-    overwrite continue to use the direct ``synapsesql`` write path.
+    overwrite continue to use the direct ``synapsesql`` write path. The
+    transaction drops its staging table, and failures also trigger a
+    best-effort Python-side cleanup attempt without masking the original
+    publication error.
 
 Performance notes
     Repartitioning can improve write throughput when the existing
@@ -296,7 +299,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 49 |
+| Live-critical dependencies | 50 |
 
 ### Release history
 
@@ -326,6 +329,7 @@ Side effects
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
