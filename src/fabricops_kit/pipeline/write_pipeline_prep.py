@@ -56,9 +56,9 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     FabricOps resolves one run-level audit record and adds only compact target
     provenance fields. This function does not call a Lakehouse or Warehouse
     writer or commit source progress. The completion context has no effect
-    unless explicitly passed to a FabricOps writer. Warehouse SCD execution is
-    explicitly unsupported until a governed Warehouse MERGE implementation is
-    available.
+    unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
+    targets use the same governed strategy definition; each writer applies its
+    engine-specific physical execution only after this preparation succeeds.
 
     Examples
     --------
@@ -83,9 +83,6 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     config, env, context = resolve_fabric_context()
     store_kind = str(get_store(config, env, target).kind).strip().lower()
     strategy = str(processing.get("load_strategy") or "")
-    if store_kind == "warehouse" and strategy in {"scd1", "scd2"}:
-        raise ValueError(f"Warehouse {strategy} execution is not supported by the governed writer yet.")
-
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":

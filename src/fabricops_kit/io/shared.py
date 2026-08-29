@@ -6,6 +6,7 @@ from importlib import import_module
 from typing import Any, Mapping
 import re
 import tempfile
+from uuid import uuid4
 
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
@@ -399,6 +400,171 @@ def write_warehouse_synapsesql(
     for key, value in (options or {}).items():
         writer = writer.option(key, value)
     writer.synapsesql(synapsesql_target)
+
+
+def execute_warehouse_sql(
+    spark_obj, store: FabricStore, sql: str, *, options: dict[str, Any] | None = None
+) -> None:
+    """Execute a Warehouse T-SQL mutation batch through the configured connector."""
+    read_warehouse_synapsesql(spark_obj, store, sql, options=options).collect()
+
+
+def _quoted_warehouse_identifier(value: str) -> str:
+    """Return a validated Warehouse identifier quoted for T-SQL."""
+    return f"[{_normalize_table_name(value)}]"
+
+
+def _warehouse_column_list(columns: list[str], *, alias: str | None = None) -> str:
+    """Return a safe comma-separated T-SQL column list."""
+    prefix = f"{alias}." if alias else ""
+    return ", ".join(f"{prefix}{_quoted_warehouse_identifier(column)}" for column in columns)
+
+
+def _warehouse_null_safe_difference(columns: list[str], left: str, right: str) -> str:
+    """Return a null-safe T-SQL difference predicate."""
+    if not columns:
+        return "1 = 0"
+    return " OR ".join(
+        f"({left}.{_quoted_warehouse_identifier(column)} <> {right}.{_quoted_warehouse_identifier(column)} "
+        f"OR ({left}.{_quoted_warehouse_identifier(column)} IS NULL AND "
+        f"{right}.{_quoted_warehouse_identifier(column)} IS NOT NULL) "
+        f"OR ({left}.{_quoted_warehouse_identifier(column)} IS NOT NULL AND "
+        f"{right}.{_quoted_warehouse_identifier(column)} IS NULL))"
+        for column in columns
+    )
+
+
+def execute_warehouse_processing(
+    df,
+    *,
+    schema: str,
+    table_name: str,
+    target: str,
+    processing: Mapping[str, Any],
+    context: Mapping[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+) -> None:
+    """Apply a validated governed SCD definition to a Fabric Warehouse target."""
+    from pyspark.sql import functions as F
+
+    from fabricops_kit.pipeline.shared import (
+        validated_processing,
+        resolve_scd1_business_columns,
+        resolve_scd2_tracked_columns,
+    )
+
+    definition = validated_processing(dict(processing))
+    strategy = definition["load_strategy"]
+    if strategy not in {"scd1", "scd2"}:
+        raise ValueError("Warehouse governed processing requires scd1 or scd2.")
+    columns = list(getattr(df, "columns", ()) or ())
+    if not columns or len(columns) != len(set(columns)):
+        raise ValueError("Incoming Warehouse SCD data must have unique named columns.")
+    for column in columns:
+        _normalize_table_name(column)
+    keys = list(definition["key_columns"])
+    missing = sorted(set(keys) - set(columns))
+    if missing:
+        raise ValueError(f"Incoming Warehouse SCD data is missing key columns: {', '.join(missing)}.")
+    if df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
+        raise ValueError("Incoming target scope contains duplicate business keys.")
+    tracked: list[str] = []
+    if strategy == "scd2":
+        required = {definition["effective_column"], "_effective_from", "_effective_to", "_is_current"}
+        missing = sorted(required - set(columns))
+        if missing:
+            raise ValueError(f"Incoming Warehouse SCD2 data is missing required columns: {', '.join(missing)}.")
+        tracked = resolve_scd2_tracked_columns(columns, definition)
+
+    store, schema_value, table_value, _object_name = resolve_configured_warehouse_table(
+        target, schema, table_name, context=dict(context or {})
+    )
+    stage_name = f"_fabricops_scd_{uuid4().hex}"
+    stage_object = _build_warehouse_object_name(store.name, schema_value, stage_name)
+    write_warehouse_synapsesql(df, store, stage_object, mode="overwrite", options=options)
+
+    qschema = _quoted_warehouse_identifier(schema_value)
+    qtarget = f"{qschema}.{_quoted_warehouse_identifier(table_value)}"
+    qstage = f"{qschema}.{_quoted_warehouse_identifier(stage_name)}"
+    join = " AND ".join(
+        f"target.{_quoted_warehouse_identifier(key)} = source.{_quoted_warehouse_identifier(key)}" for key in keys
+    )
+    incoming_columns = _warehouse_column_list(columns)
+    source_columns = _warehouse_column_list(columns, alias="source")
+    schema_checks = f"""
+IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NOT NULL
+AND (EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nullable
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{table_value}')
+            EXCEPT SELECT name, system_type_id, max_length, precision, scale, is_nullable
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}')))
+ OR EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nullable
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}')
+            EXCEPT SELECT name, system_type_id, max_length, precision, scale, is_nullable
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{table_value}')))
+    THROW 50001, 'Warehouse SCD target and incoming schemas are incompatible.', 1;
+"""
+    if strategy == "scd1":
+        business = resolve_scd1_business_columns(columns, keys)
+        update_columns = [column for column in columns if column not in keys]
+        updates = ", ".join(
+            f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
+            for column in update_columns
+        )
+        matched = (
+            f"WHEN MATCHED AND ({_warehouse_null_safe_difference(business, 'target', 'source')}) "
+            f"THEN UPDATE SET {updates}" if business else ""
+        )
+        mutation = f"""
+IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
+    SELECT * INTO {qtarget} FROM {qstage};
+ELSE
+    MERGE {qtarget} AS target
+    USING {qstage} AS source ON {join}
+    {matched}
+    WHEN NOT MATCHED BY TARGET THEN INSERT ({incoming_columns}) VALUES ({source_columns});
+"""
+    else:
+        effective = _quoted_warehouse_identifier(str(definition["effective_column"]))
+        changed = _warehouse_null_safe_difference(tracked, "target", "source")
+        mutation = f"""
+IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
+    SELECT * INTO {qtarget} FROM {qstage};
+ELSE
+BEGIN
+    IF EXISTS (SELECT 1 FROM {qtarget} GROUP BY {_warehouse_column_list(keys)}
+               HAVING SUM(CASE WHEN [_is_current] = 1 THEN 1 ELSE 0 END) > 1)
+        THROW 50002, 'SCD2 target contains multiple current records for a business key.', 1;
+    IF EXISTS (SELECT 1 FROM {qtarget} target JOIN {qstage} source ON {join}
+               WHERE target.[_is_current] = 1 AND source.{effective} < target.[_effective_from])
+        THROW 50003, 'Incoming SCD2 effective time moves backwards.', 1;
+
+    UPDATE target SET target.[_effective_to] = source.{effective}, target.[_is_current] = 0
+    FROM {qtarget} target JOIN {qstage} source ON {join}
+    WHERE target.[_is_current] = 1 AND ({changed});
+
+    INSERT INTO {qtarget} ({incoming_columns})
+    SELECT {source_columns} FROM {qstage} source
+    WHERE NOT EXISTS (
+        SELECT 1 FROM {qtarget} target WHERE {join} AND target.[_is_current] = 1
+          AND NOT ({changed})
+    );
+END;
+"""
+    sql = f"""SET XACT_ABORT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+{schema_checks}
+{mutation}
+DROP TABLE {qstage};
+COMMIT TRANSACTION;
+SELECT CAST(1 AS int) AS fabricops_scd_committed;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+IF OBJECT_ID(N'{schema_value}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstage};
+THROW;
+END CATCH;"""
+    execute_warehouse_sql(df.sparkSession, store, sql, options=options)
 
 
 def read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):

@@ -212,7 +212,7 @@ def test_write_prep_adds_audit_and_reuses_exact_processing(monkeypatch, spark_se
     assert "_committed_at" in result["df"].columns
 
 
-def test_write_prep_adds_scd2_lifecycle_and_rejects_warehouse_scd(monkeypatch, spark_session):
+def test_write_prep_adds_scd2_lifecycle_for_lakehouse_and_warehouse(monkeypatch, spark_session):
     processing = {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"}
     monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
@@ -226,8 +226,9 @@ def test_write_prep_adds_scd2_lifecycle_and_rejects_warehouse_scd(monkeypatch, s
     result = write_module.write_pipeline_prep(frame, read_prep)
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
     monkeypatch.setattr(write_module, "get_store", lambda *_args: SimpleNamespace(kind="warehouse"))
-    with pytest.raises(ValueError, match="Warehouse scd2"):
-        write_module.write_pipeline_prep(frame, read_prep, target="warehouse")
+    warehouse_result = write_module.write_pipeline_prep(frame, read_prep, target="warehouse")
+    assert warehouse_result["mode"] is None
+    assert {"_effective_from", "_effective_to", "_is_current"} <= set(warehouse_result["df"].columns)
 
 
 def test_read_prep_preserves_warehouse_overwrite_skip(monkeypatch):

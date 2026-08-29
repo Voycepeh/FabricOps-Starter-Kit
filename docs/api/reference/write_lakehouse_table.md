@@ -372,14 +372,14 @@ Side effects
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
-<li><code>fabricops_kit.pipeline.shared._business_change_columns</code></li>
-<li><code>fabricops_kit.pipeline.shared._resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
-<li><code>fabricops_kit.pipeline.shared._validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.complete_source_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
+<li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 </ul>
 
 

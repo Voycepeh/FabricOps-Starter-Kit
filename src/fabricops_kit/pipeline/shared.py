@@ -1536,7 +1536,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
     return adapted
 
 
-def _validated_processing(processing: Any) -> dict[str, Any]:
+def validated_processing(processing: Any) -> dict[str, Any]:
     """Return a valid frozen/current processing definition."""
     if not isinstance(processing, dict):
         raise ValueError("Data Contract processing definition is missing or malformed.")
@@ -1609,7 +1609,7 @@ def resolve_table_processing_definition(
             )
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
-        definition = _validated_processing((payload.get("table") or {}).get("processing"))
+        definition = validated_processing((payload.get("table") or {}).get("processing"))
         return {
             **definition,
             "source": "data_contract",
@@ -1618,7 +1618,7 @@ def resolve_table_processing_definition(
         }
     if authored_processing is None:
         raise ValueError("Development current authoring requires an authored processing definition.")
-    definition = _validated_processing(dict(authored_processing))
+    definition = validated_processing(dict(authored_processing))
     return {**definition, "source": "current_authoring"}
 
 
@@ -1633,7 +1633,7 @@ def _sql_literal(value: Any) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-def _resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
+def resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
     """Return explicit or default business columns used to detect SCD2 changes."""
     explicit = processing.get("tracked_columns")
     if explicit:
@@ -1657,7 +1657,7 @@ def _resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, A
     ]
 
 
-def _business_change_columns(columns: list[str], key_columns: list[str]) -> list[str]:
+def resolve_scd1_business_columns(columns: list[str], key_columns: list[str]) -> list[str]:
     """Return non-key business columns eligible for SCD change detection."""
     return [
         name for name in columns
@@ -1698,7 +1698,7 @@ def execute_lakehouse_processing(
     context: Mapping[str, Any] | None = None,
 ) -> None:
     """Apply one already-resolved governed load definition to a Lakehouse target."""
-    strategy = _validated_processing(dict(processing))["load_strategy"]
+    strategy = validated_processing(dict(processing))["load_strategy"]
     read_mode = scope.get("read_mode")
     runtime_scope = scope.get("scope")
     if read_mode == "skip":
@@ -1745,7 +1745,7 @@ def execute_lakehouse_processing(
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
     if strategy == "scd1":
-        business_columns = _business_change_columns(list(df.columns), keys)
+        business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         (
             delta.alias("target").merge(persisted_df.alias("source"), condition)
@@ -1754,7 +1754,7 @@ def execute_lakehouse_processing(
         return
 
     effective = str(processing["effective_column"])
-    tracked = _resolve_scd2_tracked_columns(list(df.columns), processing)
+    tracked = resolve_scd2_tracked_columns(list(df.columns), processing)
     current_column, end_column = "_is_current", "_effective_to"
     current_rows = delta.toDF().where(F.col(current_column))
     if current_rows.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
