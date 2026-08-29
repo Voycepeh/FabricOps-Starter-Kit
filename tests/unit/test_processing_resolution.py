@@ -162,7 +162,7 @@ def test_partition_strategy_requires_change_rule_on_same_column():
 
 
 def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():
-    tracked = shared._resolve_scd2_tracked_columns(
+    tracked = shared.resolve_scd2_tracked_columns(
         ["student_id", "name", "status", "effective_at", "ingested_at_utc", "_fabricops_created_at", "loaded_at"],
         {"key_columns": ["student_id"], "effective_column": "effective_at"},
     )

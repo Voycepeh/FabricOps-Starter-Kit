@@ -225,7 +225,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
 
 def test_scd2_explicit_tracking_rejects_technical_columns():
     with pytest.raises(ValueError, match="only business columns"):
-        shared._resolve_scd2_tracked_columns(
+        shared.resolve_scd2_tracked_columns(
             ["student_id", "status", "effective_at", "_committed_at"],
             {"key_columns": ["student_id"], "effective_column": "effective_at", "tracked_columns": ["_committed_at"]},
         )

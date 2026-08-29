@@ -35,9 +35,9 @@ or when physical Delta partitioning is required.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/write_warehouse_table.py:15`
+`fabricops_kit/io/write_warehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L270">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L294">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -145,7 +145,7 @@ and Warehouse ingestion limits.
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 | `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
-| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. Reserved for target-specific execution; Warehouse SCD strategies currently fail explicitly. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` also requires ``effective_column`` and may supply ``tracked_columns``. |
 | `completion_context` | `dict[str, Any] \| None` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. Source progress is committed only after the Warehouse connector write succeeds. Calls that omit it have no checkpoint effects. |
 
 ## Returns
@@ -226,9 +226,12 @@ Implementation sequence
     positive integer, resolves the Warehouse connection and table
     identity, passes the repartitioned DataFrame into the Warehouse write
     connector, executes the requested connector write mode, and returns
-    ``None``. The current implementation delegates transfer to the Fabric
-    Warehouse Spark connector through ``synapsesql`` and does not implement
-    a separate temporary staging cleanup step.
+    ``None``. Governed SCD strategies use a unique run-scoped Warehouse
+    staging table and transactional T-SQL target mutation; append and
+    overwrite continue to use the direct ``synapsesql`` write path. The
+    transaction drops its staging table, and failures also trigger a
+    best-effort Python-side cleanup attempt without masking the original
+    publication error.
 
 Performance notes
     Repartitioning can improve write throughput when the existing
@@ -261,6 +264,15 @@ Errors and edge cases
     accidental use of the original DataFrame after repartitioning are
     handled by Spark, the Fabric connector, or Warehouse runtime errors.
 
+Warehouse SCD processing
+    ``scd1`` performs a key-based upsert without deleting missing target
+    rows. ``scd2`` compares non-key business columns, closes changed current
+    rows, and inserts one new current version in the same transaction.
+    Duplicate incoming keys, backwards effective times, incompatible
+    schemas, and multiple target current rows fail before target commit.
+    Replaying unchanged input does not add rows. Independent jobs can still
+    encounter Warehouse transaction or locking conflicts.
+
 Side effects
     This function performs a physical Warehouse write and triggers Spark
     execution. Depending on the selected mode, it may append to, create,
@@ -287,7 +299,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 40 |
+| Live-critical dependencies | 50 |
 
 ### Release history
 
@@ -317,17 +329,24 @@ Side effects
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._quoted_warehouse_identifier</code></li>
 <li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._warehouse_column_list</code></li>
+<li><code>fabricops_kit.io.shared._warehouse_null_safe_difference</code></li>
 <li><code>fabricops_kit.io.shared.configured_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared.execute_warehouse_processing</code></li>
+<li><code>fabricops_kit.io.shared.execute_warehouse_sql</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
@@ -339,6 +358,9 @@ Side effects
 <li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.shared.complete_source_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 </ul>
 
 
