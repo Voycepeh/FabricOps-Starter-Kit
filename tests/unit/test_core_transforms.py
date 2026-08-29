@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.widgets import shared as gr
-from fabricops_kit.widgets.shared import build_enrichment_records, latest_enrichment_values
+from fabricops_kit.widgets import shared as widget_shared
 
 pytestmark = pytest.mark.unit
 
@@ -18,32 +17,31 @@ def test_profile_helper_returns_notebook_ready_structure():
     assert profile["row_count"] == 3
 
 
-def test_generic_enrichment_builder_and_latest_values(monkeypatch):
-    """Build independent generic rows and resolve deterministic current values."""
-    audit = {name: "2026-01-01T00:00:00Z" if name == "_committed_at" else "audit" for name in gr.STANDARD_RUNTIME_AUDIT_COLUMNS}
-    monkeypatch.setattr(gr, "build_runtime_audit_fields", lambda **_kwargs: audit)
-    records = build_enrichment_records([
-        {"enrichment_level": "table", "metadata_key": "table-key", "enrichment_type": "Description", "value": "Orders"},
-        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Description", "value": "Old", "enrichment_id": "a"},
-        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Description", "value": "Current", "enrichment_id": "b"},
-        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Classification", "value": "Sensitive"},
-    ], config=object(), env="dev")
-    assert set(records[0]) == {"enrichment_id", "enrichment_level", "metadata_key", "enrichment_type", "value", *gr.STANDARD_RUNTIME_AUDIT_COLUMNS}
-    latest = latest_enrichment_values(records)
-    assert latest[("column", "col-amount", "Description")]["value"] == "Current"
-    assert len(latest) == 3
+def test_obsolete_catalogue_and_enrichment_helpers_are_not_exposed():
+    """Verify removed widget helpers are absent from the shared module."""
+    removed_symbols = {
+        "_approved_column_identity",
+        "_approved_review_context",
+        "_collect_enrichment_extra_fields",
+        "_json",
+        "_next_minor_version",
+        "_render_enrichment_extra_fields",
+        "_selected_catalogue_rows_for_enrichment",
+        "_write_rule_records",
+        "build_catalogue_widget",
+        "build_enrichment_records",
+        "catalogue_table_browser_state",
+        "catalogue_table_options",
+        "collect_catalogue_inventory",
+        "get_current_notebook_lineage_scope",
+        "get_data_contract_views",
+        "get_selected_agreement",
+        "latest_enrichment_values",
+        "read_enrichment_records",
+        "render_read_only_catalogue_detail",
+        "set_active_pipeline_context",
+        "set_selected_agreement",
+        "write_enrichment_records",
+    }
 
-
-@pytest.mark.parametrize("field", ["metadata_key", "enrichment_type", "value"])
-def test_enrichment_builder_rejects_empty_required_values(field):
-    """Reject blank generic enrichment values."""
-    row = {"enrichment_level": "column", "metadata_key": "col", "enrichment_type": "Description", "value": "Meaning"}
-    row[field] = ""
-    with pytest.raises(ValueError, match=field):
-        build_enrichment_records([row])
-
-
-def test_enrichment_builder_rejects_unsupported_level():
-    """Only table and column identities are supported."""
-    with pytest.raises(ValueError, match="table.*column"):
-        build_enrichment_records([{"enrichment_level": "dataset", "metadata_key": "x", "enrichment_type": "x", "value": "x"}])
+    assert removed_symbols.isdisjoint(vars(widget_shared))
