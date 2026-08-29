@@ -113,22 +113,6 @@ def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
         raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
 
 
-def _schema_fingerprint(df: Any) -> str:
-    """Return the legacy environment-independent ordered-schema fingerprint.
-
-    The Stage 2 profile/catalogue model no longer persists this value, but the
-    helper remains internal while the Data Contract redesign is intentionally
-    deferred to Stage 5.
-    """
-    fields = [
-        {"name": str(field.name).strip(), "type": field.dataType.simpleString()}
-        for field in getattr(getattr(df, "schema", None), "fields", [])
-    ]
-    return hashlib.sha256(
-        json.dumps({"fields": fields}, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
-
-
 def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[str, str | None]:
     """Validate a caller-supplied identity against the active Fabric config."""
     if not isinstance(table, Mapping):
