@@ -14,10 +14,16 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Keep examples generic and public-safe. Never include real data, secrets, tenant or workspace identifiers, internal URLs, or production screenshots.
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
-- Keep metadata responsibilities separated:
-  - `METADATA_DATA_CATALOGUE` stores observed table and column profiles.
-  - `METADATA_GUARDRAIL_RULES` stores approved guardrail intent.
-  - `METADATA_GUARDRAIL_RESULTS` stores runtime outcomes.
+- Keep metadata responsibilities separated and name the implemented tables precisely:
+  - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
+  - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
+  - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
+  - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
+  - `METADATA_ENRICHMENT` stores authored business and governance enrichment.
+  - `METADATA_GUARDRAIL` stores authored executable Guardrail rules.
+  - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
+  - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.
+  - `METADATA_SOURCE_OBSERVATION`, `METADATA_SOURCE_WATERMARK_CHECKPOINT`, and `METADATA_SOURCE_PARTITION_CHECKPOINT` store implemented source-state and successful-processing records used by incremental execution.
 
 ## Canonical terminology and glossary
 
@@ -28,6 +34,10 @@ Before introducing, renaming, redefining, or broadly replacing a term:
 - check the glossary first and use the canonical term, category, meaning, aliases, and preferred usage
 - preserve the three public glossary categories: **FabricOps concepts**, **Governance concepts**, and **Engineering concepts**; **Data Quality** is a Governance concept even when Engineering executes DQ checks
 - prefer the specific FabricOps table, record, field, strategy, rule, or result name when one exists instead of vague alternatives such as `evidence`, `context`, `processing metadata`, or `data products`
+- when documenting persisted metadata, hand-offs, diagrams, or lifecycle steps, name the actual implemented `METADATA_*` tables or record types when they are known; do not replace them with vague labels such as `observed evidence`, `observed metadata`, `runtime outcomes`, or `governance intent`
+- generic category wording is acceptable only when the exact implementation is not relevant; when a section explains what FabricOps actually reads or writes, anchor it to the concrete table or record names
+- verify metadata names and schemas against `src/fabricops_kit/config/metadata_schemas.py` before documenting them; do not invent near-miss names such as `METADATA_GUARDRAIL_RULES`
+- preserve real implemented concepts such as Source Observation when they are the canonical concept or table; the rule is to remove vague substitutes, not valid domain terminology
 - treat aliases as search and comprehension aids, not additional canonical concepts; for example, **policy as code** is an alias of **governance as code**
 - update the glossary in the same focused PR when an intentional product or implementation change creates, removes, or materially changes a canonical concept
 - do not preserve obsolete glossary terms merely for backwards compatibility unless migration support is explicitly requested
