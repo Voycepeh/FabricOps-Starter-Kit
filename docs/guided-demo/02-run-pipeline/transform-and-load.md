@@ -12,7 +12,7 @@ FabricOps standardises the governed boundary around ETL. It does not replace the
 
 ## Choose the target
 
-The template supports managed Lakehouse and Warehouse targets.
+The template supports managed Lakehouse and Warehouse targets, but each governed pipeline publishes exactly one target table.
 
 ### Lakehouse target
 
@@ -35,6 +35,14 @@ CREATE SCHEMA demo
 Then execute the Warehouse target section.
 
 ![Write Warehouse](../../assets/02/Write_WH.png)
+
+## Need another persisted output?
+
+Create a separate downstream pipeline rather than adding another governed target write to the same pipeline.
+
+This keeps each pipeline responsible for one publication boundary and avoids a partial-success state where one target write succeeds but another fails. The output of the first pipeline can become an upstream source for the next pipeline when another persisted stage is needed.
+
+Do not use a pipeline's own target as an engineer-authored source inside the same pipeline. Persisted intermediate tables should form explicit stages between separate pipelines.
 
 ## Partitioning and parallelism
 
