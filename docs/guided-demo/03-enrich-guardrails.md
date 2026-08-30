@@ -50,13 +50,19 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
 
     Profiling can discover physical table and column structure, but it cannot discover business meaning, stewardship intent, classifications, or Governance rules.
 
-    ```text
-    Engineering observation
-    → Data Catalogue / Data Profiled / Data Lineage / Guardrail Results
-
-    Governance authoring
-    → Enrichment / Guardrails / Data Agreement / Data Contract
+    ```mermaid
+    flowchart LR
+        OBSERVE["Engineering<br/>observe and profile"] --> EVIDENCE["Data Catalogue<br/>Data Profiled<br/>Data Lineage"]
+        EVIDENCE --> AUTHOR["Governance<br/>enrich and author"]
+        AUTHOR --> INTENT["Enrichment<br/>Guardrails"]
+        INTENT --> EVALUATE["Engineering<br/>evaluate Guardrails"]
+        EVALUATE --> RESULTS["Guardrail Results"]
+        EVALUATE --> DECISION{"Can continue?"}
+        DECISION -->|Yes| CONTINUE["Continue pipeline"]
+        DECISION -->|No| BLOCK["Block pipeline"]
     ```
+
+    Engineering records observed evidence and runtime outcomes. Governance adds business meaning and defines the rules that Engineering evaluates on later runs.
 
 ??? info "Details — Table Guardrails versus DQ rules"
 
