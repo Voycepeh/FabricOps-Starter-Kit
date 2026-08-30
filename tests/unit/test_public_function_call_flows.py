@@ -70,6 +70,17 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
         "    return None\n",
         encoding="utf-8",
     )
+    (pkg / "detached.py").write_text(
+        "def imported_but_not_called():\n"
+        "    return None\n\n"
+        "def genuinely_orphaned():\n"
+        "    return None\n",
+        encoding="utf-8",
+    )
+    (pkg / "consumer.py").write_text(
+        "from .detached import imported_but_not_called\n",
+        encoding="utf-8",
+    )
     return root, pkg, init_path
 
 
@@ -147,7 +158,14 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert public_b_row["distinct_caller_count"] == 1
 
     unused_records = payload["defined_but_not_used"]
-    assert {item["function_name"] for item in unused_records} == {"unused_local"}
+    assert {item["function_name"] for item in unused_records} == {"unused_local", "genuinely_orphaned"}
+    detached = next(item for item in payload["defined_functions"] if item["function_name"] == "imported_but_not_called")
+    assert detached["inbound_source_references"] == ["fabricops_kit.consumer::<module>"]
+    assert detached["inbound_callers"] == []
+    assert detached["public_flow_reachable"] is False
+    reached_private = next(item for item in payload["defined_functions"] if item["function_name"] == "_private_shared")
+    assert reached_private["public_flow_reachable"] is True
+    assert "fabricops_kit.public_a.public_a" in reached_private["inbound_callers"]
     assert "generated_at_sgt" not in payload["metadata"]
     assert "generated_at_utc" not in payload["metadata"]
     assert payload["metadata"]["source_json_url"] == flows.SOURCE_JSON_URL
@@ -160,6 +178,66 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     }
     assert "Type 6" not in payload["metadata"]["architecture_violation_rules"]
     assert payload["metadata"]["architecture_violation_signal"] == "Any Type 1 to Type 5 edge appears in the public function flow."
+
+
+def test_import_call_resolution_patterns_and_re_exports(tmp_path: Path) -> None:
+    """Resolve direct, aliased, module-qualified, relative, and re-exported calls."""
+    pkg = tmp_path / "src" / "fabricops_kit"
+    helpers = pkg / "helpers"
+    feature = pkg / "feature"
+    helpers.mkdir(parents=True)
+    feature.mkdir()
+    (pkg / "__init__.py").write_text("from .feature.live import live\n__all__ = ['live']\n", encoding="utf-8")
+    (helpers / "__init__.py").write_text("from .core import reexported\n", encoding="utf-8")
+    (helpers / "core.py").write_text(
+        "def direct(): pass\n"
+        "def alias_target(): pass\n"
+        "def module_target(): pass\n"
+        "def relative_target(): pass\n"
+        "def reexported(): pass\n",
+        encoding="utf-8",
+    )
+    (feature / "__init__.py").write_text("", encoding="utf-8")
+    (feature / "live.py").write_text(
+        "from fabricops_kit.helpers.core import direct\n"
+        "from fabricops_kit.helpers.core import alias_target as renamed\n"
+        "from fabricops_kit.helpers import core\n"
+        "from ..helpers.core import relative_target\n"
+        "from fabricops_kit.helpers import reexported\n\n"
+        "def live():\n"
+        "    direct()\n"
+        "    renamed()\n"
+        "    core.module_target()\n"
+        "    relative_target()\n"
+        "    reexported()\n",
+        encoding="utf-8",
+    )
+
+    payload = flows.build_payload(root=tmp_path, pkg_dir=pkg, init_path=pkg / "__init__.py")
+    live = payload["public_functions"][0]
+    assert {row["function_name"] for row in live["flow"]} == {
+        "live", "direct", "alias_target", "module_target", "relative_target", "reexported",
+    }
+
+
+def test_repository_imported_helpers_are_not_false_unused_candidates() -> None:
+    """Keep known production imports distinct from call and reachability signals."""
+    payload = flows.build_payload()
+    unused = {row["qualified_name"] for row in payload["defined_but_not_used"]}
+    records = {row["qualified_name"]: row for row in payload["defined_functions"]}
+    expected_references = {
+        "fabricops_kit.config.audit._audit_timestamp_value": {
+            "fabricops_kit.pipeline.shared::<module>",
+            "fabricops_kit.widgets.shared::<module>",
+        },
+        "fabricops_kit.config.audit._resolve_action_by": {"fabricops_kit.widgets.shared::<module>"},
+        "fabricops_kit.config.metadata_keys._build_dq_rule_key": {"fabricops_kit.widgets.shared::<module>"},
+    }
+    for qualified_name, references in expected_references.items():
+        assert qualified_name not in unused
+        assert set(records[qualified_name]["inbound_source_references"]) == references
+        assert records[qualified_name]["inbound_callers"] == []
+        assert records[qualified_name]["public_flow_reachable"] is False
 
 
 def test_release_lifecycle_and_live_impact_contract(tmp_path: Path) -> None:
