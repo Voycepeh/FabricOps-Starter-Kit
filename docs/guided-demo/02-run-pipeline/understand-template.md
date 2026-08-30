@@ -29,14 +29,18 @@ Multi-target fan-out is technically possible through the individual writer funct
 
 Keep dependencies directional and acyclic. A pipeline should not use its own target as an engineer-authored source. Persisted intermediate stages should be explicit outputs of upstream pipelines and inputs to separate downstream pipelines.
 
-```text
-Source A ─┐
-Source B ─┼→ Pipeline 1 → Table A
-Source C ─┘
+```mermaid
+flowchart LR
+    A["Source table A"] --> P1["02_pipeline"]
+    B["Source table B"] --> P1
+    C["Reference table"] --> P1
+    P1 --> T1["Governed target A"]
 
-Table A ──┐
-Source D ─┼→ Pipeline 2 → Table B
-          ┘
+    T1 --> P2["Downstream 02_pipeline"]
+    D["Another source"] --> P2
+    P2 --> T2["Governed target B"]
+
+    P1 -.-> N["Why one target?<br/>Independent writes can partially succeed.<br/>No notebook-level rollback."]
 ```
 
 ## Why Guardrails are not required yet
