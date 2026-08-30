@@ -12,7 +12,7 @@ You will progressively take the same engineering pipeline through the FabricOps 
 Set up → Govern → Engineer → Govern → Validate → Contract → Production → Consume
 ```
 
-The learning path deliberately introduces governance in stages. Step 2 runs the full ETL before Guardrails exist. Step 3 defines Guardrails from the observed Engineering metadata. Step 4 reruns the same ETL with those Guardrails. Step 5 freezes approved expectations into a Data Contract. Step 6 runs the same engineering template in Production against the active contract.
+The learning path deliberately introduces governance in stages. Step 2 runs the full ETL before Guardrails exist. Step 3 reads the `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` records written by Engineering, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns the same ETL with those Guardrails. Step 5 freezes approved expectations into a Data Contract. Step 6 runs the same engineering template in Production against the active contract.
 
 !!! info "Four FabricOps concepts to know first"
 
@@ -27,9 +27,9 @@ The learning path deliberately introduces governance in stages. Step 2 runs the 
 | 0A. Prepare Fabric artifacts | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. |
 | 0B. Set up the environment | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing. |
 | 1. Establish governance context | Governance | `01_governance` | Create Data Stewards and a Data Agreement. |
-| 2. Engineer and run a data pipeline | Engineering Development | `02_pipeline` | Run the complete ETL, profile/register the result, and produce the metadata handoff to Governance. |
-| 3. Define Guardrails | Governance | `01_governance` | Review observed metadata, enrich the catalogue, and author Guardrails. |
-| 4. Validate with Guardrails | Engineering Development | `02_pipeline` | Rerun the same ETL; the authored Guardrails now execute. |
+| 2. Engineer and run a data pipeline | Engineering Development | `02_pipeline` | Run the complete ETL and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records. |
+| 3. Define Guardrails | Governance | `01_governance` | Read Data Catalogue and Data Profiled records, add Enrichment, and author Guardrails. |
+| 4. Validate with Guardrails | Engineering Development | `02_pipeline` | Rerun the same ETL; the authored Guardrails now execute and write Guardrail Results. |
 | 5. Create the Data Contract | Governance | `01_governance` | Freeze approved expectations into a versioned Data Contract and activate the Production version. |
 | 6. Run Production with the active contract | Engineering Production | `02_pipeline` | Run the same engineering template against the frozen Production contract. |
 | 99. Explore the data product | Project-Specific Consumer | `99_explore` | Consume governed Production data without duplicating the Production engineering workflow. |
@@ -52,11 +52,11 @@ The learning path deliberately introduces governance in stages. Step 2 runs the 
 
 ### Step 2: baseline engineering
 
-`02_pipeline` runs a complete Extract → Transform → Load flow. Profiling, catalogue registration, and lineage give Governance real observed evidence to work from. Guardrails are not expected yet because they have not been authored.
+`02_pipeline` runs a complete Extract → Transform → Load flow and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE`. Guardrails are not expected yet because they have not been authored.
 
 ### Steps 3 and 4: add governance, then rerun
 
-Step 3 uses the observed metadata to define Guardrails. Step 4 returns to the same `02_pipeline`; the engineering logic is not rebuilt, but FabricOps can now evaluate the configured governed expectations around it.
+Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates those Guardrails, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded.
 
 ### Steps 5 and 6: freeze and enforce Production expectations
 
