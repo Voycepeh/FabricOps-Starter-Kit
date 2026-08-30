@@ -46,23 +46,30 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
     | `METADATA_GUARDRAIL` | Author executable Guardrail intent for the ETL workflow. |
     | `METADATA_GUARDRAIL_RESULTS` | Inspect runtime outcomes written by Engineering; do not edit those recorded results. |
 
-??? info "Details — Why observed records and Governance intent stay separate"
+??? info "Details — How the metadata moves between Engineering and Governance"
 
-    Profiling can discover physical table and column structure, but it cannot discover business meaning, stewardship intent, classifications, or Governance rules.
+    `02_pipeline` first writes the technical metadata Governance needs. `01_governance` then adds Enrichment and Guardrails against the same governed table identity. When Engineering reruns the pipeline, those Guardrails are evaluated and the resulting records are written back to the metadata store.
 
     ```mermaid
     flowchart LR
-        OBSERVE["Engineering<br/>observe and profile"] --> EVIDENCE["Data Catalogue<br/>Data Profiled<br/>Data Lineage"]
-        EVIDENCE --> AUTHOR["Governance<br/>enrich and author"]
-        AUTHOR --> INTENT["Enrichment<br/>Guardrails"]
-        INTENT --> EVALUATE["Engineering<br/>evaluate Guardrails"]
-        EVALUATE --> RESULTS["Guardrail Results"]
-        EVALUATE --> DECISION{"Can continue?"}
+        PIPELINE["02_pipeline"] --> CATALOGUE["METADATA_DATA_CATALOGUE"]
+        PIPELINE --> PROFILED["METADATA_DATA_PROFILED"]
+        PIPELINE --> LINEAGE["METADATA_DATA_LINEAGE"]
+
+        CATALOGUE --> GOV["01_governance"]
+        PROFILED --> GOV
+        GOV --> ENRICHMENT["METADATA_ENRICHMENT"]
+        GOV --> GUARDRAIL["METADATA_GUARDRAIL"]
+
+        GUARDRAIL --> RERUN["02_pipeline rerun"]
+        RERUN --> RESULTS["METADATA_GUARDRAIL_RESULTS"]
+        RERUN --> ROWRESULTS["METADATA_GUARDRAIL_ROW_RESULTS"]
+        RERUN --> DECISION{"Can continue?"}
         DECISION -->|Yes| CONTINUE["Continue pipeline"]
         DECISION -->|No| BLOCK["Block pipeline"]
     ```
 
-    Engineering records observed evidence and runtime outcomes. Governance adds business meaning and defines the rules that Engineering evaluates on later runs.
+    The diagram uses the actual FabricOps metadata tables involved in this part of the workflow rather than introducing a separate conceptual evidence or outcome layer.
 
 ??? info "Details — Table Guardrails versus DQ rules"
 
