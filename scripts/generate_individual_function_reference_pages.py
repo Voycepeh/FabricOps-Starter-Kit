@@ -237,7 +237,6 @@ def markdown_anchor(value: str) -> str:
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.shared": "config",
-    "config.get_fabric_context": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
     "widgets.widget_author_guardrails": "widgets.widget_author_guardrails",
@@ -2730,18 +2729,9 @@ ROLE_TAGS_BY_NAME = {
     "get_default_fabric_context": ["internal_resolver", "runtime_context_provider", "shared_internal_service"],
     "get_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
     "get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
-    "build_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
-    "_validate_metadata_table_registration": ["internal_validator", "metadata_table_registration_validator"],
     "_validate_audit_timezone": ["utility_validator", "low_level_utility"],
     "_normalize_path_config": ["internal_normalizer", "path_config_normalizer"],
     "_normalize_widget_config": ["internal_normalizer", "widget_config_normalizer"],
-    "_get_metadata_table_schema_registry": ["registry_builder", "metadata_schema_registry_builder"],
-    "_metadata_schema_field_names": ["schema_utility"],
-    "_string_metadata_schema": ["schema_utility", "local_leaf_helper"],
-    "_resolve_metadata_schema": ["internal_resolver", "metadata_schema_resolver"],
-    "_get_active_metadata_tables": ["internal_resolver", "metadata_registry_query"],
-    "_setup_metadata_table_registry": ["internal_adapter", "metadata_registry_write_adapter"],
-    "_detect_nested_metadata_delta_folders": ["internal_validator", "storage_guardrail_validator"],
     "_list_data_stewards": ["internal_resolver", "data_steward_resolver"],
     "widget_render_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_steward": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
@@ -2770,7 +2760,6 @@ ROLE_TAGS_BY_NAME = {
     "list_data_agreements": ["internal_resolver", "agreement_resolver"],
     "_validate_dq_rules": ["internal_validator", "dq_rule_validator"],
     "_coerce_rows": ["internal_normalizer", "row_payload_normalizer"],
-    "_coerce_row_dicts": ["internal_normalizer", "row_payload_normalizer"],
     "_dq_records_from_selection": ["internal_normalizer", "rule_payload_normalizer"],
     "_schema_freshness_profile_records_from_selection": ["internal_normalizer", "rule_payload_normalizer"],
     "_business_agreement_snapshot": ["internal_normalizer", "agreement_payload_normalizer"],
@@ -2823,7 +2812,6 @@ ROLE_TAGS_BY_NAME = {
     "_convert_single_parquet_ns_to_us": ["internal_adapter", "parquet_timestamp_adapter"],
     "_join_lakehouse_area_path": ["utility_function", "path_join_utility"],
     "_build_warehouse_object_name": ["utility_function", "warehouse_name_formatter"],
-    "_resolve_lakehouse_table_identifier": ["utility_function", "lakehouse_table_formatter"],
 
     # Profiling public entrypoint and role-organized internals.
     "profile_dataframe": ["public_api_entrypoint", "profiling_entrypoint", "public_stable"],

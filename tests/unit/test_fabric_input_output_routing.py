@@ -590,8 +590,6 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
         verbose=False,
         context=context,
     )
-    metadata_store = config.paths["dev"]["metadata"]
-
     assert (
         "load",
         "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders",
@@ -600,12 +598,6 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
         "save",
         "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL",
     ) in frame.write.calls
-    from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
-
-    assert (
-        _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL", "meta")
-        == "meta.METADATA_GUARDRAIL"
-    )
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
@@ -617,9 +609,6 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
 
     _table, _schema, path = resolve_lakehouse_table_location(metadata_store, "orders", None)
     assert path.endswith("/Tables/orders")
-    from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
-
-    assert _resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
 
 
 @pytest.mark.parametrize("schema", ["", "bad-name", "METADATA.TABLE", "META/DATA", "1META"])

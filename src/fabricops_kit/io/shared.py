@@ -96,11 +96,6 @@ def _resolve_lakehouse_table_path(store: FabricStore, table_name: str, schema_na
     return _join_lakehouse_area_path(store, "Tables", table_relative_path)
 
 
-def _resolve_lakehouse_table_identifier(store: FabricStore, table_name: str, schema_name: str | None = None) -> str:
-    """Return the Spark table identifier for a normalized lakehouse table."""
-    return f"{schema_name}.{table_name}" if schema_name else table_name
-
-
 def _require_fabric_connector() -> Any:
     """Return Fabric connector constants or raise a runtime-specific error."""
     try:

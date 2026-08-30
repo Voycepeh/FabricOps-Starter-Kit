@@ -410,15 +410,9 @@ __all__ = [
     "AUDIT_SCHEMA_FIELDS",
     "CANONICAL_METADATA_TABLES",
     "audit_schema_fields",
-    "canonical_metadata_tables",
     "coerce_metadata_row_types",
     "metadata_schema_type_name",
     "metadata_table_field_names",
     "metadata_table_schema_rows",
     "metadata_table_schema_registry",
 ]
-
-
-def canonical_metadata_tables() -> list[str]:
-    """Return the canonical FabricOps metadata table names in bootstrap order."""
-    return list(CANONICAL_METADATA_TABLES)

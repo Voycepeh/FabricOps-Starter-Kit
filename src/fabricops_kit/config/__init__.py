@@ -1,6 +1,5 @@
 """Supported config public contract for FabricOps notebooks."""
 
-from .get_fabric_context import get_fabric_context
 from .shared import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
@@ -21,7 +20,6 @@ __all__ = [
     "FrameworkConfig",
     "ConfigSmokeCheckResult",
     "NotebookSetupContext",
-    "get_fabric_context",
     "setup_notebook",
     "setup_metadata_tables",
 ]

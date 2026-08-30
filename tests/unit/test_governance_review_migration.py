@@ -368,11 +368,14 @@ def test_pipeline_and_config_use_new_governance_owners():
     root = Path(__file__).parents[2]
     pipeline_source = (root / "src" / "fabricops_kit" / "pipeline/shared.py").read_text(encoding="utf-8")
     config_source = (root / "src" / "fabricops_kit" / "config" / "shared.py").read_text(encoding="utf-8")
+    metadata_schema_source = (root / "src" / "fabricops_kit" / "config" / "metadata_schemas.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "from .governance_review" not in pipeline_source
     assert "governance_lookup" not in pipeline_source
     assert "CATALOGUE_TABLE = \"METADATA_DATA_CATALOGUE\"" in pipeline_source
-    assert "metadata_table_schema_registry" in config_source
+    assert "def metadata_table_schema_registry" in metadata_schema_source
     assert "governance_review" not in config_source
 
 
