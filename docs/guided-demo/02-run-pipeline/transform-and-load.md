@@ -36,11 +36,19 @@ Then execute the Warehouse target section.
 
 ![Write Warehouse](../../assets/02/Write_WH.png)
 
+## Why the guided pattern uses one target
+
+It is technically possible to clone the write block and publish multiple targets from one notebook. FabricOps does not stop you from doing that.
+
+The gap is that those physical writes are independent. For example, Target A can be written successfully and Target B can then fail because of permissions, a connector issue, a timeout, locking, or another Fabric runtime error. There is no notebook-level transaction that automatically rolls Target A back, so the pipeline can finish in a partial-success state.
+
+Because of that, the governed `02_pipeline` pattern deliberately uses **fan-in**: one or many upstream sources may feed the transformation, but each pipeline publishes one governed target table.
+
 ## Need another persisted output?
 
 Create a separate downstream pipeline rather than adding another governed target write to the same pipeline.
 
-This keeps each pipeline responsible for one publication boundary and avoids a partial-success state where one target write succeeds but another fails. The output of the first pipeline can become an upstream source for the next pipeline when another persisted stage is needed.
+This keeps each pipeline responsible for one publication boundary. The output of the first pipeline can become an upstream source for the next pipeline when another persisted stage is needed.
 
 Do not use a pipeline's own target as an engineer-authored source inside the same pipeline. Persisted intermediate tables should form explicit stages between separate pipelines.
 
