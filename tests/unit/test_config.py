@@ -14,17 +14,14 @@ from fabricops_kit.config import (
     FrameworkConfig,
     GovernanceConfig,
     PathConfig,
-    get_fabric_context,
     setup_metadata_tables,
     setup_notebook,
 )
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import (
     get_current_audit_timestamp,
-    _get_active_metadata_tables,
     _validate_audit_timezone,
     validate_framework_config,
-    _validate_metadata_table_registration,
     get_default_fabric_context,
     resolve_fabric_context,
     resolve_runtime_context,
@@ -48,16 +45,6 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
-
-
-def test_get_fabric_context_uses_env_as_primary_key():
-    """Verify explicit Fabric contexts expose env as the primary environment key."""
-    config = object()
-
-    context = get_fabric_context(env="dev", config=config)
-
-    assert context["env"] == "dev"
-    assert context["config"] is config
 
 
 def test_default_fabric_context_requires_env(monkeypatch):
@@ -816,33 +803,6 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
-def test_active_metadata_tables_are_source_driven_and_include_access_context():
-    """Verify active metadata tables are source driven and include access context."""
-    tables = _get_active_metadata_tables(framework_config())
-
-    assert len(tables) == 15
-    assert "METADATA_DATA_STEWARD" in tables
-    assert "METADATA_DATA_AGREEMENT" in tables
-    assert "METADATA_DATA_CONTRACT" in tables
-    assert "METADATA_ENRICHMENT" in tables
-    assert "METADATA_COLUMN_CONTEXT" not in tables
-    assert "METADATA_COLUMN_CLASSIFICATION" not in tables
-    assert "METADATA_GUARDRAIL" in tables
-    assert "METADATA_GUARDRAIL_RESULTS" in tables
-    assert "METADATA_GUARDRAIL_ROW_RESULTS" in tables
-    assert "METADATA_SOURCE_OBSERVATION" in tables
-    assert "METADATA_DATA_PROFILED" in tables
-    assert "METADATA_DATA_ACCESS" in tables
-    for legacy in {
-        "METADATA_ENRICHMENT_RULES",
-        "METADATA_GUARDRAIL_RULES",
-        "METADATA_DATA_LINEAGE_TABLE",
-        "METADATA_NOTEBOOK_REGISTRY",
-        "METADATA_PIPELINE_RUNS",
-    }:
-        assert legacy not in tables
-
-
 def test_metadata_data_catalogue_and_profiled_schema_split():
     """Verify catalogue is narrow identity and profiled keeps detailed evidence."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
@@ -904,65 +864,6 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     assert audit_names.issubset(profiled_names)
 
 
-def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
-    """Verify metadata registration validation reads configured metadata target."""
-    import fabricops_kit.io.shared as io
-
-    calls = []
-
-    def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env"] == "dev"
-        assert target == "metadata"
-        calls.append((context["env"], target, table, schema, spark_session))
-        return object()
-
-    class Spark:
-        def sql(self, statement):
-            raise AssertionError(f"metadata validation must not call spark.sql: {statement}")
-
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    spark = Spark()
-    result = _validate_metadata_table_registration(
-        spark=spark,
-        config=framework_config(),
-        env="dev",
-        expected_tables=["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL"],
-    )
-
-    assert result["status"] == "ready"
-    assert result["missing_tables"] == []
-    assert result["expected_table_count"] == 2
-    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL"]
-    assert result["show_tables_statement"] is None
-    assert result["optional_documented_tables"] == []
-    assert calls == [
-        ("dev", "metadata", "METADATA_DATA_STEWARD", None, spark),
-        ("dev", "metadata", "METADATA_GUARDRAIL", None, spark),
-    ]
-
-
-def test_metadata_registration_validation_warns_for_missing_configured_tables(monkeypatch):
-    """Verify metadata registration validation warns for missing configured tables."""
-    import fabricops_kit.io.shared as io
-
-    def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env"] == "dev"
-        assert target == "metadata"
-        raise RuntimeError("table does not exist")
-
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    result = _validate_metadata_table_registration(
-        spark=object(),
-        config=framework_config(),
-        env="dev",
-        expected_tables=["METADATA_DATA_STEWARD"],
-    )
-
-    assert result["status"] == "not_ready"
-    assert result["missing_tables"] == ["METADATA_DATA_STEWARD"]
-    assert "configured metadata target" in result["warnings"][0]
-
-
 def test_audit_timezone_defaults_validates_and_fails_clearly():
     """Verify audit timezone defaults validates and fails clearly."""
     assert _validate_audit_timezone(None) == "UTC"
@@ -1020,8 +921,8 @@ def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workf
 
     assert "_setup_metadata_tables_workflow" not in ROLE_TAGS_BY_NAME
     assert "_setup_notebook_workflow" not in ROLE_TAGS_BY_NAME
-    assert ROLE_TAGS_BY_NAME["_setup_metadata_table_registry"][0] == "internal_adapter"
-    assert ROLE_TAGS_BY_NAME["_validate_metadata_table_registration"][0] == "internal_validator"
+    assert "_setup_metadata_table_registry" not in ROLE_TAGS_BY_NAME
+    assert "_validate_metadata_table_registration" not in ROLE_TAGS_BY_NAME
 
 
 def test_data_agreement_widget_role_hints_do_not_restore_generic_workflow():
@@ -1080,7 +981,7 @@ def test_config_public_import_contract_and_package_shape():
     assert Path("src/fabricops_kit/config/__init__.py").exists()
     assert Path("src/fabricops_kit/config/public.py").exists() is False
     assert Path("src/fabricops_kit/config/models.py").exists() is False
-    assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
+    assert not Path("src/fabricops_kit/config/get_fabric_context.py").exists()
     assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
     assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
     assert Path("src/fabricops_kit/config/shared.py").exists()
@@ -1095,6 +996,7 @@ def test_config_public_import_contract_and_package_shape():
     assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
     assert not hasattr(fabricops_kit, "get_fabric_context")
+    assert not hasattr(config_package, "get_fabric_context")
 
 
 def test_env_config_template_imports_config_from_root_only():
@@ -1117,9 +1019,7 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     assert "build_runtime_audit_fields" in Path(
         "src/fabricops_kit/pipeline/shared.py"
     ).read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path(
-        "src/fabricops_kit/pipeline/shared.py"
-    ).read_text(encoding="utf-8")
+    assert "build_audit_timestamp_expr" not in Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
 
 
 def test_setup_metadata_tables_uses_public_config_validation_helper_only():

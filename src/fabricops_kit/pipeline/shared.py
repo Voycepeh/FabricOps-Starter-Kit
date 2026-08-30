@@ -6,7 +6,7 @@ import json
 from functools import reduce
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from fabricops_kit.config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from ..io.shared import (
     configured_lakehouse_schema,
     get_spark_session,
