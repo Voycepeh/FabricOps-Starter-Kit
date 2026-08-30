@@ -21,6 +21,24 @@ Your project mainly supplies:
 3. the target configuration,
 4. the processing strategy when incremental behaviour is required.
 
+## Pipeline design rule
+
+A FabricOps governed pipeline may consume one or many upstream sources, but it publishes exactly one governed target table.
+
+Multi-target fan-out is technically possible through the individual writer functions, but the governed pipeline pattern deliberately avoids it because independent physical writes can partially succeed. If another persisted output is required, create a separate downstream pipeline.
+
+Keep dependencies directional and acyclic. A pipeline should not use its own target as an engineer-authored source. Persisted intermediate stages should be explicit outputs of upstream pipelines and inputs to separate downstream pipelines.
+
+```text
+Source A ─┐
+Source B ─┼→ Pipeline 1 → Table A
+Source C ─┘
+
+Table A ──┐
+Source D ─┼→ Pipeline 2 → Table B
+          ┘
+```
+
 ## Why Guardrails are not required yet
 
 At this point in the learning path, no Guardrails or Data Contract have been created for the demo table.
