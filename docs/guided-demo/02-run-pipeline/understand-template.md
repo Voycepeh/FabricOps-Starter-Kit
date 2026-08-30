@@ -46,11 +46,11 @@ At this point in the learning path, no Guardrails or Data Contract have been cre
 That is intentional. The same `02_pipeline` template can complete the ETL without those enforcement layers. In later modules you will add governance around this same pipeline rather than build a different pipeline.
 
 ```text
-Step 2: run ETL without authored Guardrails
+Step 2: run ETL and write Catalogue / Profiled / Lineage metadata
         ↓
-Step 3: define Guardrails from observed metadata
+Step 3: read Catalogue + Profiled; write Enrichment + Guardrail
         ↓
-Step 4: rerun the same ETL with Guardrails
+Step 4: rerun the same ETL and write Guardrail Results
         ↓
 Step 5: freeze approved expectations into a Data Contract
         ↓
