@@ -75,25 +75,34 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
 _WATERMARK_CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
+_SOURCE_COMPLETION_TABLE = "METADATA_PIPELINE_SOURCE_COMPLETION"
 
 
 def complete_source_processing(
     completion_context: Mapping[str, Any] | None,
     *,
     context: dict[str, Any] | None = None,
-) -> None:
+) -> dict[str, Any] | None:
     """Persist governed source progress using the physical writer's Fabric context."""
     if completion_context is None:
-        return
+        return None
     sources = completion_context.get("sources") if isinstance(completion_context, Mapping) else None
     if not isinstance(sources, list):
         raise ValueError("completion_context must contain a sources list from write_pipeline_prep().")
+    target = completion_context.get("target")
+    if not isinstance(target, Mapping) or not str(target.get("table_id") or "").strip():
+        raise ValueError("completion_context must contain the governed target identity from write_pipeline_prep().")
+    if not sources:
+        return None
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
     spark = get_spark_session()
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     from ..config.metadata_schemas import metadata_table_schema_registry
 
+    completion_id = str(uuid4())
+    target_table_id = str(target["table_id"])
+    checkpoint_records = []
     for source in sources:
         kind = source.get("type") if isinstance(source, Mapping) else None
         if kind == "watermark":
@@ -116,6 +125,8 @@ def complete_source_processing(
                 "table_id": identity.get("table_id"),
                 "watermark_column": candidate["column"],
                 "watermark_value": str(candidate["value"]),
+                "completion_id": completion_id,
+                "target_table_id": target_table_id,
                 **audit,
             }
         elif kind == "partition":
@@ -126,6 +137,8 @@ def complete_source_processing(
                 "environment_name": env,
                 "table_id": source["table_id"],
                 "observation_id": source["observation_id"],
+                "completion_id": completion_id,
+                "target_table_id": target_table_id,
                 **audit,
             }
         else:
@@ -142,6 +155,22 @@ def complete_source_processing(
             context=resolved_context,
             mode="append",
         )
+        checkpoint_records.append(record)
+    marker = {
+        "completion_id": completion_id,
+        "environment_name": env,
+        "target_table_id": target_table_id,
+        **audit,
+    }
+    frame = spark.createDataFrame(
+        [coerce_metadata_row_types(_SOURCE_COMPLETION_TABLE, marker)],
+        schema=metadata_table_schema_registry()[_SOURCE_COMPLETION_TABLE],
+    )
+    write_lakehouse_table_core(
+        frame, _SOURCE_COMPLETION_TABLE, target="metadata", schema=metadata_schema,
+        context=resolved_context, mode="append",
+    )
+    return checkpoint_records[0] if len(checkpoint_records) == 1 else None
 
 
 def resolve_physical_table_identity(

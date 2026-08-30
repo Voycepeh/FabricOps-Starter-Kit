@@ -4,13 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, write_lakehouse_table_core
-
-
-_CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
+from fabricops_kit.pipeline.shared import complete_source_processing
 
 
 def commit_pipeline_checkpoint(read_prep: dict[str, Any]) -> dict[str, Any] | None:
@@ -80,26 +74,15 @@ def commit_pipeline_checkpoint(read_prep: dict[str, Any]) -> dict[str, Any] | No
     if column != source_processing.get("watermark_column") or candidate.get("value") is None:
         raise ValueError("The watermark candidate does not match the prepared source processing definition.")
 
-    config, env, context = resolve_fabric_context()
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    record = {
-        "environment_name": env,
-        "table_id": source["table_id"],
-        "watermark_column": column,
-        "watermark_value": str(candidate["value"]),
-        **audit,
-    }
-    spark = get_spark_session()
-    frame = spark.createDataFrame(
-        [coerce_metadata_row_types(_CHECKPOINT_TABLE, record)],
-        schema=metadata_table_schema_registry()[_CHECKPOINT_TABLE],
-    )
-    write_lakehouse_table_core(
-        frame,
-        _CHECKPOINT_TABLE,
-        target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        context=context,
-        mode="append",
-    )
-    return record
+    target = read_prep.get("target")
+    if not isinstance(target, dict) or not str(target.get("table_id") or "").strip():
+        raise ValueError("read_prep must contain the canonical governed target identity.")
+    return complete_source_processing({
+        "target": target,
+        "sources": [{
+            "type": "watermark",
+            "source": source,
+            "source_processing": source_processing,
+            "candidate": candidate,
+        }],
+    })

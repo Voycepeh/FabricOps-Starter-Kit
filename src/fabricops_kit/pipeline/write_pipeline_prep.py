@@ -24,7 +24,13 @@ def _replace_where(partition_column: str, values: list[Any]) -> str:
     return f"`{quoted}` IN ({', '.join(literal(value) for value in values)})"
 
 
-def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified") -> dict[str, Any]:
+def write_pipeline_prep(
+    df,
+    read_prep: dict[str, Any],
+    *,
+    target: str = "unified",
+    additional_read_preps: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Prepare governed target write inputs without physically writing the target.
 
     Parameters
@@ -37,6 +43,10 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     target : str, default="unified"
         Configured Lakehouse or Warehouse target used to prepare physical
         writer settings.
+    additional_read_preps : list of dict, optional
+        Additional results from :func:`read_pipeline_prep` that feed the same
+        governed target publication. Their incremental progress is committed
+        with the primary source after the one target write succeeds.
 
     Returns
     -------
@@ -71,6 +81,7 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     read_pipeline_prep, write_lakehouse_table, write_warehouse_table
 
     """
+    read_preps = [read_prep, *(additional_read_preps or [])]
     processing = read_prep.get("processing")
     if not isinstance(processing, dict):
         raise ValueError("read_prep must contain the resolved processing definition.")
@@ -80,6 +91,18 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
         raise ValueError("read_prep must contain a canonical read_mode and scope.")
     if read_mode == "skip":
         raise ValueError("A skipped pipeline run has no target write to prepare.")
+    target_identity = read_prep.get("target")
+    if not isinstance(target_identity, dict) or not target_identity.get("table_id"):
+        raise ValueError("read_prep must contain the governed target identity.")
+    for contribution in read_preps[1:]:
+        if not isinstance(contribution, dict):
+            raise ValueError("additional_read_preps must contain read_pipeline_prep() dictionaries.")
+        if contribution.get("target") != target_identity:
+            raise ValueError("All source preparations must identify the same governed target.")
+        if contribution.get("processing") != processing:
+            raise ValueError("All source preparations must use the same governed target processing definition.")
+        if contribution.get("read_mode") == "skip":
+            raise ValueError("A skipped source preparation cannot contribute to a target publication.")
     config, env, context = resolve_fabric_context()
     store_kind = str(get_store(config, env, target).kind).strip().lower()
     strategy = str(processing.get("load_strategy") or "")
@@ -101,23 +124,24 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
         options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
     completion_sources = []
-    candidate = read_prep.get("candidate_checkpoint")
-    if candidate is not None:
-        completion_sources.append({
-            "type": "watermark",
-            "source": read_prep.get("source"),
-            "source_processing": read_prep.get("source_processing"),
-            "candidate": candidate,
-        })
-    observation = read_prep.get("observation")
-    changes = read_prep.get("changes")
-    if observation is not None and isinstance(changes, dict):
-        completion_sources.append({
-            "type": "partition",
-            "table_id": changes.get("table_id"),
-            "environment_name": changes.get("environment_name"),
-            "observation_id": changes.get("observation_id"),
-        })
+    for contribution in read_preps:
+        candidate = contribution.get("candidate_checkpoint")
+        if candidate is not None:
+            completion_sources.append({
+                "type": "watermark",
+                "source": contribution.get("source"),
+                "source_processing": contribution.get("source_processing"),
+                "candidate": candidate,
+            })
+        observation = contribution.get("observation")
+        changes = contribution.get("changes")
+        if observation is not None and isinstance(changes, dict):
+            completion_sources.append({
+                "type": "partition",
+                "table_id": changes.get("table_id"),
+                "environment_name": changes.get("environment_name"),
+                "observation_id": changes.get("observation_id"),
+            })
     return {
         "df": prepared_df,
         "mode": mode,
@@ -131,5 +155,5 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
         "processing": processing,
         "scope": {"read_mode": read_mode, "scope": scope},
         "target_kind": store_kind,
-        "completion": {"sources": completion_sources} if completion_sources else None,
+        "completion": {"target": target_identity, "sources": completion_sources} if completion_sources else None,
     }

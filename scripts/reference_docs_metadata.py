@@ -195,6 +195,15 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
+    "METADATA_PIPELINE_SOURCE_COMPLETION": {
+        "purpose": "Mark all incremental-source checkpoints for one governed target publication as logically successful.",
+        "grain": "One successful source-progress completion for one governed target publication.",
+        "primary_key": ["completion_id"],
+        "foreign_keys": [],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One successful completion validates all watermark and partition checkpoint rows with the same completion, environment, and target identity."},
+        ],
+    },
     "METADATA_DATA_PROFILED": {
         "purpose": "See the column-level profile metrics captured for a dataset snapshot.",
         "grain": "One observed column in one profiling snapshot.",
@@ -292,6 +301,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_SOURCE_OBSERVATION",
     "METADATA_SOURCE_PARTITION_CHECKPOINT",
     "METADATA_SOURCE_WATERMARK_CHECKPOINT",
+    "METADATA_PIPELINE_SOURCE_COMPLETION",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
@@ -542,6 +552,13 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_SOURCE_PARTITION_CHECKPOINT": {
         "__default__": [
             "fabricops_kit.pipeline.read_pipeline_prep._successful_partition_observation_id",
+            "fabricops_kit.pipeline.shared.complete_source_processing",
+        ],
+        "__audit__": ["fabricops_kit.pipeline.shared.complete_source_processing"],
+    },
+    "METADATA_PIPELINE_SOURCE_COMPLETION": {
+        "__default__": [
+            "fabricops_kit.pipeline.read_pipeline_prep._committed_checkpoint_rows",
             "fabricops_kit.pipeline.shared.complete_source_processing",
         ],
         "__audit__": ["fabricops_kit.pipeline.shared.complete_source_processing"],

@@ -255,6 +255,24 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
+<a class="metadata-table-card" href="metadata_pipeline_source_completion/" aria-label="Open METADATA_PIPELINE_SOURCE_COMPLETION schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__title">METADATA_PIPELINE_SOURCE_COMPLETION</span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Mark all incremental-source checkpoints for one governed target publication as logically successful.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One successful source-progress completion for one governed target publication.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>completion_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+  </span>
+</a>
 <a class="metadata-table-card" href="metadata_data_profiled/" aria-label="Open METADATA_DATA_PROFILED schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__title">METADATA_DATA_PROFILED</span>

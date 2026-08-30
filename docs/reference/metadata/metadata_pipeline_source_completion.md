@@ -1,6 +1,6 @@
-# METADATA_SOURCE_PARTITION_CHECKPOINT
+# METADATA_PIPELINE_SOURCE_COMPLETION
 
-Record which source partition observation was successfully published downstream.
+Mark all incremental-source checkpoints for one governed target publication as logically successful.
 
 ## Writer functions
 
@@ -12,31 +12,28 @@ Record which source partition observation was successfully published downstream.
 
 ## Model
 
-**Grain:** One successfully processed observation for one source table.
+**Grain:** One successful source-progress completion for one governed target publication.
 
-**Primary key:** `environment_name` + `table_id` + `_committed_at`
+**Primary key:** `completion_id`
 
 **Relationships:**
 
-`METADATA_SOURCE_OBSERVATION` **(N → 1)**
-via `observation_id`
+No immediate table relationship is defined in the current implementation.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 13 |
-| Business columns | 5 |
+| Total columns | 11 |
+| Business columns | 3 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Description |
 | --- | --- | --- |
-| `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
-| `observation_id` | `string` | Identifier stored for `observation_id`. |
 | `completion_id` | `string` | Identifier stored for `completion_id`. |
+| `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `target_table_id` | `string` | Identifier stored for `target_table_id`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |

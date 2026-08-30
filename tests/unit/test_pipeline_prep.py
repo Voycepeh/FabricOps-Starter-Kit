@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from importlib import import_module
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -58,6 +59,7 @@ def test_watermark_scope_is_bounded_and_candidate_is_not_committed(monkeypatch, 
     result = read_module._watermark_scope(
         {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
         config="config", env="dev", spark_session="spark", context={},
+        target_table_id="lakehouse:unified:dbo:bookings_curated",
     )
     assert result["read_mode"] == expected_mode
     if expected_mode == "skip":
@@ -81,12 +83,13 @@ def test_watermark_rejects_duplicate_values_that_can_hide_late_rows(monkeypatch)
         read_module._watermark_scope(
             {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
             config="config", env="dev", spark_session="spark", context={},
+            target_table_id="lakehouse:unified:dbo:bookings_curated",
         )
 
 
 def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
     writes = []
-    completion = {"sources": [{
+    completion = {"target": {"table_id": "lakehouse:unified:dbo:bookings_curated"}, "sources": [{
         "type": "watermark",
         "source": {"table_id": "warehouse:source:dbo:bookings"},
         "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_datetime"},
@@ -110,13 +113,16 @@ def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
     shared_module.complete_source_processing(completion)
     assert writes[0][0] == "METADATA_SOURCE_WATERMARK_CHECKPOINT"
     assert writes[0][1]["watermark_value"] == "2026-08-26 12:00"
+    assert writes[1][0] == "METADATA_PIPELINE_SOURCE_COMPLETION"
+    assert writes[0][1]["completion_id"] == writes[1][1]["completion_id"]
 
-    shared_module.complete_source_processing({"sources": [{
+    shared_module.complete_source_processing({"target": {"table_id": "lakehouse:unified:dbo:bookings_curated"}, "sources": [{
         "type": "partition", "environment_name": "dev", "table_id": "source",
         "observation_id": "published-observation",
     }]})
-    assert writes[1][0] == "METADATA_SOURCE_PARTITION_CHECKPOINT"
-    assert writes[1][1]["observation_id"] == "published-observation"
+    assert writes[2][0] == "METADATA_SOURCE_PARTITION_CHECKPOINT"
+    assert writes[2][1]["observation_id"] == "published-observation"
+    assert writes[3][0] == "METADATA_PIPELINE_SOURCE_COMPLETION"
 
 
 def test_checkpoint_persistence_failure_surfaces_after_physical_write(monkeypatch):
@@ -128,6 +134,141 @@ def test_checkpoint_persistence_failure_surfaces_after_physical_write(monkeypatc
     with pytest.raises(RuntimeError, match="checkpoint failed"):
         lakehouse_writer.write_lakehouse_table(object(), "target", verbose=False, completion_context={"sources": []})
     assert events == ["write"]
+
+
+def test_fan_in_completion_writes_marker_only_after_all_checkpoints(monkeypatch):
+    writes = []
+    audit = {
+        "_committed_by": "engineer", "_committed_at": "2026-08-26T12:01:00",
+        "_workspace_id": "workspace", "_workspace_name": "workspace",
+        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
+        "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
+    }
+    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda **_kwargs: ("config", "dev", {}))
+    monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: audit)
+    monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
+        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
+    ))
+    monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda *_args: "metadata")
+    monkeypatch.setattr(
+        shared_module, "write_lakehouse_table_core",
+        lambda frame, table, **_kwargs: writes.append((table, frame["rows"][0])),
+    )
+    completion = {
+        "target": {"table_id": "lakehouse:unified:dbo:students"},
+        "sources": [
+            {
+                "type": "watermark", "source": {"table_id": "warehouse:source:dbo:events"},
+                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "event_id"},
+                "candidate": {"status": "candidate", "column": "event_id", "value": 42},
+            },
+            {
+                "type": "partition", "environment_name": "dev", "table_id": "lakehouse:source:dbo:snapshots",
+                "observation_id": "observation-42",
+            },
+        ],
+    }
+
+    shared_module.complete_source_processing(completion)
+
+    assert [table for table, _record in writes] == [
+        "METADATA_SOURCE_WATERMARK_CHECKPOINT",
+        "METADATA_SOURCE_PARTITION_CHECKPOINT",
+        "METADATA_PIPELINE_SOURCE_COMPLETION",
+    ]
+    assert len({record["completion_id"] for _table, record in writes}) == 1
+    assert all(record["target_table_id"] == "lakehouse:unified:dbo:students" for _table, record in writes)
+
+
+@pytest.mark.parametrize("failure_index", [1, 2, 3])
+def test_incomplete_fan_in_never_writes_success_marker(monkeypatch, failure_index):
+    writes = []
+    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda **_kwargs: ("config", "dev", {}))
+    monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
+        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
+    ))
+    monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda *_args: "metadata")
+
+    def persist(frame, table, **_kwargs):
+        if len(writes) + 1 == failure_index:
+            raise RuntimeError("metadata persistence failed")
+        writes.append(table)
+
+    monkeypatch.setattr(shared_module, "write_lakehouse_table_core", persist)
+    completion = {
+        "target": {"table_id": "lakehouse:unified:dbo:students"},
+        "sources": [
+            {"type": "partition", "environment_name": "dev", "table_id": "source-a", "observation_id": "a"},
+            {"type": "partition", "environment_name": "dev", "table_id": "source-b", "observation_id": "b"},
+        ],
+    }
+    with pytest.raises(RuntimeError, match="metadata persistence failed"):
+        shared_module.complete_source_processing(completion)
+    assert "METADATA_PIPELINE_SOURCE_COMPLETION" not in writes
+
+
+def test_full_dataset_completion_has_no_checkpoint_or_marker(monkeypatch):
+    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda **_kwargs: pytest.fail("runtime resolution"))
+    shared_module.complete_source_processing({
+        "target": {"table_id": "lakehouse:unified:dbo:students"}, "sources": [],
+    })
+
+
+def test_checkpoint_reader_inner_joins_target_scoped_success_markers(monkeypatch):
+    checkpoints = MagicMock()
+    completions = MagicMock()
+    marker_keys = MagicMock()
+    committed = MagicMock()
+    completions.select.return_value.dropDuplicates.return_value = marker_keys
+    checkpoints.join.return_value.where.return_value = committed
+    frames = iter([checkpoints, completions])
+    monkeypatch.setattr(read_module, "configured_lakehouse_schema", lambda *_args: "metadata")
+    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: next(frames))
+
+    result = read_module._committed_checkpoint_rows(
+        "METADATA_SOURCE_WATERMARK_CHECKPOINT", "config", "dev",
+        "lakehouse:unified:dbo:students", spark_session="spark", context={},
+    )
+
+    completions.select.assert_called_once_with("completion_id", "environment_name", "target_table_id")
+    checkpoints.join.assert_called_once_with(
+        marker_keys, ["completion_id", "environment_name", "target_table_id"], "inner",
+    )
+    assert result is committed
+
+
+def test_write_prep_combines_mixed_sources_for_one_target(monkeypatch):
+    target_identity = {"table_id": "lakehouse:unified:dbo:students"}
+    processing = {"load_strategy": "append"}
+    primary = {
+        "processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"},
+        "target": target_identity, "source": {"table_id": "source-watermark"},
+        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "event_id"},
+        "candidate_checkpoint": {"status": "candidate", "column": "event_id", "value": 42},
+    }
+    partition = {
+        "processing": processing, "read_mode": "incremental_subset", "scope": {"type": "partition"},
+        "target": target_identity, "observation": object(),
+        "changes": {"table_id": "source-partition", "environment_name": "dev", "observation_id": "observation-42"},
+    }
+    full_dataset = {
+        "processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"},
+        "target": target_identity,
+    }
+    monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(write_module, "get_store", lambda *_args: SimpleNamespace(kind="lakehouse"))
+    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {})
+    monkeypatch.setattr(write_module, "add_target_audit_fields", lambda df, _audit: df)
+
+    result = write_module.write_pipeline_prep(
+        object(), primary, additional_read_preps=[partition, full_dataset],
+    )
+
+    assert result["completion"]["target"] == target_identity
+    assert [source["type"] for source in result["completion"]["sources"]] == ["watermark", "partition"]
 
 
 def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
@@ -203,7 +344,10 @@ def test_write_prep_adds_audit_and_reuses_exact_processing(monkeypatch, spark_se
         "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
     })
     frame = spark_session.createDataFrame([(1, "active")], ["student_id", "status"])
-    read_prep = {"processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
+    read_prep = {
+        "processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"},
+        "target": {"table_id": "lakehouse:unified:dbo:students"},
+    }
     result = write_module.write_pipeline_prep(frame, read_prep)
     assert result["processing"] is processing
     assert result["mode"] == mode
@@ -221,7 +365,10 @@ def test_write_prep_adds_scd2_lifecycle_for_lakehouse_and_warehouse(monkeypatch,
         "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
     })
     frame = spark_session.createDataFrame([(1, "active", "2026-08-22")], ["student_id", "status", "effective_at"])
-    read_prep = {"processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
+    read_prep = {
+        "processing": processing, "read_mode": "full_dataset", "scope": {"type": "full_dataset"},
+        "target": {"table_id": "lakehouse:unified:dbo:students"},
+    }
     monkeypatch.setattr(write_module, "get_store", lambda *_args: SimpleNamespace(kind="lakehouse"))
     result = write_module.write_pipeline_prep(frame, read_prep)
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
@@ -381,7 +528,7 @@ def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch
         object(),
         "target",
         context=explicit_context,
-        completion_context={"sources": [{
+        completion_context={"target": {"table_id": "lakehouse:unified:dbo:target"}, "sources": [{
             "type": "watermark",
             "source": {"table_id": "lakehouse:source:dbo:bookings"},
             "source_processing": {

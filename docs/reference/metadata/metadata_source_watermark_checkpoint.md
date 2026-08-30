@@ -25,8 +25,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 12 |
-| Business columns | 4 |
+| Total columns | 14 |
+| Business columns | 6 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -37,6 +37,8 @@ via `table_id`
 | `table_id` | `string` | Identifier for the accessed table or object. |
 | `watermark_column` | `string` | Metadata Source Watermark Checkpoint field `watermark_column`. |
 | `watermark_value` | `string` | Metadata Source Watermark Checkpoint field `watermark_value`. |
+| `completion_id` | `string` | Identifier stored for `completion_id`. |
+| `target_table_id` | `string` | Identifier stored for `target_table_id`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

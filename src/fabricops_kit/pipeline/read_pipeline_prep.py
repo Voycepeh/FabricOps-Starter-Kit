@@ -19,6 +19,7 @@ from fabricops_kit.pipeline.shared import resolve_physical_table_identity, resol
 
 _CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
 _PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
+_SOURCE_COMPLETION_TABLE = "METADATA_PIPELINE_SOURCE_COMPLETION"
 _SOURCE_STRATEGIES = {"full_dataset", "incremental_watermark", "incremental_partition"}
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -89,22 +90,41 @@ def _partition_scope(changes: Mapping[str, Any], processing: Mapping[str, Any], 
     }
 
 
-def _checkpoint_value(config: Any, env: str, table_id: str, column: str, *, spark_session: Any, context: Any) -> Any:
-    """Return the latest successfully committed watermark, or None on first run."""
+def _committed_checkpoint_rows(
+    table_name: str, config: Any, env: str, target_table_id: str, *, spark_session: Any, context: Any
+) -> Any | None:
+    """Return checkpoint rows whose target-scoped completion marker exists."""
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     try:
-        frame = read_lakehouse_table_core(
-            _CHECKPOINT_TABLE,
-            target="metadata",
-            schema=metadata_schema,
-            spark_session=spark_session,
-            context=context,
+        checkpoints = read_lakehouse_table_core(
+            table_name, target="metadata", schema=metadata_schema,
+            spark_session=spark_session, context=context,
         )
-    except (FileNotFoundError, RuntimeError) as exc:
-        message = str(exc).lower()
-        if "not found" in message or "does not exist" in message:
+        completions = read_lakehouse_table_core(
+            _SOURCE_COMPLETION_TABLE, target="metadata", schema=metadata_schema,
+            spark_session=spark_session, context=context,
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
             return None
         raise
+    keys = ["completion_id", "environment_name", "target_table_id"]
+    return checkpoints.join(completions.select(*keys).dropDuplicates(), keys, "inner").where(
+        (checkpoints.environment_name == env) & (checkpoints.target_table_id == target_table_id)
+    )
+
+
+def _checkpoint_value(
+    config: Any, env: str, table_id: str, column: str, target_table_id: str,
+    *, spark_session: Any, context: Any,
+) -> Any:
+    """Return the latest successfully committed watermark, or None on first run."""
+    frame = _committed_checkpoint_rows(
+        _CHECKPOINT_TABLE, config, env, target_table_id,
+        spark_session=spark_session, context=context,
+    )
+    if frame is None:
+        return None
     rows = (
         frame.where((frame.environment_name == env) & (frame.table_id == table_id) & (frame.watermark_column == column))
         .orderBy(frame._committed_at.desc())
@@ -115,21 +135,15 @@ def _checkpoint_value(config: Any, env: str, table_id: str, column: str, *, spar
 
 
 def _successful_partition_observation_id(
-    config: Any, env: str, table_id: str, *, spark_session: Any, context: Any
+    config: Any, env: str, table_id: str, target_table_id: str, *, spark_session: Any, context: Any
 ) -> str | None:
     """Return the observation from the last successfully published partition run."""
-    try:
-        frame = read_lakehouse_table_core(
-            _PARTITION_CHECKPOINT_TABLE,
-            target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
-            spark_session=spark_session,
-            context=context,
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            return None
-        raise
+    frame = _committed_checkpoint_rows(
+        _PARTITION_CHECKPOINT_TABLE, config, env, target_table_id,
+        spark_session=spark_session, context=context,
+    )
+    if frame is None:
+        return None
     rows = (
         frame.where((frame.environment_name == env) & (frame.table_id == table_id))
         .orderBy(frame._committed_at.desc())
@@ -204,10 +218,12 @@ def _watermark_scope(
     env: str,
     spark_session: Any,
     context: Any,
+    target_table_id: str,
 ) -> dict[str, Any]:
     """Resolve a bounded ``(lower, upper]`` watermark scope."""
     previous_value = _checkpoint_value(
-        config, env, str(identity["table_id"]), column, spark_session=spark_session, context=context
+        config, env, str(identity["table_id"]), column, target_table_id,
+        spark_session=spark_session, context=context
     )
     state = _source_upper_watermark(identity, column, spark_session=spark_session, context=context)
     upper = state["upper_watermark"]
@@ -361,6 +377,7 @@ def read_pipeline_prep(
             env=env,
             spark_session=spark,
             context=context,
+            target_table_id=str(target_identity["table_id"]),
         )
     else:
         observation = _observe_table_core(
@@ -370,6 +387,7 @@ def read_pipeline_prep(
             config,
             env,
             str(source_identity["table_id"]),
+            str(target_identity["table_id"]),
             spark_session=getattr(observation, "sparkSession", None) or get_spark_session(),
             context=context,
         )

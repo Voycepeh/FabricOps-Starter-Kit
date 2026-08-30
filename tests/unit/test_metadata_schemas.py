@@ -156,6 +156,21 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     assert "_committed_at" in fields
 
 
+def test_source_checkpoints_require_target_scoped_completion_marker():
+    """Checkpoint progress is valid only through one target-scoped completion."""
+    registry = metadata_table_schema_registry()
+    assert registry["METADATA_SOURCE_WATERMARK_CHECKPOINT"].fieldNames()[:6] == [
+        "environment_name", "table_id", "watermark_column", "watermark_value",
+        "completion_id", "target_table_id",
+    ]
+    assert registry["METADATA_SOURCE_PARTITION_CHECKPOINT"].fieldNames()[:5] == [
+        "environment_name", "table_id", "observation_id", "completion_id", "target_table_id",
+    ]
+    assert registry["METADATA_PIPELINE_SOURCE_COMPLETION"].fieldNames()[:3] == [
+        "completion_id", "environment_name", "target_table_id",
+    ]
+
+
 def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision():
     """One Guardrail revision is identified by rule ID plus guardrail_version."""
     registry = metadata_table_schema_registry()

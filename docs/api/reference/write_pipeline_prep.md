@@ -14,7 +14,7 @@ Prepare governed target write inputs and technical fields without physically wri
 
 `fabricops_kit/pipeline/write_pipeline_prep.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L27-L135">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L27-L159">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,6 +40,7 @@ def write_pipeline_prep(
     df,
     read_prep: dict[str, Any],
     target: str='unified',
+    additional_read_preps: list[dict[str, Any]] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -62,6 +63,7 @@ def write_pipeline_prep(
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
 | `read_prep` | `dict[str, Any]` | Yes | Exact result returned by :func:`read_pipeline_prep`. Its canonical ``processing`` definition is reused without contract re-resolution. |
 | `target` | `str` | No | Configured Lakehouse or Warehouse target used to prepare physical writer settings. |
+| `additional_read_preps` | `list[dict[str, Any]] \| None` | No | Additional results from :func:`read_pipeline_prep` that feed the same governed target publication. Their incremental progress is committed with the primary source after the one target write succeeds. |
 
 ## Returns
 

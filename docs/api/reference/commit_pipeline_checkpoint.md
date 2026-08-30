@@ -12,9 +12,9 @@ Commit a prepared watermark after the governed target write succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/commit_pipeline_checkpoint.py:16`
+`fabricops_kit/pipeline/commit_pipeline_checkpoint.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/commit_pipeline_checkpoint.py#L16-L105">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/commit_pipeline_checkpoint.py#L10-L88">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

@@ -21,6 +21,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_SOURCE_OBSERVATION",
     "METADATA_SOURCE_WATERMARK_CHECKPOINT",
     "METADATA_SOURCE_PARTITION_CHECKPOINT",
+    "METADATA_PIPELINE_SOURCE_COMPLETION",
 ]
 
 AUDIT_SCHEMA_FIELDS = [
@@ -307,6 +308,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("table_id", "string", False),
                 ("watermark_column", "string", False),
                 ("watermark_value", "string", False),
+                ("completion_id", "string", False),
+                ("target_table_id", "string", False),
                 *audit,
             ],
         ),
@@ -316,6 +319,17 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("environment_name", "string", False),
                 ("table_id", "string", False),
                 ("observation_id", "string", False),
+                ("completion_id", "string", False),
+                ("target_table_id", "string", False),
+                *audit,
+            ],
+        ),
+        "METADATA_PIPELINE_SOURCE_COMPLETION": build_metadata_schema(
+            "METADATA_PIPELINE_SOURCE_COMPLETION",
+            [
+                ("completion_id", "string", False),
+                ("environment_name", "string", False),
+                ("target_table_id", "string", False),
                 *audit,
             ],
         ),
