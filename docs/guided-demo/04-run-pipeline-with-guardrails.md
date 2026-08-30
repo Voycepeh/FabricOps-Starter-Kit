@@ -47,12 +47,21 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Use `read_pipeline_prep()` to observe the source, resolve the governed target processing definition, and prepare the source runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
 
-    ```text
-    configured source strategy + source observation + governed target strategy
-    → skip / full_dataset / incremental_subset
+    The engineer chooses the **source strategy**. FabricOps then combines that choice with recorded source state to determine the **runtime read mode** for this run.
+
+    ```mermaid
+    flowchart TB
+        FULL["Full Dataset"] --> FULLMODE["full_dataset"]
+        WATERMARK["Incremental Watermark"] --> PREP["FabricOps preparation<br/>source state + successful checkpoint"]
+        PARTITION["Incremental Partition"] --> PREP
+        PREP --> FIRST{"Successful checkpoint exists?"}
+        FIRST -->|No| FULLMODE
+        FIRST -->|Yes| CHANGED{"Changes detected?"}
+        CHANGED -->|Yes| SUBSET["incremental_subset"]
+        CHANGED -->|No| SKIP["skip"]
     ```
 
-    A `skip` run performs no business-data read, transformation, or target write.
+    A `skip` run performs no business-data read, transformation, or target write. On the first incremental run, no successful checkpoint exists yet, so FabricOps uses a full-dataset runtime scope and records progress only after successful publication.
 
 ??? info "Preview — Evaluate pre-read source Guardrails"
 
