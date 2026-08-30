@@ -233,6 +233,30 @@ def collect_imports(tree: ast.Module, module_name: str) -> tuple[dict[str, str],
     return imports, module_aliases
 
 
+def resolve_import_target(
+    target: str,
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+    *,
+    seen: set[str] | None = None,
+) -> str | None:
+    """Resolve a package import target, following package re-exports."""
+    if target in functions:
+        return target
+    visited = set(seen or set())
+    if target in visited or "." not in target:
+        return None
+    visited.add(target)
+    module_name, symbol = target.rsplit(".", 1)
+    module = modules.get(module_name)
+    if module is None:
+        return None
+    re_export = module.imports.get(symbol)
+    if re_export is None:
+        return None
+    return resolve_import_target(re_export, modules, functions, seen=visited)
+
+
 def collect_dispatch_targets(tree: ast.Module) -> dict[str, set[str]]:
     """Collect dispatch-map variable names whose values are direct function symbols."""
     targets: dict[str, set[str]] = {}
@@ -265,28 +289,43 @@ def build_name_index(functions: dict[str, FunctionInfo]) -> dict[str, set[str]]:
     return index
 
 
-def resolve_call_qns(call: ast.Call, module: ModuleInfo, functions: dict[str, FunctionInfo], name_index: dict[str, set[str]]) -> set[str]:
+def resolve_call_qns(
+    call: ast.Call,
+    module: ModuleInfo,
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+    name_index: dict[str, set[str]],
+) -> set[str]:
     """Resolve one AST call to package-local function qualified names."""
     func = call.func
     if isinstance(func, ast.Name):
         if func.id in module.dispatch_targets:
-            return {qn for name in module.dispatch_targets[func.id] for qn in resolve_name(name, module, functions, name_index)}
-        return resolve_name(func.id, module, functions, name_index)
+            return {qn for name in module.dispatch_targets[func.id] for qn in resolve_name(name, module, modules, functions, name_index)}
+        return resolve_name(func.id, module, modules, functions, name_index)
     if isinstance(func, ast.Subscript) and isinstance(func.value, ast.Name):
-        return {qn for name in module.dispatch_targets.get(func.value.id, set()) for qn in resolve_name(name, module, functions, name_index)}
+        return {qn for name in module.dispatch_targets.get(func.value.id, set()) for qn in resolve_name(name, module, modules, functions, name_index)}
     if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
         module_qn = module.module_aliases.get(func.value.id)
         if module_qn:
             candidate = f"{module_qn}.{func.attr}"
-            return {candidate} if candidate in functions else set()
+            resolved = resolve_import_target(candidate, modules, functions)
+            return {resolved} if resolved else set()
     return set()
 
 
-def resolve_name(name: str, module: ModuleInfo, functions: dict[str, FunctionInfo], name_index: dict[str, set[str]]) -> set[str]:
+def resolve_name(
+    name: str,
+    module: ModuleInfo,
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+    name_index: dict[str, set[str]],
+) -> set[str]:
     """Resolve a bare function name within a module."""
     imported = module.imports.get(name)
-    if imported in functions:
-        return {imported}
+    if imported:
+        resolved = resolve_import_target(imported, modules, functions)
+        if resolved:
+            return {resolved}
     same_file = f"{module.module_name}.{name}"
     if same_file in functions:
         return {same_file}
@@ -300,12 +339,13 @@ def called_function_qns(info: FunctionInfo, modules: dict[str, ModuleInfo], func
     calls: set[str] = set()
     for node in ast.walk(info.node):
         if isinstance(node, ast.Call):
-            calls.update(resolve_call_qns(node, module, functions, name_index))
+            calls.update(resolve_call_qns(node, module, modules, functions, name_index))
     return calls
 
 
 def _module_level_reference_qns(
     module: ModuleInfo,
+    modules: dict[str, ModuleInfo],
     functions: dict[str, FunctionInfo],
     name_index: dict[str, set[str]],
 ) -> set[str]:
@@ -316,13 +356,14 @@ def _module_level_reference_qns(
             continue
         for node in ast.walk(statement):
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
-                references.update(resolve_name(node.id, module, functions, name_index))
+                references.update(resolve_name(node.id, module, modules, functions, name_index))
             elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
                 module_qn = module.module_aliases.get(node.value.id)
                 if module_qn:
                     candidate = f"{module_qn}.{node.attr}"
-                    if candidate in functions:
-                        references.add(candidate)
+                    resolved = resolve_import_target(candidate, modules, functions)
+                    if resolved:
+                        references.add(resolved)
     return references
 
 
@@ -338,13 +379,14 @@ def _function_body_reference_qns(
     references: set[str] = set()
     for node in ast.walk(info.node):
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
-            references.update(resolve_name(node.id, module, functions, name_index))
+            references.update(resolve_name(node.id, module, modules, functions, name_index))
         elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
             module_qn = module.module_aliases.get(node.value.id)
             if module_qn:
                 candidate = f"{module_qn}.{node.attr}"
-                if candidate in functions:
-                    references.add(candidate)
+                resolved = resolve_import_target(candidate, modules, functions)
+                if resolved:
+                    references.add(resolved)
     return references
 
 
@@ -361,8 +403,26 @@ def build_global_source_references(
                 inbound[target_qn].add(caller_qn)
     for module in modules.values():
         module_ref = f"{module.module_name}::<module>"
-        for target_qn in _module_level_reference_qns(module, functions, name_index):
+        for imported in module.imports.values():
+            target_qn = resolve_import_target(imported, modules, functions)
+            if target_qn:
+                inbound[target_qn].add(module_ref)
+        for target_qn in _module_level_reference_qns(module, modules, functions, name_index):
             inbound[target_qn].add(module_ref)
+    return inbound
+
+
+def build_global_callers(
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+) -> dict[str, set[str]]:
+    """Build inbound package call edges for every discovered function."""
+    name_index = build_name_index(functions)
+    inbound: dict[str, set[str]] = {qn: set() for qn in functions}
+    for caller_qn, info in functions.items():
+        for target_qn in called_function_qns(info, modules, functions, name_index):
+            if target_qn != caller_qn:
+                inbound[target_qn].add(caller_qn)
     return inbound
 
 
@@ -784,6 +844,12 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
     defined_functions = [function_record(info, public_qns, lifecycle_by_qn, impact) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
 
     inbound_references = build_global_source_references(modules, functions)
+    inbound_callers = build_global_callers(modules, functions)
+    for record in defined_functions:
+        qn = record["qualified_name"]
+        record["inbound_source_references"] = sorted(inbound_references.get(qn, set()))
+        record["inbound_callers"] = sorted(inbound_callers.get(qn, set()))
+        record["public_flow_reachable"] = qn in used_all
     not_public_flow_reachable = set(functions) - used_all
     runtime_hooks = {qn for qn in not_public_flow_reachable if is_implicit_runtime_hook(functions[qn])}
     source_referenced = {qn for qn in not_public_flow_reachable if inbound_references.get(qn)}
@@ -809,6 +875,8 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
             "unused_function_definition": "Not reachable from a public function flow, has no inbound package source references, and is not an implicit Python runtime hook.",
             "detached_function_definition": "Not reachable from a public function flow but referenced elsewhere in package source or callable implicitly by Python.",
+            "source_reference_definition": "A production package import or loaded function symbol; this does not imply that the function is called.",
+            "inbound_call_definition": "A resolved production function call whose caller and callee are package functions.",
         },
         "public_functions": public_functions,
         "defined_functions": defined_functions,
