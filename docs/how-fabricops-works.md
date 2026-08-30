@@ -128,13 +128,13 @@ Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the not
 
     Rerun `02_pipeline` with current authored Guardrails, or with Guardrails from a selected frozen Data Contract. Engineering evaluates the rules and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded.
 
-    **5. Governance: Assemble and activate a Data Contract**
+    **5. Governance: Freeze a Data Contract and choose the active Production version**
 
-    In `01_governance`, create one versioned Data Contract for one governed `table_id` under one exact Data Agreement version. The contract freezes the table structure, processing definition, current Enrichment, active Guardrails, approved usages, and Agreement and Data Steward context.
+    In `01_governance`, create one immutable Data Contract version for one governed `table_id` under one exact Data Agreement version. Development may select and test any saved frozen version. Activation is a separate step that designates the frozen version Engineering Production is authorised to resolve.
 
     **6. Engineering: Run Production against the active Data Contract**
 
-    Run `02_pipeline` in Engineering Production against the active Data Contract for the governed table.
+    Run `02_pipeline` in Engineering Production against the active Data Contract for the governed table. Moving the approved notebook/runtime artefact into Engineering Production is a separate organisational promotion process.
 
     **7. Consumer: Use Production data directly**
 
@@ -158,11 +158,29 @@ Development data and temporary notebooks may be cleaned regularly, so teams shou
 
 A Data Agreement is created between one provider Data Steward and one recipient Data Steward. It establishes the governed sharing relationship, including business purpose, approved usages, validity, supporting documents, and other governance context.
 
-A Data Contract is table-centric. FabricOps creates one contract lifecycle for one canonical `table_id` under one exact Data Agreement version. Each immutable version freezes what downstream users can depend on for that table: its current identity and schema, processing definition, Enrichment, active Guardrails, approved usages, and the relevant Agreement and Data Steward context.
+A Data Contract is table-centric. FabricOps creates one contract lifecycle for one canonical `table_id` under one exact Data Agreement version. Each saved version is immutable. Freezing a contract does not activate it and does not promote a notebook into Engineering Production; Development can select and test a frozen version before Governance designates one frozen version as active for Production.
+
+### What a Data Contract freezes
+
+`widget_register_data_contract()` assembles the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
+
+| Frozen item | What is captured |
+| --- | --- |
+| Exact Data Agreement version | Agreement identity and version plus its name, domain, business purpose, validity dates, provider and recipient Steward IDs, and approved usages. |
+| Provider and recipient Data Stewards | The selected Stewards' IDs, names, roles, and contacts. |
+| Governed `table_id` and physical identity | The canonical `table_id` plus environment, store type, layer, schema, and table name from `METADATA_DATA_CATALOGUE`. |
+| Table structure / schema | The active Catalogue columns with their `column_id`, column name, and data type. |
+| Enrichment | Current table- and column-level `METADATA_ENRICHMENT` values, including enrichment level, type, and value. |
+| Active Guardrails | Active `METADATA_GUARDRAIL` rules, including the exact Guardrail version, type, rule identity, severity, and rule parameters. |
+| Target load strategy | The Catalogue `load_strategy`, such as `overwrite`, `append`, `scd1`, or `scd2`, when configured. |
+| Load-strategy parameters | The configured `load_strategy_parameters_json` values required by the selected target strategy. |
+| Governed usages | The selected approved-usage subset, which must remain within the parent Data Agreement's approved usages. |
+
+Runtime records are not frozen into the Data Contract. `METADATA_GUARDRAIL_RESULTS`, `METADATA_GUARDRAIL_ROW_RESULTS`, source observations, successful-processing checkpoints, and run/audit state continue to describe individual executions rather than the immutable governed definition.
 
 This means FabricOps can provide Data Contracts for governed tables it writes and consume Data Contracts for governed tables it reads. The contract represents the table-level governed expectations; the Data Agreement represents the steward-to-steward sharing relationship.
 
-In Governance, `01_governance` assembles and activates the Data Contract after the Development and Governance loop. Structured metadata, contracts, configuration, and executable checks are how Governance as Code becomes part of the operating workflow, while Production behaviour is resolved through Configuration-driven Engineering.
+In Governance, `01_governance` freezes Data Contract versions and separately activates the exact frozen version Production should resolve. Structured metadata, contracts, configuration, and executable checks are how Governance as Code becomes part of the operating workflow, while Production behaviour is resolved through Configuration-driven Engineering.
 
 ### Engineering Production
 
@@ -172,7 +190,7 @@ A recurring Production pipeline may run on any required operational schedule, in
 
 !!! important "Production rule"
 
-    All promoted `02_pipeline` notebooks should be tied to the relevant active Data Contract or Data Contracts for the governed tables they use.
+    All promoted `02_pipeline` notebooks should be tied to the relevant active Data Contract or Data Contracts for the governed tables they use. Activating a Data Contract does not itself promote or copy the notebook.
 
 </div>
 
@@ -248,7 +266,7 @@ Metadata is the broader information used to describe, understand, manage, and go
 
     **Contract relationship**
 
-    A Data Contract is tied to one canonical `table_id`. Its payload freezes the current Catalogue structure, processing definition, Enrichment, active Guardrails, approved usages, and relevant Agreement and Data Steward context. One Data Agreement can therefore support multiple table-level Data Contracts.
+    A Data Contract is tied to one canonical `table_id`. Its payload freezes the current Catalogue table/column identity and schema, target load strategy and parameters, Enrichment, active Guardrails and their versions, approved usages, and relevant Agreement and Data Steward context. One Data Agreement can therefore support multiple table-level Data Contracts.
 
     **Data Catalogue and Profiled records stay with Engineering**
 
@@ -262,7 +280,7 @@ Metadata is the broader information used to describe, understand, manage, and go
 
     `01_governance` reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. `02_pipeline` evaluates those Guardrails and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where applicable.
 
-    Governance then creates the Data Contract for the governed table. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, where AI and BI analytics consume governed Production data.
+    Governance then freezes a Data Contract version for the governed table. Engineering Development may test that frozen version. Governance separately activates the frozen version that Production should resolve. Promotion of the validated `02_pipeline` notebook/runtime artefact from Engineering Development to Engineering Production remains an organisational deployment concern rather than part of Data Contract freezing or activation.
 
     Downstream users therefore receive more than a table. Where relevant, they can inspect its Data Catalogue, Profiles, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract context.
 
