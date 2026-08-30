@@ -27,7 +27,6 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     _catalogue_dataframe_from_profiled,
     _processing_definition,
     _replace_frequency_rows,
-    _schema_fingerprint,
     _upsert_catalogue_identities,
     _validate_processing_columns,
     profile_and_register_table,
@@ -99,21 +98,6 @@ def test_logical_table_and_column_ids_are_environment_independent():
     assert dev_id != build_table_id("lakehouse", "silver", "dbo", "customers")
     assert build_column_id(dev_id, "Order_ID") == build_column_id(prod_id, " order_id ")
     assert build_column_id(dev_id, "order_id") != build_column_id(dev_id, "amount")
-
-
-def test_schema_fingerprint_remains_internal_for_deferred_contract_support(spark_session):
-    """Keep the legacy schema helper stable without persisting it in Stage 2 facts."""
-    from pyspark.sql import types as T
-
-    base_schema = T.StructType(
-        [T.StructField("order_id", T.LongType(), False), T.StructField("amount", T.DoubleType(), True)]
-    )
-    dev = spark_session.createDataFrame([(1, 1.0)], schema=base_schema)
-    prod = spark_session.createDataFrame([(99, 900.0)], schema=base_schema)
-    assert _schema_fingerprint(dev) == _schema_fingerprint(prod)
-    assert _schema_fingerprint(dev) != _schema_fingerprint(
-        spark_session.createDataFrame([(1, "1.0")], "order_id long, amount string")
-    )
 
 
 def _source_df(spark_session):
@@ -589,7 +573,6 @@ def test_catalogue_dataframe_contains_table_and_column_assets(spark_session, mon
     assert {
         row.column_name: row.data_type for row in rows if row.metadata_level == "column"
     } == {field.name: field.dataType.simpleString() for field in source.schema.fields}
-
 
 
 def test_catalogue_datatype_change_preserves_identity_and_active_state(spark_session):

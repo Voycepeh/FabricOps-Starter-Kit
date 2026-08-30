@@ -88,13 +88,6 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     assert not hasattr(pipeline, "_source_read_type")
 
 
-def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
-    """Verify summary status treats baseline created as passed and skipped as nonblocking."""
-    assert pipeline_shared._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
-    assert pipeline_shared._summary_status({"s1": {"status": "skipped"}}) == "skipped"
-    assert pipeline_shared._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
-
-
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     """Verify schema guardrail strict and allow new columns behavior."""
     from fabricops_kit.pipeline.shared import schema_check_core

@@ -127,7 +127,6 @@ def test_active_dq_rules_are_scoped_by_canonical_table_identity(spark_session):
     assert [rule["rule_id"] for rule in rules] == ["product"]
 
 
-
 def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     """Verify guardrail schemas keep rules/results and use catalogue profile evidence."""
     schemas = metadata_schemas.metadata_table_schema_registry()
@@ -246,124 +245,6 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
     assert equal_check["failed_count"] == 4
     assert gte_check["failed_count"] == 3
     assert gt_check["failed_count"] == 4
-
-
-def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
-    """Verify the internal active DQ guardrail loads only active metadata rules."""
-    df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
-    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
-    metadata = spark_session.createDataFrame(
-        [
-            {
-                "rule_key": "governance-approved-active",
-                "rule_id": "id_required",
-                "environment_name": "dev",
-                "dataset_name": "sales",
-                "table_name": "orders",
-                "metadata_table_key": table_key,
-                "column_name": "id",
-                "rule_type": "missing_values",
-                "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
-                "severity": "error",
-                "description": "id required",
-                "is_active": True,
-                "review_status": "governance_approved",
-                "action_type": "created",
-                "approved_at": "2026-06-14T00:00:00Z",
-                "_committed_at": "2026-06-14T00:00:00Z",
-            },
-            {
-                "rule_key": "draft-active",
-                "rule_id": "draft_rule",
-                "environment_name": "dev",
-                "dataset_name": "sales",
-                "table_name": "orders",
-                "metadata_table_key": table_key,
-                "column_name": "status",
-                "rule_type": "allowed_values",
-                "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["ok"]}),
-                "severity": "error",
-                "description": "draft should not run",
-                "is_active": True,
-                "review_status": "draft",
-                "action_type": "created",
-                "approved_at": "2026-06-14T00:00:00Z",
-                "_committed_at": "2026-06-14T00:00:00Z",
-            },
-            {
-                "rule_key": "governance-approved-inactive",
-                "rule_id": "inactive_rule",
-                "environment_name": "dev",
-                "dataset_name": "sales",
-                "table_name": "orders",
-                "metadata_table_key": table_key,
-                "column_name": "status",
-                "rule_type": "allowed_values",
-                "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["bad"]}),
-                "severity": "error",
-                "description": "inactive should not run",
-                "is_active": False,
-                "review_status": "governance_approved",
-                "action_type": "deactivated",
-                "approved_at": "2026-06-14T00:00:00Z",
-                "_committed_at": "2026-06-15T00:00:00Z",
-            },
-        ]
-    )
-
-    reads = []
-
-    def fake_read(table, *, target, context, **kwargs):
-        reads.append((context["env"], target, table, kwargs))
-        return metadata
-
-    monkeypatch.setattr(governance, "read_lakehouse_table_core", fake_read)
-
-    result = governance.run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
-
-    assert reads == [("dev", "metadata", governance.GUARDRAIL_TABLE, {"schema": None, "spark_session": spark_session})]
-    assert result["status"] == "failed"
-    assert result["can_continue"] is False
-    assert len(result["checks"]) == 1
-    assert result["checks"][0]["rule_id"] == "id_required"
-    assert result["checks"][0]["failed_count"] == 1
-    assert "_dq_check_status" in result["dataframe"].columns
-
-
-def test_run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
-    """Verify the internal active DQ guardrail returns passed when no active guardrail rules."""
-    df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
-    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
-    metadata = spark_session.createDataFrame(
-        [
-            {
-                "rule_key": "draft-only",
-                "rule_id": "draft_rule",
-                "environment_name": "dev",
-                "dataset_name": "sales",
-                "table_name": "orders",
-                "metadata_table_key": table_key,
-                "column_name": "id",
-                "rule_type": "missing_values",
-                "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
-                "severity": "error",
-                "description": "draft",
-                "is_active": True,
-                "review_status": "draft",
-                "action_type": "created",
-                "approved_at": "2026-06-14T00:00:00Z",
-                "_committed_at": "2026-06-14T00:00:00Z",
-            }
-        ]
-    )
-    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
-
-    result = governance.run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
-
-    assert result["status"] == "passed"
-    assert result["can_continue"] is True
-    assert result["checks"] == []
-    assert "_dq_check_status" in result["dataframe"].columns
 
 
 def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):

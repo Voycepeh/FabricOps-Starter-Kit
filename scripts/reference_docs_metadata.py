@@ -389,7 +389,6 @@ METADATA_COLUMN_OWNERS = {
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint",
         ],
     },
     "METADATA_DATA_PROFILED": {
@@ -408,7 +407,6 @@ METADATA_COLUMN_OWNERS = {
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint",
         ],
         "profiled_at": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -447,7 +445,6 @@ METADATA_COLUMN_OWNERS = {
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint",
         ],
         "profiled_at": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
