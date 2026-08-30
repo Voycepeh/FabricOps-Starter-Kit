@@ -208,7 +208,9 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
 !!! success "L. Load"
 
-    Define one or more target table IDs. Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition. Check schema and Data Quality, add audit and technical columns, prepare load-strategy execution, write the target table, then read back and profile/register the complete persisted target.
+    Define one governed target table ID. A pipeline may read one or many upstream sources, but the governed `02_pipeline` pattern publishes exactly one target table. If another persisted output is required, create a separate downstream pipeline rather than adding another governed target write to the same pipeline.
+
+    Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition. Check schema and Data Quality, add audit and technical columns, prepare load-strategy execution, write the target table, then read back and profile/register the complete persisted target.
 
 ??? note "Full-table profiling"
 
