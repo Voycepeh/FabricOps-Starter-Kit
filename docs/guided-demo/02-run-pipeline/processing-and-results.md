@@ -55,13 +55,13 @@ A complete `full_dataset` DataFrame may refresh the canonical registered source 
 
 ## Review the completed run
 
-After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes Data Catalogue, Data Profiled, Data Profiled Frequency, and Data Lineage records.
+After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` records.
 
-That observed evidence is the handoff to Governance in Step 3.
+Those concrete metadata records are the handoff to Governance in Step 3.
 
 !!! important "What happens next"
 
-    Do not add Guardrail checks manually to this module. Step 3 authors the Guardrails from the observed metadata. Step 4 returns to the same `02_pipeline` and reruns it with those Guardrails now available. Step 5 freezes approved expectations into a Data Contract, and Step 6 runs Production against the active contract.
+    Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates those Guardrails, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded. Step 5 freezes approved expectations into a Data Contract, and Step 6 runs Production against the active contract.
 
 For exact APIs such as `read_pipeline_prep()`, `check_changes()`, `write_pipeline_prep()`, and `commit_pipeline_checkpoint()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 

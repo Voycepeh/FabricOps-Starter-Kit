@@ -118,15 +118,15 @@ Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the not
 
     **2. Engineering: ETL, profile data, and build the Data Catalogue**
 
-    In Engineering Development, run `02_pipeline` to perform ETL, profile the data, and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
+    In Engineering Development, run `02_pipeline` to perform ETL and write `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records.
 
     **3. Governance: Enrich the Data Catalogue and define Guardrails**
 
-    Return to `01_governance` to read the Data Catalogue and Data Profiled records written by `02_pipeline`, write Enrichment, and define Guardrails for the governed table or column.
+    Return to `01_governance` to read `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, write `METADATA_ENRICHMENT`, and author `METADATA_GUARDRAIL` records for the governed table or column.
 
     **4. Engineering: Validate with current or frozen Guardrails**
 
-    Rerun `02_pipeline` with current authored Guardrails, or with Guardrails from a selected frozen Data Contract, and confirm warning, blocking, and validation behaviour.
+    Rerun `02_pipeline` with current authored Guardrails, or with Guardrails from a selected frozen Data Contract. Engineering evaluates the rules and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded.
 
     **5. Governance: Assemble and activate a Data Contract**
 
@@ -148,9 +148,9 @@ Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the not
 
 ### Engineering Development
 
-Engineering Development is used for exploration, development, profiling, testing, and review. `02_pipeline` performs ETL, profiles source and target data, and writes Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
+Engineering Development is used for exploration, development, profiling, testing, and review. `02_pipeline` performs ETL and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records.
 
-Governance reads the Data Catalogue and Data Profiled records, then writes Enrichment and Guardrail records. `02_pipeline` reads those records, evaluates the Guardrails, and writes Guardrail Results. Development can use current authoring or a selected frozen Data Contract.
+Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. `02_pipeline` reads those Guardrails, evaluates them, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where applicable. Development can use current authoring or a selected frozen Data Contract.
 
 Development data and temporary notebooks may be cleaned regularly, so teams should avoid treating the workspace as durable Production storage.
 
@@ -196,7 +196,7 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
     Configure the source-read strategy as Full Dataset, Incremental Watermark, or Incremental Partition. FabricOps then resolves the runtime read mode as `skip`, `full_dataset`, or `incremental_subset`.
 
-    Run Data Quality checks on the DataFrame actually being processed. Profile and register only when the DataFrame represents the complete physical table, then write the applicable Data Profiled and Data Lineage records.
+    Run Data Quality checks on the DataFrame actually being processed. Profile and register only when the DataFrame represents the complete physical table, then write the applicable `METADATA_DATA_PROFILED` and `METADATA_DATA_LINEAGE` records.
 
 ??? note "Warehouse sources should normally land in the configured raw/source layer first"
 
@@ -208,7 +208,9 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
 !!! success "L. Load"
 
-    Define one or more target table IDs. Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition. Check schema and Data Quality, add audit and technical columns, prepare load-strategy execution, write the target table, then read back and profile/register the complete persisted target.
+    Define one governed target table ID. A pipeline may read one or many upstream sources, but the governed `02_pipeline` pattern publishes exactly one target table. If another persisted output is required, create a separate downstream pipeline rather than adding another governed target write to the same pipeline.
+
+    Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition. Check schema and Data Quality, add audit and technical columns, prepare load-strategy execution, write the target table, then read back and profile/register the complete persisted target.
 
 ??? note "Full-table profiling"
 
@@ -242,23 +244,23 @@ Metadata is the broader information used to describe, understand, manage, and go
 
     **Engineering records**
 
-    The Data Catalogue identifies each governed table and column and connects Data Profiled, Data Profiled Frequency, Data Lineage, Data Access, Enrichment, Guardrail, and Guardrail Result records.
+    `METADATA_DATA_CATALOGUE` identifies each governed table and column and connects `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_DATA_ACCESS`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL`, and `METADATA_GUARDRAIL_RESULTS` records.
 
     **Contract relationship**
 
     A Data Contract is tied to one canonical `table_id`. Its payload freezes the current Catalogue structure, processing definition, Enrichment, active Guardrails, approved usages, and relevant Agreement and Data Steward context. One Data Agreement can therefore support multiple table-level Data Contracts.
 
-    **Observed records stay with Engineering**
+    **Data Catalogue and Profiled records stay with Engineering**
 
-    `02_pipeline` writes Data Catalogue and Data Profiled records. `01_governance` reads those records for Enrichment, Guardrail definition, and Data Contract preparation. Governance does not create a second copy of those observed records.
+    `02_pipeline` writes `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`. `01_governance` reads those tables for `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL`, and Data Contract preparation. Governance does not create a second copy of the Engineering-written records.
 
 ??? info "How the implemented pieces connect"
 
-    **Engineering records what happened. Governance defines what is allowed. Production exposes the governed result.**
+    **Engineering and Governance write different metadata tables around the same governed table identity.**
 
-    `02_pipeline` performs ETL, profiles source and target data, and writes Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
+    `02_pipeline` performs ETL and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE`.
 
-    Governance reads the Data Catalogue and Data Profiled records, then writes Enrichment and Guardrail records. `02_pipeline` reads those records, evaluates the Guardrails, and writes Guardrail Results.
+    `01_governance` reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. `02_pipeline` evaluates those Guardrails and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where applicable.
 
     Governance then creates the Data Contract for the governed table. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, where AI and BI analytics consume governed Production data.
 

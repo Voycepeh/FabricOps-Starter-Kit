@@ -6,13 +6,13 @@
 
 The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific source, transformation, target, and processing configuration.
 
-At the end of this module, you will have run a complete ETL and produced the observed metadata that Governance uses in Step 3.
+At the end of this module, you will have run a complete ETL and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
 
 !!! info "Why Guardrails are skipped in this first run"
 
     No Guardrails or Data Contract have been created for the demo table yet. That is expected.
 
-    The ETL still runs end to end. In Step 3 you define Guardrails from the observed metadata, Step 4 reruns this same pipeline with those Guardrails, Step 5 freezes approved expectations into a Data Contract, and Step 6 runs the same pipeline in Production against the active contract.
+    The ETL still runs end to end. In Step 3, Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns this same pipeline with those Guardrails, Step 5 freezes approved expectations into a Data Contract, and Step 6 runs the same pipeline in Production against the active contract.
 
 ## Learning objectives
 
@@ -23,7 +23,7 @@ By the end of this module, you'll be able to:
 - configure Lakehouse or Warehouse sources and targets,
 - keep project-specific transformation logic visible in the intended notebook section,
 - choose Full Dataset, Incremental Watermark, or Incremental Partition processing when required,
-- review the target, profile, catalogue, and lineage evidence produced by the run.
+- review the target plus the `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` records produced by the run.
 
 ## Prerequisites
 
@@ -42,22 +42,22 @@ Before starting this module:
 | [2. Run the baseline ETL](02-run-pipeline/run-baseline-etl.md) | Execute the complete development ETL before any Guardrails exist. |
 | [3. Configure sources](02-run-pipeline/configure-sources.md) | Use Lakehouse files/tables or Warehouse tables/SQL without hardcoded Fabric routing. |
 | [4. Transform and load](02-run-pipeline/transform-and-load.md) | Add project logic and write to Lakehouse or Warehouse targets. |
-| [5. Choose processing behaviour and review results](02-run-pipeline/processing-and-results.md) | Understand full/incremental processing and inspect the metadata handoff to Governance. |
+| [5. Choose processing behaviour and review results](02-run-pipeline/processing-and-results.md) | Understand full/incremental processing and inspect the concrete metadata records handed to Governance. |
 
 ## The learning-path story
 
 ```text
 Step 2
 Run the full ETL
-No Guardrails exist yet
+Write Catalogue / Profiled / Lineage metadata
         ↓
 Step 3
-Review observed metadata
-Define Guardrails
+Read Catalogue + Profiled
+Write Enrichment + Guardrail
         ↓
 Step 4
 Run the same ETL again
-Guardrails now execute
+Write Guardrail Results
         ↓
 Step 5
 Freeze approved expectations
@@ -68,7 +68,7 @@ Run the same ETL in Production
 against the active contract
 ```
 
-The important point is that FabricOps does not require a separate basic pipeline, Guardrail pipeline, and Production pipeline. The same engineering template progresses through a governed lifecycle as governance state is added around it.
+The important point is that FabricOps does not require a separate basic pipeline, Guardrail pipeline, and Production pipeline. The same engineering template progresses through a governed lifecycle as governance records are added around it.
 
 ## Start the module
 

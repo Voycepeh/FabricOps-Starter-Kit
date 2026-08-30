@@ -2,7 +2,7 @@
 
 **Run the complete `02_pipeline` template once before adding Guardrails.**
 
-This first execution gives Governance the observed catalogue, profile, and lineage evidence used in the next module.
+This first execution writes the `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in the next module.
 
 ## Before you begin
 
@@ -48,9 +48,9 @@ Read the persisted target back and let the profiling and registration workflow c
 
 ## What FabricOps records
 
-The baseline run can register Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records alongside pipeline activity.
+The baseline run can write `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records alongside pipeline activity.
 
-These records are important because Step 3 uses the observed Engineering evidence to enrich the catalogue and author Guardrails.
+Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` to add `METADATA_ENRICHMENT` and author `METADATA_GUARDRAIL` records.
 
 !!! info "No Guardrails yet is expected"
 
