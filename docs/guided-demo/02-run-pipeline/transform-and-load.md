@@ -16,6 +16,16 @@ The `02_pipeline` template deliberately stays lightweight. It shows where projec
 
 Most project-specific transformation in `02_pipeline` should remain in PySpark once the source has been read into a Spark DataFrame.
 
+!!! info "New to PySpark in Microsoft Fabric?"
+
+    FabricOps intentionally uses PySpark as the normal transformation path inside `02_pipeline`. This demo only teaches the patterns needed to understand the FabricOps workflow; it is not intended to replace the official Spark learning material.
+
+    Use Microsoft Learn when you want to go deeper into Fabric notebooks and Spark:
+
+    [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) · [Author and execute Fabric notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook) · [Use Python for Apache Spark in Fabric](https://learn.microsoft.com/en-us/fabric/data-science/python-guide/python-overview)
+
+    Fabric notebooks also support Spark SQL, Scala, and SparkR. PySpark is the **FabricOps recommendation** for project transformation consistency, not a Microsoft Fabric platform restriction.
+
 ### Select only what you need
 
 Use `select()` to make the intended output columns explicit and avoid carrying unnecessary data through later transformations.
@@ -165,6 +175,16 @@ Other common project patterns include `pivot()` for reshaping values into column
 ## When SQL appears in `02_pipeline`
 
 FabricOps does not treat Spark SQL as a second default transformation language beside PySpark. SQL is most useful when reading a Fabric Warehouse and the Warehouse can reduce the data before it reaches Spark.
+
+!!! info "New to SQL in Fabric Warehouse?"
+
+    FabricOps mainly uses SQL for Warehouse-side filtering, projection, joins, aggregation, CTEs, window calculations, and row limits through `read_warehouse_query()`.
+
+    Use Microsoft Learn for the full Warehouse SQL surface rather than treating the examples below as a complete SQL tutorial:
+
+    [Microsoft Learn: T-SQL surface area in Fabric Data Warehouse](https://learn.microsoft.com/en-us/fabric/data-warehouse/tsql-surface-area) · [Spark connector for Fabric Data Warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-data-warehouse-connector)
+
+    Fabric Warehouse supports a broad T-SQL surface, but support is not identical to SQL Server. Check the Fabric T-SQL surface-area page when you need syntax beyond the common read/query patterns shown here.
 
 Use `read_warehouse_query()` for engineer-authored Warehouse projection, filtering, joins, aggregation, CTEs, window calculations, or row limits that should be pushed down to the Warehouse engine.
 
