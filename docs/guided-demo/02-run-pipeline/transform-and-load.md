@@ -22,7 +22,7 @@ Most project-specific transformation in `02_pipeline` should remain in PySpark o
 
     Use Microsoft Learn when you want to go deeper into Fabric notebooks and Spark:
 
-    [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) · [Author and execute Fabric notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook) · [Use Python for Apache Spark in Fabric](https://learn.microsoft.com/en-us/fabric/data-science/python-guide/python-overview)
+    [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/) · [Author and execute Fabric notebooks](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook) · [Use Python for Apache Spark in Fabric](https://learn.microsoft.com/en-us/fabric/data-science/python-guide/python-overview)
 
     Fabric notebooks also support Spark SQL, Scala, and SparkR. PySpark is the **FabricOps recommendation** for project transformation consistency, not a Microsoft Fabric platform restriction.
 
