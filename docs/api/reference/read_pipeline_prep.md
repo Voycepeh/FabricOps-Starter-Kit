@@ -14,7 +14,7 @@ Prepare governed source observation and read scope without reading business data
 
 `fabricops_kit/pipeline/read_pipeline_prep.py:253`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L359">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,18 +37,10 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def read_pipeline_prep(
-    source_table_name: str,
-    target_table_name: str,
+    source_table_id: str,
     source_read_strategy: str,
     source_watermark_column: str | None=None,
     source_partition_column: str | None=None,
-    source_target: str='source',
-    source_schema: str | None=None,
-    target: str='unified',
-    schema: str | None=None,
-    target_table_id: str | None=None,
-    load_strategy: str,
-    load_strategy_parameters: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -59,10 +51,9 @@ def read_pipeline_prep(
 <div class="reference-example-usage" markdown="1">
 
 >>> prep = read_pipeline_prep(
-...     "bookings", "bookings_curated", source_schema="dbo", schema="dbo",
+...     source_table_id="warehouse:source:dbo:bookings",
 ...     source_read_strategy="incremental_watermark",
-...     source_watermark_column="modified_datetime", load_strategy="scd1",
-...     load_strategy_parameters={"key_columns": ["booking_id"]},
+...     source_watermark_column="modified_datetime",
 ... )
 >>> prep["read_mode"] in {"skip", "full_dataset", "incremental_subset"}
 True
@@ -73,28 +64,20 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `source_table_name` | `str` | Yes | Physical source table to prepare. |
-| `target_table_name` | `str` | Yes | Governed target table whose target processing definition controls this run. |
+| `source_table_id` | `str` | Yes | Canonical identity of one registered source table. FabricOps resolves its physical coordinates from the Catalogue. |
 | `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
 | `source_watermark_column` | `str \| None` | No | Checkpoint column required by ``incremental_watermark``. |
 | `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
-| `source_target` | `str` | No | Configured source Lakehouse or Warehouse target. |
-| `source_schema` | `str \| None` | No | Optional source schema. |
-| `target` | `str` | No | Configured governed target. |
-| `schema` | `str \| None` | No | Optional governed target schema. |
-| `target_table_id` | `str \| None` | No | Expected canonical Catalogue identity; it must match the physical target. |
-| `load_strategy` | `str` | Yes | Independent target application strategy. |
-| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters owned by the target strategy. |
 
 ## Returns
 
-Observation and change evidence, canonical processing, and skip, full, or incremental read scope.
+Registered source identity, observation and change state, candidate completion state, and skip, full, or incremental read scope.
 
 ## Raises / Errors
 
 ValueError
-    If source configuration, checkpoint state, contract processing, or the
-    resulting processing scope is invalid.
+    If source identity, configuration, checkpoint state, or the resulting
+    processing scope is invalid.
 
 ## Notes
 
@@ -103,7 +86,9 @@ ValueError
 Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
 The successful checkpoint remains unchanged until a later post-write commit
 succeeds. Partition subsets reuse FabricOps source observation and change
-detection; full-dataset reads do not observe the source merely to skip it.
+detection. Change safety resolves the source table's own processing through
+:func:`check_changes`; target selection and publication are intentionally
+outside this function.
 
 </div>
 

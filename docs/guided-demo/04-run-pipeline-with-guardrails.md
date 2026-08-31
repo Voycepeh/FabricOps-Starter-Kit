@@ -45,7 +45,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
 ??? info "Preview — Prepare the source scope"
 
-    Use `read_pipeline_prep()` to observe the source, resolve the governed target processing definition, and prepare the source runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
+    Use `read_pipeline_prep()` with the source `table_id` to resolve its registered physical identity, observe source state, and prepare the source runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
 
     The engineer chooses the **source strategy**. FabricOps then combines that choice with recorded source state to determine the **runtime read mode** for this run.
 
@@ -67,7 +67,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Run `check_schema()`, `check_freshness()`, and `check_changes()` before the business-data read. Stop when a blocking result does not allow continuation.
 
-    Source Observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines those recorded observations with the configured source strategy and governed target processing definition to decide the safe processing scope.
+    Source Observation and `check_changes()` answer **what changed**. `read_pipeline_prep()` combines that source-owned state with the configured source strategy and the source table's own processing definition to decide a safe physical read scope.
 
 ??? info "Preview — Read the resolved source scope and run DQ"
 
@@ -83,7 +83,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Run target Schema and DQ checks on the transformed target DataFrame.
 
-    Use `write_pipeline_prep()` to reuse the same resolved processing definition, add governed audit/lifecycle fields, and prepare the physical writer settings. The contract is not resolved again between read and write preparation.
+    Use `write_pipeline_prep()` with the target `table_id` to resolve that target's selected or active Data Contract, add governed audit/lifecycle fields, and prepare the physical writer settings and source completion context.
 
 ??? info "Preview — Write, read back, and register the complete target"
 
