@@ -261,6 +261,7 @@ def read_pipeline_prep(
     source_schema: str | None = None,
     target: str = "unified",
     schema: str | None = None,
+    target_table_id: str | None = None,
     load_strategy: str,
     load_strategy_parameters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -286,6 +287,8 @@ def read_pipeline_prep(
         Configured governed target.
     schema : str or None, default=None
         Optional governed target schema.
+    target_table_id : str or None, default=None
+        Expected canonical Catalogue identity; it must match the physical target.
     load_strategy : {"overwrite", "append", "scd1", "scd2"}
         Independent target application strategy.
     load_strategy_parameters : dict, optional
@@ -340,6 +343,11 @@ def read_pipeline_prep(
     target_identity = resolve_physical_table_identity(
         config, env, target=target, schema=schema, table_name=target_table_name
     )
+    expected_table_id = str(target_table_id or "").strip()
+    if target_table_id is not None and not expected_table_id:
+        raise ValueError("target_table_id must be a non-empty canonical FabricOps table identity.")
+    if expected_table_id and expected_table_id != str(target_identity["table_id"]):
+        raise ValueError(f"Configured target_table_id {expected_table_id!r} does not match the governed physical target identity {target_identity['table_id']!r}.")
     processing = resolve_table_processing_definition(
         config,
         env,

@@ -34,7 +34,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Open `02_pipeline` in Engineering Development.
 
-    Keep `widget_select_data_contract()` on **Current authoring Guardrails** for the first guarded rerun. After a Data Contract exists, the same selector can choose one exact frozen version for the same table.
+    Keep `widget_select_data_contract()` on **Current authoring** for the first guarded rerun. After a Data Contract exists, the same selector can choose one exact frozen version for the same table.
 
     | Development validation source | Rule and processing source |
     | --- | --- |

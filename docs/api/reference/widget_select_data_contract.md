@@ -12,9 +12,9 @@ Choose whether Development Guardrail checks use current authoring rules or one e
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:75`
+`fabricops_kit/widgets/widget_select_data_contract.py:76`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L75-L226">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L76-L211">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,13 +36,7 @@ They help users write values into the correct underlying metadata tables without
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_select_data_contract(
-    table_name: str,
-    target: str='source',
-    schema: str | None=None,
-    spark_session=None,
-    context=None,
-):
+def widget_select_data_contract(table_id: str, *, spark_session=None, context=None)
 ```
 
 </div>
@@ -51,8 +45,8 @@ def widget_select_data_contract(
 
 <div class="reference-example-usage" markdown="1">
 
->>> selection = widget_select_data_contract("orders", target="source", schema="dbo")
->>> selection["select"]()  # current authoring Guardrails
+>>> selection = widget_select_data_contract(table_id="table-orders")
+>>> selection["select"]()  # current authoring
 
 </div>
 
@@ -60,9 +54,7 @@ def widget_select_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Physical table name within the configured target. |
-| `target` | `str` | No | Logical FabricOps target containing the configured physical table. |
-| `schema` | `str \| None` | No | Physical schema containing the configured table. |
+| `table_id` | `str` | Yes | Canonical table identity already stored in FabricOps metadata. |
 | `spark_session` | `object` | No | Spark session override. |
 | `context` | `dict` | No | FabricOps context normally established by ``00_env_config``. |
 
@@ -72,7 +64,7 @@ dict
     Read-only selection state, available versions, frozen preview, controls,
     and a ``select`` callable. Each exact selection is stored under its
     canonical table identity in ``data_contract_overrides``; selecting
-    current authoring Guardrails removes only that table's entry.
+    current authoring removes only that table's entry.
 
 ### Return interpretation
 
@@ -81,8 +73,7 @@ The default clears this table’s Development override; an exact selection store
 ## Raises / Errors
 
 ValueError
-    If the table cannot be resolved, a version belongs to another table,
-    or a rejected contract is selected.
+    If ``table_id`` is empty, a version belongs to another table, or a rejected contract is selected.
 
 ### Common failure causes
 
@@ -95,7 +86,7 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 This is a read-only Development testing tool and never activates or changes
-Data Contract metadata. Current authoring Guardrails are the default.
+Data Contract metadata. Current authoring is the default.
 Production ignores manual selection and uses its active Data Contract
 automatically. Frozen previews are read only from ``contract_payload_json``.
 

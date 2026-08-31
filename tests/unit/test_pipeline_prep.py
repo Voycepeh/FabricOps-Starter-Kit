@@ -401,3 +401,11 @@ def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch
     assert observed["completion_input_context"] is explicit_context
     assert observed["metadata_identity"] == ("prod-config", "prod")
     assert observed["checkpoint_context"] is resolved_context
+
+
+def test_read_pipeline_prep_rejects_target_table_id_mismatch(monkeypatch):
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    identities = iter([{"table_id": "source-a"}, {"table_id": "table-b"}])
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *_args, **_kwargs: next(identities))
+    with pytest.raises(ValueError, match="does not match the governed physical target identity"):
+        read_module.read_pipeline_prep("source", "target", source_read_strategy="full_dataset", target_table_id="table-a", load_strategy="overwrite")

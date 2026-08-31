@@ -218,6 +218,14 @@ def test_02_pipeline_product_source_uses_the_warehouse_reader():
     assert 'processing_scope=read_prep["scope"]' in read
 
 
+def test_02_pipeline_selects_data_contract_by_table_id():
+    """Select the whole contract by canonical identity in the template."""
+    source = _notebook_source("02_pipeline.ipynb")
+    assert "widget_select_data_contract(table_id=TARGET_TABLE_ID)" in source
+    assert "target_table_id=TARGET_TABLE_ID" in source
+    assert "TARGET_LOAD_STRATEGY" in source
+
+
 def test_02_pipeline_skips_physical_and_downstream_work_safely():
     """The runnable path must not read, transform, or publish after a skip decision."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
