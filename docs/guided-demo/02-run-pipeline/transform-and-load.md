@@ -35,12 +35,6 @@ Use `filter()` to keep only rows that should continue through the pipeline.
 
 ```python
 transformed_df = transformed_df.filter(
-    F.col("student_id").isNotNull()
-)
-```
-
-```python
-transformed_df = transformed_df.filter(
     (F.col("status") == "ACTIVE")
     & (F.col("student_id").isNotNull())
 )
@@ -77,6 +71,23 @@ transformed_df = transformed_df.withColumn(
 )
 ```
 
+### Handle missing values
+
+Use null handling deliberately rather than letting missing values flow unnoticed through the transformation.
+
+```python
+transformed_df = transformed_df.fillna({"status": "UNKNOWN"})
+```
+
+Use `coalesce()` when you want the first available value from several columns:
+
+```python
+transformed_df = transformed_df.withColumn(
+    "contact",
+    F.coalesce("mobile", "email", F.lit("no_contact")),
+)
+```
+
 ### Remove duplicates
 
 Use `dropDuplicates()` when any surviving row is acceptable for a duplicate key.
@@ -104,6 +115,8 @@ transformed_df = (
 )
 ```
 
+The same window pattern extends to ranking, previous/next values with `lag()` and `lead()`, and running totals. Those patterns are included in the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+
 ### Join another source
 
 If the pipeline has multiple upstream sources, join their DataFrames in the transformation section.
@@ -119,6 +132,12 @@ transformed_df = (
 )
 ```
 
+Use `left_anti` when you need rows with no match and `left_semi` when you only need rows that have a match without adding columns from the right side.
+
+```python
+unmatched_df = source_1_df.join(source_2_df, "student_id", "left_anti")
+```
+
 Multiple sources may fan into this transformation, but the governed pipeline still publishes one target table.
 
 ### Aggregate
@@ -131,6 +150,7 @@ transformed_df = (
     .groupBy("programme_code", "status")
     .agg(
         F.count("*").alias("student_count"),
+        F.countDistinct("student_id").alias("distinct_students"),
         F.max("modified_datetime").alias("latest_modified_datetime"),
     )
 )
@@ -138,11 +158,15 @@ transformed_df = (
 
 The important engineering decision is not the syntax itself. Confirm that the resulting grain and business meaning are correct for the governed target you selected.
 
+### Reshape or flatten when the data requires it
+
+Other common project patterns include `pivot()` for reshaping values into columns, `explode()` for arrays, struct access for nested JSON, and `unionByName()` for combining compatible datasets with different column order. These are useful, but they are not part of every pipeline, so the full examples stay in the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+
 ## When SQL appears in `02_pipeline`
 
 FabricOps does not treat Spark SQL as a second default transformation language beside PySpark. SQL is most useful when reading a Fabric Warehouse and the Warehouse can reduce the data before it reaches Spark.
 
-Use `read_warehouse_query()` for engineer-authored Warehouse projection, filtering, joins, aggregation, or row limits that should be pushed down to the Warehouse engine.
+Use `read_warehouse_query()` for engineer-authored Warehouse projection, filtering, joins, aggregation, CTEs, window calculations, or row limits that should be pushed down to the Warehouse engine.
 
 ```python
 source_1_df = read_warehouse_query(
@@ -183,14 +207,17 @@ Keep these in mind when transformations become larger:
 
 - select only the columns you need,
 - filter unnecessary rows early,
+- prefer Spark built-in functions over Python UDFs where possible,
 - avoid unnecessary `collect()` calls,
 - expect large joins and repartitioning to cause shuffle,
+- consider broadcasting only genuinely small lookup DataFrames,
 - cache only when an expensive DataFrame will be reused,
-- choose physical partitions carefully to avoid unnecessary small files.
+- choose physical partitions carefully to avoid unnecessary small files,
+- use `df.explain(mode="formatted")` when diagnosing a slow transformation.
 
 These are project-level engineering choices, so FabricOps keeps them visible instead of trying to hide them behind the starter kit.
 
-For more examples including null handling, sorting, windows, repartitioning, caching, full versus incremental processing, and MERGE/upsert concepts, use the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+For the full syntax reference, including windows, string/date functions, nested data, `unionByName`, repartitioning, caching, full versus incremental processing, and MERGE/upsert concepts, use the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
 
 ## Choose the target
 
