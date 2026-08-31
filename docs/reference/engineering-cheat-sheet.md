@@ -4,6 +4,159 @@ Use this page when you know the transformation you need and want a quick reminde
 
 FabricOps standardises the governed workflow around engineering. Your project still owns the transformation logic.
 
+## Key concepts and when to use what
+
+Use these expandable comparisons when you need the decision first and the syntax second. The **Fabric concepts** below align to Microsoft Fabric terminology and link to the relevant Microsoft Learn article. The **FabricOps recommendations** describe how this starter kit chooses to use those capabilities.
+
+??? info "Lakehouse Files vs Tables"
+
+    | | Files | Tables |
+    | --- | --- | --- |
+    | Best fit | Raw, file-oriented, unstructured, or non-Delta data | Managed structured data |
+    | Typical access | File or folder path | Registered table name |
+    | Common formats | CSV, JSON, Parquet, Excel, and other files | Delta tables |
+    | Fabric behaviour | Flexible file area | Managed table area with Delta capabilities |
+    | FabricOps use | Raw/file source and staging paths | Governed reusable Lakehouse tables |
+
+    **Rule of thumb:** use Files when the source is naturally file-oriented; use Tables when the data should behave like a managed, queryable dataset.
+
+    **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
+
+??? info "Lakehouse vs Warehouse"
+
+    | | Lakehouse | Warehouse |
+    | --- | --- | --- |
+    | Primary development experience | Apache Spark: Python, Scala, Spark SQL, R | T-SQL |
+    | Data | Structured and unstructured | Structured relational data |
+    | Storage | Delta on OneLake | Delta on OneLake |
+    | SQL access | SQL analytics endpoint for read/query scenarios | Full Warehouse T-SQL experience |
+    | Best fit | Data engineering, data science, flexible transformation | BI, dimensional modelling, SQL-first analytics |
+    | FabricOps position | Supported source/target | Supported source/target |
+
+    **Important:** Lakehouse does support SQL. The distinction is the primary engineering experience and workload, not “Spark only” versus “SQL only.”
+
+    **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric? — Lakehouse vs. warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
+
+??? info "Notebook vs Pipeline vs Dataflow Gen2"
+
+    | Fabric item | Use it for |
+    | --- | --- |
+    | Notebook | Code-first ingestion, preparation, complex transformation, and Spark engineering |
+    | Pipeline | Orchestration, dependencies, scheduling, automation, and scalable data movement |
+    | Dataflow Gen2 | Low-code Power Query ingestion, preparation, and transformation |
+
+    **FabricOps recommendation:** keep project engineering logic visible in `02_pipeline`, then use native Fabric orchestration when the notebook needs to run as part of a scheduled or dependent workflow.
+
+    **Microsoft Learn:** [Data ingestion options for a lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [Pipeline overview](https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-overview) · [What is Dataflow Gen2?](https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview)
+
+??? info "Delta vs Parquet"
+
+    | | Parquet | Delta Lake |
+    | --- | --- | --- |
+    | Core idea | Columnar file format | Parquet files plus a transaction log |
+    | ACID transactions | Not provided by the file format itself | Supported |
+    | Time travel / table history | Not provided by the file format itself | Supported |
+    | Schema evolution | File-level capability only | Managed as part of the Delta table |
+    | FabricOps use | File source/interchange where appropriate | Governed Lakehouse tables |
+
+    **Rule of thumb:** Parquet is a file format; Delta is a table/storage layer built on Parquet plus transaction state.
+
+    **Microsoft Learn:** [Delta Lake overview](https://learn.microsoft.com/en-us/fabric/fundamentals/delta-lake-overview)
+
+??? info "PySpark vs Warehouse SQL — FabricOps recommendation"
+
+    | Need | Prefer |
+    | --- | --- |
+    | Project-specific transformation after data is already in Spark | PySpark |
+    | Filter or project Warehouse rows before they reach Spark | Warehouse SQL via `read_warehouse_query()` |
+    | Aggregate a Warehouse source before transfer | Warehouse SQL via `read_warehouse_query()` |
+    | Join DataFrames already in Spark | PySpark |
+    | Window, cleansing, reshaping, and engineering logic in `02_pipeline` | PySpark |
+
+    Spark SQL is valid in Fabric notebooks, but FabricOps does not teach it as a second default transformation language beside PySpark. SQL is shown mainly where pushing work into the Warehouse engine reduces what Spark needs to receive.
+
+    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) · [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
+
+??? info "Full vs incremental processing"
+
+    | Strategy | Use when |
+    | --- | --- |
+    | Full dataset | The source is small/simple enough to reprocess, or there is no reliable incremental key |
+    | Incremental watermark | A timestamp or increasing sequence identifies new or changed rows |
+    | Incremental partition | A date/snapshot partition is the correct unit of change and processing |
+
+    **FabricOps rule:** checkpoint/watermark state represents successful processing. Do not advance it until the governed target write succeeds.
+
+    **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse) · [Incremental copy in Copy job](https://learn.microsoft.com/en-us/fabric/data-factory/incremental-copy-job)
+
+??? info "WHERE vs HAVING"
+
+    | Clause | Filters |
+    | --- | --- |
+    | `WHERE` | Source rows before aggregation |
+    | `HAVING` | Groups after `GROUP BY` has calculated aggregates |
+
+    ```sql
+    SELECT
+        programme_code,
+        COUNT(*) AS student_count
+    FROM dbo.student_enrolment
+    WHERE status = 'ACTIVE'
+    GROUP BY programme_code
+    HAVING COUNT(*) > 100;
+    ```
+
+    **FabricOps use:** this commonly appears inside `read_warehouse_query()` when aggregation should be pushed down to the Warehouse.
+
+??? info "Join types"
+
+    | Join | Use when |
+    | --- | --- |
+    | `inner` | Keep only matching rows from both sides |
+    | `left` | Keep every row from the main/left dataset and add matches where available |
+    | `full` | Keep rows from both sides, matched or unmatched |
+    | `left_semi` | Keep left rows that have a match without adding right-side columns |
+    | `left_anti` | Keep left rows that have no match |
+
+    `left_semi` and `left_anti` are especially useful for existence checks, reconciliation, and identifying missing reference matches.
+
+    **Microsoft Learn:** [Data ingestion options for a lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) for the broader notebook/Spark engineering context.
+
+??? info "Deduplication choices"
+
+    | Pattern | Use when |
+    | --- | --- |
+    | `distinct()` | Entire duplicate rows should be removed |
+    | `dropDuplicates(keys)` | Any one row per key is acceptable |
+    | Window + `row_number()` | Business logic determines exactly which row survives |
+
+    **FabricOps recommendation:** when the surviving record matters, make the rule explicit with a window such as “latest `modified_datetime` per business key.”
+
+??? info "Repartition vs coalesce"
+
+    | Function | What it does | Typical use |
+    | --- | --- | --- |
+    | `repartition()` | Redistributes data and performs a shuffle | Increase/decrease parallelism or repartition by a known key |
+    | `coalesce()` | Usually reduces partitions with less movement | Reduce partition/file count after the main transformation |
+
+    Neither is a default performance fix. Choose them only when the real data shape and write behaviour justify the cost.
+
+    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) for the broader Spark/notebook engineering context.
+
+??? info "What FabricOps standardises vs what the project owns"
+
+    | FabricOps standardises | Project owns |
+    | --- | --- |
+    | Environment-aware Fabric routing | Business transformation logic |
+    | Governed source and target identity | Join logic and reference enrichment |
+    | Processing/load strategy resolution | Derived columns and cleansing |
+    | Profiling and Catalogue metadata | Business aggregations and target grain |
+    | Guardrails | Domain-specific validation intent |
+    | Data Contracts | Workload-specific Spark tuning |
+    | Governed publication boundary | Business meaning of the resulting dataset |
+
+    This is a **FabricOps design choice**, not a Microsoft Fabric platform restriction. Fabric provides the underlying capabilities; FabricOps standardises the repeatable governed workflow around them.
+
 ## PySpark transformation patterns
 
 The examples below assume:
