@@ -95,6 +95,70 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse)
 
+??? info "Config-driven engineering and why FabricOps has I/O functions"
+
+    A Fabric notebook can work naturally with its attached/default Fabric item, but real engineering projects often need to read and write across **multiple Lakehouses, Warehouses, workspaces, and environments**.
+
+    Native Spark access can do this, but the physical location has to be supplied somehow. Without a shared resolution layer, notebook code can end up carrying explicit OneLake ABFS paths, workspace IDs, item IDs, or connection details.
+
+    ```text
+    abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Tables/...
+    ```
+
+    That works technically, but it creates an engineering maintenance problem when the same `02_pipeline` moves from Development to Production or when a Fabric item is replaced, renamed, or added.
+
+    | Hard-coded in each pipeline | FabricOps approach |
+    | --- | --- |
+    | Physical workspace/item identity appears inside transformation notebooks | Physical identity is centralised in `00_env_config` |
+    | Dev → Prod may require editing every promoted notebook | The promoted `02_pipeline` keeps the same logical target names |
+    | Adding or replacing a Lakehouse/Warehouse can require changes across many notebooks | Update the environment configuration once |
+    | A Production notebook can accidentally retain a Development path or ID | Environment-specific resolution happens through the active config |
+    | Cross-item access logic is repeated beside business transformation | FabricOps I/O functions keep item resolution and access logic reusable |
+
+    The intended separation is:
+
+    ```text
+    02_pipeline
+        │
+        │ asks for a logical store / target
+        ▼
+    00_env_config
+        │
+        │ defines the environment-specific Fabric items
+        ▼
+    FabricOps I/O functions
+        │
+        ▼
+    Correct Lakehouse / Warehouse / workspace
+    ```
+
+    In other words, **`02_pipeline` describes what the pipeline needs; `00_env_config` describes where those resources exist in the current environment; the FabricOps I/O layer resolves the two.**
+
+    This is why the I/O functions are not just wrappers around native PySpark reads and writes. They provide a consistent boundary for multi-item access, environment portability, logical target resolution, and shared behaviour around Fabric reads and writes.
+
+    A project notebook can therefore use a logical target such as `source`, `unified`, `product`, or another project-defined key instead of embedding the physical Fabric identity everywhere.
+
+    ```python
+    source_df = read_lakehouse_table(
+        "student_enrolment",
+        target="source",
+    )
+    ```
+
+    The same `02_pipeline` can then be promoted while the Development and Production versions of `00_env_config` resolve `source` to the correct environment-specific Fabric item.
+
+    ### Why `00_env_config` is a notebook instead of YAML
+
+    A YAML file would also be a valid generic configuration pattern. FabricOps intentionally keeps environment configuration in `00_env_config` because Fabric notebooks already work naturally with notebook-to-notebook `%run` execution.
+
+    ```python
+    %run 00_env_config
+    ```
+
+    This makes the configured context available directly to the notebook session without adding a separate file-loading and parsing mechanism. It also keeps the setup visible to Fabric users in the same notebook experience as the rest of the starter kit.
+
+    The important architectural choice is not the file format. It is the **separation of environment-specific physical identity from reusable pipeline logic**.
+
 ??? info "PySpark first — and where SQL fits"
 
     Once source data is in Spark, FabricOps uses **PySpark DataFrames as the normal transformation path**.
