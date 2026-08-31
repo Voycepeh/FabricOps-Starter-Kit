@@ -22,6 +22,8 @@ Open config → Attach Environment → Configure paths → Review widgets → Se
 
     Open the copied `00_env_config` notebook in the target workspace. Run it in Governance, Engineering Development, and Engineering Production.
 
+    FabricOps keeps environment configuration in a notebook so downstream notebooks can load the configured context naturally through `%run 00_env_config` rather than introducing a separate YAML or file-parsing step.
+
 ???+ success "Live — Attach the Fabric Environment"
 
     1. Open the notebook.
@@ -42,7 +44,11 @@ Open config → Attach Environment → Configure paths → Review widgets → Se
 
     !!! note "Why this configuration exists"
 
-        A Fabric notebook can only have one default Lakehouse or Warehouse attached at a time. FabricOps avoids hardcoding cross-workspace paths in every notebook by centralising them in `00_env_config`.
+        A Fabric notebook works naturally with its attached/default item, but a real pipeline may need several Lakehouses, Warehouses, or workspaces. Without central configuration, those cross-item reads and writes can push physical OneLake paths, workspace IDs, and item IDs into individual `02_pipeline` notebooks.
+
+        FabricOps centralises those environment-specific identities in `00_env_config`. The `02_pipeline` keeps logical target names while the FabricOps I/O functions resolve the correct Development or Production item at runtime. That means promotion does not require rewriting paths in every pipeline, and replacing or adding a Fabric item can be handled in the environment configuration instead of across many notebooks.
+
+        Read the deeper rationale in the [FabricOps Engineering Guide — Config-driven engineering and why FabricOps has I/O functions](../reference/engineering-cheat-sheet.md#config-driven-engineering-and-why-fabricops-has-io-functions).
 
 ???+ success "Live — Review widget settings"
 
