@@ -74,20 +74,20 @@
     "term": "governance as code",
     "aliases": [],
     "category": "FabricOps concepts",
-    "short_definition": "Defining governance requirements in structured, version-controlled forms that FabricOps can review, apply, and enforce consistently.",
-    "long_definition": "In FabricOps, Governance as Code means representing governance requirements as structured metadata, configuration, contracts, and executable checks so they can be reviewed, versioned, repeated, and applied consistently across the engineering workflow.",
-    "preferred_usage": "Use governance as code for FabricOps governance requirements expressed in structured and executable form.",
-    "avoid_usage": "policy as code"
+    "short_definition": "Turning governance decisions into structured metadata, rules, and contracts that the engineering workflow can directly use.",
+    "long_definition": "In FabricOps, Governance as Code means governance is not only documented in prose or handled as a separate manual process. Data Agreements, Enrichment, Guardrails, and Data Contracts are captured as structured metadata that can be reviewed, versioned, resolved by 02_pipeline, and enforced during execution. Governance defines the expectations, and Engineering consumes the same governed metadata when it validates and runs the pipeline.",
+    "preferred_usage": "Use governance as code when governance decisions are represented as structured FabricOps metadata that engineering can directly consume and enforce.",
+    "avoid_usage": "using governance as code for ordinary documentation that has no executable or metadata-driven connection to the workflow"
   },
   {
     "id": "configuration-driven-engineering",
     "term": "configuration-driven engineering",
     "aliases": ["config-driven engineering"],
     "category": "FabricOps concepts",
-    "short_definition": "Controlling repeatable engineering behaviour through configuration instead of rewriting pipeline code.",
-    "long_definition": "In FabricOps, Configuration-driven Engineering means keeping reusable pipeline logic stable while configuration selects environment targets, processing strategies, governed parameters, and other repeatable behaviour.",
-    "preferred_usage": "Use configuration-driven engineering for engineering behaviour controlled by configuration.",
-    "avoid_usage": "hard-coded engineering when configuration is the intended control"
+    "short_definition": "Keeping pipeline code portable by resolving environment-specific targets and repeatable processing choices from shared configuration instead of hard-coding them into every notebook.",
+    "long_definition": "In FabricOps, Configuration-driven Engineering separates reusable 02_pipeline logic from environment-specific Fabric item identities and repeatable processing settings. 00_env_config defines logical targets such as source, unified, product, and metadata for the active environment, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. This lets the same pipeline move from Development to Production, or adapt when a Fabric item changes, without rewriting paths and IDs throughout each notebook.",
+    "preferred_usage": "Use configuration-driven engineering for the separation of reusable pipeline logic from environment-specific targets, paths, IDs, and repeatable processing settings.",
+    "avoid_usage": "using configuration-driven engineering to mean that all business transformation logic must be configurable"
   },
   {
     "id": "full-dataset",
