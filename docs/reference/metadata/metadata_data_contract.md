@@ -42,7 +42,7 @@ via `table_id`
 | `contract_version` | `integer` | Version recorded for the contract row. |
 | `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
 | `agreement_version` | `string` | Canonical agreement version associated with the row. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `contract_payload_json` | `string` | Serialized contract payload stored for the row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `is_active` | `boolean` | Whether the row is currently active. |

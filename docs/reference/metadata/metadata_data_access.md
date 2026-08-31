@@ -35,7 +35,7 @@ via `table_id`
 | --- | --- | --- |
 | `access_id` | `string` | Identifier stored for `access_id`. |
 | `user_principal` | `string` | User principal recorded for the access row. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `access_level` | `string` | Metadata Data Access field `access_level`. |
 | `access_value` | `string` | Metadata Data Access field `access_value`. |

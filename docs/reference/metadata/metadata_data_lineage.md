@@ -37,7 +37,7 @@ via `profile_snapshot_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `lineage_id` | `string` | Identifier stored for `lineage_id`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `profile_snapshot_id` | `string` | Identifier stored for `profile_snapshot_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `pipeline_role` | `string` | Metadata Data Lineage field `pipeline_role`. |

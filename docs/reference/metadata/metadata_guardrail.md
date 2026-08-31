@@ -36,8 +36,8 @@ via `table_id` + `column_id`
 | --- | --- | --- |
 | `guardrail_rule_id` | `string` | Stable identifier for the guardrail rule row. |
 | `guardrail_version` | `integer` | Metadata Guardrail field `guardrail_version`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
-| `column_id` | `string` | Identifier stored for `column_id`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `guardrail_type` | `string` | Guardrail family recorded for the row. |
 | `rule_id` | `string` | Rule identity stored by the authoring workflow. |
