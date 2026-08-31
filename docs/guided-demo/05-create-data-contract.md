@@ -1,6 +1,6 @@
-# Step 5: Create and activate the Data Contract
+# Step 5: Freeze, test, and activate the Data Contract
 
-**Use `01_governance` to freeze one immutable Data Contract version for one governed table, optionally test that frozen version in Development, then activate the exact version Production is authorised to resolve.**
+**Use `01_governance` to freeze one immutable Data Contract version for one governed table, test that frozen version in Engineering Development, obtain governance sign-off, then activate the exact approved version Production is authorised to resolve.**
 
 !!! info "Key concepts for this step"
 
@@ -8,23 +8,22 @@
 
     A Data Agreement records the provider-to-recipient Data Steward relationship. A Data Contract is table-centric: one contract lifecycle is tied to one governed `table_id` under one exact Data Agreement version. Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
 
-## Freeze, test, activate, then run
+## Freeze, test, sign off, then activate
 
-Freezing a Data Contract and promoting a notebook are separate lifecycle concerns. A frozen contract version can be selected and tested by `02_pipeline` in Engineering Development without being active. Activation only selects which frozen version Engineering Production is authorised to resolve.
+Freezing a Data Contract and promoting a notebook are separate lifecycle concerns. A frozen contract version is selected and tested by `02_pipeline` in Engineering Development before activation. Governance sign-off confirms the frozen expectations are approved. Activation then selects which approved frozen version Engineering Production is authorised to resolve.
 
 ```mermaid
 flowchart LR
     AUTHOR["Mutable Development<br/>Governance authoring"] --> FREEZE["Create Data Contract vN<br/>Frozen + immutable"]
-
-    FREEZE --> TEST["Development 02_pipeline<br/>select and test vN"]
-    FREEZE --> ACTIVATE["Activate vN"]
-
+    FREEZE --> TEST["Engineering Development<br/>02_pipeline tests vN"]
+    TEST --> SIGNOFF["Governance sign-off"]
+    SIGNOFF --> ACTIVATE["Activate vN"]
     ACTIVATE --> PROD["Engineering Production<br/>02_pipeline"]
     PROD --> RESOLVE["Resolve exactly one<br/>active Data Contract"]
     RESOLVE --> RUN["Frozen Guardrails<br/>+ frozen target load strategy"]
 ```
 
-**Freeze** creates an immutable Data Contract version. **Activate** selects one frozen version as the version Production may resolve. **Promote** moves the approved notebook/runtime artefact into Engineering Production using the organisation's deployment process; FabricOps does not currently perform that deployment step.
+**Freeze** creates an immutable Data Contract version. **Test** validates that exact frozen version in Engineering Development. **Activate** selects the approved frozen version Production may resolve. **Promote** moves the validated notebook/runtime artefact into Engineering Production using the organisation's deployment process; FabricOps does not currently perform that deployment step.
 
 ## Before you begin
 
@@ -63,7 +62,7 @@ Runtime records are not part of the frozen definition. `METADATA_GUARDRAIL_RESUL
 
     Saving a new version does not mutate historical versions. The saved contract contains the exact governed definition shown above for that point in the lifecycle.
 
-??? info "Preview — Test one frozen version in Development"
+??? info "Preview — Test the frozen version in Development"
 
     After the contract exists, return to `02_pipeline` in Engineering Development and use `widget_select_data_contract()` for the same table.
 
@@ -71,23 +70,23 @@ Runtime records are not part of the frozen definition. `METADATA_GUARDRAIL_RESUL
 
     **Data Contract vN** makes the same checks and target-write preparation use the frozen Guardrails, target load strategy, and load-strategy parameters from that exact contract version.
 
-    The selector is read only. It does not activate or change the Data Contract.
+    Run the pipeline and confirm the frozen contract passes the required validations. The selector is read only. It does not activate or change the Data Contract.
 
-??? info "Preview — Manually activate the Production Data Contract"
+??? info "Preview — Sign off and manually activate the Production Data Contract"
 
-    Open `widget_activate_data_contract()` and activate the exact saved version that Production should use.
+    After the frozen version has passed Development validation and received governance sign-off, open `widget_activate_data_contract()` and activate that exact saved version for Production.
 
     Manual activation is the current interim lifecycle mechanism. It selects the frozen version FabricOps Production runtime should resolve, but it does not copy notebooks, move data, or implement the external approval/promotion workflow.
 
 ??? note "Planned — Notebook/runtime promotion"
 
-    FabricOps currently separates Data Contract freezing and activation from promotion into Engineering Production. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
+    FabricOps currently separates Data Contract freezing, Development testing, sign-off, and activation from promotion into Engineering Production. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
 
 ## Expected result
 
-You should now understand the Live Data Contract freeze flow plus the Preview frozen Development-test and activation paths. A saved contract version is immutable and can be tested in Development without being active; activation designates the frozen version Production is authorised to resolve, while notebook/runtime promotion remains a separate lifecycle concern.
+You should now understand the Data Contract lifecycle as **freeze → test in Development → governance sign-off → activate**. The saved version is immutable, Development validates the exact frozen expectations before activation, and activation designates the approved version Production is authorised to resolve. Notebook/runtime promotion remains a separate lifecycle concern.
 
-**Previous:** [Step 4: Rerun the Development pipeline with Guardrails](04-run-pipeline-with-guardrails.md)  
-**Next:** [Step 6: Run Production with the active Data Contract](06-promote-to-production.md)
+**Previous:** [Step 4: Validate with Guardrails / Data Contract](04-run-pipeline-with-guardrails.md)  
+**Next:** [Step 6: Promote and run Production with the active Data Contract](06-promote-to-production.md)
 
 See also: [`widget_register_data_contract()`](../api/reference/widget_register_data_contract.md), [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).

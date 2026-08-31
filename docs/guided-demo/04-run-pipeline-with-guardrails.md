@@ -1,6 +1,6 @@
-# Step 4: Rerun the Development pipeline with Guardrails
+# Step 4: Validate with Guardrails / Data Contract
 
-**Rerun `02_pipeline` in Engineering Development so Governance-authored Guardrails and the governed processing definition control the pipeline boundaries.**
+**Rerun `02_pipeline` in Engineering Development so Governance-authored Guardrails or a selected frozen Data Contract control the governed pipeline boundaries.**
 
 This step uses the newer governed runtime path. The components are implemented but remain **Preview** in the Guided Demo until the complete flow is revalidated end to end in Fabric.
 
@@ -15,7 +15,7 @@ This step uses the newer governed runtime path. The components are implemented b
 ## High-level flow
 
 ```text
-Select rule source
+Select current Guardrails or frozen Data Contract
 → Prepare source scope
 → Pre-read Guardrails
 → Full Dataset / Incremental Subset read
@@ -34,7 +34,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Open `02_pipeline` in Engineering Development.
 
-    Keep `widget_select_data_contract()` on **Current authoring** for the first guarded rerun. After a Data Contract exists, the same selector can choose one exact frozen version for the same table.
+    Keep `widget_select_data_contract()` on **Current authoring Guardrails** for the first guarded rerun. After Step 5 freezes a Data Contract version, return to the same `02_pipeline` and select that exact frozen version to test it before activation.
 
     | Development validation source | Rule and processing source |
     | --- | --- |
@@ -105,7 +105,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
 ## Expected result
 
-You should understand the complete guarded Development lifecycle and where the Preview runtime components fit around the same visible ETL path used in Step 2. After Step 5 creates a Data Contract, this notebook can test an exact frozen version without changing the public check calls.
+You should understand the complete guarded Development lifecycle and where the Preview runtime components fit around the same visible ETL path used in Step 2. The same notebook first validates current Governance authoring, then returns after Step 5 freezes a Data Contract so the exact frozen version can be tested before governance sign-off and activation.
 
 **Previous:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)  
-**Next:** [Step 5: Create and activate the Data Contract](05-create-data-contract.md)
+**Next:** [Step 5: Freeze, test, and activate the Data Contract](05-create-data-contract.md)
