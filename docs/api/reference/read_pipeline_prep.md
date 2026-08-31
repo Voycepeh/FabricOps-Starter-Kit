@@ -14,7 +14,7 @@ Prepare governed source observation and read scope without reading business data
 
 `fabricops_kit/pipeline/read_pipeline_prep.py:253`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L414">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,6 +39,7 @@ For profiling-related pipeline functions, the output captures the important deta
 def read_pipeline_prep(
     source_table_name: str,
     target_table_name: str,
+    source_table_id: str,
     source_read_strategy: str,
     source_watermark_column: str | None=None,
     source_partition_column: str | None=None,
@@ -59,7 +60,9 @@ def read_pipeline_prep(
 <div class="reference-example-usage" markdown="1">
 
 >>> prep = read_pipeline_prep(
-...     "bookings", "bookings_curated", source_schema="dbo", schema="dbo",
+...     "bookings", "bookings_curated",
+...     source_table_id="warehouse:source:dbo:bookings",
+...     source_schema="dbo", schema="dbo",
 ...     source_read_strategy="incremental_watermark",
 ...     source_watermark_column="modified_datetime", load_strategy="scd1",
 ...     load_strategy_parameters={"key_columns": ["booking_id"]},
@@ -75,6 +78,7 @@ True
 | --- | --- | --- | --- |
 | `source_table_name` | `str` | Yes | Physical source table to prepare. |
 | `target_table_name` | `str` | Yes | Governed target table whose target processing definition controls this run. |
+| `source_table_id` | `str` | Yes | Canonical Catalogue identity selected for the physical source. It must exactly match the identity resolved from the active Fabric configuration. |
 | `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
 | `source_watermark_column` | `str \| None` | No | Checkpoint column required by ``incremental_watermark``. |
 | `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |

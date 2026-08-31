@@ -254,6 +254,7 @@ def read_pipeline_prep(
     source_table_name: str,
     target_table_name: str,
     *,
+    source_table_id: str,
     source_read_strategy: str,
     source_watermark_column: str | None = None,
     source_partition_column: str | None = None,
@@ -273,6 +274,9 @@ def read_pipeline_prep(
         Physical source table to prepare.
     target_table_name : str
         Governed target table whose target processing definition controls this run.
+    source_table_id : str
+        Canonical Catalogue identity selected for the physical source. It must
+        exactly match the identity resolved from the active Fabric configuration.
     source_read_strategy : {"full_dataset", "incremental_watermark", "incremental_partition"}
         Engineer-authored rule for identifying source data to process.
     source_watermark_column : str or None, default=None
@@ -318,7 +322,9 @@ def read_pipeline_prep(
     Examples
     --------
     >>> prep = read_pipeline_prep(
-    ...     "bookings", "bookings_curated", source_schema="dbo", schema="dbo",
+    ...     "bookings", "bookings_curated",
+    ...     source_table_id="warehouse:source:dbo:bookings",
+    ...     source_schema="dbo", schema="dbo",
     ...     source_read_strategy="incremental_watermark",
     ...     source_watermark_column="modified_datetime", load_strategy="scd1",
     ...     load_strategy_parameters={"key_columns": ["booking_id"]},
@@ -340,6 +346,14 @@ def read_pipeline_prep(
     source_identity = resolve_physical_table_identity(
         config, env, target=source_target, schema=source_schema, table_name=source_table_name
     )
+    expected_source_table_id = str(source_table_id or "").strip()
+    if not expected_source_table_id:
+        raise ValueError("source_table_id must be a non-empty canonical FabricOps table identity.")
+    if expected_source_table_id != str(source_identity["table_id"]):
+        raise ValueError(
+            f"Configured source_table_id {expected_source_table_id!r} does not match the governed "
+            f"physical source identity {source_identity['table_id']!r}."
+        )
     target_identity = resolve_physical_table_identity(
         config, env, target=target, schema=schema, table_name=target_table_name
     )

@@ -889,7 +889,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Source and target identities plus the current Development-authored load strategy and parameters.',
   'returns': 'Observation and change evidence, canonical processing, and skip, full, or incremental read scope.',
   'side_effects': 'Persists compact source observation and change evidence; it does not read business rows or write the target.',
-  'preferred_example': 'read_prep = read_pipeline_prep("orders", "orders_curated", source_read_strategy="incremental_watermark", source_watermark_column="change_sequence", load_strategy="scd1", load_strategy_parameters={"key_columns": ["order_id"]})',
+  'preferred_example': 'read_prep = read_pipeline_prep("orders", "orders_curated", source_table_id="warehouse:source:dbo:orders", source_read_strategy="incremental_watermark", source_watermark_column="change_sequence", load_strategy="scd1", load_strategy_parameters={"key_columns": ["order_id"]})',
   'related_functions': ['check_changes', 'write_pipeline_prep', 'commit_pipeline_checkpoint', 'read_lakehouse_table']},
  {'kind': 'function',
   'module': 'pipeline.commit_pipeline_checkpoint',

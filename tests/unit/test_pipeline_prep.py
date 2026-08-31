@@ -36,7 +36,7 @@ def test_full_dataset_does_not_observe_or_read_checkpoint(monkeypatch):
     monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: pytest.fail("checkpoint"))
     monkeypatch.setattr(read_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: {"load_strategy": "overwrite", "source": "current_authoring"})
     result = read_module.read_pipeline_prep(
-        "reference_codes", "reference_codes", source_read_strategy="full_dataset", load_strategy="overwrite",
+        "reference_codes", "reference_codes", source_table_id="lakehouse:source:None:reference_codes", source_read_strategy="full_dataset", load_strategy="overwrite",
     )
     assert result["source_processing"] == {"read_strategy": "full_dataset"}
     assert result["read_mode"] == "full_dataset"
@@ -150,7 +150,7 @@ def test_read_prep_observes_changes_and_resolves_processing_once(monkeypatch):
         },
     )
     result = read_module.read_pipeline_prep(
-        "student_source", "students", source_schema="dbo", schema="dbo",
+        "student_source", "students", source_table_id="lakehouse:source:dbo:student_source", source_schema="dbo", schema="dbo",
         source_read_strategy="incremental_partition", source_partition_column="snapshot_date",
         load_strategy="scd1", load_strategy_parameters={"key_columns": ["student_id"]},
     )
@@ -182,7 +182,7 @@ def test_read_prep_warehouse_overwrite_forces_full_scope(monkeypatch):
         "source": "data_contract", "contract_id": "c", "contract_version": 1,
     })
     result = read_module.read_pipeline_prep(
-        "student_source", "students", source_target="warehouse", source_schema="dbo",
+        "student_source", "students", source_table_id="warehouse:warehouse:dbo:student_source", source_target="warehouse", source_schema="dbo",
         target="warehouse", schema="dbo", source_read_strategy="incremental_partition",
         source_partition_column="snapshot_date", load_strategy="append",
     )
@@ -246,7 +246,7 @@ def test_read_prep_preserves_warehouse_overwrite_skip(monkeypatch):
         "load_strategy": "overwrite", "source": "data_contract", "contract_id": "c", "contract_version": 1,
     })
     result = read_module.read_pipeline_prep(
-        "student_source", "students", source_target="warehouse", source_schema="dbo",
+        "student_source", "students", source_table_id="warehouse:warehouse:dbo:student_source", source_target="warehouse", source_schema="dbo",
         target="warehouse", schema="dbo", source_read_strategy="incremental_partition",
         source_partition_column="snapshot_date", load_strategy="append",
     )
@@ -408,4 +408,22 @@ def test_read_pipeline_prep_rejects_target_table_id_mismatch(monkeypatch):
     identities = iter([{"table_id": "source-a"}, {"table_id": "table-b"}])
     monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *_args, **_kwargs: next(identities))
     with pytest.raises(ValueError, match="does not match the governed physical target identity"):
-        read_module.read_pipeline_prep("source", "target", source_read_strategy="full_dataset", target_table_id="table-a", load_strategy="overwrite")
+        read_module.read_pipeline_prep("source", "target", source_table_id="source-a", source_read_strategy="full_dataset", target_table_id="table-a", load_strategy="overwrite")
+
+
+def test_read_pipeline_prep_rejects_source_table_id_mismatch(monkeypatch):
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(
+        read_module,
+        "resolve_physical_table_identity",
+        lambda *_args, **_kwargs: {"table_id": "canonical-source"},
+    )
+
+    with pytest.raises(ValueError, match="does not match the governed physical source identity"):
+        read_module.read_pipeline_prep(
+            "source",
+            "target",
+            source_table_id="different-source",
+            source_read_strategy="full_dataset",
+            load_strategy="overwrite",
+        )

@@ -185,7 +185,7 @@ def test_02_pipeline_uses_public_cloneable_governed_blocks():
 
     assert _cell_by_id("02_pipeline.ipynb", "source-prepare").source.count("read_pipeline_prep(") == 1
     assert _cell_by_id("02_pipeline.ipynb", "target-prepare").source.count("write_pipeline_prep(") == 1
-    assert 'processing_scope=read_prep["scope"]' in source
+    assert 'processing_scope=prep["scope"]' in source
     assert 'completion_context=write_prep["completion"]' in source
     assert "run_pipeline(" not in source
     assert "build_table_id(" not in source
@@ -207,34 +207,31 @@ def test_02_pipeline_uses_canonical_source_strategy_and_read_mode_terms():
     assert ".isin(" not in source
 
 
-def test_02_pipeline_product_source_uses_the_warehouse_reader():
-    """Keep the configured product Warehouse aligned with the main physical reader."""
+def test_02_pipeline_selects_source_and_dispatches_its_registered_store_type():
+    """Use canonical source metadata and keep both physical table readers explicit."""
     config = _cell_by_id("02_pipeline.ipynb", "source-config").source
     read = _cell_by_id("02_pipeline.ipynb", "source-read").source
 
-    assert 'SOURCE_TARGET = "product"' in config
-    assert "source_1_df = read_warehouse_table(" in read
-    assert "source_1_df = read_lakehouse_table(" not in read
-    assert 'processing_scope=read_prep["scope"]' in read
+    assert 'source_selection = source_catalogue["get_selection"]()' in config
+    assert '"table_id": source_selection["table_id"]' in config
+    assert '"store_type": source_selection["store_type"]' in config
+    assert 'source_table_id=source["table_id"]' in _cell_by_id("02_pipeline.ipynb", "source-prepare").source
+    assert "SOURCE_DFS[SOURCE] = read_warehouse_table(" in read
+    assert "SOURCE_DFS[SOURCE] = read_lakehouse_table(" in read
+    assert 'processing_scope=prep["scope"]' in read
 
 
 def test_02_pipeline_selects_registered_target_and_data_contract_by_table_id():
     """Resolve the target from Catalogue metadata before selecting its Data Contract."""
     source = _notebook_source("02_pipeline.ipynb")
-    selection = _cell_by_id("02_pipeline.ipynb", "target-selection").source
-    config = _cell_by_id("02_pipeline.ipynb", "source-config").source
+    config = _cell_by_id("02_pipeline.ipynb", "source-prepare").source
 
-    assert 'widget_view_catalogue(' in selection
-    assert 'mode="explore"' in selection
     assert 'target_selection = target_catalogue["get_selection"]()' in config
-    assert 'TARGET_TABLE_ID = target_selection["table_id"]' in config
-    assert 'TARGET_TARGET = target_selection["layer"]' in config
-    assert 'TARGET_SCHEMA = target_selection["schema_name"]' in config
-    assert 'TARGET_TABLE_NAME = target_selection["table_name"]' in config
+    assert '"table_id": target_selection["table_id"]' in config
+    assert '"target": target_selection["layer"]' in config
     assert "<canonical table_id already created in FabricOps metadata>" not in source
-    assert "widget_select_data_contract(table_id=TARGET_TABLE_ID)" in source
-    assert "target_table_id=TARGET_TABLE_ID" in source
-    assert "TARGET_LOAD_STRATEGY" in source
+    assert 'widget_select_data_contract(table_id=target["table_id"])' in source
+    assert 'target_table_id=target["table_id"]' in source
 
 
 def test_02_pipeline_skips_physical_and_downstream_work_safely():
@@ -248,12 +245,34 @@ def test_02_pipeline_skips_physical_and_downstream_work_safely():
     target_prepare = by_id["target-prepare"].source
     publish = by_id["target-publish"].source
 
-    assert 'SHOULD_RUN = read_prep["read_mode"] != "skip"' in prepare
-    assert "if not SHOULD_RUN:" in read
+    assert 'SOURCE_RESULTS[SOURCE]["should_run"] = prep["read_mode"] != "skip"' in prepare
+    assert 'if not SOURCE_RESULTS[SOURCE]["should_run"]:' in read
     assert "read_warehouse_table(" in read
-    assert "if SHOULD_RUN:" in transform
-    assert "if SHOULD_RUN:" in target_prepare
-    assert "if SHOULD_RUN:" in publish
+    assert 'if SOURCE_RESULTS[1]["should_run"]:' in transform
+    assert 'if SOURCE_RESULTS[SOURCE]["should_run"]:' in target_prepare
+    assert 'if SOURCE_RESULTS[SOURCE]["should_run"]:' in publish
+
+
+def test_02_pipeline_uses_indexed_cloneable_source_and_target_state():
+    """Keep all cloneable state indexed and document inactive clone keys."""
+    source = _notebook_source("02_pipeline.ipynb")
+    for name in (
+        "SOURCES", "SOURCE_PREPS", "SOURCE_DFS", "SOURCE_PROFILES", "SOURCE_RESULTS",
+        "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS", "TARGET_CONTRACTS",
+    ):
+        assert f"{name} = {{}}" in source
+    assert "SOURCE = 1" in source
+    assert "TARGET = 1" in source
+    for obsolete in (
+        "SOURCE_1_TABLE_NAME", "SOURCE_2_TABLE_NAME", "source_1_df", "source_2_df",
+        "TARGET_1_TABLE_NAME", "target_1_df",
+    ):
+        assert obsolete not in source
+    assert "SOURCE = 2" in source
+    assert "TARGET = 2" in source
+    assert "SOURCE_DFS[1]" in source and "SOURCE_DFS[2]" in source
+    assert "one governed target per pipeline" in source
+    assert "Multiple targets are supported" in source
 
 
 def test_02_pipeline_profiles_full_sources_without_registering_incremental_slices():
