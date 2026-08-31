@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L128">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L123">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,12 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_schema(
-    table_name: str,
-    target: str='source',
-    schema: str | None=None,
-    dataframe=None,
-) -> dict:
+def check_schema(table_id: str, *, dataframe=None) -> dict
 ```
 
 </div>
@@ -50,7 +45,7 @@ def check_schema(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_schema("orders", target="source", schema="dbo")
+>>> result = check_schema(table_id="lakehouse||source||dbo||orders")
 >>> result["can_continue"]
 True
 
@@ -60,9 +55,7 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Physical table name within the configured target. |
-| `target` | `str` | No | Logical FabricOps target containing the configured physical table. |
-| `schema` | `str \| None` | No | Physical schema containing the configured table. |
+| `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataframe` | `DataFrame` | No | Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked. |
 
 ## Returns

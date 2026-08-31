@@ -18,8 +18,8 @@ def _assert_numpy_parameter_contract(function) -> None:
 
 def test_live_observation_checks_keep_their_public_signatures() -> None:
     """Protect the already-live standalone observation-check signatures from Stage 2 drift."""
-    assert str(inspect.signature(check_freshness)) == "(observation) -> dict"
-    assert str(inspect.signature(check_changes)) == "(observation) -> dict"
+    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None) -> dict"
+    assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
 
 
 def test_stage2_touched_public_functions_keep_complete_numpy_parameter_docs() -> None:

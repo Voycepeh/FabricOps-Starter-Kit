@@ -31,7 +31,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:114`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L114-L452">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L114-L447">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -180,17 +180,12 @@ Detailed table contents:
   ``stddev_value``, ``min_value``, ``percentile_25_value``,
   ``median_value``, ``percentile_75_value``, ``max_value``,
   and the standard audit fields.
-- ``METADATA_DATA_PROFILED_FREQUENCY`` stores one flattened row per
-  distinct profiled value with ``metadata_column_key``, value, count,
-  percentage, rank, profiled row totals, ``profiled_at``, and audit fields.
-  Join historical snapshots to ``METADATA_DATA_PROFILED`` through both
-  ``metadata_column_key`` and ``profiled_at``.
-- ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
-  ``notebook_id``, ``notebook_name``, ``workspace_id``,
-  ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
-  ``profile_role``, ``profiled_at``, ``committed_by``,
-  ``environment_name``, ``metadata_lakehouse_name``, and the standard
-  audit fields.
+- ``METADATA_DATA_PROFILED_FREQUENCY`` stores frequency rows through
+  ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,
+  percentage, rank, profiled row totals, and the standard audit fields.
+- ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,
+  ``profile_snapshot_id``, ``environment_name``, ``pipeline_role``, and the
+  standard audit fields.
 - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
   approval, expiry, table and column identity, and audit information.
 - ``METADATA_ENRICHMENT`` stores business metadata enrichment,

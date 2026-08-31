@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:269`
+`fabricops_kit/pipeline/check_changes.py:296`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L269-L306">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L296-L336">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,7 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_changes(observation) -> dict
+def check_changes(observation, *, table_id: str | None=None) -> dict
 ```
 
 </div>
@@ -57,6 +57,7 @@ True
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
+| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, it must match the identity carried by the observation. |
 
 ## Returns
 

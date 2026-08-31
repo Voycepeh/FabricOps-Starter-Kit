@@ -96,7 +96,7 @@ def test_catalogue_widget_dispatches_only_scope_resolution(monkeypatch, mode):
 
 def test_dataset_labels_are_consistent_and_pipeline_roles_are_explicit():
     """Shared labels stay readable when the normalized reader supplies its table ID fallback."""
-    row = {"layer": "raw", "schema_name": "sales", "table_name": "orders", "metadata_table_key": "key"}
+    row = {"layer": "raw", "schema_name": "sales", "table_name": "orders", "table_id": "key"}
     assert dataset_label(row) == "raw / sales / orders"
     assert dataset_label(row, "Source") == "[Source] raw / sales / orders"
     assert dataset_label(row, "Target") == "[Target] raw / sales / orders"
@@ -106,16 +106,16 @@ def test_guardrail_views_keep_stable_empty_schemas(spark_session):
     """A selected dataset without an execution returns two typed empty views."""
     results = spark_session.createDataFrame(
         [],
-        "metadata_table_key string, run_id string, rule_type string, column_name string, status string, "
+        "table_id string, run_id string, rule_type string, column_name string, status string, "
         "severity string, actual_value_json string, reason string, can_continue boolean, _committed_at timestamp",
     )
     row_results = spark_session.createDataFrame(
         [],
-        "metadata_table_key string, run_id string, rule_type string, row_identity string, "
+        "table_id string, run_id string, rule_type string, row_identity string, "
         "involved_columns_json string, failed_values_json string, failure_reason string",
     )
 
-    views = _prepare_selected_guardrail_views(results, row_results, metadata_table_key="missing-key")
+    views = _prepare_selected_guardrail_views(results, row_results, table_id="missing-key")
 
     assert views["guardrail_results"].count() == 0
     assert views["guardrail_results"].columns == [
@@ -335,10 +335,10 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
             ("dataset-key", "old-run", "not_null", "Country", "failed", "error", False, "old", '{"failed_count":1,"failed_percent":25.0,"total_count":4}', old_snapshot),
             ("dataset-key", "latest-run", "not_null", "Country", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":5}', latest_snapshot),
             ("unprofiled-key", "customer-run", "not_null", "customer_id", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":2}', later_snapshot),
-        ], "metadata_table_key string, run_id string, rule_type string, column_name string, status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp"),
+        ], "table_id string, run_id string, rule_type string, column_name string, status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp"),
         "METADATA_GUARDRAIL_ROW_RESULTS": spark_session.createDataFrame(
             [],
-            "metadata_table_key string, run_id string, rule_type string, row_identity string, involved_columns_json string, failed_values_json string, failure_reason string",
+            "table_id string, run_id string, rule_type string, row_identity string, involved_columns_json string, failed_values_json string, failure_reason string",
         ),
     }
     read_calls = []

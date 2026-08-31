@@ -17,7 +17,7 @@ from ..io.shared import (
     write_lakehouse_table_core,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.shared import build_metadata_table_key, build_table_id, get_store
+from ..config.shared import build_table_id, get_store
 from ..config.metadata_schemas import coerce_metadata_row_types
 
 
@@ -596,15 +596,15 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
 def guardrail_compatibility_observation(
     observation: Any, *, table_id: str, change_column: str
 ) -> Any:
-    """Add temporary in-memory aliases required by the Stage 4 Guardrail model."""
+    """Add the resolved observation change column for freshness evaluation."""
     if hasattr(observation, "withColumn"):
         from pyspark.sql import functions as F
 
-        return observation.withColumn("metadata_table_key", F.lit(table_id)).withColumn(
+        return observation.withColumn("table_id", F.lit(table_id)).withColumn(
             "change_column", F.lit(change_column)
         )
     return [
-        {**row, "metadata_table_key": table_id, "change_column": change_column}
+        {**row, "table_id": table_id, "change_column": change_column}
         for row in observation_rows(observation)
     ]
 
@@ -1103,7 +1103,7 @@ def _parse_rule_parameters(row: dict) -> dict:
     except Exception:
         return {}
 
-def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict | None:
+def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", table_id: str = "") -> dict | None:
     if rules_df is None:
         return None
     rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
@@ -1119,8 +1119,8 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
             continue
         if table_name and _string_value(_catalogue_value(row, "table_name")) != table_name:
             continue
-        rule_table_key = _string_value(_catalogue_value(row, "table_id", "metadata_table_key"))
-        if metadata_table_key and rule_table_key != metadata_table_key:
+        rule_table_id = _string_value(_catalogue_value(row, "table_id"))
+        if table_id and rule_table_id != table_id:
             continue
         if not _is_active_guardrail_rule(row):
             continue
@@ -1270,7 +1270,83 @@ def resolve_catalogue_table_id(
     return identities[0]
 
 
-def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, metadata_table_key: str) -> list[dict[str, Any]]:
+def resolve_catalogue_table_identity(
+    config,
+    env: str,
+    table_id: str,
+    *,
+    spark_session=None,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve one active registered Catalogue table by canonical table identity."""
+    canonical_id = str(table_id or "").strip()
+    if not canonical_id:
+        raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
+    frame = read_lakehouse_table_core(
+        CATALOGUE_TABLE,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        spark_session=spark_session,
+        context=context or {"config": config, "env": env},
+    )
+    matches = []
+    for raw in frame.collect():
+        row = _row_to_dict(raw)
+        if (
+            str(row.get("environment_name") or "") == env
+            and str(row.get("table_id") or "").strip() == canonical_id
+            and str(row.get("metadata_level") or "").strip().lower() == "table"
+            and not str(row.get("column_id") or "").strip()
+            and row.get("is_active") is not False
+        ):
+            matches.append(row)
+    if not matches:
+        raise ValueError(
+            f"No active registered Catalogue table exists for table_id {canonical_id!r} "
+            f"in environment {env!r}."
+        )
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"Catalogue integrity error: table_id {canonical_id!r} resolves to "
+            f"{len(matches)} active table identities."
+        )
+    row = dict(matches[0])
+    required = ("store_type", "layer", "table_name")
+    missing = [name for name in required if not str(row.get(name) or "").strip()]
+    if missing:
+        raise ValueError(
+            f"Catalogue table_id {canonical_id!r} is not a registered table identity; "
+            f"missing {', '.join(missing)}."
+        )
+    store_type = str(row["store_type"]).strip().lower()
+    if store_type not in {"lakehouse", "warehouse"}:
+        raise ValueError(
+            f"Catalogue table_id {canonical_id!r} has unsupported store_type {store_type!r}."
+        )
+    return {
+        **row,
+        "table_id": canonical_id,
+        "store_type": store_type,
+        "target": str(row["layer"]).strip().lower(),
+        "schema": str(row.get("schema_name") or "").strip() or None,
+        "table_name": str(row["table_name"]).strip(),
+    }
+
+
+def catalogue_authored_processing(identity: Mapping[str, Any]) -> dict[str, Any]:
+    """Return current processing authoring from a Catalogue table identity."""
+    strategy = str(identity.get("load_strategy") or "").strip()
+    raw = identity.get("load_strategy_parameters_json") or "{}"
+    try:
+        parameters = json.loads(raw) if isinstance(raw, str) else dict(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.") from exc
+    if not isinstance(parameters, dict):
+        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.")
+    return {"load_strategy": strategy, **parameters}
+
+
+def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, table_id: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
     table = payload.get("table")
@@ -1314,7 +1390,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
             }
         adapted.append({
             **raw,
-            "metadata_table_key": metadata_table_key,
+            "table_id": table_id,
             "environment_name": environment_name,
             "rule_parameters_json": json.dumps(params, sort_keys=True),
             "is_active": True,
@@ -1566,7 +1642,6 @@ def load_table_guardrail_rules(
     *,
     spark_session=None,
     table_id: str = "",
-    metadata_table_key: str = "",
     context: Mapping[str, Any] | None = None,
 ):
     """Resolve the environment's single Guardrail rule source."""
@@ -1577,7 +1652,7 @@ def load_table_guardrail_rules(
         rows = contract_guardrail_rows(
             contract,
             environment_name=env,
-            metadata_table_key=metadata_table_key or table_id,
+            table_id=table_id,
         )
         return spark_session.createDataFrame(rows) if rows else []
     runtime_context = context or {}
@@ -1604,7 +1679,7 @@ def load_table_guardrail_rules(
         rows = contract_guardrail_rows(
             contract,
             environment_name=env,
-            metadata_table_key=metadata_table_key or table_id,
+            table_id=table_id,
         )
         return spark_session.createDataFrame(rows) if rows else []
     try:
@@ -1618,11 +1693,11 @@ def load_table_guardrail_rules(
             raise ValueError("No guardrail rules exist; Governance must author and activate the required rule first.") from exc
         raise
 
-def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:
+def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str, environment_name: str = "") -> dict | None:
     """Select the latest active approved table rule by canonical identity."""
     return _select_table_guardrail_rule(
         rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",
-        environment_name=environment_name, metadata_table_key=metadata_table_key,
+        environment_name=environment_name, table_id=table_id,
     )
 
 def resolve_change_rule_observation_columns(rule: dict) -> tuple[str, str]:
@@ -1645,17 +1720,17 @@ def evaluate_changes_guardrail(
     dataset_name: str = "",
     table_name: str = "",
     environment_name: str = "",
-    metadata_table_key: str = "",
+    table_id: str = "",
 ) -> dict:
     """Apply approved change intent to an observation comparison result."""
     rule = _select_table_guardrail_rule(
         rules_df, guardrail_type="change", dataset_name=dataset_name,
         table_name=table_name, environment_name=environment_name,
-        metadata_table_key=metadata_table_key,
+        table_id=table_id,
     )
     if not rule:
         raise ValueError(
-            f"No active approved source-change rule exists for {metadata_table_key!r}; "
+            f"No active approved source-change rule exists for {table_id!r}; "
             "Governance must author and activate one first."
         )
     params = _parse_rule_parameters(rule)
@@ -1813,7 +1888,7 @@ def _guardrail_schema_check_base(
     dataset_name: str = "",
     table_name: str = "",
     environment_name: str = "",
-    metadata_table_key: str = "",
+    table_id: str = "",
 ) -> dict:
     """Apply an internal runtime schema check for the governed runtime checks.
 
@@ -1840,7 +1915,7 @@ def _guardrail_schema_check_base(
         Table identity used to select an approved rule.
     environment_name : str, optional
         Environment identity used to select an approved rule.
-    metadata_table_key : str, optional
+    table_id : str, optional
         Canonical table identity used to select an approved rule.
 
     Returns
@@ -1867,7 +1942,7 @@ def _guardrail_schema_check_base(
     if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
         rules_df, expected_schema = expected_schema, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
         if not rule:
             expected_schema, preset = {}, "monitor_only"
         else:
@@ -2042,7 +2117,7 @@ def freshness_check_core(
     dataset_name: str = "",
     table_name: str = "",
     environment_name: str = "",
-    metadata_table_key: str = "",
+    table_id: str = "",
 ) -> dict:
     """Enforce that a DataFrame contains recent enough data.
 
@@ -2068,7 +2143,7 @@ def freshness_check_core(
         Table identity used to select an approved rule.
     environment_name : str, optional
         Environment identity used to select an approved rule.
-    metadata_table_key : str, optional
+    table_id : str, optional
         Canonical table identity used to select an approved rule.
 
     Returns
@@ -2084,7 +2159,7 @@ def freshness_check_core(
     if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
         rules_df, freshness_column = freshness_column, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
         if rule:
             params = _parse_rule_parameters(rule)
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
@@ -2104,7 +2179,7 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns
+    observation_evidence = {"table_id", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns
     if observation_evidence and rule_type != "skip":
         rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
         change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
@@ -2337,7 +2412,7 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported operator.")
     return rules
 
-def _load_active_dq_rules(metadata_df, metadata_table_key: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
     """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
@@ -2346,12 +2421,12 @@ def _load_active_dq_rules(metadata_df, metadata_table_key: str, env: str | None 
     elif "rule_id" in columns:
         partition_columns = ["rule_id"]
     else:
-        partition_columns = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
+        partition_columns = [name for name in ("table_id", "column_name", "rule_type") if name in columns]
     if not partition_columns:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
-    if "metadata_table_key" not in columns:
-        raise ValueError("DQ metadata must include metadata_table_key for canonical table scoping.")
-    latest = metadata_df.filter(F.col("metadata_table_key") == metadata_table_key)
+    if "table_id" not in columns:
+        raise ValueError("DQ metadata must include table_id for canonical table scoping.")
+    latest = metadata_df.filter(F.col("table_id") == table_id)
     if "guardrail_type" in columns:
         latest = latest.filter(F.lower(F.col("guardrail_type")).isin("dq", "quality"))
     if env is not None and "environment_name" in columns:
@@ -2417,6 +2492,7 @@ def check_dq_runtime(
     env: str,
     table_name: str,
     *,
+    table_id: str,
     target: str,
     store_type: str,
     schema_name: str | None,
@@ -2436,23 +2512,13 @@ def check_dq_runtime(
     missing_identities = [name for name in identities if name not in source_columns]
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
-    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
-    table_id = (
-        resolve_catalogue_table_id(
-            config, env, store_type=store_type, layer=target,
-            schema_name=schema_name, table_name=table_name, spark_session=spark_session,
-        )
-        if env == "prod" or bool((context or {}).get("data_contract_overrides"))
-        else ""
-    )
     metadata_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=table_id,
-        metadata_table_key=metadata_table_key, context=context,
+        config, env, spark_session=spark_session, table_id=table_id, context=context,
     )
     rules = (
         []
         if isinstance(metadata_df, list) and not metadata_df
-        else _load_active_dq_rules(metadata_df, metadata_table_key, env=env, dataset_name=dataset_name or None)
+        else _load_active_dq_rules(metadata_df, table_id, env=env, dataset_name=dataset_name or None)
     )
     checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
     result = _summarize_dq_guardrail(checks)
@@ -2494,7 +2560,7 @@ def check_dq_runtime(
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "metadata_table_key": metadata_table_key,
+            "table_id": table_id,
             "environment_name": env,
             "dataset_name": dataset_name,
             "table_name": table_name,
@@ -2538,7 +2604,7 @@ def check_dq_runtime(
             F.expr("uuid()").alias("guardrail_row_result_id"),
             F.lit(result_ids[rule["rule_id"]]).alias("guardrail_result_id"),
             F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
-            F.lit(metadata_table_key).alias("metadata_table_key"), F.lit(env).alias("environment_name"),
+            F.lit(table_id).alias("table_id"), F.lit(env).alias("environment_name"),
             F.lit(dataset_name).alias("dataset_name"), F.lit(table_name).alias("table_name"),
             row_identity.alias("row_identity"), F.lit(rule["rule_type"]).alias("rule_type"),
             F.lit(json.dumps(involved)).alias("involved_columns_json"),
@@ -2825,7 +2891,7 @@ def schema_check_core(
     dataset_name: str = "",
     table_name: str = "",
     environment_name: str = "",
-    metadata_table_key: str = "",
+    table_id: str = "",
 ) -> dict[str, Any]:
     """Evaluate schema intent using the canonical Guardrail rule contract."""
     del dataset_name, table_name
@@ -2834,7 +2900,7 @@ def schema_check_core(
     rule = _select_rule(
         rules_df,
         guardrail_type="schema",
-        table_id=metadata_table_key,
+        table_id=table_id,
         environment_name=environment_name,
     )
     if rule is None:

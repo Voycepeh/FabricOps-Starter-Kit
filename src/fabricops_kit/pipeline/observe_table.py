@@ -220,14 +220,13 @@ def _observe_table_core(
     spark = get_spark_session()
     table_id = build_table_id(source_type, target_value, schema_value, table_value)
 
-    # Stage 4 will migrate the Guardrail schema from metadata_table_key to
-    # table_id. The hash value is intentionally identical, so the current
-    # Guardrail selector can be reused without dual-writing Observation fields.
-    rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
+    rules_df = load_table_guardrail_rules(
+        config, env, spark_session=spark, table_id=table_id, context=context,
+    )
     rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="change",
-        metadata_table_key=table_id,
+        table_id=table_id,
         environment_name=env,
     )
     if rule is None:

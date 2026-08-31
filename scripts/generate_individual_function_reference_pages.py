@@ -67,11 +67,11 @@ METADATA_FIELD_DESCRIPTIONS = {
     "effective_from": "Date when the record becomes effective.",
     "effective_to": "Date when the record stops being effective.",
     "is_active": "Whether the row is currently active.",
-    "metadata_table_key": (
+    "table_id": (
         "Stable governed data asset key that identifies a table across environment, dataset, "
         "and table context."
     ),
-    "metadata_column_key": (
+    "column_id": (
         "Stable governed data asset key that identifies a column across environment, dataset, "
         "table, and column context."
     ),
@@ -103,7 +103,6 @@ METADATA_FIELD_DESCRIPTIONS = {
     "access_purpose": "Reason the access row exists.",
     "approval_status": "Approval status recorded for the access row.",
     "access_scope": "Scope of the recorded access entry.",
-    "table_id": "Identifier for the accessed table or object.",
     "granted_date": "Date when access was granted.",
     "expires_at": "Timestamp when access expires.",
     "approved_by": "Actor who approved the access row.",
@@ -190,7 +189,7 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
-    "metadata_table_key": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",
+    "table_id": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",
     "source_target": "Logical FabricOps target resolved through 00_env_config.",
     "source_schema": "Resolved physical source schema when the configured store uses one.",
     "source_table": "Resolved physical source table name.",
@@ -2765,7 +2764,7 @@ ROLE_TAGS_BY_NAME = {
     "_business_agreement_snapshot": ["internal_normalizer", "agreement_payload_normalizer"],
     "render_searchable_selector": ["internal_adapter", "widget_rendering_adapter"],
     "_selected_catalogue_rows_for_enrichment": ["internal_resolver", "catalogue_table_resolver"],
-    "build_metadata_table_key": ["utility_function", "metadata_key_formatter"],
+    "build_table_id": ["utility_function", "metadata_key_formatter"],
     "apply_governance_rule_action": ["internal_normalizer", "rule_payload_normalizer"],
     "load_rule_review_history": ["internal_resolver", "rule_catalogue_resolver"],
 

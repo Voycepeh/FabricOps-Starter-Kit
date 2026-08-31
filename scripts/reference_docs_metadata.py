@@ -379,13 +379,13 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
         "data_type": ["fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_column_key",
+            "fabricops_kit.config.shared.build_column_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -397,13 +397,13 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_column_key",
+            "fabricops_kit.config.shared.build_column_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -420,7 +420,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe",
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
         ],
@@ -439,9 +439,9 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
             "fabricops_kit.pipeline.profile_and_register_table._lineage_event_id",
         ],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
@@ -524,9 +524,9 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_SOURCE_OBSERVATION": {
         "__default__": ["fabricops_kit.pipeline.observe_table._observe_table_core"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.observe_table._observe_table_core",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
     },
     "METADATA_SOURCE_WATERMARK_CHECKPOINT": {
@@ -830,10 +830,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use directly for targeted schema validation or through run_table_guardrails.',
   'do_not_use_when': 'Do not use to infer or author expected schema rules.',
-  'parameters': 'dataframe, optional expected_schema and preset, or approved rules_df with table identity.',
+  'parameters': 'Canonical table_id and an optional incoming DataFrame.',
   'returns': 'Structured schema guardrail status, continuation decision, checks, and differences.',
   'side_effects': 'None. The orchestrator records execution evidence when configured.',
-  'preferred_example': 'schema_result = check_schema(df, {"order_id": "bigint"})',
+  'preferred_example': 'schema_result = check_schema(table_id=table_id, dataframe=df)',
   'related_functions': ['check_freshness', 'check_changes']},
  {'kind': 'function',
   'module': 'pipeline',
@@ -844,10 +844,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use directly for targeted freshness validation or through run_table_guardrails.',
   'do_not_use_when': 'Do not use for schema or row-content changes.',
-  'parameters': 'dataframe, freshness column, maximum lag, severity, reference date, or approved rule context.',
+  'parameters': 'Canonical source observation and optional matching table_id.',
   'returns': 'Structured freshness evidence and continuation decision.',
   'side_effects': 'None. The orchestrator records execution evidence when configured.',
-  'preferred_example': 'freshness_result = check_freshness(df, "business_date", 2)',
+  'preferred_example': 'freshness_result = check_freshness(observation, table_id=table_id)',
   'related_functions': ['check_schema', 'check_changes', 'enforce_freshness']},
  {'kind': 'function',
   'module': 'pipeline',
@@ -858,10 +858,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use after schema and freshness checks to compare current and previous source observations.',
   'do_not_use_when': 'Do not use as target merge policy or a persistent CDC framework.',
-  'parameters': 'current and previous data, partition and logical key columns, range configuration, source pattern, comparison scope, mutable window, and an explicit version column for versioned sources.',
+  'parameters': 'Canonical source observation and optional matching table_id.',
   'returns': 'Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.',
   'side_effects': 'None. It does not merge or write target data.',
- 'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',
+ 'preferred_example': 'change_result = check_changes(observation, table_id=table_id)',
  'related_functions': ['check_schema', 'check_freshness', 'read_pipeline_prep']},
  {'kind': 'function',
   'module': 'pipeline',
@@ -872,10 +872,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use after reading source or target rows and before a governed write proceeds.',
   'do_not_use_when': 'Do not use to author rules or copy complete failed source rows into metadata.',
-  'parameters': 'DataFrame, table and configured target identity, optional dataset/run identity, and optional business row-identity columns.',
+  'parameters': 'DataFrame, canonical table_id, optional dataset/run identity, and optional business row-identity columns.',
   'returns': 'Overall DQ status, continuation decision, per-rule checks, aggregate counts, and a tagged DataFrame.',
   'side_effects': 'Appends one rule/run summary per evaluated rule and compact evidence for failed row/rule pairs.',
-  'preferred_example': 'dq_result = check_dq(source_df, "orders", row_identity_columns=["order_id"])',
+  'preferred_example': 'dq_result = check_dq(source_df, table_id=table_id, row_identity_columns=["order_id"])',
   'related_functions': ['check_schema', 'check_freshness', 'check_changes']},
  {'kind': 'function',
   'module': 'pipeline.read_pipeline_prep',
@@ -1688,7 +1688,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Catalogue review',
   'use_when': 'Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.',
   'related_functions': ['profile_and_register_table', 'widget_register_data_contract'],
-  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected metadata_table_key.'},
+  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected table_id.'},
 
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',
