@@ -27,13 +27,13 @@ jobs:
           set -euo pipefail
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          unexpected="$(git status --porcelain | awk '{print $2}' | grep -vE '^(docs/reference/index\.md|docs/reference/metadata/)' || true)"
+          unexpected="$(git status --porcelain | awk '{print $2}' | grep -vE '^(docs/reference/index\.md|docs/reference/metadata/|docs/reference/_data/generated-artifacts\.json$)' || true)"
           if [ -n "$unexpected" ]; then
             echo "Unexpected generated paths:"
             echo "$unexpected"
             exit 1
           fi
-          git add docs/reference/index.md docs/reference/metadata/
+          git add docs/reference/index.md docs/reference/metadata/ docs/reference/_data/generated-artifacts.json
           if git diff --cached --quiet; then
             echo "No generated reference changes required."
             exit 0
