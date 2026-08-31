@@ -1,6 +1,6 @@
-# Step 6: Run Production with the active Data Contract
+# Step 6: Promote and run Production with the active Data Contract
 
-**Run `02_pipeline` in Engineering Production and let FabricOps resolve the one active Data Contract for each governed table automatically.**
+**Promote the validated `02_pipeline` into Engineering Production, then run it so FabricOps resolves the one active Data Contract for each governed table automatically.**
 
 The Production runtime behaviour below is implemented but remains **Preview** in the Guided Demo until the complete promotion-to-run path is revalidated end to end in Fabric.
 
@@ -13,7 +13,8 @@ The Production runtime behaviour below is implemented but remains **Preview** in
 ## High-level flow
 
 ```text
-Production environment
+Validated Development 02_pipeline
+→ Promote into Engineering Production
 → Resolve active Data Contract
 → Resolve frozen Guardrails + processing
 → Prepare source scope
@@ -26,11 +27,17 @@ Production environment
 
 ## Before you begin
 
-Confirm that the governed table has exactly one active Data Contract version, the required `02_pipeline` and Production data are already available in Engineering Production through the organisation's current Fabric process, and the notebook uses the Production `00_env_config`.
+Confirm that the governed table has exactly one approved active Data Contract version, the validated `02_pipeline` has passed Development validation, and the notebook uses the Production `00_env_config` after it is promoted into Engineering Production.
+
+??? note "Planned — Promote the validated pipeline"
+
+    Move the validated `02_pipeline` into Engineering Production using the organisation's approved deployment process.
+
+    FabricOps keeps this promotion action separate from Data Contract activation. Activating a contract does not deploy the notebook. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
 
 ??? info "Preview — Resolve the active Data Contract automatically"
 
-    Open `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
+    Open the promoted `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
 
     Run the Data Contract selector area. In Production it is read only and shows the active Data Contract version for the table.
 
@@ -71,17 +78,11 @@ Confirm that the governed table has exactly one active Data Contract version, th
 
     The active Data Contract therefore controls the governed runtime boundary while the physical read, transformation, writer, and persisted target remain visible in `02_pipeline`.
 
-??? note "Planned — Promotion into Engineering Production"
-
-    This demo currently assumes the Production notebook and data are already available through the organisation's current Fabric process.
-
-    The canonical **Promote** stage is planned to use an approved organisational mechanism, which may be Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
-
 ## Expected result
 
-You should understand how the Preview Production runtime resolves one active frozen Data Contract and applies that contract's Guardrails and processing definition around the same canonical ETL lifecycle.
+You should understand the Production path as **promote the validated `02_pipeline` → resolve the active frozen Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's frozen Guardrails and processing definition around the same canonical ETL lifecycle.
 
-**Previous:** [Step 5: Create and activate the Data Contract](05-create-data-contract.md)  
-**Next:** [Step 7: Consume Production data](99-explore-via-notebook.md)
+**Previous:** [Step 5: Freeze, test, and activate the Data Contract](05-create-data-contract.md)  
+**Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
 See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`read_pipeline_prep()`](../api/reference/read_pipeline_prep.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
