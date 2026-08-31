@@ -10,7 +10,7 @@ Use the **User defined transformation** section in `02_pipeline` for joins, filt
 
 FabricOps standardises the governed boundary around ETL. It does not replace the transformation logic that belongs to the project.
 
-The `02_pipeline` template deliberately stays lightweight. It shows where project transformation belongs without carrying a full PySpark tutorial into every new pipeline. This Guided Demo teaches the common patterns; use the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md) later when you only need a syntax reminder.
+The `02_pipeline` template deliberately stays lightweight. It shows where project transformation belongs without carrying a full PySpark tutorial into every new pipeline. This Guided Demo teaches the common patterns; use the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md) when you want the deeper engineering explanation or a syntax reminder.
 
 ## Core PySpark patterns
 
@@ -125,7 +125,7 @@ transformed_df = (
 )
 ```
 
-The same window pattern extends to ranking, previous/next values with `lag()` and `lead()`, and running totals. Those patterns are included in the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+The same window pattern extends to ranking, previous/next values with `lag()` and `lead()`, and running totals. Those patterns are included in the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
 
 ### Join another source
 
@@ -170,7 +170,7 @@ The important engineering decision is not the syntax itself. Confirm that the re
 
 ### Reshape or flatten when the data requires it
 
-Other common project patterns include `pivot()` for reshaping values into columns, `explode()` for arrays, struct access for nested JSON, and `unionByName()` for combining compatible datasets with different column order. These are useful, but they are not part of every pipeline, so the full examples stay in the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+Other common project patterns include `pivot()` for reshaping values into columns, `explode()` for arrays, struct access for nested JSON, and `unionByName()` for combining compatible datasets with different column order. These are useful, but they are not part of every pipeline, so the full examples stay in the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
 
 ## When SQL appears in `02_pipeline`
 
@@ -237,7 +237,7 @@ Keep these in mind when transformations become larger:
 
 These are project-level engineering choices, so FabricOps keeps them visible instead of trying to hide them behind the starter kit.
 
-For the full syntax reference, including windows, string/date functions, nested data, `unionByName`, repartitioning, caching, full versus incremental processing, and MERGE/upsert concepts, use the [Fabric Engineering Cheat Sheet](../../reference/engineering-cheat-sheet.md).
+For the deeper engineering explanation and the full syntax reference, including windows, string/date functions, nested data, `unionByName`, repartitioning, caching, and full versus incremental processing, use the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
 
 ## Choose the target
 
