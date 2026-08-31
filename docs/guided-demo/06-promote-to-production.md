@@ -54,7 +54,7 @@ Confirm that the governed table has exactly one approved active Data Contract ve
 
 ??? info "Preview — Prepare and validate the Production source"
 
-    Use `read_pipeline_prep()` so FabricOps resolves the active contract's frozen processing definition and the configured source-read strategy, then prepares the runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
+    Use `read_pipeline_prep()` with the source `table_id` so FabricOps resolves the registered source, its own active contract processing where change safety requires it, and the configured source-read strategy. It then prepares the runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
 
     The source-read strategy itself is Full Dataset, Incremental Watermark, or Incremental Partition. The source strategy and runtime read mode are separate concepts.
 
@@ -70,7 +70,7 @@ Confirm that the governed table has exactly one approved active Data Contract ve
 
     Run target Schema and DQ checks before changing the Production target.
 
-    Use `write_pipeline_prep()` and continue with the Production write only when the Guardrail continuation decisions allow it. The same frozen processing definition resolved for the source scope is reused for target-write preparation.
+    Use `write_pipeline_prep()` with the target `table_id` and continue with the Production write only when the Guardrail continuation decisions allow it. Target preparation independently resolves the target's one active Data Contract and its frozen processing definition.
 
 ??? info "Preview — Read back and register the complete target"
 

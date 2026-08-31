@@ -14,7 +14,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.check_changes import _observation_changes
 from fabricops_kit.pipeline.observe_table import _observe_table_core
-from fabricops_kit.pipeline.shared import resolve_physical_table_identity, resolve_table_processing_definition
+from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
 
 
 _CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
@@ -251,84 +251,61 @@ def _watermark_scope(
 
 
 def read_pipeline_prep(
-    source_table_name: str,
-    target_table_name: str,
+    source_table_id: str,
     *,
     source_read_strategy: str,
     source_watermark_column: str | None = None,
     source_partition_column: str | None = None,
-    source_target: str = "source",
-    source_schema: str | None = None,
-    target: str = "unified",
-    schema: str | None = None,
-    target_table_id: str | None = None,
-    load_strategy: str,
-    load_strategy_parameters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Prepare an explicit governed source read without reading business rows.
 
     Parameters
     ----------
-    source_table_name : str
-        Physical source table to prepare.
-    target_table_name : str
-        Governed target table whose target processing definition controls this run.
+    source_table_id : str
+        Canonical identity of one registered source table. FabricOps resolves
+        its physical coordinates from the Catalogue.
     source_read_strategy : {"full_dataset", "incremental_watermark", "incremental_partition"}
         Engineer-authored rule for identifying source data to process.
     source_watermark_column : str or None, default=None
         Checkpoint column required by ``incremental_watermark``.
     source_partition_column : str or None, default=None
         Logical bucket column required by ``incremental_partition``.
-    source_target : str, default="source"
-        Configured source Lakehouse or Warehouse target.
-    source_schema : str or None, default=None
-        Optional source schema.
-    target : str, default="unified"
-        Configured governed target.
-    schema : str or None, default=None
-        Optional governed target schema.
-    target_table_id : str or None, default=None
-        Expected canonical Catalogue identity; it must match the physical target.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}
-        Independent target application strategy.
-    load_strategy_parameters : dict, optional
-        Parameters owned by the target strategy.
 
     Returns
     -------
     dict
-        Canonical identities, ``source_processing``, resolved target
-        ``processing``, and one runtime ``read_mode`` plus ``scope``. A
-        watermark candidate is returned separately and is never committed by
-        this function.
+        Canonical source identity, normalized ``source_processing``, and one
+        runtime ``read_mode`` plus ``scope``. Candidate source completion state
+        is returned separately and is never committed by this function.
 
     Raises
     ------
     ValueError
-        If source configuration, checkpoint state, contract processing, or the
-        resulting processing scope is invalid.
+        If source identity, configuration, checkpoint state, or the resulting
+        processing scope is invalid.
 
     Notes
     -----
     Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
     The successful checkpoint remains unchanged until a later post-write commit
     succeeds. Partition subsets reuse FabricOps source observation and change
-    detection; full-dataset reads do not observe the source merely to skip it.
+    detection. Change safety resolves the source table's own processing through
+    :func:`check_changes`; target selection and publication are intentionally
+    outside this function.
 
     Examples
     --------
     >>> prep = read_pipeline_prep(
-    ...     "bookings", "bookings_curated", source_schema="dbo", schema="dbo",
+    ...     source_table_id="warehouse:source:dbo:bookings",
     ...     source_read_strategy="incremental_watermark",
-    ...     source_watermark_column="modified_datetime", load_strategy="scd1",
-    ...     load_strategy_parameters={"key_columns": ["booking_id"]},
+    ...     source_watermark_column="modified_datetime",
     ... )
     >>> prep["read_mode"] in {"skip", "full_dataset", "incremental_subset"}
     True
 
     See Also
     --------
-    write_pipeline_prep, check_changes, read_lakehouse_table
+    write_pipeline_prep, check_changes, read_lakehouse_table, read_warehouse_table
 
     """
     source_processing = _source_processing_definition(
@@ -337,24 +314,10 @@ def read_pipeline_prep(
         partition_column=source_partition_column,
     )
     config, env, context = resolve_fabric_context()
-    source_identity = resolve_physical_table_identity(
-        config, env, target=source_target, schema=source_schema, table_name=source_table_name
+    source_identity = resolve_catalogue_table_identity(
+        config, env, source_table_id, context=context
     )
-    target_identity = resolve_physical_table_identity(
-        config, env, target=target, schema=schema, table_name=target_table_name
-    )
-    expected_table_id = str(target_table_id or "").strip()
-    if target_table_id is not None and not expected_table_id:
-        raise ValueError("target_table_id must be a non-empty canonical FabricOps table identity.")
-    if expected_table_id and expected_table_id != str(target_identity["table_id"]):
-        raise ValueError(f"Configured target_table_id {expected_table_id!r} does not match the governed physical target identity {target_identity['table_id']!r}.")
-    processing = resolve_table_processing_definition(
-        config,
-        env,
-        target_identity["table_id"],
-        context=context,
-        authored_processing={"load_strategy": load_strategy, **(load_strategy_parameters or {})},
-    )
+    source_identity["store_kind"] = source_identity["store_type"]
     strategy = source_processing["read_strategy"]
     observation = None
     changes = None
@@ -382,19 +345,15 @@ def read_pipeline_prep(
             context=context,
         )
         changes = _observation_changes(observation, successful_observation_id=successful_observation_id)
-        runtime = _partition_scope(changes, processing, source_processing["partition_column"])
-        if (
-            target_identity["store_kind"] == "warehouse"
-            and processing["load_strategy"] == "overwrite"
-            and runtime["read_mode"] == "incremental_subset"
-        ):
-            runtime = {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
+        change_processing = {
+            "load_strategy": changes["load_strategy"],
+            "partition_column": changes.get("partition_column"),
+        }
+        runtime = _partition_scope(changes, change_processing, source_processing["partition_column"])
     return {
         "source": source_identity,
-        "target": target_identity,
         "source_processing": source_processing,
         "observation": observation,
         "changes": changes,
-        "processing": processing,
         **runtime,
     }

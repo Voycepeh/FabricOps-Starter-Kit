@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fabricops_kit.config.shared import get_store, resolve_fabric_context
-from fabricops_kit.pipeline.shared import add_target_audit_fields, resolve_target_audit_fields
+from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.pipeline.shared import (
+    add_target_audit_fields,
+    catalogue_authored_processing,
+    resolve_catalogue_table_identity,
+    resolve_table_processing_definition,
+    resolve_target_audit_fields,
+)
 
 
 def _replace_where(partition_column: str, values: list[Any]) -> str:
@@ -24,19 +30,64 @@ def _replace_where(partition_column: str, values: list[Any]) -> str:
     return f"`{quoted}` IN ({', '.join(literal(value) for value in values)})"
 
 
-def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified") -> dict[str, Any]:
+def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Validate source preparation and return one truthful target scope plus completion rows."""
+    if not source_preps:
+        raise ValueError("source_preps must contain at least one read_pipeline_prep result.")
+    scopes = []
+    completion_sources = []
+    for prep in source_preps:
+        if not isinstance(prep, dict):
+            raise ValueError("source_preps must contain read_pipeline_prep result dictionaries.")
+        read_mode = prep.get("read_mode")
+        scope = prep.get("scope")
+        if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(scope, dict):
+            raise ValueError("Each source prep must contain a non-skipped canonical read_mode and scope.")
+        scopes.append({"read_mode": read_mode, "scope": scope})
+        candidate = prep.get("candidate_checkpoint")
+        if candidate is not None:
+            completion_sources.append({
+                "type": "watermark",
+                "source": prep.get("source"),
+                "source_processing": prep.get("source_processing"),
+                "candidate": candidate,
+            })
+        observation = prep.get("observation")
+        changes = prep.get("changes")
+        if observation is not None and isinstance(changes, dict):
+            completion_sources.append({
+                "type": "partition",
+                "table_id": changes.get("table_id"),
+                "environment_name": changes.get("environment_name"),
+                "observation_id": changes.get("observation_id"),
+            })
+    if all(scope == scopes[0] for scope in scopes[1:]):
+        return scopes[0], completion_sources
+    return {
+        "read_mode": "incremental_subset",
+        "scope": {"type": "multiple_sources"},
+    }, completion_sources
+
+
+def write_pipeline_prep(
+    df,
+    *,
+    target_table_id: str,
+    source_preps: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Prepare governed target write inputs without physically writing the target.
 
     Parameters
     ----------
     df : pyspark.sql.DataFrame
         Business target DataFrame after target schema and DQ checks pass.
-    read_prep : dict
-        Exact result returned by :func:`read_pipeline_prep`. Its canonical
-        ``processing`` definition is reused without contract re-resolution.
-    target : str, default="unified"
-        Configured Lakehouse or Warehouse target used to prepare physical
-        writer settings.
+    target_table_id : str
+        Canonical registered target identity used to resolve physical target
+        metadata and target-owned processing.
+    source_preps : list of dict
+        Results returned by :func:`read_pipeline_prep` for the sources that fed
+        this target. Candidate checkpoint state is committed only after the
+        physical target writer succeeds.
 
     Returns
     -------
@@ -62,7 +113,11 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
 
     Examples
     --------
-    >>> write_prep = write_pipeline_prep(transformed_df, read_prep, target="unified")
+    >>> write_prep = write_pipeline_prep(
+    ...     transformed_df,
+    ...     target_table_id="lakehouse:unified:dbo:students",
+    ...     source_preps=[read_prep],
+    ... )
     >>> write_prep["mode"]
     'append'
 
@@ -71,18 +126,24 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     read_pipeline_prep, write_lakehouse_table, write_warehouse_table
 
     """
-    processing = read_prep.get("processing")
-    if not isinstance(processing, dict):
-        raise ValueError("read_prep must contain the resolved processing definition.")
-    read_mode = read_prep.get("read_mode")
-    scope = read_prep.get("scope")
-    if read_mode not in {"skip", "full_dataset", "incremental_subset"} or not isinstance(scope, dict):
-        raise ValueError("read_prep must contain a canonical read_mode and scope.")
-    if read_mode == "skip":
-        raise ValueError("A skipped pipeline run has no target write to prepare.")
     config, env, context = resolve_fabric_context()
-    store_kind = str(get_store(config, env, target).kind).strip().lower()
+    target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+    processing = resolve_table_processing_definition(
+        config,
+        env,
+        target_identity["table_id"],
+        context=context,
+        authored_processing=catalogue_authored_processing(target_identity),
+    )
+    prepared_scope, completion_sources = _source_completion(source_preps)
+    scope = prepared_scope["scope"]
+    store_kind = target_identity["store_type"]
     strategy = str(processing.get("load_strategy") or "")
+    if strategy == "overwrite" and scope.get("type") == "multiple_sources":
+        raise ValueError(
+            "overwrite cannot infer one safe target scope from differing source scopes; "
+            "publish this target from one complete source scope."
+        )
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
@@ -100,24 +161,6 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
     options: dict[str, Any] = {}
     if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
         options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
-    completion_sources = []
-    candidate = read_prep.get("candidate_checkpoint")
-    if candidate is not None:
-        completion_sources.append({
-            "type": "watermark",
-            "source": read_prep.get("source"),
-            "source_processing": read_prep.get("source_processing"),
-            "candidate": candidate,
-        })
-    observation = read_prep.get("observation")
-    changes = read_prep.get("changes")
-    if observation is not None and isinstance(changes, dict):
-        completion_sources.append({
-            "type": "partition",
-            "table_id": changes.get("table_id"),
-            "environment_name": changes.get("environment_name"),
-            "observation_id": changes.get("observation_id"),
-        })
     return {
         "df": prepared_df,
         "mode": mode,
@@ -129,7 +172,8 @@ def write_pipeline_prep(df, read_prep: dict[str, Any], *, target: str = "unified
             if name not in {"load_strategy", "source", "contract_id", "contract_version"}
         },
         "processing": processing,
-        "scope": {"read_mode": read_mode, "scope": scope},
+        "scope": prepared_scope,
+        "target": target_identity,
         "target_kind": store_kind,
         "completion": {"sources": completion_sources} if completion_sources else None,
     }

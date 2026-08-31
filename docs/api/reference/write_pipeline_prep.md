@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:27`
+`fabricops_kit/pipeline/write_pipeline_prep.py:72`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L27-L135">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L179">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -38,8 +38,8 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def write_pipeline_prep(
     df,
-    read_prep: dict[str, Any],
-    target: str='unified',
+    target_table_id: str,
+    source_preps: list[dict[str, Any]],
 ) -> dict[str, Any]:
 ```
 
@@ -49,7 +49,11 @@ def write_pipeline_prep(
 
 <div class="reference-example-usage" markdown="1">
 
->>> write_prep = write_pipeline_prep(transformed_df, read_prep, target="unified")
+>>> write_prep = write_pipeline_prep(
+...     transformed_df,
+...     target_table_id="lakehouse:unified:dbo:students",
+...     source_preps=[read_prep],
+... )
 >>> write_prep["mode"]
 'append'
 
@@ -60,12 +64,12 @@ def write_pipeline_prep(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `read_prep` | `dict[str, Any]` | Yes | Exact result returned by :func:`read_pipeline_prep`. Its canonical ``processing`` definition is reused without contract re-resolution. |
-| `target` | `str` | No | Configured Lakehouse or Warehouse target used to prepare physical writer settings. |
+| `target_table_id` | `str` | Yes | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
+| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Candidate checkpoint state is committed only after the physical target writer succeeds. |
 
 ## Returns
 
-Audited DataFrame, writer mode/options, canonical processing, and prepared execution scope.
+Audited DataFrame, target identity, resolved target processing, writer settings, execution scope, and completion context.
 
 ## Raises / Errors
 
