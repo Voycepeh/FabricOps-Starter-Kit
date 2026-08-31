@@ -2,7 +2,7 @@
 
 Use this page when you want the deeper engineering reasoning behind the FabricOps `02_pipeline` workflow.
 
-The Guided Demo stays practical and the How FabricOps Works page stays high-level. This guide explains the engineering choices behind those pages, then keeps the practical PySpark, Spark optimisation, and Warehouse SQL references collapsed at the bottom for quick lookup.
+The Guided Demo stays practical and the How FabricOps Works page stays high-level. This guide explains the engineering choices behind those pages, then keeps the practical PySpark, Spark optimisation, and T-SQL references collapsed at the bottom for quick lookup.
 
 ## Engineering concepts behind FabricOps
 
@@ -25,25 +25,57 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
 
-??? info "Lakehouse vs Warehouse"
+??? info "Lakehouse first — and when Warehouse fits"
 
-    FabricOps supports both Lakehouse and Warehouse. It does not force every project into one storage engine.
+    FabricOps supports both Lakehouse and Warehouse, but its engineering path is intentionally **Lakehouse first** when substantial transformation is required.
 
     | | Lakehouse | Warehouse |
     | --- | --- | --- |
     | Primary engineering experience | Spark / notebooks | T-SQL |
-    | Data shape | Structured, semi-structured, unstructured, and files | Structured relational data |
-    | OneLake storage | Delta-based | Delta-based |
-    | SQL access | SQL analytics endpoint for query scenarios | Warehouse T-SQL experience |
-    | Strong fit | Data engineering, Spark transformation, file-heavy ingestion, flexible processing | SQL-first analytics, relational modelling, dimensional models, BI-oriented workloads |
-    | FabricOps source | Supported | Supported |
-    | FabricOps target | Supported | Supported |
+    | Strong fit | Large-scale data engineering, mixed structures, repeated PySpark transformation | Structured relational analytics, dimensional models, SQL consumption, BI serving |
+    | Processing style | Distributed Spark processing over Delta / OneLake | SQL engine over structured relational tables |
+    | FabricOps source | Preferred working layer for heavy or repeated engineering | Supported source; often useful as an ingestion/query boundary |
+    | FabricOps target | Preferred for intermediate engineered layers | Strong option for curated Product / Gold outputs |
 
-    **FabricOps recommendation:** choose based on the workload, not because one is universally better.
+    **Why Lakehouse first?** FabricOps is PySpark-first. Spark is designed to distribute work across partitions and process large datasets in parallel, and Lakehouse Delta tables are the native fit for that engineering path.
 
-    A Lakehouse is a strong default when the engineering path is PySpark-heavy or the source estate includes files and mixed structures. A Warehouse is a strong fit when the target is relational, the team is SQL-first, or downstream consumption benefits from a Warehouse-native relational model.
+    A Warehouse can still be read from a notebook, including with `read_warehouse_query()`. That is useful when SQL can filter, project, join, or aggregate before Spark receives the data. But when the same large Warehouse dataset will be processed repeatedly in PySpark, repeatedly crossing from the Warehouse SQL engine into Spark adds an unnecessary processing boundary.
 
-    A Warehouse source can still feed a PySpark transformation. `read_warehouse_query()` lets the Warehouse perform useful filtering, projection, joins, or aggregation first, then Spark receives the result as a DataFrame.
+    For heavy or repeated engineering, FabricOps therefore recommends landing the required Warehouse data **1:1 into a Lakehouse Delta table first**, using either a full or incremental ingestion pattern, then carrying out the main transformation in PySpark.
+
+    ```text
+    Source Warehouse
+          ↓
+    focused full / incremental extract
+          ↓
+    Lakehouse Delta landing
+          ↓
+    parallel PySpark engineering
+          ↓
+    reusable engineered layers
+          ↓
+    curated Product / Gold
+    ```
+
+    This does not mean every Warehouse source must be copied. If the query is small, selective, or used once, direct Warehouse pushdown can be simpler and more efficient.
+
+    ### Why Warehouse is often strong at Product / Gold
+
+    The final curated layer has different priorities from the engineering layers. At Product / Gold, the data is normally structured, stable, and designed for consumption rather than heavy transformation.
+
+    A Fabric Warehouse can be a strong serving layer when the product benefits from relational schemas, T-SQL access, SQL permissions, auditing, dimensional modelling, Power BI, Data Agents, or other SQL-oriented consumers.
+
+    FabricOps therefore separates the two questions:
+
+    ```text
+    Where should heavy engineering happen?
+    → usually Lakehouse + PySpark
+
+    Where should curated relational data be served?
+    → Lakehouse or Warehouse, with Warehouse preferred when relational serving and control are useful
+    ```
+
+    Warehouse is a recommendation for those serving characteristics, not a requirement. Power BI, Data Agents, and other Fabric consumers can also work with Lakehouse data where that is the better fit.
 
     **Microsoft Learn:** [Lakehouse vs. Warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
 
@@ -159,38 +191,38 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     The important architectural choice is not the file format. It is the **separation of environment-specific physical identity from reusable pipeline logic**.
 
-??? info "PySpark first — and where SQL fits"
+??? info "PySpark first — and where T-SQL fits"
 
     Once source data is in Spark, FabricOps uses **PySpark DataFrames as the normal transformation path**.
 
     | Need | FabricOps preference |
     | --- | --- |
-    | Project-specific transformation after read | PySpark |
-    | Filtering or projection on a Warehouse source before Spark | Warehouse SQL via `read_warehouse_query()` |
-    | Aggregation or join that can reduce Warehouse data before transfer | Warehouse SQL via `read_warehouse_query()` |
+    | Heavy or repeated project transformation | Lakehouse + PySpark |
+    | Filtering or projection on a Warehouse source before Spark | T-SQL via `read_warehouse_query()` |
+    | Aggregation or join that can substantially reduce Warehouse data before transfer | T-SQL via `read_warehouse_query()` |
     | Joining DataFrames already in Spark | PySpark |
     | Cleansing, derivation, deduplication, windows, reshaping | PySpark |
 
-    Spark SQL is valid in Fabric. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the normal project path easier to read and review.
+    PySpark fits the main FabricOps engineering path because Spark distributes processing across partitions and is well suited to large-scale transformation. Keeping the working data in Lakehouse Delta avoids repeatedly crossing between a Warehouse SQL engine and Spark when the workload is primarily PySpark.
 
     ```text
-    Lakehouse / Warehouse / Files
-              ↓
-            READ
-              ↓
-       PySpark DataFrame
-              ↓
-    project transformation
-              ↓
-     governed target write
+    Lakehouse / Files
+          ↓
+        READ
+          ↓
+    PySpark DataFrame
+          ↓
+    parallel project transformation
+          ↓
+    governed target write
     ```
 
-    For Warehouse sources, SQL can sit inside the read boundary:
+    For Warehouse sources, T-SQL can sit inside the read boundary:
 
     ```text
     Warehouse
         ↓
-    SQL pushdown
+    T-SQL pushdown
         ↓
     read_warehouse_query(...)
         ↓
@@ -198,6 +230,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
         ↓
     PySpark transformation
     ```
+
+    For a large Warehouse source that will be transformed repeatedly, prefer landing it into Lakehouse Delta first rather than making the Warehouse-to-Spark boundary part of every processing step.
 
     **Microsoft Learn:** [Microsoft Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
 
@@ -505,9 +539,9 @@ Use these when you already know what you want to do and only need a quick syntax
     = how should Spark distribute the DataFrame for compute/write?
     ```
 
-??? example "Warehouse SQL cheat sheet"
+??? example "T-SQL cheat sheet"
 
-    SQL in FabricOps is primarily used for **Warehouse pushdown** through `read_warehouse_query()` when the Warehouse can reduce the data before Spark receives it.
+    T-SQL in FabricOps is primarily used for **Warehouse pushdown** through `read_warehouse_query()` when the Warehouse can reduce the data before Spark receives it.
 
     ### Select and filter
 
