@@ -119,15 +119,29 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     | --- | --- | --- |
     | Notebook | Code-first engineering, PySpark, custom transformation, reusable engineering logic | Primary governed engineering implementation in `02_pipeline` |
     | Pipeline | Orchestration, schedules, dependencies, retries, data movement, calling notebooks | Use around FabricOps notebooks when orchestration is required |
-    | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Valid Fabric capability, but not the canonical FabricOps engineering path |
+    | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Useful ingestion option, but not the canonical FabricOps transformation path |
 
     **Why notebook first?** FabricOps wants project-specific engineering logic to stay explicit, reviewable, and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
 
     Pipelines still matter. They are the natural place to schedule or orchestrate notebooks, chain dependencies, run activities, and monitor execution. FabricOps does not try to recreate those native platform capabilities inside its own metadata model.
 
-    Dataflow Gen2 can still be useful for teams that prefer Power Query or low-code preparation. It simply is not the default implementation path taught by the starter kit.
+    Dataflow Gen2 is useful for low-code ingestion and Power Query-based preparation. FabricOps does not use it as the default transformation path because `02_pipeline` keeps repeatable engineering logic in notebooks and PySpark, and Dataflow Gen2 workloads still consume Fabric capacity according to the compute used.
 
-    **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse)
+    **SharePoint is an important exception.** For SharePoint Folder or SharePoint List sources, FabricOps recommends using the supported Dataflow Gen2 connectors to land the source into the configured Lakehouse, then continuing governed engineering in `02_pipeline`.
+
+    ```text
+    SharePoint Folder / List
+             ↓
+       Dataflow Gen2
+             ↓
+      Lakehouse landing
+             ↓
+    02_pipeline + PySpark
+    ```
+
+    This keeps source-specific connector handling in the Fabric ingestion layer while preserving the normal FabricOps notebook path for governed transformation.
+
+    **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [SharePoint Folder connector](https://learn.microsoft.com/en-us/fabric/data-factory/connector-sharepoint-folder)
 
 ??? info "Config-driven engineering and why FabricOps has I/O functions"
 
