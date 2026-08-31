@@ -103,12 +103,20 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     table = table_rows[-1]
     columns = [r for r in current if r.get("column_id")]
     column_docs = [_fields(r, ("column_id", "column_name", "data_type")) for r in columns]
-    missing_data_types = [str(row.get("column_name") or row.get("column_id")) for row in column_docs if not row.get("data_type")]
-    if missing_data_types:
+    incomplete_columns = [
+        str(row.get("column_name") or row.get("column_id") or "<blank>")
+        for row in column_docs
+        if any(not str(row.get(name) or "").strip() for name in ("column_id", "column_name", "data_type"))
+    ]
+    if incomplete_columns:
         raise ValueError(
-            "Active METADATA_DATA_CATALOGUE columns must define data_type before a Data Contract can be assembled: "
-            + ", ".join(missing_data_types)
+            "Active METADATA_DATA_CATALOGUE columns must define column_id, column_name, and data_type before a Data Contract can be assembled: "
+            + ", ".join(incomplete_columns)
         )
+    column_names = [str(row["column_name"]).strip() for row in column_docs]
+    duplicate_names = sorted({name for name in column_names if column_names.count(name) > 1})
+    if duplicate_names:
+        raise ValueError("Active METADATA_DATA_CATALOGUE columns contain duplicate column_name values: " + ", ".join(duplicate_names))
     enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
     enrichment_docs = [_fields(r, ("enrichment_id", "table_id", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
     guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
@@ -117,7 +125,15 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
         if row.get("is_active") is not True:
             continue
         item = _fields(row, ("guardrail_rule_id", "guardrail_version", "table_id", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
-        item["rule_parameters"] = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
+        rule_parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
+        if not isinstance(rule_parameters, dict):
+            raise ValueError("rule_parameters_json must contain a JSON object.")
+        if str(row.get("guardrail_type") or "").strip().lower() == "schema":
+            rule_parameters = {
+                name: value for name, value in rule_parameters.items()
+                if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
+            }
+        item["rule_parameters"] = rule_parameters
         guardrail_docs.append(item)
     steward_ids = {str(agreement.get("provider_steward_id") or ""), str(agreement.get("recipient_steward_id") or "")}
     stewards = _latest([r for r in tables["METADATA_DATA_STEWARD"] if str(r.get("steward_id") or "") in steward_ids and r.get("is_active") is not False], ("steward_id",))

@@ -78,6 +78,33 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert warnings == []
 
 
+def test_payload_freezes_schema_once_in_table_columns():
+    """Keep schema Guardrails as enforcement policy rather than structural authority."""
+    sources = _sources()
+    sources["METADATA_GUARDRAIL"][1].update(
+        is_active=True,
+        rule_type="minimum_required",
+        rule_parameters_json=json.dumps({
+            "columns": ["stale"],
+            "data_types": {"stale": "double"},
+            "selected_columns": ["also_stale"],
+            "expected_data_types": {"also_stale": "string"},
+        }),
+    )
+    payload, _ = _assemble_payload(
+        contract_id="contract", contract_version=1, agreement=_agreement(),
+        table_id="orders", usages=[], tables=sources, environment_name="dev",
+    )
+
+    assert payload["table"]["columns"] == [
+        {"column_id": "order_id", "column_name": "order_id", "data_type": "long"}
+    ]
+    schema_rule = next(rule for rule in payload["guardrails"] if rule["guardrail_type"] == "schema")
+    assert schema_rule["rule_type"] == "minimum_required"
+    assert schema_rule["severity"] == "warning"
+    assert schema_rule["rule_parameters"] == {}
+
+
 def test_contract_versions_freeze_catalogue_processing_independently():
     """Keep earlier payloads unchanged when current Catalogue processing changes."""
     sources = _sources()
@@ -301,7 +328,7 @@ def test_payload_blocks_when_catalogue_data_type_is_missing():
     """Require complete structural typing from the active Catalogue definition."""
     sources = _sources()
     sources["METADATA_DATA_CATALOGUE"][1]["data_type"] = None
-    with pytest.raises(ValueError, match="must define data_type"):
+    with pytest.raises(ValueError, match="must define column_id, column_name, and data_type"):
         _assemble_payload(
             contract_id="contract", contract_version=1, agreement=_agreement(),
             table_id="orders", usages=[], tables=sources, environment_name="dev",

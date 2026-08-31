@@ -1273,6 +1273,26 @@ def resolve_catalogue_table_id(
 def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, metadata_table_key: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
+    table = payload.get("table")
+    if not isinstance(table, dict) or "columns" not in table:
+        raise ValueError("Active Data Contract table.columns is missing.")
+    columns = table["columns"]
+    if not isinstance(columns, list):
+        raise ValueError("Active Data Contract table.columns must be a list.")
+    expected_schema: dict[str, str] = {}
+    for index, column in enumerate(columns):
+        if not isinstance(column, dict):
+            raise ValueError(f"Active Data Contract table.columns[{index}] must be an object.")
+        column_id = str(column.get("column_id") or "").strip()
+        column_name = str(column.get("column_name") or "").strip()
+        data_type = str(column.get("data_type") or "").strip()
+        if not column_id or not column_name or not data_type:
+            raise ValueError(
+                f"Active Data Contract table.columns[{index}] must define non-blank column_id, column_name, and data_type."
+            )
+        if column_name in expected_schema:
+            raise ValueError(f"Active Data Contract table.columns contains duplicate column_name {column_name!r}.")
+        expected_schema[column_name] = data_type
     rules = payload.get("guardrails")
     if not isinstance(rules, list):
         raise ValueError("Active Data Contract guardrails must be a list.")
@@ -1281,6 +1301,17 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
         if not isinstance(raw, dict):
             raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
         params = raw.get("rule_parameters") or {}
+        if not isinstance(params, dict):
+            raise ValueError("Active Data Contract Guardrail rule_parameters must be an object.")
+        if str(raw.get("guardrail_type") or "").strip().lower() == "schema":
+            params = {
+                **{
+                    name: value for name, value in params.items()
+                    if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
+                },
+                "columns": list(expected_schema),
+                "data_types": expected_schema,
+            }
         adapted.append({
             **raw,
             "metadata_table_key": metadata_table_key,
@@ -1845,7 +1876,7 @@ def _guardrail_schema_check_base(
             selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
-            preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+            preset = {"strict": "strict", "minimum_required": "allow_new_columns", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
             severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
