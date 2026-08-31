@@ -50,6 +50,11 @@ The FabricOps documentation focuses on the patterns, metadata, functions, and wo
     <span class="fabricops-landing-card__body">Browse the notebook-facing public functions, signatures, relationships, and exact contracts.</span>
   </a>
 
+  <a class="fabricops-landing-card" href="reference/engineering-cheat-sheet/">
+    <span class="fabricops-landing-card__title">Fabric Engineering Cheat Sheet</span>
+    <span class="fabricops-landing-card__body">Quick PySpark, Warehouse SQL, incremental-processing, and engineering patterns used around the 02_pipeline workflow.</span>
+  </a>
+
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title">Metadata Tables</span>
     <span class="fabricops-landing-card__body">Review the shared metadata tables, schemas, purpose, and writer ownership.</span>
