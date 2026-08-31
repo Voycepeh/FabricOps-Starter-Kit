@@ -6,6 +6,7 @@ from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     load_table_guardrail_rules,
     resolve_change_rule_observation_columns,
+    resolve_catalogue_table_identity,
     select_table_guardrail_rule,
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
@@ -35,13 +36,16 @@ def _is_source_observation(observation) -> bool:
     return _OBSERVATION_COLUMNS <= columns
 
 
-def check_freshness(observation) -> dict:
+def check_freshness(observation, *, table_id: str | None = None) -> dict:
     """Check whether a source satisfies configured freshness intent.
     
     Parameters
     ----------
     observation : pyspark.sql.DataFrame
         Canonical evidence returned by :func:`observe_table`.
+    table_id : str, optional
+        Canonical registered table identity. When supplied, it must match the
+        identity carried by the observation.
     
     Returns
     -------
@@ -66,11 +70,11 @@ def check_freshness(observation) -> dict:
     if not rows:
         raise ValueError("observation must contain at least one canonical evidence row")
     first = rows[0]
-    table_id = str(first.get("table_id") or "")
+    observed_table_id = str(first.get("table_id") or "")
     environment_name = str(first.get("environment_name") or "")
-    if not table_id or not environment_name:
+    if not observed_table_id or not environment_name:
         raise ValueError("observation must contain table_id and environment_name")
-    if any(str(row.get("table_id") or "") != table_id for row in rows):
+    if any(str(row.get("table_id") or "") != observed_table_id for row in rows):
         raise ValueError("observation dataframe must contain one shared table_id")
     if any(str(row.get("environment_name") or "") != environment_name for row in rows):
         raise ValueError("observation dataframe must contain one shared environment_name")
@@ -81,6 +85,15 @@ def check_freshness(observation) -> dict:
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
+    requested_table_id = str(table_id or observed_table_id).strip()
+    if requested_table_id != observed_table_id:
+        raise ValueError(
+            f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."
+        )
+    identity = resolve_catalogue_table_identity(
+        config, env, requested_table_id, spark_session=spark_session, context=context,
+    )
+    table_id = identity["table_id"]
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark_session, table_id=table_id,
         metadata_table_key=table_id, context=context,

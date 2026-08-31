@@ -9,7 +9,10 @@ from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import (
     evaluate_changes_guardrail,
+    catalogue_authored_processing,
     load_table_guardrail_rules,
+    resolve_catalogue_table_identity,
+    resolve_table_processing_definition,
     select_table_guardrail_rule,
 )
 from fabricops_kit.pipeline.shared import (
@@ -86,18 +89,23 @@ def _previous_observation(
     return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
-def _observation_changes(observation, *, successful_observation_id: str | None = None) -> dict:
+def _observation_changes(
+    observation,
+    *,
+    table_id: str | None = None,
+    successful_observation_id: str | None = None,
+) -> dict:
     """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
 
-    table_id = str(current[0].get("table_id") or "")
+    observed_table_id = str(current[0].get("table_id") or "")
     environment_name = str(current[0].get("environment_name") or "")
     observation_id = str(current[0].get("observation_id") or "")
     committed_at = current[0]["_committed_at"]
     activity_id = str(current[0].get("_activity_id") or "")
-    if not table_id or not observation_id or not environment_name or not activity_id:
+    if not observed_table_id or not observation_id or not environment_name or not activity_id:
         raise ValueError(
             "observation dataframe must contain table_id, observation_id, environment_name, and _activity_id"
         )
@@ -107,7 +115,7 @@ def _observation_changes(observation, *, successful_observation_id: str | None =
         raise ValueError("observation dataframe must contain one shared _activity_id")
     if any(str(row.get("observation_id") or "") != observation_id for row in current):
         raise ValueError("observation dataframe must contain one shared observation_id")
-    if any(str(row.get("table_id") or "") != table_id for row in current):
+    if any(str(row.get("table_id") or "") != observed_table_id for row in current):
         raise ValueError("observation dataframe must contain one shared table_id")
     if any(str(row.get("environment_name") or "") != environment_name for row in current):
         raise ValueError("observation dataframe must contain one shared environment_name")
@@ -117,6 +125,24 @@ def _observation_changes(observation, *, successful_observation_id: str | None =
         raise ValueError(
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
+    requested_table_id = str(table_id or observed_table_id).strip()
+    if requested_table_id != observed_table_id:
+        raise ValueError(
+            f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."
+        )
+    spark_session = getattr(observation, "sparkSession", None)
+    identity = resolve_catalogue_table_identity(
+        config, env, requested_table_id, spark_session=spark_session, context=context,
+    )
+    table_id = identity["table_id"]
+    processing = resolve_table_processing_definition(
+        config,
+        env,
+        table_id,
+        spark_session=spark_session,
+        context=context,
+        authored_processing=catalogue_authored_processing(identity),
+    )
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     try:
         history = read_lakehouse_table_core(
@@ -233,6 +259,8 @@ def _observation_changes(observation, *, successful_observation_id: str | None =
         "reappeared_partitions": reappeared,
         "affected_partitions": [*new, *changed, *removed, *reappeared],
         "partition_column": parameters.get("partition_column"),
+        "load_strategy": processing["load_strategy"],
+        "processing_source": processing["source"],
         "source_pattern": source_pattern,
         "pattern_semantics": pattern_result["pattern_semantics"],
         "append_violation_count": pattern_result["append_violation_count"],
@@ -266,13 +294,16 @@ def _observation_changes(observation, *, successful_observation_id: str | None =
     return result
 
 
-def check_changes(observation) -> dict:
+def check_changes(observation, *, table_id: str | None = None) -> dict:
     """Describe deterministic row and partition changes since an observation.
     
     Parameters
     ----------
     observation : pyspark.sql.DataFrame
         Canonical evidence returned by :func:`observe_table`.
+    table_id : str, optional
+        Canonical registered table identity. When supplied, it must match the
+        identity carried by the observation.
     
     Returns
     -------
@@ -303,4 +334,4 @@ def check_changes(observation) -> dict:
     """
     if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
-    return _observation_changes(observation)
+    return _observation_changes(observation, table_id=table_id)

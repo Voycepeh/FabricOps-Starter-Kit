@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import importlib
-import types
 
 import pytest
 
@@ -23,13 +22,14 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
     context = {"data_contract_overrides": {"orders": {"contract_id": "contract-a", "contract_version": 2}}}
     captured = {}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", context))
-    monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))
-    monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda *args: ("orders", "sales", "path"))
+    monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": "orders", "store_type": "lakehouse", "target": "source", "schema": "sales", "table_name": "orders",
+    })
     monkeypatch.setattr(
         module, "check_dq_runtime",
         lambda *args, **kwargs: captured.update(kwargs) or {"status": "passed"},
     )
-    assert module.check_dq(object(), "orders")["status"] == "passed"
+    assert module.check_dq(object(), table_id="orders")["status"] == "passed"
     assert captured["context"] is context
 
 

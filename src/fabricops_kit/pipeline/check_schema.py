@@ -1,6 +1,6 @@
 """Public schema guardrail check."""
 
-from fabricops_kit.config.shared import build_metadata_table_key, get_store, resolve_fabric_context
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
     get_spark_session,
     read_lakehouse_table_core,
@@ -10,7 +10,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
-    resolve_catalogue_table_id,
+    resolve_catalogue_table_identity,
     schema_check_core,
     select_table_guardrail_rule,
 )
@@ -18,22 +18,16 @@ from fabricops_kit.pipeline.shared import stop_if_failed, write_guardrail_result
 
 
 def check_schema(
-    table_name: str,
+    table_id: str,
     *,
-    target: str = "source",
-    schema: str | None = None,
     dataframe=None,
 ) -> dict:
     """Check a persisted or supplied schema against configured schema intent.
 
     Parameters
     ----------
-    table_name : str
-        Physical table name within the configured target.
-    target : str, default="source"
-        Logical FabricOps target containing the configured physical table.
-    schema : str, optional
-        Physical schema containing the configured table.
+    table_id : str
+        Canonical identity of an active registered Catalogue table.
     dataframe : DataFrame, optional
         Incoming DataFrame whose schema should be checked. When omitted, the
         schema of the configured physical table is checked.
@@ -60,15 +54,26 @@ def check_schema(
 
     Examples
     --------
-    >>> result = check_schema("orders", target="source", schema="dbo")
+    >>> result = check_schema(table_id="lakehouse||source||dbo||orders")
     >>> result["can_continue"]
     True
 
     """
     config, env, context = resolve_fabric_context()
-    store = get_store(config, env, target)
     spark = get_spark_session()
+    identity = resolve_catalogue_table_identity(
+        config, env, table_id, spark_session=spark, context=context,
+    )
+    target = identity["target"]
+    schema = identity["schema"]
+    table_name = identity["table_name"]
+    store = get_store(config, env, target)
     store_type = str(store.kind).lower()
+    if store_type != identity["store_type"]:
+        raise ValueError(
+            f"Catalogue table_id {table_id!r} declares store_type {identity['store_type']!r}, "
+            f"but configured target {target!r} resolves to {store_type!r}."
+        )
     if store_type == "warehouse":
         schema_name, resolved_table, _ = resolve_warehouse_table_location(
             store, schema or getattr(store, "schema", None), table_name,
@@ -87,28 +92,19 @@ def check_schema(
             ).limit(0)
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
-    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
-    table_id = (
-        resolve_catalogue_table_id(
-            config, env, store_type=store_type, layer=target,
-            schema_name=schema_name, table_name=resolved_table, spark_session=spark,
-        )
-        if env == "prod" or bool(context.get("data_contract_overrides"))
-        else ""
-    )
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark, table_id=table_id,
-        metadata_table_key=metadata_table_key, context=context,
+        metadata_table_key=table_id, context=context,
     )
     selected_rule = select_table_guardrail_rule(
-        rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,
+        rules_df, guardrail_type="schema", metadata_table_key=table_id,
         environment_name=env,
     )
     if selected_rule is None:
-        raise ValueError(f"No active approved schema rule exists for {metadata_table_key!r}.")
+        raise ValueError(f"No active approved schema rule exists for {table_id!r}.")
     result = schema_check_core(
         dataframe, rules_df=rules_df, table_name=resolved_table,
-        environment_name=env, metadata_table_key=metadata_table_key,
+        environment_name=env, metadata_table_key=table_id,
     )
     if selected_rule is not None:
         result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))

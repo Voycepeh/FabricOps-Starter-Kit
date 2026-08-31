@@ -1270,6 +1270,82 @@ def resolve_catalogue_table_id(
     return identities[0]
 
 
+def resolve_catalogue_table_identity(
+    config,
+    env: str,
+    table_id: str,
+    *,
+    spark_session=None,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve one active registered Catalogue table by canonical table identity."""
+    canonical_id = str(table_id or "").strip()
+    if not canonical_id:
+        raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
+    frame = read_lakehouse_table_core(
+        CATALOGUE_TABLE,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        spark_session=spark_session,
+        context=context or {"config": config, "env": env},
+    )
+    matches = []
+    for raw in frame.collect():
+        row = _row_to_dict(raw)
+        if (
+            str(row.get("environment_name") or "") == env
+            and str(row.get("table_id") or "").strip() == canonical_id
+            and str(row.get("metadata_level") or "").strip().lower() == "table"
+            and not str(row.get("column_id") or "").strip()
+            and row.get("is_active") is not False
+        ):
+            matches.append(row)
+    if not matches:
+        raise ValueError(
+            f"No active registered Catalogue table exists for table_id {canonical_id!r} "
+            f"in environment {env!r}."
+        )
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"Catalogue integrity error: table_id {canonical_id!r} resolves to "
+            f"{len(matches)} active table identities."
+        )
+    row = dict(matches[0])
+    required = ("store_type", "layer", "table_name")
+    missing = [name for name in required if not str(row.get(name) or "").strip()]
+    if missing:
+        raise ValueError(
+            f"Catalogue table_id {canonical_id!r} is not a registered table identity; "
+            f"missing {', '.join(missing)}."
+        )
+    store_type = str(row["store_type"]).strip().lower()
+    if store_type not in {"lakehouse", "warehouse"}:
+        raise ValueError(
+            f"Catalogue table_id {canonical_id!r} has unsupported store_type {store_type!r}."
+        )
+    return {
+        **row,
+        "table_id": canonical_id,
+        "store_type": store_type,
+        "target": str(row["layer"]).strip().lower(),
+        "schema": str(row.get("schema_name") or "").strip() or None,
+        "table_name": str(row["table_name"]).strip(),
+    }
+
+
+def catalogue_authored_processing(identity: Mapping[str, Any]) -> dict[str, Any]:
+    """Return current processing authoring from a Catalogue table identity."""
+    strategy = str(identity.get("load_strategy") or "").strip()
+    raw = identity.get("load_strategy_parameters_json") or "{}"
+    try:
+        parameters = json.loads(raw) if isinstance(raw, str) else dict(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.") from exc
+    if not isinstance(parameters, dict):
+        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.")
+    return {"load_strategy": strategy, **parameters}
+
+
 def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, metadata_table_key: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
@@ -2417,6 +2493,7 @@ def check_dq_runtime(
     env: str,
     table_name: str,
     *,
+    table_id: str,
     target: str,
     store_type: str,
     schema_name: str | None,
@@ -2436,15 +2513,7 @@ def check_dq_runtime(
     missing_identities = [name for name in identities if name not in source_columns]
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
-    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
-    table_id = (
-        resolve_catalogue_table_id(
-            config, env, store_type=store_type, layer=target,
-            schema_name=schema_name, table_name=table_name, spark_session=spark_session,
-        )
-        if env == "prod" or bool((context or {}).get("data_contract_overrides"))
-        else ""
-    )
+    metadata_table_key = table_id
     metadata_df = load_table_guardrail_rules(
         config, env, spark_session=spark_session, table_id=table_id,
         metadata_table_key=metadata_table_key, context=context,

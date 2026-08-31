@@ -12,9 +12,9 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_dq.py:8`
+`fabricops_kit/pipeline/check_dq.py:7`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L8-L93">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L80">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -38,9 +38,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def check_dq(
     dataframe,
-    table_name: str,
-    target: str='source',
-    schema: str | None=None,
+    table_id: str,
     dataset_name: str='',
     run_id: str='',
     row_identity_columns: list[str] | None=None,
@@ -53,7 +51,7 @@ def check_dq(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_dq(source_df, "orders", row_identity_columns=["order_id"])
+>>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
 >>> result["can_continue"]
 True
 
@@ -64,9 +62,7 @@ True
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate without filtering or copying complete rows into metadata. |
-| `table_name` | `str` | Yes | Physical table name used to select current active DQ rules. |
-| `target` | `str` | No | Configured FabricOps store target that owns the table. |
-| `schema` | `str \| None` | No | Physical schema containing the table. |
+| `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
 | `run_id` | `str` | No | Pipeline run identity persisted with failed-row evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |

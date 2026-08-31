@@ -209,7 +209,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
     )
 
     result = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", target="source", store_type="lakehouse",
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, target="source", store_type="lakehouse",
         schema_name=None, dataset_name="sales", run_id="run-9", row_identity_columns=["business_id"],
     )
 
@@ -268,7 +268,7 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     )
 
     result = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", target="source", store_type="lakehouse", schema_name=None,
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, target="source", store_type="lakehouse", schema_name=None,
     )
 
     assert result["status"] == "passed"
@@ -278,7 +278,7 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     assert {row.run_id for row in writes[0][1]} == {"activity-auto-run-1"}
 
     second = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", target="source",
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, target="source",
         store_type="lakehouse", schema_name=None,
     )
     assert second["run_id"] == "activity-auto-run-2"

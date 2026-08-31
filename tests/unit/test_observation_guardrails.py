@@ -120,6 +120,13 @@ def configure_changes(monkeypatch, history, rules=None):
     monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
     monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [change_rule()])
+    monkeypatch.setattr(changes, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo",
+        "table_name": "orders", "load_strategy": "overwrite", "load_strategy_parameters_json": "{}",
+    })
+    monkeypatch.setattr(changes, "resolve_table_processing_definition", lambda *args, **kwargs: {
+        "load_strategy": "overwrite", "source": "current_authoring",
+    })
     return written
 
 
@@ -129,6 +136,9 @@ def configure_freshness(monkeypatch, rules=None):
     monkeypatch.setattr(freshness, "get_spark_session", lambda: Spark())
     monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: configured_rules)
     monkeypatch.setattr(freshness, "write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(freshness, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
+    })
 
 
 def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypatch):
@@ -282,9 +292,9 @@ def test_governed_guardrail_public_signatures_are_minimal():
     import inspect
     from fabricops_kit import check_schema
 
-    assert str(inspect.signature(check_schema)) == "(table_name: str, *, target: str = 'source', schema: str | None = None, dataframe=None) -> dict"
-    assert str(inspect.signature(check_freshness)) == "(observation) -> dict"
-    assert str(inspect.signature(check_changes)) == "(observation) -> dict"
+    assert str(inspect.signature(check_schema)) == "(table_id: str, *, dataframe=None) -> dict"
+    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None) -> dict"
+    assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
 
 
 def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
@@ -305,6 +315,9 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "dev", {"active": True}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: store)
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
+    })
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "read_lakehouse_table_core", lambda *args, **kwargs: frame)
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "lakehouse||source||dbo||orders")
@@ -321,10 +334,10 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
 
     monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
-    result = schema_module.check_schema("orders", target="source", schema="dbo")
+    result = schema_module.check_schema("catalogue-orders")
     assert result["status"] == "passed"
     assert result["guardrail_version"] == 2
-    assert core_calls[0][1]["metadata_table_key"] == "lakehouse||source||dbo||orders"
+    assert core_calls[0][1]["metadata_table_key"] == "catalogue-orders"
     assert writes[0]["guardrail_type"] == "schema"
     assert writes[0]["table_name"] == "orders"
     assert writes[0]["result"]["guardrail_version"] == 2
@@ -355,7 +368,9 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
     )
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "warehouse||product||sales||orders")
-    monkeypatch.setattr(schema_module, "resolve_catalogue_table_id", lambda *args, **kwargs: "catalogue-orders")
+    monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": "catalogue-orders", "store_type": "warehouse", "target": "product", "schema": "sales", "table_name": "orders",
+    })
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: None)
@@ -365,14 +380,14 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         return {"status": "passed", "can_continue": True, "guardrail_rule_id": "schema_rule", "rule_type": "strict"}
 
     monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
-    schema_module.check_schema("orders", target="product", schema="sales", dataframe=incoming)
+    schema_module.check_schema("catalogue-orders", dataframe=incoming)
     assert core_calls == [(
         incoming,
         {
             "rules_df": rules,
             "table_name": "orders",
             "environment_name": "prod",
-            "metadata_table_key": "warehouse||product||sales||orders",
+            "metadata_table_key": "catalogue-orders",
         },
     )]
 
@@ -395,11 +410,13 @@ def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "governed-orders")
-    monkeypatch.setattr(schema_module, "resolve_catalogue_table_id", lambda *args, **kwargs: "catalogue-orders")
+    monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+        "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "product", "schema": "dbo", "table_name": "orders",
+    })
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: [result])
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: result)
     monkeypatch.setattr(schema_module, "schema_check_core", lambda *args, **kwargs: result.copy())
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: events.append("recorded"))
     monkeypatch.setattr(schema_module, "stop_if_failed", lambda checked: events.append(("gate", checked["can_continue"])))
-    schema_module.check_schema("orders", target="product", schema="dbo", dataframe=object())
+    schema_module.check_schema("catalogue-orders", dataframe=object())
     assert events == ["recorded", ("gate", False)]
