@@ -1876,7 +1876,7 @@ def _guardrail_schema_check_base(
             selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
-            preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+            preset = {"strict": "strict", "minimum_required": "allow_new_columns", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
             severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")

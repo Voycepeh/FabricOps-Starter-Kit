@@ -103,6 +103,8 @@ class _SchemaFrame:
     [
         ("strict", [("id", "string"), ("amount", "double"), ("extra", "string")], "failed", False),
         ("minimum_required", [("id", "string"), ("amount", "double"), ("extra", "string")], "warning", True),
+        ("minimum_required", [("id", "string")], "failed", False),
+        ("minimum_required", [("id", "string"), ("amount", "string")], "failed", False),
         ("relaxed", [("id", "string"), ("amount", "double"), ("extra", "string")], "warning", True),
         ("skip", [("id", "long"), ("extra", "string")], "warning", True),
     ],
