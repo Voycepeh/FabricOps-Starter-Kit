@@ -33,8 +33,8 @@ No immediate table relationship is defined in the current implementation.
 | Column | Data type | Description |
 | --- | --- | --- |
 | `metadata_level` | `string` | Metadata Data Catalogue field `metadata_level`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
-| `column_id` | `string` | Identifier stored for `column_id`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `store_type` | `string` | Configured Fabric store type recorded for the profiled dataset. |
 | `layer` | `string` | The configured medallion layer where the table is stored. |

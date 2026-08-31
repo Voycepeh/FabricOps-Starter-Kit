@@ -38,8 +38,8 @@ via `profile_id` + `profile_snapshot_id`
 | --- | --- | --- |
 | `profile_id` | `string` | Identifier stored for `profile_id`. |
 | `profile_snapshot_id` | `string` | Identifier stored for `profile_snapshot_id`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
-| `column_id` | `string` | Identifier stored for `column_id`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `data_type` | `string` | Stable data type label recorded for the column. |
 | `row_count` | `long` | Observed total row count in the profiled dataset snapshot. |
