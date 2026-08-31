@@ -218,9 +218,20 @@ def test_02_pipeline_product_source_uses_the_warehouse_reader():
     assert 'processing_scope=read_prep["scope"]' in read
 
 
-def test_02_pipeline_selects_data_contract_by_table_id():
-    """Select the whole contract by canonical identity in the template."""
+def test_02_pipeline_selects_registered_target_and_data_contract_by_table_id():
+    """Resolve the target from Catalogue metadata before selecting its Data Contract."""
     source = _notebook_source("02_pipeline.ipynb")
+    selection = _cell_by_id("02_pipeline.ipynb", "target-selection").source
+    config = _cell_by_id("02_pipeline.ipynb", "source-config").source
+
+    assert 'widget_view_catalogue(' in selection
+    assert 'mode="explore"' in selection
+    assert 'target_selection = target_catalogue["get_selection"]()' in config
+    assert 'TARGET_TABLE_ID = target_selection["table_id"]' in config
+    assert 'TARGET_TARGET = target_selection["layer"]' in config
+    assert 'TARGET_SCHEMA = target_selection["schema_name"]' in config
+    assert 'TARGET_TABLE_NAME = target_selection["table_name"]' in config
+    assert "<canonical table_id already created in FabricOps metadata>" not in source
     assert "widget_select_data_contract(table_id=TARGET_TABLE_ID)" in source
     assert "target_table_id=TARGET_TABLE_ID" in source
     assert "TARGET_LOAD_STRATEGY" in source
@@ -280,7 +291,7 @@ def test_02_pipeline_keeps_main_governed_path_runnable():
     """The canonical workflow is expanded rather than stored in disabled Preview strings."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     governed_ids = {
-        "source-config", "source-prepare", "source-read", "source-quality",
+        "target-selection", "source-config", "source-prepare", "source-read", "source-quality",
         "transform", "target-prepare", "target-publish",
     }
     by_id = {cell.get("id"): cell for cell in notebook.cells}
