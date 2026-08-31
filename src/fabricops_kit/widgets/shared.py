@@ -868,15 +868,15 @@ def dataset_label(row: dict[str, Any], role: str | None = None) -> str:
         str(row.get(field) or "").strip()
         for field in ("layer", "schema_name", "table_name")
         if str(row.get(field) or "").strip()
-    ) or str(row.get("metadata_table_key") or "")
+    ) or str(row.get("table_id") or "")
     return f"[{role}] {location}" if role else location
 
 
-def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) -> list[tuple[str, str]]:
+def schema_version_options(rows: list[dict[str, Any]], table_id: str) -> list[tuple[str, str]]:
     """Return deterministic newest-first schema choices for one dataset."""
     versions: dict[str, Any] = {}
     for row in rows:
-        if str(row.get("metadata_table_key") or "") != metadata_table_key:
+        if str(row.get("table_id") or "") != table_id:
             continue
         fingerprint = str(row.get("schema_fingerprint") or "").strip()
         committed = row.get("_committed_at")
@@ -897,12 +897,12 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
     return result
 
 
-def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_key: str) -> dict[str, Any]:
+def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) -> dict[str, Any]:
     """Prepare one selected dataset's latest persisted guardrail execution."""
     from pyspark.sql import functions as F
 
     scoped = results.filter(
-        (F.col("metadata_table_key") == metadata_table_key)
+        (F.col("table_id") == table_id)
         & F.col("run_id").isNotNull()
         & (F.trim(F.col("run_id")) != "")
     )
@@ -940,7 +940,7 @@ def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_ke
     )
     selected_row_results = (
         row_results.filter(
-            (F.col("metadata_table_key") == metadata_table_key)
+            (F.col("table_id") == table_id)
             & (F.col("run_id") == selected_run_id)
         )
         if selected_run_id is not None

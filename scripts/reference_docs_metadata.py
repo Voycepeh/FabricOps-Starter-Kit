@@ -379,13 +379,13 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
         "data_type": ["fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_column_key",
+            "fabricops_kit.config.shared.build_column_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -397,13 +397,13 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_metadata_column_key",
+            "fabricops_kit.config.shared.build_column_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -420,7 +420,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
-        "metadata_column_key": [
+        "column_id": [
             "fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe",
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
         ],
@@ -439,9 +439,9 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
             "fabricops_kit.pipeline.profile_and_register_table._lineage_event_id",
         ],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
@@ -524,9 +524,9 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_SOURCE_OBSERVATION": {
         "__default__": ["fabricops_kit.pipeline.observe_table._observe_table_core"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "metadata_table_key": [
+        "table_id": [
             "fabricops_kit.pipeline.observe_table._observe_table_core",
-            "fabricops_kit.config.shared.build_metadata_table_key",
+            "fabricops_kit.config.shared.build_table_id",
         ],
     },
     "METADATA_SOURCE_WATERMARK_CHECKPOINT": {
@@ -1688,7 +1688,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Catalogue review',
   'use_when': 'Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.',
   'related_functions': ['profile_and_register_table', 'widget_register_data_contract'],
-  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected metadata_table_key.'},
+  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected table_id.'},
 
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',

@@ -320,7 +320,6 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     })
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "read_lakehouse_table_core", lambda *args, **kwargs: frame)
-    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "lakehouse||source||dbo||orders")
     loader_calls = []
     monkeypatch.setattr(
         schema_module, "load_table_guardrail_rules",
@@ -337,7 +336,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     result = schema_module.check_schema("catalogue-orders")
     assert result["status"] == "passed"
     assert result["guardrail_version"] == 2
-    assert core_calls[0][1]["metadata_table_key"] == "catalogue-orders"
+    assert core_calls[0][1]["table_id"] == "catalogue-orders"
     assert writes[0]["guardrail_type"] == "schema"
     assert writes[0]["table_name"] == "orders"
     assert writes[0]["result"]["guardrail_version"] == 2
@@ -367,7 +366,6 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         "read_warehouse_query_core",
         lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
     )
-    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "warehouse||product||sales||orders")
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "catalogue-orders", "store_type": "warehouse", "target": "product", "schema": "sales", "table_name": "orders",
     })
@@ -387,7 +385,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
             "rules_df": rules,
             "table_name": "orders",
             "environment_name": "prod",
-            "metadata_table_key": "catalogue-orders",
+            "table_id": "catalogue-orders",
         },
     )]
 
@@ -409,7 +407,6 @@ def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     monkeypatch.setattr(schema_module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
-    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "governed-orders")
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "product", "schema": "dbo", "table_name": "orders",
     })

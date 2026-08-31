@@ -95,13 +95,12 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
     )
     table_id = identity["table_id"]
     rules_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=table_id,
-        metadata_table_key=table_id, context=context,
+        config, env, spark_session=spark_session, table_id=table_id, context=context,
     )
     freshness_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="freshness",
-        metadata_table_key=table_id,
+        table_id=table_id,
         environment_name=env,
     )
     if freshness_rule is None:
@@ -109,7 +108,7 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
     change_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="change",
-        metadata_table_key=table_id,
+        table_id=table_id,
         environment_name=env,
     )
     if change_rule is None:
@@ -127,7 +126,7 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
         compatibility_observation,
         rules_df=rules_df,
         environment_name=env,
-        metadata_table_key=table_id,
+        table_id=table_id,
     )
     if result.get("guardrail_rule_id"):
         result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}

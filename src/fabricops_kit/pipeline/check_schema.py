@@ -93,18 +93,17 @@ def check_schema(
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     rules_df = load_table_guardrail_rules(
-        config, env, spark_session=spark, table_id=table_id,
-        metadata_table_key=table_id, context=context,
+        config, env, spark_session=spark, table_id=table_id, context=context,
     )
     selected_rule = select_table_guardrail_rule(
-        rules_df, guardrail_type="schema", metadata_table_key=table_id,
+        rules_df, guardrail_type="schema", table_id=table_id,
         environment_name=env,
     )
     if selected_rule is None:
         raise ValueError(f"No active approved schema rule exists for {table_id!r}.")
     result = schema_check_core(
         dataframe, rules_df=rules_df, table_name=resolved_table,
-        environment_name=env, metadata_table_key=table_id,
+        environment_name=env, table_id=table_id,
     )
     if selected_rule is not None:
         result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))

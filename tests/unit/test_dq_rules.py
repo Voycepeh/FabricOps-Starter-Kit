@@ -9,7 +9,7 @@ import pytest
 
 from fabricops_kit.pipeline import shared as governance
 from fabricops_kit.config import metadata_schemas
-from fabricops_kit.config.shared import build_metadata_table_key
+from fabricops_kit.config.shared import build_table_id
 from fabricops_kit.widgets import shared as governance_authoring
 from tests.helpers import FakeSpark, framework_config
 
@@ -97,9 +97,9 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(
         [
-            {"rule_key": "k1", "rule_id": "r1", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
-            {"rule_key": "k1", "rule_id": "r1", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
-            {"rule_key": "k2", "rule_id": "r2", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "allowed_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "table_id": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "table_id": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
+            {"rule_key": "k2", "rule_id": "r2", "table_id": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "allowed_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
         ]
     )
     rules = governance._load_active_dq_rules(metadata, "orders-key", env="dev", dataset_name="sales")
@@ -116,8 +116,8 @@ def test_active_dq_rules_are_scoped_by_canonical_table_identity(spark_session):
         "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
     }
     metadata = spark_session.createDataFrame([
-        {**base, "metadata_table_key": "source-orders", "rule_key": "source", "rule_id": "source"},
-        {**base, "metadata_table_key": "product-orders", "rule_key": "product", "rule_id": "product"},
+        {**base, "table_id": "source-orders", "rule_key": "source", "rule_id": "source"},
+        {**base, "table_id": "product-orders", "rule_key": "product", "rule_id": "product"},
     ])
 
     rules = governance._load_active_dq_rules(
@@ -257,7 +257,7 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
             "environment_name": "dev",
             "dataset_name": "sales",
             "table_name": "orders",
-            "metadata_table_key": "orders-key",
+            "table_id": "orders-key",
             "column_name": "order_id",
             "rule_type": "missing_values",
             "rule_parameters_json": json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}),

@@ -217,13 +217,12 @@ def _observation_changes(
         config,
         env,
         spark_session=getattr(observation, "sparkSession", None),
-        table_id=table_id,
-        metadata_table_key=table_id, context=context,
+        table_id=table_id, context=context,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="change",
-        metadata_table_key=table_id,
+        table_id=table_id,
         environment_name=env,
     )
     if selected_rule is None:
@@ -274,7 +273,7 @@ def _observation_changes(
         result,
         rules_df=rules_df,
         environment_name=env,
-        metadata_table_key=table_id,
+        table_id=table_id,
     )
     if result.get("guardrail_rule_id"):
         write_guardrail_result_row(

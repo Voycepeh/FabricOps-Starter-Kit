@@ -46,7 +46,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
         [
             {
                 "table_name": "orders",
-                "metadata_table_key": "orders-key",
+                "table_id": "orders-key",
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
@@ -64,7 +64,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
             },
             {
                 "table_name": "orders",
-                "metadata_table_key": "orders-key",
+                "table_id": "orders-key",
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
@@ -93,7 +93,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
         [
             {
                 "table_name": "orders",
-                "metadata_table_key": "orders-key",
+                "table_id": "orders-key",
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
@@ -132,7 +132,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
 
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
-    from fabricops_kit.config.shared import build_metadata_table_key
+    from fabricops_kit.config.shared import build_table_id
     from fabricops_kit.pipeline import shared as guardrails_shared
 
     writes = []
@@ -172,10 +172,10 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
 
 def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(spark_session, monkeypatch):
     """Persist one summary per rule and one compact evidence row per failed row/rule."""
-    from fabricops_kit.config.shared import build_metadata_table_key
+    from fabricops_kit.config.shared import build_table_id
     from fabricops_kit.pipeline import shared as guardrails_shared
 
-    table_key = build_metadata_table_key("lakehouse", "source", None, "orders")
+    table_key = build_table_id("lakehouse", "source", None, "orders")
     dataframe = spark_session.createDataFrame(
         [("one", None, "open", 5, 3), ("two", "x", "closed", 1, 2)],
         "business_id string, required_value string, status string, upper int, lower int",
@@ -183,7 +183,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
     metadata = spark_session.createDataFrame([
         {
             "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
-            "metadata_table_key": table_key,
+            "table_id": table_key,
             "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
             "guardrail_type": "dq", "rule_type": "required_when", "column_name": "required_value",
             "rule_parameters_json": json.dumps({"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"}),
@@ -192,7 +192,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
         },
         {
             "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
-            "metadata_table_key": table_key,
+            "table_id": table_key,
             "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
             "guardrail_type": "dq", "rule_type": "compare_columns", "column_name": "upper,lower",
             "rule_parameters_json": json.dumps({"columns": ["upper", "lower"], "operator": "<="}),
@@ -240,14 +240,14 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
 
 def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_session, monkeypatch):
     """Avoid empty row-evidence writes while retaining a passing rule summary."""
-    from fabricops_kit.config.shared import build_metadata_table_key
+    from fabricops_kit.config.shared import build_table_id
     from fabricops_kit.pipeline import shared as guardrails_shared
 
-    table_key = build_metadata_table_key("lakehouse", "source", None, "orders")
+    table_key = build_table_id("lakehouse", "source", None, "orders")
     dataframe = spark_session.createDataFrame([("one", "ok")], "row_uuid string, value string")
     metadata = spark_session.createDataFrame([{
         "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
-        "metadata_table_key": table_key,
+        "table_id": table_key,
         "environment_name": "dev", "table_name": "orders", "guardrail_type": "dq",
         "rule_type": "allowed_values", "column_name": "value",
         "rule_parameters_json": json.dumps({"columns": ["value"], "allowed_values": ["ok"]}),

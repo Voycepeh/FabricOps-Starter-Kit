@@ -134,7 +134,7 @@ def _resolve_explore_catalogue_scope(
 def _reader_dataset_label(row: dict[str, Any], role: str | None = None) -> str:
     """Return a readable dataset label backed by normalized table identity."""
     labelled = dict(row)
-    labelled["metadata_table_key"] = str(row.get("table_id") or "")
+    labelled["table_id"] = str(row.get("table_id") or "")
     return widget_shared.dataset_label(labelled, role)
 
 
@@ -143,12 +143,12 @@ def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
     return frame.select(*[name for name in preferred if name in frame.columns])
 
 
-def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_key: str) -> dict[str, Any]:
+def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) -> dict[str, Any]:
     """Prepare the selected dataset's latest persisted guardrail execution."""
     from pyspark.sql import functions as F
 
     scoped = results.filter(
-        (F.col("metadata_table_key") == metadata_table_key)
+        (F.col("table_id") == table_id)
         & F.col("run_id").isNotNull()
         & (F.trim(F.col("run_id")) != "")
     )
@@ -186,7 +186,7 @@ def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_ke
     )
     selected_row_results = (
         row_results.filter(
-            (F.col("metadata_table_key") == metadata_table_key)
+            (F.col("table_id") == table_id)
             & (F.col("run_id") == selected_run_id)
         )
         if selected_run_id is not None
@@ -266,7 +266,6 @@ def _build_catalogue_widget(
         return {
             **selection_context,
             "table_id": table_id or None,
-            "metadata_table_key": table_id or None,
             "dataset_label": _reader_dataset_label(row, role) if row else None,
             "profile_snapshot_id": selected_profile_snapshot_id,
             "profiled_at": selected_profiled_at,
@@ -475,7 +474,7 @@ def _build_catalogue_widget(
             _prepare_selected_guardrail_views(
                 source_frames["guardrail_results"],
                 source_frames["guardrail_row_results"],
-                metadata_table_key=table_id,
+                table_id=table_id,
             )
         )
         return views

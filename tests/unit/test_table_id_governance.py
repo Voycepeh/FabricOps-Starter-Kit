@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
 from fabricops_kit.pipeline import shared
 
@@ -69,3 +70,19 @@ def test_catalogue_resolver_rejects_missing_duplicate_and_non_table_rows(monkeyp
     rows[:] = [catalogue_row("table-a", "orders"), catalogue_row("table-a", "orders-copy")]
     with pytest.raises(RuntimeError, match="resolves to 2 active table identities"):
         shared.resolve_catalogue_table_identity(object(), "dev", "table-a")
+
+
+def test_governed_check_modules_have_no_legacy_table_identity_name():
+    """Keep the governed runtime stack on the single canonical identity name."""
+    pipeline_root = Path(__file__).parents[2] / "src" / "fabricops_kit" / "pipeline"
+    directly_affected = (
+        "shared.py",
+        "check_schema.py",
+        "check_freshness.py",
+        "check_changes.py",
+        "check_dq.py",
+    )
+    for name in directly_affected:
+        source = (pipeline_root / name).read_text(encoding="utf-8")
+        assert "metadata_table_key" not in source
+        assert "build_metadata_table_key" not in source
