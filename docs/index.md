@@ -32,7 +32,7 @@ FabricOps provides the governed skeleton of the data practice, abstracting impor
 
 ## Reference and resources
 
-The FabricOps documentation focuses on the patterns, metadata, functions, and workflows implemented by this starter kit. For broader Microsoft Fabric concepts and engineering background, the external references below are useful companions.
+The FabricOps documentation focuses on the patterns, metadata, functions, and workflows implemented by this starter kit.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="glossary/">
@@ -73,16 +73,6 @@ The FabricOps documentation focuses on the patterns, metadata, functions, and wo
   <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
     <span class="fabricops-landing-card__body">Inspect callable architecture, call flows, nested functions, and architecture violations.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="https://learn.microsoft.com/en-us/training/fabric/">
-    <span class="fabricops-landing-card__title">Microsoft Learn — Fabric</span>
-    <span class="fabricops-landing-card__body">Official Microsoft learning material for Fabric fundamentals, Data Engineering, pipelines, Spark, Lakehouse, Warehouse, security, monitoring, and related platform capabilities.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="https://www.slideshare.net/slideshow/microsoft-fabric-complete-handwritten-notes-pdf/289496813">
-    <span class="fabricops-landing-card__title">Microsoft Fabric Visual Notes</span>
-    <span class="fabricops-landing-card__body">A visual 86-page community reference by SomeshK13 covering Fabric architecture, PySpark, pipelines, incremental loading, data quality, CI/CD, monitoring, and other common concepts.</span>
   </a>
 </div>
 
