@@ -17,7 +17,7 @@ def _contract(version: int, *, status: str = "draft", active: bool = False, tabl
     payload = {
         "contract": {"contract_id": "contract", "contract_version": version, "status": "draft"},
         "agreement": {"agreement_id": "agreement", "agreement_version": "1", "agreement_name": "Orders"},
-        "table": {"table_id": table_id, "table_name": "orders", "schema_name": "sales", "columns": [{"column_name": "id", "data_type": "long"}]},
+        "table": {"table_id": table_id, "table_name": "orders", "schema_name": "sales", "columns": [{"column_id": "id", "column_name": "id", "data_type": "long"}]},
         "enrichment": {"table": [], "columns": []},
         "guardrails": [{"guardrail_rule_id": rule, "guardrail_version": version, "guardrail_type": "dq", "rule_id": rule, "rule_type": "not_null", "rule_parameters": {"columns": ["id"]}, "severity": "error"}],
         "approved_usages": ["analytics"],
@@ -62,6 +62,88 @@ def test_review_and_guardrails_come_only_from_frozen_payload():
     assert rules[0]["guardrail_rule_id"] == "rule-a"
     assert rules[0]["metadata_table_key"] == "runtime-orders"
     assert json.loads(rules[0]["rule_parameters_json"]) == {"columns": ["id"]}
+
+
+def _schema_contract(*, rule_type="strict", severity="blocking"):
+    contract = _contract(1, status="active", active=True)
+    payload = json.loads(contract["contract_payload_json"])
+    payload["table"]["columns"] = [
+        {"column_id": "id", "column_name": "id", "data_type": "string"},
+        {"column_id": "amount", "column_name": "amount", "data_type": "double"},
+    ]
+    payload["guardrails"] = [{
+        "guardrail_rule_id": "schema-rule", "guardrail_version": 1,
+        "table_id": "orders", "guardrail_type": "schema", "rule_id": "schema", "rule_type": rule_type,
+        "rule_parameters": {"columns": ["stale"], "data_types": {"stale": "long"}},
+        "severity": severity,
+    }]
+    contract["contract_payload_json"] = json.dumps(payload)
+    contract["contract_payload"] = payload
+    return contract
+
+
+def test_frozen_schema_adapter_uses_table_columns_over_conflicting_rule_parameters():
+    """Synthesize runtime schema parameters exclusively from frozen table.columns."""
+    rules = pipeline_shared.contract_guardrail_rows(
+        _schema_contract(), environment_name="dev", metadata_table_key="orders",
+    )
+    assert json.loads(rules[0]["rule_parameters_json"]) == {
+        "columns": ["id", "amount"], "data_types": {"id": "string", "amount": "double"},
+    }
+
+
+class _SchemaFrame:
+    def __init__(self, fields):
+        self.dtypes = fields
+        self.columns = [name for name, _dtype in fields]
+
+
+@pytest.mark.parametrize(
+    ("rule_type", "fields", "status", "can_continue"),
+    [
+        ("strict", [("id", "string"), ("amount", "double"), ("extra", "string")], "failed", False),
+        ("minimum_required", [("id", "string"), ("amount", "double"), ("extra", "string")], "warning", True),
+        ("relaxed", [("id", "string"), ("amount", "double"), ("extra", "string")], "warning", True),
+        ("skip", [("id", "long"), ("extra", "string")], "warning", True),
+    ],
+)
+def test_frozen_schema_enforcement_modes(rule_type, fields, status, can_continue):
+    """Preserve strict, relaxed, minimum-required, and monitor-only enforcement."""
+    rules = pipeline_shared.contract_guardrail_rows(
+        _schema_contract(rule_type=rule_type), environment_name="prod", metadata_table_key="orders",
+    )
+    result = pipeline_shared.schema_check_core(
+        _SchemaFrame(fields), rules_df=rules, environment_name="prod", metadata_table_key="orders",
+    )
+    assert result["status"] == status
+    assert result["can_continue"] is can_continue
+
+
+@pytest.mark.parametrize(
+    ("columns", "message"),
+    [
+        (None, "missing"),
+        ({}, "must be a list"),
+        (["id"], "must be an object"),
+        ([{"column_id": "id", "column_name": "", "data_type": "string"}], "non-blank"),
+        ([{"column_id": "id", "column_name": "id", "data_type": ""}], "non-blank"),
+        ([
+            {"column_id": "id-1", "column_name": "id", "data_type": "string"},
+            {"column_id": "id-2", "column_name": "id", "data_type": "long"},
+        ], "duplicate column_name"),
+    ],
+)
+def test_corrupt_frozen_table_columns_fail_without_guardrail_fallback(columns, message):
+    """Reject corrupt frozen structure even when stale schema parameters exist."""
+    contract = _schema_contract()
+    if columns is None:
+        del contract["contract_payload"]["table"]["columns"]
+    else:
+        contract["contract_payload"]["table"]["columns"] = columns
+    with pytest.raises(ValueError, match=message):
+        pipeline_shared.contract_guardrail_rows(
+            contract, environment_name="prod", metadata_table_key="orders",
+        )
 
 
 class _Frame:
