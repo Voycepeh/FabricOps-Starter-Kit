@@ -33,24 +33,15 @@ The shared Metadata Lakehouse carries FabricOps metadata between Governance and 
 
 ## Four ideas to know before you start
 
-**FabricOps Starter Kit**, **Metadata**, **Governance as Code**, and **Configuration-driven Engineering** are the four high-level ideas used throughout the workflow.
+**FabricOps Starter Kit** is a governed Data Engineering and Data Governance practice for Microsoft Fabric. It gives teams a repeatable operating workflow, notebook templates, reusable functions, and shared metadata rather than asking every project to invent its own engineering and governance pattern.
 
-Hover over a glossary term for its canonical short definition. Use the [FabricOps Glossary](glossary.md) for the full definition, category, aliases, and Microsoft Learn source where applicable. The glossary is the terminology source of truth for this repository.
+**Metadata** is the information FabricOps carries through that workflow so Governance and Engineering are working from the same definition of the data. It includes technical structure and Profiles as well as business meaning, ownership, Guardrails, lineage, Data Agreements, and Data Contracts.
 
-### Where the key terms enter the workflow
+**Governance as Code** means governance decisions are captured in structured metadata, rules, and contracts that the engineering workflow can directly use. Governance does not only describe expectations in documents; FabricOps turns those expectations into Data Agreements, Enrichment, Guardrails, and Data Contracts that `02_pipeline` can resolve, validate, and enforce during execution.
 
-| Term | Role in the FabricOps workflow |
-| ---- | ------------------------------ |
-| Data Steward | Provides the accountable provider or recipient role used by a Data Agreement. |
-| Data Agreement | Establishes the governed sharing relationship between one provider Data Steward and one recipient Data Steward. |
-| Profile | Records observed characteristics of a dataset at a point in time. |
-| Enrichment | Adds business and governance meaning to the Data Catalogue. |
-| Guardrails | Express the governed rules FabricOps evaluates for a table or column. |
-| Enforcement | Applies active Guardrails during execution and acts on the outcome. |
-| Guardrail Result | Records what happened when a Guardrail was evaluated. |
-| Data Contract | Freezes the governed expectations for one `table_id` under one exact Data Agreement version. |
-| Configuration | Controls environment targets and pipeline behaviour without rewriting implementation code. |
-| Data Quality | Defines whether data is fit for its intended use and meets the quality expectations that apply. |
+**Configuration-driven Engineering** keeps reusable pipeline code separate from environment-specific Fabric item identities and repeatable processing choices. `00_env_config` defines the active environment and logical stores, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. The same `02_pipeline` can therefore move from Development to Production without hard-coding different workspace paths and item IDs throughout the notebook.
+
+These four ideas recur throughout the rest of the workflow. Hover over a glossary term when you only need the short definition, or use the [FabricOps Glossary](glossary.md) for the full terminology reference.
 
 </div>
 
