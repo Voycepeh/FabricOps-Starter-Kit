@@ -14,7 +14,7 @@ def _row(version: int, *, table_id: str = "table-a", status: str = "draft") -> d
     payload = {
         "contract": {"contract_id": "contract-a", "contract_version": version},
         "agreement": {"agreement_name": "Product Agreement", "agreement_version": 2},
-        "table": {"table_id": table_id, "schema_name": "demo", "table_name": "orders", "columns": [{"column_name": "id"}]},
+        "table": {"table_id": table_id, "schema_name": "demo", "table_name": "orders", "columns": [{"column_name": "id"}], "processing": {"load_strategy": "scd1", "key_columns": ["id"]}},
         "guardrails": [{"guardrail_type": "dq", "rule_id": "frozen-rule"}],
         "approved_usages": ["Analytics"],
     }
@@ -47,6 +47,7 @@ def test_contract_review_uses_only_frozen_payload():
     assert review["guardrails"] == {"dq": 1}
     assert review["guardrail_details"][0]["rule_id"] == "frozen-rule"
     assert review["schema_columns"] == 1
+    assert review["processing"]["load_strategy"] == "scd1"
 
 
 def test_contract_review_rejects_payload_identity_mismatch():
@@ -76,9 +77,6 @@ def _render(monkeypatch, rows, *, env="dev", overrides=None):
     state_context = {"config": object(), "env": env, "data_contract_overrides": dict(overrides or {})}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], env, state_context))
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
-    monkeypatch.setattr(module, "get_store", lambda *_args: _Store())
-    monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda *_args: ("orders", "demo", "path"))
-    monkeypatch.setattr(module, "resolve_catalogue_table_id", lambda *_args, **_kwargs: "table-a")
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: "governance")
     def read_contracts(*_args, **kwargs):
         assert kwargs["schema"] == "governance"
@@ -88,7 +86,7 @@ def _render(monkeypatch, rows, *, env="dev", overrides=None):
     monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: rows[0] if rows else None)
     monkeypatch.setattr(module, "get_default_fabric_context", lambda: state_context)
     monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
-    return state_context, module.widget_select_data_contract("orders", schema="demo")
+    return state_context, module.widget_select_data_contract(table_id="table-a")
 
 
 def test_default_and_exact_selection_feed_active_context(monkeypatch):
@@ -129,4 +127,25 @@ def test_production_never_accepts_manual_override(monkeypatch):
 
     state["select"]("contract-a", 3)
     assert context["data_contract_overrides"] == {}
-    assert state["message"] == "Active Data Contract v3"
+    assert state["message"] == "Using active Data Contract v3"
+
+
+def test_selector_exposes_only_canonical_identity():
+    """Remove all physical-coordinate selector parameters."""
+    import inspect
+    parameters = inspect.signature(module.widget_select_data_contract).parameters
+    assert "table_id" in parameters
+    assert {"table_name", "target", "schema"}.isdisjoint(parameters)
+    with pytest.raises(ValueError, match="table_id must be a non-empty"):
+        module.widget_select_data_contract(table_id=" ")
+
+
+def test_production_requires_active_contract(monkeypatch):
+    """Never fall back to current authoring or latest contract in Production."""
+    state_context = {"config": object(), "env": "prod", "data_contract_overrides": {}}
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], "prod", state_context))
+    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: "governance")
+    monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("missing")))
+    with pytest.raises(ValueError, match="Production requires an active Data Contract"):
+        module.widget_select_data_contract(table_id="table-a")

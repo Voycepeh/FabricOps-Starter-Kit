@@ -14,7 +14,7 @@ Prepare governed source observation and read scope without reading business data
 
 `fabricops_kit/pipeline/read_pipeline_prep.py:253`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L392">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L400">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -46,6 +46,7 @@ def read_pipeline_prep(
     source_schema: str | None=None,
     target: str='unified',
     schema: str | None=None,
+    target_table_id: str | None=None,
     load_strategy: str,
     load_strategy_parameters: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
@@ -81,6 +82,7 @@ True
 | `source_schema` | `str \| None` | No | Optional source schema. |
 | `target` | `str` | No | Configured governed target. |
 | `schema` | `str \| None` | No | Optional governed target schema. |
+| `target_table_id` | `str \| None` | No | Expected canonical Catalogue identity; it must match the physical target. |
 | `load_strategy` | `str` | Yes | Independent target application strategy. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters owned by the target strategy. |
 

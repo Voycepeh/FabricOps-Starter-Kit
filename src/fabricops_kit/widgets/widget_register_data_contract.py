@@ -12,6 +12,7 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.pipeline.shared import validated_processing
 from fabricops_kit.widgets.shared import action_row, form_page, form_section, require_ipywidgets, status_message, widget_common
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -123,17 +124,15 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     steward_docs = [_fields(r, ("steward_id", "steward_name", "steward_role", "contact")) for r in stewards]
     agreement_doc = _fields(agreement, ("agreement_id", "agreement_version", "agreement_name", "domain", "business_purpose", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date"))
     agreement_doc["approved_usages"] = _approved_usages(agreement.get("approved_usage_json"))
-    strategy = str(table.get("load_strategy") or "").strip().lower()
-    processing = None
-    if strategy:
-        parameters = _json_value(
-            table.get("load_strategy_parameters_json"),
-            field="load_strategy_parameters_json",
-            default={},
-        )
-        if not isinstance(parameters, dict):
-            raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
-        processing = {"load_strategy": strategy, **parameters}
+    parameters = _json_value(
+        table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={},
+    )
+    if not isinstance(parameters, dict):
+        raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
+    try:
+        processing = validated_processing({**parameters, "load_strategy": table.get("load_strategy")})
+    except ValueError as exc:
+        raise ValueError(f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}") from exc
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "draft"},
         "agreement": agreement_doc,
@@ -200,7 +199,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     ``draft`` row with ``is_active=False`` and the next version of a stable
     contract identity derived from the Agreement lifecycle and ``table_id``.
     The canonical payload freezes Agreement and steward context, current active
-    Catalogue structure, current enrichment, active Guardrail expectations,
+    Catalogue structure and processing, current enrichment, active Guardrail expectations,
     and the selected approved-usage subset. Runtime Guardrail result tables are
     neither read nor embedded. Historical contract versions are never updated.
     This workflow does not submit, approve, promote, export, or enforce a

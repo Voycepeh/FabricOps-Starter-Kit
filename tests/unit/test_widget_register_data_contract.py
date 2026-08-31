@@ -319,3 +319,18 @@ def test_payload_uses_catalogue_type_without_profiled_metadata():
     assert payload["table"]["columns"] == [
         {"column_id": "order_id", "column_name": "order_id", "data_type": "long"}
     ]
+
+
+@pytest.mark.parametrize(("strategy", "parameters", "message"), [(None, "{}", "invalid load_strategy"), ("merge", "{}", "invalid load_strategy"), ("scd1", "{}", "requires key_columns"), ("scd2", '{"key_columns":["order_id"]}', "requires effective_column")])
+def test_contract_registration_requires_valid_processing(strategy, parameters, message):
+    """Reject every processing definition that runtime would reject."""
+    sources = _sources(); sources["METADATA_DATA_CATALOGUE"][0].update(load_strategy=strategy, load_strategy_parameters_json=parameters)
+    with pytest.raises(ValueError, match=message):
+        _assemble_payload(contract_id="c", contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
+
+
+def test_contract_registration_preserves_processing_parameters():
+    """Preserve canonical parameters in the frozen payload."""
+    sources = _sources(); sources["METADATA_DATA_CATALOGUE"][0].update(load_strategy="scd2", load_strategy_parameters_json='{"key_columns":["order_id"],"effective_column":"effective_at","tracked_columns":["status"]}')
+    payload, _ = _assemble_payload(contract_id="c", contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
+    assert payload["table"]["processing"] == {"load_strategy": "scd2", "key_columns": ["order_id"], "effective_column": "effective_at", "tracked_columns": ["status"]}

@@ -12,9 +12,9 @@ Assemble and save a versioned Data Contract for one governed table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:161`
+`fabricops_kit/widgets/widget_register_data_contract.py:160`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L161-L356">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L160-L355">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -105,7 +105,7 @@ Rendering does not write metadata. Each explicit save appends exactly one
 ``draft`` row with ``is_active=False`` and the next version of a stable
 contract identity derived from the Agreement lifecycle and ``table_id``.
 The canonical payload freezes Agreement and steward context, current active
-Catalogue structure, current enrichment, active Guardrail expectations,
+Catalogue structure and processing, current enrichment, active Guardrail expectations,
 and the selected approved-usage subset. Runtime Guardrail result tables are
 neither read nor embedded. Historical contract versions are never updated.
 This workflow does not submit, approve, promote, export, or enforce a
