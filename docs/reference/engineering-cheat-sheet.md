@@ -29,6 +29,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     FabricOps supports both Lakehouse and Warehouse, but its engineering path is intentionally **Lakehouse first** when substantial transformation is required.
 
+    Microsoft’s own decision guide draws a similar boundary: Lakehouse is the stronger fit when Spark, large-scale data engineering, or mixed data types are central, while Warehouse is the stronger fit for T-SQL-first relational analytics, dimensional modelling, enterprise warehousing, and BI-oriented consumption.
+
     | | Lakehouse | Warehouse |
     | --- | --- | --- |
     | Primary engineering experience | Spark / notebooks | T-SQL |
@@ -77,7 +79,7 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     Warehouse is a recommendation for those serving characteristics, not a requirement. Power BI, Data Agents, and other Fabric consumers can also work with Lakehouse data where that is the better fit.
 
-    **Microsoft Learn:** [Lakehouse vs. Warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
+    **Microsoft Learn:** [Choose between Warehouse and Lakehouse](https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse)
 
 ??? info "Medallion architecture"
 
