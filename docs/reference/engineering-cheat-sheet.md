@@ -1,163 +1,211 @@
 # Fabric Engineering Cheat Sheet
 
-Use this page when you know the transformation you need and want a quick reminder of the syntax. The Guided Demo explains these patterns in context; the `02_pipeline` template stays intentionally lightweight and only provides the place for project-specific transformation code.
+Use this page as the quick engineering reference around the FabricOps `02_pipeline` workflow.
 
-FabricOps standardises the governed workflow around engineering. Your project still owns the transformation logic.
+FabricOps intentionally makes a few opinionated engineering choices: keep notebook transformation code visible, use PySpark as the default transformation language once data is in Spark, use Warehouse SQL mainly for pushdown before Spark, and make full vs incremental processing an explicit governed choice.
 
-## Key concepts and when to use what
+The expandable sections below explain those choices. The rest of the page is a practical PySpark, Spark optimisation, and Warehouse SQL cheat sheet.
 
-Use these expandable comparisons when you need the decision first and the syntax second. The **Fabric concepts** below align to Microsoft Fabric terminology and link to the relevant Microsoft Learn article. The **FabricOps recommendations** describe how this starter kit chooses to use those capabilities.
+## FabricOps engineering choices
 
 ??? info "Lakehouse Files vs Tables"
 
+    A Fabric Lakehouse has two useful storage experiences: **Files** and **Tables**. FabricOps supports both, but they serve different purposes.
+
     | | Files | Tables |
     | --- | --- | --- |
-    | Best fit | Raw, file-oriented, unstructured, or non-Delta data | Managed structured data |
+    | Best fit | Raw, file-oriented, semi-structured, unstructured, or externally supplied data | Managed structured datasets |
     | Typical access | File or folder path | Registered table name |
-    | Common formats | CSV, JSON, Parquet, Excel, and other files | Delta tables |
-    | Fabric behaviour | Flexible file area | Managed table area with Delta capabilities |
-    | FabricOps use | Raw/file source and staging paths | Governed reusable Lakehouse tables |
+    | Common formats | CSV, JSON, Parquet, Excel, text, and other files | Delta tables |
+    | Schema | Usually interpreted when read | Managed as part of the table |
+    | Table transactions | Not provided by a plain file | Delta table capabilities |
+    | FabricOps use | Raw/source landing and file ingestion | Governed reusable engineering sources and targets |
 
-    **Rule of thumb:** use Files when the source is naturally file-oriented; use Tables when the data should behave like a managed, queryable dataset.
+    **FabricOps recommendation:** keep naturally file-based inputs as Files when that preserves the source cleanly. Once data becomes a reusable governed dataset, prefer a managed Table rather than treating it as an anonymous file forever.
+
+    This also keeps the distinction between **source representation** and **governed analytical dataset** clear. A CSV arriving from a source system can remain a file; the cleaned, typed, reusable result can become a Delta table.
 
     **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
 
 ??? info "Lakehouse vs Warehouse"
 
+    FabricOps supports both Lakehouse and Warehouse. It does not force every project into one storage engine.
+
     | | Lakehouse | Warehouse |
     | --- | --- | --- |
-    | Primary development experience | Apache Spark: Python, Scala, Spark SQL, R | T-SQL |
-    | Data | Structured and unstructured | Structured relational data |
-    | Storage | Delta on OneLake | Delta on OneLake |
-    | SQL access | SQL analytics endpoint for read/query scenarios | Full Warehouse T-SQL experience |
-    | Best fit | Data engineering, data science, flexible transformation | BI, dimensional modelling, SQL-first analytics |
-    | FabricOps position | Supported source/target | Supported source/target |
+    | Primary engineering experience | Spark / notebooks | T-SQL |
+    | Data shape | Structured, semi-structured, unstructured, and files | Structured relational data |
+    | OneLake storage | Delta-based | Delta-based |
+    | SQL access | SQL analytics endpoint for query scenarios | Full Warehouse T-SQL experience |
+    | Strong fit | Data engineering, Spark transformation, file-heavy ingestion, flexible processing | SQL-first analytics, relational modelling, dimensional models, BI-oriented workloads |
+    | FabricOps source | Supported | Supported |
+    | FabricOps target | Supported | Supported |
 
-    **Important:** Lakehouse does support SQL. The distinction is the primary engineering experience and workload, not “Spark only” versus “SQL only.”
+    **FabricOps recommendation:** choose based on the workload, not because one is universally “better.”
+
+    A Lakehouse is a strong default when the engineering path is already PySpark-heavy or the source estate includes files and mixed structures. A Warehouse is a strong fit when the target is relational, the team is SQL-first, or downstream consumption benefits from a Warehouse-native relational model.
+
+    In FabricOps, a Warehouse source can still feed a PySpark transformation. `read_warehouse_query()` lets the Warehouse perform useful filtering, projection, joins, or aggregation first, and Spark receives the result as a DataFrame.
 
     **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric? — Lakehouse vs. warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
 
-??? info "Notebook vs Pipeline vs Dataflow Gen2"
+??? info "Medallion architecture"
 
-    | Fabric item | Use it for |
-    | --- | --- |
-    | Notebook | Code-first ingestion, preparation, complex transformation, and Spark engineering |
-    | Pipeline | Orchestration, dependencies, scheduling, automation, and scalable data movement |
-    | Dataflow Gen2 | Low-code Power Query ingestion, preparation, and transformation |
+    Medallion is a common way to organise data into progressively more refined layers.
 
-    **FabricOps recommendation:** keep project engineering logic visible in `02_pipeline`, then use native Fabric orchestration when the notebook needs to run as part of a scheduled or dependent workflow.
+    | Layer | Typical meaning | Example |
+    | --- | --- | --- |
+    | Bronze | Raw / landed data | Source extracts, raw files, minimally changed ingestion |
+    | Silver | Cleaned, validated, standardised, reusable data | Typed, deduplicated, conformed engineering tables |
+    | Gold | Curated data for consumption | Business-ready tables, aggregates, dimensional models |
+
+    The useful idea is **progressive refinement**: preserve the source, create trusted reusable data, then publish data shaped for consumption.
+
+    **FabricOps position:** medallion is compatible with FabricOps but is not mandatory. FabricOps standardises governance, metadata, processing and publication boundaries; it does not require every project to create Bronze, Silver and Gold layers just to conform to the terminology.
+
+    Use separate persisted layers when they have a real purpose: reuse, isolation, auditability, different grains, expensive transformations, or different consumer needs. Do not create extra copies only because the layer names exist.
+
+    A practical FabricOps mapping could be:
+
+    ```text
+    Raw source / Files
+            ↓
+    reusable engineered table
+            ↓
+    governed Production table
+            ↓
+    consumer model / BI / AI
+    ```
+
+    That may resemble Bronze → Silver → Gold, but the actual number of stages should follow the project architecture.
+
+    **Microsoft Learn:** [Understand medallion architecture for Fabric with OneLake](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture) · [Organize a Fabric lakehouse using medallion architecture design](https://learn.microsoft.com/en-us/training/modules/describe-medallion-architecture/)
+
+??? info "Notebook first — vs Pipeline vs Dataflow Gen2"
+
+    Fabric has several ways to move and transform data. FabricOps deliberately makes the **Notebook** the visible engineering unit for governed transformation.
+
+    | Fabric item | Strong fit | FabricOps position |
+    | --- | --- | --- |
+    | Notebook | Code-first engineering, PySpark, custom transformation, reusable engineering logic | Primary governed engineering implementation in `02_pipeline` |
+    | Pipeline | Orchestration, schedules, dependencies, retries, data movement, calling notebooks | Use around FabricOps notebooks when orchestration is required |
+    | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Valid Fabric capability, but not the canonical FabricOps engineering path |
+
+    **Why notebook first?** FabricOps wants the project-specific engineering logic to stay explicit, reviewable and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
+
+    Pipelines still matter. They are the natural place to schedule or orchestrate notebooks, chain dependencies, run activities, and monitor execution. FabricOps does not try to recreate those native platform capabilities inside its own metadata model.
+
+    Dataflow Gen2 can still be useful for teams that prefer Power Query or low-code preparation. It simply is not the default implementation path taught by the starter kit.
 
     **Microsoft Learn:** [Data ingestion options for a lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [Pipeline overview](https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-overview) · [What is Dataflow Gen2?](https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview)
 
-??? info "Delta vs Parquet"
+??? info "PySpark first — and where SQL fits"
 
-    | | Parquet | Delta Lake |
-    | --- | --- | --- |
-    | Core idea | Columnar file format | Parquet files plus a transaction log |
-    | ACID transactions | Not provided by the file format itself | Supported |
-    | Time travel / table history | Not provided by the file format itself | Supported |
-    | Schema evolution | File-level capability only | Managed as part of the Delta table |
-    | FabricOps use | File source/interchange where appropriate | Governed Lakehouse tables |
+    Once source data is in Spark, FabricOps uses **PySpark DataFrames as the normal transformation path**.
 
-    **Rule of thumb:** Parquet is a file format; Delta is a table/storage layer built on Parquet plus transaction state.
-
-    **Microsoft Learn:** [Delta Lake overview](https://learn.microsoft.com/en-us/fabric/fundamentals/delta-lake-overview)
-
-??? info "PySpark vs Warehouse SQL — FabricOps recommendation"
-
-    | Need | Prefer |
+    | Need | FabricOps preference |
     | --- | --- |
-    | Project-specific transformation after data is already in Spark | PySpark |
-    | Filter or project Warehouse rows before they reach Spark | Warehouse SQL via `read_warehouse_query()` |
-    | Aggregate a Warehouse source before transfer | Warehouse SQL via `read_warehouse_query()` |
-    | Join DataFrames already in Spark | PySpark |
-    | Window, cleansing, reshaping, and engineering logic in `02_pipeline` | PySpark |
+    | Project-specific transformation after read | PySpark |
+    | Filtering or projection on a Warehouse source before Spark | Warehouse SQL via `read_warehouse_query()` |
+    | Aggregation or join that can reduce Warehouse data before transfer | Warehouse SQL via `read_warehouse_query()` |
+    | Joining DataFrames already in Spark | PySpark |
+    | Cleansing, derivation, deduplication, windows, reshaping | PySpark |
 
-    Spark SQL is valid in Fabric notebooks, but FabricOps does not teach it as a second default transformation language beside PySpark. SQL is shown mainly where pushing work into the Warehouse engine reduces what Spark needs to receive.
+    Spark SQL is supported by Fabric and is technically valid. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the expected engineering path easier to read and easier to review.
 
-    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) · [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
+    The normal mental model is:
+
+    ```text
+    Lakehouse / Warehouse / Files
+              ↓
+            READ
+              ↓
+       PySpark DataFrame
+              ↓
+    project transformation
+              ↓
+     governed target write
+    ```
+
+    For Warehouse sources, SQL can sit inside the read boundary:
+
+    ```text
+    Warehouse
+        ↓
+    SQL pushdown
+        ↓
+    read_warehouse_query(...)
+        ↓
+    PySpark DataFrame
+        ↓
+    PySpark transformation
+    ```
+
+    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
 
 ??? info "Full vs incremental processing"
 
-    | Strategy | Use when |
-    | --- | --- |
-    | Full dataset | The source is small/simple enough to reprocess, or there is no reliable incremental key |
-    | Incremental watermark | A timestamp or increasing sequence identifies new or changed rows |
-    | Incremental partition | A date/snapshot partition is the correct unit of change and processing |
+    FabricOps makes the processing strategy explicit rather than hiding it inside ad-hoc notebook code.
 
-    **FabricOps rule:** checkpoint/watermark state represents successful processing. Do not advance it until the governed target write succeeds.
+    | Strategy | Use when | Main trade-off |
+    | --- | --- | --- |
+    | Full dataset | The source is small/simple enough to reprocess, or there is no trustworthy incremental key | Simple and easy to reason about, but repeatedly processes everything |
+    | Incremental watermark | A timestamp or monotonically increasing value identifies new or changed rows | Efficient, but depends on reliable ordering/change state |
+    | Incremental partition | A date, snapshot, or partition is the correct unit of change | Efficient and easy to reconcile by partition, but depends on meaningful source partitioning |
+
+    ### Full dataset
+
+    ```text
+    Read all source rows
+            ↓
+       Transform
+            ↓
+    Write governed target
+    ```
+
+    Prefer full processing when simplicity is worth more than incremental complexity. A full load is often the safest choice for small reference tables, modest datasets, or sources without a reliable change indicator.
+
+    ### Incremental watermark
+
+    ```text
+    Last successful watermark
+             ↓
+    Read rows newer than state
+             ↓
+          Transform
+             ↓
+    Write governed target
+             ↓
+    Commit new watermark
+    ```
+
+    A watermark normally uses a timestamp, sequence, or other increasing value. The key requirement is that it reliably represents new or changed source records.
+
+    **Critical FabricOps rule:** the watermark represents **successfully processed state**. Do not advance it before the governed target write succeeds. Otherwise a failed run can move the checkpoint forward and silently skip data on the next run.
+
+    Consider late-arriving records when designing the watermark. Depending on the source, a small lookback/reprocessing window may be safer than assuming every record arrives strictly in order.
+
+    ### Incremental partition
+
+    ```text
+    Identify changed/new partition
+             ↓
+    Read that logical partition
+             ↓
+          Transform
+             ↓
+    Write/reconcile that partition
+             ↓
+      Commit completion state
+    ```
+
+    Partition-based processing works well when the source naturally exposes a meaningful processing unit such as `snapshot_date`, business date, or another stable partition identifier.
+
+    Do not confuse **logical incremental partitions** with Spark physical partition tuning. Incremental processing decides **which business/source data belongs in the run**. Spark repartitioning decides **how the DataFrame is physically distributed for compute/write**.
 
     **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse) · [Incremental copy in Copy job](https://learn.microsoft.com/en-us/fabric/data-factory/incremental-copy-job)
 
-??? info "WHERE vs HAVING"
-
-    | Clause | Filters |
-    | --- | --- |
-    | `WHERE` | Source rows before aggregation |
-    | `HAVING` | Groups after `GROUP BY` has calculated aggregates |
-
-    ```sql
-    SELECT
-        programme_code,
-        COUNT(*) AS student_count
-    FROM dbo.student_enrolment
-    WHERE status = 'ACTIVE'
-    GROUP BY programme_code
-    HAVING COUNT(*) > 100;
-    ```
-
-    **FabricOps use:** this commonly appears inside `read_warehouse_query()` when aggregation should be pushed down to the Warehouse.
-
-??? info "Join types"
-
-    | Join | Use when |
-    | --- | --- |
-    | `inner` | Keep only matching rows from both sides |
-    | `left` | Keep every row from the main/left dataset and add matches where available |
-    | `full` | Keep rows from both sides, matched or unmatched |
-    | `left_semi` | Keep left rows that have a match without adding right-side columns |
-    | `left_anti` | Keep left rows that have no match |
-
-    `left_semi` and `left_anti` are especially useful for existence checks, reconciliation, and identifying missing reference matches.
-
-    **Microsoft Learn:** [Data ingestion options for a lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) for the broader notebook/Spark engineering context.
-
-??? info "Deduplication choices"
-
-    | Pattern | Use when |
-    | --- | --- |
-    | `distinct()` | Entire duplicate rows should be removed |
-    | `dropDuplicates(keys)` | Any one row per key is acceptable |
-    | Window + `row_number()` | Business logic determines exactly which row survives |
-
-    **FabricOps recommendation:** when the surviving record matters, make the rule explicit with a window such as “latest `modified_datetime` per business key.”
-
-??? info "Repartition vs coalesce"
-
-    | Function | What it does | Typical use |
-    | --- | --- | --- |
-    | `repartition()` | Redistributes data and performs a shuffle | Increase/decrease parallelism or repartition by a known key |
-    | `coalesce()` | Usually reduces partitions with less movement | Reduce partition/file count after the main transformation |
-
-    Neither is a default performance fix. Choose them only when the real data shape and write behaviour justify the cost.
-
-    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview) for the broader Spark/notebook engineering context.
-
-??? info "What FabricOps standardises vs what the project owns"
-
-    | FabricOps standardises | Project owns |
-    | --- | --- |
-    | Environment-aware Fabric routing | Business transformation logic |
-    | Governed source and target identity | Join logic and reference enrichment |
-    | Processing/load strategy resolution | Derived columns and cleansing |
-    | Profiling and Catalogue metadata | Business aggregations and target grain |
-    | Guardrails | Domain-specific validation intent |
-    | Data Contracts | Workload-specific Spark tuning |
-    | Governed publication boundary | Business meaning of the resulting dataset |
-
-    This is a **FabricOps design choice**, not a Microsoft Fabric platform restriction. Fabric provides the underlying capabilities; FabricOps standardises the repeatable governed workflow around them.
-
-## PySpark transformation patterns
+## PySpark cheat sheet
 
 The examples below assume:
 
@@ -201,29 +249,21 @@ df = df.limit(10)
 
 ```python
 df = df.filter(F.col("status") == "ACTIVE")
-```
 
-Combine conditions with `&` and `|`:
-
-```python
 df = df.filter(
     (F.col("status") == "ACTIVE")
     & (F.col("student_id").isNotNull())
 )
 ```
 
-### Add or replace a column
+### Add, derive, and cast columns
 
 ```python
 df = df.withColumn(
     "modified_date",
     F.to_date("modified_datetime"),
 )
-```
 
-### Cast a data type
-
-```python
 df = df.withColumn(
     "student_id",
     F.col("student_id").cast("string"),
@@ -247,11 +287,7 @@ df = df.withColumn(
 df = df.fillna({"amount": 0, "region": "UNKNOWN"})
 df = df.dropna(subset=["student_id"])
 df = df.filter(F.col("amount").isNotNull())
-```
 
-Use `coalesce()` when you want the first available value:
-
-```python
 df = df.withColumn(
     "contact",
     F.coalesce("mobile", "email", F.lit("no_contact")),
@@ -265,7 +301,7 @@ df = df.distinct()
 df = df.dropDuplicates(["student_id"])
 ```
 
-Use a window when you need to control which duplicate survives:
+When the surviving row matters, make the rule explicit:
 
 ```python
 latest_window = (
@@ -276,13 +312,13 @@ latest_window = (
 
 latest_df = (
     df
-    .withColumn("row_number", F.row_number().over(latest_window))
-    .filter(F.col("row_number") == 1)
-    .drop("row_number")
+    .withColumn("rn", F.row_number().over(latest_window))
+    .filter(F.col("rn") == 1)
+    .drop("rn")
 )
 ```
 
-### Join DataFrames
+### Joins
 
 ```python
 enriched_df = (
@@ -295,24 +331,22 @@ enriched_df = (
 )
 ```
 
-Common join types include `inner`, `left`, `right`, `full`, `left_semi`, and `left_anti`.
-
-Use `left_anti` to keep rows with no match:
+Useful join types:
 
 ```python
+matched_df = source_df.join(reference_df, "student_id", "inner")
 unmatched_df = source_df.join(reference_df, "student_id", "left_anti")
+exists_df = source_df.join(reference_df, "student_id", "left_semi")
 ```
 
-Use `left_semi` when you only need to know whether a match exists:
+Broadcast a genuinely small lookup when appropriate:
 
 ```python
-matched_df = source_df.join(reference_df, "student_id", "left_semi")
-```
-
-Broadcast a genuinely small lookup table when appropriate:
-
-```python
-enriched_df = source_df.join(F.broadcast(small_lookup_df), "programme_code", "left")
+enriched_df = source_df.join(
+    F.broadcast(small_lookup_df),
+    "programme_code",
+    "left",
+)
 ```
 
 ### Group and aggregate
@@ -324,13 +358,13 @@ summary_df = (
     .agg(
         F.count("*").alias("student_count"),
         F.countDistinct("student_id").alias("distinct_students"),
+        F.sum("amount").alias("total_amount"),
         F.avg("amount").alias("avg_amount"),
+        F.min("modified_datetime").alias("first_modified_datetime"),
         F.max("modified_datetime").alias("latest_modified_datetime"),
     )
 )
 ```
-
-Useful aggregations include `count`, `countDistinct`, `sum`, `avg`, `min`, and `max`.
 
 ### Pivot
 
@@ -343,7 +377,7 @@ pivoted_df = (
 )
 ```
 
-### Sort rows
+### Sort
 
 ```python
 df = df.orderBy(
@@ -388,7 +422,7 @@ running_window = (
 df = df.withColumn("running_total", F.sum("amount").over(running_window))
 ```
 
-### String functions
+### Common string functions
 
 ```python
 df = df.withColumn("name_upper", F.upper("name"))
@@ -398,7 +432,7 @@ df = df.withColumn("clean_phone", F.regexp_replace("phone", "-", ""))
 df = df.withColumn("prefix", F.substring("programme_code", 1, 3))
 ```
 
-### Date functions
+### Common date functions
 
 ```python
 df = df.withColumn("today", F.current_date())
@@ -413,6 +447,7 @@ df = df.withColumn("year", F.year("modified_date"))
 
 ```python
 exploded_df = df.withColumn("tag", F.explode("tags"))
+
 flat_df = df.select(
     "event_id",
     F.col("customer.customer_id").alias("customer_id"),
@@ -433,57 +468,173 @@ summary_df = (
 )
 ```
 
-### Combine datasets by column name
+### Combine compatible datasets
 
 ```python
-combined_df = df1.unionByName(df2, allowMissingColumns=True)
+combined_df = df1.unionByName(
+    df2,
+    allowMissingColumns=True,
+)
 ```
 
-Use this when compatible datasets may not have identical column order or when some columns may be absent.
+## Spark optimisation cheat sheet
 
-## Built-ins before UDFs
+FabricOps deliberately leaves project-specific Spark tuning visible because the correct choice depends on the real workload.
 
-Prefer Spark built-in functions whenever possible because Spark can optimise them. A normal Python UDF processes values through Python row by row and usually prevents some Spark optimisations.
-
-Use a UDF only when the required logic cannot reasonably be expressed with built-in functions. For vectorisable custom numerical logic, a Pandas UDF may be more appropriate than a row-at-a-time UDF.
-
-## Practical Spark performance habits
-
-For normal FabricOps engineering work:
+### Start with the high-value habits
 
 1. Select only the columns you need.
-2. Filter unnecessary rows early.
-3. Prefer built-in Spark functions over UDFs.
+2. Filter rows as early as practical.
+3. Prefer built-in Spark functions over Python UDFs.
 4. Avoid unnecessary `collect()` calls that move data to the driver.
-5. Use joins deliberately; large joins can cause expensive shuffles.
-6. Broadcast a small join input only when it is genuinely small enough.
-7. Repartition only for a known reason.
-8. Cache only when the same expensive DataFrame is reused.
-9. Watch for skewed join keys and small-file problems.
-10. Use `df.explain(mode="formatted")` when diagnosing a slow transformation.
+5. Expect wide joins, `groupBy`, `distinct`, and repartitioning to create shuffle.
+6. Broadcast only genuinely small lookup DataFrames.
+7. Cache only expensive DataFrames that are reused.
+8. Watch for skewed keys and very uneven partitions.
+9. Avoid creating excessive small output files.
+10. Inspect the execution plan before guessing at a fix.
 
-### Repartition and coalesce
+### Built-ins before UDFs
+
+Prefer Spark built-in functions when possible because Spark can optimise them as part of the query plan.
+
+```python
+# Prefer
+clean_df = df.withColumn("name", F.upper(F.trim("name")))
+```
+
+A normal Python UDF crosses the Spark/Python boundary row by row and can prevent some Spark optimisation. Use one when the logic cannot reasonably be expressed using built-in functions.
+
+### Broadcast a small lookup
+
+```python
+enriched_df = large_df.join(
+    F.broadcast(small_lookup_df),
+    "key",
+    "left",
+)
+```
+
+Broadcasting can avoid a large shuffle when one side is small enough. Do not force it on a DataFrame that is not genuinely small.
+
+### Repartition vs coalesce
 
 ```python
 df = df.repartition(200, "student_id")
 df = df.coalesce(10)
 ```
 
-`repartition()` performs a shuffle and can increase or decrease partitions. `coalesce()` is normally used to reduce partitions with less movement.
+| | `repartition()` | `coalesce()` |
+| --- | --- | --- |
+| Can increase partitions | Yes | Normally no |
+| Can decrease partitions | Yes | Yes |
+| Shuffle | Yes | Usually less movement |
+| Typical use | Change parallelism or redistribute by key | Reduce partitions/file count after the main work |
 
-### Cache only when reused
+Do not use either as a default performance fix.
+
+### Cache only reused work
 
 ```python
 df.cache()
-# ...reuse df in multiple actions...
-df.unpersist()
+
+# multiple actions that reuse df
+
+ df.unpersist()
 ```
 
-These are project-level engineering choices. FabricOps does not hide them because their correct use depends on the data and workload.
+Caching costs memory. It is useful when the same expensive result feeds multiple actions in the same Spark session; it is wasteful when the DataFrame is only used once.
 
-## Warehouse SQL pushdown
+### Inspect the plan
 
-In FabricOps, SQL is primarily useful when reading from a Fabric Warehouse. Use `read_warehouse_query()` when filtering, projection, joins, aggregation, CTEs, window calculations, or row limits should happen in the Warehouse before the result reaches Spark.
+```python
+df.explain(mode="formatted")
+```
+
+Look for expensive exchanges/shuffles, large joins, repeated scans, and whether filters/projections are happening early enough.
+
+### Physical partitioning is not incremental processing
+
+Keep these ideas separate:
+
+```text
+Incremental processing
+= which logical source data should this run process?
+
+Spark partitioning
+= how should Spark distribute the DataFrame for compute/write?
+```
+
+A pipeline can use incremental watermark processing and still need no explicit `repartition()` at all.
+
+## Warehouse SQL cheat sheet
+
+SQL in FabricOps is primarily used for **Warehouse pushdown** through `read_warehouse_query()`.
+
+Use it when the Warehouse can reduce the amount of data before Spark receives it.
+
+### Select and filter
+
+```sql
+SELECT
+    student_id,
+    programme_code,
+    status,
+    modified_datetime
+FROM dbo.student_enrolment
+WHERE status = 'ACTIVE';
+```
+
+### Join
+
+```sql
+SELECT
+    e.student_id,
+    e.programme_code,
+    p.programme_name
+FROM dbo.student_enrolment AS e
+LEFT JOIN dbo.programme AS p
+    ON e.programme_code = p.programme_code;
+```
+
+### Aggregate, WHERE, and HAVING
+
+```sql
+SELECT
+    programme_code,
+    COUNT(*) AS student_count
+FROM dbo.student_enrolment
+WHERE status = 'ACTIVE'
+GROUP BY programme_code
+HAVING COUNT(*) > 100
+ORDER BY student_count DESC;
+```
+
+`WHERE` filters source rows **before** aggregation. `HAVING` filters groups **after** `GROUP BY` has calculated the aggregates.
+
+### CTE + window
+
+```sql
+WITH latest AS (
+    SELECT
+        student_id,
+        programme_code,
+        modified_datetime,
+        ROW_NUMBER() OVER (
+            PARTITION BY student_id
+            ORDER BY modified_datetime DESC
+        ) AS rn
+    FROM dbo.student_enrolment
+)
+SELECT
+    student_id,
+    programme_code,
+    modified_datetime
+FROM latest
+WHERE rn = 1;
+```
+
+### FabricOps Warehouse read pattern
 
 ```python
 source_df = read_warehouse_query(
@@ -494,110 +645,34 @@ source_df = read_warehouse_query(
         COUNT(*) AS student_count
     FROM dbo.student_enrolment
     WHERE modified_datetime >= '2026-01-01'
-    GROUP BY
-        programme_code,
-        status
+    GROUP BY programme_code, status
     HAVING COUNT(*) > 100
-    ORDER BY student_count DESC
     """,
     target="product",
 )
 ```
 
-### SQL clauses to remember
+After the query returns, continue project-specific transformation using the returned PySpark DataFrame.
 
-```sql
-SELECT ...
-FROM ...
-JOIN ... ON ...
-WHERE ...
-GROUP BY ...
-HAVING ...
-ORDER BY ...
-```
+**Microsoft Learn:** [Warehouse in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehousing) · [T-SQL surface area in Fabric Data Warehouse](https://learn.microsoft.com/en-us/fabric/data-warehouse/tsql-surface-area)
 
-`WHERE` filters source rows before aggregation. `HAVING` filters groups after `GROUP BY` has calculated the aggregates.
-
-### CTE
-
-```sql
-WITH latest AS (
-    SELECT
-        student_id,
-        modified_datetime,
-        ROW_NUMBER() OVER (
-            PARTITION BY student_id
-            ORDER BY modified_datetime DESC
-        ) AS rn
-    FROM dbo.student_enrolment
-)
-SELECT *
-FROM latest
-WHERE rn = 1;
-```
-
-Use SQL pushdown when the Warehouse can reduce the amount of data that Spark needs to receive. Continue the project-specific transformation in PySpark after the query returns a Spark DataFrame.
-
-## Full vs incremental processing
-
-### Full dataset
-
-Use a full load when the source is small enough to reprocess safely and simply, or when the source does not provide a reliable incremental key.
-
-```text
-Read all source rows → Transform → Write complete target
-```
-
-### Incremental watermark
-
-Use a watermark when a monotonically increasing timestamp or sequence can identify new or changed rows.
-
-```text
-Last successful watermark
-        ↓
-Read newer rows
-        ↓
-Transform and write
-        ↓
-Commit the new watermark only after success
-```
-
-The important rule is that the watermark represents successful processing state. Do not advance it before the governed target write succeeds.
-
-### Incremental partition
-
-Use partition-based processing when the source exposes meaningful partitions such as a snapshot or business date and those partitions are the correct unit of change detection and processing.
-
-## MERGE / upsert
-
-A merge pattern is useful when an incremental load needs to update existing keys and insert new keys rather than replacing the complete target.
-
-Treat MERGE as a load pattern, not a default transformation step. In FabricOps, the actual write behaviour should follow the governed load strategy for the selected target.
-
-## SCD patterns
-
-Use SCD Type 1 when the latest value should replace the previous value. Use SCD Type 2 when historical versions must remain queryable.
-
-These are target load strategies, not generic transformations to add automatically to every pipeline.
-
-## Quick decision guide
+## Quick FabricOps decision guide
 
 | Need | Prefer |
 | --- | --- |
-| Project-specific transformation after data is in Spark | PySpark |
-| Reduce/filter/aggregate a Fabric Warehouse source before Spark | `read_warehouse_query()` + SQL |
-| Find rows with no lookup match | `left_anti` join |
-| Keep rows that have a lookup match without adding lookup columns | `left_semi` join |
-| Small lookup joined to a much larger DataFrame | Broadcast join when appropriate |
-| Keep one controlled record per duplicate business key | Window + `row_number()` |
-| Rank or compare rows within a group | Window functions |
-| Summarise rows | `groupBy(...).agg(...)` |
-| Reshape values into columns | `pivot()` |
-| Flatten arrays or nested structures | `explode()` / struct column access |
-| Combine compatible datasets with different column order | `unionByName()` |
-| Simple complete reprocessing | Full dataset |
-| Process only records newer than a reliable state value | Incremental watermark |
-| Process changed date/snapshot partitions | Incremental partition |
-| Update existing keys and insert new ones | Governed MERGE/upsert load strategy |
+| Raw or naturally file-oriented source | Lakehouse Files |
+| Governed reusable Lakehouse dataset | Lakehouse Table |
+| Spark-heavy / file-heavy engineering workload | Lakehouse |
+| SQL-first relational / dimensional workload | Warehouse |
+| Project transformation after read | PySpark |
+| Reduce Warehouse data before Spark | `read_warehouse_query()` + SQL |
+| Simple safe reprocessing | Full dataset |
+| Timestamp/sequence identifies change | Incremental watermark |
+| Snapshot/date is the natural processing unit | Incremental partition |
+| Schedule/dependency/orchestration | Native Fabric Pipeline around the notebook |
+| Low-code Power Query transformation | Dataflow Gen2 where appropriate, outside the canonical FabricOps notebook path |
+| Extra Bronze/Silver/Gold stage | Only when that persisted layer has a real architectural purpose |
 
-For FabricOps-specific function parameters and contracts, use the [Function Reference](index.md). For the worked learning path, return to [Module 2: Engineer and run a data pipeline](../guided-demo/02-run-pipeline.md).
+For exact FabricOps function contracts, use the [Function Reference](index.md). For the worked learning path, return to [Module 2: Engineer and run a data pipeline](../guided-demo/02-run-pipeline.md).
+
+**Additional PySpark reference:** [Databricks / PySpark / SQL Server / Spark SQL Cheat Sheet — Srihari S.](https://lnkd.in/p/gAEsCbeR). FabricOps adapts only the engineering patterns relevant to Microsoft Fabric and does not treat Databricks-specific features as Fabric capabilities.
