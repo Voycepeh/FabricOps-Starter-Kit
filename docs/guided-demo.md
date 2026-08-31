@@ -4,6 +4,15 @@
 
 Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) for the notebook downloads.
 
+!!! tip "New to Microsoft Fabric?"
+
+    These optional references can help with the wider Fabric concepts used throughout the demo:
+
+    - [Microsoft Learn — Microsoft Fabric](https://learn.microsoft.com/en-us/training/fabric/) — official Microsoft learning material for Fabric fundamentals and platform capabilities.
+    - [Microsoft Fabric Visual Notes](https://www.slideshare.net/slideshow/microsoft-fabric-complete-handwritten-notes-pdf/289496813) — a visual community reference by SomeshK13 covering Fabric architecture, PySpark, pipelines, incremental loading, data quality, CI/CD, monitoring, and related concepts.
+
+    FabricOps documentation remains the source of truth for how this starter kit is designed and used.
+
 ## What you'll build
 
 You will progressively take the same governed pipeline through the FabricOps lifecycle:
