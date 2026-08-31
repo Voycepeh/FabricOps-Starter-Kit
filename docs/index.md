@@ -32,6 +32,8 @@ FabricOps provides the governed skeleton of the data practice, abstracting impor
 
 ## Reference and resources
 
+The FabricOps documentation focuses on the patterns, metadata, functions, and workflows implemented by this starter kit.
+
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="glossary/">
     <span class="fabricops-landing-card__title">FabricOps Glossary</span>
@@ -46,6 +48,11 @@ FabricOps provides the governed skeleton of the data practice, abstracting impor
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title">FabricOps Functions</span>
     <span class="fabricops-landing-card__body">Browse the notebook-facing public functions, signatures, relationships, and exact contracts.</span>
+  </a>
+
+  <a class="fabricops-landing-card" href="reference/engineering-cheat-sheet/">
+    <span class="fabricops-landing-card__title">Fabric Engineering Cheat Sheet</span>
+    <span class="fabricops-landing-card__body">Quick PySpark, Warehouse SQL, incremental-processing, and engineering patterns used around the 02_pipeline workflow.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">

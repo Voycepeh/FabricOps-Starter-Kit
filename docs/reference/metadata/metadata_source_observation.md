@@ -34,7 +34,7 @@ via `table_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `observation_id` | `string` | Identifier stored for `observation_id`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
+| `table_id` | `string` | Canonical table identity shared with METADATA_DATA_CATALOGUE. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `partition_value` | `string` | String representation of the observed partition value. |
 | `row_count` | `long` | Number of rows observed in the partition, or zero for a removal tombstone. |

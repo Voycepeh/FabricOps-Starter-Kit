@@ -34,8 +34,8 @@ via `table_id` + `column_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `enrichment_id` | `string` | Identifier stored for `enrichment_id`. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
-| `column_id` | `string` | Identifier stored for `column_id`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `enrichment_level` | `string` | Metadata Enrichment field `enrichment_level`. |
 | `enrichment_type` | `string` | Enrichment type recorded for the row. |

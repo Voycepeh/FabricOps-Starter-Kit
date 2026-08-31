@@ -34,7 +34,7 @@ via `table_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `table_id` | `string` | Identifier for the accessed table or object. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `watermark_column` | `string` | Metadata Source Watermark Checkpoint field `watermark_column`. |
 | `watermark_value` | `string` | Metadata Source Watermark Checkpoint field `watermark_value`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
