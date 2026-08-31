@@ -4,7 +4,7 @@ Use this page as the quick engineering reference around the FabricOps `02_pipeli
 
 FabricOps intentionally makes a few opinionated engineering choices: keep notebook transformation code visible, use PySpark as the default transformation language once data is in Spark, use Warehouse SQL mainly for pushdown before Spark, and make full vs incremental processing an explicit governed choice.
 
-The expandable sections below explain those choices. The rest of the page is a practical PySpark, Spark optimisation, and Warehouse SQL cheat sheet.
+The expandable sections below explain those choices. The practical PySpark, Spark optimisation, and Warehouse SQL references are collapsed further down so this page stays easy to scan.
 
 ## FabricOps engineering choices
 
@@ -23,7 +23,7 @@ The expandable sections below explain those choices. The rest of the page is a p
 
     **FabricOps recommendation:** keep naturally file-based inputs as Files when that preserves the source cleanly. Once data becomes a reusable governed dataset, prefer a managed Table rather than treating it as an anonymous file forever.
 
-    This also keeps the distinction between **source representation** and **governed analytical dataset** clear. A CSV arriving from a source system can remain a file; the cleaned, typed, reusable result can become a Delta table.
+    This keeps the distinction between **source representation** and **governed analytical dataset** clear. A CSV arriving from a source system can remain a file; the cleaned, typed, reusable result can become a Delta table.
 
     **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
 
@@ -41,13 +41,13 @@ The expandable sections below explain those choices. The rest of the page is a p
     | FabricOps source | Supported | Supported |
     | FabricOps target | Supported | Supported |
 
-    **FabricOps recommendation:** choose based on the workload, not because one is universally “better.”
+    **FabricOps recommendation:** choose based on the workload, not because one is universally better.
 
     A Lakehouse is a strong default when the engineering path is already PySpark-heavy or the source estate includes files and mixed structures. A Warehouse is a strong fit when the target is relational, the team is SQL-first, or downstream consumption benefits from a Warehouse-native relational model.
 
     In FabricOps, a Warehouse source can still feed a PySpark transformation. `read_warehouse_query()` lets the Warehouse perform useful filtering, projection, joins, or aggregation first, and Spark receives the result as a DataFrame.
 
-    **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric? — Lakehouse vs. warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
+    **Microsoft Learn:** [Lakehouse vs. Warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
 
 ??? info "Medallion architecture"
 
@@ -65,8 +65,6 @@ The expandable sections below explain those choices. The rest of the page is a p
 
     Use separate persisted layers when they have a real purpose: reuse, isolation, auditability, different grains, expensive transformations, or different consumer needs. Do not create extra copies only because the layer names exist.
 
-    A practical FabricOps mapping could be:
-
     ```text
     Raw source / Files
             ↓
@@ -79,11 +77,11 @@ The expandable sections below explain those choices. The rest of the page is a p
 
     That may resemble Bronze → Silver → Gold, but the actual number of stages should follow the project architecture.
 
-    **Microsoft Learn:** [Understand medallion architecture for Fabric with OneLake](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture) · [Organize a Fabric lakehouse using medallion architecture design](https://learn.microsoft.com/en-us/training/modules/describe-medallion-architecture/)
+    **Microsoft Learn:** [Medallion architecture in Fabric](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture)
 
 ??? info "Notebook first — vs Pipeline vs Dataflow Gen2"
 
-    Fabric has several ways to move and transform data. FabricOps deliberately makes the **Notebook** the visible engineering unit for governed transformation.
+    FabricOps deliberately makes the **Notebook** the visible engineering unit for governed transformation.
 
     | Fabric item | Strong fit | FabricOps position |
     | --- | --- | --- |
@@ -91,13 +89,13 @@ The expandable sections below explain those choices. The rest of the page is a p
     | Pipeline | Orchestration, schedules, dependencies, retries, data movement, calling notebooks | Use around FabricOps notebooks when orchestration is required |
     | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Valid Fabric capability, but not the canonical FabricOps engineering path |
 
-    **Why notebook first?** FabricOps wants the project-specific engineering logic to stay explicit, reviewable and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
+    **Why notebook first?** FabricOps wants project-specific engineering logic to stay explicit, reviewable and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
 
     Pipelines still matter. They are the natural place to schedule or orchestrate notebooks, chain dependencies, run activities, and monitor execution. FabricOps does not try to recreate those native platform capabilities inside its own metadata model.
 
     Dataflow Gen2 can still be useful for teams that prefer Power Query or low-code preparation. It simply is not the default implementation path taught by the starter kit.
 
-    **Microsoft Learn:** [Data ingestion options for a lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [Pipeline overview](https://learn.microsoft.com/en-us/fabric/data-factory/pipeline-overview) · [What is Dataflow Gen2?](https://learn.microsoft.com/en-us/fabric/data-factory/dataflows-gen2-overview)
+    **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse)
 
 ??? info "PySpark first — and where SQL fits"
 
@@ -111,9 +109,7 @@ The expandable sections below explain those choices. The rest of the page is a p
     | Joining DataFrames already in Spark | PySpark |
     | Cleansing, derivation, deduplication, windows, reshaping | PySpark |
 
-    Spark SQL is supported by Fabric and is technically valid. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the expected engineering path easier to read and easier to review.
-
-    The normal mental model is:
+    Spark SQL is supported by Fabric and is technically valid. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the expected engineering path easier to read and review.
 
     ```text
     Lakehouse / Warehouse / Files
@@ -141,7 +137,7 @@ The expandable sections below explain those choices. The rest of the page is a p
     PySpark transformation
     ```
 
-    **Microsoft Learn:** [What is Microsoft Fabric Data Engineering?](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
+    **Microsoft Learn:** [Microsoft Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
 
 ??? info "Full vs incremental processing"
 
@@ -183,7 +179,7 @@ The expandable sections below explain those choices. The rest of the page is a p
 
     **Critical FabricOps rule:** the watermark represents **successfully processed state**. Do not advance it before the governed target write succeeds. Otherwise a failed run can move the checkpoint forward and silently skip data on the next run.
 
-    Consider late-arriving records when designing the watermark. Depending on the source, a small lookback/reprocessing window may be safer than assuming every record arrives strictly in order.
+    Consider late-arriving records when designing the watermark. Depending on the source, a small lookback or reprocessing window may be safer than assuming every record arrives strictly in order.
 
     ### Incremental partition
 
@@ -203,476 +199,389 @@ The expandable sections below explain those choices. The rest of the page is a p
 
     Do not confuse **logical incremental partitions** with Spark physical partition tuning. Incremental processing decides **which business/source data belongs in the run**. Spark repartitioning decides **how the DataFrame is physically distributed for compute/write**.
 
-    **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse) · [Incremental copy in Copy job](https://learn.microsoft.com/en-us/fabric/data-factory/incremental-copy-job)
+    **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse)
 
-## PySpark cheat sheet
+## Practical cheat sheets
 
-The examples below assume:
+Use these only when you need a quick syntax or tuning reminder. The [Guided Demo](../guided-demo/02-run-pipeline.md) explains how the patterns fit into the FabricOps workflow.
 
-```python
-from pyspark.sql import functions as F
-from pyspark.sql.window import Window
-```
+??? example "PySpark transformation cheat sheet"
 
-### Inspect a DataFrame
+    The examples assume:
 
-```python
-display(df)
-df.show(20, truncate=False)
-df.printSchema()
-df.count()
-df.columns
-df.dtypes
-```
+    ```python
+    from pyspark.sql import functions as F
+    from pyspark.sql.window import Window
+    ```
 
-### Select, rename, drop, and limit
+    ### Inspect a DataFrame
 
-```python
-df = df.select(
-    "student_id",
-    "programme",
-    "status",
-    "modified_datetime",
-)
+    ```python
+    display(df)
+    df.show(20, truncate=False)
+    df.printSchema()
+    df.count()
+    df.columns
+    df.dtypes
+    ```
 
-df = df.select(
-    F.col("programme").alias("programme_code"),
-    "status",
-)
+    ### Select, rename, drop, and limit
 
-df = df.withColumnRenamed("old_name", "new_name")
-df = df.drop("temporary_column")
-df = df.limit(10)
-```
+    ```python
+    df = df.select("student_id", "programme", "status", "modified_datetime")
+    df = df.select(F.col("programme").alias("programme_code"), "status")
+    df = df.withColumnRenamed("old_name", "new_name")
+    df = df.drop("temporary_column")
+    df = df.limit(10)
+    ```
 
-### Filter rows
+    ### Filter rows
 
-```python
-df = df.filter(F.col("status") == "ACTIVE")
+    ```python
+    df = df.filter(F.col("status") == "ACTIVE")
 
-df = df.filter(
-    (F.col("status") == "ACTIVE")
-    & (F.col("student_id").isNotNull())
-)
-```
+    df = df.filter(
+        (F.col("status") == "ACTIVE")
+        & (F.col("student_id").isNotNull())
+    )
+    ```
 
-### Add, derive, and cast columns
+    ### Add, derive, and cast columns
 
-```python
-df = df.withColumn(
-    "modified_date",
-    F.to_date("modified_datetime"),
-)
+    ```python
+    df = df.withColumn("modified_date", F.to_date("modified_datetime"))
+    df = df.withColumn("student_id", F.col("student_id").cast("string"))
+    ```
 
-df = df.withColumn(
-    "student_id",
-    F.col("student_id").cast("string"),
-)
-```
+    ### Conditional logic
 
-### Conditional logic
+    ```python
+    df = df.withColumn(
+        "status_group",
+        F.when(F.col("status") == "ACTIVE", "Current")
+         .when(F.col("status") == "COMPLETED", "Completed")
+         .otherwise("Other"),
+    )
+    ```
 
-```python
-df = df.withColumn(
-    "status_group",
-    F.when(F.col("status") == "ACTIVE", "Current")
-     .when(F.col("status") == "COMPLETED", "Completed")
-     .otherwise("Other"),
-)
-```
+    ### Null handling
 
-### Null handling
+    ```python
+    df = df.fillna({"amount": 0, "region": "UNKNOWN"})
+    df = df.dropna(subset=["student_id"])
+    df = df.filter(F.col("amount").isNotNull())
+    df = df.withColumn("contact", F.coalesce("mobile", "email", F.lit("no_contact")))
+    ```
 
-```python
-df = df.fillna({"amount": 0, "region": "UNKNOWN"})
-df = df.dropna(subset=["student_id"])
-df = df.filter(F.col("amount").isNotNull())
+    ### Distinct and deduplication
 
-df = df.withColumn(
-    "contact",
-    F.coalesce("mobile", "email", F.lit("no_contact")),
-)
-```
+    ```python
+    df = df.distinct()
+    df = df.dropDuplicates(["student_id"])
+    ```
 
-### Distinct and deduplication
+    When the surviving row matters, make the rule explicit:
 
-```python
-df = df.distinct()
-df = df.dropDuplicates(["student_id"])
-```
+    ```python
+    latest_window = (
+        Window
+        .partitionBy("student_id")
+        .orderBy(F.col("modified_datetime").desc())
+    )
 
-When the surviving row matters, make the rule explicit:
+    latest_df = (
+        df
+        .withColumn("rn", F.row_number().over(latest_window))
+        .filter(F.col("rn") == 1)
+        .drop("rn")
+    )
+    ```
 
-```python
-latest_window = (
-    Window
-    .partitionBy("student_id")
-    .orderBy(F.col("modified_datetime").desc())
-)
+    ### Joins
 
-latest_df = (
-    df
-    .withColumn("rn", F.row_number().over(latest_window))
-    .filter(F.col("rn") == 1)
-    .drop("rn")
-)
-```
+    ```python
+    enriched_df = (
+        enrolment_df.alias("e")
+        .join(
+            programme_df.alias("p"),
+            F.col("e.programme_code") == F.col("p.programme_code"),
+            "left",
+        )
+    )
+    ```
 
-### Joins
+    Useful existence and reconciliation joins:
 
-```python
-enriched_df = (
-    enrolment_df.alias("e")
-    .join(
-        programme_df.alias("p"),
-        F.col("e.programme_code") == F.col("p.programme_code"),
+    ```python
+    matched_df = source_df.join(reference_df, "student_id", "inner")
+    unmatched_df = source_df.join(reference_df, "student_id", "left_anti")
+    exists_df = source_df.join(reference_df, "student_id", "left_semi")
+    ```
+
+    Broadcast a genuinely small lookup when appropriate:
+
+    ```python
+    enriched_df = source_df.join(
+        F.broadcast(small_lookup_df),
+        "programme_code",
         "left",
     )
-)
-```
+    ```
 
-Useful join types:
+    ### Group and aggregate
 
-```python
-matched_df = source_df.join(reference_df, "student_id", "inner")
-unmatched_df = source_df.join(reference_df, "student_id", "left_anti")
-exists_df = source_df.join(reference_df, "student_id", "left_semi")
-```
-
-Broadcast a genuinely small lookup when appropriate:
-
-```python
-enriched_df = source_df.join(
-    F.broadcast(small_lookup_df),
-    "programme_code",
-    "left",
-)
-```
-
-### Group and aggregate
-
-```python
-summary_df = (
-    df
-    .groupBy("programme", "status")
-    .agg(
-        F.count("*").alias("student_count"),
-        F.countDistinct("student_id").alias("distinct_students"),
-        F.sum("amount").alias("total_amount"),
-        F.avg("amount").alias("avg_amount"),
-        F.min("modified_datetime").alias("first_modified_datetime"),
-        F.max("modified_datetime").alias("latest_modified_datetime"),
+    ```python
+    summary_df = (
+        df
+        .groupBy("programme", "status")
+        .agg(
+            F.count("*").alias("student_count"),
+            F.countDistinct("student_id").alias("distinct_students"),
+            F.sum("amount").alias("total_amount"),
+            F.avg("amount").alias("avg_amount"),
+            F.max("modified_datetime").alias("latest_modified_datetime"),
+        )
     )
-)
-```
+    ```
 
-### Pivot
+    ### Pivot and sort
 
-```python
-pivoted_df = (
-    df
-    .groupBy("programme")
-    .pivot("status")
-    .agg(F.count("*"))
-)
-```
-
-### Sort
-
-```python
-df = df.orderBy(
-    F.col("programme").asc(),
-    F.col("modified_datetime").desc(),
-)
-```
-
-### Window functions
-
-Latest row per key:
-
-```python
-w = Window.partitionBy("student_id").orderBy(F.col("modified_datetime").desc())
-latest_df = df.withColumn("rn", F.row_number().over(w)).filter(F.col("rn") == 1)
-```
-
-Rank within a group:
-
-```python
-df = df.withColumn("rank", F.rank().over(w))
-df = df.withColumn("dense_rank", F.dense_rank().over(w))
-```
-
-Previous and next values:
-
-```python
-df = df.withColumn("previous_amount", F.lag("amount", 1).over(w))
-df = df.withColumn("next_amount", F.lead("amount", 1).over(w))
-```
-
-Running total:
-
-```python
-running_window = (
-    Window
-    .partitionBy("student_id")
-    .orderBy("modified_datetime")
-    .rowsBetween(Window.unboundedPreceding, Window.currentRow)
-)
-
-df = df.withColumn("running_total", F.sum("amount").over(running_window))
-```
-
-### Common string functions
-
-```python
-df = df.withColumn("name_upper", F.upper("name"))
-df = df.withColumn("name_clean", F.trim("name"))
-df = df.withColumn("full_name", F.concat_ws(" ", "first_name", "last_name"))
-df = df.withColumn("clean_phone", F.regexp_replace("phone", "-", ""))
-df = df.withColumn("prefix", F.substring("programme_code", 1, 3))
-```
-
-### Common date functions
-
-```python
-df = df.withColumn("today", F.current_date())
-df = df.withColumn("loaded_at", F.current_timestamp())
-df = df.withColumn("modified_date", F.to_date("modified_datetime"))
-df = df.withColumn("month_start", F.date_trunc("month", "modified_datetime"))
-df = df.withColumn("days_since", F.datediff(F.current_date(), "modified_date"))
-df = df.withColumn("year", F.year("modified_date"))
-```
-
-### Nested and array data
-
-```python
-exploded_df = df.withColumn("tag", F.explode("tags"))
-
-flat_df = df.select(
-    "event_id",
-    F.col("customer.customer_id").alias("customer_id"),
-    F.col("customer.email").alias("email"),
-)
-```
-
-Aggregate values into arrays:
-
-```python
-summary_df = (
-    df
-    .groupBy("student_id")
-    .agg(
-        F.collect_list("module_code").alias("modules"),
-        F.collect_set("module_code").alias("distinct_modules"),
+    ```python
+    pivoted_df = (
+        df
+        .groupBy("programme")
+        .pivot("status")
+        .agg(F.count("*"))
     )
-)
-```
 
-### Combine compatible datasets
+    df = df.orderBy(
+        F.col("programme").asc(),
+        F.col("modified_datetime").desc(),
+    )
+    ```
 
-```python
-combined_df = df1.unionByName(
-    df2,
-    allowMissingColumns=True,
-)
-```
+    ### Window functions
 
-## Spark optimisation cheat sheet
+    ```python
+    w = Window.partitionBy("student_id").orderBy(F.col("modified_datetime").desc())
 
-FabricOps deliberately leaves project-specific Spark tuning visible because the correct choice depends on the real workload.
+    latest_df = df.withColumn("rn", F.row_number().over(w)).filter(F.col("rn") == 1)
+    df = df.withColumn("rank", F.rank().over(w))
+    df = df.withColumn("dense_rank", F.dense_rank().over(w))
+    df = df.withColumn("previous_amount", F.lag("amount", 1).over(w))
+    df = df.withColumn("next_amount", F.lead("amount", 1).over(w))
+    ```
 
-### Start with the high-value habits
+    Running total:
 
-1. Select only the columns you need.
-2. Filter rows as early as practical.
-3. Prefer built-in Spark functions over Python UDFs.
-4. Avoid unnecessary `collect()` calls that move data to the driver.
-5. Expect wide joins, `groupBy`, `distinct`, and repartitioning to create shuffle.
-6. Broadcast only genuinely small lookup DataFrames.
-7. Cache only expensive DataFrames that are reused.
-8. Watch for skewed keys and very uneven partitions.
-9. Avoid creating excessive small output files.
-10. Inspect the execution plan before guessing at a fix.
+    ```python
+    running_window = (
+        Window
+        .partitionBy("student_id")
+        .orderBy("modified_datetime")
+        .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+    )
 
-### Built-ins before UDFs
+    df = df.withColumn("running_total", F.sum("amount").over(running_window))
+    ```
 
-Prefer Spark built-in functions when possible because Spark can optimise them as part of the query plan.
+    ### Common string and date functions
 
-```python
-# Prefer
-clean_df = df.withColumn("name", F.upper(F.trim("name")))
-```
+    ```python
+    df = df.withColumn("name_upper", F.upper("name"))
+    df = df.withColumn("name_clean", F.trim("name"))
+    df = df.withColumn("full_name", F.concat_ws(" ", "first_name", "last_name"))
+    df = df.withColumn("clean_phone", F.regexp_replace("phone", "-", ""))
 
-A normal Python UDF crosses the Spark/Python boundary row by row and can prevent some Spark optimisation. Use one when the logic cannot reasonably be expressed using built-in functions.
+    df = df.withColumn("today", F.current_date())
+    df = df.withColumn("loaded_at", F.current_timestamp())
+    df = df.withColumn("modified_date", F.to_date("modified_datetime"))
+    df = df.withColumn("month_start", F.date_trunc("month", "modified_datetime"))
+    df = df.withColumn("year", F.year("modified_date"))
+    ```
 
-### Broadcast a small lookup
+    ### Nested, array, and compatible datasets
 
-```python
-enriched_df = large_df.join(
-    F.broadcast(small_lookup_df),
-    "key",
-    "left",
-)
-```
+    ```python
+    exploded_df = df.withColumn("tag", F.explode("tags"))
 
-Broadcasting can avoid a large shuffle when one side is small enough. Do not force it on a DataFrame that is not genuinely small.
+    flat_df = df.select(
+        "event_id",
+        F.col("customer.customer_id").alias("customer_id"),
+        F.col("customer.email").alias("email"),
+    )
 
-### Repartition vs coalesce
+    combined_df = df1.unionByName(df2, allowMissingColumns=True)
+    ```
 
-```python
-df = df.repartition(200, "student_id")
-df = df.coalesce(10)
-```
+??? tip "Spark optimisation cheat sheet"
 
-| | `repartition()` | `coalesce()` |
-| --- | --- | --- |
-| Can increase partitions | Yes | Normally no |
-| Can decrease partitions | Yes | Yes |
-| Shuffle | Yes | Usually less movement |
-| Typical use | Change parallelism or redistribute by key | Reduce partitions/file count after the main work |
+    FabricOps deliberately leaves project-specific Spark tuning visible because the correct choice depends on the real workload.
 
-Do not use either as a default performance fix.
+    ### High-value habits
 
-### Cache only reused work
+    1. Select only the columns you need.
+    2. Filter rows as early as practical.
+    3. Prefer built-in Spark functions over Python UDFs.
+    4. Avoid unnecessary `collect()` calls that move data to the driver.
+    5. Expect wide joins, `groupBy`, `distinct`, and repartitioning to create shuffle.
+    6. Broadcast only genuinely small lookup DataFrames.
+    7. Cache only expensive DataFrames that are reused.
+    8. Watch for skewed keys and very uneven partitions.
+    9. Avoid creating excessive small output files.
+    10. Inspect the execution plan before guessing at a fix.
 
-```python
-df.cache()
+    ### Built-ins before UDFs
 
-# multiple actions that reuse df
+    ```python
+    clean_df = df.withColumn("name", F.upper(F.trim("name")))
+    ```
 
- df.unpersist()
-```
+    Prefer Spark built-ins when possible because Spark can optimise them as part of the query plan. Use a Python UDF only when the required logic cannot reasonably be expressed using built-in functions.
 
-Caching costs memory. It is useful when the same expensive result feeds multiple actions in the same Spark session; it is wasteful when the DataFrame is only used once.
+    ### Broadcast a small lookup
 
-### Inspect the plan
+    ```python
+    enriched_df = large_df.join(
+        F.broadcast(small_lookup_df),
+        "key",
+        "left",
+    )
+    ```
 
-```python
-df.explain(mode="formatted")
-```
+    Broadcasting can avoid a large shuffle when one side is genuinely small.
 
-Look for expensive exchanges/shuffles, large joins, repeated scans, and whether filters/projections are happening early enough.
+    ### Repartition vs coalesce
 
-### Physical partitioning is not incremental processing
+    ```python
+    df = df.repartition(200, "student_id")
+    df = df.coalesce(10)
+    ```
 
-Keep these ideas separate:
+    | | `repartition()` | `coalesce()` |
+    | --- | --- | --- |
+    | Can increase partitions | Yes | Normally no |
+    | Can decrease partitions | Yes | Yes |
+    | Shuffle | Yes | Usually less movement |
+    | Typical use | Change parallelism or redistribute by key | Reduce partitions/file count after the main work |
 
-```text
-Incremental processing
-= which logical source data should this run process?
+    Do not use either as a default performance fix.
 
-Spark partitioning
-= how should Spark distribute the DataFrame for compute/write?
-```
+    ### Cache only reused work
 
-A pipeline can use incremental watermark processing and still need no explicit `repartition()` at all.
+    ```python
+    df.cache()
 
-## Warehouse SQL cheat sheet
+    # multiple actions that reuse df
 
-SQL in FabricOps is primarily used for **Warehouse pushdown** through `read_warehouse_query()`.
+    df.unpersist()
+    ```
 
-Use it when the Warehouse can reduce the amount of data before Spark receives it.
+    Caching costs memory. It is useful when the same expensive result feeds multiple actions in the same Spark session; it is wasteful when the DataFrame is only used once.
 
-### Select and filter
+    ### Inspect the plan
 
-```sql
-SELECT
-    student_id,
-    programme_code,
-    status,
-    modified_datetime
-FROM dbo.student_enrolment
-WHERE status = 'ACTIVE';
-```
+    ```python
+    df.explain(mode="formatted")
+    ```
 
-### Join
+    Look for expensive exchanges or shuffles, large joins, repeated scans, and whether filters or projections are happening early enough.
 
-```sql
-SELECT
-    e.student_id,
-    e.programme_code,
-    p.programme_name
-FROM dbo.student_enrolment AS e
-LEFT JOIN dbo.programme AS p
-    ON e.programme_code = p.programme_code;
-```
+    ### Physical partitioning is not incremental processing
 
-### Aggregate, WHERE, and HAVING
+    ```text
+    Incremental processing
+    = which logical source data should this run process?
 
-```sql
-SELECT
-    programme_code,
-    COUNT(*) AS student_count
-FROM dbo.student_enrolment
-WHERE status = 'ACTIVE'
-GROUP BY programme_code
-HAVING COUNT(*) > 100
-ORDER BY student_count DESC;
-```
+    Spark partitioning
+    = how should Spark distribute the DataFrame for compute/write?
+    ```
 
-`WHERE` filters source rows **before** aggregation. `HAVING` filters groups **after** `GROUP BY` has calculated the aggregates.
+    A pipeline can use incremental watermark processing and still need no explicit `repartition()` at all.
 
-### CTE + window
+??? example "Warehouse SQL cheat sheet"
 
-```sql
-WITH latest AS (
+    SQL in FabricOps is primarily used for **Warehouse pushdown** through `read_warehouse_query()` when the Warehouse can reduce the data before Spark receives it.
+
+    ### Select and filter
+
+    ```sql
     SELECT
         student_id,
         programme_code,
-        modified_datetime,
-        ROW_NUMBER() OVER (
-            PARTITION BY student_id
-            ORDER BY modified_datetime DESC
-        ) AS rn
+        status,
+        modified_datetime
     FROM dbo.student_enrolment
-)
-SELECT
-    student_id,
-    programme_code,
-    modified_datetime
-FROM latest
-WHERE rn = 1;
-```
+    WHERE status = 'ACTIVE';
+    ```
 
-### FabricOps Warehouse read pattern
+    ### Join
 
-```python
-source_df = read_warehouse_query(
-    """
+    ```sql
+    SELECT
+        e.student_id,
+        e.programme_code,
+        p.programme_name
+    FROM dbo.student_enrolment AS e
+    LEFT JOIN dbo.programme AS p
+        ON e.programme_code = p.programme_code;
+    ```
+
+    ### Aggregate, WHERE, and HAVING
+
+    ```sql
     SELECT
         programme_code,
-        status,
         COUNT(*) AS student_count
     FROM dbo.student_enrolment
-    WHERE modified_datetime >= '2026-01-01'
-    GROUP BY programme_code, status
+    WHERE status = 'ACTIVE'
+    GROUP BY programme_code
     HAVING COUNT(*) > 100
-    """,
-    target="product",
-)
-```
+    ORDER BY student_count DESC;
+    ```
 
-After the query returns, continue project-specific transformation using the returned PySpark DataFrame.
+    `WHERE` filters source rows **before** aggregation. `HAVING` filters groups **after** `GROUP BY` has calculated the aggregates.
 
-**Microsoft Learn:** [Warehouse in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehousing) · [T-SQL surface area in Fabric Data Warehouse](https://learn.microsoft.com/en-us/fabric/data-warehouse/tsql-surface-area)
+    ### CTE + window
 
-## Quick FabricOps decision guide
+    ```sql
+    WITH latest AS (
+        SELECT
+            student_id,
+            programme_code,
+            modified_datetime,
+            ROW_NUMBER() OVER (
+                PARTITION BY student_id
+                ORDER BY modified_datetime DESC
+            ) AS rn
+        FROM dbo.student_enrolment
+    )
+    SELECT
+        student_id,
+        programme_code,
+        modified_datetime
+    FROM latest
+    WHERE rn = 1;
+    ```
 
-| Need | Prefer |
-| --- | --- |
-| Raw or naturally file-oriented source | Lakehouse Files |
-| Governed reusable Lakehouse dataset | Lakehouse Table |
-| Spark-heavy / file-heavy engineering workload | Lakehouse |
-| SQL-first relational / dimensional workload | Warehouse |
-| Project transformation after read | PySpark |
-| Reduce Warehouse data before Spark | `read_warehouse_query()` + SQL |
-| Simple safe reprocessing | Full dataset |
-| Timestamp/sequence identifies change | Incremental watermark |
-| Snapshot/date is the natural processing unit | Incremental partition |
-| Schedule/dependency/orchestration | Native Fabric Pipeline around the notebook |
-| Low-code Power Query transformation | Dataflow Gen2 where appropriate, outside the canonical FabricOps notebook path |
-| Extra Bronze/Silver/Gold stage | Only when that persisted layer has a real architectural purpose |
+    ### FabricOps Warehouse read pattern
+
+    ```python
+    source_df = read_warehouse_query(
+        """
+        SELECT
+            programme_code,
+            status,
+            COUNT(*) AS student_count
+        FROM dbo.student_enrolment
+        WHERE modified_datetime >= '2026-01-01'
+        GROUP BY programme_code, status
+        HAVING COUNT(*) > 100
+        """,
+        target="product",
+    )
+    ```
+
+    After the query returns, continue project-specific transformation using the returned PySpark DataFrame.
 
 For exact FabricOps function contracts, use the [Function Reference](index.md). For the worked learning path, return to [Module 2: Engineer and run a data pipeline](../guided-demo/02-run-pipeline.md).
-
-**Additional PySpark reference:** [Databricks / PySpark / SQL Server / Spark SQL Cheat Sheet — Srihari S.](https://lnkd.in/p/gAEsCbeR). FabricOps adapts only the engineering patterns relevant to Microsoft Fabric and does not treat Databricks-specific features as Fabric capabilities.
