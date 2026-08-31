@@ -14,7 +14,7 @@ Prepare governed target write inputs and technical fields without physically wri
 
 `fabricops_kit/pipeline/write_pipeline_prep.py:72`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L179">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L187">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,6 +87,9 @@ writer or commit source progress. The completion context has no effect
 unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
 targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.
+Warehouse overwrite requires a full-dataset source result because Warehouse
+has no Lakehouse-style partition replacement. Lakehouse partition overwrite
+remains scoped with ``replaceWhere``.
 
 </div>
 

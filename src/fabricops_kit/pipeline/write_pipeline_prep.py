@@ -110,6 +110,9 @@ def write_pipeline_prep(
     unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
+    Warehouse overwrite requires a full-dataset source result because Warehouse
+    has no Lakehouse-style partition replacement. Lakehouse partition overwrite
+    remains scoped with ``replaceWhere``.
 
     Examples
     --------
@@ -143,6 +146,11 @@ def write_pipeline_prep(
         raise ValueError(
             "overwrite cannot infer one safe target scope from differing source scopes; "
             "publish this target from one complete source scope."
+        )
+    if store_kind == "warehouse" and strategy == "overwrite" and prepared_scope["read_mode"] != "full_dataset":
+        raise ValueError(
+            "Warehouse overwrite requires a full-dataset source result; "
+            "incremental subsets cannot safely replace the complete target."
         )
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)

@@ -8088,7 +8088,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 179,
+      "source_end_line": 187,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 72,
       "supports_live_contract": false,
@@ -131408,7 +131408,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 179,
+          "source_end_line": 187,
           "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
           "source_start_line": 72,
           "supports_live_contract": false,
@@ -135174,12 +135174,12 @@
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 179,
+      "source_end_line": 187,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 72,
       "summary": "Prepare governed target write inputs without physically writing the target.",
       "transitive_function_count": 39,
-      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.",
+      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nWarehouse overwrite requires a full-dataset source result because Warehouse\nhas no Lakehouse-style partition replacement. Lakehouse partition overwrite\nremains scoped with ``replaceWhere``.",
       "width": 8
     },
     {

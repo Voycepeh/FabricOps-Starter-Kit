@@ -250,6 +250,111 @@ def test_write_prep_supports_multiple_source_completion_for_scd(monkeypatch, spa
     }
 
 
+@pytest.mark.parametrize(
+    "source_prep",
+    [
+        {
+            "read_mode": "incremental_subset",
+            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
+        },
+        {
+            "read_mode": "incremental_subset",
+            "scope": {
+                "type": "watermark",
+                "column": "modified_at",
+                "lower_bound": 2,
+                "upper_bound": 3,
+                "lower_inclusive": False,
+                "upper_inclusive": True,
+            },
+        },
+    ],
+    ids=["partition", "watermark"],
+)
+def test_write_prep_rejects_partial_warehouse_overwrite(monkeypatch, spark_session, source_prep):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type="warehouse")
+    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+
+    with pytest.raises(ValueError, match="Warehouse overwrite requires a full-dataset source result"):
+        write_module.write_pipeline_prep(
+            frame, target_table_id=identity["table_id"], source_preps=[source_prep]
+        )
+
+
+def test_write_prep_allows_full_dataset_warehouse_overwrite(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type="warehouse")
+    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}],
+    )
+
+    assert result["mode"] == "overwrite"
+    assert result["options"] == {}
+
+
+def test_write_prep_keeps_lakehouse_partition_overwrite_scoped(monkeypatch, spark_session):
+    processing = {"load_strategy": "overwrite", "partition_column": "snapshot_date"}
+    identity = _patch_target_processing(monkeypatch, processing)
+    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{
+            "read_mode": "incremental_subset",
+            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
+        }],
+    )
+
+    assert result["mode"] == "overwrite"
+    assert result["options"] == {"replaceWhere": "`snapshot_date` IN ('2026-08-31')"}
+
+
+def test_write_prep_keeps_lakehouse_full_dataset_overwrite(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
+    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}],
+    )
+
+    assert result["mode"] == "overwrite"
+    assert result["options"] == {}
+
+
+def test_write_prep_keeps_incremental_append(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
+    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{
+            "read_mode": "incremental_subset",
+            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
+        }],
+    )
+
+    assert result["mode"] == "append"
+
+
+def test_write_prep_rejects_skipped_source(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
+    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+
+    with pytest.raises(ValueError, match="non-skipped canonical read_mode"):
+        write_module.write_pipeline_prep(
+            frame,
+            target_table_id=identity["table_id"],
+            source_preps=[{"read_mode": "skip", "scope": {"type": "skip"}}],
+        )
+
+
 def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypatch):
     calls = []
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
