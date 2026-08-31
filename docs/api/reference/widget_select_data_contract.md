@@ -7,7 +7,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Choose whether Development Guardrail checks use current authoring rules or one exact frozen Data Contract version.
+Choose current authoring or one exact frozen Data Contract version for a canonical target table identity.
 
 <div class="reference-source-card" markdown="1">
 **Source**
@@ -77,7 +77,7 @@ ValueError
 
 ### Common failure causes
 
-- The configured physical table has no canonical active Catalogue table identity.
+- The canonical target table_id is empty or has no Data Contract versions.
 - The selected version is rejected or belongs to another table.
 - The frozen contract payload is invalid.
 

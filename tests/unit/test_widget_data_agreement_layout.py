@@ -82,7 +82,8 @@ def _render_contract(monkeypatch, *, writer=None):
         "METADATA_DATA_CATALOGUE": Frame([
             {"metadata_level": "table", "table_id": "table-1", "column_id": None,
              "environment_name": "dev", "store_type": "lakehouse", "layer": "curated",
-             "schema_name": "sales", "table_name": "orders", "is_active": True, **audit},
+             "schema_name": "sales", "table_name": "orders", "load_strategy": "overwrite",
+             "load_strategy_parameters_json": "{}", "is_active": True, **audit},
             {"metadata_level": "column", "table_id": "table-1", "column_id": "column-1",
              "column_name": "example_column", "data_type": "string", "environment_name": "dev",
              "is_active": True, **audit},
