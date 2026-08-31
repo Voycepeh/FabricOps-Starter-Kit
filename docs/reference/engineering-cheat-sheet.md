@@ -1,12 +1,10 @@
-# Fabric Engineering Cheat Sheet
+# FabricOps Engineering Guide
 
-Use this page as the quick engineering reference around the FabricOps `02_pipeline` workflow.
+Use this page when you want the deeper engineering reasoning behind the FabricOps `02_pipeline` workflow.
 
-FabricOps intentionally makes a few opinionated engineering choices: keep notebook transformation code visible, use PySpark as the default transformation language once data is in Spark, use Warehouse SQL mainly for pushdown before Spark, and make full vs incremental processing an explicit governed choice.
+The Guided Demo stays practical and the How FabricOps Works page stays high-level. This guide explains the engineering choices behind those pages, then keeps the practical PySpark, Spark optimisation, and Warehouse SQL references collapsed at the bottom for quick lookup.
 
-The expandable sections below explain those choices. The practical PySpark, Spark optimisation, and Warehouse SQL references are collapsed further down so this page stays easy to scan.
-
-## FabricOps engineering choices
+## Engineering concepts behind FabricOps
 
 ??? info "Lakehouse Files vs Tables"
 
@@ -36,16 +34,16 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     | Primary engineering experience | Spark / notebooks | T-SQL |
     | Data shape | Structured, semi-structured, unstructured, and files | Structured relational data |
     | OneLake storage | Delta-based | Delta-based |
-    | SQL access | SQL analytics endpoint for query scenarios | Full Warehouse T-SQL experience |
+    | SQL access | SQL analytics endpoint for query scenarios | Warehouse T-SQL experience |
     | Strong fit | Data engineering, Spark transformation, file-heavy ingestion, flexible processing | SQL-first analytics, relational modelling, dimensional models, BI-oriented workloads |
     | FabricOps source | Supported | Supported |
     | FabricOps target | Supported | Supported |
 
     **FabricOps recommendation:** choose based on the workload, not because one is universally better.
 
-    A Lakehouse is a strong default when the engineering path is already PySpark-heavy or the source estate includes files and mixed structures. A Warehouse is a strong fit when the target is relational, the team is SQL-first, or downstream consumption benefits from a Warehouse-native relational model.
+    A Lakehouse is a strong default when the engineering path is PySpark-heavy or the source estate includes files and mixed structures. A Warehouse is a strong fit when the target is relational, the team is SQL-first, or downstream consumption benefits from a Warehouse-native relational model.
 
-    In FabricOps, a Warehouse source can still feed a PySpark transformation. `read_warehouse_query()` lets the Warehouse perform useful filtering, projection, joins, or aggregation first, and Spark receives the result as a DataFrame.
+    A Warehouse source can still feed a PySpark transformation. `read_warehouse_query()` lets the Warehouse perform useful filtering, projection, joins, or aggregation first, then Spark receives the result as a DataFrame.
 
     **Microsoft Learn:** [Lakehouse vs. Warehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview#lakehouse-vs-warehouse)
 
@@ -61,9 +59,9 @@ The expandable sections below explain those choices. The practical PySpark, Spar
 
     The useful idea is **progressive refinement**: preserve the source, create trusted reusable data, then publish data shaped for consumption.
 
-    **FabricOps position:** medallion is compatible with FabricOps but is not mandatory. FabricOps standardises governance, metadata, processing and publication boundaries; it does not require every project to create Bronze, Silver and Gold layers just to conform to the terminology.
+    **FabricOps position:** medallion is compatible with FabricOps but is not mandatory. FabricOps standardises governance, metadata, processing, and publication boundaries; it does not require every project to create Bronze, Silver, and Gold layers just to conform to the terminology.
 
-    Use separate persisted layers when they have a real purpose: reuse, isolation, auditability, different grains, expensive transformations, or different consumer needs. Do not create extra copies only because the layer names exist.
+    Use separate persisted layers when they have a real purpose such as reuse, isolation, auditability, different grains, expensive transformations, or different consumer needs. Do not create extra copies only because the layer names exist.
 
     ```text
     Raw source / Files
@@ -75,7 +73,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     consumer model / BI / AI
     ```
 
-    That may resemble Bronze → Silver → Gold, but the actual number of stages should follow the project architecture.
+    That may resemble Bronze → Silver → Gold, but the actual number of persisted stages should follow the project architecture.
 
     **Microsoft Learn:** [Medallion architecture in Fabric](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture)
 
@@ -89,7 +87,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     | Pipeline | Orchestration, schedules, dependencies, retries, data movement, calling notebooks | Use around FabricOps notebooks when orchestration is required |
     | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Valid Fabric capability, but not the canonical FabricOps engineering path |
 
-    **Why notebook first?** FabricOps wants project-specific engineering logic to stay explicit, reviewable and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
+    **Why notebook first?** FabricOps wants project-specific engineering logic to stay explicit, reviewable, and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
 
     Pipelines still matter. They are the natural place to schedule or orchestrate notebooks, chain dependencies, run activities, and monitor execution. FabricOps does not try to recreate those native platform capabilities inside its own metadata model.
 
@@ -109,7 +107,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     | Joining DataFrames already in Spark | PySpark |
     | Cleansing, derivation, deduplication, windows, reshaping | PySpark |
 
-    Spark SQL is supported by Fabric and is technically valid. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the expected engineering path easier to read and review.
+    Spark SQL is valid in Fabric. FabricOps simply avoids teaching two equal transformation styles inside `02_pipeline`. That keeps the normal project path easier to read and review.
 
     ```text
     Lakehouse / Warehouse / Files
@@ -139,15 +137,15 @@ The expandable sections below explain those choices. The practical PySpark, Spar
 
     **Microsoft Learn:** [Microsoft Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
 
-??? info "Full vs incremental processing"
+??? info "Full vs incremental: full, watermark, and partition"
 
     FabricOps makes the processing strategy explicit rather than hiding it inside ad-hoc notebook code.
 
     | Strategy | Use when | Main trade-off |
     | --- | --- | --- |
-    | Full dataset | The source is small/simple enough to reprocess, or there is no trustworthy incremental key | Simple and easy to reason about, but repeatedly processes everything |
-    | Incremental watermark | A timestamp or monotonically increasing value identifies new or changed rows | Efficient, but depends on reliable ordering/change state |
-    | Incremental partition | A date, snapshot, or partition is the correct unit of change | Efficient and easy to reconcile by partition, but depends on meaningful source partitioning |
+    | Full dataset | The source is small enough to reprocess safely, or there is no trustworthy incremental key | Simplest and easiest to reason about, but repeatedly processes everything |
+    | Incremental watermark | A timestamp or monotonically increasing value identifies new or changed rows | Efficient, but depends on reliable change state and ordering |
+    | Incremental partition | A date, snapshot, or other partition is the correct unit of change | Efficient and easy to reconcile by partition, but depends on meaningful source partitioning |
 
     ### Full dataset
 
@@ -159,7 +157,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     Write governed target
     ```
 
-    Prefer full processing when simplicity is worth more than incremental complexity. A full load is often the safest choice for small reference tables, modest datasets, or sources without a reliable change indicator.
+    Prefer full processing when simplicity is worth more than incremental complexity. It is often the safest choice for small reference tables, modest datasets, or sources without a reliable change indicator.
 
     ### Incremental watermark
 
@@ -175,7 +173,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
     Commit new watermark
     ```
 
-    A watermark normally uses a timestamp, sequence, or other increasing value. The key requirement is that it reliably represents new or changed source records.
+    A watermark normally uses a timestamp, sequence, or another increasing value that reliably identifies new or changed source records.
 
     **Critical FabricOps rule:** the watermark represents **successfully processed state**. Do not advance it before the governed target write succeeds. Otherwise a failed run can move the checkpoint forward and silently skip data on the next run.
 
@@ -203,7 +201,7 @@ The expandable sections below explain those choices. The practical PySpark, Spar
 
 ## Practical cheat sheets
 
-Use these only when you need a quick syntax or tuning reminder. The [Guided Demo](../guided-demo/02-run-pipeline.md) explains how the patterns fit into the FabricOps workflow.
+Use these when you already know what you want to do and only need a quick syntax or tuning reminder. The [Guided Demo](../guided-demo/02-run-pipeline.md) explains how the patterns fit into the FabricOps workflow.
 
 ??? example "PySpark transformation cheat sheet"
 
@@ -214,46 +212,32 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     from pyspark.sql.window import Window
     ```
 
-    ### Inspect a DataFrame
+    ### Inspect and select
 
     ```python
     display(df)
     df.show(20, truncate=False)
     df.printSchema()
     df.count()
-    df.columns
-    df.dtypes
-    ```
 
-    ### Select, rename, drop, and limit
-
-    ```python
     df = df.select("student_id", "programme", "status", "modified_datetime")
-    df = df.select(F.col("programme").alias("programme_code"), "status")
     df = df.withColumnRenamed("old_name", "new_name")
     df = df.drop("temporary_column")
-    df = df.limit(10)
     ```
 
-    ### Filter rows
+    ### Filter, derive, and cast
 
     ```python
-    df = df.filter(F.col("status") == "ACTIVE")
-
     df = df.filter(
         (F.col("status") == "ACTIVE")
         & (F.col("student_id").isNotNull())
     )
-    ```
 
-    ### Add, derive, and cast columns
-
-    ```python
     df = df.withColumn("modified_date", F.to_date("modified_datetime"))
     df = df.withColumn("student_id", F.col("student_id").cast("string"))
     ```
 
-    ### Conditional logic
+    ### Conditional logic and nulls
 
     ```python
     df = df.withColumn(
@@ -262,27 +246,17 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
          .when(F.col("status") == "COMPLETED", "Completed")
          .otherwise("Other"),
     )
-    ```
 
-    ### Null handling
-
-    ```python
     df = df.fillna({"amount": 0, "region": "UNKNOWN"})
     df = df.dropna(subset=["student_id"])
-    df = df.filter(F.col("amount").isNotNull())
     df = df.withColumn("contact", F.coalesce("mobile", "email", F.lit("no_contact")))
     ```
 
-    ### Distinct and deduplication
+    ### Deduplication
 
     ```python
-    df = df.distinct()
     df = df.dropDuplicates(["student_id"])
-    ```
 
-    When the surviving row matters, make the rule explicit:
-
-    ```python
     latest_window = (
         Window
         .partitionBy("student_id")
@@ -308,12 +282,7 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
             "left",
         )
     )
-    ```
 
-    Useful existence and reconciliation joins:
-
-    ```python
-    matched_df = source_df.join(reference_df, "student_id", "inner")
     unmatched_df = source_df.join(reference_df, "student_id", "left_anti")
     exists_df = source_df.join(reference_df, "student_id", "left_semi")
     ```
@@ -328,7 +297,7 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     )
     ```
 
-    ### Group and aggregate
+    ### Group, aggregate, pivot, and sort
 
     ```python
     summary_df = (
@@ -339,14 +308,9 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
             F.countDistinct("student_id").alias("distinct_students"),
             F.sum("amount").alias("total_amount"),
             F.avg("amount").alias("avg_amount"),
-            F.max("modified_datetime").alias("latest_modified_datetime"),
         )
     )
-    ```
 
-    ### Pivot and sort
-
-    ```python
     pivoted_df = (
         df
         .groupBy("programme")
@@ -354,10 +318,7 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
         .agg(F.count("*"))
     )
 
-    df = df.orderBy(
-        F.col("programme").asc(),
-        F.col("modified_datetime").desc(),
-    )
+    df = df.orderBy(F.col("modified_datetime").desc())
     ```
 
     ### Window functions
@@ -365,7 +326,6 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     ```python
     w = Window.partitionBy("student_id").orderBy(F.col("modified_datetime").desc())
 
-    latest_df = df.withColumn("rn", F.row_number().over(w)).filter(F.col("rn") == 1)
     df = df.withColumn("rank", F.rank().over(w))
     df = df.withColumn("dense_rank", F.dense_rank().over(w))
     df = df.withColumn("previous_amount", F.lag("amount", 1).over(w))
@@ -385,24 +345,14 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     df = df.withColumn("running_total", F.sum("amount").over(running_window))
     ```
 
-    ### Common string and date functions
+    ### Common string, date, and nested-data patterns
 
     ```python
-    df = df.withColumn("name_upper", F.upper("name"))
     df = df.withColumn("name_clean", F.trim("name"))
     df = df.withColumn("full_name", F.concat_ws(" ", "first_name", "last_name"))
-    df = df.withColumn("clean_phone", F.regexp_replace("phone", "-", ""))
-
-    df = df.withColumn("today", F.current_date())
-    df = df.withColumn("loaded_at", F.current_timestamp())
     df = df.withColumn("modified_date", F.to_date("modified_datetime"))
     df = df.withColumn("month_start", F.date_trunc("month", "modified_datetime"))
-    df = df.withColumn("year", F.year("modified_date"))
-    ```
 
-    ### Nested, array, and compatible datasets
-
-    ```python
     exploded_df = df.withColumn("tag", F.explode("tags"))
 
     flat_df = df.select(
@@ -449,8 +399,6 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     )
     ```
 
-    Broadcasting can avoid a large shuffle when one side is genuinely small.
-
     ### Repartition vs coalesce
 
     ```python
@@ -471,13 +419,9 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
 
     ```python
     df.cache()
-
     # multiple actions that reuse df
-
     df.unpersist()
     ```
-
-    Caching costs memory. It is useful when the same expensive result feeds multiple actions in the same Spark session; it is wasteful when the DataFrame is only used once.
 
     ### Inspect the plan
 
@@ -496,8 +440,6 @@ Use these only when you need a quick syntax or tuning reminder. The [Guided Demo
     Spark partitioning
     = how should Spark distribute the DataFrame for compute/write?
     ```
-
-    A pipeline can use incremental watermark processing and still need no explicit `repartition()` at all.
 
 ??? example "Warehouse SQL cheat sheet"
 
