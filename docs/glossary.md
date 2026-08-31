@@ -54,13 +54,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="governance-as-code">
-<summary><strong>Governance as Code</strong> — Defining governance requirements in structured, version-controlled forms that FabricOps can review, apply, and enforce consistently.</summary>
-<p>In FabricOps, Governance as Code means representing governance requirements as structured metadata, configuration, contracts, and executable checks so they can be reviewed, versioned, repeated, and applied consistently across the engineering workflow.</p>
+<summary><strong>Governance as Code</strong> — Turning governance decisions into structured metadata, rules, and contracts that the engineering workflow can directly use.</summary>
+<p>In FabricOps, Governance as Code means governance is not only documented in prose or handled as a separate manual process. Data Agreements, Enrichment, Guardrails, and Data Contracts are captured as structured metadata that can be reviewed, versioned, resolved by 02_pipeline, and enforced during execution. Governance defines the expectations, and Engineering consumes the same governed metadata when it validates and runs the pipeline.</p>
 </details>
 
 <details id="configuration-driven-engineering">
-<summary><strong>Configuration-driven Engineering</strong> — Controlling repeatable engineering behaviour through configuration instead of rewriting pipeline code.</summary>
-<p>In FabricOps, Configuration-driven Engineering means keeping reusable pipeline logic stable while configuration selects environment targets, processing strategies, governed parameters, and other repeatable behaviour.</p>
+<summary><strong>Configuration-driven Engineering</strong> — Keeping pipeline code portable by resolving environment-specific targets and repeatable processing choices from shared configuration instead of hard-coding them into every notebook.</summary>
+<p>In FabricOps, Configuration-driven Engineering separates reusable 02_pipeline logic from environment-specific Fabric item identities and repeatable processing settings. 00_env_config defines logical targets such as source, unified, product, and metadata for the active environment, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. This lets the same pipeline move from Development to Production, or adapt when a Fabric item changes, without rewriting paths and IDs throughout each notebook.</p>
 <p><strong>Also known as:</strong> config-driven engineering</p>
 </details>
 
