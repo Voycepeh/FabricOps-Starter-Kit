@@ -1,6 +1,6 @@
 """Generate normalized public-function call-flow JSON data.
 
-The detailed analysis implementation remains in ``public_function_call_flows_legacy``
+The detailed analysis implementation lives in ``public_function_call_flows_analysis``
 so tests and release tooling can keep using the existing in-memory expanded flow.
 Only the committed current JSON is normalized to functions + relationships.
 """
@@ -12,17 +12,17 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts import public_function_call_flows_legacy as _legacy
+    from scripts import public_function_call_flows_analysis as _analysis
 except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
-    import public_function_call_flows_legacy as _legacy
+    import public_function_call_flows_analysis as _analysis
 
 
 # Re-export the existing analysis surface so repository tests and release tooling keep
 # using the same implementation. The committed v3 JSON is normalized only when it is
 # written to DATA_PATH below; dashboard and agent consumers traverse the same graph.
-for _name in dir(_legacy):
+for _name in dir(_analysis):
     if not _name.startswith("__"):
-        globals()[_name] = getattr(_legacy, _name)
+        globals()[_name] = getattr(_analysis, _name)
 
 
 def _empty_relationship(caller: str, callee: str) -> dict[str, Any]:
@@ -90,7 +90,7 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
 def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
     """Write call-flow JSON, normalizing only the current committed architecture contract."""
     output = normalize_payload(payload) if data_path == DATA_PATH else payload
-    _legacy.write_json(output, data_path)
+    _analysis.write_json(output, data_path)
 
 
 def main() -> None:
