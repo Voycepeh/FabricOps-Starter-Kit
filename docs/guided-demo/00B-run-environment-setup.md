@@ -48,7 +48,7 @@ Open config → Attach Environment → Configure paths → Review widgets → Se
 
         FabricOps centralises those environment-specific identities in `00_env_config`. The `02_pipeline` keeps logical target names while the FabricOps I/O functions resolve the correct Development or Production item at runtime. That means promotion does not require rewriting paths in every pipeline, and replacing or adding a Fabric item can be handled in the environment configuration instead of across many notebooks.
 
-        Read the deeper rationale in the [FabricOps Engineering Guide — Config-driven engineering and why FabricOps has I/O functions](../reference/engineering-cheat-sheet.md#config-driven-engineering-and-why-fabricops-has-io-functions).
+        Read the deeper rationale in the [FabricOps Engineering Guide — Config-driven engineering and why FabricOps has I/O functions](../reference/engineering-cheat-sheet.md#config-driven-engineering).
 
 ???+ success "Live — Review widget settings"
 
