@@ -508,11 +508,12 @@ def profile_and_register_table(
         Spark DataFrame to profile exactly as supplied by the caller. The
         helper does not sample, re-read, or mutate this DataFrame.
     profile_role : {"source", "target"}
-        Records whether the profiled asset participated in the notebook
-        activity as an input or an output: ``source`` for an activity input and
-        ``target`` for an activity output. The value is recorded as ``pipeline_role`` in
-        ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
-        ``METADATA_DATA_CATALOGUE``.
+        Selects the profiling and Catalogue registration rules for the asset.
+        ``source`` rejects target-owned load-strategy metadata. ``target``
+        requires and stores the governed target processing definition in
+        ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage;
+        governed pipeline preparation and successful publication own source
+        and target Lineage respectively.
     table : mapping, optional
         Canonical resolved table identity returned as ``read_pipeline_prep()``
         ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
@@ -569,16 +570,17 @@ def profile_and_register_table(
         A Spark DataFrame containing one canonical profiling record for each
         eligible column in the supplied DataFrame. This is the same DataFrame
         appended to ``METADATA_DATA_PROFILED`` and includes stable table and column identity, profiling snapshot identity,
-        compact statistical metrics, environment identity, and runtime audit fields. Flattened child frequency rows, generated catalogue rows,
-        and the lineage event are not returned.
+        compact statistical metrics, environment identity, and runtime audit
+        fields. Flattened child frequency rows and generated Catalogue rows
+        are not returned.
     
     Raises
     ------
     ValueError
         If the role, target, configured store, schema, or table identity is invalid.
     RuntimeError
-        If Delta replacement support is unavailable, or lineage registration
-        fails after profile and catalogue registration succeed.
+        If required Delta replacement or Catalogue merge support is
+        unavailable.
     
     Notes
     -----
@@ -712,17 +714,11 @@ def profile_and_register_table(
     after a successful complete-table read, and profile a target only after
     its write has succeeded and the persisted target has been confirmed.
     
-    Profile and catalogue registration occur before lineage registration. If
-    lineage registration fails after those writes succeed, the function raises
-    a ``RuntimeError`` explaining that profile and catalogue registration
-    succeeded but lineage registration failed. Guardrail execution is a
-    separate workflow.
+    This function does not create or update ``METADATA_DATA_LINEAGE``.
+    Registered source participation is recorded by ``read_pipeline_prep()``,
+    while target participation is recorded only after a successful governed
+    publication. Guardrail execution is a separate workflow.
     
-    This Stage 2 redesign changes the physical schemas for Catalogue, Profile,
-    Profile Frequency, Lineage, and Source Observation. Existing development
-    metadata tables may need recreation through the established setup flow; no
-    compatibility or automatic migration layer is provided.
-
     """
     normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     config, env, context = resolve_fabric_context()
