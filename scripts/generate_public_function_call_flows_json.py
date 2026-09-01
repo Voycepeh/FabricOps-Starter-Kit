@@ -11,7 +11,10 @@ import copy
 from pathlib import Path
 from typing import Any
 
-import public_function_call_flows_legacy as _legacy
+try:
+    from scripts import public_function_call_flows_legacy as _legacy
+except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
+    import public_function_call_flows_legacy as _legacy
 
 
 # Re-export the existing analysis surface so repository tests and release tooling keep
