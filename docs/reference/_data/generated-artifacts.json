@@ -8,21 +8,21 @@
       "output_path": "docs/api/reference"
     },
     "public_function_call_flows_dashboard": {
-      "generated_at_sgt": "01 Sep 2026, 6:51 PM SGT",
-      "generated_at_utc": "2026-09-01T10:51:40.768031Z",
+      "generated_at_sgt": "01 Sep 2026, 6:53 PM SGT",
+      "generated_at_utc": "2026-09-01T10:53:43.625883Z",
       "generator": "scripts/generate_public_function_call_flows_dashboard.py",
       "label": "Public function call-flow dashboard",
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
     },
     "public_function_call_flows_json": {
-      "generated_at_sgt": "01 Sep 2026, 6:51 PM SGT",
-      "generated_at_utc": "2026-09-01T10:51:40.658506Z",
+      "generated_at_sgt": "01 Sep 2026, 6:53 PM SGT",
+      "generated_at_utc": "2026-09-01T10:53:43.519387Z",
       "generator": "scripts/generate_public_function_call_flows_json.py",
       "label": "Public function call-flow data",
       "output_path": "docs/reference/_data/public-function-call-flows.json"
     }
   },
-  "last_generated_at_sgt": "01 Sep 2026, 6:51 PM SGT",
-  "last_generated_at_utc": "2026-09-01T10:51:40.768031Z",
+  "last_generated_at_sgt": "01 Sep 2026, 6:53 PM SGT",
+  "last_generated_at_utc": "2026-09-01T10:53:43.625883Z",
   "schema": "fabricops_generated_artifact_timestamps_v1"
 }
