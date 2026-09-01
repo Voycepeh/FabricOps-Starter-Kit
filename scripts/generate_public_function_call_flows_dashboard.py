@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from scripts import public_function_call_flows_dashboard_legacy as _legacy
+import public_function_call_flows_dashboard_legacy as _legacy
 
 
 for _name in dir(_legacy):
