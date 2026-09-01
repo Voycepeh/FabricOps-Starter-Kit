@@ -216,9 +216,11 @@ def test_profile_and_register_table_imports_shared_profilers_directly():
 
 def test_profile_registration_call_flow_records_shared_frequency_implementation():
     payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
-    flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
+    root = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
     direct_callees = {
-        row["qualified_name"]: row for row in flow["flow"] if row["parent_qualified_name"] == flow["qualified_name"]
+        row["callee_qualified_name"]: row
+        for row in payload["relationships"]
+        if row["caller_qualified_name"] == root["qualified_name"]
     }
     assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
     assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
