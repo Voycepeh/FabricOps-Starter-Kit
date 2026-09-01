@@ -5,7 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import public_function_call_flows_dashboard_legacy as _legacy
+try:
+    from scripts import public_function_call_flows_dashboard_legacy as _legacy
+except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
+    import public_function_call_flows_dashboard_legacy as _legacy
 
 
 for _name in dir(_legacy):
@@ -79,6 +82,7 @@ def render_dashboard(
         data_url=data_url,
         metadata_url=metadata_url,
     )
+    html = html.replace("Public Function Call Flows V2", "Public Function Call Flows V3")
     html = html.replace(
         ".then(renderDashboard).catch(showDataLoadError);",
         ".then(bundle=>{hydrateNormalizedFlows(bundle.data);return bundle}).then(renderDashboard).catch(showDataLoadError);",
