@@ -14,7 +14,7 @@ Prepare governed target write inputs and technical fields without physically wri
 
 `fabricops_kit/pipeline/write_pipeline_prep.py:72`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L187">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L201">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,7 +83,7 @@ ValueError
 
 FabricOps resolves one run-level audit record and adds only compact target
 provenance fields. This function does not call a Lakehouse or Warehouse
-writer or commit source progress. The completion context has no effect
+writer, persist target Lineage, or commit source progress. The completion context has no effect
 unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
 targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.
