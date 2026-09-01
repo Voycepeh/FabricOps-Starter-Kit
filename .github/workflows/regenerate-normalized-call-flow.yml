@@ -1,0 +1,79 @@
+name: Regenerate normalized call-flow artifacts
+
+on:
+  push:
+    branches:
+      - agent/normalize-call-flow-json
+    paths:
+      - scripts/generate_public_function_call_flows_json.py
+      - scripts/generate_public_function_call_flows_dashboard.py
+      - scripts/public_function_call_flows_legacy.py
+      - scripts/public_function_call_flows_dashboard_legacy.py
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install package
+        run: python -m pip install -e .
+
+      - name: Record old JSON size
+        run: |
+          echo "OLD_LINES=$(wc -l < docs/reference/_data/public-function-call-flows.json)" >> "$GITHUB_ENV"
+          echo "OLD_BYTES=$(wc -c < docs/reference/_data/public-function-call-flows.json)" >> "$GITHUB_ENV"
+
+      - name: Regenerate normalized artifacts
+        run: |
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
+
+      - name: Validate normalized contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('docs/reference/_data/public-function-call-flows.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['metadata']['schema'] == 'fabricops_public_function_call_flows_v3'
+          assert isinstance(data.get('relationships'), list)
+          assert all('flow' not in row for row in data.get('public_functions', []))
+          functions = data.get('defined_functions', [])
+          assert len(functions) == len({row['qualified_name'] for row in functions})
+          edges = data['relationships']
+          edge_keys = {(row['caller_qualified_name'], row['callee_qualified_name']) for row in edges}
+          assert len(edges) == len(edge_keys)
+          html = Path('docs/assets/public-function-call-flows-dashboard.html').read_text(encoding='utf-8')
+          assert 'hydrateNormalizedFlows' in html
+          assert '.then(bundle=>{hydrateNormalizedFlows(bundle.data);return bundle}).then(renderDashboard)' in html
+          print('relationships', len(edges))
+          print('functions', len(functions))
+          print('public_functions', len(data.get('public_functions', [])))
+          PY
+
+      - name: Report size reduction
+        run: |
+          NEW_LINES=$(wc -l < docs/reference/_data/public-function-call-flows.json)
+          NEW_BYTES=$(wc -c < docs/reference/_data/public-function-call-flows.json)
+          echo "Old JSON: $OLD_LINES lines, $OLD_BYTES bytes"
+          echo "New JSON: $NEW_LINES lines, $NEW_BYTES bytes"
+
+      - name: Commit generated artifacts
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/reference/_data/public-function-call-flows.json docs/assets/public-function-call-flows-dashboard.html docs/reference/_data/generated-artifacts.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Regenerate normalized call-flow artifacts"
+          git push
