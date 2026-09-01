@@ -10,7 +10,7 @@ Use the **User defined transformation** section in `02_pipeline` for joins, filt
 
 FabricOps standardises the governed boundary around ETL. It does not replace the transformation logic that belongs to the project.
 
-The `02_pipeline` template deliberately stays lightweight. It shows where project transformation belongs without carrying a full PySpark tutorial into every new pipeline. This Guided Demo teaches the common patterns; use the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md) when you want the deeper engineering explanation or a syntax reminder.
+The `02_pipeline` template deliberately stays lightweight. It shows where project transformation belongs without carrying a full PySpark tutorial into every new pipeline. This Guided Demo teaches the common patterns; read [PySpark first — and where T-SQL fits](../../reference/engineering-cheat-sheet.md#pyspark-first) for the deeper engineering rationale and use the [practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets) when you need a syntax reminder.
 
 ## Core PySpark patterns
 
@@ -125,7 +125,7 @@ transformed_df = (
 )
 ```
 
-The same window pattern extends to ranking, previous/next values with `lag()` and `lead()`, and running totals. Those patterns are included in the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
+The same window pattern extends to ranking, previous/next values with `lag()` and `lead()`, and running totals. Those patterns are included in the [practical PySpark reference](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets).
 
 ### Join another source
 
@@ -170,11 +170,13 @@ The important engineering decision is not the syntax itself. Confirm that the re
 
 ### Reshape or flatten when the data requires it
 
-Other common project patterns include `pivot()` for reshaping values into columns, `explode()` for arrays, struct access for nested JSON, and `unionByName()` for combining compatible datasets with different column order. These are useful, but they are not part of every pipeline, so the full examples stay in the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
+Other common project patterns include `pivot()` for reshaping values into columns, `explode()` for arrays, struct access for nested JSON, and `unionByName()` for combining compatible datasets with different column order. These are useful, but they are not part of every pipeline, so the full examples stay in the [practical PySpark reference](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets).
 
 ## When SQL appears in `02_pipeline`
 
 FabricOps does not treat Spark SQL as a second default transformation language beside PySpark. SQL is most useful when reading a Fabric Warehouse and the Warehouse can reduce the data before it reaches Spark.
+
+Read [PySpark first — and where T-SQL fits](../../reference/engineering-cheat-sheet.md#pyspark-first) for the decision boundary, then use the [T-SQL examples in the practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets) when you need a quick query reference.
 
 !!! info "New to SQL in Fabric Warehouse?"
 
@@ -237,11 +239,11 @@ Keep these in mind when transformations become larger:
 
 These are project-level engineering choices, so FabricOps keeps them visible instead of trying to hide them behind the starter kit.
 
-For the deeper engineering explanation and the full syntax reference, including windows, string/date functions, nested data, `unionByName`, repartitioning, caching, and full versus incremental processing, use the [FabricOps Engineering Guide](../../reference/engineering-cheat-sheet.md).
+For the deeper optimisation and syntax reference, use the [practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets). For the separate question of which logical source data belongs in a run, read [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
 
 ## Choose the target
 
-The template supports managed Lakehouse and Warehouse targets, but each governed pipeline publishes exactly one target table.
+The template supports managed Lakehouse and Warehouse targets, but each governed pipeline publishes exactly one target table. Read [Lakehouse first — and when Warehouse fits](../../reference/engineering-cheat-sheet.md#lakehouse-first) when choosing the serving store for the workload.
 
 ### Lakehouse target
 
@@ -287,7 +289,7 @@ Do not use a pipeline's own target as an engineer-authored source inside the sam
 
 ![Write Lakehouse in parallel](../../assets/02/Write_LH_Parallel.png)
 
-These physical write choices are separate from FabricOps incremental processing strategy, which determines which logical source data should be processed during a run.
+These physical write choices are separate from FabricOps incremental processing strategy, which determines which logical source data should be processed during a run. See the [Spark optimisation and incremental-processing references](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets) for the deeper distinction.
 
 ## Function details
 
