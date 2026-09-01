@@ -15,6 +15,8 @@
 
 The template uses FabricOps IO helpers behind these patterns rather than hardcoding workspace and item paths throughout the notebook.
 
+For the reasoning behind these choices, read [Lakehouse Files vs Tables](../../reference/engineering-cheat-sheet.md#lakehouse-files-vs-tables) and [Lakehouse first — and when Warehouse fits](../../reference/engineering-cheat-sheet.md#lakehouse-first).
+
 ## Lakehouse file examples
 
 ![Read Excel](../../assets/02/Read_Excel.png)
@@ -34,6 +36,8 @@ A filtered, joined, or aggregated query result should not replace the canonical 
 ## Source strategy is a separate choice
 
 Where the data lives and how much of it should be processed are different questions. After choosing the source, Unit 5 explains the processing strategies available to the template: Full Dataset, Incremental Watermark, and Incremental Partition.
+
+Read more about the trade-offs in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
 
 ## Function details
 
