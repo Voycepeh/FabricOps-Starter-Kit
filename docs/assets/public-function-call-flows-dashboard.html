@@ -83,5 +83,55 @@ function showWorkflow(name){document.querySelectorAll('[data-workflow-tab]').for
 document.addEventListener('click',e=>{if(e.target.closest('a'))return; const tab=e.target.closest('[data-workflow-tab]'); if(tab){showWorkflow(tab.dataset.workflowTab);return} const toggle=e.target.closest('[data-tree-node-toggle]'); if(toggle){expandedTreeNodes.has(toggle.dataset.treeNodeToggle)?expandedTreeNodes.delete(toggle.dataset.treeNodeToggle):expandedTreeNodes.add(toggle.dataset.treeNodeToggle);renderSelected();return} const depthAction=e.target.closest('[data-tree-depth-action]'); if(depthAction){setTreeDepth(depthAction.dataset.treeDepthAction==='all'?'all':0);return} const row=e.target.closest('[data-public-flow-row]'); if(row){selectPublic(row.dataset.publicFlowRow);return} const card=e.target.closest('[data-call-flow-card-button]'); if(card){setScopeRootFromCallFlowCard(card.dataset.callFlowCardButton);return}}); document.addEventListener('keydown',e=>{const row=e.target.closest('[data-public-flow-row]'); if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectPublic(row.dataset.publicFlowRow)}}); ['searchBox','signalFilter','lifecycleFilter'].forEach(id=>$(id).addEventListener('input',renderPublicTable)); ['inventorySearch','inventoryTypeFilter'].forEach(id=>$(id).addEventListener('input',renderSelected)); ['cleanupSearch'].forEach(id=>$(id).addEventListener('input',renderUnused)); $('clearFilters').onclick=()=>{$('searchBox').value='';$('signalFilter').value='';$('lifecycleFilter').value='';renderPublicTable()}; $('clearInventoryFilters').onclick=()=>{$('inventorySearch').value='';$('inventoryTypeFilter').value='';renderSelected()}; $('clearCleanupFilters').onclick=()=>{$('cleanupSearch').value='';renderUnused()}; document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortDir=sortKey===b.dataset.sort?-sortDir:1;sortKey=b.dataset.sort;renderPublicTable()}); document.querySelectorAll('[data-inventory-sort]').forEach(b=>b.onclick=()=>{inventorySortDir=inventorySortKey===b.dataset.inventorySort?-inventorySortDir:1;inventorySortKey=b.dataset.inventorySort;renderSelected()}); $('selectVisibleInventory').onclick=()=>{inventoryRows.forEach(n=>selectedInventory.add(n.qualified_name));renderSelected();updateCounts()}; $('clearInventory').onclick=()=>{selectedInventory.clear();renderSelected();updateCounts()}; $('resetScopeRoot').onclick=()=>resetScopeToPublicFunction(); $('selectVisibleCleanup').onclick=()=>{cleanupRows.forEach(n=>selectedCleanup.add(n.qualified_name));renderUnused();updateCounts()}; $('clearCleanup').onclick=()=>{selectedCleanup.clear();renderUnused();updateCounts()}; document.addEventListener('input',e=>{if(e.target.matches('[data-tree-depth-slider]'))setTreeDepth(Number(e.target.value))}); document.addEventListener('change',e=>{if(e.target.classList.contains('inventory-check')){e.target.checked?selectedInventory.add(e.target.dataset.qn):selectedInventory.delete(e.target.dataset.qn);renderSelected();updateCounts()} if(e.target.classList.contains('cleanup-check')){e.target.checked?selectedCleanup.add(e.target.dataset.qn):selectedCleanup.delete(e.target.dataset.qn);renderUnused();updateCounts()}}); $('exportScope').onchange=()=>{renderSelected();updateCounts()}; $('cleanupMode').onchange=()=>updateCounts(); $('downloadPacket').onclick=()=>exportPacket(); $('downloadSimplifyPacket').onclick=()=>exportSimplifyPacket(); $('downloadOrphanPacket').onclick=()=>exportOrphanPacket(); $('liveCriticalToggle').onclick=()=>{highlightLiveCriticalOnly=!highlightLiveCriticalOnly;$('liveCriticalToggle').setAttribute('aria-pressed',highlightLiveCriticalOnly?'true':'false');$('liveCriticalToggle').textContent=highlightLiveCriticalOnly?'Highlighting helpers supporting Live functions':'Highlight helpers supporting Live functions';renderSelected()};
 function validateDashboardData(data,url){if(!data||!Array.isArray(data.public_functions))throw new Error(`Loaded data from ${url} did not include a public_functions array`);const missing=data.public_functions.find(f=>!f.lifecycle_status);if(missing)throw new Error(`Lifecycle data missing for public function:
 ${missing.qualified_name||missing.function_name||'unknown'}`);return data} function loadJson(url,required=true){const attemptedUrl=new URL(url,window.location.href).href;return fetch(attemptedUrl).then(response=>{if(!response.ok){if(required)throw new Error(`HTTP ${response.status} ${response.statusText} for ${attemptedUrl}`);return null}return response.json()})} function loadDashboardBundle(dataUrl,metadataUrl){const attemptedDataUrl=new URL(dataUrl,window.location.href).href;return Promise.all([loadJson(dataUrl,true).then(data=>validateDashboardData(data,attemptedDataUrl)),loadJson(metadataUrl,false).catch(()=>null)]).then(([data,artifacts])=>({data,artifacts}))} function showDataLoadError(error){const message=`Failed to load public-function-call-flows.json from ${error&&error.message?error.message:error}`;console.error(message,error);$('dataLoadStatus').textContent=message;$('selectedSummary').innerHTML=`<div class="selected-function-strip risk"><strong>Data-load failure.</strong> ${esc(message)}</div>`} function artifactTimestamp(artifacts,key){return (((artifacts||{}).artifacts||{})[key]||{}).generated_at_sgt||''} function renderMetadata(artifacts){const m=DATA.metadata||{}, dataGenerated=artifactTimestamp(artifacts,'public_function_call_flows_json'), dashboardGenerated=artifactTimestamp(artifacts,'public_function_call_flows_dashboard');$('generatedTimestamp').textContent=(dataGenerated||dashboardGenerated)?`Call-flow data generated: ${dataGenerated||'Generated timestamp unavailable'} · Dashboard UI version: ${dashboardGenerated||'Generated timestamp unavailable'}`:'Generated timestamp unavailable';if(m.source_json_url)$('sourceJsonLink').href=m.source_json_url} function initialFocusedFunction(){const params=new URLSearchParams(window.location.search);return params.get('function')||params.get('focus')||''} function renderDashboard(bundle){const data=bundle&&bundle.data?bundle.data:bundle, artifacts=bundle&&bundle.artifacts?bundle.artifacts:null;DATA=normalizeDashboardData(data);renderMetadata(artifacts);renderCards();setupFilters();renderPublicTable();renderUnused();const focused=initialFocusedFunction();const match=DATA.public_functions.find(f=>f.function_name===focused||f.qualified_name===focused);if(match)selectPublic(match.qualified_name,{scrollToPanel:true});else if(DATA.public_functions.length)selectPublic(DATA.public_functions[0],{scrollToPanel:false});$('dataLoadStatus').textContent='Loaded public-function-call-flows.json'}
-loadDashboardBundle('../reference/_data/public-function-call-flows.json', '../reference/_data/generated-artifacts.json').then(renderDashboard).catch(showDataLoadError);
+loadDashboardBundle('../reference/_data/public-function-call-flows.json', '../reference/_data/generated-artifacts.json').then(bundle=>{hydrateNormalizedFlows(bundle.data);return bundle}).then(renderDashboard).catch(showDataLoadError);
+
+function hydrateNormalizedFlows(data){
+  if(!data||!Array.isArray(data.relationships))return data;
+  const byQn=new Map((data.defined_functions||[]).map(row=>[row.qualified_name,row]));
+  const publicQns=new Set((data.public_functions||[]).map(row=>row.qualified_name));
+  const children=new Map();
+  (data.relationships||[]).forEach(rel=>{
+    const caller=rel.caller_qualified_name, callee=rel.callee_qualified_name;
+    if(!caller||!callee)return;
+    if(!children.has(caller))children.set(caller,[]);
+    children.get(caller).push(rel);
+  });
+  children.forEach(rows=>rows.sort((a,b)=>String(a.callee_qualified_name).localeCompare(String(b.callee_qualified_name))));
+
+  function flowType(fn,qn,rootQn){
+    if(qn===rootQn)return fn.function_type==='widget_function'?'widget_function':'public_function';
+    if(publicQns.has(qn)&&fn.function_type!=='widget_function')return 'public_dependency';
+    return fn.function_type||'shared_function';
+  }
+
+  function expand(rootQn){
+    const rows=[];
+    function visit(qn,depth,parent,stack,relationship){
+      const fn=byQn.get(qn)||{qualified_name:qn,function_name:String(qn).split('.').pop(),source_path:'',source_start_line:0,source_end_line:0,function_type:'shared_function'};
+      const recursive=stack.has(qn);
+      rows.push({...fn,
+        depth,
+        function_type:flowType(fn,qn,rootQn),
+        parent_qualified_name:parent,
+        edge_type:parent?'direct':'root',
+        architecture_violations:relationship?.architecture_violations||[],
+        violation_types:relationship?.violation_types||[],
+        violation_details:relationship?.violation_details||[],
+        call_count_from_parent:parent?(relationship?.call_count||1):0,
+        recursive
+      });
+      if(recursive)return;
+      const next=new Set(stack);next.add(qn);
+      (children.get(qn)||[]).forEach(rel=>visit(rel.callee_qualified_name,depth+1,qn,next,rel));
+    }
+    visit(rootQn,0,null,new Set(),null);
+    return rows;
+  }
+
+  (data.public_functions||[]).forEach(publicFunction=>{
+    if(!Array.isArray(publicFunction.flow))publicFunction.flow=expand(publicFunction.qualified_name);
+  });
+  return data;
+}
+
 </script></main></body></html>
