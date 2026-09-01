@@ -1,0 +1,55 @@
+name: Temporary normalized consumer fix
+
+on:
+  push:
+    branches:
+      - agent/normalize-call-flow-json
+    paths:
+      - scripts/tmp_fix_normalized_call_flow_consumers.py
+      - .github/workflows/tmp-fix-normalized-call-flow-consumers.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+      - name: Apply normalized consumer fixes
+        run: uv run python scripts/tmp_fix_normalized_call_flow_consumers.py
+      - name: Regenerate individual references
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/first-generation.diff
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/second-generation.diff
+          diff -u /tmp/first-generation.diff /tmp/second-generation.diff
+      - name: Run focused validation
+        run: |
+          uv run ruff check scripts/generate_individual_function_reference_pages.py tests/contract/test_public_contract.py tests/unit/test_config.py
+          uv run pytest \
+            tests/contract/test_public_contract.py::test_supported_public_api_matches_generated_call_flow_contract \
+            tests/unit/test_config.py::test_data_agreement_widget_callable_inventory_roles_are_current \
+            tests/unit/test_reference_agent_docs.py::test_function_catalogue_uses_simplified_callable_flow_chips \
+            tests/unit/test_normalized_call_flow_contract.py -q
+      - name: Commit fixes and generated references
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add scripts/generate_individual_function_reference_pages.py tests/contract/test_public_contract.py tests/unit/test_config.py
+          git add docs/api/reference docs/reference/index.md docs/reference/_data/generated-artifacts.json
+          git add docs/reference/function-call-graph.md 2>/dev/null || true
+          git add docs/reference/call-graph.md 2>/dev/null || true
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix normalized call-flow reference consumers"
+          git push
