@@ -5,6 +5,7 @@ on:
     branches:
       - agent/normalize-call-flow-json
     paths:
+      - .github/workflows/regenerate-normalized-call-flow.yml
       - scripts/generate_public_function_call_flows_json.py
       - scripts/generate_public_function_call_flows_dashboard.py
       - scripts/public_function_call_flows_legacy.py
@@ -26,10 +27,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install package
-        run: python -m pip install -e . packaging
+      - name: Install package and focused test dependencies
+        run: python -m pip install -e . packaging pytest
 
-      - name: Record old JSON size
+      - name: Record JSON size
         run: |
           echo "OLD_LINES=$(wc -l < docs/reference/_data/public-function-call-flows.json)" >> "$GITHUB_ENV"
           echo "OLD_BYTES=$(wc -c < docs/reference/_data/public-function-call-flows.json)" >> "$GITHUB_ENV"
@@ -54,26 +55,115 @@ jobs:
           edges = data['relationships']
           edge_keys = {(row['caller_qualified_name'], row['callee_qualified_name']) for row in edges}
           assert len(edges) == len(edge_keys)
+          expected_edges = {
+              (caller, row['qualified_name'])
+              for row in functions
+              for caller in row.get('inbound_callers', [])
+          }
+          assert expected_edges <= edge_keys
           html = Path('docs/assets/public-function-call-flows-dashboard.html').read_text(encoding='utf-8')
           assert 'hydrateNormalizedFlows' in html
+          assert 'Public Function Call Flows V3' in html
           assert '.then(bundle=>{hydrateNormalizedFlows(bundle.data);return bundle}).then(renderDashboard)' in html
           print('relationships', len(edges))
           print('functions', len(functions))
           print('public_functions', len(data.get('public_functions', [])))
           PY
 
-      - name: Report size reduction
+      - name: Wire normalized graph consumers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          agents = Path('AGENTS.md')
+          text = agents.read_text(encoding='utf-8')
+          old = '''## Public call-flow architecture contract
+
+`docs/reference/_data/public-function-call-flows.json` is the committed public callable architecture contract and compact lookup index for agents.
+
+Before function-level source changes, inspect the relevant entry for:
+
+- callable scope and owner file
+- direct and transitive callees
+- helper reachability
+- source locations
+- architecture violations
+- cleanup signals
+- defined-but-not-used functions
+
+Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix.
+'''
+          new = '''## Public call-flow architecture contract
+
+`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract and compact lookup index for agents. It stores each callable once in `defined_functions`, public-root metrics and lifecycle in `public_functions`, and each resolved direct caller-to-callee edge once in `relationships`.
+
+Before function-level source changes:
+
+- find the callable by `qualified_name` in `defined_functions` for owner file, source location, classification, inbound callers, source references, and cleanup signals
+- inspect `public_functions` when public-root width, scope, depth, files touched, lifecycle, or Live impact matters
+- inspect `relationships` where `caller_qualified_name` matches the current callable for direct callees
+- follow those relationships recursively only when transitive helper reachability is needed
+- keep `inbound_callers` and `inbound_source_references` distinct; a package import or loaded-symbol reference is not a call edge
+- use the dashboard when a fully expanded interactive call tree is useful; the dashboard reconstructs that view from the same normalized relationships at runtime
+
+Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix, and do not require agents to parse the generated dashboard HTML to understand the graph.
+'''
+          if old in text:
+              agents.write_text(text.replace(old, new, 1), encoding='utf-8')
+          elif new not in text:
+              raise SystemExit('AGENTS call-flow block not found')
+
+          test_path = Path('tests/unit/test_profile_and_register_table.py')
+          text = test_path.read_text(encoding='utf-8')
+          old = '''def test_profile_registration_call_flow_records_shared_frequency_implementation():
+    payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
+    flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
+    direct_callees = {
+        row["qualified_name"]: row for row in flow["flow"] if row["parent_qualified_name"] == flow["qualified_name"]
+    }
+    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
+'''
+          new = '''def test_profile_registration_call_flow_records_shared_frequency_implementation():
+    payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
+    root = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
+    direct_callees = {
+        row["callee_qualified_name"]: row
+        for row in payload["relationships"]
+        if row["caller_qualified_name"] == root["qualified_name"]
+    }
+    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
+'''
+          if old in text:
+              test_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          elif new not in text:
+              raise SystemExit('profile call-flow test block not found')
+          PY
+
+      - name: Run focused call-flow tests
+        run: pytest tests/unit/test_public_function_call_flows.py -q
+
+      - name: Verify generator idempotence
+        run: |
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/assets/public-function-call-flows-dashboard.html > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/assets/public-function-call-flows-dashboard.html > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+
+      - name: Report current size
         run: |
           NEW_LINES=$(wc -l < docs/reference/_data/public-function-call-flows.json)
           NEW_BYTES=$(wc -c < docs/reference/_data/public-function-call-flows.json)
-          echo "Old JSON: $OLD_LINES lines, $OLD_BYTES bytes"
-          echo "New JSON: $NEW_LINES lines, $NEW_BYTES bytes"
+          echo "Before this validation run: $OLD_LINES lines, $OLD_BYTES bytes"
+          echo "Normalized JSON: $NEW_LINES lines, $NEW_BYTES bytes"
 
-      - name: Commit generated artifacts
+      - name: Commit normalized consumers and generated artifacts
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add docs/reference/_data/public-function-call-flows.json docs/assets/public-function-call-flows-dashboard.html docs/reference/_data/generated-artifacts.json
+          git add AGENTS.md tests/unit/test_profile_and_register_table.py docs/reference/_data/public-function-call-flows.json docs/assets/public-function-call-flows-dashboard.html docs/reference/_data/generated-artifacts.json
           git diff --cached --quiet && exit 0
-          git commit -m "Regenerate normalized call-flow artifacts"
+          git commit -m "Wire normalized call-flow consumers"
           git push
