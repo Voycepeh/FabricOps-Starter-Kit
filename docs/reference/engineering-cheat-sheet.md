@@ -6,6 +6,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 ## Engineering concepts behind FabricOps
 
+<span id="lakehouse-files-vs-tables"></span>
+
 ??? info "Lakehouse Files vs Tables"
 
     A Fabric Lakehouse has two useful storage experiences: **Files** and **Tables**. FabricOps supports both, but they serve different purposes.
@@ -24,6 +26,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     This keeps the distinction between **source representation** and **governed analytical dataset** clear. A CSV arriving from a source system can remain a file; the cleaned, typed, reusable result can become a Delta table.
 
     **Microsoft Learn:** [What is a lakehouse in Microsoft Fabric?](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview)
+
+<span id="lakehouse-first"></span>
 
 ??? info "Lakehouse first — and when Warehouse fits"
 
@@ -81,6 +85,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     **Microsoft Learn:** [Choose between Warehouse and Lakehouse](https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse)
 
+<span id="medallion-architecture"></span>
+
 ??? info "Medallion architecture"
 
     Medallion is a common way to organise data into progressively more refined layers.
@@ -94,6 +100,17 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     The useful idea is **progressive refinement**: preserve the source, create trusted reusable data, then publish data shaped for consumption.
 
     **FabricOps position:** medallion is compatible with FabricOps but is not mandatory. FabricOps standardises governance, metadata, processing, and publication boundaries; it does not require every project to create Bronze, Silver, and Gold layers just to conform to the terminology.
+
+    The starter configuration uses logical stores that map approximately to the common medallion roles, but the names are configurable rather than contractual.
+
+    | Starter example | Approximate medallion role | Typical intent |
+    | --- | --- | --- |
+    | `source` | Bronze | Land source-oriented or raw data |
+    | `unified` | Silver | Standardise, validate, integrate, or enrich data |
+    | `product` | Gold | Publish curated data for analytics, AI, BI, or other consumers |
+    | `metadata` | Not a medallion layer | Store FabricOps governance and engineering metadata |
+
+    Projects can instead use `bronze` / `silver` / `gold` or organisation-specific logical store names. `00_env_config` defines which logical stores exist in the current environment and which physical Fabric items they resolve to.
 
     Use separate persisted layers when they have a real purpose such as reuse, isolation, auditability, different grains, expensive transformations, or different consumer needs. Do not create extra copies only because the layer names exist.
 
@@ -110,6 +127,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     That may resemble Bronze → Silver → Gold, but the actual number of persisted stages should follow the project architecture.
 
     **Microsoft Learn:** [Medallion architecture in Fabric](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture)
+
+<span id="notebook-first"></span>
 
 ??? info "Notebook first — vs Pipeline vs Dataflow Gen2"
 
@@ -142,6 +161,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     This keeps source-specific connector handling in the Fabric ingestion layer while preserving the normal FabricOps notebook path for governed transformation.
 
     **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [SharePoint Folder connector](https://learn.microsoft.com/en-us/fabric/data-factory/connector-sharepoint-folder)
+
+<span id="config-driven-engineering"></span>
 
 ??? info "Config-driven engineering and why FabricOps has I/O functions"
 
@@ -207,6 +228,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     The important architectural choice is not the file format. It is the **separation of environment-specific physical identity from reusable pipeline logic**.
 
+<span id="pyspark-first"></span>
+
 ??? info "PySpark first — and where T-SQL fits"
 
     Once source data is in Spark, FabricOps uses **PySpark DataFrames as the normal transformation path**.
@@ -250,6 +273,8 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     For a large Warehouse source that will be transformed repeatedly, prefer landing it into Lakehouse Delta first rather than making the Warehouse-to-Spark boundary part of every processing step.
 
     **Microsoft Learn:** [Microsoft Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/data-engineering-overview)
+
+<span id="full-vs-incremental"></span>
 
 ??? info "Full vs incremental: full, watermark, and partition"
 
@@ -310,6 +335,12 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     Partition-based processing works well when the source naturally exposes a meaningful processing unit such as `snapshot_date`, business date, or another stable partition identifier.
 
     Do not confuse **logical incremental partitions** with Spark physical partition tuning. Incremental processing decides **which business/source data belongs in the run**. Spark repartitioning decides **how the DataFrame is physically distributed for compute/write**.
+
+    ### Profiling an incremental run
+
+    The DataFrame processed during an incremental run can represent only part of the physical table. FabricOps therefore treats execution scope and registered table Profile as different concerns.
+
+    A partial incremental DataFrame must not replace the registered Profile of the complete physical table. When FabricOps needs to register the table-level Profile after a write, it should profile the complete persisted target so the metadata continues to describe the physical table rather than only the latest increment.
 
     **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse)
 
