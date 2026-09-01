@@ -107,8 +107,9 @@ def write_lakehouse_table(
     completion_context : dict, optional
         Governed source-completion context returned by
         :func:`write_pipeline_prep`. When supplied, source progress is
-        committed only after the physical write succeeds. Calls that omit it
-        have no checkpoint effects.
+        committed only after the physical write succeeds. The target Lineage
+        participant is persisted before source progress. Calls that omit it
+        have no Lineage or checkpoint effects.
 
     Returns
     -------

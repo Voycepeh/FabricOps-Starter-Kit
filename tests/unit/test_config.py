@@ -1211,7 +1211,6 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
     assert schema.fieldNames() == [
         "lineage_id",
         "table_id",
-        "profile_snapshot_id",
         "environment_name",
         "pipeline_role",
         *audit_names,

@@ -94,8 +94,9 @@ def write_warehouse_table(
     completion_context : dict, optional
         Governed source-completion context returned by
         :func:`write_pipeline_prep`. Source progress is committed only after
-        the Warehouse connector write succeeds. Calls that omit it have no
-        checkpoint effects.
+        the Warehouse connector write succeeds. The target Lineage participant
+        is persisted before source progress. Calls that omit it have no Lineage
+        or checkpoint effects.
 
     Returns
     -------

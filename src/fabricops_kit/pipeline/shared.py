@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from functools import reduce
 from typing import Any, Mapping
@@ -75,6 +76,77 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
 _WATERMARK_CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
+_LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
+
+
+def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
+    """Return the deterministic identity for pipeline participation."""
+    values = {
+        "activity_id": str(activity_id or "").strip(),
+        "table_id": str(table_id or "").strip(),
+        "pipeline_role": str(pipeline_role or "").strip().lower(),
+    }
+    if not values["activity_id"] or not values["table_id"]:
+        raise ValueError("activity_id and table_id must be non-empty strings.")
+    if values["pipeline_role"] not in {"source", "target"}:
+        raise ValueError("pipeline_role must be source or target.")
+    return hashlib.sha256(
+        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def persist_lineage_participation(
+    *,
+    table_id: str,
+    pipeline_role: str,
+    activity_id: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> str:
+    """Upsert one canonical source or target participant for an activity."""
+    config, env, resolved_context = resolve_fabric_context(context=context)
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
+    effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
+    audit["_activity_id"] = effective_activity_id
+    identifier = lineage_id(
+        activity_id=effective_activity_id,
+        table_id=table_id,
+        pipeline_role=pipeline_role,
+    )
+    record = coerce_metadata_row_types(
+        _LINEAGE_TABLE,
+        {
+            "lineage_id": identifier,
+            "table_id": str(table_id).strip(),
+            "environment_name": env,
+            "pipeline_role": str(pipeline_role).strip().lower(),
+            **audit,
+        },
+    )
+    from ..config.metadata_schemas import metadata_table_schema_registry
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
+        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
+    spark = get_spark_session()
+    frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "metadata",
+        _LINEAGE_TABLE,
+        configured_lakehouse_schema(config, env, "metadata"),
+        context=resolved_context,
+    )
+    (
+        DeltaTable.forPath(spark, path)
+        .alias("target")
+        .merge(
+            frame.alias("source"),
+            "target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
+        )
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
+    return identifier
 
 
 def complete_source_processing(
@@ -85,6 +157,15 @@ def complete_source_processing(
     """Persist governed source progress using the physical writer's Fabric context."""
     if completion_context is None:
         return
+    lineage = completion_context.get("lineage") if isinstance(completion_context, Mapping) else None
+    if not isinstance(lineage, Mapping):
+        raise ValueError("completion_context must contain target lineage from write_pipeline_prep().")
+    persist_lineage_participation(
+        table_id=str(lineage.get("table_id") or ""),
+        pipeline_role=str(lineage.get("pipeline_role") or ""),
+        activity_id=str(lineage.get("activity_id") or ""),
+        context=context,
+    )
     sources = completion_context.get("sources") if isinstance(completion_context, Mapping) else None
     if not isinstance(sources, list):
         raise ValueError("completion_context must contain a sources list from write_pipeline_prep().")
@@ -613,7 +694,6 @@ def guardrail_compatibility_observation(
 # Guardrail shared implementation
 # ---------------------------------------------------------------------------
 
-import hashlib
 
 import re
 
