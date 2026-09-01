@@ -16,18 +16,21 @@ Do not use this skill for docs-only wording, release-only presentation, or noteb
 Inspect only the sources relevant to the task:
 
 - `AGENTS.md`
-- the target entry in `docs/reference/_data/public-function-call-flows.json`
+- the target function record in `docs/reference/_data/public-function-call-flows.json`
+- the target's direct caller/callee relationships in the same JSON when call structure matters
 - `src/fabricops_kit/public_api.py`
 - the callable owner file and package `shared.py`
 - package exports
 - relevant tests
 - `scripts/reference_docs_metadata.py` only when reference categorisation, usage notes, or examples change
 
+The current call-flow JSON is normalized rather than storing a duplicated expanded tree under every public callable. Use `public_functions` for public-root metrics and lifecycle, `defined_functions` for one record per callable, and `relationships` for direct caller-to-callee edges. Follow `relationships` recursively only when transitive helper reachability is needed.
+
 ## Workflow
 
 1. Classify the callable as Live, Preview, Discontinued, Internal, or Private.
 2. Identify the smallest valid owner-file seam and reuse existing shared helpers.
-3. Inspect the observable contract and current call flow.
+3. Inspect the observable contract and current call flow. Find the callable by `qualified_name`, then inspect direct relationships and recurse only when the downstream scope is relevant.
 4. Implement only the required source change.
 5. Update exports, docstrings, reference metadata, and tests only when affected.
 6. For a new or modified Live callable, compare the docstring with the implementation and cover behaviour, side effects, return interpretation, failure behaviour, runtime assumptions, and a valid example. Preview callable documentation may remain lighter unless the callable is being promoted.
