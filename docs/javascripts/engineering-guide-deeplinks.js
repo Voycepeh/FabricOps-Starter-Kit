@@ -5,6 +5,16 @@
     return window.location.pathname.endsWith(GUIDE_PATH);
   }
 
+  function getHashId() {
+    if (!window.location.hash) return "";
+
+    try {
+      return decodeURIComponent(window.location.hash.slice(1));
+    } catch {
+      return window.location.hash.slice(1);
+    }
+  }
+
   function resolveDetails(target) {
     if (!target) return null;
 
@@ -21,34 +31,54 @@
     return null;
   }
 
-  function openHashTarget() {
-    if (!isEngineeringGuide() || !window.location.hash) return;
+  function openHashTarget(attempt = 0) {
+    if (!isEngineeringGuide()) return;
 
-    let id;
-    try {
-      id = decodeURIComponent(window.location.hash.slice(1));
-    } catch {
-      id = window.location.hash.slice(1);
-    }
-
+    const id = getHashId();
     if (!id) return;
 
     const target = document.getElementById(id);
-    if (!target) return;
+
+    // MkDocs Material can replace page content during instant navigation.
+    // Retry briefly until the new page DOM and its <details> blocks exist.
+    if (!target) {
+      if (attempt < 10) {
+        window.setTimeout(() => openHashTarget(attempt + 1), 50);
+      }
+      return;
+    }
 
     const details = resolveDetails(target);
-    if (details) details.open = true;
+    if (details) {
+      details.open = true;
+    }
 
+    // Wait until opening the details block has changed the layout before scrolling.
     window.requestAnimationFrame(() => {
-      target.scrollIntoView({ block: "start" });
+      window.requestAnimationFrame(() => {
+        const scrollTarget = details || target;
+        scrollTarget.scrollIntoView({ block: "start", behavior: "auto" });
+      });
     });
   }
 
-  window.addEventListener("hashchange", openHashTarget);
+  function scheduleOpen() {
+    window.setTimeout(() => openHashTarget(), 0);
+  }
+
+  window.addEventListener("hashchange", scheduleOpen);
+  window.addEventListener("popstate", scheduleOpen);
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", openHashTarget, { once: true });
+    document.addEventListener("DOMContentLoaded", scheduleOpen, { once: true });
   } else {
-    openHashTarget();
+    scheduleOpen();
+  }
+
+  // MkDocs Material exposes document$ for both initial rendering and instant
+  // navigation. Subscribe when available so deep links also work when users
+  // move to the Engineering Guide from another documentation page.
+  if (typeof document$ !== "undefined" && document$?.subscribe) {
+    document$.subscribe(scheduleOpen);
   }
 })();
