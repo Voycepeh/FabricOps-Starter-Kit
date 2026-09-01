@@ -56,6 +56,7 @@ def _payload():
 
 
 def test_normalize_payload_stores_functions_and_relationships_once():
+    """Persist one callable inventory and one record for each direct edge."""
     normalized = flows.normalize_payload(_payload())
 
     assert normalized["metadata"]["schema"] == "fabricops_public_function_call_flows_v3"
@@ -75,6 +76,7 @@ def test_normalize_payload_stores_functions_and_relationships_once():
 
 
 def test_normalize_payload_keeps_resolved_edges_outside_public_reachability():
+    """Retain resolved package call edges even when no public root reaches them."""
     payload = _payload()
     payload["defined_functions"].append(
         {
@@ -94,6 +96,7 @@ def test_normalize_payload_keeps_resolved_edges_outside_public_reachability():
 
 
 def test_dashboard_hydrates_expanded_flows_from_normalized_relationships():
+    """Keep the interactive dashboard wired to the normalized relationship graph."""
     html = dashboard.render_dashboard(payload=flows.normalize_payload(_payload()), embed_json=True)
 
     assert "hydrateNormalizedFlows" in html
