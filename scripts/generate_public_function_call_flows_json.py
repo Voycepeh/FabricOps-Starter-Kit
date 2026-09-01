@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
 
 # Re-export the existing analysis surface so repository tests and release tooling keep
 # using the same implementation. The committed v3 JSON is normalized only when it is
-# written to DATA_PATH below; dashboard consumers rebuild expanded trees.
+# written to DATA_PATH below; dashboard and agent consumers traverse the same graph.
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
