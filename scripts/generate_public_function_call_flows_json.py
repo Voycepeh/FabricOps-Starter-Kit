@@ -22,11 +22,24 @@ for _name in dir(_legacy):
         globals()[_name] = getattr(_legacy, _name)
 
 
+def _empty_relationship(caller: str, callee: str) -> dict[str, Any]:
+    """Return a canonical direct relationship record."""
+    return {
+        "caller_qualified_name": caller,
+        "callee_qualified_name": callee,
+        "call_count": 1,
+        "architecture_violations": [],
+        "violation_types": [],
+        "violation_details": [],
+    }
+
+
 def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Return a compact v3 graph contract without duplicated expanded public flows."""
     normalized = copy.deepcopy(payload)
     relationship_by_key: dict[tuple[str, str], dict[str, Any]] = {}
 
+    # Preserve the richer edge evidence already calculated for public-root flows.
     for public_function in payload.get("public_functions", []):
         for row in public_function.get("flow", []):
             caller = row.get("parent_qualified_name")
@@ -34,18 +47,22 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
             if not caller or not callee:
                 continue
             key = (str(caller), str(callee))
-            edge = relationship_by_key.setdefault(
-                key,
-                {
-                    "caller_qualified_name": str(caller),
-                    "callee_qualified_name": str(callee),
-                    "call_count": int(row.get("call_count_from_parent") or 1),
-                    "architecture_violations": copy.deepcopy(row.get("architecture_violations", [])),
-                    "violation_types": list(row.get("violation_types", [])),
-                    "violation_details": list(row.get("violation_details", [])),
-                },
-            )
+            edge = relationship_by_key.setdefault(key, _empty_relationship(*key))
             edge["call_count"] = max(edge["call_count"], int(row.get("call_count_from_parent") or 1))
+            if row.get("architecture_violations"):
+                edge["architecture_violations"] = copy.deepcopy(row["architecture_violations"])
+                edge["violation_types"] = list(row.get("violation_types", []))
+                edge["violation_details"] = list(row.get("violation_details", []))
+
+    # Include resolved calls outside public-root reachability as well. These edges are
+    # already represented by each function's canonical inbound_callers list.
+    for callee_record in payload.get("defined_functions", []):
+        callee = callee_record.get("qualified_name")
+        if not callee:
+            continue
+        for caller in callee_record.get("inbound_callers", []):
+            key = (str(caller), str(callee))
+            relationship_by_key.setdefault(key, _empty_relationship(*key))
 
     for public_function in normalized.get("public_functions", []):
         public_function.pop("flow", None)
@@ -57,7 +74,7 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
         {
             "schema": "fabricops_public_function_call_flows_v3",
             "graph_storage": "normalized_functions_and_direct_relationships",
-            "relationship_definition": "Each direct package-local caller to callee relationship is stored once. Consumers reconstruct downstream trees by traversing relationships from a public root.",
+            "relationship_definition": "Each resolved direct package-local caller to callee relationship is stored once. Consumers reconstruct downstream trees by traversing relationships from a public root.",
         }
     )
     normalized["metadata"] = metadata
