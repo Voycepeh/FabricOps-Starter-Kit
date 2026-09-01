@@ -126,19 +126,18 @@ For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusab
 
 ## Public call-flow architecture contract
 
-`docs/reference/_data/public-function-call-flows.json` is the committed public callable architecture contract and compact lookup index for agents.
+`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract and compact lookup index for agents. It stores each callable once in `defined_functions`, public-root metrics and lifecycle in `public_functions`, and each resolved direct caller-to-callee edge once in `relationships`.
 
-Before function-level source changes, inspect the relevant entry for:
+Before function-level source changes:
 
-- callable scope and owner file
-- direct and transitive callees
-- helper reachability
-- source locations
-- architecture violations
-- cleanup signals
-- defined-but-not-used functions
+- find the callable by `qualified_name` in `defined_functions` for owner file, source location, classification, inbound callers, source references, and cleanup signals
+- inspect `public_functions` when public-root width, scope, depth, files touched, lifecycle, or Live impact matters
+- inspect `relationships` where `caller_qualified_name` matches the current callable for direct callees
+- follow those relationships recursively only when transitive helper reachability is needed
+- keep `inbound_callers` and `inbound_source_references` distinct; a package import or loaded-symbol reference is not a call edge
+- use the dashboard when a fully expanded interactive call tree is useful; the dashboard reconstructs that view from the same normalized relationships at runtime
 
-Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix.
+Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix, and do not require agents to parse the generated dashboard HTML to understand the graph.
 
 Regenerate and commit the call-flow outputs only when a change affects:
 

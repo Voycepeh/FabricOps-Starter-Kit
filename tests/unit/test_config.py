@@ -936,7 +936,7 @@ def test_data_agreement_widget_role_hints_do_not_restore_generic_workflow():
 
 
 def test_data_agreement_widget_callable_inventory_roles_are_current():
-    """Verify generated v2 callable-flow inventory reflects the widget role split."""
+    """Verify normalized callable inventory reflects the widget role split."""
     import json
 
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
@@ -946,17 +946,9 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
         "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
     )
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
-    public_functions = {row["qualified_name"]: row for row in flow_data["public_functions"]}
+    assert rows["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["function_type"] == "widget_function"
     assert (
-        public_functions["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["flow"][0][
-            "function_type"
-        ]
-        == "widget_function"
-    )
-    assert (
-        public_functions["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["flow"][0][
-            "function_type"
-        ]
+        rows["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["function_type"]
         == "widget_function"
     )
 
