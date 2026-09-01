@@ -41,7 +41,7 @@ The shared Metadata Lakehouse carries FabricOps metadata between Governance and 
 
 **Configuration-driven Engineering** keeps reusable pipeline code separate from environment-specific Fabric item identities and repeatable processing choices. `00_env_config` defines the active environment and logical stores, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. The same `02_pipeline` can therefore move from Development to Production without hard-coding different workspace paths and item IDs throughout the notebook.
 
-These four ideas recur throughout the rest of the workflow. Hover over a glossary term when you only need the short definition, or use the [FabricOps Glossary](glossary.md) for the full terminology reference.
+Read more about [Config-driven engineering and why FabricOps has I/O functions](reference/engineering-cheat-sheet.md#config-driven-engineering). Hover over a glossary term when you only need the short definition, or use the [FabricOps Glossary](glossary.md) for the full terminology reference.
 
 </div>
 
@@ -72,20 +72,9 @@ These four ideas recur throughout the rest of the workflow. Hover over a glossar
 
 ### Data layers and Medallion Architecture
 
-FabricOps adopts the Microsoft Fabric **Medallion Architecture** principle of progressively refining data from raw to validated and enriched to curated consumption-ready forms.
+FabricOps is compatible with the familiar **Bronze → Silver → Gold** pattern, but it does not require those literal store names or a fixed number of persisted layers. Projects define their logical stores in `00_env_config` and use only the layers their architecture actually needs.
 
-Microsoft describes the familiar layers as **Bronze → Silver → Gold**. FabricOps does not require those literal store names. The `00_env_config` notebook defines the logical stores available to a project, so teams can use `bronze` / `silver` / `gold`, keep the starter example names `source` / `unified` / `product`, or introduce additional organisation-specific layers where the architecture needs them.
-
-The starter configuration maps approximately like this:
-
-| Starter example | Medallion role | Typical intent |
-| --- | --- | --- |
-| `source` | Bronze | Land source-oriented or raw data. |
-| `unified` | Silver | Standardize, validate, integrate, or enrich data. |
-| `product` | Gold | Publish curated data for downstream analytics, AI, and BI. |
-| `metadata` | Not a Medallion layer | Store FabricOps governance and engineering metadata. |
-
-This mapping is an example, not a fixed FabricOps contract. `REQUIRED_TARGETS` and `ENV_PATHS` in `00_env_config` define the store keys the project uses, while `FabricStore` records the actual Fabric item behind each key.
+Read more about [Medallion architecture in FabricOps](reference/engineering-cheat-sheet.md#medallion-architecture) and [Lakehouse first — and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first).
 
 </div>
 
@@ -209,45 +198,15 @@ FabricOps standardizes the boundaries around ETL with a simple operating model:
 
 **0. Environment → E. Extract → T. Transform → L. Load**
 
-!!! abstract "0. Environment"
+**0. Environment** establishes whether the notebook is running in Development or Production and loads the configured Fabric targets.
 
-    Determine Development or Production from `00_env_config`.
+**E. Extract** reads one or more governed sources and resolves the applicable contract, Guardrails, source state, and checks.
 
-    In Development, use current authoring or a selected Data Contract. In Production, use the active Data Contract.
+**T. Transform** contains the project-specific engineering logic. FabricOps governs the inputs and outputs rather than hiding the business transformation.
 
-!!! info "E. Extract"
+**L. Load** publishes one governed target table using the applicable Data Contract, Guardrails, and load strategy.
 
-    Define one or more source table IDs. Resolve source Guardrails and Data Contract context, or current Guardrail metadata in Development. Check schema, freshness, and change state.
-
-    Configure the source-read strategy as Full Dataset, Incremental Watermark, or Incremental Partition. FabricOps then resolves the runtime read mode as `skip`, `full_dataset`, or `incremental_subset`.
-
-    Run Data Quality checks on the DataFrame actually being processed. Profile and register only when the DataFrame represents the complete physical table, then write the applicable `METADATA_DATA_PROFILED` and `METADATA_DATA_LINEAGE` records.
-
-??? note "Warehouse sources should normally land in the configured raw/source layer first"
-
-    For large or repeatedly processed Warehouse sources, use the Warehouse primarily as an ingestion boundary. Land the required full or incremental extract into the configured raw/source layer as Delta, then perform profiling, Data Quality checks, transformations, and governed processing from the Lakehouse. This keeps repeated Spark processing in OneLake and avoids using the external Warehouse as the normal processing layer.
-
-!!! abstract "T. Transform"
-
-    Apply user-defined business transformation. Join, derive, aggregate, enrich, and reshape as required. FabricOps governs the inputs and outputs, not the business logic.
-
-!!! success "L. Load"
-
-    Define one governed target table ID. A pipeline may read one or many upstream sources, but the governed `02_pipeline` pattern publishes exactly one target table. If another persisted output is required, create a separate downstream pipeline rather than adding another governed target write to the same pipeline.
-
-    Resolve target Guardrails and governed load strategy from the Data Contract, or Development definition. Check schema and Data Quality, add audit and technical columns, prepare load-strategy execution, write the target table, then read back and profile/register the complete persisted target.
-
-??? note "Full-table profiling"
-
-    Incremental processing may use an Incremental Subset for execution, but a partial DataFrame must not replace the registered Profile of the complete physical table.
-
-??? info "Why FabricOps uses PySpark mainly"
-
-    **PySpark is the standard for repeatable `02_pipeline` workflows.**
-
-    Spark has startup overhead, and pandas may be better suited to smaller one-off analyses. FabricOps uses PySpark because it supports larger datasets and provides a consistent engineering pattern for maintenance and handover.
-
-    This does not prevent teams from using pandas or other tools for appropriate exploration.
+The detailed engineering choices deliberately live in the Engineering Guide rather than on this operating-model page. Read more about [Full vs incremental processing](reference/engineering-cheat-sheet.md#full-vs-incremental), [Lakehouse first — and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first), and [PySpark first — and where T-SQL fits](reference/engineering-cheat-sheet.md#pyspark-first).
 
 </div>
 
