@@ -37,6 +37,7 @@ def _patch_source_identity(monkeypatch, identity=None):
         "resolve_catalogue_table_identity",
         lambda _config, _env, table_id, **_kwargs: resolved if table_id == resolved["table_id"] else pytest.fail(table_id),
     )
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
     return resolved
 
 
@@ -56,6 +57,8 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
 
 def test_full_dataset_source_can_prepare_before_any_target_exists(monkeypatch):
     identity = _patch_source_identity(monkeypatch)
+    lineage = []
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *_args, **_kwargs: pytest.fail("observation"))
     monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: pytest.fail("checkpoint"))
 
@@ -70,6 +73,7 @@ def test_full_dataset_source_can_prepare_before_any_target_exists(monkeypatch):
     assert result["scope"] == {"type": "full_dataset"}
     assert "target" not in result
     assert "processing" not in result
+    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
 
 
 def test_read_prep_requires_source_table_id():
@@ -78,14 +82,32 @@ def test_read_prep_requires_source_table_id():
 
 
 def test_read_prep_rejects_unknown_source_table_id(monkeypatch):
+    lineage = []
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
     monkeypatch.setattr(
         read_module,
         "resolve_catalogue_table_identity",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("No active registered Catalogue table")),
     )
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     with pytest.raises(ValueError, match="No active registered Catalogue table"):
         read_module.read_pipeline_prep(source_table_id="wrong", source_read_strategy="full_dataset")
+    assert lineage == []
+
+
+def test_two_registered_sources_share_activity_lineage_context(monkeypatch):
+    lineage = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {"activity_id": "activity"}))
+    monkeypatch.setattr(
+        read_module,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **_kwargs: _identity(table_id),
+    )
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
+    for table_id in ("warehouse:source:dbo:a", "warehouse:source:dbo:b"):
+        read_module.read_pipeline_prep(source_table_id=table_id, source_read_strategy="full_dataset")
+    assert [row["table_id"] for row in lineage] == ["warehouse:source:dbo:a", "warehouse:source:dbo:b"]
+    assert {row["context"]["activity_id"] for row in lineage} == {"activity"}
 
 
 @pytest.mark.parametrize(("previous", "upper", "expected_mode"), [
@@ -155,7 +177,7 @@ def test_read_prep_uses_source_processing_from_change_check(monkeypatch):
 
 def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
     writes = []
-    completion = {"sources": [{
+    completion = {"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{
         "type": "watermark",
         "source": {"table_id": "warehouse:source:dbo:bookings"},
         "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_datetime"},
@@ -174,11 +196,15 @@ def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
     ))
     monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
     monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda *_args: "metadata")
+    monkeypatch.setattr(shared_module, "persist_lineage_participation", lambda **_kwargs: writes.append(("METADATA_DATA_LINEAGE", {})))
     monkeypatch.setattr(shared_module, "write_lakehouse_table_core", lambda frame, *args, **kwargs: writes.append((args[0], frame["rows"][0])))
 
     shared_module.complete_source_processing(completion)
-    assert writes[0][0] == "METADATA_SOURCE_WATERMARK_CHECKPOINT"
-    assert writes[0][1]["watermark_value"] == "2026-08-26 12:00"
+    assert [table for table, _row in writes] == [
+        "METADATA_DATA_LINEAGE",
+        "METADATA_SOURCE_WATERMARK_CHECKPOINT",
+    ]
+    assert writes[1][1]["watermark_value"] == "2026-08-26 12:00"
 
 
 @pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])
@@ -378,7 +404,7 @@ def test_lakehouse_governed_completion_runs_after_each_supported_write(monkeypat
     events = []
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
     monkeypatch.setattr(shared_module, "complete_source_processing", lambda completion, **_kwargs: events.append(("complete", completion)))
-    completion = {"sources": [{"type": "watermark"}]}
+    completion = {"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{"type": "watermark"}]}
     if strategy in {"scd1", "scd2"}:
         monkeypatch.setattr(import_module("fabricops_kit.pipeline.shared"), "execute_lakehouse_processing", lambda *args, **kwargs: events.append(("write", strategy)))
         lakehouse_writer.write_lakehouse_table(
@@ -405,7 +431,7 @@ def test_warehouse_completion_runs_after_supported_write(monkeypatch, mode):
     monkeypatch.setattr(warehouse_writer, "resolve_configured_warehouse_table", lambda *args, **kwargs: ("store", "dbo", "target", "dbo.target"))
     monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: events.append("write"))
     monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: events.append("complete"))
-    warehouse_writer.write_warehouse_table(object(), "dbo", "target", mode=mode, completion_context={"sources": []})
+    warehouse_writer.write_warehouse_table(object(), "dbo", "target", mode=mode, completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": []})
     assert events == ["write", "complete"]
 
 
@@ -416,7 +442,7 @@ def test_writer_failure_never_attempts_completion(monkeypatch):
     monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
     monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: pytest.fail("completion"))
     with pytest.raises(RuntimeError, match="write failed"):
-        warehouse_writer.write_warehouse_table(object(), "dbo", "target", completion_context={"sources": []})
+        warehouse_writer.write_warehouse_table(object(), "dbo", "target", completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": []})
 
 
 def test_ungoverned_writer_does_not_resolve_completion_state(monkeypatch):
@@ -473,6 +499,7 @@ def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch
     monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda config, env, _target: (
         observed.setdefault("metadata_identity", (config, env)) or "metadata"
     ))
+    monkeypatch.setattr(shared_module, "persist_lineage_participation", lambda **kwargs: observed.setdefault("lineage_context", kwargs.get("context")))
     monkeypatch.setattr(
         shared_module,
         "write_lakehouse_table_core",
@@ -483,7 +510,7 @@ def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch
         object(),
         "target",
         context=explicit_context,
-        completion_context={"sources": [{
+        completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{
             "type": "watermark",
             "source": {"table_id": "lakehouse:source:dbo:bookings"},
             "source_processing": {

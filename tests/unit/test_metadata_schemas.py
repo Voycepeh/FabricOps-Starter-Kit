@@ -123,7 +123,6 @@ def test_stage2_lineage_schema_uses_pipeline_language():
     assert fields == [
         "lineage_id",
         "table_id",
-        "profile_snapshot_id",
         "environment_name",
         "pipeline_role",
         *[name for name, _kind, _nullable in audit_schema_fields()],

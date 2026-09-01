@@ -187,9 +187,6 @@ def registered(monkeypatch):
     def upsert_catalogue(*, catalogue_df, config, env, spark_session):
         writes.append({"df": catalogue_df, "table_name": CATALOGUE_TABLE, "mode": "upsert"})
 
-    def upsert_lineage(*, lineage_df, config, env, spark_session):
-        writes.append({"df": lineage_df, "table_name": "METADATA_DATA_LINEAGE", "mode": "upsert"})
-
     def replace_frequency(*, frequency_df, profiled_df, config, env, spark_session):
         writes.append(
             {
@@ -203,7 +200,6 @@ def registered(monkeypatch):
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
     monkeypatch.setattr(module, "_replace_frequency_rows", replace_frequency)
     monkeypatch.setattr(module, "_upsert_catalogue_identities", upsert_catalogue)
-    monkeypatch.setattr(module, "_upsert_lineage_event", upsert_lineage)
     return writes
 
 
@@ -296,8 +292,7 @@ def test_profile_and_register_table_accepts_source_and_target_roles(spark_sessio
         _source_df(spark_session), profile_role=role, target="raw", table_name="customers"
     )
     assert "profile_role" not in result.columns
-    lineage = next(write["df"] for write in registered if write["table_name"] == "METADATA_DATA_LINEAGE")
-    assert lineage.collect()[0].pipeline_role == role.strip().lower()
+    assert "METADATA_DATA_LINEAGE" not in {write["table_name"] for write in registered}
 
 
 @pytest.mark.parametrize(("target", "kind", "schema"), [("silver", "lakehouse", None), ("warehouse", "warehouse", "dbo")])
@@ -645,61 +640,32 @@ def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
 
 def test_lineage_schema_is_pipeline_participation_contract():
     fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
-    assert fields[:5] == [
-        "lineage_id", "table_id", "profile_snapshot_id", "environment_name", "pipeline_role"
-    ]
+    assert fields[:4] == ["lineage_id", "table_id", "environment_name", "pipeline_role"]
+    assert "profile_snapshot_id" not in fields
     assert {"lineage_event_id", "metadata_table_key", "schema_fingerprint", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
     assert "_committed_at" in fields
 
 
-def test_lineage_writer_uses_activity_for_idempotent_identity(spark_session, monkeypatch):
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    audit = {
-        "_committed_by": "tester",
-        "_committed_at": datetime(2026, 1, 1, 10, 31),
-        "_workspace_id": "workspace-1",
-        "_workspace_name": "Workspace One",
-        "_notebook_id": "notebook-1",
-        "_notebook_name": "Notebook One",
-        "_metadata_lakehouse_name": "metadata_lh",
-        "_activity_id": "activity-1",
-    }
-    captured = []
-    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **_kwargs: audit)
-    monkeypatch.setattr(module, "_upsert_lineage_event", lambda **kwargs: captured.append(kwargs["lineage_df"]))
-    arguments = {
-        "table_id": "table-1",
-        "profile_snapshot_id": "snapshot-1",
-        "pipeline_role": "source",
-        "config": object(),
-        "env": "dev",
-        "context": {},
-        "spark_session": spark_session,
-    }
-    module._write_lineage_participation(**arguments)
-    module._write_lineage_participation(**arguments)
-    rows = [dataframe.collect()[0].asDict() for dataframe in captured]
-    assert rows[0] == rows[1]
-    assert rows[0]["lineage_id"] == module._lineage_id(
-        activity_id="activity-1", table_id="table-1", profile_snapshot_id="snapshot-1", pipeline_role="source"
+def test_lineage_identity_is_deterministic_and_role_sensitive():
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
+    source_id = module.lineage_id(
+        activity_id="activity-1", table_id="table-1", pipeline_role="source"
     )
-    assert rows[0]["_committed_at"] == audit["_committed_at"]
+    assert source_id == module.lineage_id(
+        activity_id="activity-1", table_id="table-1", pipeline_role="source"
+    )
+    assert source_id != module.lineage_id(
+        activity_id="activity-1", table_id="table-1", pipeline_role="target"
+    )
 
 
-def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeypatch, registered):
+def test_profile_registration_does_not_persist_lineage(spark_session, monkeypatch, registered):
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
-    monkeypatch.setattr(
-        module,
-        "_upsert_lineage_event",
-        lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("merge failed")),
+    profile_and_register_table(
+        _source_df(spark_session), profile_role="source", target="raw", table_name="customers"
     )
-    expected_id = build_table_id("lakehouse", "raw", None, "customers")
-    with pytest.raises(RuntimeError, match=expected_id):
-        profile_and_register_table(
-            _source_df(spark_session), profile_role="source", target="raw", table_name="customers"
-        )
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, PROFILED_FREQUENCY_TABLE, CATALOGUE_TABLE]
+    assert "METADATA_DATA_LINEAGE" not in {write["table_name"] for write in registered}
 
 
 def test_profile_write_failure_stops_before_catalogue_and_lineage(spark_session, monkeypatch, registered):

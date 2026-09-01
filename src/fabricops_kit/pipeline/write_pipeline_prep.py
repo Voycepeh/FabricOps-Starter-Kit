@@ -93,8 +93,8 @@ def write_pipeline_prep(
     -------
     dict
         Audited target DataFrame, physical writer mode/options, the unchanged
-        resolved processing definition, its prepared scope, and an optional
-        governed completion context for the physical writer.
+        resolved processing definition, its prepared scope, target Lineage
+        preparation, and governed completion context for the physical writer.
 
     Raises
     ------
@@ -106,7 +106,7 @@ def write_pipeline_prep(
     -----
     FabricOps resolves one run-level audit record and adds only compact target
     provenance fields. This function does not call a Lakehouse or Warehouse
-    writer or commit source progress. The completion context has no effect
+    writer, persist target Lineage, or commit source progress. The completion context has no effect
     unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
@@ -183,5 +183,19 @@ def write_pipeline_prep(
         "scope": prepared_scope,
         "target": target_identity,
         "target_kind": store_kind,
-        "completion": {"sources": completion_sources} if completion_sources else None,
+        "lineage": {
+            "table_id": target_identity["table_id"],
+            "pipeline_role": "target",
+            "activity_id": audit["_activity_id"],
+            "environment_name": env,
+        },
+        "completion": {
+            "lineage": {
+                "table_id": target_identity["table_id"],
+                "pipeline_role": "target",
+                "activity_id": audit["_activity_id"],
+                "environment_name": env,
+            },
+            "sources": completion_sources,
+        },
     }

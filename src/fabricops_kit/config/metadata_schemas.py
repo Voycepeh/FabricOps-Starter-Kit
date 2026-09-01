@@ -209,7 +209,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             [
                 ("lineage_id", "string"),
                 ("table_id", "string"),
-                ("profile_snapshot_id", "string"),
                 ("environment_name", "string"),
                 ("pipeline_role", "string"),
                 *audit,

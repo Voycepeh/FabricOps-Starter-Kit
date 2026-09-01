@@ -14,7 +14,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.check_changes import _observation_changes
 from fabricops_kit.pipeline.observe_table import _observe_table_core
-from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
+from fabricops_kit.pipeline.shared import persist_lineage_participation, resolve_catalogue_table_identity
 
 
 _CHECKPOINT_TABLE = "METADATA_SOURCE_WATERMARK_CHECKPOINT"
@@ -275,8 +275,9 @@ def read_pipeline_prep(
     -------
     dict
         Canonical source identity, normalized ``source_processing``, and one
-        runtime ``read_mode`` plus ``scope``. Candidate source completion state
-        is returned separately and is never committed by this function.
+        runtime ``read_mode`` plus ``scope``. The resolved table is recorded as
+        source Lineage for the current activity. Candidate source completion
+        state is returned separately and is never committed by this function.
 
     Raises
     ------
@@ -318,6 +319,11 @@ def read_pipeline_prep(
         config, env, source_table_id, context=context
     )
     source_identity["store_kind"] = source_identity["store_type"]
+    persist_lineage_participation(
+        table_id=str(source_identity["table_id"]),
+        pipeline_role="source",
+        context=context,
+    )
     strategy = source_processing["read_strategy"]
     observation = None
     changes = None

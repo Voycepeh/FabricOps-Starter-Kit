@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from typing import Any, Mapping, Sequence
@@ -26,7 +25,6 @@ from fabricops_kit.pipeline.shared import (
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 PROFILED_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
@@ -134,19 +132,6 @@ def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[st
             "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
         )
     return resolved
-
-
-def _lineage_id(*, activity_id: str, table_id: str, profile_snapshot_id: str, pipeline_role: str) -> str:
-    """Return the deterministic runtime lineage identity."""
-    payload = {
-        "activity_id": _require_non_empty_string(activity_id, "activity_id"),
-        "table_id": _require_non_empty_string(table_id, "table_id"),
-        "profile_snapshot_id": _require_non_empty_string(profile_snapshot_id, "profile_snapshot_id"),
-        "pipeline_role": _normalize_choice(pipeline_role, "pipeline_role", {"source", "target"}),
-    }
-    return hashlib.sha256(
-        json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
 
 
 def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
@@ -490,66 +475,6 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
     )
 
 
-def _write_lineage_participation(
-    *,
-    table_id: str,
-    profile_snapshot_id: str,
-    pipeline_role: str,
-    config: Any,
-    env: str,
-    context: dict[str, Any],
-    spark_session: Any,
-) -> None:
-    """Write one idempotent source/target lineage participation record."""
-    normalized_table_id = _require_non_empty_string(table_id, "table_id")
-    normalized_snapshot = _require_non_empty_string(profile_snapshot_id, "profile_snapshot_id")
-    normalized_role = _normalize_choice(pipeline_role, "pipeline_role", {"source", "target"})
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    row = coerce_metadata_row_types(
-        LINEAGE_TABLE,
-        {
-            "lineage_id": _lineage_id(
-                activity_id=audit["_activity_id"],
-                table_id=normalized_table_id,
-                profile_snapshot_id=normalized_snapshot,
-                pipeline_role=normalized_role,
-            ),
-            "table_id": normalized_table_id,
-            "profile_snapshot_id": normalized_snapshot,
-            "environment_name": env,
-            "pipeline_role": normalized_role,
-            **audit,
-        },
-    )
-    lineage_df = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[LINEAGE_TABLE])
-    _upsert_lineage_event(lineage_df=lineage_df, config=config, env=env, spark_session=spark_session)
-
-
-def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_session: Any) -> None:
-    """Upsert Lineage rows by environment and lineage_id."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "metadata",
-        LINEAGE_TABLE,
-        configured_lakehouse_schema(config, env, "metadata"),
-        context={"config": config, "env": env},
-    )
-    (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
-        .merge(
-            lineage_df.alias("source"),
-            "target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
-        )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .execute()
-    )
-
-
 def profile_and_register_table(
     df,
     *,
@@ -570,8 +495,7 @@ def profile_and_register_table(
     The notebook supplies a Spark DataFrame and the table identity that the
     DataFrame represents. FabricOps calculates one profiling result row for
     each eligible column, saves a new profiling snapshot, creates stable table
-    and column IDs, updates or adds catalogue records, records whether the
-    table was used as an input or produced as an output, and returns the
+    and column IDs, updates or adds catalogue records, and returns the
     profiling result to the notebook.
     
     The original business DataFrame is not written, sampled, re-read, or
@@ -584,11 +508,12 @@ def profile_and_register_table(
         Spark DataFrame to profile exactly as supplied by the caller. The
         helper does not sample, re-read, or mutate this DataFrame.
     profile_role : {"source", "target"}
-        Records whether the profiled asset participated in the notebook
-        activity as an input or an output: ``source`` for an activity input and
-        ``target`` for an activity output. The value is recorded as ``pipeline_role`` in
-        ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
-        ``METADATA_DATA_CATALOGUE``.
+        Selects the profiling and Catalogue registration rules for the asset.
+        ``source`` rejects target-owned load-strategy metadata. ``target``
+        requires and stores the governed target processing definition in
+        ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage;
+        governed pipeline preparation and successful publication own source
+        and target Lineage respectively.
     table : mapping, optional
         Canonical resolved table identity returned as ``read_pipeline_prep()``
         ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
@@ -645,16 +570,17 @@ def profile_and_register_table(
         A Spark DataFrame containing one canonical profiling record for each
         eligible column in the supplied DataFrame. This is the same DataFrame
         appended to ``METADATA_DATA_PROFILED`` and includes stable table and column identity, profiling snapshot identity,
-        compact statistical metrics, environment identity, and runtime audit fields. Flattened child frequency rows, generated catalogue rows,
-        and the lineage event are not returned.
+        compact statistical metrics, environment identity, and runtime audit
+        fields. Flattened child frequency rows and generated Catalogue rows
+        are not returned.
     
     Raises
     ------
     ValueError
         If the role, target, configured store, schema, or table identity is invalid.
     RuntimeError
-        If Delta replacement support is unavailable, or lineage registration
-        fails after profile and catalogue registration succeed.
+        If required Delta replacement or Catalogue merge support is
+        unavailable.
     
     Notes
     -----
@@ -765,17 +691,6 @@ def profile_and_register_table(
     identity or deactivating the column. Column catalogue rows that disappear from a
     new profile are retained but marked inactive rather than silently deleted.
     
-    ``METADATA_DATA_LINEAGE`` records whether the table was used as an input
-    or produced as an output during the current notebook activity. A
-    ``profile_role="source"`` value means the DataFrame was used as an input.
-    A ``profile_role="target"`` value means the DataFrame was produced as an
-    output. Lineage-specific fields are ``lineage_id``, ``table_id``,
-    ``profile_snapshot_id``, ``environment_name``, and ``pipeline_role``. The
-    standard eight underscore audit fields are the execution-context contract,
-    and ``_committed_at`` is the authoritative timestamp for the lineage event.
-    ``lineage_id`` is deterministically derived from ``_activity_id``,
-    ``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.
-    
     What the notebook receives: a Spark DataFrame containing one profiling
     result row for each eligible column.
     
@@ -786,7 +701,6 @@ def profile_and_register_table(
       ``profile_id`` and grouped by ``profile_snapshot_id``.
     * ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
       records.
-    * ``METADATA_DATA_LINEAGE``: the current source or target activity.
     
     Statistical profiling records describe the complete DataFrame supplied
     during the notebook activity. If ``frequency_profile_df`` is supplied,
@@ -800,17 +714,11 @@ def profile_and_register_table(
     after a successful complete-table read, and profile a target only after
     its write has succeeded and the persisted target has been confirmed.
     
-    Profile and catalogue registration occur before lineage registration. If
-    lineage registration fails after those writes succeed, the function raises
-    a ``RuntimeError`` explaining that profile and catalogue registration
-    succeeded but lineage registration failed. Guardrail execution is a
-    separate workflow.
+    This function does not create or update ``METADATA_DATA_LINEAGE``.
+    Registered source participation is recorded by ``read_pipeline_prep()``,
+    while target participation is recorded only after a successful governed
+    publication. Guardrail execution is a separate workflow.
     
-    This Stage 2 redesign changes the physical schemas for Catalogue, Profile,
-    Profile Frequency, Lineage, and Source Observation. Existing development
-    metadata tables may need recreation through the established setup flow; no
-    compatibility or automatic migration layer is provided.
-
     """
     normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     config, env, context = resolve_fabric_context()
@@ -905,19 +813,4 @@ def profile_and_register_table(
         env=env,
         spark_session=df.sparkSession,
     )
-    try:
-        _write_lineage_participation(
-            table_id=table_id,
-            profile_snapshot_id=profile_snapshot_id,
-            pipeline_role=normalized_profile_role,
-            config=config,
-            env=env,
-            context=context,
-            spark_session=df.sparkSession,
-        )
-    except Exception as exc:
-        raise RuntimeError(
-            "Profile and catalogue registration succeeded but lineage registration failed "
-            f"for table_id={table_id!r} and pipeline_role={normalized_profile_role!r}."
-        ) from exc
     return profiled_df
