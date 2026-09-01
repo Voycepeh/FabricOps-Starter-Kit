@@ -27,12 +27,14 @@ jobs:
         run: uv sync --frozen --extra docs --extra dev
       - name: Apply normalized consumer fixes
         run: uv run python scripts/tmp_fix_normalized_call_flow_consumers.py
-      - name: Regenerate individual references
+      - name: Regenerate individual references twice
         run: |
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/first-generation.diff
+          cp docs/reference/_data/generated-artifacts.json /tmp/generated-artifacts-first.json
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/first-generation.diff
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/second-generation.diff
+          cp /tmp/generated-artifacts-first.json docs/reference/_data/generated-artifacts.json
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/second-generation.diff
           diff -u /tmp/first-generation.diff /tmp/second-generation.diff
       - name: Run focused validation
         run: |
