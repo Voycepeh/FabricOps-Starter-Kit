@@ -58,7 +58,7 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
 
     ??? info "Background reading"
 
-        See Medallion Architecture in the [FabricOps Glossary](../glossary.md#medallion-architecture) for the Microsoft Learn source and the FabricOps naming approach.
+        The glossary gives the canonical terms. For the engineering reasoning behind the store choices, read [Medallion architecture in FabricOps](../reference/engineering-cheat-sheet.md#medallion-architecture) and [Lakehouse first — and when Warehouse fits](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
 ???+ success "Live — Create a Fabric Environment and install the FabricOps wheel"
 
@@ -81,6 +81,8 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
     | `01_governance` | Manages Data Steward, Data Agreement, Data Contract, Enrichment, Guardrail, and review workflows. |
     | `02_pipeline` | Runs the canonical Environment → Extract → Transform → Load workflow, including IO, profiling, Guardrails, and recorded metadata. |
     | `99_explore` | Uses governed Production data for project exploration, AI, or BI work. |
+
+    FabricOps uses notebooks as the visible engineering unit while relying on native Fabric Pipelines for orchestration when needed. Read more in [Notebook first — vs Pipeline vs Dataflow Gen2](../reference/engineering-cheat-sheet.md#notebook-first).
 
     !!! tip "Naming your copies"
 
