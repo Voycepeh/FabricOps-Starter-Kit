@@ -11,6 +11,7 @@ def replace_once(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+# Temporary one-shot patch used only to update PR #1191 consumers.
 # 1. Contract test now owns the normalized v3 contract.
 path = Path("tests/contract/test_public_contract.py")
 replace_once(
@@ -84,7 +85,6 @@ match = re.search(r"^def ", text[start + 1 :], flags=re.MULTILINE)
 if not match:
     raise SystemExit("next top-level function not found after call-flow loader")
 end = start + 1 + match.start()
-old_loader = text[start:end]
 new_loader = '''def _expanded_downstream_count(root_qn: str, relationships: list[dict[str, Any]]) -> int:
     """Return the expanded downstream row count reconstructed from normalized edges."""
     children: dict[str, list[str]] = {}
