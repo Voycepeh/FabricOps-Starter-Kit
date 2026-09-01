@@ -6,14 +6,14 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts import public_function_call_flows_dashboard_legacy as _legacy
+    from scripts import public_function_call_flows_dashboard_renderer as _renderer
 except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
-    import public_function_call_flows_dashboard_legacy as _legacy
+    import public_function_call_flows_dashboard_renderer as _renderer
 
 
-for _name in dir(_legacy):
+for _name in dir(_renderer):
     if not _name.startswith("__"):
-        globals()[_name] = getattr(_legacy, _name)
+        globals()[_name] = getattr(_renderer, _name)
 
 
 _HYDRATE_NORMALIZED_GRAPH_JS = r"""
@@ -75,8 +75,8 @@ def render_dashboard(
     data_url: str = DASHBOARD_DATA_URL,
     metadata_url: str = ARTIFACT_METADATA_URL,
 ) -> str:
-    """Render the existing dashboard and hydrate expanded flows from relationships at load time."""
-    html = _legacy.render_dashboard(
+    """Render the dashboard and hydrate expanded flows from relationships at load time."""
+    html = _renderer.render_dashboard(
         payload=payload,
         embed_json=embed_json,
         data_url=data_url,
