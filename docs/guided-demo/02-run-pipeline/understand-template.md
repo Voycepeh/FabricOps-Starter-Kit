@@ -4,6 +4,8 @@
 
 You do not assemble the FabricOps lifecycle by calling every framework function yourself. The template already provides the standard structure around your project-specific ETL logic.
 
+FabricOps deliberately uses the notebook as the visible governed engineering unit, while native Fabric Pipelines can orchestrate it when scheduling or dependencies are required. Read more in [Notebook first — vs Pipeline vs Dataflow Gen2](../../reference/engineering-cheat-sheet.md#notebook-first).
+
 ## What the template does
 
 The notebook follows one visible engineering flow:
