@@ -146,7 +146,20 @@ A Data Agreement is created between one provider Data Steward and one recipient 
 
 A Data Contract is for one canonical `table_id` under one exact Data Agreement version. Each saved version is immutable. Development can select and test a frozen version before it is active. Activation chooses which frozen version Production can resolve.
 
-### What a Data Contract freezes
+#### Data Contract lifecycle
+
+The Data Contract moves through one approval and deployment lifecycle before Production relies on it.
+
+| Action | What it means |
+| --- | --- |
+| **Freeze** | Save an immutable Data Contract version. |
+| **Test** | Run the frozen version in Engineering Development and confirm the governed expectations pass. |
+| **Activate** | Choose the approved frozen version Production is allowed to resolve. |
+| **Promote** | Move the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process. |
+
+Activation and promotion are deliberately separate. Activation selects the governed contract Production may resolve; promotion moves the validated engineering implementation that will run against it.
+
+#### What a Data Contract freezes
 
 `widget_register_data_contract()` builds the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
 
@@ -164,15 +177,6 @@ A Data Contract is for one canonical `table_id` under one exact Data Agreement v
 | Governed usages | The selected approved-usage subset, which must remain within the parent Data Agreement's approved usages. |
 
 `METADATA_GUARDRAIL_RESULTS`, `METADATA_GUARDRAIL_ROW_RESULTS`, source observations, successful-processing checkpoints, and run/audit fields are not frozen. They record what happened during individual runs.
-
-### Freeze, test, activate, and promote
-
-| Action | What it means |
-| --- | --- |
-| **Freeze** | Save an immutable Data Contract version. |
-| **Test** | Run the frozen version in Engineering Development and confirm the governed expectations pass. |
-| **Activate** | Choose the approved frozen version Production is allowed to resolve. |
-| **Promote** | Move the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process. |
 
 A Data Agreement covers the provider-to-recipient sharing relationship. A Data Contract freezes the approved definition for one table under one exact Data Agreement version.
 
