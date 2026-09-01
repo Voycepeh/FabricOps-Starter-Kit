@@ -158,7 +158,7 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
 
 
 def test_supported_public_api_matches_generated_call_flow_contract():
-    """Verify contract entries remain generated v2 callable-flow entries."""
+    """Verify contract entries remain generated normalized callable-flow entries."""
     root = Path(__file__).parents[2]
     callable_flow = json.loads(
         (root / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8")
@@ -168,7 +168,7 @@ def test_supported_public_api_matches_generated_call_flow_contract():
     flow_public = {row["function_name"] for row in callable_flow["public_functions"]}
 
     assert dashboard_path.exists()
-    assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
+    assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v3"
     assert {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS}.issubset(flow_public)
 
 
