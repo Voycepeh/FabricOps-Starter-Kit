@@ -184,7 +184,7 @@ Detailed table contents:
   ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,
   percentage, rank, profiled row totals, and the standard audit fields.
 - ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,
-  ``profile_snapshot_id``, ``environment_name``, ``pipeline_role``, and the
+  ``environment_name``, ``pipeline_role``, and the
   standard audit fields.
 - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
   approval, expiry, table and column identity, and audit information.

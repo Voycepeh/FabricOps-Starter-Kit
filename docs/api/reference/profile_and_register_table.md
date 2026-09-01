@@ -8,15 +8,14 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Profile a Spark DataFrame, save a profiling snapshot, update catalogue records, and record source or target activity.
+Profile a Spark DataFrame, save a profiling snapshot, and update catalogue records.
 
 <div class="reference-docstring-intro" markdown="1">
 
 The notebook supplies a Spark DataFrame and the table identity that the
 DataFrame represents. FabricOps calculates one profiling result row for
 each eligible column, saves a new profiling snapshot, creates stable table
-and column IDs, updates or adds catalogue records, records whether the
-table was used as an input or produced as an output, and returns the
+and column IDs, updates or adds catalogue records, and returns the
 profiling result to the notebook.
 
 The original business DataFrame is not written, sampled, re-read, or
@@ -28,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:553`
+`fabricops_kit/pipeline/profile_and_register_table.py:478`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L553-L923">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L478-L816">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -85,7 +84,7 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. The helper does not sample, re-read, or mutate this DataFrame. |
-| `profile_role` | `{"source", "target"}` | Yes | Records whether the profiled asset participated in the notebook activity as an input or an output: ``source`` for an activity input and ``target`` for an activity output. The value is recorded as ``pipeline_role`` in ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``. |
+| `profile_role` | `{"source", "target"}` | Yes | Selects the profiling and Catalogue registration rules for the asset. ``source`` rejects target-owned load-strategy metadata. ``target`` requires and stores the governed target processing definition in ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage; governed pipeline preparation and successful publication own source and target Lineage respectively. |
 | `table` | `mapping` | No | Canonical resolved table identity returned as ``read_pipeline_prep()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity. |
 | `target` | `str` | No | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. Required when ``table`` is not supplied. |
 | `table_name` | `str` | No | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. Required when ``table`` is not supplied. |
@@ -103,7 +102,7 @@ Spark DataFrame containing one compact profiling summary row for each eligible c
 
 ### Return interpretation
 
-The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency, catalogue, and lineage rows are side effects and are not returned.
+The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency and catalogue rows are side effects and are not returned.
 
 ## Raises / Errors
 
@@ -116,7 +115,6 @@ Raises ValueError for an unsupported profile_role, unknown target, unsupported c
 - frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.
 - The configured metadata target cannot be resolved or written.
 - Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost.
-- If lineage registration fails after profile and catalogue writes succeed, RuntimeError is raised and earlier writes remain completed.
 
 ## Notes
 
@@ -229,17 +227,6 @@ Production observations separate. Column rows store the current source schema
 identity or deactivating the column. Column catalogue rows that disappear from a
 new profile are retained but marked inactive rather than silently deleted.
 
-``METADATA_DATA_LINEAGE`` records whether the table was used as an input
-or produced as an output during the current notebook activity. A
-``profile_role="source"`` value means the DataFrame was used as an input.
-A ``profile_role="target"`` value means the DataFrame was produced as an
-output. Lineage-specific fields are ``lineage_id``, ``table_id``,
-``profile_snapshot_id``, ``environment_name``, and ``pipeline_role``. The
-standard eight underscore audit fields are the execution-context contract,
-and ``_committed_at`` is the authoritative timestamp for the lineage event.
-``lineage_id`` is deterministically derived from ``_activity_id``,
-``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.
-
 What the notebook receives: a Spark DataFrame containing one profiling
 result row for each eligible column.
 
@@ -250,7 +237,6 @@ What FabricOps saves:
   ``profile_id`` and grouped by ``profile_snapshot_id``.
 * ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
   records.
-* ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
 Statistical profiling records describe the complete DataFrame supplied
 during the notebook activity. If ``frequency_profile_df`` is supplied,
@@ -264,16 +250,10 @@ an arbitrary DataFrame does not prove that table exists. Profile a source
 after a successful complete-table read, and profile a target only after
 its write has succeeded and the persisted target has been confirmed.
 
-Profile and catalogue registration occur before lineage registration. If
-lineage registration fails after those writes succeed, the function raises
-a ``RuntimeError`` explaining that profile and catalogue registration
-succeeded but lineage registration failed. Guardrail execution is a
-separate workflow.
-
-This Stage 2 redesign changes the physical schemas for Catalogue, Profile,
-Profile Frequency, Lineage, and Source Observation. Existing development
-metadata tables may need recreation through the established setup flow; no
-compatibility or automatic migration layer is provided.
+This function does not create or update ``METADATA_DATA_LINEAGE``.
+Registered source participation is recorded by ``read_pipeline_prep()``,
+while target participation is recorded only after a successful governed
+publication. Guardrail execution is a separate workflow.
 
 </div>
 
@@ -294,7 +274,7 @@ compatibility or automatic migration layer is provided.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 62 |
+| Live-critical dependencies | 59 |
 
 ### Release history
 
@@ -348,7 +328,6 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.profile_and_register_table._lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._normalize_choice</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._replace_frequency_rows</code></li>
@@ -356,11 +335,9 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._selected_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
-<li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_lineage_event</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_frequency_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_processing_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._validate_resolved_identity</code></li>
-<li><code>fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>

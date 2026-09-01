@@ -283,12 +283,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
         <code>METADATA_DATA_PROFILED_FREQUENCY</code>
       </span>
     </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_LINEAGE</code>
-      </span>
-    </span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_data_profiled_frequency/" aria-label="Open METADATA_DATA_PROFILED_FREQUENCY schema">
@@ -320,10 +314,10 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__title">METADATA_DATA_LINEAGE</span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See where the data came from and where it ends up.</span>
+  <span class="metadata-table-card__purpose">See which registered tables participated as sources and targets in pipeline activities.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One table participating as a source or target in one pipeline/profiling execution.</span>
+    <span>One registered table participating as a source or target in one pipeline activity.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -335,12 +329,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_PROFILED</code>
       </span>
     </span>
   </span>

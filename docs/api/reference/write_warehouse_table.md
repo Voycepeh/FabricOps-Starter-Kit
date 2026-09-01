@@ -37,7 +37,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L294">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L295">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -146,7 +146,7 @@ and Warehouse ingestion limits.
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 | `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` also requires ``effective_column`` and may supply ``tracked_columns``. |
-| `completion_context` | `dict[str, Any] \| None` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. Source progress is committed only after the Warehouse connector write succeeds. Calls that omit it have no checkpoint effects. |
+| `completion_context` | `dict[str, Any] \| None` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. Source progress is committed only after the Warehouse connector write succeeds. The target Lineage participant is persisted before source progress. Calls that omit it have no Lineage or checkpoint effects. |
 
 ## Returns
 
@@ -299,7 +299,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 50 |
+| Live-critical dependencies | 52 |
 
 ### Release history
 
@@ -358,6 +358,8 @@ Side effects
 <li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.shared.complete_source_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>

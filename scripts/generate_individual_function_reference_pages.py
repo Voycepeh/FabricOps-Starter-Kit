@@ -206,7 +206,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CATALOGUE": ["profile_and_register_table", "widget_enrich_table_metadata"],
     "METADATA_DATA_PROFILED": ["profile_and_register_table", "widget_author_guardrails", "widget_author_dq_rules"],
-    "METADATA_DATA_LINEAGE": ["profile_and_register_table"],
+    "METADATA_DATA_LINEAGE": ["read_pipeline_prep"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
     "METADATA_GUARDRAIL_RESULTS": [
