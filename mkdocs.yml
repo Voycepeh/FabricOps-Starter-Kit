@@ -124,6 +124,7 @@ extra_javascript:
   - javascripts/mermaid-init.js
   - javascripts/callable-finder.js
   - javascripts/table-controls.js
+  - javascripts/engineering-guide-deeplinks.js
 
 extra_css:
   - stylesheets/breadcrumbs.css
