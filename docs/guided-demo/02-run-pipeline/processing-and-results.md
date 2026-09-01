@@ -14,6 +14,8 @@ FabricOps separates the configured source strategy from the runtime read mode an
 
 The runtime can then resolve to `skip`, `full_dataset`, or `incremental_subset` depending on what the current execution needs.
 
+Read the deeper rationale and trade-offs in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
+
 ## Watermark processing
 
 For a Warehouse source using `modified_datetime`, a successful checkpoint at `2026-08-26 10:00` and a captured upper watermark of `2026-08-26 12:00` produces this bounded range:
@@ -52,6 +54,8 @@ FabricOps prepares the complete 26 Aug and 27 Aug buckets. This is a strong fit 
 ## Keep canonical profiles complete
 
 A complete `full_dataset` DataFrame may refresh the canonical registered source profile. An `incremental_subset` can be profiled diagnostically, but it should not replace the profile of the complete physical source.
+
+This distinction is explained further under the profiling guidance in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
 
 ## Review the completed run
 
