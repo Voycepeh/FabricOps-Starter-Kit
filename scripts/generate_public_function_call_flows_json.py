@@ -11,7 +11,7 @@ import copy
 from pathlib import Path
 from typing import Any
 
-from scripts import public_function_call_flows_legacy as _legacy
+import public_function_call_flows_legacy as _legacy
 
 
 # Re-export the existing analysis surface so repository tests and release tooling keep
