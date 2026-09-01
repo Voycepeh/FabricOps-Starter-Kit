@@ -6,10 +6,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 
 !!! tip "New to Microsoft Fabric?"
 
-    These optional references can help with the wider Fabric concepts used throughout the demo:
-
-    - [Microsoft Learn — Microsoft Fabric](https://learn.microsoft.com/en-us/training/fabric/) — official Microsoft learning material for Fabric fundamentals and platform capabilities.
-    - [Microsoft Fabric Visual Notes](https://www.slideshare.net/slideshow/microsoft-fabric-complete-handwritten-notes-pdf/289496813) — a visual community reference by SomeshK13 covering Fabric architecture, PySpark, pipelines, incremental loading, data quality, CI/CD, monitoring, and related concepts.
+    Start with [Microsoft Learn: Fabric fundamentals](https://learn.microsoft.com/en-us/fabric/fundamentals/) for the platform concepts used throughout the demo. When you reach the engineering parts, continue with [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/) for Lakehouse, notebooks, Spark, and Data Engineering workflows.
 
     FabricOps documentation remains the source of truth for how this starter kit is designed and used.
 
@@ -31,29 +28,19 @@ The learning path deliberately introduces governance in stages. Step 2 runs the 
 
 ## Learning path
 
+Select a module name to continue through the demo in order.
+
 | Module | Workspace | Notebook | What you do |
 | --- | --- | --- | --- |
-| 0A. Prepare Fabric artifacts | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. |
-| 0B. Set up the operating environment | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing and create or validate the Governance metadata tables. |
-| 1. Data Stewards and Data Agreement | Governance | `01_governance` | Create Data Stewards and a Data Agreement. |
-| 2. ETL, Profile, and Catalogue | Engineering Development | `02_pipeline` | Run the complete ETL and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records. |
-| 3. Enrich Catalogue and define Guardrails | Governance | `01_governance` | Read Data Catalogue and Data Profiled records, add Enrichment, and author Guardrails. |
-| 4. Validate with Guardrails / Data Contract | Engineering Development | `02_pipeline` | Rerun the same ETL with current Guardrails or a selected frozen Data Contract and write Guardrail Results. |
-| 5. Freeze, test, and activate the Data Contract | Governance + Engineering Development | `01_governance` + `02_pipeline` | Freeze an immutable Data Contract version, test the frozen version in Development, obtain governance sign-off, and activate the approved version. |
-| 6. Run the Production pipeline | Engineering Production | `02_pipeline` | Promote the validated pipeline, resolve the active Data Contract, and run the governed Production pipeline. |
-| 7. Consume approved Production data | Project-Specific Consumer | `99_explore` | Consume only approved Production data without duplicating the Production engineering workflow. |
-
-## Start here
-
-1. [Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md)
-2. [Set up the operating environment](guided-demo/00B-run-environment-setup.md)
-3. [Create data stewards and a data agreement](guided-demo/01-create-agreement.md)
-4. [Module 2: Engineer and run a data pipeline](guided-demo/02-run-pipeline.md)
-5. [Enrich the Data Catalogue and define Guardrails](guided-demo/03-enrich-guardrails.md)
-6. [Rerun the Development pipeline with Guardrails](guided-demo/04-run-pipeline-with-guardrails.md)
-7. [Create, test, and activate the Data Contract](guided-demo/05-create-data-contract.md)
-8. [Promote and run Production with the active Data Contract](guided-demo/06-promote-to-production.md)
-9. [Consume governed Production data](guided-demo/99-explore-via-notebook.md)
+| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. |
+| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing and create or validate the Governance metadata tables. |
+| [1. Data Stewards and Data Agreement](guided-demo/01-create-agreement.md) | Governance | `01_governance` | Create Data Stewards and a Data Agreement. |
+| [2. ETL, Profile, and Catalogue](guided-demo/02-run-pipeline.md) | Engineering Development | `02_pipeline` | Run the complete ETL and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records. |
+| [3. Enrich Catalogue and define Guardrails](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Read Data Catalogue and Data Profiled records, add Enrichment, and author Guardrails. |
+| [4. Validate with Guardrails / Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | Engineering Development | `02_pipeline` | Rerun the same ETL with current Guardrails or a selected frozen Data Contract and write Guardrail Results. |
+| [5. Freeze, test, and activate the Data Contract](guided-demo/05-create-data-contract.md) | Governance + Engineering Development | `01_governance` + `02_pipeline` | Freeze an immutable Data Contract version, test the frozen version in Development, obtain governance sign-off, and activate the approved version. |
+| [6. Run the Production pipeline](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline, resolve the active Data Contract, and run the governed Production pipeline. |
+| [7. Consume approved Production data](guided-demo/99-explore-via-notebook.md) | Project-Specific Consumer | `99_explore` | Consume only approved Production data without duplicating the Production engineering workflow. |
 
 ## How the same pipeline matures
 
