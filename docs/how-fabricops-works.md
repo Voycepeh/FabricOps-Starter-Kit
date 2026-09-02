@@ -64,18 +64,27 @@ In `01_governance`, Governance creates the provider and recipient **Data Steward
 
 The Data Agreement establishes the governed sharing context: who is providing and receiving the data, the business purpose, approved usages, validity, and other agreement-level governance information.
 
-### 2. Engineering Development builds the initial pipeline
+### 2. Engineering builds the ETL pipeline within `02_pipeline`
 
 Engineering Development uses `02_pipeline` to read one or more configured sources, perform project-specific transformations, and write governed target tables to the configured Lakehouse or Warehouse.
 
 Each governed target is identified by a canonical `table_id`. Engineering then records the technical context around that table, including:
 
-- Data Catalogue metadata
-- Data Profiled records
-- Data Profiled Frequency where applicable
-- Data Lineage
+- **Data Catalogue metadata** — the governed table and column structure used as the canonical technical identity for the target.
+- **Data Profiled records** — observed characteristics of the data that help Engineering and Governance understand what is actually present.
+- **Data Profiled Frequency**, where applicable — the recorded frequency distribution for profiled values where that deeper profile is useful.
+- **Data Lineage** — the relationship between the source data used by the pipeline and the governed target it produces.
 
 The `table_id` is the shared identity that lets the rest of the FabricOps workflow refer to the same governed table.
+
+A few engineering choices shape how this ETL is built, but the detailed reasoning lives in the Engineering Guide:
+
+- **[Configuration-driven Engineering](reference/engineering-cheat-sheet.md#config-driven-engineering)** — `00_env_config` keeps environment-specific Fabric item identities separate from reusable `02_pipeline` logic, while FabricOps I/O functions resolve the correct Lakehouse or Warehouse for the active environment.
+- **[PySpark first, and where T-SQL fits](reference/engineering-cheat-sheet.md#pyspark-first)** — PySpark DataFrames are the normal transformation path; T-SQL is useful where Warehouse-side filtering, projection, joins, or aggregation should happen before data enters Spark.
+- **[Lakehouse first, and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first)** — Lakehouse is the preferred working layer for substantial or repeated Spark engineering, while Warehouse is often a strong relational serving layer for curated outputs.
+- **[Medallion architecture](reference/engineering-cheat-sheet.md#medallion-architecture)** — FabricOps supports Bronze, Silver, and Gold style layering, but does not require those literal names or force extra persisted layers where the project does not need them.
+
+The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
 ### 3. Governance turns the Engineering context into governed expectations
 
