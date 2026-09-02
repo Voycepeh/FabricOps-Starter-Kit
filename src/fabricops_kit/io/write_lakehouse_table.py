@@ -28,7 +28,6 @@ def write_lakehouse_table(
     load_strategy=None,
     load_strategy_parameters=None,
     processing_scope=None,
-    completion_context=None,
 ):
     """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
@@ -104,12 +103,6 @@ def write_lakehouse_table(
         Governed strategy parameters returned by :func:`write_pipeline_prep`.
     processing_scope : dict, optional
         Prepared skip, full, or incremental execution scope.
-    completion_context : dict, optional
-        Governed source-completion context returned by
-        :func:`write_pipeline_prep`. When supplied, target Lineage and any
-        partition completion state are persisted after the physical write.
-        Watermark progress is already part of the successfully published
-        target rows. Calls that omit it have no completion effects.
 
     Returns
     -------
@@ -118,15 +111,6 @@ def write_lakehouse_table(
 
     Notes
     -----
-    Governed completion
-        The physical target write or merge completes before Lineage or
-        partition completion is persisted. Watermark correctness has no
-        post-write checkpoint: ``_watermark_value`` advances atomically with
-        target publication. Replay is deterministic for overwrite, SCD1, and
-        SCD2; governed incremental-watermark append is rejected without an
-        explicit deterministic identity. Independent concurrent writers still
-        rely on Delta transaction semantics.
-
     Parallel processing and write concurrency
         Spark writes DataFrame partitions concurrently across available
         executors. ``write_lakehouse_table`` can repartition the input
@@ -316,10 +300,6 @@ def write_lakehouse_table(
                 processing={"load_strategy": strategy, **(load_strategy_parameters or {})},
                 scope=processing_scope, context=context,
             )
-            if completion_context is not None:
-                from fabricops_kit.pipeline.shared import complete_source_processing
-
-                complete_source_processing(completion_context, context=context)
             return
         if strategy not in {"overwrite", "append"} or mode != strategy:
             raise ValueError("Governed overwrite/append load_strategy must match the physical writer mode.")
@@ -331,7 +311,3 @@ def write_lakehouse_table(
     if verbose:
         print(f"Writing Lakehouse table to {path}")
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
-    if completion_context is not None:
-        from fabricops_kit.pipeline.shared import complete_source_processing
-
-        complete_source_processing(completion_context, context=context)

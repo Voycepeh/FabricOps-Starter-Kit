@@ -14,7 +14,7 @@ The notebook follows one visible engineering flow:
 Environment → Extract → Transform → Load
 ```
 
-FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, governed processing preparation, and checkpoint handling where those capabilities are configured.
+FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, governed processing preparation, and target-backed incremental state where those capabilities are configured.
 
 Your project mainly supplies:
 

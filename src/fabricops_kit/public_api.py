@@ -27,7 +27,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_changes",
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
-    "fabricops_kit.pipeline.commit_pipeline_checkpoint.commit_pipeline_checkpoint",
     "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",

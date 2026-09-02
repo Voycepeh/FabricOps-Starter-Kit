@@ -9,7 +9,7 @@ FabricOps separates the configured source strategy from the runtime read mode an
 | Source strategy | Meaning | Typical use |
 | --- | --- | --- |
 | `full_dataset` | Read the complete source each run. | Small files and reference data. |
-| `incremental_watermark` | Read rows newer than the last successfully committed checkpoint. | Transactional sources with a reliable unique increasing value. |
+| `incremental_watermark` | Read rows newer than the maximum governed target `_watermark_value`. | Transactional sources with a reliable unique increasing value. |
 | `incremental_partition` | Read whole logical buckets that are new or changed. | Daily, monthly, snapshot, or history data. |
 
 The runtime can then resolve to `skip`, `full_dataset`, or `incremental_subset` depending on what the current execution needs.
@@ -18,14 +18,14 @@ Read the deeper rationale and trade-offs in [Full vs incremental processing](../
 
 ## Watermark processing
 
-For a Warehouse source using `modified_datetime`, a successful checkpoint at `2026-08-26 10:00` and a captured upper watermark of `2026-08-26 12:00` produces this bounded range:
+For a Warehouse source using `modified_datetime`, a governed target watermark of `2026-08-26 10:00` and a captured upper watermark of `2026-08-26 12:00` produces this bounded range:
 
 ```text
 modified_datetime > 2026-08-26 10:00
 AND modified_datetime <= 2026-08-26 12:00
 ```
 
-The interval is `(lower_bound, upper_bound]`. The checkpoint advances only after the target write succeeds.
+The interval is `(lower_bound, upper_bound]`. Successful progress advances atomically when the target write publishes `_watermark_value`.
 
 !!! warning "Use a safe watermark"
 
@@ -67,7 +67,7 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
     Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates current authoring, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded. Step 5 saves an immutable Data Contract version, Engineering selects and tests that exact saved version, and Governance activates the selected version for Production. Step 6 runs Production against the active contract.
 
-For exact APIs such as `read_pipeline_prep()`, `check_changes()`, `write_pipeline_prep()`, and `commit_pipeline_checkpoint()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
+For exact APIs such as `read_pipeline_prep()`, `check_changes()`, `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 
 **Previous:** [Unit 4: Transform and load](transform-and-load.md)  
 **Next:** [Step 3: Enrich the Data Catalogue and define Guardrails](../03-enrich-guardrails.md)

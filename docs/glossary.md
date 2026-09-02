@@ -71,7 +71,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="incremental-watermark">
 <summary><strong>Incremental Watermark</strong> — The FabricOps source-read strategy that processes rows after the last successfully committed watermark.</summary>
-<p>In FabricOps, Incremental Watermark resolves a bounded row-level range from the last successfully committed checkpoint to the current source upper watermark. The current implementation requires the configured watermark column to be non-null and globally unique for every source row so the range can be processed deterministically without skipping tied late-arriving rows.</p>
+<p>In FabricOps, Incremental Watermark resolves a bounded row-level range from the maximum governed target `_watermark_value` to the current source upper watermark. The current implementation requires the configured watermark column to be non-null and globally unique for every source row so the range can be processed deterministically without skipping tied late-arriving rows.</p>
 </details>
 
 <details id="incremental-partition">
@@ -230,7 +230,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="watermark">
-<summary><strong>Watermark</strong> — A checkpoint that represents how far an incremental process has successfully processed a source.</summary>
+<summary><strong>Watermark</strong> — A value that represents how far an incremental process has successfully published source data to a governed target.</summary>
 <p>A Watermark is a saved progress marker used by an incremental process to determine what data should be considered after a previously successful point. The exact uniqueness, ordering, and tie-handling requirements depend on the incremental design.</p>
 </details>
 

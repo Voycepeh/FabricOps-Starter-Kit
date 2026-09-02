@@ -201,55 +201,10 @@ def test_cleanup_failure_preserves_original_mutation_error(monkeypatch, spark_se
     assert calls == ["execute", "execute"]
 
 
-def test_writer_scd_completion_is_strictly_after_mutation(monkeypatch):
-    """Successful mutation precedes completion exactly once."""
-    events = []
-    monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    monkeypatch.setattr(writer, "execute_warehouse_processing", lambda *_args, **_kwargs: events.append("merge"))
-    monkeypatch.setattr(pipeline_shared, "complete_source_processing", lambda *_args, **_kwargs: events.append("complete"))
-    writer.write_warehouse_table(
-        object(), "dbo", "customers", mode=None, load_strategy="scd1",
-        load_strategy_parameters={"key_columns": ["customer_id"]}, completion_context={"sources": []},
-    )
-    assert events == ["merge", "complete"]
 
 
-def test_writer_scd_failures_preserve_completion_boundary(monkeypatch):
-    """Mutation failure prevents source completion."""
-    monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    monkeypatch.setattr(
-        writer, "execute_warehouse_processing",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("merge failed")),
-    )
-    monkeypatch.setattr(
-        pipeline_shared, "complete_source_processing", lambda *_args, **_kwargs: pytest.fail("completion called")
-    )
-    with pytest.raises(RuntimeError, match="merge failed"):
-        writer.write_warehouse_table(
-            object(), "dbo", "customers", mode=None, load_strategy="scd1",
-            load_strategy_parameters={"key_columns": ["customer_id"]}, completion_context={"sources": []},
-        )
 
 
-def test_writer_surfaces_completion_failure_after_successful_scd(monkeypatch):
-    """Completion errors remain visible after target success."""
-    events = []
-    monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    monkeypatch.setattr(writer, "execute_warehouse_processing", lambda *_args, **_kwargs: events.append("merge"))
-    monkeypatch.setattr(
-        pipeline_shared, "complete_source_processing",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("checkpoint failed")),
-    )
-    with pytest.raises(RuntimeError, match="checkpoint failed"):
-        writer.write_warehouse_table(
-            object(), "dbo", "customers", mode=None, load_strategy="scd2",
-            load_strategy_parameters={"key_columns": ["customer_id"], "effective_column": "effective_at"},
-            completion_context={"sources": []},
-        )
-    assert events == ["merge"]
 
 
 def test_writer_contract_and_contradictory_scd_mode(monkeypatch):

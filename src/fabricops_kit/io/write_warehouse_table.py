@@ -25,7 +25,6 @@ def write_warehouse_table(
     context: dict[str, Any] | None = None,
     load_strategy: str | None = None,
     load_strategy_parameters: dict[str, Any] | None = None,
-    completion_context: dict[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric Warehouse table.
 
@@ -91,11 +90,6 @@ def write_warehouse_table(
         Governed strategy parameters. ``scd1`` requires ``key_columns``;
         ``scd2`` also requires ``effective_column`` and may supply
         ``tracked_columns``.
-    completion_context : dict, optional
-        Governed source-completion context returned by
-        :func:`write_pipeline_prep`. Target Lineage and any partition completion
-        state are persisted after the write. Watermark progress is already
-        stored on successfully published target rows.
 
     Returns
     -------
@@ -105,14 +99,6 @@ def write_warehouse_table(
 
     Notes
     -----
-    Governed completion
-        The Warehouse mutation completes before Lineage or partition completion
-        is persisted. Watermark correctness has no post-write checkpoint:
-        ``_watermark_value`` advances with target publication. SCD1 and SCD2
-        replay is deterministic; governed incremental-watermark append is
-        rejected without deterministic identity. Independent concurrent jobs
-        remain subject to Warehouse transaction and locking semantics.
-
     Parallel processing and write concurrency
         Spark processes DataFrame partitions concurrently. Before invoking the
         Warehouse connector, ``write_warehouse_table`` can repartition the
@@ -289,7 +275,3 @@ def write_warehouse_table(
             target, schema, table_name, context=context
         )
         write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
-    if completion_context is not None:
-        from fabricops_kit.pipeline.shared import complete_source_processing
-
-        complete_source_processing(completion_context, context=context)

@@ -253,7 +253,7 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
 
     **Environment** resolves the active Development or Production configuration. **Extract** reads one or more configured sources and prepares the source processing state. **Transform** remains project-owned business logic. **Load** writes one governed target using the applicable target processing definition.
 
-    FabricOps standardises the operational behaviour around that lifecycle, including configured I/O, profiling, Catalogue registration, lineage, governed checks, source processing preparation, and checkpoint handling. It does not hide the project-specific transformation itself.
+    FabricOps standardises the operational behaviour around that lifecycle, including configured I/O, profiling, Catalogue registration, lineage, governed checks, source processing preparation, and target-backed incremental state. It does not hide the project-specific transformation itself.
 
     This keeps the framework boundary easy to understand: FabricOps owns the repeatable engineering scaffolding, while the engineer owns the transformation that makes the project unique.
 
@@ -372,20 +372,18 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
     ### Incremental watermark
 
     ```text
-    Last successful watermark
+    Maximum target `_watermark_value`
              ↓
     Read rows newer than state
              ↓
           Transform
              ↓
-    Write governed target
-             ↓
-    Commit new watermark
+    Write governed target with `_watermark_value`
     ```
 
     A watermark normally uses a timestamp, sequence, or another increasing value that reliably identifies new or changed source records.
 
-    **Critical FabricOps rule:** the watermark represents **successfully processed state**. Do not advance it before the governed target write succeeds. Otherwise a failed run can move the checkpoint forward and silently skip data on the next run.
+    **Critical FabricOps rule:** the watermark represents **successfully published target state**. Persist it only as `_watermark_value` on governed target rows so a failed write cannot advance progress or skip data on the next run.
 
     Consider late-arriving records when designing the watermark. Depending on the source, a small lookback or reprocessing window may be safer than assuming every record arrives strictly in order.
 
@@ -399,8 +397,7 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
           Transform
              ↓
     Write/reconcile that partition
-             ↓
-      Commit completion state
+      with `_partition_bucket`
     ```
 
     Partition-based processing works well when the source naturally exposes a meaningful processing unit such as `snapshot_date`, business date, or another stable partition identifier.
@@ -419,9 +416,9 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
 
 ??? info "Failure-safe processing and recovery"
 
-    FabricOps treats source progress as **successfully processed state**, not simply as data that was attempted or read.
+    FabricOps treats source progress as **successfully published target state**, not simply as data that was attempted or read.
 
-    `read_pipeline_prep()` prepares the source runtime mode and source state before processing. The pipeline then performs the project transformation, governed checks, and physical target write. Only after those steps succeed should `commit_pipeline_checkpoint()` advance the source checkpoint.
+    `read_pipeline_prep()` prepares the source runtime mode and reads successful progress from the governed target. A successful target write persists watermark progress in `_watermark_value` or partition progress in `_partition_bucket`; a failed write cannot advance either state.
 
     ```text
     Prepare source state
@@ -432,12 +429,11 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
           ↓
     Validate governed expectations
           ↓
-    Write governed target
-          ↓
-    Commit source checkpoint
+    Write governed target with
+    `_watermark_value` or `_partition_bucket`
     ```
 
-    If the run fails before the target write completes, the successful checkpoint is not advanced. The next run can therefore re-read the uncommitted source scope instead of silently skipping it.
+    If the target write fails, no secondary state is created or advanced. The next run derives successful progress from the unchanged governed target and can safely retry the source scope.
 
     This is the core FabricOps recovery rule for watermark and partition-driven processing: **state follows successful governed processing, never the other way around.**
 

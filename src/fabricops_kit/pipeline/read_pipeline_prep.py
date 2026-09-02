@@ -244,8 +244,8 @@ def _source_upper_watermark(
     }
 
 
-def _coerce_checkpoint(value: Any, data_type: str, *, spark_session: Any) -> Any:
-    """Parse a stored checkpoint with Spark so comparisons use the source type."""
+def _coerce_watermark_boundary(value: Any, data_type: str, *, spark_session: Any) -> Any:
+    """Parse a stored target watermark boundary with Spark so comparisons use the source type."""
     if value is None:
         return None
     from pyspark.sql import functions as F
@@ -285,7 +285,7 @@ def _watermark_scope(
         raise ValueError(
             "The source is empty or all watermark values are null; the existing target watermark cannot be compared."
         )
-    previous = _coerce_checkpoint(previous_value, data_type, spark_session=spark_session)
+    previous = _coerce_watermark_boundary(previous_value, data_type, spark_session=spark_session)
     if previous is None:
         return {
             "read_mode": "full_dataset",

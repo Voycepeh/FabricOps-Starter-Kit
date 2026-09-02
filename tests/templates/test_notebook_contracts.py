@@ -186,7 +186,8 @@ def test_02_pipeline_uses_public_cloneable_governed_blocks():
     assert _cell_by_id("02_pipeline.ipynb", "source-prepare").source.count("read_pipeline_prep(") == 1
     assert _cell_by_id("02_pipeline.ipynb", "target-prepare").source.count("write_pipeline_prep(") == 1
     assert 'processing_scope=source_prep["scope"]' in source
-    assert 'completion_context=target_prep["completion"]' in source
+    assert 'completion_context' not in source
+    assert 'target_prep["completion"]' not in source
     for state in (
         "SOURCES", "SOURCE_PREPS", "SOURCE_DFS", "SOURCE_PROFILES", "SOURCE_RESULTS",
         "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS", "TARGET_CONTRACTS",
@@ -279,7 +280,7 @@ def test_02_pipeline_profiles_full_sources_without_registering_incremental_slice
 
 
 def test_02_pipeline_passes_all_prepared_lakehouse_writer_values():
-    """Publication consumes the exact governed preparation fields, including completion."""
+    """Publication consumes the exact governed preparation fields without completion plumbing."""
     source = _cell_by_id("02_pipeline.ipynb", "target-publish").source
 
     for argument in (
@@ -288,7 +289,6 @@ def test_02_pipeline_passes_all_prepared_lakehouse_writer_values():
         'load_strategy=target_prep["load_strategy"]',
         'load_strategy_parameters=target_prep["load_strategy_parameters"]',
         'processing_scope=target_prep["scope"]',
-        'completion_context=target_prep["completion"]',
     ):
         assert argument in source
 

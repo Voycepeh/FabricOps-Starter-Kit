@@ -8,7 +8,6 @@ from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_changes import check_changes
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.read_pipeline_prep import read_pipeline_prep
-from fabricops_kit.pipeline.commit_pipeline_checkpoint import commit_pipeline_checkpoint
 from fabricops_kit.pipeline.write_pipeline_prep import write_pipeline_prep
 from fabricops_kit.pipeline.shared import stop_if_failed
 
@@ -18,7 +17,6 @@ __all__ = [
     "check_changes",
     "check_dq",
     "read_pipeline_prep",
-    "commit_pipeline_checkpoint",
     "write_pipeline_prep",
     "stop_if_failed",
     "profile_and_register_table",

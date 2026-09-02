@@ -152,7 +152,6 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'profile_dataframe',
         'profile_frequency_distribution',
         'read_pipeline_prep',
-        'commit_pipeline_checkpoint',
         'write_pipeline_prep',
         'widget_render_data_steward',
         'widget_render_data_agreement',
@@ -296,3 +295,13 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
 
     assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]
     assert [frame.rows[0]["environment_name"] for frame in writes] == ["dev", "prod"]
+
+
+def test_persistent_checkpoint_tables_are_not_registered():
+    """Metadata setup has no persistent source-checkpoint entities."""
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+
+    registry = metadata_table_schema_registry()
+    assert "METADATA_SOURCE_OBSERVATION" in CANONICAL_METADATA_TABLES
+    assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
+    assert all("CHECKPOINT" not in table_name for table_name in registry)
