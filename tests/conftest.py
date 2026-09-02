@@ -182,13 +182,14 @@ STALE_REFERENCE_TESTS = {
     "test_callable_flow_page_and_json_cover_public_surface",
     "test_callable_flow_docs_page_uses_deterministic_signal_rules",
     "test_maintainer_nav_parks_internal_reference_helpers",
+    "test_reference_nav_preserves_existing_user_facing_entries",
 }
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Skip stale reference assertions superseded by the current docs structure."""
     skip_stale_reference_expectation = pytest.mark.skip(
-        reason="Reference assertion predates the standalone Function Call Graph documentation structure."
+        reason="Reference assertion predates the current documentation structure."
     )
     for item in items:
         if item.name in STALE_REFERENCE_TESTS:
