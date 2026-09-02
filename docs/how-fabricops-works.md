@@ -286,36 +286,21 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: draft in `01_governance`, validate in `02_pipeline`, then activate for Production
+## The core loop: draft, validate, freeze, test, activate
 
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
 ```mermaid
-flowchart TB
-    GOVERN["01_governance<br/>Select table_id and draft / refine<br/>Enrichment + Guardrails"]
-    VALIDATE["02_pipeline<br/>Run ETL and validate<br/>governed expectations"]
-    PASS{"Do the governed<br/>expectations pass?"}
-    FREEZE["01_governance<br/>Freeze Data Contract for table_id<br/>under a Data Agreement version"]
-    TEST["02_pipeline<br/>Test the frozen<br/>Data Contract version"]
-    FROZEN_PASS{"Does the frozen<br/>version pass?"}
-    ACTIVATE["01_governance<br/>Activate the approved<br/>Data Contract version"]
-    PROD["Engineering Production<br/>Promoted 02_pipeline resolves<br/>the active contract"]
-
-    GOVERN --> VALIDATE
-    VALIDATE --> PASS
-    PASS -- "No" --> GOVERN
-    PASS -- "Yes" --> FREEZE
-    FREEZE --> TEST
-    TEST --> FROZEN_PASS
-    FROZEN_PASS -- "No · refine and freeze a new version" --> GOVERN
-    FROZEN_PASS -- "Yes" --> ACTIVATE
-    ACTIVATE --> PROD
+flowchart LR
+    DRAFT["Draft"] --> VALIDATE["Validate"] --> FREEZE["Freeze"] --> TEST["Test"] --> ACTIVATE["Activate"] --> PROD["Production"]
+    VALIDATE -. "Fail · refine" .-> DRAFT
+    TEST -. "Fail · new version" .-> DRAFT
 
     classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
     class FREEZE,ACTIVATE focal;
 ```
 
-This is how FabricOps makes Governance executable: Governance decisions authored in `01_governance` become structured metadata, Guardrails, and Data Contracts that `02_pipeline` can directly resolve and validate before Production uses the approved version.
+The details live in the expandable workflow above. The key idea is simple: Governance drafts the governed definition, Engineering validates it, Governance freezes and activates the approved version, and Production resolves that active contract.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
 
