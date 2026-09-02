@@ -253,7 +253,11 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
         processing["key_columns"] = ["student_id"]
     identity = _patch_target_processing(monkeypatch, processing)
     frame = spark_session.createDataFrame([(1, "active")], ["student_id", "status"])
-    source_prep = {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
+    source_prep = {
+        "source_processing": {"read_strategy": "full_dataset"},
+        "read_mode": "full_dataset",
+        "scope": {"type": "full_dataset"},
+    }
 
     result = write_module.write_pipeline_prep(
         frame, target_table_id=identity["table_id"], source_preps=[source_prep]
@@ -319,10 +323,12 @@ def test_write_prep_supports_multiple_source_completion_for_scd(monkeypatch, spa
     "source_prep",
     [
         {
+            "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
             "read_mode": "incremental_subset",
             "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
         },
         {
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
             "read_mode": "incremental_subset",
             "scope": {
                 "type": "watermark",
@@ -340,7 +346,7 @@ def test_write_prep_rejects_partial_warehouse_overwrite(monkeypatch, spark_sessi
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type="warehouse")
     frame = spark_session.createDataFrame([(1,)], ["student_id"])
 
-    with pytest.raises(ValueError, match="Warehouse overwrite requires a full-dataset source result"):
+    with pytest.raises(ValueError, match="Incremental source processing cannot use unrestricted overwrite"):
         write_module.write_pipeline_prep(
             frame, target_table_id=identity["table_id"], source_preps=[source_prep]
         )
@@ -353,7 +359,11 @@ def test_write_prep_allows_full_dataset_warehouse_overwrite(monkeypatch, spark_s
     result = write_module.write_pipeline_prep(
         frame,
         target_table_id=identity["table_id"],
-        source_preps=[{"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}],
+        source_preps=[{
+            "source_processing": {"read_strategy": "full_dataset"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset"},
+        }],
     )
 
     assert result["mode"] == "overwrite"
@@ -369,6 +379,7 @@ def test_write_prep_keeps_lakehouse_partition_overwrite_scoped(monkeypatch, spar
         frame,
         target_table_id=identity["table_id"],
         source_preps=[{
+            "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
             "read_mode": "incremental_subset",
             "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
         }],
@@ -378,6 +389,77 @@ def test_write_prep_keeps_lakehouse_partition_overwrite_scoped(monkeypatch, spar
     assert result["options"] == {"replaceWhere": "`snapshot_date` IN ('2026-08-31')"}
 
 
+def test_write_prep_keeps_lakehouse_watermark_overwrite_scoped_and_replay_safe(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
+    frame = spark_session.createDataFrame([(1, 150), (2, 200)], ["student_id", "modified_at"])
+    source_prep = {
+        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+        "read_mode": "incremental_subset",
+        "scope": {
+            "type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200,
+            "lower_inclusive": False, "upper_inclusive": True,
+        },
+    }
+
+    first = write_module.write_pipeline_prep(
+        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
+    )
+    replay = write_module.write_pipeline_prep(
+        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
+    )
+
+    expected = {"replaceWhere": "`_watermark_value` > 100 AND `_watermark_value` <= 200"}
+    assert first["mode"] == replay["mode"] == "overwrite"
+    assert first["options"] == replay["options"] == expected
+
+
+@pytest.mark.parametrize(
+    "source_prep",
+    [
+        {
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
+        },
+        {
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+            "read_mode": "incremental_subset",
+            "scope": {
+                "type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200,
+                "lower_inclusive": True, "upper_inclusive": True,
+            },
+        },
+    ],
+    ids=["first-run-unbounded", "inclusive-lower"],
+)
+def test_write_prep_rejects_watermark_overwrite_without_canonical_scope(monkeypatch, source_prep):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
+    with pytest.raises(ValueError, match="cannot use unrestricted overwrite"):
+        write_module.write_pipeline_prep(
+            SimpleNamespace(columns=["student_id", "modified_at"]),
+            target_table_id=identity["table_id"],
+            source_preps=[source_prep],
+        )
+
+
+def test_write_prep_rejects_partition_overwrite_without_affected_values(monkeypatch):
+    identity = _patch_target_processing(
+        monkeypatch, {"load_strategy": "overwrite", "partition_column": "snapshot_date"}
+    )
+    with pytest.raises(ValueError, match="cannot use unrestricted overwrite"):
+        write_module.write_pipeline_prep(
+            SimpleNamespace(columns=["student_id", "snapshot_date"]),
+            target_table_id=identity["table_id"],
+            source_preps=[{
+                "source_processing": {
+                    "read_strategy": "incremental_partition", "partition_column": "snapshot_date",
+                },
+                "read_mode": "incremental_subset",
+                "scope": {"type": "partition", "column": "snapshot_date", "values": []},
+            }],
+        )
+
+
 def test_write_prep_keeps_lakehouse_full_dataset_overwrite(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
     frame = spark_session.createDataFrame([(1,)], ["student_id"])
@@ -385,7 +467,11 @@ def test_write_prep_keeps_lakehouse_full_dataset_overwrite(monkeypatch, spark_se
     result = write_module.write_pipeline_prep(
         frame,
         target_table_id=identity["table_id"],
-        source_preps=[{"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}],
+        source_preps=[{
+            "source_processing": {"read_strategy": "full_dataset"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset"},
+        }],
     )
 
     assert result["mode"] == "overwrite"

@@ -59,6 +59,59 @@ def _validate_watermark_progress(df, upper_bound: Any) -> None:
         )
 
 
+def _overwrite_options(
+    source_preps: list[dict[str, Any]],
+    processing: dict[str, Any],
+    store_kind: str,
+) -> dict[str, Any]:
+    """Return safe overwrite options or reject an unrestricted incremental overwrite."""
+    error = (
+        "Incremental source processing cannot use unrestricted overwrite because it would replace rows "
+        "outside the processed source scope."
+    )
+    if len(source_preps) != 1:
+        raise ValueError(error)
+    prep = source_preps[0]
+    source_strategy = str((prep.get("source_processing") or {}).get("read_strategy") or "")
+    read_mode = prep.get("read_mode")
+    scope = prep.get("scope")
+    if not isinstance(scope, dict):
+        raise ValueError(error)
+    if source_strategy == "full_dataset":
+        if read_mode == "full_dataset" and scope == {"type": "full_dataset"}:
+            return {}
+        raise ValueError(error)
+    if store_kind != "lakehouse":
+        raise ValueError(error)
+    if source_strategy == "incremental_watermark":
+        required = (
+            read_mode == "incremental_subset"
+            and scope.get("type") == "watermark"
+            and scope.get("lower_bound") is not None
+            and scope.get("upper_bound") is not None
+            and scope.get("lower_inclusive") is False
+            and scope.get("upper_inclusive") is True
+        )
+        if not required:
+            raise ValueError(error)
+        lower = _delta_literal(scope["lower_bound"])
+        upper = _delta_literal(scope["upper_bound"])
+        return {"replaceWhere": f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"}
+    if source_strategy == "incremental_partition":
+        values = scope.get("values")
+        partition_column = processing.get("partition_column")
+        if (
+            read_mode != "incremental_subset"
+            or scope.get("type") != "partition"
+            or not isinstance(values, list | tuple)
+            or not values
+            or partition_column != scope.get("column")
+        ):
+            raise ValueError(error)
+        return {"replaceWhere": _replace_where(str(partition_column), list(values))}
+    raise ValueError(error)
+
+
 def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Validate source preparation and return one truthful target scope plus completion rows."""
     if not source_preps:
@@ -132,9 +185,11 @@ def write_pipeline_prep(
     unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
-    Warehouse overwrite requires a full-dataset source result because Warehouse
-    has no Lakehouse-style partition replacement. Lakehouse partition overwrite
-    remains scoped with ``replaceWhere``. For incremental-watermark processing,
+    Overwrite is full-table only for an explicitly configured ``full_dataset``
+    source. Lakehouse incremental watermark and partition reads require a
+    matching canonical scope and use ``replaceWhere``; Warehouse incremental
+    overwrite is rejected because no equivalent scoped replacement is
+    implemented. For incremental-watermark processing,
     including its first ``full_dataset`` population, this function evaluates
     the transformed DataFrame before publication and requires its maximum
     ``_watermark_value`` to equal the captured source upper bound. Empty or
@@ -169,6 +224,7 @@ def write_pipeline_prep(
     scope = prepared_scope["scope"]
     store_kind = target_identity["store_type"]
     strategy = str(processing.get("load_strategy") or "")
+    options = _overwrite_options(source_preps, processing, store_kind) if strategy == "overwrite" else {}
     watermark_preps = [
         prep for prep in source_preps
         if (prep.get("source_processing") or {}).get("read_strategy") == "incremental_watermark"
@@ -196,16 +252,6 @@ def write_pipeline_prep(
         df = df.withColumn("_watermark_value", F.col(watermark_column))
         if scope.get("upper_bound") is not None:
             _validate_watermark_progress(df, scope["upper_bound"])
-    if strategy == "overwrite" and scope.get("type") == "multiple_sources":
-        raise ValueError(
-            "overwrite cannot infer one safe target scope from differing source scopes; "
-            "publish this target from one complete source scope."
-        )
-    if store_kind == "warehouse" and strategy == "overwrite" and prepared_scope["read_mode"] != "full_dataset":
-        raise ValueError(
-            "Warehouse overwrite requires a full-dataset source result; "
-            "incremental subsets cannot safely replace the complete target."
-        )
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
@@ -220,13 +266,6 @@ def write_pipeline_prep(
         )
 
     mode = strategy if strategy in {"overwrite", "append"} else None
-    options: dict[str, Any] = {}
-    if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
-        options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
-    if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "watermark":
-        lower = _delta_literal(scope["lower_bound"])
-        upper = _delta_literal(scope["upper_bound"])
-        options["replaceWhere"] = f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"
     return {
         "df": prepared_df,
         "mode": mode,
