@@ -145,10 +145,12 @@ FabricOps is built around four reusable notebooks that work together as one oper
 
 | Notebook | Role in the workflow |
 | --- | --- |
-| `00_env_config` | Defines the active environment and the configured Fabric items used by the workflow. |
-| `01_governance` | Creates Data Stewards and Data Agreements, enriches governed tables, defines Guardrails, and manages Data Contract versions. |
-| `02_pipeline` | Performs project-specific engineering, records technical metadata, validates governed expectations, and runs the governed Production pipeline. |
-| `99_explore` | Lets project-specific consumer workspaces use approved Production data without recreating the Production engineering workflow. |
+| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | Defines the active environment and the configured Fabric items used by the workflow. |
+| [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb) | Creates Data Stewards and Data Agreements, enriches governed tables, defines Guardrails, and manages Data Contract versions. |
+| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Performs project-specific engineering, records technical metadata, validates governed expectations, and runs the governed Production pipeline. |
+| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific consumer workspaces use approved Production data without recreating the Production engineering workflow. |
+
+[Browse all reusable notebook templates](notebook-templates.md).
 
 For the deeper engineering reasoning behind `00_env_config`, FabricOps I/O functions, Lakehouse/Warehouse choices, PySpark, incremental processing, and the detailed `02_pipeline` structure, use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md).
 
