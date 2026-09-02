@@ -206,7 +206,7 @@ The exact ETL implementation stays project-specific. FabricOps standardizes the 
 </details>
 
 <details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code> and draft the governed Data Contract definition</span></span><span class="fabricops-step-chevron"></span></summary>
+<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code> and author the governed Data Contract definition</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
 Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering.
@@ -215,9 +215,9 @@ Governance can then add:
 
 - **Enrichment**, such as business meaning, sensitivity classification, PII classification, and other table- or column-level context
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
-- the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be frozen into the Data Contract
+- the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 
-Together, these records form the draft governed definition for that `table_id`. Governance can refine this definition before it is frozen into an immutable Data Contract version.
+Together, these records form the authored governed definition for that `table_id`. Governance can refine this definition before it is saved as an immutable Data Contract version.
 
 </div>
 </details>
@@ -226,7 +226,7 @@ Together, these records form the draft governed definition for that `table_id`. 
 <summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Run the governed definition in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected frozen Data Contract.
+Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected saved Data Contract version.
 
 The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
 
@@ -236,20 +236,20 @@ If the expectations do not yet work, the workflow returns to `01_governance` so 
 </details>
 
 <details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Freeze the Data Contract, link the Data Agreement, then activate the approved version</span></span><span class="fabricops-step-chevron"></span></summary>
+<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Save the Data Contract, link the Data Agreement, test the saved version, then activate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Once the governed definition is ready, Governance uses `01_governance` to freeze an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
+Once the governed definition is ready, Governance uses `01_governance` to save an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
 
-That frozen version captures the approved governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
+That saved immutable version captures the governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
 
-Engineering Development tests the frozen version in `02_pipeline`. After governance sign-off, Governance activates the approved frozen version in `01_governance` so Engineering Production is allowed to resolve it.
+Engineering Development selects and tests that exact saved version in `02_pipeline`. After governance sign-off, Governance activates the selected version in `01_governance` so Engineering Production is allowed to resolve it.
 
 <!-- VIDEO SLOT: Data Agreement and Data Contract lifecycle -->
 
 !!! important "Data Contract activation and pipeline promotion are separate"
 
-    **Activate** in `01_governance` selects the approved frozen Data Contract version that Production may resolve.
+    **Activate** in `01_governance` selects the saved Data Contract version that Production may resolve. FabricOps currently treats test and governance sign-off as workflow practice rather than a technical activation gate.
 
     **Promote** moves the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process.
 
@@ -262,7 +262,7 @@ Engineering Development tests the frozen version in `02_pipeline`. After governa
 
 Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
 
-At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those frozen expectations.
+At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those saved immutable expectations.
 
 </div>
 </details>
@@ -286,21 +286,21 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: draft, validate, freeze, test, activate
+## The core loop: author, validate, save, test, activate
 
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
 ```mermaid
 flowchart LR
-    DRAFT["Draft"] --> VALIDATE["Validate"] --> FREEZE["Freeze"] --> TEST["Test"] --> ACTIVATE["Activate"] --> PROD["Production"]
-    VALIDATE -. "Fail · refine" .-> DRAFT
-    TEST -. "Fail · new version" .-> DRAFT
+    AUTHOR["Author"] --> VALIDATE["Validate"] --> SAVE["Save Contract"] --> TEST["Test Saved Version"] --> ACTIVATE["Activate"] --> PROD["Production Resolves Active Contract"]
+    VALIDATE -. "Fail · refine" .-> AUTHOR
+    TEST -. "Fail · author and save new version" .-> AUTHOR
 
     classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class FREEZE,ACTIVATE focal;
+    class SAVE,ACTIVATE focal;
 ```
 
-The details live in the expandable workflow above. The key idea is simple: Governance drafts the governed definition, Engineering validates it, Governance freezes and activates the approved version, and Production resolves that active contract.
+The details live in the expandable workflow above. The key idea is simple: Governance authors the governed definition, Engineering validates it, Governance saves an immutable Data Contract version, Engineering tests that exact saved version, Governance activates the selected version, and Production resolves the active contract. Testing and governance sign-off are part of the recommended operating workflow; activation is not currently blocked by a recorded approval state.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
 
