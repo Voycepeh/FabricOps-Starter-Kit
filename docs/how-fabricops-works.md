@@ -77,12 +77,17 @@ Each governed target is identified by a canonical `table_id`. Engineering then r
 
 The `table_id` is the shared identity that lets the rest of the FabricOps workflow refer to the same governed table.
 
-A few engineering choices shape how this ETL is built, but the detailed reasoning lives in the Engineering Guide:
+#### Opinionated engineering choices behind FabricOps
 
-- **[Configuration-driven Engineering](reference/engineering-cheat-sheet.md#config-driven-engineering)** — `00_env_config` keeps environment-specific Fabric item identities separate from reusable `02_pipeline` logic, while FabricOps I/O functions resolve the correct Lakehouse or Warehouse for the active environment.
-- **[PySpark first, and where T-SQL fits](reference/engineering-cheat-sheet.md#pyspark-first)** — PySpark DataFrames are the normal transformation path; T-SQL is useful where Warehouse-side filtering, projection, joins, or aggregation should happen before data enters Spark.
-- **[Lakehouse first, and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first)** — Lakehouse is the preferred working layer for substantial or repeated Spark engineering, while Warehouse is often a strong relational serving layer for curated outputs.
-- **[Medallion architecture](reference/engineering-cheat-sheet.md#medallion-architecture)** — FabricOps supports Bronze, Silver, and Gold style layering, but does not require those literal names or force extra persisted layers where the project does not need them.
+FabricOps makes several engineering choices so projects do not need to redefine the same foundations every time. This page only introduces them; use each link to jump into the deeper Engineering Guide explanation.
+
+- **[Configuration-driven Engineering](reference/engineering-cheat-sheet.md#config-driven-engineering)** — keep reusable pipeline logic separate from environment-specific Fabric item identities through `00_env_config` and FabricOps I/O resolution.
+- **[Notebook first, and where Pipeline and Dataflow Gen2 fit](reference/engineering-cheat-sheet.md#notebook-first)** — use `02_pipeline` as the visible governed transformation unit, with Fabric Pipelines for orchestration and Dataflow Gen2 where connector-led ingestion is the better fit.
+- **[PySpark first, and where T-SQL fits](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path and T-SQL where Warehouse-side filtering, projection, joins, or aggregation should happen before Spark.
+- **[Lakehouse Files vs Tables](reference/engineering-cheat-sheet.md#lakehouse-files-vs-tables)** — keep naturally file-based inputs as Files where appropriate and use managed Tables for reusable governed structured datasets.
+- **[Lakehouse first, and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering, while Warehouse is often a strong relational serving layer for curated outputs.
+- **[Medallion architecture](reference/engineering-cheat-sheet.md#medallion-architecture)** — use Bronze, Silver, and Gold style layering where it adds real architectural value, without forcing those literal names or unnecessary persisted copies.
+- **[Full vs incremental processing](reference/engineering-cheat-sheet.md#full-vs-incremental)** — choose full processing for simplicity where practical, or use watermark / partition-based incremental processing when scale and source behaviour justify it.
 
 The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
