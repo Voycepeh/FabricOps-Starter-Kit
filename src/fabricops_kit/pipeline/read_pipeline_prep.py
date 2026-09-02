@@ -7,7 +7,6 @@ from typing import Any, Mapping
 
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import (
-    configured_lakehouse_schema,
     get_spark_session,
     read_lakehouse_table_core,
     read_warehouse_query_core,
@@ -17,7 +16,6 @@ from fabricops_kit.pipeline.observe_table import _observe_table_core
 from fabricops_kit.pipeline.shared import persist_lineage_participation, resolve_catalogue_table_identity
 
 
-_PARTITION_CHECKPOINT_TABLE = "METADATA_SOURCE_PARTITION_CHECKPOINT"
 _SOURCE_STRATEGIES = {"full_dataset", "incremental_watermark", "incremental_partition"}
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -62,26 +60,30 @@ def _partition_scope(changes: Mapping[str, Any], processing: Mapping[str, Any], 
             f"incremental_partition configured {column!r}, but the active change rule observes "
             f"{observed_column or '<none>'!r}."
         )
-    if changes.get("first_observation"):
-        return {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
-
     new = list(changes.get("new_partitions") or [])
     changed = list(changes.get("changed_partitions") or [])
     reappeared = list(changes.get("reappeared_partitions") or [])
     removed = list(changes.get("removed_partitions") or [])
     existing_changes = [*changed, *reappeared]
+    if changes.get("first_observation"):
+        return {
+            "read_mode": "full_dataset",
+            "scope": {
+                "type": "full_dataset",
+                "partition_column": column,
+                "values": [*new, *existing_changes],
+                "target_state_empty": True,
+            },
+        }
     if removed:
-        if strategy == "overwrite" and not processing.get("partition_column"):
-            return {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
-        raise ValueError(f"{strategy} cannot safely apply removed source partitions without explicit delete semantics.")
+        if strategy != "overwrite":
+            raise ValueError(f"{strategy} cannot safely apply removed source partitions without explicit delete semantics.")
     if strategy == "append" and existing_changes:
         raise ValueError("append is unsafe when an existing source partition changed or reappeared.")
 
-    affected = [*new, *existing_changes]
+    affected = [*new, *existing_changes, *removed]
     if not affected:
         return {"read_mode": "skip", "scope": {"type": "skip"}}
-    if strategy == "overwrite" and processing.get("partition_column") != column:
-        return {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
     return {
         "read_mode": "incremental_subset",
         "scope": {"type": "partition", "column": column, "values": affected},
@@ -139,29 +141,58 @@ def _target_watermark(identity: Mapping[str, Any], *, spark_session: Any, contex
     return values.get("target_watermark")
 
 
-def _successful_partition_observation_id(
-    config: Any, env: str, table_id: str, *, spark_session: Any, context: Any
-) -> str | None:
-    """Return the observation from the last successfully published partition run."""
+def _target_partitions(identity: Mapping[str, Any], *, spark_session: Any, context: Any) -> dict[str, dict[str, Any]]:
+    """Return successfully published partition buckets from the governed target."""
     try:
-        frame = read_lakehouse_table_core(
-            _PARTITION_CHECKPOINT_TABLE,
-            target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
-            spark_session=spark_session,
-            context=context,
-        )
+        if identity["store_kind"] == "warehouse":
+            frame = read_warehouse_query_core(
+                "SELECT [_partition_bucket] AS partition_bucket, "
+                "MAX([_committed_at]) AS committed_at, COUNT_BIG(*) AS row_count "
+                f"FROM [{identity['schema']}].[{identity['table_name']}] GROUP BY [_partition_bucket]",
+                target=str(identity["target"]), spark_session=spark_session, context=context,
+            )
+        else:
+            from pyspark.sql import functions as F
+
+            target = read_lakehouse_table_core(
+                str(identity["table_name"]), target=str(identity["target"]), schema=identity.get("schema"),
+                spark_session=spark_session, context=context,
+            )
+            if "_partition_bucket" not in target.columns:
+                if target.limit(1).count():
+                    raise ValueError(
+                        "The existing governed target contains rows but has no _partition_bucket column; "
+                        "migrate or rebuild it before incremental_partition processing."
+                    )
+                return {}
+            frame = target.groupBy(F.col("_partition_bucket").alias("partition_bucket")).agg(
+                F.max(F.col("_committed_at")).alias("committed_at"),
+                F.count(F.lit(1)).alias("row_count"),
+            )
     except Exception as exc:
         if is_table_not_found_error(exc):
-            return None
+            return {}
+        if "_partition_bucket" in str(exc) and "column" in str(exc).lower():
+            if identity["store_kind"] == "warehouse":
+                count_frame = read_warehouse_query_core(
+                    f"SELECT COUNT_BIG(*) AS row_count FROM [{identity['schema']}].[{identity['table_name']}]",
+                    target=str(identity["target"]), spark_session=spark_session, context=context,
+                )
+                count_rows = count_frame.collect()
+                if not count_rows or not int(count_rows[0]["row_count"] or 0):
+                    return {}
+            raise ValueError(
+                "The existing governed target contains rows but has no _partition_bucket column; "
+                "migrate or rebuild it before incremental_partition processing."
+            ) from exc
         raise
-    rows = (
-        frame.where((frame.environment_name == env) & (frame.table_id == table_id))
-        .orderBy(frame._committed_at.desc())
-        .limit(1)
-        .collect()
-    )
-    return None if not rows else str(rows[0]["observation_id"])
+    state = {}
+    for row in frame.collect():
+        values = row.asDict(recursive=True)
+        if int(values.get("row_count") or 0):
+            value = values.get("partition_bucket")
+            state[str(value)] = {"value": value, "committed_at": values.get("committed_at")}
+    return state
 
 
 def _source_upper_watermark(
@@ -297,8 +328,8 @@ def read_pipeline_prep(
     source_read_strategy : {"full_dataset", "incremental_watermark", "incremental_partition"}
         Engineer-authored rule for identifying source data to process.
     target_table_id : str or None, default=None
-        Governed target whose ``_watermark_value`` stores successful progress.
-        Required for ``incremental_watermark`` and ignored by other strategies.
+        Governed target whose ``_watermark_value`` or ``_partition_bucket``
+        stores successful incremental progress. Required for incremental strategies.
     source_watermark_column : str or None, default=None
         Physical source progress column required by ``incremental_watermark``.
     source_partition_column : str or None, default=None
@@ -324,11 +355,12 @@ def read_pipeline_prep(
     The first watermark run remains a ``full_dataset`` read, while its scope
     retains the watermark column and captured upper bound so write preparation
     can verify that target-backed progress reaches the inspected source state.
-    Successful watermark progress is the maximum target ``_watermark_value``;
-    there is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change
-    detection. Change safety resolves the source table's own processing through
-    :func:`check_changes`; target selection and publication are intentionally
-    outside this function.
+    Successful watermark progress is the maximum target ``_watermark_value``.
+    Successful partition progress is the set of target ``_partition_bucket``
+    values. Source Observation remains change-detection evidence and neither
+    strategy uses a secondary checkpoint commit. Partition change safety resolves
+    the source table's own processing through :func:`check_changes`; target
+    selection and publication are intentionally outside this function.
 
     Examples
     --------
@@ -351,10 +383,10 @@ def read_pipeline_prep(
         watermark_column=source_watermark_column,
         partition_column=source_partition_column,
     )
-    if source_processing["read_strategy"] == "incremental_watermark" and (
+    if source_processing["read_strategy"] in {"incremental_watermark", "incremental_partition"} and (
         not isinstance(target_table_id, str) or not target_table_id.strip()
     ):
-        raise ValueError("target_table_id is required for incremental_watermark target-state resolution.")
+        raise ValueError(f"target_table_id is required for {source_processing['read_strategy']} target-state resolution.")
     config, env, context = resolve_fabric_context()
     source_identity = resolve_catalogue_table_identity(
         config, env, source_table_id, context=context
@@ -384,17 +416,16 @@ def read_pipeline_prep(
             context=context,
         )
     else:
+        target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+        target_identity["store_kind"] = target_identity["store_type"]
+        spark = get_spark_session()
+        successful_partitions = _target_partitions(
+            target_identity, spark_session=spark, context=context,
+        )
         observation = _observe_table_core(
             source_identity["table_name"], target=source_identity["target"], schema=source_identity["schema"]
         )
-        successful_observation_id = _successful_partition_observation_id(
-            config,
-            env,
-            str(source_identity["table_id"]),
-            spark_session=getattr(observation, "sparkSession", None) or get_spark_session(),
-            context=context,
-        )
-        changes = _observation_changes(observation, successful_observation_id=successful_observation_id)
+        changes = _observation_changes(observation, successful_partition_state=successful_partitions)
         change_processing = {
             "load_strategy": changes["load_strategy"],
             "partition_column": changes.get("partition_column"),
@@ -402,7 +433,7 @@ def read_pipeline_prep(
         runtime = _partition_scope(changes, change_processing, source_processing["partition_column"])
     return {
         "source": source_identity,
-        **({"target": target_identity} if strategy == "incremental_watermark" else {}),
+        **({"target": target_identity} if strategy in {"incremental_watermark", "incremental_partition"} else {}),
         "source_processing": source_processing,
         "observation": observation,
         "changes": changes,

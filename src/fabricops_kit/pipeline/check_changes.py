@@ -94,6 +94,7 @@ def _observation_changes(
     *,
     table_id: str | None = None,
     successful_observation_id: str | None = None,
+    successful_partition_state: dict[str, dict[str, Any]] | None = None,
 ) -> dict:
     """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
@@ -144,6 +145,7 @@ def _observation_changes(
         authored_processing=catalogue_authored_processing(identity),
     )
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
+    history = []
     try:
         history = read_lakehouse_table_core(
             _OBSERVATION_TABLE,
@@ -152,13 +154,29 @@ def _observation_changes(
             spark_session=getattr(observation, "sparkSession", None),
             context=context,
         )
-        previous = _previous_observation(
-            history,
-            table_id=table_id,
-            environment_name=environment_name,
-            committed_at=committed_at,
-            observation_id=successful_observation_id,
-        )
+        if successful_partition_state is None:
+            previous = _previous_observation(
+                history,
+                table_id=table_id,
+                environment_name=environment_name,
+                committed_at=committed_at,
+                observation_id=successful_observation_id,
+            )
+        else:
+            history_rows = observation_rows(history)
+            previous = []
+            for bucket, state in successful_partition_state.items():
+                published_at = state.get("committed_at")
+                candidates = [
+                    row for row in history_rows
+                    if str(row.get("table_id") or "") == table_id
+                    and str(row.get("environment_name") or "") == environment_name
+                    and str(row.get("partition_value")) == bucket
+                    and row.get("_committed_at") < committed_at
+                    and (published_at is None or row.get("_committed_at") <= published_at)
+                ]
+                if candidates:
+                    previous.append(max(candidates, key=lambda row: row["_committed_at"]))
     except Exception as exc:
         if not is_table_not_found_error(exc):
             raise RuntimeError(f"Unable to load table observation history for {table_id!r}: {exc}") from exc
@@ -166,11 +184,27 @@ def _observation_changes(
 
     current_by = {str(row["partition_value"]): row for row in current}
     previous_by = {str(row["partition_value"]): row for row in previous}
+    latest_evidence_by: dict[str, dict[str, Any]] = {}
+    if successful_partition_state is not None:
+        for row in observation_rows(history):
+            value = str(row.get("partition_value"))
+            if (
+                str(row.get("table_id") or "") == table_id
+                and str(row.get("environment_name") or "") == environment_name
+                and row.get("_committed_at") < committed_at
+                and (
+                    value not in latest_evidence_by
+                    or row["_committed_at"] > latest_evidence_by[value]["_committed_at"]
+                )
+            ):
+                latest_evidence_by[value] = row
     new, changed, reappeared = [], [], []
     for value, row in current_by.items():
         prior = previous_by.get(value)
         if prior is None:
             new.append(row["partition_value"])
+        elif not latest_evidence_by.get(value, prior).get("is_present", True):
+            reappeared.append(row["partition_value"])
         elif not prior.get("is_present", True):
             reappeared.append(row["partition_value"])
         elif any(
@@ -179,8 +213,11 @@ def _observation_changes(
         ):
             changed.append(row["partition_value"])
     removed = [
-        row["partition_value"]
-        for value, row in previous_by.items()
+        state["value"]
+        for value, state in (successful_partition_state or {}).items()
+        if value not in current_by
+    ] if successful_partition_state is not None else [
+        row["partition_value"] for value, row in previous_by.items()
         if row.get("is_present", True) and value not in current_by
     ]
 
@@ -241,7 +278,8 @@ def _observation_changes(
         source_pattern=source_pattern,
         comparison_scope="partial" if source_pattern == "incremental_append" else "complete",
     )
-    has_changes = not previous or bool(new or changed or removed or reappeared)
+    first_observation = not successful_partition_state if successful_partition_state is not None else not previous
+    has_changes = first_observation or bool(new or changed or removed or reappeared)
     result = {
         "table_id": table_id,
         "environment_name": environment_name,
@@ -251,7 +289,7 @@ def _observation_changes(
         "check_type": "changes",
         "guardrail_type": "change",
         "changed": has_changes,
-        "first_observation": not previous,
+        "first_observation": first_observation,
         "new_partitions": new,
         "changed_partitions": changed,
         "removed_partitions": removed,
@@ -265,7 +303,7 @@ def _observation_changes(
         "append_violation_count": pattern_result["append_violation_count"],
         "reason": (
             "First observation baseline created."
-            if not previous
+            if first_observation
             else ("Source observation changed." if has_changes else "Source observation is unchanged.")
         ),
     }

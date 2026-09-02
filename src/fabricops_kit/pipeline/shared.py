@@ -1666,10 +1666,9 @@ def execute_lakehouse_processing(
         if read_mode == "full_dataset":
             write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
             return
-        partition_column = processing.get("partition_column")
-        if not partition_column or partition_column != runtime_scope.get("column"):
-            raise ValueError("Incremental overwrite requires matching safe target partition configuration.")
-        predicate = f"`{str(partition_column).replace('`', '``')}` IN ({', '.join(_sql_literal(v) for v in values)})"
+        if "_partition_bucket" not in columns:
+            raise ValueError("Incremental overwrite requires persisted _partition_bucket target state.")
+        predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table_core(
             persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
             options={"replaceWhere": predicate},

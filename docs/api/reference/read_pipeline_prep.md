@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:282`
+`fabricops_kit/pipeline/read_pipeline_prep.py:313`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L282-L410">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L313-L441">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -68,7 +68,7 @@ True
 | --- | --- | --- | --- |
 | `source_table_id` | `str` | Yes | Canonical identity of one registered source table. FabricOps resolves its physical coordinates from the Catalogue. |
 | `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
-| `target_table_id` | `str \| None` | No | Governed target whose ``_watermark_value`` stores successful progress. Required for ``incremental_watermark`` and ignored by other strategies. |
+| `target_table_id` | `str \| None` | No | Governed target whose ``_watermark_value`` or ``_partition_bucket`` stores successful incremental progress. Required for incremental strategies. |
 | `source_watermark_column` | `str \| None` | No | Physical source progress column required by ``incremental_watermark``. |
 | `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
 
@@ -90,11 +90,12 @@ Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
 The first watermark run remains a ``full_dataset`` read, while its scope
 retains the watermark column and captured upper bound so write preparation
 can verify that target-backed progress reaches the inspected source state.
-Successful watermark progress is the maximum target ``_watermark_value``;
-there is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change
-detection. Change safety resolves the source table's own processing through
-:func:`check_changes`; target selection and publication are intentionally
-outside this function.
+Successful watermark progress is the maximum target ``_watermark_value``.
+Successful partition progress is the set of target ``_partition_bucket``
+values. Source Observation remains change-detection evidence and neither
+strategy uses a secondary checkpoint commit. Partition change safety resolves
+the source table's own processing through :func:`check_changes`; target
+selection and publication are intentionally outside this function.
 
 </div>
 

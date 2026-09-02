@@ -44,19 +44,19 @@ def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
 def test_incremental_overwrite_uses_replace_where(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
-        object(), table_name="students", target="unified", schema="dbo",
+        type("Frame", (), {"columns": ["_partition_bucket"]})(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "overwrite", "partition_column": "business_date"},
         scope={"read_mode": "incremental_subset", "scope": {
             "type": "partition", "column": "business_date", "values": ["2026-08-21"],
         }},
     )
     assert calls[0][1]["mode"] == "overwrite"
-    assert calls[0][1]["options"] == {"replaceWhere": "`business_date` IN ('2026-08-21')"}
+    assert calls[0][1]["options"] == {"replaceWhere": "`_partition_bucket` IN ('2026-08-21')"}
 
 
 def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    with pytest.raises(ValueError, match="matching safe target partition"):
+    with pytest.raises(ValueError, match="persisted _partition_bucket target state"):
         shared.execute_lakehouse_processing(
             object(), table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "overwrite", "partition_column": "other_date"},

@@ -108,10 +108,18 @@ def _overwrite_options(
         upper = _delta_literal(scope["upper_bound"])
         return {"replaceWhere": f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"}
     if source_strategy == "incremental_partition":
+        partition_column = str((prep.get("source_processing") or {}).get("partition_column") or "")
+        first_population = (
+            read_mode == "full_dataset"
+            and scope.get("type") == "full_dataset"
+            and scope.get("partition_column") == partition_column
+            and scope.get("target_state_empty") is True
+        )
+        if first_population:
+            return {}
         if store_kind != "lakehouse":
             raise ValueError(error)
         values = scope.get("values")
-        partition_column = processing.get("partition_column")
         if (
             read_mode != "incremental_subset"
             or scope.get("type") != "partition"
@@ -120,7 +128,7 @@ def _overwrite_options(
             or partition_column != scope.get("column")
         ):
             raise ValueError(error)
-        return {"replaceWhere": _replace_where(str(partition_column), list(values))}
+        return {"replaceWhere": _replace_where("_partition_bucket", list(values))}
     raise ValueError(error)
 
 
@@ -138,15 +146,6 @@ def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, An
         if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(scope, dict):
             raise ValueError("Each source prep must contain a non-skipped canonical read_mode and scope.")
         scopes.append({"read_mode": read_mode, "scope": scope})
-        observation = prep.get("observation")
-        changes = prep.get("changes")
-        if observation is not None and isinstance(changes, dict):
-            completion_sources.append({
-                "type": "partition",
-                "table_id": changes.get("table_id"),
-                "environment_name": changes.get("environment_name"),
-                "observation_id": changes.get("observation_id"),
-            })
     if all(scope == scopes[0] for scope in scopes[1:]):
         return scopes[0], completion_sources
     return {
@@ -242,6 +241,17 @@ def write_pipeline_prep(
         prep for prep in source_preps
         if (prep.get("source_processing") or {}).get("read_strategy") == "incremental_watermark"
     ]
+    partition_preps = [
+        prep for prep in source_preps
+        if (prep.get("source_processing") or {}).get("read_strategy") == "incremental_partition"
+    ]
+    if partition_preps and strategy == "append":
+        raise ValueError(
+            "incremental_partition with append is unsafe because replay can duplicate rows; "
+            "use overwrite, scd1, or scd2."
+        )
+    if len(partition_preps) > 1:
+        raise ValueError("A governed target can derive _partition_bucket from only one incremental_partition source.")
     if watermark_preps and strategy == "append":
         raise ValueError(
             "incremental_watermark with append is unsafe because the processing definition has no "
@@ -265,6 +275,22 @@ def write_pipeline_prep(
         df = df.withColumn("_watermark_value", F.col(watermark_column))
         if scope.get("upper_bound") is not None:
             _validate_watermark_progress(df, scope["upper_bound"])
+    if partition_preps:
+        partition_column = str(partition_preps[0]["source_processing"]["partition_column"])
+        if partition_column == "_partition_bucket":
+            raise ValueError("_partition_bucket is reserved for FabricOps target partition state.")
+        if "_partition_bucket" in df.columns:
+            raise ValueError("_partition_bucket is a reserved FabricOps technical column and must not be supplied.")
+        if partition_column not in df.columns:
+            raise ValueError(
+                f"incremental_partition requires source partition column {partition_column!r} to be retained "
+                "through transformation until write_pipeline_prep."
+            )
+        from pyspark.sql import functions as F
+
+        df = df.withColumn("_partition_bucket", F.col(partition_column))
+        if df.where(F.col("_partition_bucket").isNull()).limit(1).count():
+            raise ValueError("incremental_partition requires non-null _partition_bucket values on every target row.")
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
