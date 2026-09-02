@@ -56,9 +56,9 @@ Step 2: run ETL and write Catalogue / Profiled / Lineage metadata
         ↓
 Step 3: read Catalogue + Profiled; write Enrichment + Guardrail
         ↓
-Step 4: rerun the same ETL and write Guardrail Results
+Step 4: rerun the same ETL and validate current authoring
         ↓
-Step 5: freeze approved expectations into a Data Contract
+Step 5: save an immutable Data Contract, select and test it, then activate the selected version
         ↓
 Step 6: run the same ETL in Production against the active contract
 ```
