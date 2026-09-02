@@ -138,6 +138,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'read_lakehouse_table',
         'write_lakehouse_table',
         'read_lakehouse_csv',
+        'read_lakehouse_json',
         'read_lakehouse_parquet',
         'read_lakehouse_excel',
         'read_warehouse_table',
