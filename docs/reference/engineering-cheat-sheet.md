@@ -4,7 +4,20 @@ Use this page when you want the deeper engineering reasoning behind the FabricOp
 
 The Guided Demo stays practical and the How FabricOps Works page stays high-level. This guide explains the engineering choices behind those pages, then keeps the practical PySpark, Spark optimisation, and T-SQL references collapsed at the bottom for quick lookup.
 
-## Engineering concepts behind FabricOps
+## Opinionated engineering choices behind FabricOps
+
+Use this as the jump-off point for the engineering decisions built into FabricOps:
+
+1. [Configuration-driven engineering](#config-driven-engineering)
+2. [Code-first engineering](#notebook-first)
+3. [ETL lifecycle implementation](#etl-lifecycle)
+4. [PySpark-first transformation](#pyspark-first)
+5. [Lakehouse-first engineering](#lakehouse-first)
+6. [Single-target pipeline implementation](#single-target-pipeline)
+7. [Governance as Code](#governance-as-code)
+8. [Medallion architecture implementation](#medallion-architecture)
+9. [Incremental load implementation](#full-vs-incremental)
+10. [Failure-safe processing and recovery](#failure-safe-processing)
 
 <span id="lakehouse-files-vs-tables"></span>
 
@@ -29,7 +42,7 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 <span id="lakehouse-first"></span>
 
-??? info "Lakehouse first — and when Warehouse fits"
+??? info "Lakehouse-first engineering"
 
     FabricOps supports both Lakehouse and Warehouse, but its engineering path is intentionally **Lakehouse first** when substantial transformation is required.
 
@@ -87,7 +100,7 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 <span id="medallion-architecture"></span>
 
-??? info "Medallion architecture"
+??? info "Medallion architecture implementation"
 
     Medallion is a common way to organise data into progressively more refined layers.
 
@@ -130,9 +143,9 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 <span id="notebook-first"></span>
 
-??? info "Notebook first — vs Pipeline vs Dataflow Gen2"
+??? info "Code-first engineering"
 
-    FabricOps deliberately makes the **Notebook** the visible engineering unit for governed transformation.
+    FabricOps deliberately keeps the governed engineering implementation **code first**, with `02_pipeline` as the visible, reviewable unit for project-specific transformation.
 
     | Fabric item | Strong fit | FabricOps position |
     | --- | --- | --- |
@@ -140,11 +153,11 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     | Pipeline | Orchestration, schedules, dependencies, retries, data movement, calling notebooks | Use around FabricOps notebooks when orchestration is required |
     | Dataflow Gen2 | Low-code Power Query ingestion and transformation | Useful ingestion option, but not the canonical FabricOps transformation path |
 
-    **Why notebook first?** FabricOps wants project-specific engineering logic to stay explicit, reviewable, and versionable beside the metadata-driven workflow. PySpark also gives a consistent DataFrame transformation path across Lakehouse and Warehouse reads.
+    Keeping the transformation code visible means project-specific joins, filters, derivations, aggregations, and reshaping remain explicit, reviewable, and versionable beside the metadata-driven workflow.
 
     Pipelines still matter. They are the natural place to schedule or orchestrate notebooks, chain dependencies, run activities, and monitor execution. FabricOps does not try to recreate those native platform capabilities inside its own metadata model.
 
-    Dataflow Gen2 is useful for low-code ingestion and Power Query-based preparation. FabricOps does not use it as the default transformation path because `02_pipeline` keeps repeatable engineering logic in notebooks and PySpark, and Dataflow Gen2 workloads still consume Fabric capacity according to the compute used.
+    Dataflow Gen2 is useful for low-code ingestion and Power Query-based preparation. FabricOps does not use it as the default transformation path because `02_pipeline` keeps repeatable engineering logic in code and PySpark.
 
     **SharePoint is an important exception.** For SharePoint Folder or SharePoint List sources, FabricOps recommends using the supported Dataflow Gen2 connectors to land the source into the configured Lakehouse, then continuing governed engineering in `02_pipeline`.
 
@@ -164,7 +177,7 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 <span id="config-driven-engineering"></span>
 
-??? info "Config-driven engineering and why FabricOps has I/O functions"
+??? info "Configuration-driven engineering"
 
     A Fabric notebook can work naturally with its attached/default Fabric item, but real engineering projects often need to read and write across **multiple Lakehouses, Warehouses, workspaces, and environments**.
 
@@ -228,9 +241,67 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
     The important architectural choice is not the file format. It is the **separation of environment-specific physical identity from reusable pipeline logic**.
 
+<span id="etl-lifecycle"></span>
+
+??? info "ETL lifecycle implementation"
+
+    `02_pipeline` keeps one visible engineering lifecycle:
+
+    ```text
+    Environment → Extract → Transform → Load
+    ```
+
+    **Environment** resolves the active Development or Production configuration. **Extract** reads one or more configured sources and prepares the source processing state. **Transform** remains project-owned business logic. **Load** writes one governed target using the applicable target processing definition.
+
+    FabricOps standardises the operational behaviour around that lifecycle, including configured I/O, profiling, Catalogue registration, lineage, governed checks, source processing preparation, and checkpoint handling. It does not hide the project-specific transformation itself.
+
+    This keeps the framework boundary easy to understand: FabricOps owns the repeatable engineering scaffolding, while the engineer owns the transformation that makes the project unique.
+
+<span id="single-target-pipeline"></span>
+
+??? info "Single-target pipeline implementation"
+
+    A FabricOps `02_pipeline` can read **one or many upstream sources**, but it publishes **one governed target table**.
+
+    ```mermaid
+    flowchart LR
+        A["Source A"] --> P["02_pipeline"]
+        B["Source B"] --> P
+        C["Reference source"] --> P
+        P --> T["One governed target"]
+        T --> P2["Downstream 02_pipeline"]
+        P2 --> T2["Next governed target"]
+    ```
+
+    The reason is failure isolation. Independent physical writes inside one notebook can partially succeed, and there is no notebook-level transaction that rolls all targets back together. If another persisted governed output is required, create a separate downstream pipeline.
+
+    Keep persisted dependencies directional and acyclic. A pipeline should not use its own target as an engineer-authored source, and persisted intermediate stages should be explicit outputs of upstream pipelines.
+
+<span id="governance-as-code"></span>
+
+??? info "Governance as Code"
+
+    FabricOps keeps governance and engineering context in **shared metadata tables inside Fabric**, centred on one canonical `table_id` for each governed table.
+
+    Engineering writes technical context such as the Data Catalogue, Profile, Profile Frequency, and Lineage. Governance reads that same `table_id` and adds Enrichment, Guardrails, Data Agreements, and Data Contracts. `02_pipeline` can then resolve and validate those structured definitions instead of relying on a separate document-only governance process.
+
+    ```text
+    Engineering metadata
+    Catalogue + Profile + Lineage
+              ↓
+          canonical table_id
+              ↓
+    Governance metadata
+    Enrichment + Guardrails + Contract
+              ↓
+        governed 02_pipeline
+    ```
+
+    The goal is a hassle-free, self-contained Fabric operating model: the governed context travels with the engineering workflow through the shared Metadata Lakehouse. For the exact tables and fields, use the [Metadata Tables reference](metadata.md).
+
 <span id="pyspark-first"></span>
 
-??? info "PySpark first — and where T-SQL fits"
+??? info "PySpark-first transformation"
 
     Once source data is in Spark, FabricOps uses **PySpark DataFrames as the normal transformation path**.
 
@@ -276,7 +347,7 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
 
 <span id="full-vs-incremental"></span>
 
-??? info "Full vs incremental: full, watermark, and partition"
+??? info "Incremental load implementation"
 
     FabricOps makes the processing strategy explicit rather than hiding it inside ad-hoc notebook code.
 
@@ -343,6 +414,34 @@ The Guided Demo stays practical and the How FabricOps Works page stays high-leve
     A partial incremental DataFrame must not replace the registered Profile of the complete physical table. When FabricOps needs to register the table-level Profile after a write, it should profile the complete persisted target so the metadata continues to describe the physical table rather than only the latest increment.
 
     **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse)
+
+<span id="failure-safe-processing"></span>
+
+??? info "Failure-safe processing and recovery"
+
+    FabricOps treats source progress as **successfully processed state**, not simply as data that was attempted or read.
+
+    `read_pipeline_prep()` prepares the source runtime mode and source state before processing. The pipeline then performs the project transformation, governed checks, and physical target write. Only after those steps succeed should `commit_pipeline_checkpoint()` advance the source checkpoint.
+
+    ```text
+    Prepare source state
+          ↓
+    Read source scope
+          ↓
+    Transform
+          ↓
+    Validate governed expectations
+          ↓
+    Write governed target
+          ↓
+    Commit source checkpoint
+    ```
+
+    If the run fails before the target write completes, the successful checkpoint is not advanced. The next run can therefore re-read the uncommitted source scope instead of silently skipping it.
+
+    This is the core FabricOps recovery rule for watermark and partition-driven processing: **state follows successful governed processing, never the other way around.**
+
+    Source preparation can also resolve a runtime read mode such as `skip`, `full_dataset`, or an incremental scope based on the configured source strategy and recorded state. That keeps recovery behaviour inside the same repeatable `02_pipeline` lifecycle rather than relying on ad-hoc notebook variables.
 
 ## Practical cheat sheets
 

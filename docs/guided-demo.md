@@ -1,8 +1,8 @@
 # FabricOps Guided Demo
 
-**The Guided Demo is a learning path that takes one FabricOps workflow from initial Fabric preparation through Governance, Engineering Development validation, Engineering Production, and downstream consumption.**
+**The Guided Demo is the practical, step-by-step path for running the FabricOps workflow from initial Fabric preparation through Governance, Engineering Development validation, Engineering Production, and downstream consumption.**
 
-Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) for the notebook downloads.
+Read [How FabricOps Works](how-fabricops-works.md) first for the operating model and the Governance ↔ Engineering workflow. Use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md) when you want the deeper reasoning behind `00_env_config`, I/O, Lakehouse/Warehouse choices, PySpark, and processing patterns.
 
 !!! tip "New to Microsoft Fabric?"
 
@@ -14,59 +14,68 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 
 ## What you'll build
 
-You will progressively take the same governed pipeline through the FabricOps lifecycle:
+You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A and 0B prepare and configure the environment before that workflow begins.**
 
-```text
-Prepare → Configure → Govern → Engineer → Enrich → Validate → Freeze/Test/Activate → Promote/Run → Consume
+```mermaid
+flowchart TB
+    S0A["0A · Prepare<br/>Fabric artifacts"] --> S0B["0B · Configure<br/>00_env_config"]
+    S0B --> S1["1 · Govern<br/>Data Stewards + Data Agreement"]
+    S1 --> S2["2 · Engineer<br/>ETL + Profile + Catalogue + Lineage"]
+    S2 --> S3["3 · Enrich<br/>Enrichment + Guardrails"]
+    S3 --> S4["4 · Validate<br/>02_pipeline tests governed expectations"]
+    S4 --> PASS{"Ready to freeze?"}
+    PASS -- "No · refine" --> S3
+    PASS -- "Yes" --> S5["5 · Data Contract lifecycle<br/>Freeze → Test → Activate"]
+    S5 --> FROZEN{"Frozen version passes?"}
+    FROZEN -- "No · refine and freeze a new version" --> S3
+    FROZEN -- "Yes" --> S6["6 · Promote / Run<br/>Engineering Production"]
+    S6 --> S7["7 · Consume<br/>99_explore from Production"]
+
+    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
+    class S3,S4,S5 focal;
 ```
 
-The learning path deliberately introduces governance in stages. Step 2 runs the full ETL before Guardrails exist. Step 3 reads the `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` records written by Engineering, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns the same `02_pipeline` with those Guardrails or a selected frozen Data Contract. Step 5 freezes an immutable Data Contract version, tests the frozen version in Development, and activates the approved version for Production. Step 6 promotes the validated `02_pipeline` into Engineering Production, resolves the active Data Contract, and runs the governed Production pipeline. Step 7 consumes only approved Production data from the project-specific consumer workspace.
+The diagram makes the non-linear part explicit: **Steps 3, 4, and 5 form the Governance ↔ Engineering iteration.** Governance refines the governed definition in Step 3, Engineering validates it in Step 4, and Step 5 freezes and tests an immutable version. If either validation shows the definition is not ready, the workflow returns to Governance for refinement before a new version is frozen. Only an approved activated version continues to Production.
 
-!!! info "Four FabricOps concepts to know first"
+The demo is intentionally action-oriented. Each module tells you what to do, what you should see, and what FabricOps records at that stage.
 
-    **FabricOps Starter Kit**, **Metadata**, **Governance as Code**, and **Configuration-driven Engineering** appear throughout this demo.
-
-    Hover over a glossary term for its canonical short definition. Use the [FabricOps Glossary](glossary.md) when you want the full definition, category, aliases, or Microsoft Learn source where applicable.
+<!-- SCREEN-RECORDING SLOT: Optional 20-30 second demo orientation -->
 
 ## Learning path
 
-Select a module name to continue through the demo in order.
+| Module | Workspace | Notebook | What you do | What FabricOps records / proves |
+| --- | --- | --- | --- | --- |
+| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. | The operating environment exists and is ready for the notebook workflow. |
+| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing and create or validate the Governance metadata tables. | Logical stores resolve to the correct environment-specific Fabric items. |
+| [1. Data Stewards and Data Agreement](guided-demo/01-create-agreement.md) | Governance | `01_governance` | Create provider and recipient Data Stewards and a Data Agreement. | The governed sharing relationship is established. |
+| [2. ETL, Profile, and Catalogue](guided-demo/02-run-pipeline.md) | Engineering Development | `02_pipeline` | Run the complete ETL for the governed target. | Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records are written for the governed `table_id`. |
+| [3. Enrich Catalogue and define Guardrails](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Read the Engineering metadata, add Enrichment, and author Guardrails. | The governed definition for the same `table_id` is enriched with business context and enforceable expectations. |
+| [4. Validate with Guardrails / Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | Engineering Development | `02_pipeline` | Rerun the same ETL with current Guardrails or a selected frozen Data Contract. | Guardrail Results and row-level results where applicable prove whether the governed expectations pass. |
+| [5. Freeze, test, and activate the Data Contract](guided-demo/05-create-data-contract.md) | Governance + Engineering Development | `01_governance` + `02_pipeline` | Freeze an immutable version, test it in Development, obtain governance sign-off, and activate the approved version. | One approved frozen Data Contract version is selected for Production resolution. |
+| [6. Run the Production pipeline](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline using the organisation's deployment process, resolve the active Data Contract, and run the governed Production pipeline. | Production executes against the active frozen contract. |
+| [7. Consume approved Production data](guided-demo/99-explore-via-notebook.md) | Project-Specific Consumer | `99_explore` | Consume approved Production data without duplicating the Production engineering workflow. | Downstream BI, AI, data science, and exploration use the trusted Production source. |
 
-| Module | Workspace | Notebook | What you do |
-| --- | --- | --- | --- |
-| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. |
-| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing and create or validate the Governance metadata tables. |
-| [1. Data Stewards and Data Agreement](guided-demo/01-create-agreement.md) | Governance | `01_governance` | Create Data Stewards and a Data Agreement. |
-| [2. ETL, Profile, and Catalogue](guided-demo/02-run-pipeline.md) | Engineering Development | `02_pipeline` | Run the complete ETL and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records. |
-| [3. Enrich Catalogue and define Guardrails](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Read Data Catalogue and Data Profiled records, add Enrichment, and author Guardrails. |
-| [4. Validate with Guardrails / Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | Engineering Development | `02_pipeline` | Rerun the same ETL with current Guardrails or a selected frozen Data Contract and write Guardrail Results. |
-| [5. Freeze, test, and activate the Data Contract](guided-demo/05-create-data-contract.md) | Governance + Engineering Development | `01_governance` + `02_pipeline` | Freeze an immutable Data Contract version, test the frozen version in Development, obtain governance sign-off, and activate the approved version. |
-| [6. Run the Production pipeline](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline, resolve the active Data Contract, and run the governed Production pipeline. |
-| [7. Consume approved Production data](guided-demo/99-explore-via-notebook.md) | Project-Specific Consumer | `99_explore` | Consume only approved Production data without duplicating the Production engineering workflow. |
+## How to use each module
 
-## How the same pipeline matures
+Each action page should stay practical and use the same rhythm:
 
-![FabricOps role workflow](assets/fabricops-role-workflow.png)
+1. **What you are doing** — the purpose of the step in one sentence.
+2. **Do this** — the actual notebook, widget, or Fabric action.
+3. **What you should see** — the expected result, supported by a screenshot or short real screen recording where motion matters.
+4. **What FabricOps recorded** — the metadata, result, or governed state created by the step.
+5. **Go deeper** — link back to [How FabricOps Works](how-fabricops-works.md) for the operating concept or the [Engineering Guide](reference/engineering-cheat-sheet.md) for technical reasoning.
 
-### Step 2: baseline engineering
+The Guided Demo should not repeat long architecture or engineering explanations. Those concepts live on the pages above so this path can stay focused on doing the work.
 
-`02_pipeline` runs a complete Extract → Transform → Load flow and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE`. Guardrails are not expected yet because they have not been authored.
+For the conceptual explanation of the Step 3 → Step 4 → Step 5 loop and the Data Contract lifecycle, see [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop).
 
-### Steps 3 and 4: enrich, govern, then validate
+## Promotion mechanism
 
-Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates current Guardrails or a selected frozen Data Contract, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded.
+!!! note "Promotion remains separate from contract activation"
 
-### Steps 5 and 6: freeze, test, activate, promote, then run
+    The canonical **Promote** stage remains part of FabricOps. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
 
-Step 5 freezes an immutable Data Contract version, tests that frozen version in Development, records governance sign-off, and activates the approved version for Production. Step 6 promotes the validated `02_pipeline` into Engineering Production, resolves the active Data Contract, and runs the governed Production pipeline against those frozen expectations.
-
-### Step 7: consume approved Production data
-
-Project-specific consumer workspaces use `99_explore` to consume approved data from Engineering Production for Power BI, AI, data science, exploration, and other project-level use without recreating the Production pipeline.
-
-!!! note "Promotion mechanism"
-
-    The canonical **Promote** stage remains part of FabricOps. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process. The current demo assumes the validated `02_pipeline` is made available in Engineering Production through the organisation's current Fabric process before the Production run.
+    The current demo assumes the validated `02_pipeline` is made available in Engineering Production through the organisation's current Fabric process before the Production run.
 
 ## Live, Preview, and Planned content
 

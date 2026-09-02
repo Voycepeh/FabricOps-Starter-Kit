@@ -25,249 +25,190 @@
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-The shared Metadata Lakehouse carries FabricOps metadata between Governance and Engineering. Governance authors and freezes the governed definition, Engineering Development tests it, and Engineering Production resolves the active Data Contract when the approved pipeline runs. Project-specific consumer workspaces consume only approved Production data and do not recreate the Production engineering workflow.
+The shared Metadata Lakehouse carries FabricOps metadata between Governance and Engineering. Governance defines and approves the governed expectations, Engineering Development builds and validates the pipeline against them, Engineering Production resolves the active Data Contract at runtime, and project-specific consumer workspaces consume approved Production data.
+
+<!-- VIDEO SLOT: Main How FabricOps Works overview -->
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## Four ideas to know before you start
+## The workflow at a glance
 
-**FabricOps Starter Kit** is a governed Data Engineering and Data Governance practice for Microsoft Fabric. It gives teams a repeatable operating workflow, notebook templates, reusable functions, and shared metadata rather than asking every project to invent its own engineering and governance pattern.
+FabricOps is built around four reusable notebooks that work together as one operating practice:
 
-**Metadata** is the information FabricOps carries through that workflow so Governance and Engineering are working from the same definition of the data. It includes technical structure and Profiles as well as business meaning, ownership, Guardrails, lineage, Data Agreements, and Data Contracts.
+| Notebook | Role in the workflow |
+| --- | --- |
+| `00_env_config` | Defines the active environment and the configured Fabric items used by the workflow. |
+| `01_governance` | Creates Data Stewards and Data Agreements, enriches governed tables, defines Guardrails, and manages Data Contract versions. |
+| `02_pipeline` | Performs project-specific engineering, records technical metadata, validates governed expectations, and runs the governed Production pipeline. |
+| `99_explore` | Lets project-specific consumer workspaces use approved Production data without recreating the Production engineering workflow. |
 
-**Governance as Code** means governance decisions are captured in structured metadata, rules, and contracts that the engineering workflow can directly use. Governance does not only describe expectations in documents; FabricOps turns those expectations into Data Agreements, Enrichment, Guardrails, and Data Contracts that `02_pipeline` can resolve, validate, and enforce during execution.
-
-**Configuration-driven Engineering** keeps reusable pipeline code separate from environment-specific Fabric item identities and repeatable processing choices. `00_env_config` defines the active environment and logical stores, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. The same `02_pipeline` can therefore move from Development to Production without hard-coding different workspace paths and item IDs throughout the notebook.
-
-Read more about [Config-driven engineering and why FabricOps has I/O functions](reference/engineering-cheat-sheet.md#config-driven-engineering). Hover over a glossary term when you only need the short definition, or use the [FabricOps Glossary](glossary.md) for the full terminology reference.
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## Workspace model
-
-| Workspace | Primary Purpose | Main Fabric Stores |
-| --------- | --------------- | ------------------ |
-| Governance | Manage Data Stewards, Data Agreements, Data Contracts, Catalogue Enrichment, and Guardrails | Shared FabricOps Metadata Lakehouse |
-| Engineering Development | Explore data and develop, profile, test, and review repeatable pipelines | Configured Development data layers using Lakehouses, Warehouses, or both |
-| Engineering Production | Run governed and stable Production pipelines on the required operational schedule | Configured Production data layers using Lakehouses, Warehouses, or both |
-| Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the Production engineering workflow | Consumes approved data from the Engineering Production workspace via `99_explore` |
-
-??? info "Read more about the workspace model"
-
-    **Core workspaces**
-
-    Governance, Engineering Development, and Engineering Production establish the shared governance and engineering workflow used to create, validate, govern, and operate data pipelines. The Metadata Lakehouse is the shared hand-off point for FabricOps metadata between Governance and Engineering.
-
-    **Project-Specific Consumer workspaces**
-
-    Teams may create multiple project-specific consumer workspaces for exploration, AI, data science, and BI consumption. Each workspace uses `99_explore` to read approved governed data directly from Engineering Production for its own project work.
-
-    **Trusted Production source**
-
-    Consumer workspaces do not reproduce the Production pipeline or maintain their own Production copies of the governed data layers. Engineering Production remains the trusted Production source.
-
-### Data layers and Medallion Architecture
-
-FabricOps is compatible with the familiar **Bronze → Silver → Gold** pattern, but it does not require those literal store names or a fixed number of persisted layers. Projects define their logical stores in `00_env_config` and use only the layers their architecture actually needs.
-
-Read more about [Medallion architecture in FabricOps](reference/engineering-cheat-sheet.md#medallion-architecture) and [Lakehouse first — and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first).
+For the deeper engineering reasoning behind `00_env_config`, FabricOps I/O functions, Lakehouse/Warehouse choices, PySpark, incremental processing, and the detailed `02_pipeline` structure, use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md).
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## The governance and engineering loop workflow
-
-**FabricOps uses a loop between Governance and Engineering Development to validate a pipeline and its governed definition before the approved pipeline runs in Engineering Production.**
+## The Governance and Engineering loop
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the notebooks from [Notebook Templates](notebook-templates.md).
+FabricOps deliberately loops between Governance and Engineering Development before the approved pipeline runs in Production.
 
-??? info "Read the workflow step by step"
+<!-- VIDEO SLOT: Governance and Engineering loop -->
 
-    **0A. Prepare Fabric artifacts**
+### 1. Governance creates Data Stewards and a Data Agreement in `01_governance`
 
-    Create the Governance, Engineering Development, and Engineering Production workspaces, the required Lakehouses and Warehouses, attach the Fabric Environment, and copy the notebook templates.
+In `01_governance`, Governance creates the provider and recipient **Data Stewards** and a **Data Agreement** between them.
 
-    **0B. Set up the operating environment**
+The Data Agreement establishes the governed sharing context: who is providing and receiving the data, the business purpose, approved usages, validity, and other agreement-level governance information.
 
-    Run `00_env_config` in Governance, Engineering Development, and Engineering Production, then create or validate the Governance metadata tables.
+### 2. Engineering builds the ETL pipeline within `02_pipeline`
 
-    **1. Governance: Create Data Stewards and a Data Agreement**
+Engineering Development uses `02_pipeline` to read one or more configured sources, perform project-specific transformations, and write governed target tables to the configured Lakehouse or Warehouse.
 
-    In `01_governance`, create the provider and recipient Data Stewards and establish the Data Agreement between them.
+Each governed target is identified by a canonical `table_id`. Engineering then records the technical context around that table, including:
 
-    **2. Engineering Development: ETL, profile, and catalogue**
+- **Data Catalogue metadata** — the governed table and column structure used as the canonical technical identity for the target.
+- **Data Profiled records** — observed characteristics of the data that help Engineering and Governance understand what is actually present.
+- **Data Profiled Frequency**, where applicable — the recorded frequency distribution for profiled values where that deeper profile is useful.
+- **Data Lineage** — the relationship between the source data used by the pipeline and the governed target it produces.
 
-    Run `02_pipeline` to perform ETL and write `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records.
+The `table_id` is the shared identity that lets the rest of the FabricOps workflow refer to the same governed table.
 
-    **3. Governance: Enrich the Data Catalogue and define Guardrails**
+#### Opinionated engineering choices behind FabricOps
 
-    Return to `01_governance` to read `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, write `METADATA_ENRICHMENT`, and author `METADATA_GUARDRAIL` records for the governed table or column.
+FabricOps makes several engineering choices so projects do not need to redefine the same foundations every time. This page only introduces them; use each link to jump into the deeper Engineering Guide explanation.
 
-    **4. Engineering Development: Validate with Guardrails or a Data Contract**
+- **[Configuration-driven engineering](reference/engineering-cheat-sheet.md#config-driven-engineering)** — separate reusable `02_pipeline` logic from environment-specific Fabric item identities through `00_env_config` and FabricOps I/O resolution.
+- **[Code-first engineering](reference/engineering-cheat-sheet.md#notebook-first)** — keep governed transformation logic explicit, reviewable, and versionable in code, with `02_pipeline` as the primary engineering implementation.
+- **[ETL lifecycle implementation](reference/engineering-cheat-sheet.md#etl-lifecycle)** — keep one visible `Environment → Extract → Transform → Load` lifecycle while FabricOps supplies the repeatable engineering behaviour around it.
+- **[PySpark-first transformation](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path, with T-SQL for efficient Warehouse-side operations before data enters Spark.
+- **[Lakehouse-first engineering](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering while still supporting Warehouse as a relational source or curated serving layer.
+- **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
+- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — keep FabricOps self-contained in Fabric by recording Catalogue, Profile, Lineage, Enrichment, Guardrails, results, Agreements, and Contracts in shared metadata tables centred on the canonical `table_id`.
+- **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
+- **[Incremental load implementation](reference/engineering-cheat-sheet.md#full-vs-incremental)** — use full, watermark, or partition-based processing according to source behaviour, scale, and recovery requirements.
+- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — commit source checkpoints only after transformation, governed validation, and the physical target write have succeeded.
 
-    Rerun `02_pipeline` with current authored Guardrails, or with Guardrails from a selected frozen Data Contract. Engineering evaluates the rules and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where row-level failures are recorded.
+The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
-    **5. Governance and Development: Freeze, test, and activate a Data Contract**
+### 3. Governance selects the `table_id` in `01_governance` and drafts the governed Data Contract definition
 
-    In `01_governance`, save one immutable Data Contract version for one governed `table_id` under one exact Data Agreement version. Test that frozen version in Engineering Development. After governance sign-off, activate the approved frozen version for Production.
+Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering.
 
-    **6. Engineering Production: Promote and run the validated pipeline**
+Governance can then add:
 
-    Promote the validated `02_pipeline` into Engineering Production using the organisation's deployment process. The Production run resolves the active Data Contract and executes the governed pipeline against its frozen expectations.
+- **Enrichment**, such as business meaning, sensitivity classification, PII classification, and other table- or column-level context
+- **Guardrails**, such as schema, freshness, and Data Quality expectations
+- the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be frozen into the Data Contract
 
-    **7. Consumer: Consume approved Production data**
+Together, these records form the draft governed definition for that `table_id`. Governance can refine this definition before it is frozen into an immutable Data Contract version.
 
-    Use `99_explore` in the project-specific consumer workspace to consume approved Engineering Production data for Power BI, AI, data science, exploration, or other downstream project use without recreating the Production pipeline.
+### 4. Engineering runs the governed definition in `02_pipeline` and validates that it works
 
-</div>
+Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected frozen Data Contract.
 
-<div class="fabricops-section-block" markdown>
+The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
 
-## Development and Production
+If the expectations do not yet work, the workflow returns to `01_governance` so Governance can refine the definition before Engineering validates it again.
 
-### Engineering Development
+### 5. Governance freezes the `table_id` into a Data Contract, links it to the Data Agreement, and activates it in `01_governance`
 
-Engineering Development is used for exploration, development, profiling, testing, and review. `02_pipeline` performs ETL and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records.
+Once the governed definition is ready, Governance uses `01_governance` to freeze an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
 
-Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. `02_pipeline` reads those Guardrails, evaluates them, and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where applicable. Development can validate current authoring or test a selected frozen Data Contract before Governance activates it for Production.
+That frozen version captures the approved governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
 
-Development data and temporary notebooks may be cleaned regularly, so teams should avoid treating the workspace as durable Production storage.
+Engineering Development tests the frozen version in `02_pipeline`. After governance sign-off, Governance activates the approved frozen version in `01_governance` so Engineering Production is allowed to resolve it.
 
-### Data Agreement and Data Contract
+<!-- VIDEO SLOT: Data Agreement and Data Contract lifecycle -->
 
-A Data Agreement is created between one provider Data Steward and one recipient Data Steward. It establishes the governed sharing relationship, including business purpose, approved usages, validity, supporting documents, and other governance context.
+!!! important "Data Contract activation and pipeline promotion are separate"
 
-A Data Contract is for one canonical `table_id` under one exact Data Agreement version. Each saved version is immutable. Development can select and test a frozen version before it is active. Activation chooses which frozen version Production can resolve.
+    **Activate** in `01_governance` selects the approved frozen Data Contract version that Production may resolve.
 
-#### Data Contract lifecycle
+    **Promote** moves the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process.
 
-The Data Contract moves through one approval and deployment lifecycle before Production relies on it.
+### 6. Engineering promotes `02_pipeline` to Production and runs it with the active Data Contract for each `table_id`
 
-| Action | What it means |
-| --- | --- |
-| **Freeze** | Save an immutable Data Contract version. |
-| **Test** | Run the frozen version in Engineering Development and confirm the governed expectations pass. |
-| **Activate** | Choose the approved frozen version Production is allowed to resolve. |
-| **Promote** | Move the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process. |
+Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
 
-Activation and promotion are deliberately separate. Activation selects the governed contract Production may resolve; promotion moves the validated engineering implementation that will run against it.
+At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those frozen expectations.
 
-#### What a Data Contract freezes
+### 7. Consumers use `99_explore` to consume approved Production data only
 
-`widget_register_data_contract()` builds the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
+Project-specific consumer workspaces use `99_explore` to read approved data from Engineering Production for Power BI, AI, data science, exploration, and other downstream project work.
 
-| Frozen item | What is captured |
-| --- | --- |
-| Exact Data Agreement version | Agreement identity and version plus its name, domain, business purpose, validity dates, provider and recipient Steward IDs, and approved usages. |
-| Provider and recipient Data Stewards | The selected Stewards' IDs, names, roles, and contacts. |
-| Governed `table_id` | The canonical table identity used to match the same governed table across Development and Production. |
-| Recorded table location | The contract payload records the environment, store type, layer, schema, and table name from `METADATA_DATA_CATALOGUE` when the version is frozen. Production still resolves its own configured physical table and uses the canonical `table_id` to find the active contract. |
-| Table structure / schema | The active Catalogue columns with their `column_id`, column name, and data type. |
-| Enrichment | Current table- and column-level `METADATA_ENRICHMENT` values, including enrichment level, type, and value. |
-| Active Guardrails | Active `METADATA_GUARDRAIL` rules, including the exact Guardrail version, type, rule identity, severity, and rule parameters. |
-| Target load strategy | The Catalogue `load_strategy`, such as `overwrite`, `append`, `scd1`, or `scd2`, when configured. |
-| Load-strategy parameters | The configured `load_strategy_parameters_json` values required by the selected target strategy. |
-| Governed usages | The selected approved-usage subset, which must remain within the parent Data Agreement's approved usages. |
+Consumer workspaces do not recreate the Production pipeline or maintain their own Production copy of the engineering workflow. Engineering Production remains the trusted Production source.
 
-`METADATA_GUARDRAIL_RESULTS`, `METADATA_GUARDRAIL_ROW_RESULTS`, source observations, successful-processing checkpoints, and run/audit fields are not frozen. They record what happened during individual runs.
-
-A Data Agreement covers the provider-to-recipient sharing relationship. A Data Contract freezes the approved definition for one table under one exact Data Agreement version.
-
-In Production, `02_pipeline` resolves the active Data Contract for the table and uses its frozen Guardrails, target load strategy, and load-strategy parameters.
-
-### Engineering Production
-
-Engineering Production contains governed, stable, recurring pipelines and durable outputs. The validated `02_pipeline` is promoted into this workspace through the organisation's deployment process. At runtime, the Production pipeline resolves and uses the active Data Contract for each governed table.
-
-A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
-
-!!! important "Production rule"
-
-    A Production `02_pipeline` should use the active Data Contract for each governed table it reads or writes. Activating a contract does not copy or deploy the notebook; promotion is a separate deployment action.
+<!-- VIDEO SLOT: Development to Production to Consumer -->
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## The ETL model inside `02_pipeline`
+## The core loop: draft in `01_governance`, validate in `02_pipeline`, then activate for Production
 
-FabricOps standardizes the boundaries around ETL with a simple operating model:
+The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
-**0. Environment → E. Extract → T. Transform → L. Load**
+```mermaid
+flowchart TB
+    GOVERN["01_governance<br/>Select table_id and draft / refine<br/>Enrichment + Guardrails"]
+    VALIDATE["02_pipeline<br/>Run ETL and validate<br/>governed expectations"]
+    PASS{"Do the governed<br/>expectations pass?"}
+    FREEZE["01_governance<br/>Freeze Data Contract for table_id<br/>under a Data Agreement version"]
+    TEST["02_pipeline<br/>Test the frozen<br/>Data Contract version"]
+    FROZEN_PASS{"Does the frozen<br/>version pass?"}
+    ACTIVATE["01_governance<br/>Activate the approved<br/>Data Contract version"]
+    PROD["Engineering Production<br/>Promoted 02_pipeline resolves<br/>the active contract"]
 
-**0. Environment** establishes whether the notebook is running in Development or Production and loads the configured Fabric targets.
+    GOVERN --> VALIDATE
+    VALIDATE --> PASS
+    PASS -- "No" --> GOVERN
+    PASS -- "Yes" --> FREEZE
+    FREEZE --> TEST
+    TEST --> FROZEN_PASS
+    FROZEN_PASS -- "No · refine and freeze a new version" --> GOVERN
+    FROZEN_PASS -- "Yes" --> ACTIVATE
+    ACTIVATE --> PROD
 
-**E. Extract** reads one or more governed sources and resolves the applicable contract, Guardrails, source state, and checks.
+    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
+    class FREEZE,ACTIVATE focal;
+```
 
-**T. Transform** contains the project-specific engineering logic. FabricOps governs the inputs and outputs rather than hiding the business transformation.
+This is how FabricOps makes Governance executable: Governance decisions authored in `01_governance` become structured metadata, Guardrails, and Data Contracts that `02_pipeline` can directly resolve and validate before Production uses the approved version.
 
-**L. Load** publishes one governed target table using the applicable Data Contract, Guardrails, and load strategy.
-
-The detailed engineering choices deliberately live in the Engineering Guide rather than on this operating-model page. Read more about [Full vs incremental processing](reference/engineering-cheat-sheet.md#full-vs-incremental), [Lakehouse first — and when Warehouse fits](reference/engineering-cheat-sheet.md#lakehouse-first), and [PySpark first — and where T-SQL fits](reference/engineering-cheat-sheet.md#pyspark-first).
+<!-- VIDEO SLOT: Governance as Code / core loop -->
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## Metadata stored supporting the workflow
+## Shared metadata carries the context
 
 **The Data Catalogue sits at the centre of the FabricOps metadata model.**
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-Metadata is the broader information used to describe, understand, manage, and govern the data. The individual FabricOps metadata tables record the specific Governance and Engineering context used by the operating workflow. They are shared through the Metadata Lakehouse rather than copied into separate Governance and Engineering metadata stores.
+Engineering and Governance write different metadata around the same governed `table_id` in the shared Metadata Lakehouse. Engineering records technical observations such as Catalogue, Profile, and Lineage context. Governance reads that context and adds Enrichment, Guardrails, Data Agreements, and Data Contracts.
 
-??? info "Read how the metadata records connect"
+The important point is not the number of metadata tables. It is that Governance and Engineering work from the same structured context instead of maintaining separate copies of the definition.
 
-    **Governance records**
+<!-- VIDEO SLOT: Shared metadata model -->
 
-    [FabricOps metadata tables](reference/metadata.md) carry Governance information through the workflow. A Data Agreement records the relationship between one provider Data Steward and one recipient Data Steward. A Data Contract then freezes the governed definition for one `table_id` under one exact Data Agreement version.
-
-    **Engineering records**
-
-    `METADATA_DATA_CATALOGUE` identifies each governed table and column and connects `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_DATA_ACCESS`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL`, and `METADATA_GUARDRAIL_RESULTS` records.
-
-    **Contract relationship**
-
-    A Data Contract is tied to one canonical `table_id`. It freezes the current Catalogue table/column identity and schema, target load strategy and parameters, Enrichment, active Guardrails and their versions, approved usages, and the relevant Data Agreement and Data Stewards. One Data Agreement can support multiple table-level Data Contracts.
-
-    **Data Catalogue and Profiled records stay with Engineering**
-
-    `02_pipeline` writes `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` into the shared metadata store. `01_governance` reads those records for `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL`, and Data Contract preparation. Governance does not create a second copy of the Engineering-written records.
-
-??? info "How the implemented pieces connect"
-
-    **Engineering and Governance write different metadata tables around the same governed table identity.**
-
-    `02_pipeline` performs ETL and writes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE`.
-
-    `01_governance` reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. `02_pipeline` evaluates those Guardrails and writes `METADATA_GUARDRAIL_RESULTS` plus `METADATA_GUARDRAIL_ROW_RESULTS` where applicable.
-
-    Governance freezes a Data Contract version for the table. Engineering Development tests that frozen version. Governance can then activate the approved frozen version Production should use. The validated `02_pipeline` is promoted into Engineering Production through the organisation's deployment process, where it resolves the active contract at runtime.
-
-    Downstream users therefore receive more than a table. Where relevant, they can inspect its Data Catalogue, Profiles, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract context.
+For exact table schemas, ownership, and field definitions, use the [Metadata Tables reference](reference/metadata.md).
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## Consumer workspaces
+## Where to go next
 
-Project-specific consumer workspaces provide a separate environment for exploration, AI, data science, and BI consumption. Teams use `99_explore` in their own workspace to read approved governed data directly from Engineering Production without changing or duplicating the Production pipeline.
-
-There may be multiple consumer workspaces, with each workspace aligned to a specific project, analytical product, or business use case. These workspaces consume only from Engineering Production; Development is not a downstream consumer source.
-
-??? info "When consumer work should move into the governed pipeline"
-
-    Important `99_explore` work should be preserved when reproducibility is required. Consumer notebooks support analysis and experimentation, but they should not become an alternative Production pipeline.
-
-    Repeatable data preparation that needs to be operationalised should be incorporated into the governed Engineering Development and Engineering Production workflow.
+- **Run the workflow yourself:** [FabricOps Guided Demo](guided-demo.md)
+- **Understand the engineering choices:** [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md)
+- **Inspect the shared metadata model:** [Metadata Tables](reference/metadata.md)
+- **Browse reusable notebook-facing functions:** [FabricOps Functions](reference/index.md)
+- **Download the notebooks:** [Notebook Templates](notebook-templates.md)
 
 </div>
