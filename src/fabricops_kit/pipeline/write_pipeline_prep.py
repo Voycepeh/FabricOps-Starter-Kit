@@ -14,20 +14,114 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
+def _delta_literal(value: Any) -> str:
+    """Return a safely encoded primitive Delta predicate literal."""
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, int | float):
+        return str(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def _replace_where(partition_column: str, values: list[Any]) -> str:
     """Return a safely quoted Delta partition-replacement predicate."""
-
-    def literal(value: Any) -> str:
-        if value is None:
-            return "NULL"
-        if isinstance(value, bool):
-            return "TRUE" if value else "FALSE"
-        if isinstance(value, int | float):
-            return str(value)
-        return "'" + str(value).replace("'", "''") + "'"
-
     quoted = str(partition_column).replace("`", "``")
-    return f"`{quoted}` IN ({', '.join(literal(value) for value in values)})"
+    return f"`{quoted}` IN ({', '.join(_delta_literal(value) for value in values)})"
+
+
+def _validate_watermark_progress(df, upper_bound: Any) -> None:
+    """Require transformed output to retain the captured source upper watermark."""
+    from pyspark.sql import functions as F
+
+    state = df.agg(
+        F.count(F.lit(1)).alias("row_count"),
+        F.max(F.col("_watermark_value")).alias("maximum_watermark"),
+    ).collect()[0]
+    if not int(state["row_count"] or 0):
+        raise ValueError(
+            "incremental_watermark transformed output is empty; target-backed watermark persistence "
+            "requires at least one published row carrying the captured upper watermark."
+        )
+    maximum = state["maximum_watermark"]
+    try:
+        matches_upper = maximum == upper_bound
+    except TypeError as exc:
+        raise ValueError(
+            "The transformed target watermark cannot be compared with the captured source upper watermark."
+        ) from exc
+    if not matches_upper:
+        raise ValueError(
+            f"incremental_watermark transformed output reaches {maximum!r}, but the captured upper watermark "
+            f"is {upper_bound!r}; target-backed watermark persistence requires a published row carrying "
+            "the captured upper watermark."
+        )
+
+
+def _overwrite_options(
+    source_preps: list[dict[str, Any]],
+    processing: dict[str, Any],
+    store_kind: str,
+) -> dict[str, Any]:
+    """Return safe overwrite options or reject an unrestricted incremental overwrite."""
+    error = (
+        "Incremental source processing cannot use unrestricted overwrite because it would replace rows "
+        "outside the processed source scope."
+    )
+    if len(source_preps) != 1:
+        raise ValueError(error)
+    prep = source_preps[0]
+    source_strategy = str((prep.get("source_processing") or {}).get("read_strategy") or "")
+    read_mode = prep.get("read_mode")
+    scope = prep.get("scope")
+    if not isinstance(scope, dict):
+        raise ValueError(error)
+    if source_strategy == "full_dataset":
+        if read_mode == "full_dataset" and scope == {"type": "full_dataset"}:
+            return {}
+        raise ValueError(error)
+    if source_strategy == "incremental_watermark":
+        watermark_column = str((prep.get("source_processing") or {}).get("watermark_column") or "")
+        first_population = (
+            read_mode == "full_dataset"
+            and scope.get("type") == "full_dataset"
+            and scope.get("watermark_column") == watermark_column
+            and scope.get("upper_bound") is not None
+            and scope.get("lower_bound") is None
+        )
+        if first_population:
+            return {}
+        if store_kind != "lakehouse":
+            raise ValueError(error)
+        required = (
+            read_mode == "incremental_subset"
+            and scope.get("type") == "watermark"
+            and scope.get("lower_bound") is not None
+            and scope.get("upper_bound") is not None
+            and scope.get("lower_inclusive") is False
+            and scope.get("upper_inclusive") is True
+        )
+        if not required:
+            raise ValueError(error)
+        lower = _delta_literal(scope["lower_bound"])
+        upper = _delta_literal(scope["upper_bound"])
+        return {"replaceWhere": f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"}
+    if source_strategy == "incremental_partition":
+        if store_kind != "lakehouse":
+            raise ValueError(error)
+        values = scope.get("values")
+        partition_column = processing.get("partition_column")
+        if (
+            read_mode != "incremental_subset"
+            or scope.get("type") != "partition"
+            or not isinstance(values, list | tuple)
+            or not values
+            or partition_column != scope.get("column")
+        ):
+            raise ValueError(error)
+        return {"replaceWhere": _replace_where(str(partition_column), list(values))}
+    raise ValueError(error)
 
 
 def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -44,14 +138,6 @@ def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, An
         if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(scope, dict):
             raise ValueError("Each source prep must contain a non-skipped canonical read_mode and scope.")
         scopes.append({"read_mode": read_mode, "scope": scope})
-        candidate = prep.get("candidate_checkpoint")
-        if candidate is not None:
-            completion_sources.append({
-                "type": "watermark",
-                "source": prep.get("source"),
-                "source_processing": prep.get("source_processing"),
-                "candidate": candidate,
-            })
         observation = prep.get("observation")
         changes = prep.get("changes")
         if observation is not None and isinstance(changes, dict):
@@ -86,8 +172,8 @@ def write_pipeline_prep(
         metadata and target-owned processing.
     source_preps : list of dict
         Results returned by :func:`read_pipeline_prep` for the sources that fed
-        this target. Candidate checkpoint state is committed only after the
-        physical target writer succeeds.
+        this target. Watermark source values must remain present through
+        transformation so target state can be persisted on each row.
 
     Returns
     -------
@@ -100,7 +186,8 @@ def write_pipeline_prep(
     ------
     ValueError
         If preparation is incomplete or an unsafe target/strategy combination
-        is requested.
+        is requested, or if transformed incremental-watermark output cannot
+        persist the captured upper watermark on a target row.
 
     Notes
     -----
@@ -110,9 +197,17 @@ def write_pipeline_prep(
     unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
-    Warehouse overwrite requires a full-dataset source result because Warehouse
-    has no Lakehouse-style partition replacement. Lakehouse partition overwrite
-    remains scoped with ``replaceWhere``.
+    Overwrite is full-table for an explicitly configured ``full_dataset`` source
+    and for the first ``incremental_watermark`` population whose scope retains
+    its captured upper bound. Later Lakehouse incremental watermark and
+    partition reads require a matching canonical scope and use ``replaceWhere``;
+    later Warehouse incremental overwrite is rejected because no equivalent
+    scoped replacement is implemented. For incremental-watermark processing,
+    including its first ``full_dataset`` population, this function evaluates
+    the transformed DataFrame before publication and requires its maximum
+    ``_watermark_value`` to equal the captured source upper bound. Empty or
+    truncated output fails rather than leaving target-backed progress
+    permanently behind the processed window.
 
     Examples
     --------
@@ -142,16 +237,34 @@ def write_pipeline_prep(
     scope = prepared_scope["scope"]
     store_kind = target_identity["store_type"]
     strategy = str(processing.get("load_strategy") or "")
-    if strategy == "overwrite" and scope.get("type") == "multiple_sources":
+    options = _overwrite_options(source_preps, processing, store_kind) if strategy == "overwrite" else {}
+    watermark_preps = [
+        prep for prep in source_preps
+        if (prep.get("source_processing") or {}).get("read_strategy") == "incremental_watermark"
+    ]
+    if watermark_preps and strategy == "append":
         raise ValueError(
-            "overwrite cannot infer one safe target scope from differing source scopes; "
-            "publish this target from one complete source scope."
+            "incremental_watermark with append is unsafe because the processing definition has no "
+            "deterministic row identity for replay; use overwrite, scd1, or scd2."
         )
-    if store_kind == "warehouse" and strategy == "overwrite" and prepared_scope["read_mode"] != "full_dataset":
-        raise ValueError(
-            "Warehouse overwrite requires a full-dataset source result; "
-            "incremental subsets cannot safely replace the complete target."
-        )
+    if len(watermark_preps) > 1:
+        raise ValueError("A governed target can derive _watermark_value from only one incremental_watermark source.")
+    if watermark_preps:
+        watermark_column = str(watermark_preps[0]["source_processing"]["watermark_column"])
+        if watermark_column == "_watermark_value":
+            raise ValueError("_watermark_value is reserved for FabricOps target watermark state.")
+        if "_watermark_value" in df.columns:
+            raise ValueError("_watermark_value is a reserved FabricOps technical column and must not be supplied.")
+        if watermark_column not in df.columns:
+            raise ValueError(
+                f"incremental_watermark requires source watermark column {watermark_column!r} to be retained "
+                "through transformation until write_pipeline_prep."
+            )
+        from pyspark.sql import functions as F
+
+        df = df.withColumn("_watermark_value", F.col(watermark_column))
+        if scope.get("upper_bound") is not None:
+            _validate_watermark_progress(df, scope["upper_bound"])
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
@@ -166,9 +279,6 @@ def write_pipeline_prep(
         )
 
     mode = strategy if strategy in {"overwrite", "append"} else None
-    options: dict[str, Any] = {}
-    if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
-        options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
     return {
         "df": prepared_df,
         "mode": mode,

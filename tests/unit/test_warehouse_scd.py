@@ -69,8 +69,11 @@ def test_scd1_rejects_duplicate_incoming_keys_before_staging(monkeypatch, spark_
 def test_scd2_generates_atomic_history_safety_and_idempotency_checks(monkeypatch, spark_session):
     """SCD2 SQL atomically validates, closes, and inserts versions."""
     frame = spark_session.createDataFrame(
-        [(1, "Ada", "2026-01-01", "2026-01-01", "9999-12-31", True)],
-        ["customer_id", "name", "effective_at", "_effective_from", "_effective_to", "_is_current"],
+        [(1, "Ada", "2026-01-01", 200, "2026-01-01", "9999-12-31", True)],
+        [
+            "customer_id", "name", "effective_at", "_watermark_value",
+            "_effective_from", "_effective_to", "_is_current",
+        ],
     )
     observed = _capture_sql(
         monkeypatch, frame,
@@ -84,6 +87,8 @@ def test_scd2_generates_atomic_history_safety_and_idempotency_checks(monkeypatch
     assert "INSERT INTO [dbo].[customers]" in sql
     assert "target.[_is_current] = 1" in sql
     assert "target.[name]" in sql
+    assert "target.[_watermark_value] = source.[_watermark_value]" in sql
+    assert "target.[_watermark_value] <> source.[_watermark_value]" not in sql
     assert "target.[_effective_from] <> source.[_effective_from]" not in sql
     assert "BEGIN TRANSACTION" in sql and "ROLLBACK TRANSACTION" in sql
 

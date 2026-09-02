@@ -532,10 +532,14 @@ AND (EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nulla
             f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
             for column in update_columns
         )
-        matched = (
-            f"WHEN MATCHED AND ({_warehouse_null_safe_difference(business, 'target', 'source')}) "
-            f"THEN UPDATE SET {updates}" if business else ""
-        )
+        technical = [column for column in update_columns if column not in business]
+        differences = [
+            value for value in (
+                _warehouse_null_safe_difference(business, "target", "source") if business else "",
+                _warehouse_null_safe_difference(technical, "target", "source") if technical else "",
+            ) if value
+        ]
+        matched = f"WHEN MATCHED AND ({' OR '.join(differences)}) THEN UPDATE SET {updates}" if differences else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
     SELECT * INTO {qtarget} FROM {qstage};
@@ -548,6 +552,19 @@ ELSE
     else:
         effective = _quoted_warehouse_identifier(str(definition["effective_column"]))
         changed = _warehouse_null_safe_difference(tracked, "target", "source")
+        technical = [
+            column for column in columns
+            if column not in {*keys, *tracked, definition["effective_column"], "_effective_from", "_effective_to", "_is_current"}
+        ]
+        technical_updates = ", ".join(
+            f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
+            for column in technical
+        )
+        unchanged_update = f"""
+    UPDATE target SET {technical_updates}
+    FROM {qtarget} target JOIN {qstage} source ON {join}
+    WHERE target.[_is_current] = 1 AND NOT ({changed});
+""" if technical_updates else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
     SELECT * INTO {qtarget} FROM {qstage};
@@ -563,6 +580,7 @@ BEGIN
     UPDATE target SET target.[_effective_to] = source.{effective}, target.[_is_current] = 0
     FROM {qtarget} target JOIN {qstage} source ON {join}
     WHERE target.[_is_current] = 1 AND ({changed});
+{unchanged_update}
 
     INSERT INTO {qtarget} ({incoming_columns})
     SELECT {source_columns} FROM {qstage} source

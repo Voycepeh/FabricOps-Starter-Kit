@@ -146,7 +146,7 @@ and Warehouse ingestion limits.
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 | `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` also requires ``effective_column`` and may supply ``tracked_columns``. |
-| `completion_context` | `dict[str, Any] \| None` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. Source progress is committed only after the Warehouse connector write succeeds. The target Lineage participant is persisted before source progress. Calls that omit it have no Lineage or checkpoint effects. |
+| `completion_context` | `dict[str, Any] \| None` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. Target Lineage and any partition completion state are persisted after the write. Watermark progress is already stored on successfully published target rows. |
 
 ## Returns
 
@@ -171,11 +171,12 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 <div class="reference-docstring-notes" markdown="1">
 
 Governed completion
-    When ``completion_context`` is supplied, the Warehouse connector write
-    completes before source progress is committed. A connector exception
-    prevents the commit. If checkpoint persistence fails after target
-    publication, that exception is surfaced and a retry may replay
-    already-published source rows.
+    The Warehouse mutation completes before Lineage or partition completion
+    is persisted. Watermark correctness has no post-write checkpoint:
+    ``_watermark_value`` advances with target publication. SCD1 and SCD2
+    replay is deterministic; governed incremental-watermark append is
+    rejected without deterministic identity. Independent concurrent jobs
+    remain subject to Warehouse transaction and locking semantics.
 
 Parallel processing and write concurrency
     Spark processes DataFrame partitions concurrently. Before invoking the

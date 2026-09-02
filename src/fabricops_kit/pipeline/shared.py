@@ -1692,10 +1692,13 @@ def execute_lakehouse_processing(
     if strategy == "scd1":
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
-        (
-            delta.alias("target").merge(persisted_df.alias("source"), condition)
-            .whenMatchedUpdateAll(condition=change).whenNotMatchedInsertAll().execute()
-        )
+        technical_updates = {
+            name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS
+        }
+        merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
+        if technical_updates:
+            merge = merge.whenMatchedUpdate(set=technical_updates)
+        merge.whenNotMatchedInsertAll().execute()
         return
 
     effective = str(processing["effective_column"])
@@ -1705,11 +1708,17 @@ def execute_lakehouse_processing(
     if current_rows.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
         raise RuntimeError("SCD2 target contains multiple current records for one or more business keys.")
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
-    expire = (
+    technical_updates = {
+        name: f"source.`{name}`" for name in persisted_df.columns
+        if name in _TARGET_TECHNICAL_COLUMNS and name not in _SCD2_LIFECYCLE_COLUMNS
+    }
+    merge = (
         delta.alias("target").merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
         .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
     )
-    expire.execute()
+    if technical_updates:
+        merge = merge.whenMatchedUpdate(condition=f"NOT ({change})", set=technical_updates)
+    merge.execute()
     current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
     incoming = persisted_df.join(current, on=keys, how="left_anti")
     if incoming.limit(1).count():
