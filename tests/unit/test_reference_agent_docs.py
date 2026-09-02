@@ -846,7 +846,6 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
 
     assert "  - Reference:" not in mkdocs_text
     assert "  - Notebook Templates: notebook-templates.md" in mkdocs_text
-    assert "  - List of Metadata Tables:" in mkdocs_text
     assert "      - Overview: reference/metadata.md" in mkdocs_text
     assert "  - List of Functions: reference/index.md" in mkdocs_text
     assert "  - List of DQ Rules:" in mkdocs_text

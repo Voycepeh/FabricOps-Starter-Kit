@@ -199,13 +199,20 @@ def test_read_prep_uses_source_processing_from_change_check(monkeypatch):
         "changed_partitions": [], "removed_partitions": [], "reappeared_partitions": [],
         "partition_column": "snapshot_date", "load_strategy": "scd1",
     }
-    monkeypatch.setattr(read_module, "_successful_partition_observation_id", lambda *args, **kwargs: None)
+    target = _identity("lakehouse:unified:dbo:students", store_type="lakehouse")
+    monkeypatch.setattr(
+        read_module, "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **_kwargs: identity if table_id == identity["table_id"] else target,
+    )
+    monkeypatch.setattr(read_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(read_module, "_target_partitions", lambda *args, **kwargs: {"2026-08-20": {"value": "2026-08-20", "committed_at": "then"}})
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
     monkeypatch.setattr(read_module, "_observation_changes", lambda value, **_kwargs: changes if value is observation else pytest.fail())
 
     result = read_module.read_pipeline_prep(
         source_table_id=identity["table_id"],
         source_read_strategy="incremental_partition",
+        target_table_id=target["table_id"],
         source_partition_column="snapshot_date",
     )
 
@@ -284,9 +291,9 @@ def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
 
 
-def test_write_prep_aggregates_source_completion(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+def test_write_prep_omits_partition_checkpoint_completion(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
     source_prep = {
         "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
         "observation": SimpleNamespace(),
@@ -301,12 +308,8 @@ def test_write_prep_aggregates_source_completion(monkeypatch, spark_session):
     result = write_module.write_pipeline_prep(
         frame, target_table_id=identity["table_id"], source_preps=[source_prep]
     )
-    assert result["completion"]["sources"] == [{
-        "type": "partition",
-        "table_id": "source",
-        "environment_name": "dev",
-        "observation_id": "observation-1",
-    }]
+    assert result["completion"]["sources"] == []
+    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
 
 
 def test_write_prep_supports_multiple_source_completion_for_scd(monkeypatch, spark_session):
@@ -394,7 +397,8 @@ def test_write_prep_keeps_lakehouse_partition_overwrite_scoped(monkeypatch, spar
     )
 
     assert result["mode"] == "overwrite"
-    assert result["options"] == {"replaceWhere": "`snapshot_date` IN ('2026-08-31')"}
+    assert result["options"] == {"replaceWhere": "`_partition_bucket` IN ('2026-08-31')"}
+    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
 
 
 def test_write_prep_keeps_lakehouse_watermark_overwrite_scoped_and_replay_safe(monkeypatch, spark_session):
@@ -514,7 +518,7 @@ def test_write_prep_keeps_lakehouse_full_dataset_overwrite(monkeypatch, spark_se
     assert result["options"] == {}
 
 
-def test_write_prep_keeps_incremental_append(monkeypatch, spark_session):
+def test_write_prep_rejects_incremental_partition_append(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
     frame = spark_session.createDataFrame([(1,)], ["student_id"])
 
@@ -779,3 +783,99 @@ def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch
     assert observed["completion_input_context"] is explicit_context
     assert observed["metadata_identity"] == ("prod-config", "prod")
     assert observed["checkpoint_context"] is resolved_context
+
+
+def test_target_partitions_absent_returns_empty(monkeypatch):
+    monkeypatch.setattr(
+        read_module, "read_lakehouse_table_core",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(Exception("Table or view not found")),
+    )
+    monkeypatch.setattr(read_module, "is_table_not_found_error", lambda _exc: True)
+    assert read_module._target_partitions(
+        {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
+        spark_session="spark", context={},
+    ) == {}
+
+
+def test_target_partitions_returns_persisted_state(monkeypatch, spark_session):
+    target = spark_session.createDataFrame(
+        [("2026-08-30", "2026-08-31T00:00:00"), ("2026-08-31", "2026-09-01T00:00:00")],
+        ["_partition_bucket", "_committed_at"],
+    )
+    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
+    state = read_module._target_partitions(
+        {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
+        spark_session=spark_session, context={},
+    )
+    assert set(state) == {"2026-08-30", "2026-08-31"}
+
+
+def test_target_partitions_rejects_populated_legacy_target(monkeypatch, spark_session):
+    target = spark_session.createDataFrame([(1,)], ["student_id"])
+    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
+    with pytest.raises(ValueError, match="migrate or rebuild.*incremental_partition"):
+        read_module._target_partitions(
+            {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
+            spark_session=spark_session, context={},
+        )
+
+
+def test_lakehouse_target_partitions_rejects_null_bucket(monkeypatch, spark_session):
+    target = spark_session.createDataFrame(
+        [(None, "2026-09-01T00:00:00"), ("2026-08-31", "2026-09-01T00:00:00")],
+        ["_partition_bucket", "_committed_at"],
+    )
+    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
+    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
+        read_module._target_partitions(
+            {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
+            spark_session=spark_session, context={},
+        )
+
+
+def test_warehouse_target_partitions_rejects_null_bucket(monkeypatch):
+    class Row(dict):
+        def asDict(self, recursive=False):
+            return dict(self)
+
+    class Frame:
+        def collect(self):
+            return [Row(partition_bucket=None, committed_at="2026-09-01T00:00:00", row_count=1)]
+
+    monkeypatch.setattr(read_module, "read_warehouse_query_core", lambda *_args, **_kwargs: Frame())
+    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
+        read_module._target_partitions(
+            {"store_kind": "warehouse", "target": "product", "schema": "dbo", "table_name": "students"},
+            spark_session="spark", context={},
+        )
+
+
+def test_first_partition_population_persists_bucket(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
+    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
+    source = {
+        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
+        "read_mode": "full_dataset",
+        "scope": {"type": "full_dataset", "partition_column": "snapshot_date", "values": ["2026-08-31"], "target_state_empty": True},
+    }
+    result = write_module.write_pipeline_prep(frame, target_table_id=identity["table_id"], source_preps=[source])
+    assert result["options"] == {}
+    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
+
+
+def test_partition_write_rejects_reserved_or_missing_bucket_source(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    source = {
+        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
+        "read_mode": "incremental_subset",
+        "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
+    }
+    with pytest.raises(ValueError, match="retained through transformation"):
+        write_module.write_pipeline_prep(
+            spark_session.createDataFrame([(1,)], ["student_id"]), target_table_id=identity["table_id"], source_preps=[source]
+        )
+    with pytest.raises(ValueError, match="reserved FabricOps technical column"):
+        write_module.write_pipeline_prep(
+            spark_session.createDataFrame([(1, "2026-08-31", "x")], ["student_id", "snapshot_date", "_partition_bucket"]),
+            target_table_id=identity["table_id"], source_preps=[source],
+        )
