@@ -291,9 +291,9 @@ def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
 
 
-def test_write_prep_aggregates_source_completion(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
+def test_write_prep_omits_partition_checkpoint_completion(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
     source_prep = {
         "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
         "observation": SimpleNamespace(),
