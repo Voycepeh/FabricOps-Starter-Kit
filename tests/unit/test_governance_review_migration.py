@@ -46,6 +46,7 @@ EXPECTED_V1_CALLABLES = [
     'read_lakehouse_table',
     'write_lakehouse_table',
     'read_lakehouse_csv',
+    'read_lakehouse_json',
     'read_lakehouse_parquet',
     'read_lakehouse_excel',
     'read_warehouse_table',
@@ -183,7 +184,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
 
 
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
-    """Verify dq rule validation rejects unsupported runtime rule types."""
+    """Verify dq rule validation rejectss unsupported runtime rule types."""
     rules = [{"rule_id": "id_required", "rule_type": "missing_values", "columns": ["id"], "maximum_null_percent": 0, "severity": "error", "description": "Required"}]
     assert dq_runtime._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
