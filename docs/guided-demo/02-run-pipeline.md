@@ -12,7 +12,7 @@ At the end of this module, you will have run a complete ETL and written `METADAT
 
     No Guardrails or Data Contract have been created for the demo table yet. That is expected.
 
-    The ETL still runs end to end. In Step 3, Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns this same pipeline with those Guardrails, Step 5 freezes approved expectations into a Data Contract, and Step 6 runs the same pipeline in Production against the active contract.
+    The ETL still runs end to end. In Step 3, Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns this same pipeline with those Guardrails. Step 5 saves the governed definition as an immutable Data Contract version, Engineering selects and tests that exact saved version, and Governance activates the selected version for Production. Step 6 runs the same pipeline in Production against the active contract.
 
 ## Learning objectives
 
@@ -57,11 +57,12 @@ Write Enrichment + Guardrail
         ↓
 Step 4
 Run the same ETL again
-Write Guardrail Results
+Validate current authoring
         ↓
 Step 5
-Freeze approved expectations
-into a Data Contract
+Save an immutable Data Contract
+Select and test the saved version
+Activate the selected version
         ↓
 Step 6
 Run the same ETL in Production
