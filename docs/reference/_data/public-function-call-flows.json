@@ -8096,7 +8096,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._overwrite_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 112,
+      "source_end_line": 124,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 62,
       "supports_live_contract": false,
@@ -8152,9 +8152,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._source_completion",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 143,
+      "source_end_line": 155,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 115,
+      "source_start_line": 127,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8206,9 +8206,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 298,
+      "source_end_line": 311,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 146,
+      "source_start_line": 158,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -15001,12 +15001,12 @@
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 298,
+      "source_end_line": 311,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 146,
+      "source_start_line": 158,
       "summary": "Prepare governed target write inputs without physically writing the target.",
       "transitive_function_count": 42,
-      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nOverwrite is full-table only for an explicitly configured ``full_dataset``\nsource. Lakehouse incremental watermark and partition reads require a\nmatching canonical scope and use ``replaceWhere``; Warehouse incremental\noverwrite is rejected because no equivalent scoped replacement is\nimplemented. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
+      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nOverwrite is full-table for an explicitly configured ``full_dataset`` source\nand for the first ``incremental_watermark`` population whose scope retains\nits captured upper bound. Later Lakehouse incremental watermark and\npartition reads require a matching canonical scope and use ``replaceWhere``;\nlater Warehouse incremental overwrite is rejected because no equivalent\nscoped replacement is implemented. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
       "width": 9
     },
     {

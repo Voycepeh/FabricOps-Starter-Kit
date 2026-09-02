@@ -81,9 +81,19 @@ def _overwrite_options(
         if read_mode == "full_dataset" and scope == {"type": "full_dataset"}:
             return {}
         raise ValueError(error)
-    if store_kind != "lakehouse":
-        raise ValueError(error)
     if source_strategy == "incremental_watermark":
+        watermark_column = str((prep.get("source_processing") or {}).get("watermark_column") or "")
+        first_population = (
+            read_mode == "full_dataset"
+            and scope.get("type") == "full_dataset"
+            and scope.get("watermark_column") == watermark_column
+            and scope.get("upper_bound") is not None
+            and scope.get("lower_bound") is None
+        )
+        if first_population:
+            return {}
+        if store_kind != "lakehouse":
+            raise ValueError(error)
         required = (
             read_mode == "incremental_subset"
             and scope.get("type") == "watermark"
@@ -98,6 +108,8 @@ def _overwrite_options(
         upper = _delta_literal(scope["upper_bound"])
         return {"replaceWhere": f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"}
     if source_strategy == "incremental_partition":
+        if store_kind != "lakehouse":
+            raise ValueError(error)
         values = scope.get("values")
         partition_column = processing.get("partition_column")
         if (
@@ -185,11 +197,12 @@ def write_pipeline_prep(
     unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
-    Overwrite is full-table only for an explicitly configured ``full_dataset``
-    source. Lakehouse incremental watermark and partition reads require a
-    matching canonical scope and use ``replaceWhere``; Warehouse incremental
-    overwrite is rejected because no equivalent scoped replacement is
-    implemented. For incremental-watermark processing,
+    Overwrite is full-table for an explicitly configured ``full_dataset`` source
+    and for the first ``incremental_watermark`` population whose scope retains
+    its captured upper bound. Later Lakehouse incremental watermark and
+    partition reads require a matching canonical scope and use ``replaceWhere``;
+    later Warehouse incremental overwrite is rejected because no equivalent
+    scoped replacement is implemented. For incremental-watermark processing,
     including its first ``full_dataset`` population, this function evaluates
     the transformed DataFrame before publication and requires its maximum
     ``_watermark_value`` to equal the captured source upper bound. Empty or

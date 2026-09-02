@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:146`
+`fabricops_kit/pipeline/write_pipeline_prep.py:158`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L146-L298">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L158-L311">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -88,11 +88,12 @@ writer, persist target Lineage, or commit source progress. The completion contex
 unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
 targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.
-Overwrite is full-table only for an explicitly configured ``full_dataset``
-source. Lakehouse incremental watermark and partition reads require a
-matching canonical scope and use ``replaceWhere``; Warehouse incremental
-overwrite is rejected because no equivalent scoped replacement is
-implemented. For incremental-watermark processing,
+Overwrite is full-table for an explicitly configured ``full_dataset`` source
+and for the first ``incremental_watermark`` population whose scope retains
+its captured upper bound. Later Lakehouse incremental watermark and
+partition reads require a matching canonical scope and use ``replaceWhere``;
+later Warehouse incremental overwrite is rejected because no equivalent
+scoped replacement is implemented. For incremental-watermark processing,
 including its first ``full_dataset`` population, this function evaluates
 the transformed DataFrame before publication and requires its maximum
 ``_watermark_value`` to equal the captured source upper bound. Empty or

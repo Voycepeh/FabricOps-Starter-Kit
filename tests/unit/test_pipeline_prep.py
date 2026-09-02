@@ -414,12 +414,40 @@ def test_write_prep_keeps_lakehouse_watermark_overwrite_scoped_and_replay_safe(m
 
 
 @pytest.mark.parametrize(
+    "store_type",
+    ["lakehouse", "warehouse"],
+)
+def test_write_prep_allows_first_watermark_population_overwrite(monkeypatch, spark_session, store_type):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type=store_type)
+    frame = spark_session.createDataFrame([(1, 180), (2, 200)], ["student_id", "modified_at"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
+        }],
+    )
+
+    assert result["mode"] == "overwrite"
+    assert result["options"] == {}
+    assert result["scope"]["read_mode"] == "full_dataset"
+
+
+@pytest.mark.parametrize(
     "source_prep",
     [
         {
             "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
             "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
+            "scope": {"type": "full_dataset", "watermark_column": "wrong_column", "upper_bound": 200},
+        },
+        {
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset", "watermark_column": "modified_at"},
         },
         {
             "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
@@ -430,7 +458,7 @@ def test_write_prep_keeps_lakehouse_watermark_overwrite_scoped_and_replay_safe(m
             },
         },
     ],
-    ids=["first-run-unbounded", "inclusive-lower"],
+    ids=["invalid-first-run-column", "missing-first-run-upper", "inclusive-lower"],
 )
 def test_write_prep_rejects_watermark_overwrite_without_canonical_scope(monkeypatch, source_prep):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
