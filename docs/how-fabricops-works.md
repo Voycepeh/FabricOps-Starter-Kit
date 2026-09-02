@@ -58,7 +58,7 @@ FabricOps deliberately loops between Governance and Engineering Development befo
 
 <!-- VIDEO SLOT: Governance and Engineering loop -->
 
-### 1. Governance establishes the sharing relationship
+### 1. Governance creates Data Stewards and a Data Agreement in `01_governance`
 
 In `01_governance`, Governance creates the provider and recipient **Data Stewards** and a **Data Agreement** between them.
 
@@ -91,9 +91,9 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 
 The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
-### 3. Governance turns the Engineering context into governed expectations
+### 3. Governance selects the `table_id` in `01_governance` and drafts the governed Data Contract definition
 
-Back in `01_governance`, Governance uses the same `table_id` to read the Catalogue and Profile information produced by Engineering.
+Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering.
 
 Governance can then add:
 
@@ -101,41 +101,41 @@ Governance can then add:
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be frozen into the Data Contract
 
-At this stage, Governance is assembling the governed definition that will become the table-level Data Contract.
+Together, these records form the draft governed definition for that `table_id`. Governance can refine this definition before it is frozen into an immutable Data Contract version.
 
-### 4. Engineering Development validates the governed definition
+### 4. Engineering runs the governed definition in `02_pipeline` and validates that it works
 
-The same `02_pipeline` runs again with the authored Guardrails or a selected frozen Data Contract.
+Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected frozen Data Contract.
 
-Engineering evaluates the governed expectations against the real pipeline and writes Guardrail Results, plus row-level results where applicable.
+The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
 
-If the expectations do not yet work, Governance and Engineering iterate: Governance refines the definition and Engineering validates it again.
+If the expectations do not yet work, the workflow returns to `01_governance` so Governance can refine the definition before Engineering validates it again.
 
-### 5. Governance freezes, tests, and activates the Data Contract
+### 5. Governance freezes the `table_id` into a Data Contract, links it to the Data Agreement, and activates it in `01_governance`
 
-Once the governed definition is ready, Governance freezes an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
+Once the governed definition is ready, Governance uses `01_governance` to freeze an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
 
-That frozen version includes the approved governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
+That frozen version captures the approved governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
 
-Engineering Development tests the frozen version. After governance sign-off, Governance activates the approved frozen version that Production is allowed to resolve.
+Engineering Development tests the frozen version in `02_pipeline`. After governance sign-off, Governance activates the approved frozen version in `01_governance` so Engineering Production is allowed to resolve it.
 
 <!-- VIDEO SLOT: Data Agreement and Data Contract lifecycle -->
 
-!!! important "Activation and promotion are separate"
+!!! important "Data Contract activation and pipeline promotion are separate"
 
-    **Activate** selects the approved frozen Data Contract version that Production may resolve.
+    **Activate** in `01_governance` selects the approved frozen Data Contract version that Production may resolve.
 
-    **Promote** moves the validated `02_pipeline` into Engineering Production using the organisation's deployment process.
+    **Promote** moves the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process.
 
-### 6. Engineering Production runs the governed pipeline
+### 6. Engineering promotes `02_pipeline` to Production and runs it with the active Data Contract for each `table_id`
 
-The validated `02_pipeline` is promoted into Engineering Production through the organisation's deployment process.
+Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
 
-At runtime, the Production pipeline resolves the active Data Contract for each governed table and runs against those frozen expectations.
+At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those frozen expectations.
 
-### 7. Consumers use Production only
+### 7. Consumers use `99_explore` to consume approved Production data only
 
-Project-specific consumer workspaces use `99_explore` to consume approved data from Engineering Production for Power BI, AI, data science, exploration, and other downstream project work.
+Project-specific consumer workspaces use `99_explore` to read approved data from Engineering Production for Power BI, AI, data science, exploration, and other downstream project work.
 
 Consumer workspaces do not recreate the Production pipeline or maintain their own Production copy of the engineering workflow. Engineering Production remains the trusted Production source.
 
@@ -145,20 +145,20 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: author, validate, approve
+## The core loop: draft in `01_governance`, validate in `02_pipeline`, then activate for Production
 
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
 ```mermaid
 flowchart TB
-    GOVERN["Governance authors / refines<br/>the governed definition"]
-    VALIDATE["Engineering Development validates<br/>in 02_pipeline"]
+    GOVERN["01_governance<br/>Select table_id and draft / refine<br/>Enrichment + Guardrails"]
+    VALIDATE["02_pipeline<br/>Run ETL and validate<br/>governed expectations"]
     PASS{"Do the governed<br/>expectations pass?"}
-    FREEZE["Freeze immutable<br/>Data Contract version"]
-    TEST["Test frozen version<br/>in Engineering Development"]
+    FREEZE["01_governance<br/>Freeze Data Contract for table_id<br/>under a Data Agreement version"]
+    TEST["02_pipeline<br/>Test the frozen<br/>Data Contract version"]
     FROZEN_PASS{"Does the frozen<br/>version pass?"}
-    ACTIVATE["Governance activates<br/>the approved version"]
-    PROD["Engineering Production<br/>resolves the active contract"]
+    ACTIVATE["01_governance<br/>Activate the approved<br/>Data Contract version"]
+    PROD["Engineering Production<br/>Promoted 02_pipeline resolves<br/>the active contract"]
 
     GOVERN --> VALIDATE
     VALIDATE --> PASS
@@ -166,7 +166,7 @@ flowchart TB
     PASS -- "Yes" --> FREEZE
     FREEZE --> TEST
     TEST --> FROZEN_PASS
-    FROZEN_PASS -- "No — refine and freeze a new version" --> GOVERN
+    FROZEN_PASS -- "No · refine and freeze a new version" --> GOVERN
     FROZEN_PASS -- "Yes" --> ACTIVATE
     ACTIVATE --> PROD
 
@@ -174,7 +174,7 @@ flowchart TB
     class FREEZE,ACTIVATE focal;
 ```
 
-This is how FabricOps makes Governance executable: Governance decisions are captured as structured metadata, Guardrails, and Data Contracts that Engineering can directly resolve and validate rather than leaving them only in documentation.
+This is how FabricOps makes Governance executable: Governance decisions authored in `01_governance` become structured metadata, Guardrails, and Data Contracts that `02_pipeline` can directly resolve and validate before Production uses the approved version.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
 
