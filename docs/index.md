@@ -4,92 +4,96 @@
 
 **Microsoft Fabric gives you the platform. FabricOps gives you the operating practice.**
 
-FabricOps is a plug-and-play Data Engineering and Data Governance practice for Microsoft Fabric. It packages the repeatable foundations teams otherwise need to define project by project so they can focus on project-specific engineering and analytics.
+A plug-and-play Data Engineering and Data Governance practice for Microsoft Fabric, with the repeatable foundations already in place so teams can focus on project-specific engineering and analytics.
 
-<!-- VIDEO SLOT: Main FabricOps landing-page explainer (target 2.5-4 minutes) -->
+<!--
+VIDEO SLOT: Main FabricOps homepage explainer.
+Wrap the final responsive iframe/video embed in:
+<div class="fabricops-video-shell">...</div>
+-->
 
-<div class="fabricops-card-grid">
+<div class="fabricops-card-grid fabricops-primary-actions">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
     <span class="fabricops-landing-card__title">How FabricOps works</span>
-    <span class="fabricops-landing-card__body">Understand the Governance ↔ Engineering loop, Data Contract lifecycle, Production path, and shared metadata model.</span>
+    <span class="fabricops-landing-card__body">Operating model, Governance ↔ Engineering loop, Data Contract lifecycle, Production, and consumption.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
     <span class="fabricops-landing-card__title">Step-by-step Guided Demo</span>
-    <span class="fabricops-landing-card__body">Run the complete FabricOps workflow with practical actions, screenshots, expected results, and links to deeper concepts.</span>
+    <span class="fabricops-landing-card__body">Build and run the complete FabricOps workflow with practical actions, screenshots, and expected results.</span>
   </a>
 </div>
 
 <p class="fabricops-architecture-image">
-  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
+  <img src="assets/fabricops-roles.png" alt="FabricOps Governance, Data Engineering, and AI and BI analytics working from one shared foundation">
 </p>
 
-## Why FabricOps
+<p class="fabricops-image-caption"><strong>One shared operating foundation</strong> connecting Governance, Data Engineering, and downstream analytics and AI.</p>
 
-Microsoft Fabric already provides the platform capabilities for Data Engineering, Governance, analytics, AI, workspaces, notebooks, Lakehouses, Warehouses, and related services.
+## The four notebooks
 
-What teams still need to define is **how those capabilities should work together as a repeatable operating practice**.
-
-Without a shared practice, each project can end up rebuilding the same foundations: environment configuration, reusable I/O, metadata capture, profiling, lineage, governance hand-offs, Data Quality controls, Data Contracts, Development-to-Production conventions, and downstream consumption patterns.
-
-FabricOps packages those repeatable foundations into a ready-to-adopt starter kit.
-
-## What FabricOps gives you
-
-FabricOps is organised around four reusable notebooks that work together as one workflow:
-
-| Notebook | What it provides |
-| --- | --- |
-| `00_env_config` | Environment-aware configuration and Fabric item routing. |
-| `01_governance` | Data Stewards, Data Agreements, Enrichment, Guardrails, and Data Contracts. |
-| `02_pipeline` | Project-specific ETL with Catalogue, profiling, lineage, Guardrail validation, and governed Production execution. |
-| `99_explore` | Controlled consumption of approved Production data for BI, AI, data science, and exploration. |
-
-Around those notebooks, FabricOps provides standardized notebook-facing functions and a shared metadata model so Governance and Engineering work from the same structured context.
-
-As the workflow runs, FabricOps records the implemented Governance and Engineering context, including Data Agreements, Catalogue metadata, profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, Enrichment, Guardrails and their results, and Data Contracts.
-
-The result is a governed Production data foundation that can be understood, validated, promoted, reused, and consumed without rebuilding its context afterwards.
-
-## The core idea
-
-FabricOps does not try to replace project-specific engineering logic. Instead, it standardizes the repeatable operating foundation around that work.
-
-Engineering Development builds and observes the data. Governance uses the shared metadata to add meaning and governed expectations. Engineering validates those expectations. Governance freezes and activates the approved Data Contract. Engineering Production runs the validated pipeline against the active contract. Project-specific consumer workspaces then use approved Production data through `99_explore`.
-
-[See the workflow in detail →](how-fabricops-works.md)
-
-## Reference and resources
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="reference/engineering-cheat-sheet/">
-    <span class="fabricops-landing-card__title">FabricOps Engineering Guide</span>
-    <span class="fabricops-landing-card__body">Go deeper into configuration-driven engineering, Lakehouse/Warehouse choices, PySpark, processing strategies, optimisation, and Warehouse SQL.</span>
+<div class="fabricops-notebook-grid">
+  <a class="fabricops-mini-card" href="notebook-templates/">
+    <span class="fabricops-mini-card__code">00_env_config</span>
+    <span class="fabricops-mini-card__title">Configure</span>
+    <span class="fabricops-mini-card__body">Environment-aware Fabric item routing.</span>
   </a>
-
-  <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title">Metadata Tables</span>
-    <span class="fabricops-landing-card__body">Review the shared metadata tables, schemas, purpose, and writer ownership.</span>
+  <a class="fabricops-mini-card" href="notebook-templates/">
+    <span class="fabricops-mini-card__code">01_governance</span>
+    <span class="fabricops-mini-card__title">Govern</span>
+    <span class="fabricops-mini-card__body">Agreements, Enrichment, Guardrails, and Data Contracts.</span>
   </a>
-
-  <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title">FabricOps Functions</span>
-    <span class="fabricops-landing-card__body">Browse notebook-facing public functions, signatures, relationships, and exact contracts.</span>
+  <a class="fabricops-mini-card" href="notebook-templates/">
+    <span class="fabricops-mini-card__code">02_pipeline</span>
+    <span class="fabricops-mini-card__title">Engineer</span>
+    <span class="fabricops-mini-card__body">ETL, profiling, lineage, validation, and Production execution.</span>
   </a>
-
-  <a class="fabricops-landing-card" href="notebook-templates/">
-    <span class="fabricops-landing-card__title">Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Download the reusable Governance, Engineering, and exploration notebook templates.</span>
+  <a class="fabricops-mini-card" href="notebook-templates/">
+    <span class="fabricops-mini-card__code">99_explore</span>
+    <span class="fabricops-mini-card__title">Consume</span>
+    <span class="fabricops-mini-card__body">Approved Production data for BI, AI, data science, and exploration.</span>
   </a>
+</div>
 
-  <a class="fabricops-landing-card" href="glossary/">
-    <span class="fabricops-landing-card__title">FabricOps Glossary</span>
-    <span class="fabricops-landing-card__body">Look up FabricOps, Governance, and Engineering terms as you encounter them.</span>
+## Opinionated engineering choices
+
+<div class="fabricops-principles-grid">
+  <a href="reference/engineering-cheat-sheet/#config-driven-engineering">Configuration-driven</a>
+  <a href="reference/engineering-cheat-sheet/#notebook-first">Code-first</a>
+  <a href="reference/engineering-cheat-sheet/#pyspark-first">PySpark-first</a>
+  <a href="reference/engineering-cheat-sheet/#lakehouse-first">Lakehouse-first</a>
+  <a href="reference/engineering-cheat-sheet/#governance-as-code">Governance as Code</a>
+  <a href="reference/engineering-cheat-sheet/#medallion-architecture">Medallion architecture</a>
+  <a href="reference/engineering-cheat-sheet/#full-vs-incremental">Incremental loading</a>
+  <a href="reference/engineering-cheat-sheet/#failure-safe-processing">Failure-safe processing</a>
+</div>
+
+## Quick links
+
+<div class="fabricops-quick-grid">
+  <a class="fabricops-mini-card" href="reference/engineering-cheat-sheet/">
+    <span class="fabricops-mini-card__title">Engineering Guide</span>
+    <span class="fabricops-mini-card__body">The engineering decisions behind FabricOps.</span>
   </a>
-
-  <a class="fabricops-landing-card" href="releases/">
-    <span class="fabricops-landing-card__title">Official Releases</span>
-    <span class="fabricops-landing-card__body">View published FabricOps releases and the assets included in each version.</span>
+  <a class="fabricops-mini-card" href="reference/metadata/">
+    <span class="fabricops-mini-card__title">Metadata Tables</span>
+    <span class="fabricops-mini-card__body">Shared schemas, context, and ownership.</span>
+  </a>
+  <a class="fabricops-mini-card" href="reference/">
+    <span class="fabricops-mini-card__title">Functions</span>
+    <span class="fabricops-mini-card__body">Notebook-facing functions and exact contracts.</span>
+  </a>
+  <a class="fabricops-mini-card" href="notebook-templates/">
+    <span class="fabricops-mini-card__title">Notebook Templates</span>
+    <span class="fabricops-mini-card__body">Reusable Governance, Engineering, and exploration notebooks.</span>
+  </a>
+  <a class="fabricops-mini-card" href="glossary/">
+    <span class="fabricops-mini-card__title">Glossary</span>
+    <span class="fabricops-mini-card__body">FabricOps, Governance, and Engineering terms.</span>
+  </a>
+  <a class="fabricops-mini-card" href="releases/">
+    <span class="fabricops-mini-card__title">Releases</span>
+    <span class="fabricops-mini-card__body">Published versions and release assets.</span>
   </a>
 </div>
 
