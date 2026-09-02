@@ -6,7 +6,7 @@ The Production runtime behaviour below is implemented but remains **Preview** in
 
 !!! info "Key concepts for this step"
 
-    **Data Contract**, **Enforcement**, **Guardrail Result**, and **Data Quality** explain why Production resolves a frozen table-level contract instead of mutable Development authoring.
+    **Data Contract**, **Enforcement**, **Guardrail Result**, and **Data Quality** explain why Production resolves a saved immutable table-level contract instead of mutable Development authoring.
 
     Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
 
@@ -16,7 +16,7 @@ The Production runtime behaviour below is implemented but remains **Preview** in
 Validated Development 02_pipeline
 → Promote into Engineering Production
 → Resolve active Data Contract
-→ Resolve frozen Guardrails + processing
+→ Resolve saved immutable Guardrails + processing
 → Prepare source scope
 → Validate source
 → Transform
@@ -27,7 +27,9 @@ Validated Development 02_pipeline
 
 ## Before you begin
 
-Confirm that the governed table has exactly one approved active Data Contract version, the validated `02_pipeline` has passed Development validation, and the notebook uses the Production `00_env_config` after it is promoted into Engineering Production.
+Confirm that the governed table has exactly one active Data Contract version, the validated `02_pipeline` has passed Development validation, and the notebook uses the Production `00_env_config` after it is promoted into Engineering Production.
+
+As an operating practice, the version should have been tested in Development and completed any required governance sign-off before activation. FabricOps does not currently enforce those checks as a technical activation gate.
 
 ??? note "Planned — Promote the validated pipeline"
 
@@ -47,7 +49,7 @@ Confirm that the governed table has exactly one approved active Data Contract ve
     physical Production table
     → canonical Data Catalogue table_id
     → exactly one active Data Contract
-    → frozen Guardrails + frozen target processing
+    → saved immutable Guardrails + target processing
     ```
 
     If no active contract exists, or more than one active version exists for the same table, the governed Production run fails.
@@ -70,7 +72,7 @@ Confirm that the governed table has exactly one approved active Data Contract ve
 
     Run target Schema and DQ checks before changing the Production target.
 
-    Use `write_pipeline_prep()` with the target `table_id` and continue with the Production write only when the Guardrail continuation decisions allow it. Target preparation independently resolves the target's one active Data Contract and its frozen processing definition.
+    Use `write_pipeline_prep()` with the target `table_id` and continue with the Production write only when the Guardrail continuation decisions allow it. Target preparation independently resolves the target's one active Data Contract and its saved immutable processing definition.
 
 ??? info "Preview — Read back and register the complete target"
 
@@ -80,9 +82,9 @@ Confirm that the governed table has exactly one approved active Data Contract ve
 
 ## Expected result
 
-You should understand the Production path as **promote the validated `02_pipeline` → resolve the active frozen Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's frozen Guardrails and processing definition around the same canonical ETL lifecycle.
+You should understand the Production path as **promote the validated `02_pipeline` → resolve the active saved Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's saved immutable Guardrails and processing definition around the same canonical ETL lifecycle.
 
-**Previous:** [Step 5: Freeze, test, and activate the Data Contract](05-create-data-contract.md)  
+**Previous:** [Step 5: Save, test, and activate the Data Contract](05-create-data-contract.md)  
 **Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
 See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`read_pipeline_prep()`](../api/reference/read_pipeline_prep.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
