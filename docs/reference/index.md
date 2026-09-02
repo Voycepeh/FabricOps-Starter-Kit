@@ -4,7 +4,7 @@ Use this page to look up public notebook-facing Starter Kit functions used by th
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">29</strong>
+    <strong class="reference-kpi-value">30</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -14,14 +14,14 @@ Use this page to look up public notebook-facing Starter Kit functions used by th
 
 ## Find a function
 
-Use the finder below to search 29 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 30 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 29 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 30 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -30,9 +30,9 @@ Use the finder below to search 29 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 42
-    - Total callables: 449
-    - Supporting functions: 194
+    - Source Python files count: 43
+    - Total callables: 452
+    - Supporting functions: 196
     - Private helpers to review: 219
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v3 normalized public-function call-flow architecture contract.
@@ -57,6 +57,7 @@ Use the finder below to search 29 public functions. Config classes stay out of t
 | [`profile_frequency_distribution`](../api/reference/profile_frequency_distribution/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.2.0 | Profile exact value frequencies for eligible Spark DataFrame columns. |
 | [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a CSV file from a configured Fabric-resolved path through Spark CSV. |
 | [`read_lakehouse_excel`](../api/reference/read_lakehouse_excel/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read an Excel file from a configured Fabric-resolved path through pandas.read_excel. |
+| [`read_lakehouse_json`](../api/reference/read_lakehouse_json/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Read JSON data from a configured Lakehouse Files path through Spark JSON. |
 | [`read_lakehouse_parquet`](../api/reference/read_lakehouse_parquet/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a Parquet path from a configured Fabric-resolved path through Spark Parquet. |
 | [`read_lakehouse_table`](../api/reference/read_lakehouse_table/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a Delta table from a configured Fabric lakehouse target. |
 | [`read_pipeline_prep`](../api/reference/read_pipeline_prep/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Prepare governed source observation and read scope without reading business data. |
@@ -176,6 +177,16 @@ Use the finder below to search 29 public functions. Config classes stay out of t
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 16</span></summary><ul><li><code>get_spark_session</code></li><li><code>read_excel_file</code></li><li><code>_load_pandas</code></li><li><code>resolve_configured_file_path</code></li><li><code>resolve_lakehouse_file_location</code></li><li><code>_validate_relative_path</code></li><li><code>resolve_lakehouse_file_path</code></li><li><code>_join_lakehouse_area_path</code></li><li><code>_validate_relative_path</code></li><li><code>resolve_target_store</code></li><li><code>get_store</code></li><li><code>_normalize_path_config</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li></ul></details>
+  </div>
+</article>
+<article id="io.read_lakehouse_json-read_lakehouse_json" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_json" data-callable-module="io" data-function-type="public-starter-kit" data-callable-purpose="Read JSON data from a configured Lakehouse Files path through Spark JSON.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_json/"><code>read_lakehouse_json</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read JSON data from a configured Lakehouse Files path through Spark JSON.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">—</span></p>
+
+  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 15</span></summary><ul><li><code>get_spark_session</code></li><li><code>read_json_path</code></li><li><code>resolve_configured_file_path</code></li><li><code>resolve_lakehouse_file_location</code></li><li><code>_validate_relative_path</code></li><li><code>resolve_lakehouse_file_path</code></li><li><code>_join_lakehouse_area_path</code></li><li><code>_validate_relative_path</code></li><li><code>resolve_target_store</code></li><li><code>get_store</code></li><li><code>_normalize_path_config</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li></ul></details>
   </div>
 </article>
 <article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="io" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.">

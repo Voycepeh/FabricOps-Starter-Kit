@@ -20,6 +20,7 @@ PUBLIC_IO_CALLABLES = {
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",
+    "read_lakehouse_json",
     "read_lakehouse_parquet",
     "read_lakehouse_excel",
     "read_warehouse_table",
@@ -193,6 +194,53 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
         "csv",
         "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv",
     ) in spark.read.calls
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "expected_suffix"),
+    [
+        ("events.json", "/Files/events.json"),
+        ("incoming/2026/events.json", "/Files/incoming/2026/events.json"),
+        ("incoming/events/", "/Files/incoming/events"),
+    ],
+)
+def test_read_lakehouse_json_resolves_paths_and_forwards_options(relative_path, expected_suffix):
+    """Verify JSON reads delegate files and folders to Spark with reader options."""
+    from fabricops_kit.io.read_lakehouse_json import read_lakehouse_json
+
+    context = {"config": _io_config(), "env": "dev"}
+    spark_override = _Spark()
+
+    result = read_lakehouse_json(
+        relative_path,
+        target="source",
+        spark_session=spark_override,
+        context=context,
+        multiLine=True,
+        mode="PERMISSIVE",
+        recursiveFileLookup=True,
+    )
+
+    expected_path = (
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item" + expected_suffix
+    )
+    assert result == {"path": expected_path}
+    assert ("option", "multiLine", True) in spark_override.read.calls
+    assert ("option", "mode", "PERMISSIVE") in spark_override.read.calls
+    assert ("option", "recursiveFileLookup", True) in spark_override.read.calls
+    assert ("json", expected_path) in spark_override.read.calls
+
+
+def test_read_lakehouse_json_is_exported_from_public_surfaces():
+    """Verify the JSON reader is available from IO and package-root APIs."""
+    import fabricops_kit
+
+    from fabricops_kit.io.read_lakehouse_json import read_lakehouse_json
+
+    assert io.read_lakehouse_json is read_lakehouse_json
+    assert fabricops_kit.read_lakehouse_json is read_lakehouse_json
+    assert "read_lakehouse_json" in io.__all__
+    assert "read_lakehouse_json" in fabricops_kit.__all__
 
 
 def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():

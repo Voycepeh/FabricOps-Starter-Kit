@@ -38,7 +38,7 @@ Engineering Production
 
     | Helper | What it demonstrates |
     | --- | --- |
-    | `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_parquet` | Read files from a configured Production Lakehouse target. |
+    | `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_json`, `read_lakehouse_parquet` | Read files from a configured Production Lakehouse target. |
     | `read_lakehouse_table` | Read Delta tables from Engineering Production. |
     | `read_warehouse_table`, `read_warehouse_query` | Read Production Warehouse tables or query results. |
 

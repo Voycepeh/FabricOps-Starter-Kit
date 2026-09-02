@@ -19,6 +19,7 @@ from .config import (
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
+    read_lakehouse_json,
     read_lakehouse_parquet,
     read_lakehouse_table,
     read_warehouse_query,
@@ -55,6 +56,7 @@ IO_EXPORTS = (
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",
+    "read_lakehouse_json",
     "read_lakehouse_parquet",
     "read_lakehouse_excel",
     "read_warehouse_table",
