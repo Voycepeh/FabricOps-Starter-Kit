@@ -135,22 +135,29 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
-```text
-Governance authors / refines the governed definition
-                    ↓
-Engineering Development validates it in 02_pipeline
-                    ↓
-       Do the governed expectations pass?
-          ↙                         ↘
-        No                           Yes
-        ↓                             ↓
-Governance refines              Freeze contract
-        ↑                             ↓
-        └──────── validate again ← Test frozen version
-                                      ↓
-                                   Activate
-                                      ↓
-                         Engineering Production
+```mermaid
+flowchart TB
+    GOVERN["Governance authors / refines<br/>the governed definition"]
+    VALIDATE["Engineering Development validates<br/>in 02_pipeline"]
+    PASS{"Do the governed<br/>expectations pass?"}
+    FREEZE["Freeze immutable<br/>Data Contract version"]
+    TEST["Test frozen version<br/>in Engineering Development"]
+    FROZEN_PASS{"Does the frozen<br/>version pass?"}
+    ACTIVATE["Governance activates<br/>the approved version"]
+    PROD["Engineering Production<br/>resolves the active contract"]
+
+    GOVERN --> VALIDATE
+    VALIDATE --> PASS
+    PASS -- "No" --> GOVERN
+    PASS -- "Yes" --> FREEZE
+    FREEZE --> TEST
+    TEST --> FROZEN_PASS
+    FROZEN_PASS -- "No — refine and freeze a new version" --> GOVERN
+    FROZEN_PASS -- "Yes" --> ACTIVATE
+    ACTIVATE --> PROD
+
+    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
+    class FREEZE,ACTIVATE focal;
 ```
 
 This is how FabricOps makes Governance executable: Governance decisions are captured as structured metadata, Guardrails, and Data Contracts that Engineering can directly resolve and validate rather than leaving them only in documentation.
