@@ -59,7 +59,10 @@ nav:
       - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
       - Data Contract: reference/metadata/metadata_data_contract.md
       - Data Access: reference/metadata/metadata_data_access.md
-  - List of Functions: reference/index.md
+  - List of Functions:
+      - Function Reference: reference/index.md
+      - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
+      - Function Call Graph: function-call-graph.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
       - missing_values: reference/dq-rules/missing-values.md
