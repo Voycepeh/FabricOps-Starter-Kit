@@ -288,17 +288,25 @@ def test_write_prep_aggregates_source_completion(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
     frame = spark_session.createDataFrame([(1,)], ["student_id"])
     source_prep = {
-        "source": {"table_id": "source"},
-        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-        "candidate_checkpoint": {"status": "candidate", "column": "modified_at", "value": 3},
+        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
+        "observation": SimpleNamespace(),
+        "changes": {
+            "table_id": "source",
+            "environment_name": "dev",
+            "observation_id": "observation-1",
+        },
         "read_mode": "incremental_subset",
-        "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 2, "upper_bound": 3,
-                  "lower_inclusive": False, "upper_inclusive": True},
+        "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
     }
     result = write_module.write_pipeline_prep(
         frame, target_table_id=identity["table_id"], source_preps=[source_prep]
     )
-    assert result["completion"]["sources"][0]["candidate"]["value"] == 3
+    assert result["completion"]["sources"] == [{
+        "type": "partition",
+        "table_id": "source",
+        "environment_name": "dev",
+        "observation_id": "observation-1",
+    }]
 
 
 def test_write_prep_supports_multiple_source_completion_for_scd(monkeypatch, spark_session):
