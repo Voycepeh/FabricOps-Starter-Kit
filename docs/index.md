@@ -38,15 +38,9 @@
   height: auto;
 }
 
-.fabricops-home-summary figcaption {
-  margin-top: 0.5rem;
-  color: var(--md-default-fg-color--light);
-  font-size: 0.82rem;
-}
-
 .fabricops-home-quicklinks {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.65rem;
   margin: 0.85rem 0 1.5rem;
 }
@@ -55,8 +49,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 3.3rem;
-  padding: 0.75rem 0.9rem;
+  min-height: 3rem;
+  padding: 0.65rem 0.8rem;
   border: 1px solid var(--md-default-fg-color--lightest);
   border-radius: 0.35rem;
   background: var(--md-default-bg-color);
@@ -78,8 +72,19 @@
   background: var(--md-accent-fg-color--transparent);
 }
 
+@media screen and (max-width: 900px) {
+  .fabricops-home-quicklinks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media screen and (max-width: 768px) {
-  .fabricops-home-primary,
+  .fabricops-home-primary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 520px) {
   .fabricops-home-quicklinks {
     grid-template-columns: 1fr;
   }
@@ -92,7 +97,7 @@
 
 **Microsoft Fabric gives you the platform. FabricOps gives you the operating practice.**
 
-FabricOps is a plug-and-play Data Engineering and Data Governance practice for Microsoft Fabric, packaging repeatable operating foundations so teams can focus on project-specific engineering and analytics.
+Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fabric.
 
 <div class="fabricops-home-video" role="img" aria-label="FabricOps overview video coming soon">
   Video coming soon
@@ -112,7 +117,6 @@ FabricOps is a plug-and-play Data Engineering and Data Governance practice for M
 
 <figure class="fabricops-home-summary">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
-  <figcaption>One shared operating foundation connecting Governance, Data Engineering, and downstream AI and BI analytics.</figcaption>
 </figure>
 
 ## Explore FabricOps
