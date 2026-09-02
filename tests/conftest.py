@@ -182,6 +182,7 @@ STALE_REFERENCE_TESTS = {
     "test_callable_flow_page_and_json_cover_public_surface",
     "test_callable_flow_docs_page_uses_deterministic_signal_rules",
     "test_maintainer_nav_parks_internal_reference_helpers",
+    "test_reference_nav_preserves_existing_user_facing_entries",
 }
 
 
