@@ -1,6 +1,6 @@
 # Step 4: Validate with Guardrails / Data Contract
 
-**Rerun `02_pipeline` in Engineering Development so Governance-authored Guardrails or a selected frozen Data Contract control the governed pipeline boundaries.**
+**Rerun `02_pipeline` in Engineering Development so Governance-authored Guardrails or a selected saved Data Contract version control the governed pipeline boundaries.**
 
 This step uses the newer governed runtime path. The components are implemented but remain **Preview** in the Guided Demo until the complete flow is revalidated end to end in Fabric.
 
@@ -15,7 +15,7 @@ This step uses the newer governed runtime path. The components are implemented b
 ## High-level flow
 
 ```text
-Select current Guardrails or frozen Data Contract
+Select current Guardrails or saved Data Contract version
 → Prepare source scope
 → Pre-read Guardrails
 → Full Dataset / Incremental Subset read
@@ -30,16 +30,16 @@ Select current Guardrails or frozen Data Contract
 
 Confirm that Step 3 has authored the required Guardrails, the source and target tables are registered where required, `02_pipeline` uses the Engineering Development `00_env_config`, and the target load strategy plus required parameters are defined.
 
-??? info "Preview — Select current authoring or a frozen Data Contract"
+??? info "Preview — Select current authoring or a saved Data Contract version"
 
     Open `02_pipeline` in Engineering Development.
 
-    Keep `widget_select_data_contract()` on **Current authoring Guardrails** for the first guarded rerun. After Step 5 freezes a Data Contract version, return to the same `02_pipeline` and select that exact frozen version to test it before activation.
+    Keep `widget_select_data_contract()` on **Current authoring Guardrails** for the first guarded rerun. After Step 5 saves a Data Contract version, return to the same `02_pipeline` and select that exact saved version to test it before activation.
 
     | Development validation source | Rule and processing source |
     | --- | --- |
     | Current authoring | Current Guardrails plus the target load strategy declared for Development |
-    | Selected Data Contract version | Frozen Guardrails and processing definition inside that version's `contract_payload_json` |
+    | Selected Data Contract version | Saved immutable Guardrails and processing definition inside that version's `contract_payload_json` |
 
     Selection is table-scoped. Selecting a contract for one `table_id` does not apply it to another table.
 
@@ -105,7 +105,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
 ## Expected result
 
-You should understand the complete guarded Development lifecycle and where the Preview runtime components fit around the same visible ETL path used in Step 2. The same notebook first validates current Governance authoring, then returns after Step 5 freezes a Data Contract so the exact frozen version can be tested before governance sign-off and activation.
+You should understand the complete guarded Development lifecycle and where the Preview runtime components fit around the same visible ETL path used in Step 2. The same notebook first validates current Governance authoring, then returns after Step 5 saves a Data Contract so the exact saved immutable version can be selected and tested before activation.
 
 **Previous:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)  
-**Next:** [Step 5: Freeze, test, and activate the Data Contract](05-create-data-contract.md)
+**Next:** [Step 5: Save, test, and activate the Data Contract](05-create-data-contract.md)
