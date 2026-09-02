@@ -183,6 +183,10 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
             recorded["change"] = condition
             return self
 
+        def whenMatchedUpdate(self, *, set):
+            recorded["technical_update"] = set
+            return self
+
         def whenNotMatchedInsertAll(self):
             recorded["insert"] = True
             return self
@@ -218,6 +222,14 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
     assert recorded == {
         "keys": "target.`student_id` <=> source.`student_id`",
         "change": "NOT (target.`status` <=> source.`status`)",
+        "technical_update": {
+            "_committed_at": "source.`_committed_at`",
+            "_committed_by": "source.`_committed_by`",
+            "_activity_id": "source.`_activity_id`",
+            "_workspace_id": "source.`_workspace_id`",
+            "_notebook_id": "source.`_notebook_id`",
+            "_notebook_name": "source.`_notebook_name`",
+        },
         "insert": True,
         "executed": True,
     }

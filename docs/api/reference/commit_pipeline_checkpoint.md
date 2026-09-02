@@ -7,7 +7,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Commit a prepared watermark after the governed target write succeeds.
+Legacy explicit watermark checkpoint commit retained for later cleanup.
 
 <div class="reference-source-card" markdown="1">
 **Source**

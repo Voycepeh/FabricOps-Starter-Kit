@@ -14,20 +14,21 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
+def _delta_literal(value: Any) -> str:
+    """Return a safely encoded primitive Delta predicate literal."""
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, int | float):
+        return str(value)
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def _replace_where(partition_column: str, values: list[Any]) -> str:
     """Return a safely quoted Delta partition-replacement predicate."""
-
-    def literal(value: Any) -> str:
-        if value is None:
-            return "NULL"
-        if isinstance(value, bool):
-            return "TRUE" if value else "FALSE"
-        if isinstance(value, int | float):
-            return str(value)
-        return "'" + str(value).replace("'", "''") + "'"
-
     quoted = str(partition_column).replace("`", "``")
-    return f"`{quoted}` IN ({', '.join(literal(value) for value in values)})"
+    return f"`{quoted}` IN ({', '.join(_delta_literal(value) for value in values)})"
 
 
 def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -44,14 +45,6 @@ def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, An
         if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(scope, dict):
             raise ValueError("Each source prep must contain a non-skipped canonical read_mode and scope.")
         scopes.append({"read_mode": read_mode, "scope": scope})
-        candidate = prep.get("candidate_checkpoint")
-        if candidate is not None:
-            completion_sources.append({
-                "type": "watermark",
-                "source": prep.get("source"),
-                "source_processing": prep.get("source_processing"),
-                "candidate": candidate,
-            })
         observation = prep.get("observation")
         changes = prep.get("changes")
         if observation is not None and isinstance(changes, dict):
@@ -86,8 +79,8 @@ def write_pipeline_prep(
         metadata and target-owned processing.
     source_preps : list of dict
         Results returned by :func:`read_pipeline_prep` for the sources that fed
-        this target. Candidate checkpoint state is committed only after the
-        physical target writer succeeds.
+        this target. Watermark source values must remain present through
+        transformation so target state can be persisted on each row.
 
     Returns
     -------
@@ -142,6 +135,31 @@ def write_pipeline_prep(
     scope = prepared_scope["scope"]
     store_kind = target_identity["store_type"]
     strategy = str(processing.get("load_strategy") or "")
+    watermark_preps = [
+        prep for prep in source_preps
+        if (prep.get("source_processing") or {}).get("read_strategy") == "incremental_watermark"
+    ]
+    if watermark_preps and strategy == "append":
+        raise ValueError(
+            "incremental_watermark with append is unsafe because the processing definition has no "
+            "deterministic row identity for replay; use overwrite, scd1, or scd2."
+        )
+    if len(watermark_preps) > 1:
+        raise ValueError("A governed target can derive _watermark_value from only one incremental_watermark source.")
+    if watermark_preps:
+        watermark_column = str(watermark_preps[0]["source_processing"]["watermark_column"])
+        if watermark_column == "_watermark_value":
+            raise ValueError("_watermark_value is reserved for FabricOps target watermark state.")
+        if "_watermark_value" in df.columns:
+            raise ValueError("_watermark_value is a reserved FabricOps technical column and must not be supplied.")
+        if watermark_column not in df.columns:
+            raise ValueError(
+                f"incremental_watermark requires source watermark column {watermark_column!r} to be retained "
+                "through transformation until write_pipeline_prep."
+            )
+        from pyspark.sql import functions as F
+
+        df = df.withColumn("_watermark_value", F.col(watermark_column))
     if strategy == "overwrite" and scope.get("type") == "multiple_sources":
         raise ValueError(
             "overwrite cannot infer one safe target scope from differing source scopes; "
@@ -169,6 +187,10 @@ def write_pipeline_prep(
     options: dict[str, Any] = {}
     if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "partition":
         options["replaceWhere"] = _replace_where(str(scope["column"]), list(scope.get("values") or []))
+    if store_kind == "lakehouse" and strategy == "overwrite" and scope.get("type") == "watermark":
+        lower = _delta_literal(scope["lower_bound"])
+        upper = _delta_literal(scope["upper_bound"])
+        options["replaceWhere"] = f"`_watermark_value` > {lower} AND `_watermark_value` <= {upper}"
     return {
         "df": prepared_df,
         "mode": mode,

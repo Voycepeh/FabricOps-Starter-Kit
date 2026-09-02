@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:253`
+`fabricops_kit/pipeline/read_pipeline_prep.py:275`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L253-L365">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L275-L400">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,6 +39,7 @@ For profiling-related pipeline functions, the output captures the important deta
 def read_pipeline_prep(
     source_table_id: str,
     source_read_strategy: str,
+    target_table_id: str | None=None,
     source_watermark_column: str | None=None,
     source_partition_column: str | None=None,
 ) -> dict[str, Any]:
@@ -53,6 +54,7 @@ def read_pipeline_prep(
 >>> prep = read_pipeline_prep(
 ...     source_table_id="warehouse:source:dbo:bookings",
 ...     source_read_strategy="incremental_watermark",
+...     target_table_id="lakehouse:unified:dbo:bookings",
 ...     source_watermark_column="modified_datetime",
 ... )
 >>> prep["read_mode"] in {"skip", "full_dataset", "incremental_subset"}
@@ -66,17 +68,18 @@ True
 | --- | --- | --- | --- |
 | `source_table_id` | `str` | Yes | Canonical identity of one registered source table. FabricOps resolves its physical coordinates from the Catalogue. |
 | `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
-| `source_watermark_column` | `str \| None` | No | Checkpoint column required by ``incremental_watermark``. |
+| `target_table_id` | `str \| None` | No | Governed target whose ``_watermark_value`` stores successful progress. Required for ``incremental_watermark`` and ignored by other strategies. |
+| `source_watermark_column` | `str \| None` | No | Physical source progress column required by ``incremental_watermark``. |
 | `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
 
 ## Returns
 
-Registered source identity, observation and change state, candidate completion state, and skip, full, or incremental read scope.
+Registered source identity, target identity for watermark processing, observation and change state, and skip, full, or incremental read scope.
 
 ## Raises / Errors
 
 ValueError
-    If source identity, configuration, checkpoint state, or the resulting
+    If source identity, configuration, target watermark state, or the resulting
     processing scope is invalid.
 
 ## Notes
@@ -84,8 +87,8 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
-The successful checkpoint remains unchanged until a later post-write commit
-succeeds. Partition subsets reuse FabricOps source observation and change
+Successful watermark progress is the maximum target ``_watermark_value``;
+there is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change
 detection. Change safety resolves the source table's own processing through
 :func:`check_changes`; target selection and publication are intentionally
 outside this function.

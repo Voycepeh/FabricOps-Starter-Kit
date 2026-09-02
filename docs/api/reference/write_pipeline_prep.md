@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:72`
+`fabricops_kit/pipeline/write_pipeline_prep.py:65`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L72-L201">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L65-L223">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -65,7 +65,7 @@ def write_pipeline_prep(
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
 | `target_table_id` | `str` | Yes | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
-| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Candidate checkpoint state is committed only after the physical target writer succeeds. |
+| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Watermark source values must remain present through transformation so target state can be persisted on each row. |
 
 ## Returns
 

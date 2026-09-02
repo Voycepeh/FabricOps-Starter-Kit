@@ -60,7 +60,7 @@ def test_full_dataset_source_can_prepare_before_any_target_exists(monkeypatch):
     lineage = []
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     monkeypatch.setattr(read_module, "_observe_table_core", lambda *_args, **_kwargs: pytest.fail("observation"))
-    monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: pytest.fail("checkpoint"))
+    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: pytest.fail("checkpoint"))
 
     result = read_module.read_pipeline_prep(
         source_table_id=identity["table_id"],
@@ -115,22 +115,19 @@ def test_two_registered_sources_share_activity_lineage_context(monkeypatch):
     ("2026-08-26 12:00", "2026-08-26 12:00", "skip"),
     ("2026-08-26 10:00", "2026-08-26 12:00", "incremental_subset"),
 ])
-def test_watermark_scope_is_bounded_and_candidate_is_not_committed(monkeypatch, previous, upper, expected_mode):
-    monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: previous)
+def test_watermark_scope_is_bounded_by_target_state(monkeypatch, previous, upper, expected_mode):
+    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: previous)
     monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
         "upper_watermark": upper, "data_type": "string", "row_count": 1,
         "non_null_count": 1, "distinct_count": 1,
     })
     monkeypatch.setattr(read_module, "_coerce_checkpoint", lambda value, *_args, **_kwargs: value)
     result = read_module._watermark_scope(
-        {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
+        {"table_id": "warehouse:source:dbo:bookings"}, {"store_kind": "lakehouse"}, "modified_datetime",
         config="config", env="dev", spark_session="spark", context={},
     )
     assert result["read_mode"] == expected_mode
-    if expected_mode == "skip":
-        assert result["candidate_checkpoint"] is None
-    else:
-        assert result["candidate_checkpoint"]["status"] == "candidate"
+    assert "candidate_checkpoint" not in result
     if expected_mode == "incremental_subset":
         assert result["scope"]["lower_inclusive"] is False
         assert result["scope"]["upper_inclusive"] is True
@@ -139,15 +136,51 @@ def test_watermark_scope_is_bounded_and_candidate_is_not_committed(monkeypatch, 
 
 
 def test_watermark_rejects_duplicate_values_that_can_hide_late_rows(monkeypatch):
-    monkeypatch.setattr(read_module, "_checkpoint_value", lambda *_args, **_kwargs: "2026-08-26 10:00")
+    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: "2026-08-26 10:00")
     monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
         "upper_watermark": "2026-08-26 12:00", "data_type": "string", "row_count": 2,
         "non_null_count": 2, "distinct_count": 1,
     })
     with pytest.raises(ValueError, match="globally unique"):
         read_module._watermark_scope(
-            {"table_id": "warehouse:source:dbo:bookings"}, "modified_datetime",
+            {"table_id": "warehouse:source:dbo:bookings"}, {"store_kind": "lakehouse"}, "modified_datetime",
             config="config", env="dev", spark_session="spark", context={},
+        )
+
+
+def test_warehouse_target_watermark_uses_governed_target_query(monkeypatch):
+    observed = {}
+
+    class Row(dict):
+        def asDict(self, recursive=False):
+            return dict(self)
+
+    class Frame:
+        def collect(self):
+            return [Row(target_watermark=200, row_count=5)]
+
+    monkeypatch.setattr(
+        read_module,
+        "read_warehouse_query_core",
+        lambda query, **kwargs: observed.update(query=query, kwargs=kwargs) or Frame(),
+    )
+    value = read_module._target_watermark(
+        {"store_kind": "warehouse", "target": "product", "schema": "dbo", "table_name": "orders"},
+        spark_session="spark",
+        context={"activity_id": "activity"},
+    )
+    assert value == 200
+    assert "MAX([_watermark_value]) AS target_watermark" in observed["query"]
+    assert observed["kwargs"]["target"] == "product"
+
+
+def test_incremental_watermark_requires_governed_target_identity(monkeypatch):
+    identity = _patch_source_identity(monkeypatch)
+    with pytest.raises(ValueError, match="target_table_id is required"):
+        read_module.read_pipeline_prep(
+            source_table_id=identity["table_id"],
+            source_read_strategy="incremental_watermark",
+            source_watermark_column="modified_datetime",
         )
 
 
@@ -367,6 +400,21 @@ def test_write_prep_keeps_incremental_append(monkeypatch, spark_session):
     )
 
     assert result["mode"] == "append"
+
+
+def test_write_prep_rejects_unsafe_incremental_watermark_append(monkeypatch):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
+    frame = SimpleNamespace(columns=["student_id", "modified_at"])
+    with pytest.raises(ValueError, match="unsafe.*deterministic row identity"):
+        write_module.write_pipeline_prep(
+            frame,
+            target_table_id=identity["table_id"],
+            source_preps=[{
+                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+                "read_mode": "incremental_subset",
+                "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 1, "upper_bound": 2},
+            }],
+        )
 
 
 def test_write_prep_rejects_skipped_source(monkeypatch, spark_session):

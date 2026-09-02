@@ -106,10 +106,10 @@ def write_lakehouse_table(
         Prepared skip, full, or incremental execution scope.
     completion_context : dict, optional
         Governed source-completion context returned by
-        :func:`write_pipeline_prep`. When supplied, source progress is
-        committed only after the physical write succeeds. The target Lineage
-        participant is persisted before source progress. Calls that omit it
-        have no Lineage or checkpoint effects.
+        :func:`write_pipeline_prep`. When supplied, target Lineage and any
+        partition completion state are persisted after the physical write.
+        Watermark progress is already part of the successfully published
+        target rows. Calls that omit it have no completion effects.
 
     Returns
     -------
@@ -119,12 +119,13 @@ def write_lakehouse_table(
     Notes
     -----
     Governed completion
-        When ``completion_context`` is supplied, the physical target write or
-        merge completes first and source progress is committed second. A
-        physical-write exception prevents the commit. If checkpoint
-        persistence fails after publication, that exception is surfaced and a
-        retry may replay already-published source rows; the target load
-        strategy remains responsible for deterministic replay semantics.
+        The physical target write or merge completes before Lineage or
+        partition completion is persisted. Watermark correctness has no
+        post-write checkpoint: ``_watermark_value`` advances atomically with
+        target publication. Replay is deterministic for overwrite, SCD1, and
+        SCD2; governed incremental-watermark append is rejected without an
+        explicit deterministic identity. Independent concurrent writers still
+        rely on Delta transaction semantics.
 
     Parallel processing and write concurrency
         Spark writes DataFrame partitions concurrently across available
