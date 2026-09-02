@@ -820,6 +820,36 @@ def test_target_partitions_rejects_populated_legacy_target(monkeypatch, spark_se
         )
 
 
+def test_lakehouse_target_partitions_rejects_null_bucket(monkeypatch, spark_session):
+    target = spark_session.createDataFrame(
+        [(None, "2026-09-01T00:00:00"), ("2026-08-31", "2026-09-01T00:00:00")],
+        ["_partition_bucket", "_committed_at"],
+    )
+    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
+    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
+        read_module._target_partitions(
+            {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
+            spark_session=spark_session, context={},
+        )
+
+
+def test_warehouse_target_partitions_rejects_null_bucket(monkeypatch):
+    class Row(dict):
+        def asDict(self, recursive=False):
+            return dict(self)
+
+    class Frame:
+        def collect(self):
+            return [Row(partition_bucket=None, committed_at="2026-09-01T00:00:00", row_count=1)]
+
+    monkeypatch.setattr(read_module, "read_warehouse_query_core", lambda *_args, **_kwargs: Frame())
+    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
+        read_module._target_partitions(
+            {"store_kind": "warehouse", "target": "product", "schema": "dbo", "table_name": "students"},
+            spark_session="spark", context={},
+        )
+
+
 def test_first_partition_population_persists_bucket(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
     frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])

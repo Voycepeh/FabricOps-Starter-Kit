@@ -191,6 +191,11 @@ def _target_partitions(identity: Mapping[str, Any], *, spark_session: Any, conte
         values = row.asDict(recursive=True)
         if int(values.get("row_count") or 0):
             value = values.get("partition_bucket")
+            if value is None:
+                raise ValueError(
+                    "The existing governed target contains null _partition_bucket values; "
+                    "migrate or rebuild it before incremental_partition processing."
+                )
             state[str(value)] = {"value": value, "committed_at": values.get("committed_at")}
     return state
 
