@@ -8,15 +8,34 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the operating model
 
     Start with [Microsoft Learn: Fabric fundamentals](https://learn.microsoft.com/en-us/fabric/fundamentals/) for the platform concepts used throughout the demo. When you reach the engineering parts, continue with [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/) for Lakehouse, notebooks, Spark, and Data Engineering workflows.
 
+    **Useful visual reference:** [Microsoft Fabric Visual Notes](https://www.slideshare.net/slideshow/microsoft-fabric-complete-handwritten-notes-pdf/289496813) — a visual community reference covering Fabric architecture, PySpark, pipelines, incremental loading, data quality, CI/CD, monitoring, and related concepts.
+
     FabricOps documentation remains the source of truth for how this starter kit is designed and used.
 
 ## What you'll build
 
-You will progressively take the same governed pipeline through the FabricOps lifecycle:
+You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A and 0B prepare and configure the environment before that workflow begins.**
 
-```text
-Prepare → Configure → Govern → Engineer → Enrich → Validate → Freeze/Test/Activate → Promote/Run → Consume
+```mermaid
+flowchart TB
+    S0A["0A · Prepare<br/>Fabric artifacts"] --> S0B["0B · Configure<br/>00_env_config"]
+    S0B --> S1["1 · Govern<br/>Data Stewards + Data Agreement"]
+    S1 --> S2["2 · Engineer<br/>ETL + Profile + Catalogue + Lineage"]
+    S2 --> S3["3 · Enrich<br/>Enrichment + Guardrails"]
+    S3 --> S4["4 · Validate<br/>02_pipeline tests governed expectations"]
+    S4 --> PASS{"Ready to freeze?"}
+    PASS -- "No · refine" --> S3
+    PASS -- "Yes" --> S5["5 · Data Contract lifecycle<br/>Freeze → Test → Activate"]
+    S5 --> FROZEN{"Frozen version passes?"}
+    FROZEN -- "No · refine and freeze a new version" --> S3
+    FROZEN -- "Yes" --> S6["6 · Promote / Run<br/>Engineering Production"]
+    S6 --> S7["7 · Consume<br/>99_explore from Production"]
+
+    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
+    class S3,S4,S5 focal;
 ```
+
+The diagram makes the non-linear part explicit: **Steps 3, 4, and 5 form the Governance ↔ Engineering iteration.** Governance refines the governed definition in Step 3, Engineering validates it in Step 4, and Step 5 freezes and tests an immutable version. If either validation shows the definition is not ready, the workflow returns to Governance for refinement before a new version is frozen. Only an approved activated version continues to Production.
 
 The demo is intentionally action-oriented. Each module tells you what to do, what you should see, and what FabricOps records at that stage.
 
@@ -50,21 +69,25 @@ The Guided Demo should not repeat long architecture or engineering explanations.
 
 ## The iterative part of the demo
 
-Steps 3, 4, and 5 form the Governance ↔ Engineering loop:
+The same Step 3 → Step 4 → Step 5 loop shown above is the part of the demo that may repeat while the governed definition is being refined:
 
-```text
-Governance authors / refines
-        ↓
-Engineering validates in 02_pipeline
-        ↓
-Pass?
- ↙   ↘
-No    Yes
-↓      ↓
-Refine Freeze → Test → Activate
+```mermaid
+flowchart TB
+    G["3 · Governance refines<br/>Enrichment + Guardrails"] --> E["4 · Engineering validates<br/>in 02_pipeline"]
+    E --> D{"Governed expectations pass?"}
+    D -- "No" --> G
+    D -- "Yes" --> F["5 · Freeze immutable<br/>Data Contract version"]
+    F --> T["Test frozen version<br/>in Engineering Development"]
+    T --> FD{"Frozen version passes?"}
+    FD -- "No · refine and freeze a new version" --> G
+    FD -- "Yes" --> A["Governance activates<br/>approved version"]
+    A --> P["6 · Engineering Production"]
+
+    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
+    class F,A focal;
 ```
 
-Repeat the author-and-validate loop until the governed expectations are ready to freeze and approve.
+Repeat the author-and-validate loop until the governed expectations are ready to freeze, test, approve, and activate.
 
 For the conceptual explanation of this loop and the Data Contract lifecycle, see [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop).
 
