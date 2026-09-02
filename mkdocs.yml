@@ -21,7 +21,6 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
-  - Glossary: glossary.md
   - Guided Demo:
       - Learning Path: guided-demo.md
       - Step 0A - Prepare Fabric Artifacts: guided-demo/00A-setup-fabric-artifacts.md
@@ -39,44 +38,47 @@ nav:
       - Step 5 - Create and Activate Data Contract: guided-demo/05-create-data-contract.md
       - Step 6 - Run Production with Active Contract: guided-demo/06-promote-to-production.md
       - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
-  - Notebook Templates: notebook-templates.md
+  - Resources & Reference:
+      - Notebook Templates: notebook-templates.md
+      - FabricOps Engineering Guide: reference/engineering-cheat-sheet.md
+      - Glossary: glossary.md
+      - Metadata Tables:
+          - Overview: reference/metadata.md
+          - Data Steward: reference/metadata/metadata_data_steward.md
+          - Data Agreement: reference/metadata/metadata_data_agreement.md
+          - Source Observation: reference/metadata/metadata_source_observation.md
+          - Data Catalogue: reference/metadata/metadata_data_catalogue.md
+          - Data Profiled: reference/metadata/metadata_data_profiled.md
+          - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
+          - Data Lineage: reference/metadata/metadata_data_lineage.md
+          - Enrichment: reference/metadata/metadata_enrichment.md
+          - Guardrail: reference/metadata/metadata_guardrail.md
+          - Guardrail Results: reference/metadata/metadata_guardrail_results.md
+          - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
+          - Data Contract: reference/metadata/metadata_data_contract.md
+          - Data Access: reference/metadata/metadata_data_access.md
+      - Functions:
+          - Function Reference: reference/index.md
+          - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
+          - Function Call Graph: function-call-graph.md
+      - DQ Rules:
+          - Overview: reference/dq-rules/index.md
+          - missing_values: reference/dq-rules/missing-values.md
+          - blank_text: reference/dq-rules/blank-text.md
+          - unique_values: reference/dq-rules/unique-values.md
+          - unique_combination: reference/dq-rules/unique-combination.md
+          - allowed_values: reference/dq-rules/allowed-values.md
+          - blocked_values: reference/dq-rules/blocked-values.md
+          - value_range: reference/dq-rules/value-range.md
+          - text_pattern: reference/dq-rules/text-pattern.md
+          - required_when: reference/dq-rules/required-when.md
+          - conditional_value: reference/dq-rules/conditional-value.md
+          - compare_columns: reference/dq-rules/compare-columns.md
   - Releases:
       - Overview: releases/index.md
       - 0.2.0: releases/0.2.0/index.md
       - 0.1.0: releases/0.1.0/index.md
-  - List of Metadata Tables:
-      - Overview: reference/metadata.md
-      - Data Steward: reference/metadata/metadata_data_steward.md
-      - Data Agreement: reference/metadata/metadata_data_agreement.md
-      - Source Observation: reference/metadata/metadata_source_observation.md
-      - Data Catalogue: reference/metadata/metadata_data_catalogue.md
-      - Data Profiled: reference/metadata/metadata_data_profiled.md
-      - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
-      - Data Lineage: reference/metadata/metadata_data_lineage.md
-      - Enrichment: reference/metadata/metadata_enrichment.md
-      - Guardrail: reference/metadata/metadata_guardrail.md
-      - Guardrail Results: reference/metadata/metadata_guardrail_results.md
-      - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
-      - Data Contract: reference/metadata/metadata_data_contract.md
-      - Data Access: reference/metadata/metadata_data_access.md
-  - List of Functions:
-      - Function Reference: reference/index.md
-      - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
-      - Function Call Graph: function-call-graph.md
-  - List of DQ Rules:
-      - Overview: reference/dq-rules/index.md
-      - missing_values: reference/dq-rules/missing-values.md
-      - blank_text: reference/dq-rules/blank-text.md
-      - unique_values: reference/dq-rules/unique-values.md
-      - unique_combination: reference/dq-rules/unique-combination.md
-      - allowed_values: reference/dq-rules/allowed-values.md
-      - blocked_values: reference/dq-rules/blocked-values.md
-      - value_range: reference/dq-rules/value-range.md
-      - text_pattern: reference/dq-rules/text-pattern.md
-      - required_when: reference/dq-rules/required-when.md
-      - conditional_value: reference/dq-rules/conditional-value.md
-      - compare_columns: reference/dq-rules/compare-columns.md
-  - FabricOps Maintainer:
+  - Maintainer:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
