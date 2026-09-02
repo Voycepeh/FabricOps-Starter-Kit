@@ -41,7 +41,7 @@ Read more about the trade-offs in [Full vs incremental processing](../../referen
 
 ## Function details
 
-The Guided Demo teaches the template behaviour rather than every function signature. Use the [Function Reference](../../reference/index.md) when you need exact parameters for `read_lakehouse_csv()`, `read_lakehouse_excel()`, `read_lakehouse_parquet()`, `read_lakehouse_table()`, `read_warehouse_table()`, or `read_warehouse_query()`.
+The Guided Demo teaches the template behaviour rather than every function signature. Use the [Function Reference](../../reference/index.md) when you need exact parameters for `read_lakehouse_csv()`, `read_lakehouse_excel()`, `read_lakehouse_json()`, `read_lakehouse_parquet()`, `read_lakehouse_table()`, `read_warehouse_table()`, or `read_warehouse_query()`.
 
 **Previous:** [Unit 2: Run the baseline ETL](run-baseline-etl.md)  
 **Next:** [Unit 4: Transform and load](transform-and-load.md)

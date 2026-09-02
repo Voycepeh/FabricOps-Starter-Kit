@@ -34,6 +34,10 @@ class _Reader:
         self.calls.append(("csv", path))
         return {"path": path}
 
+    def json(self, path):
+        self.calls.append(("json", path))
+        return {"path": path}
+
     def parquet(self, path):
         self.calls.append(("parquet", path))
         return SimpleNamespace(limit=lambda count: SimpleNamespace(collect=lambda: []))

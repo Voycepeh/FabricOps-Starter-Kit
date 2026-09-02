@@ -241,6 +241,14 @@ def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]
     return reader.csv(path)
 
 
+def read_json_path(spark_obj, path: str, *, options: dict[str, Any]):
+    """Read a JSON path through Spark."""
+    reader = spark_obj.read
+    for key, value in options.items():
+        reader = reader.option(key, value)
+    return reader.json(path)
+
+
 def repartition_dataframe_for_write(df, repartition_by):
     """Return ``df`` or a repartitioned DataFrame for a write operation."""
     if repartition_by is None:

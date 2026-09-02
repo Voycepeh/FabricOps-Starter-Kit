@@ -46,6 +46,7 @@ EXPECTED_V1_CALLABLES = [
     'read_lakehouse_table',
     'write_lakehouse_table',
     'read_lakehouse_csv',
+    'read_lakehouse_json',
     'read_lakehouse_parquet',
     'read_lakehouse_excel',
     'read_warehouse_table',
