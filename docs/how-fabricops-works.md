@@ -41,6 +41,13 @@
   padding: 0.8rem 0.15rem;
   cursor: pointer;
   list-style: none;
+  background: transparent;
+}
+
+.md-typeset details.fabricops-workflow-step > summary::before,
+.md-typeset details.fabricops-workflow-step > summary::after {
+  display: none !important;
+  content: none !important;
 }
 
 .md-typeset details.fabricops-workflow-step > summary::-webkit-details-marker {
