@@ -17,6 +17,105 @@
 .md-typeset .fabricops-section-block > :last-child {
   margin-bottom: 0;
 }
+
+.md-typeset .fabricops-workflow-steps {
+  margin: 1rem 0 0;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset details.fabricops-workflow-step {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.md-typeset details.fabricops-workflow-step > summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0.8rem 0.15rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.md-typeset details.fabricops-workflow-step > summary::-webkit-details-marker {
+  display: none;
+}
+
+.md-typeset .fabricops-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-accent-fg-color) 12%, transparent);
+  color: var(--md-accent-fg-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.md-typeset .fabricops-step-heading {
+  min-width: 0;
+}
+
+.md-typeset .fabricops-step-role {
+  display: block;
+  margin-bottom: 0.12rem;
+  color: var(--md-accent-fg-color);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.md-typeset .fabricops-step-title {
+  display: block;
+  color: var(--md-default-fg-color);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.md-typeset .fabricops-step-chevron {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 0.1rem solid var(--md-default-fg-color--light);
+  border-bottom: 0.1rem solid var(--md-default-fg-color--light);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.md-typeset details.fabricops-workflow-step[open] > summary .fabricops-step-chevron {
+  transform: rotate(225deg);
+}
+
+.md-typeset details.fabricops-workflow-step[open] > summary {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .fabricops-step-body {
+  padding: 0.15rem 0.15rem 1rem 2.7rem;
+}
+
+.md-typeset .fabricops-step-body > :first-child {
+  margin-top: 0.55rem;
+}
+
+.md-typeset .fabricops-step-body > :last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 44.9844em) {
+  .md-typeset .fabricops-step-body {
+    padding-left: 0.15rem;
+  }
+}
 </style>
 
 <div class="fabricops-section-block" markdown>
@@ -54,17 +153,26 @@ For the deeper engineering reasoning behind `00_env_config`, FabricOps I/O funct
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-FabricOps deliberately loops between Governance and Engineering Development before the approved pipeline runs in Production.
+FabricOps deliberately loops between Governance and Engineering Development before the approved pipeline runs in Production. Scan the seven stages below, then expand a stage when you need the implementation detail.
 
 <!-- VIDEO SLOT: Governance and Engineering loop -->
 
-### 1. Governance creates Data Stewards and a Data Agreement in `01_governance`
+<div class="fabricops-workflow-steps" markdown>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">1</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Create Data Stewards and a Data Agreement in <code>01_governance</code></span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 In `01_governance`, Governance creates the provider and recipient **Data Stewards** and a **Data Agreement** between them.
 
 The Data Agreement establishes the governed sharing context: who is providing and receiving the data, the business purpose, approved usages, validity, and other agreement-level governance information.
 
-### 2. Engineering builds the ETL pipeline within `02_pipeline`
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">2</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Build the ETL pipeline within <code>02_pipeline</code></span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Engineering Development uses `02_pipeline` to read one or more configured sources, perform project-specific transformations, and write governed target tables to the configured Lakehouse or Warehouse.
 
@@ -94,7 +202,12 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 
 The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
-### 3. Governance selects the `table_id` in `01_governance` and drafts the governed Data Contract definition
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code> and draft the governed Data Contract definition</span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering.
 
@@ -106,7 +219,12 @@ Governance can then add:
 
 Together, these records form the draft governed definition for that `table_id`. Governance can refine this definition before it is frozen into an immutable Data Contract version.
 
-### 4. Engineering runs the governed definition in `02_pipeline` and validates that it works
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Run the governed definition in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected frozen Data Contract.
 
@@ -114,7 +232,12 @@ The pipeline evaluates the governed expectations against the real ETL and writes
 
 If the expectations do not yet work, the workflow returns to `01_governance` so Governance can refine the definition before Engineering validates it again.
 
-### 5. Governance freezes the `table_id` into a Data Contract, links it to the Data Agreement, and activates it in `01_governance`
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Freeze the Data Contract, link the Data Agreement, then activate the approved version</span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Once the governed definition is ready, Governance uses `01_governance` to freeze an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
 
@@ -130,19 +253,34 @@ Engineering Development tests the frozen version in `02_pipeline`. After governa
 
     **Promote** moves the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process.
 
-### 6. Engineering promotes `02_pipeline` to Production and runs it with the active Data Contract for each `table_id`
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">6</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Production</span><span class="fabricops-step-title">Promote <code>02_pipeline</code> and run with the active Data Contract</span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
 
 At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those frozen expectations.
 
-### 7. Consumers use `99_explore` to consume approved Production data only
+</div>
+</details>
+
+<details class="fabricops-workflow-step" markdown>
+<summary><span class="fabricops-step-number">7</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Consumers</span><span class="fabricops-step-title">Use <code>99_explore</code> to consume approved Production data only</span></span><span class="fabricops-step-chevron"></span></summary>
+<div class="fabricops-step-body" markdown>
 
 Project-specific consumer workspaces use `99_explore` to read approved data from Engineering Production for Power BI, AI, data science, exploration, and other downstream project work.
 
 Consumer workspaces do not recreate the Production pipeline or maintain their own Production copy of the engineering workflow. Engineering Production remains the trusted Production source.
 
 <!-- VIDEO SLOT: Development to Production to Consumer -->
+
+</div>
+</details>
+
+</div>
 
 </div>
 
