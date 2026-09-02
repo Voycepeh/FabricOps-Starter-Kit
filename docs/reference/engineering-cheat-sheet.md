@@ -14,7 +14,7 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
 4. [PySpark-first transformation](#pyspark-first)
 5. [Lakehouse-first engineering](#lakehouse-first)
 6. [Single-target pipeline implementation](#single-target-pipeline)
-7. [Governance as Code](metadata.md)
+7. [Governance as Code](#governance-as-code)
 8. [Medallion architecture implementation](#medallion-architecture)
 9. [Incremental load implementation](#full-vs-incremental)
 10. [Failure-safe processing and recovery](#failure-safe-processing)
@@ -171,6 +171,8 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
     02_pipeline + PySpark
     ```
 
+    This keeps source-specific connector handling in the Fabric ingestion layer while preserving the normal FabricOps notebook path for governed transformation.
+
     **Microsoft Learn:** [Data ingestion options for a Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/load-data-lakehouse) · [SharePoint Folder connector](https://learn.microsoft.com/en-us/fabric/data-factory/connector-sharepoint-folder)
 
 <span id="config-driven-engineering"></span>
@@ -274,6 +276,28 @@ Use this as the jump-off point for the engineering decisions built into FabricOp
     The reason is failure isolation. Independent physical writes inside one notebook can partially succeed, and there is no notebook-level transaction that rolls all targets back together. If another persisted governed output is required, create a separate downstream pipeline.
 
     Keep persisted dependencies directional and acyclic. A pipeline should not use its own target as an engineer-authored source, and persisted intermediate stages should be explicit outputs of upstream pipelines.
+
+<span id="governance-as-code"></span>
+
+??? info "Governance as Code"
+
+    FabricOps keeps governance and engineering context in **shared metadata tables inside Fabric**, centred on one canonical `table_id` for each governed table.
+
+    Engineering writes technical context such as the Data Catalogue, Profile, Profile Frequency, and Lineage. Governance reads that same `table_id` and adds Enrichment, Guardrails, Data Agreements, and Data Contracts. `02_pipeline` can then resolve and validate those structured definitions instead of relying on a separate document-only governance process.
+
+    ```text
+    Engineering metadata
+    Catalogue + Profile + Lineage
+              ↓
+          canonical table_id
+              ↓
+    Governance metadata
+    Enrichment + Guardrails + Contract
+              ↓
+        governed 02_pipeline
+    ```
+
+    The goal is a hassle-free, self-contained Fabric operating model: the governed context travels with the engineering workflow through the shared Metadata Lakehouse. For the exact tables and fields, use the [Metadata Tables reference](metadata.md).
 
 <span id="pyspark-first"></span>
 
@@ -572,6 +596,7 @@ Use these when you already know what you want to do and only need a quick syntax
     df = df.withColumn("full_name", F.concat_ws(" ", "first_name", "last_name"))
     df = df.withColumn("modified_date", F.to_date("modified_datetime"))
     df = df.withColumn("month_start", F.date_trunc("month", "modified_datetime"))
+
     exploded_df = df.withColumn("tag", F.explode("tags"))
 
     flat_df = df.select(
