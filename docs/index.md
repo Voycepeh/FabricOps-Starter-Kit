@@ -4,7 +4,7 @@
 
 **Microsoft Fabric gives you the platform. FabricOps gives you the operating practice.**
 
-FabricOps is a plug-and-play Data Engineering and Data Governance practice for Microsoft Fabric. It packages the repeatable foundations teams otherwise need to define project by project so they can focus on project-specific engineering, analytics, and AI-assisted development.
+FabricOps is a plug-and-play Data Engineering and Data Governance practice for Microsoft Fabric. It packages the repeatable foundations teams otherwise need to define project by project so they can focus on project-specific engineering and analytics.
 
 <!-- VIDEO SLOT: Main FabricOps landing-page explainer (target 2.5-4 minutes) -->
 
@@ -58,12 +58,6 @@ FabricOps does not try to replace project-specific engineering logic. Instead, i
 Engineering Development builds and observes the data. Governance uses the shared metadata to add meaning and governed expectations. Engineering validates those expectations. Governance freezes and activates the approved Data Contract. Engineering Production runs the validated pipeline against the active contract. Project-specific consumer workspaces then use approved Production data through `99_explore`.
 
 [See the workflow in detail →](how-fabricops-works.md)
-
-## Built for AI-assisted engineering
-
-FabricOps provides the structure, workflow, and Guardrails while engineers and analysts remain responsible for project-specific logic and decisions about what the data should do and what “good” looks like.
-
-Teams can use Copilot, AI Functions, or other approved AI assistance to accelerate coding, testing, documentation, and analysis without making the core Production foundation depend on external tooling or nondeterministic decisions.
 
 ## Reference and resources
 
