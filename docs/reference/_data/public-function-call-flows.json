@@ -8124,7 +8124,35 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._source_completion",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 62,
+      "source_end_line": 90,
+      "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
+      "source_start_line": 62,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_validate_watermark_progress",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 59,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 34,
       "supports_live_contract": false,
@@ -8150,9 +8178,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 223,
+      "source_end_line": 258,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 65,
+      "source_start_line": 93,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14879,7 +14907,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 9,
+      "direct_call_count": 10,
       "discontinued_in": null,
       "examples": ">>> write_prep = write_pipeline_prep(\n...     transformed_df,\n...     target_table_id=\"lakehouse:unified:dbo:students\",\n...     source_preps=[read_prep],\n... )\n>>> write_prep[\"mode\"]\n'append'",
       "files_touched": [
@@ -14922,13 +14950,13 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
-      "raises_documentation": "ValueError\n    If preparation is incomplete or an unsafe target/strategy combination\n    is requested.",
+      "raises_documentation": "ValueError\n    If preparation is incomplete or an unsafe target/strategy combination\n    is requested, or if transformed incremental-watermark output cannot\n    persist the captured upper watermark on a target row.",
       "refactor_signals": [
         {
           "evidence": [
             {
               "depth": 7,
-              "width": 9
+              "width": 10
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -14940,18 +14968,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Audited target DataFrame, physical writer mode/options, the unchanged\n    resolved processing definition, its prepared scope, target Lineage\n    preparation, and governed completion context for the physical writer.",
-      "scope": 40,
+      "scope": 41,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 223,
+      "source_end_line": 258,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 65,
+      "source_start_line": 93,
       "summary": "Prepare governed target write inputs without physically writing the target.",
-      "transitive_function_count": 40,
-      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nWarehouse overwrite requires a full-dataset source result because Warehouse\nhas no Lakehouse-style partition replacement. Lakehouse partition overwrite\nremains scoped with ``replaceWhere``.",
-      "width": 9
+      "transitive_function_count": 41,
+      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nWarehouse overwrite requires a full-dataset source result because Warehouse\nhas no Lakehouse-style partition replacement. Lakehouse partition overwrite\nremains scoped with ``replaceWhere``. For a bounded watermark scope, this\nfunction evaluates the transformed DataFrame before publication and\nrequires its maximum ``_watermark_value`` to equal the captured source\nupper bound. Empty or truncated output fails rather than leaving\ntarget-backed progress permanently behind the processed window.",
+      "width": 10
     },
     {
       "architecture_violation_count": 0,
@@ -18984,6 +19012,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
+      "caller_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
       "violation_details": [],
@@ -21269,13 +21305,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 13,
-    "defined_function_count": 367,
+    "defined_function_count": 368,
     "detached_function_count": 18,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 30,
-    "relationship_count": 761,
+    "relationship_count": 762,
     "source_referenced_function_count": 16,
-    "used_function_count": 336
+    "used_function_count": 337
   },
   "used_functions": [
     "fabricops_kit.config.audit._context_get",
@@ -21496,6 +21532,7 @@
     "fabricops_kit.pipeline.write_pipeline_prep._delta_literal",
     "fabricops_kit.pipeline.write_pipeline_prep._replace_where",
     "fabricops_kit.pipeline.write_pipeline_prep._source_completion",
+    "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
     "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
     "fabricops_kit.widgets.enrichment_shared._enrichment_values",
     "fabricops_kit.widgets.enrichment_shared._rows",

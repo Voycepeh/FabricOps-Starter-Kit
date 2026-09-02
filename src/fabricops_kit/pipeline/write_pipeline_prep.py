@@ -31,6 +31,34 @@ def _replace_where(partition_column: str, values: list[Any]) -> str:
     return f"`{quoted}` IN ({', '.join(_delta_literal(value) for value in values)})"
 
 
+def _validate_watermark_progress(df, upper_bound: Any) -> None:
+    """Require transformed output to retain the captured source upper watermark."""
+    from pyspark.sql import functions as F
+
+    state = df.agg(
+        F.count(F.lit(1)).alias("row_count"),
+        F.max(F.col("_watermark_value")).alias("maximum_watermark"),
+    ).collect()[0]
+    if not int(state["row_count"] or 0):
+        raise ValueError(
+            "incremental_watermark transformed output is empty; target-backed watermark persistence "
+            "requires at least one published row carrying the captured upper watermark."
+        )
+    maximum = state["maximum_watermark"]
+    try:
+        matches_upper = maximum == upper_bound
+    except TypeError as exc:
+        raise ValueError(
+            "The transformed target watermark cannot be compared with the captured source upper watermark."
+        ) from exc
+    if not matches_upper:
+        raise ValueError(
+            f"incremental_watermark transformed output reaches {maximum!r}, but the captured upper watermark "
+            f"is {upper_bound!r}; target-backed watermark persistence requires a published row carrying "
+            "the captured upper watermark."
+        )
+
+
 def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Validate source preparation and return one truthful target scope plus completion rows."""
     if not source_preps:
@@ -93,7 +121,8 @@ def write_pipeline_prep(
     ------
     ValueError
         If preparation is incomplete or an unsafe target/strategy combination
-        is requested.
+        is requested, or if transformed incremental-watermark output cannot
+        persist the captured upper watermark on a target row.
 
     Notes
     -----
@@ -105,7 +134,11 @@ def write_pipeline_prep(
     engine-specific physical execution only after this preparation succeeds.
     Warehouse overwrite requires a full-dataset source result because Warehouse
     has no Lakehouse-style partition replacement. Lakehouse partition overwrite
-    remains scoped with ``replaceWhere``.
+    remains scoped with ``replaceWhere``. For a bounded watermark scope, this
+    function evaluates the transformed DataFrame before publication and
+    requires its maximum ``_watermark_value`` to equal the captured source
+    upper bound. Empty or truncated output fails rather than leaving
+    target-backed progress permanently behind the processed window.
 
     Examples
     --------
@@ -160,6 +193,8 @@ def write_pipeline_prep(
         from pyspark.sql import functions as F
 
         df = df.withColumn("_watermark_value", F.col(watermark_column))
+        if scope.get("type") == "watermark":
+            _validate_watermark_progress(df, scope["upper_bound"])
     if strategy == "overwrite" and scope.get("type") == "multiple_sources":
         raise ValueError(
             "overwrite cannot infer one safe target scope from differing source scopes; "

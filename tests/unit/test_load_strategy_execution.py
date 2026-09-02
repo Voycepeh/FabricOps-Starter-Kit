@@ -212,7 +212,8 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
 
     _install_delta(monkeypatch, ExistingDelta)
     incoming = spark_session.createDataFrame(
-        [(1, "active", "old-audit")], ["student_id", "status", "_committed_by"]
+        [(1, "active", 200, "old-audit")],
+        ["student_id", "status", "_watermark_value", "_committed_by"],
     )
     shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
@@ -223,6 +224,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
         "keys": "target.`student_id` <=> source.`student_id`",
         "change": "NOT (target.`status` <=> source.`status`)",
         "technical_update": {
+            "_watermark_value": "source.`_watermark_value`",
             "_committed_at": "source.`_committed_at`",
             "_committed_by": "source.`_committed_by`",
             "_activity_id": "source.`_activity_id`",
@@ -241,3 +243,155 @@ def test_scd2_explicit_tracking_rejects_technical_columns():
             ["student_id", "status", "effective_at", "_committed_at"],
             {"key_columns": ["student_id"], "effective_column": "effective_at", "tracked_columns": ["_committed_at"]},
         )
+
+
+def test_scd2_identical_business_state_updates_watermark_without_new_version(monkeypatch, spark_session):
+    """An unchanged current row takes only the technical SCD2 merge branch."""
+    from pyspark.sql import functions as F
+
+    recorded = {"appends": 0}
+    current = spark_session.createDataFrame(
+        [(1, "active", "2026-08-22", 100, True)],
+        ["student_id", "status", "effective_at", "_watermark_value", "_is_current"],
+    )
+
+    class Merge:
+        def whenMatchedUpdate(self, *, condition, set):
+            recorded.setdefault("updates", []).append((condition, set))
+            return self
+
+        def execute(self):
+            recorded["executed"] = True
+
+    class ExistingDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return True
+
+        @staticmethod
+        def forPath(_spark, _path):
+            return ExistingDelta()
+
+        def alias(self, _name):
+            return self
+
+        def merge(self, _source, condition):
+            recorded["merge_condition"] = condition
+            return Merge()
+
+        def toDF(self):
+            return current
+
+    _install_delta(monkeypatch, ExistingDelta)
+    monkeypatch.setattr(
+        shared,
+        "write_lakehouse_table_core",
+        lambda *_args, **_kwargs: recorded.__setitem__("appends", recorded["appends"] + 1),
+    )
+    incoming = (
+        spark_session.createDataFrame(
+            [(1, "active", "2026-08-22", 200)],
+            ["student_id", "status", "effective_at", "_watermark_value"],
+        )
+        .withColumn("_effective_from", F.col("effective_at"))
+        .withColumn("_effective_to", F.lit(None).cast("string"))
+        .withColumn("_is_current", F.lit(True))
+    )
+
+    shared.execute_lakehouse_processing(
+        incoming,
+        table_name="students",
+        target="unified",
+        schema="dbo",
+        processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
+        scope={"read_mode": "incremental_subset", "scope": {
+            "type": "watermark", "column": "effective_at", "lower_bound": 100, "upper_bound": 200,
+        }},
+        context={},
+    )
+
+    expire, technical = recorded["updates"]
+    assert expire[0] == "NOT (target.`status` <=> source.`status`)"
+    assert technical[0] == "NOT (NOT (target.`status` <=> source.`status`))"
+    assert technical[1]["_watermark_value"] == "source.`_watermark_value`"
+    assert recorded["appends"] == 0
+
+
+def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch, spark_session):
+    """Replaying an already-applied business state does not append another version."""
+    from pyspark.sql import functions as F
+
+    history = [{
+        "student_id": 1,
+        "status": "old",
+        "effective_at": "2026-08-21",
+        "_watermark_value": 100,
+        "_effective_from": "2026-08-21",
+        "_effective_to": "9999-12-31",
+        "_is_current": True,
+    }]
+    source_rows = []
+
+    class Merge:
+        def whenMatchedUpdate(self, *, condition, set):
+            return self
+
+        def execute(self):
+            source = source_rows[-1]
+            current = next(row for row in history if row["student_id"] == source["student_id"] and row["_is_current"])
+            if current["status"] != source["status"]:
+                current["_is_current"] = False
+                current["_effective_to"] = source["effective_at"]
+            else:
+                current["_watermark_value"] = source["_watermark_value"]
+
+    class StatefulDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return True
+
+        @staticmethod
+        def forPath(_spark, _path):
+            return StatefulDelta()
+
+        def alias(self, _name):
+            return self
+
+        def merge(self, source, _condition):
+            source_rows.append(source.collect()[0].asDict())
+            return Merge()
+
+        def toDF(self):
+            return spark_session.createDataFrame(history)
+
+    def append_version(frame, *_args, **_kwargs):
+        history.extend(row.asDict() for row in frame.collect())
+
+    _install_delta(monkeypatch, StatefulDelta)
+    monkeypatch.setattr(shared, "write_lakehouse_table_core", append_version)
+    incoming = (
+        spark_session.createDataFrame(
+            [(1, "new", "2026-08-22", 200)],
+            ["student_id", "status", "effective_at", "_watermark_value"],
+        )
+        .withColumn("_effective_from", F.col("effective_at"))
+        .withColumn("_effective_to", F.lit(None).cast("string"))
+        .withColumn("_is_current", F.lit(True))
+    )
+    kwargs = {
+        "table_name": "students",
+        "target": "unified",
+        "schema": "dbo",
+        "processing": {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
+        "scope": {"read_mode": "incremental_subset", "scope": {
+            "type": "watermark", "column": "effective_at", "lower_bound": 100, "upper_bound": 200,
+        }},
+        "context": {},
+    }
+
+    shared.execute_lakehouse_processing(incoming, **kwargs)
+    shared.execute_lakehouse_processing(incoming, **kwargs)
+
+    assert len(history) == 2
+    assert sum(bool(row["_is_current"]) for row in history) == 1
+    assert [row["status"] for row in history if row["_is_current"]] == ["new"]

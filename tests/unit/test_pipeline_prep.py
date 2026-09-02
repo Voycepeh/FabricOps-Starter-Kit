@@ -417,6 +417,33 @@ def test_write_prep_rejects_unsafe_incremental_watermark_append(monkeypatch):
         )
 
 
+@pytest.mark.parametrize(
+    ("rows", "message"),
+    [
+        ([(1, 180)], "reaches 180.*captured upper watermark is 200"),
+        ([], "transformed output is empty"),
+    ],
+    ids=["maximum-below-upper", "empty-output"],
+)
+def test_write_prep_rejects_watermark_output_that_cannot_advance_target(
+    monkeypatch, spark_session, rows, message
+):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    frame = spark_session.createDataFrame(rows, "student_id long, modified_at long")
+    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: pytest.fail("audit"))
+
+    with pytest.raises(ValueError, match=message):
+        write_module.write_pipeline_prep(
+            frame,
+            target_table_id=identity["table_id"],
+            source_preps=[{
+                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+                "read_mode": "incremental_subset",
+                "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200},
+            }],
+        )
+
+
 def test_write_prep_rejects_skipped_source(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
     frame = spark_session.createDataFrame([(1,)], ["student_id"])

@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:65`
+`fabricops_kit/pipeline/write_pipeline_prep.py:93`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L65-L223">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L93-L258">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -75,7 +75,8 @@ Audited DataFrame, target identity, resolved target processing, writer settings,
 
 ValueError
     If preparation is incomplete or an unsafe target/strategy combination
-    is requested.
+    is requested, or if transformed incremental-watermark output cannot
+    persist the captured upper watermark on a target row.
 
 ## Notes
 
@@ -89,7 +90,11 @@ targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.
 Warehouse overwrite requires a full-dataset source result because Warehouse
 has no Lakehouse-style partition replacement. Lakehouse partition overwrite
-remains scoped with ``replaceWhere``.
+remains scoped with ``replaceWhere``. For a bounded watermark scope, this
+function evaluates the transformed DataFrame before publication and
+requires its maximum ``_watermark_value`` to equal the captured source
+upper bound. Empty or truncated output fails rather than leaving
+target-backed progress permanently behind the processed window.
 
 </div>
 
