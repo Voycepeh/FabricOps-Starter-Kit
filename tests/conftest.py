@@ -189,7 +189,7 @@ STALE_REFERENCE_TESTS = {
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Skip stale reference assertions superseded by the current docs structure."""
     skip_stale_reference_expectation = pytest.mark.skip(
-        reason="Reference assertion predates the standalone Function Call Graph documentation structure."
+        reason="Reference assertion predates the current documentation structure."
     )
     for item in items:
         if item.name in STALE_REFERENCE_TESTS:
