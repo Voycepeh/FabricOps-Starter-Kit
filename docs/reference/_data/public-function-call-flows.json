@@ -4974,7 +4974,7 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._watermark_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 272,
+      "source_end_line": 279,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
       "source_start_line": 224,
       "supports_live_contract": false,
@@ -5000,9 +5000,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 400,
+      "source_end_line": 410,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 275,
+      "source_start_line": 282,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8178,7 +8178,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 258,
+      "source_end_line": 259,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 93,
       "supports_live_contract": false,
@@ -13374,12 +13374,12 @@
         "large_width_or_depth"
       ],
       "signature": "def read_pipeline_prep(source_table_id: str, *, source_read_strategy: str, target_table_id: str | None=None, source_watermark_column: str | None=None, source_partition_column: str | None=None) -> dict[str, Any]",
-      "source_end_line": 400,
+      "source_end_line": 410,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 275,
+      "source_start_line": 282,
       "summary": "Prepare an explicit governed source read without reading business rows.",
       "transitive_function_count": 109,
-      "usage_notes": "Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.\nSuccessful watermark progress is the maximum target ``_watermark_value``;\nthere is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change\ndetection. Change safety resolves the source table's own processing through\n:func:`check_changes`; target selection and publication are intentionally\noutside this function.",
+      "usage_notes": "Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.\nThe first watermark run remains a ``full_dataset`` read, while its scope\nretains the watermark column and captured upper bound so write preparation\ncan verify that target-backed progress reaches the inspected source state.\nSuccessful watermark progress is the maximum target ``_watermark_value``;\nthere is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change\ndetection. Change safety resolves the source table's own processing through\n:func:`check_changes`; target selection and publication are intentionally\noutside this function.",
       "width": 10
     },
     {
@@ -14973,12 +14973,12 @@
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 258,
+      "source_end_line": 259,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 93,
       "summary": "Prepare governed target write inputs without physically writing the target.",
       "transitive_function_count": 41,
-      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nWarehouse overwrite requires a full-dataset source result because Warehouse\nhas no Lakehouse-style partition replacement. Lakehouse partition overwrite\nremains scoped with ``replaceWhere``. For a bounded watermark scope, this\nfunction evaluates the transformed DataFrame before publication and\nrequires its maximum ``_watermark_value`` to equal the captured source\nupper bound. Empty or truncated output fails rather than leaving\ntarget-backed progress permanently behind the processed window.",
+      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter, persist target Lineage, or commit source progress. The completion context has no effect\nunless explicitly passed to a FabricOps writer. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nWarehouse overwrite requires a full-dataset source result because Warehouse\nhas no Lakehouse-style partition replacement. Lakehouse partition overwrite\nremains scoped with ``replaceWhere``. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
       "width": 10
     },
     {

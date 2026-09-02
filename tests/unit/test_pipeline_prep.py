@@ -128,7 +128,13 @@ def test_watermark_scope_is_bounded_by_target_state(monkeypatch, previous, upper
     )
     assert result["read_mode"] == expected_mode
     assert "candidate_checkpoint" not in result
-    if expected_mode == "incremental_subset":
+    if previous is None:
+        assert result["scope"] == {
+            "type": "full_dataset",
+            "watermark_column": "modified_datetime",
+            "upper_bound": upper,
+        }
+    elif expected_mode == "incremental_subset":
         assert result["scope"]["lower_inclusive"] is False
         assert result["scope"]["upper_inclusive"] is True
         assert result["scope"]["lower_bound"] == previous
@@ -442,6 +448,52 @@ def test_write_prep_rejects_watermark_output_that_cannot_advance_target(
                 "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200},
             }],
         )
+
+
+@pytest.mark.parametrize(
+    ("rows", "message"),
+    [
+        ([(1, 180)], "reaches 180.*captured upper watermark is 200"),
+        ([], "transformed output is empty"),
+    ],
+    ids=["maximum-below-upper", "empty-output"],
+)
+def test_first_watermark_population_rejects_output_that_cannot_advance_target(
+    monkeypatch, spark_session, rows, message
+):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    frame = spark_session.createDataFrame(rows, "student_id long, modified_at long")
+    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: pytest.fail("audit"))
+
+    with pytest.raises(ValueError, match=message):
+        write_module.write_pipeline_prep(
+            frame,
+            target_table_id=identity["table_id"],
+            source_preps=[{
+                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+                "read_mode": "full_dataset",
+                "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
+            }],
+        )
+
+
+def test_first_watermark_population_accepts_output_at_captured_upper(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
+    frame = spark_session.createDataFrame([(1, 180), (2, 200)], ["student_id", "modified_at"])
+
+    result = write_module.write_pipeline_prep(
+        frame,
+        target_table_id=identity["table_id"],
+        source_preps=[{
+            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
+            "read_mode": "full_dataset",
+            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
+        }],
+    )
+
+    assert result["scope"]["read_mode"] == "full_dataset"
+    assert result["scope"]["scope"]["upper_bound"] == 200
+    assert result["df"].agg({"_watermark_value": "max"}).collect()[0][0] == 200
 
 
 def test_write_prep_rejects_skipped_source(monkeypatch, spark_session):

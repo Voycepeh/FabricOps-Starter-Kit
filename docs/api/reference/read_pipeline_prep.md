@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:275`
+`fabricops_kit/pipeline/read_pipeline_prep.py:282`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L275-L400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L282-L410">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,6 +87,9 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
+The first watermark run remains a ``full_dataset`` read, while its scope
+retains the watermark column and captured upper bound so write preparation
+can verify that target-backed progress reaches the inspected source state.
 Successful watermark progress is the maximum target ``_watermark_value``;
 there is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change
 detection. Change safety resolves the source table's own processing through

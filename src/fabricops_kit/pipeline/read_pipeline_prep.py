@@ -251,7 +251,14 @@ def _watermark_scope(
         )
     previous = _coerce_checkpoint(previous_value, data_type, spark_session=spark_session)
     if previous is None:
-        return {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
+        return {
+            "read_mode": "full_dataset",
+            "scope": {
+                "type": "full_dataset",
+                "watermark_column": column,
+                "upper_bound": upper,
+            },
+        }
     try:
         if upper < previous:
             raise ValueError("Current upper watermark is earlier than the persisted target watermark.")
@@ -314,6 +321,9 @@ def read_pipeline_prep(
     Notes
     -----
     Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
+    The first watermark run remains a ``full_dataset`` read, while its scope
+    retains the watermark column and captured upper bound so write preparation
+    can verify that target-backed progress reaches the inspected source state.
     Successful watermark progress is the maximum target ``_watermark_value``;
     there is no secondary checkpoint commit. Partition subsets reuse FabricOps source observation and change
     detection. Change safety resolves the source table's own processing through
