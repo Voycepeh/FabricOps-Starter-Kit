@@ -67,29 +67,7 @@ Each action page should stay practical and use the same rhythm:
 
 The Guided Demo should not repeat long architecture or engineering explanations. Those concepts live on the pages above so this path can stay focused on doing the work.
 
-## The iterative part of the demo
-
-The same Step 3 → Step 4 → Step 5 loop shown above is the part of the demo that may repeat while the governed definition is being refined:
-
-```mermaid
-flowchart TB
-    G["3 · Governance refines<br/>Enrichment + Guardrails"] --> E["4 · Engineering validates<br/>in 02_pipeline"]
-    E --> D{"Governed expectations pass?"}
-    D -- "No" --> G
-    D -- "Yes" --> F["5 · Freeze immutable<br/>Data Contract version"]
-    F --> T["Test frozen version<br/>in Engineering Development"]
-    T --> FD{"Frozen version passes?"}
-    FD -- "No · refine and freeze a new version" --> G
-    FD -- "Yes" --> A["Governance activates<br/>approved version"]
-    A --> P["6 · Engineering Production"]
-
-    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class F,A focal;
-```
-
-Repeat the author-and-validate loop until the governed expectations are ready to freeze, test, approve, and activate.
-
-For the conceptual explanation of this loop and the Data Contract lifecycle, see [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop).
+For the conceptual explanation of the Step 3 → Step 4 → Step 5 loop and the Data Contract lifecycle, see [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop).
 
 ## Promotion mechanism
 
