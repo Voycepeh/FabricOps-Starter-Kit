@@ -60,7 +60,7 @@ nav:
       - Functions:
           - Function Reference: reference/index.md
           - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
-          - Function Call Graph: function-call-graph.md
+          - Function Call Graph: reference/function-call-graph.md
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - missing_values: reference/dq-rules/missing-values.md
@@ -138,5 +138,6 @@ extra_css:
   - stylesheets/release-pages.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
+  - stylesheets/workflow.css
   - stylesheets/table-controls.css
   - stylesheets/image-borders.css
