@@ -306,6 +306,78 @@ expandEngineeringChoiceFromHash();
 
     The goal is a hassle-free, self-contained Fabric operating model: the governed context travels with the engineering workflow through the shared Metadata Lakehouse. For the exact tables and fields, use the [Metadata Tables reference](metadata.md).
 
+<span id="pii-guardrail"></span>
+
+??? info "Direct PII guardrail and token vault"
+
+    FabricOps treats Direct PII as a governed engineering constraint, not only as a descriptive metadata tag.
+
+    Governance can classify a column as Direct PII in Enrichment. When that classification is active, Engineering should not allow the raw identifier to flow through the governed pipeline untreated.
+
+    The intended validation order is deliberately simple:
+
+    ```text
+    check_schema()
+          ↓
+    check_pii_guardrail()
+          ↓
+    continue read / write
+    ```
+
+    `check_pii_guardrail()` should evaluate both configured sources and the governed target against the active Enrichment metadata:
+
+    | Direct PII state | Result |
+    | --- | --- |
+    | Classified Direct PII column is absent | Pass |
+    | Classified Direct PII column is present in its approved tokenised form | Pass |
+    | Classified Direct PII column is present as raw PII | Warn or fail according to the guardrail mode |
+
+    On the **read path**, the check protects downstream transformation from silently ingesting untreated Direct PII. If the classified column was already removed, there is nothing further to protect. If it is present, FabricOps verifies that the protected representation is being used before the pipeline proceeds.
+
+    On the **write path**, the governed DataFrame must contain the tokenised representation before the Production write is allowed. The raw value must not be written to the governed target.
+
+    ```text
+    Raw / upstream DataFrame
+             ↓
+        check_schema()
+             ↓
+      check_pii_guardrail()
+             ↓
+        tokenise PII
+          ↙       ↘
+    governed     protected
+      target     token vault
+      TOKEN      TOKEN ↔ ORIGINAL
+    ```
+
+    ### Why tokenisation instead of reversible hashing
+
+    If the original identifier must be recoverable later, the design is **tokenisation / pseudonymisation**, not a one-way hash. FabricOps should not invent a reversible hash or scrambling method based on a stored random seed.
+
+    The governed table keeps only the token. Recovery happens through a separately protected mapping store that contains the token-to-original-value relationship.
+
+    ### Keep the token vault outside normal governance metadata
+
+    The token mapping is sensitive data, not ordinary metadata. It should therefore not live in the shared Metadata Lakehouse tables that hold Catalogue, Enrichment, Guardrails, Agreements, or Contracts.
+
+    FabricOps should keep the recovery mappings in a separately permissioned `pii_token_vault` area. Prefer isolation per governed `table_id` rather than one universal mapping table when table-level delegation is required.
+
+    ```text
+    pii_token_vault
+    ├── customer
+    │   └── TOKEN ↔ ORIGINAL_VALUE
+    ├── employee
+    │   └── TOKEN ↔ ORIGINAL_VALUE
+    └── another_governed_table
+        └── TOKEN ↔ ORIGINAL_VALUE
+    ```
+
+    A vault table can also retain the governed `table_id`, `column_id`, token version, and audit timestamps needed to manage the mapping safely. The token vault itself requires stricter access than the pseudonymised Production table.
+
+    This separation also supports table-level access patterns: a user can be granted access to one governed Production table, and only explicitly authorised users or services need access to that table's token mapping. Access to one token map should not automatically expose mappings for every governed dataset.
+
+    **FabricOps recommendation:** treat Direct PII as pass only when it is absent or already protected. Raw Direct PII should warn or fail before the governed read/write proceeds, and reversible recovery mappings should remain isolated from normal governance metadata.
+
 <span id="pyspark-first"></span>
 
 ??? info "PySpark-first transformation"
