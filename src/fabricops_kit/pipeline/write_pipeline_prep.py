@@ -13,6 +13,7 @@ from fabricops_kit.pipeline.shared import (
     resolve_table_processing_definition,
     resolve_target_audit_fields,
 )
+from fabricops_kit.security.shared import resolve_direct_pii_columns, tokenise_direct_pii
 
 
 def _delta_literal(value: Any) -> str:
@@ -177,8 +178,9 @@ def write_pipeline_prep(
     Returns
     -------
     dict
-        Audited target DataFrame, physical writer mode/options, the unchanged
-        resolved processing definition, its prepared scope, and target Lineage preparation.
+        Tokenised and audited target DataFrame, physical writer mode/options,
+        the unchanged resolved processing definition, its prepared scope, and
+        target Lineage preparation.
 
     Raises
     ------
@@ -190,8 +192,11 @@ def write_pipeline_prep(
     Notes
     -----
     FabricOps resolves one run-level audit record and adds only compact target
-    provenance fields. This function does not call a Lakehouse or Warehouse
-    writer or commit source progress. It persists target Lineage at the governed
+    provenance fields. Direct PII columns are replaced with opaque tokens before
+    audit fields are added, and unique reversible mappings are persisted to the
+    separately configured, table-isolated ``pii_token_vault`` target. This
+    function does not call a Lakehouse or Warehouse writer or commit source
+    progress. It persists target Lineage at the governed
     preparation boundary. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
@@ -290,6 +295,22 @@ def write_pipeline_prep(
         df = df.withColumn("_partition_bucket", F.col(partition_column))
         if df.where(F.col("_partition_bucket").isNull()).limit(1).count():
             raise ValueError("incremental_partition requires non-null _partition_bucket values on every target row.")
+    direct_pii_columns = resolve_direct_pii_columns(
+        config,
+        env,
+        target_identity["table_id"],
+        spark_session=getattr(df, "sparkSession", None),
+        context=context,
+    )
+    df = tokenise_direct_pii(
+        df,
+        config=config,
+        env=env,
+        table_id=target_identity["table_id"],
+        columns=direct_pii_columns,
+        spark_session=getattr(df, "sparkSession", None),
+        context=context,
+    )
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
     persist_lineage_participation(

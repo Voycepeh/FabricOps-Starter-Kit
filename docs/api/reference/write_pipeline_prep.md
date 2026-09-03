@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:157`
+`fabricops_kit/pipeline/write_pipeline_prep.py:158`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L157-L333">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L158-L354">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,8 +83,11 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 FabricOps resolves one run-level audit record and adds only compact target
-provenance fields. This function does not call a Lakehouse or Warehouse
-writer or commit source progress. It persists target Lineage at the governed
+provenance fields. Direct PII columns are replaced with opaque tokens before
+audit fields are added, and unique reversible mappings are persisted to the
+separately configured, table-isolated ``pii_token_vault`` target. This
+function does not call a Lakehouse or Warehouse writer or commit source
+progress. It persists target Lineage at the governed
 preparation boundary. Lakehouse and Warehouse
 targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.

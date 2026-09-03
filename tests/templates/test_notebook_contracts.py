@@ -303,6 +303,8 @@ def test_02_pipeline_separates_source_and_target_ownership():
     assert "TARGET" not in extract
     assert 'source_table_id=source["table_id"]' in source_prepare
     assert 'check_schema(table_id=source["table_id"])' in source_prepare
+    assert 'check_pii_guardrail(table_id=source["table_id"])' in source_prepare
+    assert source_prepare.index("check_schema(") < source_prepare.index("check_pii_guardrail(")
     assert 'table_id=source["table_id"]' in source_prepare
     assert 'table_id=target["table_id"]' in target_guard
     assert 'check_dq(' in target_guard

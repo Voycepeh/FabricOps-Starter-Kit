@@ -4,6 +4,7 @@ from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 from fabricops_kit.pipeline.profile_and_register_table import profile_and_register_table
 from fabricops_kit.pipeline.check_schema import check_schema
+from fabricops_kit.pipeline.check_pii_guardrail import check_pii_guardrail
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_changes import check_changes
 from fabricops_kit.pipeline.check_dq import check_dq
@@ -13,6 +14,7 @@ from fabricops_kit.pipeline.shared import stop_if_failed
 
 __all__ = [
     "check_schema",
+    "check_pii_guardrail",
     "check_freshness",
     "check_changes",
     "check_dq",

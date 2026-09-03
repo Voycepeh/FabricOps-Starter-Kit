@@ -23,6 +23,7 @@ SUPPORTED_PUBLIC_API = (
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
     "fabricops_kit.pipeline.check_schema",
+    "fabricops_kit.pipeline.check_pii_guardrail",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_changes",
     "fabricops_kit.pipeline.check_dq.check_dq",

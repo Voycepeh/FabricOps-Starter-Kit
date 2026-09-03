@@ -149,9 +149,9 @@
       "qualified_name": "fabricops_kit.__getattr__",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 103,
+      "source_end_line": 105,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 93,
+      "source_start_line": 95,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -175,9 +175,9 @@
       "qualified_name": "fabricops_kit._load_package_version",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 116,
+      "source_end_line": 118,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 106,
+      "source_start_line": 108,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -349,6 +349,7 @@
         "fabricops_kit.pipeline.shared.persist_lineage_participation",
         "fabricops_kit.pipeline.shared.resolve_target_audit_fields",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
         "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
         "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
         "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
@@ -367,6 +368,8 @@
         "fabricops_kit.pipeline.shared.resolve_target_audit_fields",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
         "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared::<module>",
         "fabricops_kit.widgets.shared::<module>",
@@ -1271,9 +1274,11 @@
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
-        "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
+        "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
+        "fabricops_kit.security.shared.load_token_vault_rows"
       ],
       "inbound_source_references": [
         "fabricops_kit.config.audit.build_runtime_audit_fields",
@@ -1285,12 +1290,16 @@
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.resolve_target_store",
         "fabricops_kit.io.shared::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.observe_table::<module>",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
-        "fabricops_kit.pipeline.shared::<module>"
+        "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
@@ -1334,6 +1343,8 @@
         "fabricops_kit.pipeline.shared._resolve_data_contract_version",
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
         "fabricops_kit.pipeline.shared.resolve_active_data_contract",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
         "fabricops_kit.widgets.shared.read_metadata_table_or_empty"
       ],
       "inbound_source_references": [
@@ -1348,6 +1359,9 @@
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
         "fabricops_kit.pipeline.shared.resolve_active_data_contract",
         "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.shared.read_metadata_table_or_empty",
         "fabricops_kit.widgets.shared::<module>"
       ],
@@ -1380,6 +1394,7 @@
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table",
@@ -1406,6 +1421,8 @@
         "fabricops_kit.pipeline.check_dq::<module>",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -2449,6 +2466,9 @@
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_id",
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
         "fabricops_kit.widgets.enrichment_shared.read_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared.write_enrichment_records",
         "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
@@ -2479,6 +2499,10 @@
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
         "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.enrichment_shared.read_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared.write_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared::<module>",
@@ -2628,6 +2652,7 @@
         "fabricops_kit.io.shared.read_lakehouse_table_core",
         "fabricops_kit.io.shared.read_warehouse_query_core",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
@@ -2655,6 +2680,8 @@
         "fabricops_kit.io.shared.read_warehouse_query_core",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -2861,6 +2888,7 @@
       "inbound_callers": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.pipeline.check_changes._observation_changes",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_lakehouse",
         "fabricops_kit.pipeline.read_pipeline_prep._source_upper_watermark",
@@ -2872,6 +2900,8 @@
         "fabricops_kit.pipeline.shared.resolve_active_data_contract",
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_id",
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
         "fabricops_kit.widgets.enrichment_shared.read_enrichment_records",
         "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
         "fabricops_kit.widgets.shared.activate_contract_version",
@@ -2892,6 +2922,8 @@
         "fabricops_kit.config.setup_metadata_tables::<module>",
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_changes::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_lakehouse",
@@ -2907,6 +2939,9 @@
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_id",
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
         "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.enrichment_shared.read_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared::<module>",
         "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
@@ -2952,6 +2987,7 @@
       "function_name": "read_warehouse_query_core",
       "function_type": "shared_function",
       "inbound_callers": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.read_pipeline_prep._source_upper_watermark",
@@ -2959,6 +2995,8 @@
         "fabricops_kit.pipeline.read_pipeline_prep._target_watermark"
       ],
       "inbound_source_references": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -3308,12 +3346,15 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
       ],
       "inbound_source_references": [
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -3395,12 +3436,15 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
       ],
       "inbound_source_references": [
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -3594,6 +3638,7 @@
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
         "fabricops_kit.widgets.enrichment_shared.write_enrichment_records",
         "fabricops_kit.widgets.shared.write_rule_records",
         "fabricops_kit.widgets.shared.write_widget_metadata_row",
@@ -3613,6 +3658,8 @@
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
         "fabricops_kit.pipeline.shared.write_guardrail_result_row",
         "fabricops_kit.pipeline.shared::<module>",
+        "fabricops_kit.security.shared.tokenise_direct_pii",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.enrichment_shared.write_enrichment_records",
         "fabricops_kit.widgets.enrichment_shared::<module>",
         "fabricops_kit.widgets.shared.write_rule_records",
@@ -3931,6 +3978,32 @@
       "source_end_line": 151,
       "source_path": "src/fabricops_kit/pipeline/check_freshness.py",
       "source_start_line": 39,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_public_function",
+      "contract_display": "Preview",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "check_pii_guardrail",
+      "function_type": "public_function",
+      "inbound_callers": [],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline::<module>"
+      ],
+      "lifecycle_status": "preview",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 153,
+      "source_path": "src/fabricops_kit/pipeline/check_pii_guardrail.py",
+      "source_start_line": 25,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7282,6 +7355,7 @@
       "inbound_callers": [
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
         "fabricops_kit.pipeline.shared.check_dq_runtime"
@@ -7291,6 +7365,8 @@
         "fabricops_kit.pipeline.check_changes::<module>",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -7390,11 +7466,14 @@
       "inbound_callers": [
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
         "fabricops_kit.pipeline.shared.resolve_table_processing_definition",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
         "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract"
       ],
       "inbound_source_references": [
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
         "fabricops_kit.pipeline.shared.resolve_table_processing_definition",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns",
+        "fabricops_kit.security.shared::<module>",
         "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
         "fabricops_kit.widgets.widget_select_data_contract::<module>"
       ],
@@ -7448,6 +7527,7 @@
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
         "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
@@ -7459,6 +7539,8 @@
         "fabricops_kit.pipeline.check_dq::<module>",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
@@ -7784,6 +7866,7 @@
       "inbound_callers": [
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table._observe_table_core"
       ],
@@ -7792,6 +7875,8 @@
         "fabricops_kit.pipeline.check_changes::<module>",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.observe_table._observe_table_core",
@@ -7820,9 +7905,12 @@
       "function_name": "stop_if_failed",
       "function_type": "shared_function",
       "inbound_callers": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema"
       ],
       "inbound_source_references": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline::<module>"
@@ -7890,6 +7978,7 @@
       "inbound_callers": [
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
         "fabricops_kit.pipeline.check_schema.check_schema"
       ],
       "inbound_source_references": [
@@ -7897,6 +7986,8 @@
         "fabricops_kit.pipeline.check_changes::<module>",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_freshness::<module>",
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>"
       ],
@@ -7937,9 +8028,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._delta_literal",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 26,
+      "source_end_line": 27,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 18,
+      "source_start_line": 19,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7965,9 +8056,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._overwrite_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 133,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 63,
+      "source_start_line": 64,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7993,9 +8084,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._replace_where",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 32,
+      "source_end_line": 33,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 29,
+      "source_start_line": 30,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8021,9 +8112,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._source_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 154,
+      "source_end_line": 155,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 136,
+      "source_start_line": 137,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8049,9 +8140,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 60,
+      "source_end_line": 61,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 35,
+      "source_start_line": 36,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8075,9 +8166,218 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 333,
+      "source_end_line": 354,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 157,
+      "source_start_line": 158,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_latest_direct_pii",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.security.shared.resolve_direct_pii_columns"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.security.shared.resolve_direct_pii_columns"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared._latest_direct_pii",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 59,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 30,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_row_dict",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.resolve_direct_pii_columns"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared._row_dict",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 27,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 25,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "load_token_vault_rows",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.security.shared.tokenise_direct_pii"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
+        "fabricops_kit.security.shared.tokenise_direct_pii"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 159,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 131,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "pii_guardrail_core",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared.pii_guardrail_core",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 278,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 240,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "resolve_direct_pii_columns",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+        "fabricops_kit.pipeline.check_pii_guardrail::<module>",
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+        "fabricops_kit.pipeline.write_pipeline_prep::<module>"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 122,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 62,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "token_vault_table_name",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.tokenise_direct_pii"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.security.shared.load_token_vault_rows",
+        "fabricops_kit.security.shared.tokenise_direct_pii"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared.token_vault_table_name",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 128,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 125,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "tokenise_direct_pii",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+        "fabricops_kit.pipeline.write_pipeline_prep::<module>"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 237,
+      "source_path": "src/fabricops_kit/security/shared.py",
+      "source_start_line": 162,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12235,6 +12535,82 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
+      "direct_call_count": 15,
+      "discontinued_in": null,
+      "examples": ">>> result = check_pii_guardrail(\"lakehouse:source:dbo:customers\")\n>>> result[\"can_continue\"]\nTrue",
+      "files_touched": [
+        "src/fabricops_kit/config/audit.py",
+        "src/fabricops_kit/config/metadata_schemas.py",
+        "src/fabricops_kit/config/shared.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/pipeline/check_pii_guardrail.py",
+        "src/fabricops_kit/pipeline/shared.py",
+        "src/fabricops_kit/security/shared.py"
+      ],
+      "function_name": "check_pii_guardrail",
+      "has_architecture_violation": false,
+      "has_large_width_or_depth": true,
+      "lifecycle_status": "preview",
+      "live_critical_dependencies": [],
+      "live_critical_dependency_count": 0,
+      "live_since": null,
+      "max_depth": 7,
+      "parameters": [
+        {
+          "description": "Canonical identity of an active registered Catalogue table.",
+          "name": "table_id",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Incoming DataFrame to check. When omitted, FabricOps reads the configured physical table without silently detokenising it.",
+          "name": "dataframe",
+          "required": "No",
+          "type": "DataFrame, optional"
+        }
+      ],
+      "public_import_path": "fabricops_kit.check_pii_guardrail",
+      "public_signals": [
+        "large_width_or_depth"
+      ],
+      "qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "raises_documentation": "ValueError\n    If the registered table or configured store is unsupported.\nSchemaDriftError\n    If a blocking PII Guardrail rejects untreated Direct PII.",
+      "refactor_signals": [
+        {
+          "evidence": [
+            {
+              "depth": 7,
+              "width": 15
+            }
+          ],
+          "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
+          "severity": "warning",
+          "signal": "large_width_or_depth"
+        }
+      ],
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
+      "release_history": [],
+      "release_versions": [],
+      "returns_documentation": "dict\n    Guardrail status, continuation decision, and classified, present, and\n    untreated column names. When an active PII Guardrail rule exists, its\n    outcome is appended to ``METADATA_GUARDRAIL_RESULTS``.",
+      "scope": 65,
+      "signals": [
+        "large_width_or_depth"
+      ],
+      "signature": "def check_pii_guardrail(table_id: str, *, dataframe=None) -> dict",
+      "source_end_line": 153,
+      "source_path": "src/fabricops_kit/pipeline/check_pii_guardrail.py",
+      "source_start_line": 25,
+      "summary": "Check that governed Direct PII is absent or represented by approved tokens.",
+      "transitive_function_count": 65,
+      "usage_notes": "Development uses mutable ``METADATA_ENRICHMENT`` classification. Production\nuses the active frozen Data Contract enrichment. Approved tokens are checked\nagainst the separately configured, table-isolated ``pii_token_vault`` target;\nreversible mappings never enter ordinary governance metadata.",
+      "width": 15
+    },
+    {
+      "architecture_violation_count": 0,
+      "contract_classification": "preview_public_function",
+      "contract_display": "Preview",
+      "contract_risk": "preview",
+      "depth": 7,
       "direct_call_count": 13,
       "discontinued_in": null,
       "examples": ">>> result = check_schema(table_id=\"lakehouse||source||dbo||orders\")\n>>> result[\"can_continue\"]\nTrue",
@@ -14735,7 +15111,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 10,
+      "direct_call_count": 12,
       "discontinued_in": null,
       "examples": ">>> write_prep = write_pipeline_prep(\n...     transformed_df,\n...     target_table_id=\"lakehouse:unified:dbo:students\",\n...     source_preps=[read_prep],\n... )\n>>> write_prep[\"mode\"]\n'append'",
       "files_touched": [
@@ -14744,7 +15120,8 @@
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
         "src/fabricops_kit/pipeline/shared.py",
-        "src/fabricops_kit/pipeline/write_pipeline_prep.py"
+        "src/fabricops_kit/pipeline/write_pipeline_prep.py",
+        "src/fabricops_kit/security/shared.py"
       ],
       "function_name": "write_pipeline_prep",
       "has_architecture_violation": false,
@@ -14785,7 +15162,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 10
+              "width": 12
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -14796,19 +15173,19 @@
       "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
-      "returns_documentation": "dict\n    Audited target DataFrame, physical writer mode/options, the unchanged\n    resolved processing definition, its prepared scope, and target Lineage preparation.",
-      "scope": 49,
+      "returns_documentation": "dict\n    Tokenised and audited target DataFrame, physical writer mode/options,\n    the unchanged resolved processing definition, its prepared scope, and\n    target Lineage preparation.",
+      "scope": 60,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 333,
+      "source_end_line": 354,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 157,
+      "source_start_line": 158,
       "summary": "Prepare governed target write inputs without physically writing the target.",
-      "transitive_function_count": 49,
-      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter or commit source progress. It persists target Lineage at the governed\npreparation boundary. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nOverwrite is full-table for an explicitly configured ``full_dataset`` source\nand for the first ``incremental_watermark`` population whose scope retains\nits captured upper bound. Later Lakehouse incremental watermark and\npartition reads require a matching canonical scope and use ``replaceWhere``;\nlater Warehouse incremental overwrite is rejected because no equivalent\nscoped replacement is implemented. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
-      "width": 10
+      "transitive_function_count": 60,
+      "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. Direct PII columns are replaced with opaque tokens before\naudit fields are added, and unique reversible mappings are persisted to the\nseparately configured, table-isolated ``pii_token_vault`` target. This\nfunction does not call a Lakehouse or Warehouse writer or commit source\nprogress. It persists target Lineage at the governed\npreparation boundary. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nOverwrite is full-table for an explicitly configured ``full_dataset`` source\nand for the first ``incremental_watermark`` population whose scope retains\nits captured upper bound. Later Lakehouse incremental watermark and\npartition reads require a matching canonical scope and use ``replaceWhere``;\nlater Warehouse incremental overwrite is rejected because no equivalent\nscoped replacement is implemented. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
+      "width": 12
     },
     {
       "architecture_violation_count": 0,
@@ -16377,6 +16754,126 @@
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared.write_guardrail_result_row",
       "caller_qualified_name": "fabricops_kit.pipeline.check_freshness.check_freshness",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.get_store",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.get_spark_session",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_core",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.read_warehouse_query_core",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.select_table_guardrail_rule",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.stop_if_failed",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.write_guardrail_result_row",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.pii_guardrail_core",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
       "violation_details": [],
       "violation_types": []
     },
@@ -18679,6 +19176,158 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "caller_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "caller_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.get_store",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.configured_lakehouse_schema",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_core",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared._row_dict",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.token_vault_table_name",
+      "caller_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.configured_lakehouse_schema",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_core",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_active_data_contract",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared._latest_direct_pii",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared._row_dict",
+      "caller_qualified_name": "fabricops_kit.security.shared.resolve_direct_pii_columns",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
+      "caller_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.configured_lakehouse_schema",
+      "caller_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.write_lakehouse_table_core",
+      "caller_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.load_token_vault_rows",
+      "caller_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.security.shared.token_vault_table_name",
+      "caller_qualified_name": "fabricops_kit.security.shared.tokenise_direct_pii",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
       "violation_details": [],
@@ -20938,7 +21587,7 @@
     "latest_release_version": "0.2.0",
     "live_critical_internal_count": 103,
     "live_public_function_count": 13,
-    "preview_public_function_count": 16,
+    "preview_public_function_count": 17,
     "release_versions": [
       "0.1.0",
       "0.2.0"
@@ -20964,13 +21613,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 13,
-    "defined_function_count": 367,
+    "defined_function_count": 375,
     "detached_function_count": 18,
     "implicit_runtime_hook_count": 2,
-    "public_function_count": 29,
-    "relationship_count": 747,
+    "public_function_count": 30,
+    "relationship_count": 781,
     "source_referenced_function_count": 16,
-    "used_function_count": 336
+    "used_function_count": 344
   },
   "used_functions": [
     "fabricops_kit.config.audit._context_get",
@@ -21068,6 +21717,7 @@
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_freshness._is_source_observation",
     "fabricops_kit.pipeline.check_freshness.check_freshness",
+    "fabricops_kit.pipeline.check_pii_guardrail.check_pii_guardrail",
     "fabricops_kit.pipeline.check_schema.check_schema",
     "fabricops_kit.pipeline.observe_table._compact_rows",
     "fabricops_kit.pipeline.observe_table._identifier",
@@ -21192,6 +21842,13 @@
     "fabricops_kit.pipeline.write_pipeline_prep._source_scope",
     "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
     "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+    "fabricops_kit.security.shared._latest_direct_pii",
+    "fabricops_kit.security.shared._row_dict",
+    "fabricops_kit.security.shared.load_token_vault_rows",
+    "fabricops_kit.security.shared.pii_guardrail_core",
+    "fabricops_kit.security.shared.resolve_direct_pii_columns",
+    "fabricops_kit.security.shared.token_vault_table_name",
+    "fabricops_kit.security.shared.tokenise_direct_pii",
     "fabricops_kit.widgets.enrichment_shared._enrichment_values",
     "fabricops_kit.widgets.enrichment_shared._rows",
     "fabricops_kit.widgets.enrichment_shared._sort_timestamp",

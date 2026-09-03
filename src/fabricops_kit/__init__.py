@@ -31,6 +31,7 @@ from .pipeline import (
     check_changes,
     check_dq,
     check_freshness,
+    check_pii_guardrail,
     check_schema,
     read_pipeline_prep,
     profile_and_register_table,
@@ -65,6 +66,7 @@ IO_EXPORTS = (
 
 PIPELINE_EXPORTS = (
     "check_schema",
+    "check_pii_guardrail",
     "check_freshness",
     "check_changes",
     "check_dq",

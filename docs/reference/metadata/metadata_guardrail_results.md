@@ -7,6 +7,7 @@ See whether the expectations of the data in the ETL pipeline run are met.
 * [`check_changes`](../../api/reference/check_changes.md)
 * [`check_dq`](../../api/reference/check_dq.md)
 * [`check_freshness`](../../api/reference/check_freshness.md)
+* [`check_pii_guardrail`](../../api/reference/check_pii_guardrail.md)
 * [`check_schema`](../../api/reference/check_schema.md)
 
 ## Used in Workflow Template

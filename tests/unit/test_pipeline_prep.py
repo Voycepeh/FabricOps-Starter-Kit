@@ -48,6 +48,8 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     monkeypatch.setattr(write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]})
     monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing)
     monkeypatch.setattr(write_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
+    monkeypatch.setattr(write_module, "resolve_direct_pii_columns", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(write_module, "tokenise_direct_pii", lambda dataframe, **_kwargs: dataframe)
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
         "_committed_at": "2026-08-22T00:00:00Z", "_committed_by": "engineer",
         "_activity_id": "activity", "_workspace_id": "workspace",
