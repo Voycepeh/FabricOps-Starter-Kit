@@ -8,6 +8,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
+    persist_lineage_participation,
     resolve_catalogue_table_identity,
     resolve_table_processing_definition,
     resolve_target_audit_fields,
@@ -132,12 +133,11 @@ def _overwrite_options(
     raise ValueError(error)
 
 
-def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Validate source preparation and return one truthful target scope plus completion rows."""
+def _source_scope(source_preps: list[dict[str, Any]]) -> dict[str, Any]:
+    """Validate source preparation and return one truthful target scope."""
     if not source_preps:
         raise ValueError("source_preps must contain at least one read_pipeline_prep result.")
     scopes = []
-    completion_sources = []
     for prep in source_preps:
         if not isinstance(prep, dict):
             raise ValueError("source_preps must contain read_pipeline_prep result dictionaries.")
@@ -147,11 +147,11 @@ def _source_completion(source_preps: list[dict[str, Any]]) -> tuple[dict[str, An
             raise ValueError("Each source prep must contain a non-skipped canonical read_mode and scope.")
         scopes.append({"read_mode": read_mode, "scope": scope})
     if all(scope == scopes[0] for scope in scopes[1:]):
-        return scopes[0], completion_sources
+        return scopes[0]
     return {
         "read_mode": "incremental_subset",
         "scope": {"type": "multiple_sources"},
-    }, completion_sources
+    }
 
 
 def write_pipeline_prep(
@@ -178,8 +178,7 @@ def write_pipeline_prep(
     -------
     dict
         Audited target DataFrame, physical writer mode/options, the unchanged
-        resolved processing definition, its prepared scope, target Lineage
-        preparation, and governed completion context for the physical writer.
+        resolved processing definition, its prepared scope, and target Lineage preparation.
 
     Raises
     ------
@@ -192,8 +191,8 @@ def write_pipeline_prep(
     -----
     FabricOps resolves one run-level audit record and adds only compact target
     provenance fields. This function does not call a Lakehouse or Warehouse
-    writer, persist target Lineage, or commit source progress. The completion context has no effect
-    unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
+    writer or commit source progress. It persists target Lineage at the governed
+    preparation boundary. Lakehouse and Warehouse
     targets use the same governed strategy definition; each writer applies its
     engine-specific physical execution only after this preparation succeeds.
     Overwrite is full-table for an explicitly configured ``full_dataset`` source
@@ -232,7 +231,7 @@ def write_pipeline_prep(
         context=context,
         authored_processing=catalogue_authored_processing(target_identity),
     )
-    prepared_scope, completion_sources = _source_completion(source_preps)
+    prepared_scope = _source_scope(source_preps)
     scope = prepared_scope["scope"]
     store_kind = target_identity["store_type"]
     strategy = str(processing.get("load_strategy") or "")
@@ -293,6 +292,12 @@ def write_pipeline_prep(
             raise ValueError("incremental_partition requires non-null _partition_bucket values on every target row.")
     audit = resolve_target_audit_fields(context)
     prepared_df = add_target_audit_fields(df, audit)
+    persist_lineage_participation(
+        table_id=target_identity["table_id"],
+        pipeline_role="target",
+        activity_id=audit["_activity_id"],
+        context=context,
+    )
     if strategy == "scd2":
         from pyspark.sql import functions as F
 
@@ -324,14 +329,5 @@ def write_pipeline_prep(
             "pipeline_role": "target",
             "activity_id": audit["_activity_id"],
             "environment_name": env,
-        },
-        "completion": {
-            "lineage": {
-                "table_id": target_identity["table_id"],
-                "pipeline_role": "target",
-                "activity_id": audit["_activity_id"],
-                "environment_name": env,
-            },
-            "sources": completion_sources,
         },
     }

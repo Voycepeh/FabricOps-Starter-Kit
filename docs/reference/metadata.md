@@ -142,12 +142,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_WATERMARK_CHECKPOINT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_PROFILED</code>
       </span>
     </span>
@@ -190,60 +184,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
     <span><code>observation_id</code> <span class="metadata-table-card__key-separator">+</span> <code>partition_value</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_PARTITION_CHECKPOINT</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_source_partition_checkpoint/" aria-label="Open METADATA_SOURCE_PARTITION_CHECKPOINT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_SOURCE_PARTITION_CHECKPOINT</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Record which source partition observation was successfully published downstream.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One successfully processed observation for one source table.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>_committed_at</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_OBSERVATION</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_source_watermark_checkpoint/" aria-label="Open METADATA_SOURCE_WATERMARK_CHECKPOINT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_SOURCE_WATERMARK_CHECKPOINT</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Record how far a successfully completed watermark pipeline has processed.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One successfully committed watermark for one source table and watermark column.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>watermark_column</code> <span class="metadata-table-card__key-separator">+</span> <code>_committed_at</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>

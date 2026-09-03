@@ -14,7 +14,7 @@ Prepare governed target write inputs and technical fields without physically wri
 
 `fabricops_kit/pipeline/write_pipeline_prep.py:157`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L157-L337">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L157-L333">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ def write_pipeline_prep(
 
 ## Returns
 
-Audited DataFrame, target identity, resolved target processing, writer settings, execution scope, and completion context.
+Audited DataFrame, target identity, resolved target processing, writer settings, execution scope, and target Lineage.
 
 ## Raises / Errors
 
@@ -84,8 +84,8 @@ ValueError
 
 FabricOps resolves one run-level audit record and adds only compact target
 provenance fields. This function does not call a Lakehouse or Warehouse
-writer, persist target Lineage, or commit source progress. The completion context has no effect
-unless explicitly passed to a FabricOps writer. Lakehouse and Warehouse
+writer or commit source progress. It persists target Lineage at the governed
+preparation boundary. Lakehouse and Warehouse
 targets use the same governed strategy definition; each writer applies its
 engine-specific physical execution only after this preparation succeeds.
 Overwrite is full-table for an explicitly configured ``full_dataset`` source

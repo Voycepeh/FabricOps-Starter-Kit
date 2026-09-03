@@ -47,6 +47,7 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     monkeypatch.setattr(write_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
     monkeypatch.setattr(write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]})
     monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing)
+    monkeypatch.setattr(write_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
         "_committed_at": "2026-08-22T00:00:00Z", "_committed_by": "engineer",
         "_activity_id": "activity", "_workspace_id": "workspace",
@@ -121,7 +122,7 @@ def test_watermark_scope_is_bounded_by_target_state(monkeypatch, previous, upper
         "upper_watermark": upper, "data_type": "string", "row_count": 1,
         "non_null_count": 1, "distinct_count": 1,
     })
-    monkeypatch.setattr(read_module, "_coerce_checkpoint", lambda value, *_args, **_kwargs: value)
+    monkeypatch.setattr(read_module, "_coerce_watermark_boundary", lambda value, *_args, **_kwargs: value)
     result = read_module._watermark_scope(
         {"table_id": "warehouse:source:dbo:bookings"}, {"store_kind": "lakehouse"}, "modified_datetime",
         config="config", env="dev", spark_session="spark", context={},
@@ -221,36 +222,6 @@ def test_read_prep_uses_source_processing_from_change_check(monkeypatch):
     assert result["scope"]["values"] == ["2026-08-22"]
 
 
-def test_checkpoint_advances_only_after_successful_target_write(monkeypatch):
-    writes = []
-    completion = {"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{
-        "type": "watermark",
-        "source": {"table_id": "warehouse:source:dbo:bookings"},
-        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_datetime"},
-        "candidate": {"status": "candidate", "column": "modified_datetime", "value": "2026-08-26 12:00"},
-    }]}
-    audit = {
-        "_committed_by": "engineer", "_committed_at": "2026-08-26T12:01:00",
-        "_workspace_id": "workspace", "_workspace_name": "workspace",
-        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
-        "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
-    }
-    monkeypatch.setattr(shared_module, "resolve_fabric_context", lambda **_kwargs: ("config", "dev", {}))
-    monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: audit)
-    monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
-        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
-    ))
-    monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
-    monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda *_args: "metadata")
-    monkeypatch.setattr(shared_module, "persist_lineage_participation", lambda **_kwargs: writes.append(("METADATA_DATA_LINEAGE", {})))
-    monkeypatch.setattr(shared_module, "write_lakehouse_table_core", lambda frame, *args, **kwargs: writes.append((args[0], frame["rows"][0])))
-
-    shared_module.complete_source_processing(completion)
-    assert [table for table, _row in writes] == [
-        "METADATA_DATA_LINEAGE",
-        "METADATA_SOURCE_WATERMARK_CHECKPOINT",
-    ]
-    assert writes[1][1]["watermark_value"] == "2026-08-26 12:00"
 
 
 @pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])
@@ -291,7 +262,7 @@ def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
 
 
-def test_write_prep_omits_partition_checkpoint_completion(monkeypatch, spark_session):
+def test_write_prep_partition_state_requires_no_completion_layer(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
     frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
     source_prep = {
@@ -308,11 +279,11 @@ def test_write_prep_omits_partition_checkpoint_completion(monkeypatch, spark_ses
     result = write_module.write_pipeline_prep(
         frame, target_table_id=identity["table_id"], source_preps=[source_prep]
     )
-    assert result["completion"]["sources"] == []
+    assert "completion" not in result
     assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
 
 
-def test_write_prep_supports_multiple_source_completion_for_scd(monkeypatch, spark_session):
+def test_write_prep_supports_multiple_source_scope_for_scd(monkeypatch, spark_session):
     identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
     frame = spark_session.createDataFrame([(1,)], ["student_id"])
     source_preps = [
@@ -652,58 +623,12 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
             processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
         )
 
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
-def test_lakehouse_governed_completion_runs_after_each_supported_write(monkeypatch, strategy):
-    events = []
-    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda completion, **_kwargs: events.append(("complete", completion)))
-    completion = {"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{"type": "watermark"}]}
-    if strategy in {"scd1", "scd2"}:
-        monkeypatch.setattr(import_module("fabricops_kit.pipeline.shared"), "execute_lakehouse_processing", lambda *args, **kwargs: events.append(("write", strategy)))
-        lakehouse_writer.write_lakehouse_table(
-            object(), "target", mode=None, load_strategy=strategy,
-            processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
-            completion_context=completion,
-        )
-    else:
-        monkeypatch.setattr(lakehouse_writer, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "path"))
-        monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: events.append(("write", strategy)))
-        lakehouse_writer.write_lakehouse_table(
-            object(), "target", mode=strategy, load_strategy=strategy,
-            processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
-            completion_context=completion, verbose=False,
-        )
-    assert events == [("write", strategy), ("complete", completion)]
 
 
-@pytest.mark.parametrize("mode", ["append", "overwrite"])
-def test_warehouse_completion_runs_after_supported_write(monkeypatch, mode):
-    events = []
-    monkeypatch.setattr(warehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(warehouse_writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    monkeypatch.setattr(warehouse_writer, "resolve_configured_warehouse_table", lambda *args, **kwargs: ("store", "dbo", "target", "dbo.target"))
-    monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: events.append("write"))
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: events.append("complete"))
-    warehouse_writer.write_warehouse_table(object(), "dbo", "target", mode=mode, completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": []})
-    assert events == ["write", "complete"]
 
 
-def test_writer_failure_never_attempts_completion(monkeypatch):
-    monkeypatch.setattr(warehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(warehouse_writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    monkeypatch.setattr(warehouse_writer, "resolve_configured_warehouse_table", lambda *args, **kwargs: ("store", "dbo", "target", "dbo.target"))
-    monkeypatch.setattr(warehouse_writer, "write_warehouse_synapsesql", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: pytest.fail("completion"))
-    with pytest.raises(RuntimeError, match="write failed"):
-        warehouse_writer.write_warehouse_table(object(), "dbo", "target", completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": []})
 
 
-def test_ungoverned_writer_does_not_resolve_completion_state(monkeypatch):
-    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(lakehouse_writer, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, None, None, "path"))
-    monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: None)
-    monkeypatch.setattr(shared_module, "complete_source_processing", lambda _context, **_kwargs: pytest.fail("checkpoint"))
-    lakehouse_writer.write_lakehouse_table(object(), "target", verbose=False)
 
 
 def test_partition_retry_compares_with_last_successful_observation():
@@ -718,71 +643,6 @@ def test_partition_retry_compares_with_last_successful_observation():
     assert [row["observation_id"] for row in previous] == ["successful"]
 
 
-def test_explicit_writer_context_is_reused_for_checkpoint_completion(monkeypatch):
-    explicit_context = {"config": "prod-config", "env": "prod", "marker": "explicit"}
-    resolved_context = {**explicit_context, "resolved": True}
-    observed = {}
-
-    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(
-        lakehouse_writer,
-        "resolve_configured_lakehouse_table",
-        lambda *args, context=None, **kwargs: (
-            observed.setdefault("target_context", context), None, None, "prod-path"
-        ),
-    )
-    monkeypatch.setattr(lakehouse_writer, "write_delta_path", lambda *args, **kwargs: None)
-
-    def resolve_context(*, context=None, **_kwargs):
-        observed["completion_input_context"] = context
-        assert context is explicit_context
-        return "prod-config", "prod", resolved_context
-
-    monkeypatch.setattr(shared_module, "resolve_fabric_context", resolve_context)
-    monkeypatch.setattr(shared_module, "build_runtime_audit_fields", lambda **_kwargs: {
-        "_committed_by": "engineer", "_committed_at": "2026-08-26T12:01:00",
-        "_workspace_id": "workspace", "_workspace_name": "workspace",
-        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
-        "_metadata_lakehouse_name": "metadata", "_activity_id": "activity",
-    })
-    monkeypatch.setattr(shared_module, "get_spark_session", lambda: SimpleNamespace(
-        createDataFrame=lambda rows, schema=None: {"rows": rows, "schema": schema}
-    ))
-    monkeypatch.setattr(shared_module, "coerce_metadata_row_types", lambda _table, row: row)
-    monkeypatch.setattr(shared_module, "configured_lakehouse_schema", lambda config, env, _target: (
-        observed.setdefault("metadata_identity", (config, env)) or "metadata"
-    ))
-    monkeypatch.setattr(shared_module, "persist_lineage_participation", lambda **kwargs: observed.setdefault("lineage_context", kwargs.get("context")))
-    monkeypatch.setattr(
-        shared_module,
-        "write_lakehouse_table_core",
-        lambda *_args, context=None, **_kwargs: observed.setdefault("checkpoint_context", context),
-    )
-
-    lakehouse_writer.write_lakehouse_table(
-        object(),
-        "target",
-        context=explicit_context,
-        completion_context={"lineage": {"table_id": "target-table", "pipeline_role": "target", "activity_id": "activity"}, "sources": [{
-            "type": "watermark",
-            "source": {"table_id": "lakehouse:source:dbo:bookings"},
-            "source_processing": {
-                "read_strategy": "incremental_watermark",
-                "watermark_column": "modified_datetime",
-            },
-            "candidate": {
-                "status": "candidate",
-                "column": "modified_datetime",
-                "value": "2026-08-26 12:00",
-            },
-        }]},
-        verbose=False,
-    )
-
-    assert observed["target_context"] is explicit_context
-    assert observed["completion_input_context"] is explicit_context
-    assert observed["metadata_identity"] == ("prod-config", "prod")
-    assert observed["checkpoint_context"] is resolved_context
 
 
 def test_target_partitions_absent_returns_empty(monkeypatch):
@@ -879,3 +739,11 @@ def test_partition_write_rejects_reserved_or_missing_bucket_source(monkeypatch, 
             spark_session.createDataFrame([(1, "2026-08-31", "x")], ["student_id", "snapshot_date", "_partition_bucket"]),
             target_table_id=identity["table_id"], source_preps=[source],
         )
+
+
+def test_public_writers_have_no_completion_context():
+    """Persistent checkpoint completion is not part of either writer API."""
+    import inspect
+
+    assert "completion_context" not in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
+    assert "completion_context" not in inspect.signature(warehouse_writer.write_warehouse_table).parameters

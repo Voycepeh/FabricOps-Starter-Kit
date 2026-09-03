@@ -38,7 +38,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L337">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L313">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -75,7 +75,6 @@ def write_lakehouse_table(
     load_strategy=None,
     load_strategy_parameters=None,
     processing_scope=None,
-    completion_context=None,
 ):
 ```
 
@@ -176,7 +175,6 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append. |
 | `load_strategy_parameters` | `dict` | No | Governed strategy parameters returned by :func:`write_pipeline_prep`. |
 | `processing_scope` | `dict` | No | Prepared skip, full, or incremental execution scope. |
-| `completion_context` | `dict` | No | Governed source-completion context returned by :func:`write_pipeline_prep`. When supplied, target Lineage and any partition completion state are persisted after the physical write. Watermark progress is already part of the successfully published target rows. Calls that omit it have no completion effects. |
 
 ## Returns
 
@@ -199,15 +197,6 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
-
-Governed completion
-    The physical target write or merge completes before Lineage or
-    partition completion is persisted. Watermark correctness has no
-    post-write checkpoint: ``_watermark_value`` advances atomically with
-    target publication. Replay is deterministic for overwrite, SCD1, and
-    SCD2; governed incremental-watermark append is rejected without an
-    explicit deterministic identity. Independent concurrent writers still
-    rely on Delta transaction semantics.
 
 Parallel processing and write concurrency
     Spark writes DataFrame partitions concurrently across available
@@ -327,7 +316,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 44 |
+| Live-critical dependencies | 34 |
 
 ### Release history
 
@@ -343,11 +332,6 @@ Side effects
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
@@ -363,8 +347,6 @@ Side effects
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.configured_lakehouse_schema</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
@@ -375,10 +357,7 @@ Side effects
 <li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
-<li><code>fabricops_kit.pipeline.shared.complete_source_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
-<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>

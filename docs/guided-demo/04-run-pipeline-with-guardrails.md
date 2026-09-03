@@ -52,16 +52,16 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
     ```mermaid
     flowchart TB
         FULL["Full Dataset"] --> FULLMODE["full_dataset"]
-        WATERMARK["Incremental Watermark"] --> PREP["FabricOps preparation<br/>source state + successful checkpoint"]
+        WATERMARK["Incremental Watermark"] --> PREP["FabricOps preparation<br/>source evidence + target state"]
         PARTITION["Incremental Partition"] --> PREP
-        PREP --> FIRST{"Successful checkpoint exists?"}
+        PREP --> FIRST{"Successful target state exists?"}
         FIRST -->|No| FULLMODE
         FIRST -->|Yes| CHANGED{"Changes detected?"}
         CHANGED -->|Yes| SUBSET["incremental_subset"]
         CHANGED -->|No| SKIP["skip"]
     ```
 
-    A `skip` run performs no business-data read, transformation, or target write. On the first incremental run, no successful checkpoint exists yet, so FabricOps uses a full-dataset runtime scope and records progress only after successful publication.
+    A `skip` run performs no business-data read, transformation, or target write. On the first incremental run, no successful target state exists yet, so FabricOps uses a full-dataset runtime scope and persists progress on the governed target during successful publication.
 
 ??? info "Preview — Evaluate pre-read source Guardrails"
 
@@ -83,7 +83,7 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Run target Schema and DQ checks on the transformed target DataFrame.
 
-    Use `write_pipeline_prep()` with the target `table_id` to resolve that target's selected or active Data Contract, add governed audit/lifecycle fields, and prepare the physical writer settings and source completion context.
+    Use `write_pipeline_prep()` with the target `table_id` to resolve that target's selected or active Data Contract, add governed audit/lifecycle fields, and prepare the physical writer settings, target state columns, and target Lineage.
 
 ??? info "Preview — Write, read back, and register the complete target"
 

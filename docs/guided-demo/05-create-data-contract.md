@@ -56,7 +56,7 @@ Confirm that the relevant Data Agreement exists, the table is registered in the 
 | Load-strategy parameters | The configured `load_strategy_parameters_json` values required by the selected target strategy. |
 | Governed usages | The selected approved-usage subset, which must remain within the parent Data Agreement's approved usages. |
 
-Runtime records are not part of the saved immutable definition. `METADATA_GUARDRAIL_RESULTS`, `METADATA_GUARDRAIL_ROW_RESULTS`, source observations, successful-processing checkpoints, and run/audit state continue to describe individual executions rather than the contract itself.
+Runtime records are not part of the saved immutable definition. `METADATA_GUARDRAIL_RESULTS`, `METADATA_GUARDRAIL_ROW_RESULTS`, Source Observation evidence and run/audit state continue to describe individual executions rather than the contract itself.
 
 ???+ success "Live — Understand the one-table contract boundary"
 

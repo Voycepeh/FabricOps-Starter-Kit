@@ -23,7 +23,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_GUARDRAIL` stores authored executable Guardrail rules.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.
-  - `METADATA_SOURCE_OBSERVATION`, `METADATA_SOURCE_WATERMARK_CHECKPOINT`, and `METADATA_SOURCE_PARTITION_CHECKPOINT` store implemented source-state and successful-processing records used by incremental execution.
+  - `METADATA_SOURCE_OBSERVATION` stores source-state evidence and history used by incremental execution; successful watermark and partition progress is stored on governed targets.
 
 ## Canonical terminology and glossary
 
