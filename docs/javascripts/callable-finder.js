@@ -61,6 +61,24 @@
     });
   }
 
+  function initHashDetails() {
+    const rawHash = window.location.hash.slice(1);
+    if (!rawHash) return;
+    const id = decodeURIComponent(rawHash);
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const directDetails = target.tagName === "DETAILS" ? target : null;
+    const containingDetails = target.closest("details");
+    const nextDetails = target.nextElementSibling?.tagName === "DETAILS" ? target.nextElementSibling : null;
+    const parentNextDetails = target.parentElement?.nextElementSibling?.tagName === "DETAILS"
+      ? target.parentElement.nextElementSibling
+      : null;
+    const details = directDetails || containingDetails || nextDetails || parentNextDetails;
+
+    if (details) details.open = true;
+  }
+
   function initCallableFinder() {
     const container = document.querySelector("[data-callable-finder]");
     const input = document.getElementById("callable-finder-input");
@@ -142,10 +160,13 @@
     input.addEventListener("input", update);
     update();
   }
+  window.addEventListener("hashchange", initHashDetails);
   document.addEventListener("DOMContentLoaded", initRenderedDocLinks);
+  document.addEventListener("DOMContentLoaded", initHashDetails);
   document.addEventListener("DOMContentLoaded", initCallableFinder);
   document.addEventListener("DOMContentLoaded", initCallableMapFinder);
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initRenderedDocLinks);
+  if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initHashDetails);
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initCallableFinder);
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(initCallableMapFinder);
 })();
