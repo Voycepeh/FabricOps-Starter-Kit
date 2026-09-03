@@ -226,7 +226,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 
 <div class="fabricops-home-quicklinks">
   <a class="fabricops-home-quicklink" href="notebook-templates/">Notebook Templates</a>
-  <a class="fabricops-home-quicklink" href="reference/engineering-cheat-sheet/">FabricOps Engineering Guide</a>
+  <a class="fabricops-home-quicklink" href="reference/engineering-cheat-sheet/">FabricOps Engineering</a>
   <a class="fabricops-home-quicklink" href="glossary/">Glossary</a>
   <a class="fabricops-home-quicklink" href="reference/metadata/">Metadata Tables</a>
   <a class="fabricops-home-quicklink" href="reference/">Functions</a>
