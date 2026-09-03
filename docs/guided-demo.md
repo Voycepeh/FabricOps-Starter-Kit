@@ -17,7 +17,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the operating model
 You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A and 0B prepare and configure the environment before that workflow begins.**
 
 ```mermaid
-flowchart LR
+flowchart TD
     S0A["0A · Prepare"] --> S0B["0B · Configure"] --> S1["1 · Govern"] --> S2["2 · Engineer"] --> S3["3 · Author"] --> S4["4 · Validate"] --> S5["5 · Save / Test / Activate"] --> S6["6 · Production"] --> S7["7 · Consume"]
     S4 -. "Fail · refine" .-> S3
     S5 -. "Test fails · author and save new version" .-> S3
