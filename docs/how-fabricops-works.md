@@ -300,7 +300,7 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
 ```mermaid
-flowchart LR
+flowchart TD
     AUTHOR["Author"] --> VALIDATE["Validate"] --> SAVE["Save Contract"] --> TEST["Test Saved Version"] --> ACTIVATE["Activate"] --> PROD["Production Resolves Active Contract"]
     VALIDATE -. "Fail · refine" .-> AUTHOR
     TEST -. "Fail · author and save new version" .-> AUTHOR
