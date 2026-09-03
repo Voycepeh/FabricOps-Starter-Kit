@@ -4,20 +4,27 @@ Use this page when you want the deeper engineering reasoning behind the FabricOp
 
 The Guided Demo stays practical and the How FabricOps Works page stays high-level. This guide explains the engineering choices behind those pages, then keeps the practical PySpark, Spark optimisation, and T-SQL references collapsed at the bottom for quick lookup.
 
-## Opinionated engineering choices behind FabricOps
+## Engineering choices
 
-Use this as the jump-off point for the engineering decisions built into FabricOps:
+Select an engineering choice to explore the reasoning behind it.
 
-1. [Configuration-driven engineering](#config-driven-engineering)
-2. [Code-first engineering](#notebook-first)
-3. [ETL lifecycle implementation](#etl-lifecycle)
-4. [PySpark-first transformation](#pyspark-first)
-5. [Lakehouse-first engineering](#lakehouse-first)
-6. [Single-target pipeline implementation](#single-target-pipeline)
-7. [Governance as Code](#governance-as-code)
-8. [Medallion architecture implementation](#medallion-architecture)
-9. [Incremental load implementation](#full-vs-incremental)
-10. [Failure-safe processing and recovery](#failure-safe-processing)
+<script>
+function expandEngineeringChoiceFromHash() {
+  const id = decodeURIComponent(window.location.hash.slice(1));
+  if (!id) return;
+
+  const anchor = document.getElementById(id);
+  const details = anchor?.nextElementSibling;
+
+  if (details?.tagName === "DETAILS") {
+    details.open = true;
+  }
+}
+
+window.addEventListener("hashchange", expandEngineeringChoiceFromHash);
+window.addEventListener("DOMContentLoaded", expandEngineeringChoiceFromHash);
+expandEngineeringChoiceFromHash();
+</script>
 
 <span id="lakehouse-files-vs-tables"></span>
 
