@@ -40,7 +40,7 @@ nav:
       - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
   - Resources & Reference:
       - Notebook Templates: notebook-templates.md
-      - FabricOps Engineering Guide: reference/engineering-cheat-sheet.md
+      - FabricOps Engineering: reference/engineering-cheat-sheet.md
       - Glossary: glossary.md
       - Metadata Tables:
           - Overview: reference/metadata.md
