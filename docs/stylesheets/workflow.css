@@ -1,9 +1,9 @@
 /* How FabricOps Works workflow styling. */
 .md-typeset .fabricops-step-role,
 .md-typeset .fabricops-step-number {
-  color: var(--md-primary-fg-color);
+  color: #0f8f83 !important;
 }
 
 .md-typeset .fabricops-step-number {
-  background: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
+  background: color-mix(in srgb, #0f8f83 12%, transparent);
 }
