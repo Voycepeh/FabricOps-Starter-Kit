@@ -60,7 +60,7 @@ nav:
       - Functions:
           - Function Reference: reference/index.md
           - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
-          - Function Call Graph: reference/function-call-graph.md
+          - Function Call Graph: function-call-graph.md
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - missing_values: reference/dq-rules/missing-values.md
