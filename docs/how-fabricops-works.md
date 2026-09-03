@@ -194,7 +194,7 @@ Each governed target is identified by a canonical `table_id`. Engineering then r
 
 The `table_id` is the shared identity that lets the rest of the FabricOps workflow refer to the same governed table.
 
-#### Opinionated engineering choices behind FabricOps
+#### Engineering choices
 
 FabricOps makes several engineering choices so projects do not need to redefine the same foundations every time. This page only introduces them; use each link to jump into the deeper Engineering Guide explanation.
 
