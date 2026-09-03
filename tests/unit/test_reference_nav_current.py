@@ -12,7 +12,7 @@ def test_resources_reference_nav_matches_current_structure() -> None:
 
     assert "  - Resources & Reference:" in mkdocs_text
     assert "      - Notebook Templates: notebook-templates.md" in mkdocs_text
-    assert "      - FabricOps Engineering Guide: reference/engineering-cheat-sheet.md" in mkdocs_text
+    assert "      - FabricOps Engineering: reference/engineering-cheat-sheet.md" in mkdocs_text
     assert "      - Glossary: glossary.md" in mkdocs_text
     assert "      - Metadata Tables:" in mkdocs_text
     assert "          - Overview: reference/metadata.md" in mkdocs_text
