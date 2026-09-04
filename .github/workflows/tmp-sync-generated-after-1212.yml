@@ -1,0 +1,48 @@
+name: Temporary sync generated artifacts after 1212
+
+on:
+  push:
+    branches:
+      - fix/sync-generated-artifacts-after-1212
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --frozen --extra docs --extra dev
+      - name: Regenerate public call-flow JSON
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+      - name: Regenerate individual references twice
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+      - name: Commit directly affected generated outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/reference/_data/public-function-call-flows.json \
+                  docs/reference/_data/generated-artifacts.json \
+                  docs/reference/index.md
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "chore: sync generated artifacts after #1212"
+            git push origin HEAD:fix/sync-generated-artifacts-after-1212
+          fi
