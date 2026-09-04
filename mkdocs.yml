@@ -41,9 +41,8 @@ nav:
   - Resources & Reference:
       - Notebook Templates: notebook-templates.md
       - FabricOps Engineering: reference/engineering-cheat-sheet.md
-      - Storage Model: reference/storage-model.md
       - Glossary: glossary.md
-      - Metadata Tables:
+      - Data Model:
           - Overview: reference/metadata.md
           - Data Steward: reference/metadata/metadata_data_steward.md
           - Data Agreement: reference/metadata/metadata_data_agreement.md
