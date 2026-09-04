@@ -27,9 +27,9 @@ jobs:
         run: |
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/first.diff
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/first.diff
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/second.diff
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
       - name: Collect changed generated artifacts
         run: |
