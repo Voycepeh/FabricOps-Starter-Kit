@@ -221,11 +221,11 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See who has row-level access to the data.",
-        "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
+        "purpose": "See the SQL permissions observed for governed tables, including direct and role-based access.",
+        "grain": "One observed SQL permission row for one principal and one governed table within one access snapshot.",
         "primary_key": ["access_id"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in an environment."},
         ],
         "relationships": [],
     },
