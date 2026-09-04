@@ -1,3 +1,5 @@
+"""Unit tests for the Warehouse SQL access inventory scanner."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -87,6 +89,7 @@ def _observations(spark_session):
 
 
 def test_scan_warehouse_access_maps_table_schema_and_database_scopes(monkeypatch, spark_session):
+    """Map object, schema, and database permissions to governed tables."""
     module = importlib.import_module("fabricops_kit.access.scan_warehouse_access")
     calls = []
 
@@ -143,6 +146,7 @@ def test_scan_warehouse_access_maps_table_schema_and_database_scopes(monkeypatch
 
 
 def test_scan_warehouse_access_scans_each_unique_target(monkeypatch, spark_session):
+    """Scan each unique configured Warehouse target once."""
     module = importlib.import_module("fabricops_kit.access.scan_warehouse_access")
     calls = []
 
