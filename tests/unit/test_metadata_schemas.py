@@ -182,9 +182,10 @@ def test_stage3_enrichment_schema_uses_asset_ids_and_environment():
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key", "enrichment_name"}.isdisjoint(fields)
 
 
-def test_stage3_data_access_schema_is_minimal_rls_contract():
-    """Data Access stores only the RLS assignment needed for one table/environment."""
-    fields = metadata_table_schema_registry()["METADATA_DATA_ACCESS"].fieldNames()
+def test_stage3_data_access_schema_records_observed_sql_permissions():
+    """Data Access stores one observed SQL permission for a registered table snapshot."""
+    schema = metadata_table_schema_registry()["METADATA_DATA_ACCESS"]
+    fields = schema.fieldNames()
     assert fields == [
         "access_id",
         "user_principal",
@@ -193,11 +194,35 @@ def test_stage3_data_access_schema_is_minimal_rls_contract():
         "access_level",
         "access_value",
         "access_state",
+        "access_snapshot_id",
+        "user_type",
+        "role_name",
+        "permission_source",
+        "database_name",
+        "schema_name",
+        "object_name",
+        "object_type",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
+    field_by_name = {field.name: field for field in schema.fields}
+    assert all(
+        not field_by_name[name].nullable
+        for name in {
+            "access_id",
+            "user_principal",
+            "table_id",
+            "environment_name",
+            "access_level",
+            "access_value",
+            "access_state",
+            "access_snapshot_id",
+            "user_type",
+            "permission_source",
+            "database_name",
+        }
+    )
+    assert all(field_by_name[name].nullable for name in {"role_name", "schema_name", "object_name", "object_type"})
     assert {
-        "role_name",
-        "permission",
         "access_purpose",
         "approval_status",
         "access_scope",
