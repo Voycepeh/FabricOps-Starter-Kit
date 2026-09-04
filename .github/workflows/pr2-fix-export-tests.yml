@@ -1,0 +1,56 @@
+name: PR2 fix export contract tests
+
+on:
+  push:
+    branches:
+      - feat/sql-access-inventory-scanner
+    paths:
+      - .github/workflows/pr2-fix-export-tests.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/sql-access-inventory-scanner
+      - name: Update expected public export lists
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/unit/test_governance_review_migration.py')
+          text = path.read_text()
+          old = "EXPECTED_V1_CALLABLES = [\n    'FabricStore',"
+          new = "EXPECTED_V1_CALLABLES = [\n    'scan_warehouse_access',\n    'FabricStore',"
+          if old not in text:
+              raise SystemExit('Expected governance callable list marker not found')
+          path.write_text(text.replace(old, new, 1))
+
+          path = Path('tests/unit/test_metadata.py')
+          text = path.read_text()
+          old = "    expected_public_callables = [\n        'FabricStore',"
+          new = "    expected_public_callables = [\n        'scan_warehouse_access',\n        'FabricStore',"
+          if old not in text:
+              raise SystemExit('Expected metadata callable list marker not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - uses: astral-sh/setup-uv@v6
+      - name: Set up Python
+        run: uv python install 3.11
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+      - name: Ruff lint
+        run: uv run ruff check .
+      - name: Run affected tests
+        run: uv run pytest -q tests/unit/test_governance_review_migration.py tests/unit/test_metadata.py tests/unit/test_scan_warehouse_access.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/unit/test_governance_review_migration.py tests/unit/test_metadata.py
+          git commit -m "test: include SQL access scanner in public exports"
+          git push origin HEAD:feat/sql-access-inventory-scanner
