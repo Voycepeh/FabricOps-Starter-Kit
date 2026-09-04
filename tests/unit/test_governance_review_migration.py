@@ -34,6 +34,7 @@ DELETED_MODULE_SUFFIXES = (
 DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
 EXPECTED_V1_CALLABLES = [
+    'scan_warehouse_access',
     'FabricStore',
     'PathConfig',
     'GovernanceConfig',
