@@ -302,10 +302,10 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__title">METADATA_DATA_ACCESS</span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See who has row-level access to the data.</span>
+  <span class="metadata-table-card__purpose">See the SQL permissions observed for governed tables, including direct and role-based access.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One RLS assignment for one user and one Catalogue table in one environment.</span>
+    <span>One observed SQL permission row for one principal and one governed table within one access snapshot.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

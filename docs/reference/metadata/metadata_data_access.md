@@ -1,6 +1,6 @@
 # METADATA_DATA_ACCESS
 
-See who has row-level access to the data.
+See the SQL permissions observed for governed tables, including direct and role-based access.
 
 ## Writer functions
 
@@ -12,7 +12,7 @@ No starter template or solution is traced for the public writer functions.
 
 ## Model
 
-**Grain:** One RLS assignment for one user and one Catalogue table in one environment.
+**Grain:** One observed SQL permission row for one principal and one governed table within one access snapshot.
 
 **Primary key:** `access_id`
 
@@ -25,21 +25,29 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 15 |
-| Business columns | 7 |
+| Total columns | 23 |
+| Business columns | 15 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Description |
 | --- | --- | --- |
-| `access_id` | `string` | Identifier stored for `access_id`. |
-| `user_principal` | `string` | User principal recorded for the access row. |
+| `access_id` | `string` | Stable identifier for one observed SQL permission row. |
+| `user_principal` | `string` | SQL principal name observed for the permission row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `access_level` | `string` | Metadata Data Access field `access_level`. |
-| `access_value` | `string` | Metadata Data Access field `access_value`. |
-| `access_state` | `string` | Metadata Data Access field `access_state`. |
+| `access_level` | `string` | SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN. |
+| `access_value` | `string` | SQL permission name, such as SELECT. |
+| `access_state` | `string` | Observed SQL permission state, such as GRANT or DENY. |
+| `access_snapshot_id` | `string` | Identifier grouping permission rows captured in the same access inventory snapshot. |
+| `user_type` | `string` | SQL principal type observed for the permission row. |
+| `role_name` | `string` | Database role through which the permission is inherited when applicable. |
+| `permission_source` | `string` | Whether the observed permission is direct or inherited through a database role. |
+| `database_name` | `string` | Database containing the observed permission scope. |
+| `schema_name` | `string` | Lakehouse or warehouse schema name recorded for the dataset when available. |
+| `object_name` | `string` | Database object name covered by the observed permission when applicable. |
+| `object_type` | `string` | Database object type covered by the observed permission when applicable. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
