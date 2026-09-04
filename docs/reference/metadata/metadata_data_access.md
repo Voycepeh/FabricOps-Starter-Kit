@@ -4,11 +4,11 @@ See the SQL permissions observed for governed tables, including direct and role-
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`scan_warehouse_access`](../../api/reference/scan_warehouse_access.md)
 
 ## Used in Workflow Template
 
-No starter template or solution is traced for the public writer functions.
+* [`90_access_inventory (planned)`](../../notebook-templates.md) — Access inventory
 
 ## Model
 
