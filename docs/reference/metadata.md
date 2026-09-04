@@ -1,408 +1,124 @@
-# List of Metadata Tables
+# FabricOps data model
 
-FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
+FabricOps separates **workflow metadata**, **governed physical data**, and **table-specific engineering support** so each kind of state has one clear home.
 
-The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
+![FabricOps data model](../assets/fabricops-data-model.svg)
 
-![FabricOps metadata model](../assets/fabricops-metadata-model.png)
+`table_id` is the shared identity that connects the FabricOps Governance and Engineering workflow to the physical table produced by `02_pipeline`.
 
-## Metadata tables
+## 1. FabricOps workflow metadata
 
-<style>
-.metadata-table-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }
-.metadata-table-card { display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid rgba(0, 150, 136, .24); border-radius: .7rem; background: rgba(0, 150, 136, .055); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }
-.metadata-table-card:hover { border-color: rgba(0, 150, 136, .48); background: rgba(0, 150, 136, .085); transform: translateY(-1px); }
-.metadata-table-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
-.metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--md-primary-fg-color); overflow-wrap: anywhere; }
-.metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--md-primary-fg-color); }
-.metadata-table-card__purpose { line-height: 1.45; }
-.metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }
-.metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }
-.metadata-table-card__relationships { display: flex; flex-direction: column; gap: .35rem; padding-top: .15rem; }
-.metadata-table-card__relationship-summary { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: .5rem; align-items: start; }
-.metadata-table-card__relationship-list { display: flex; flex-wrap: wrap; gap: .35rem .5rem; min-width: 0; }
-.metadata-table-card__relationship-list code { font-size: .74rem; overflow-wrap: anywhere; }
-.metadata-table-card__cardinality { font-weight: 700; color: var(--md-primary-fg-color); white-space: nowrap; }
-@media (max-width: 720px) { .metadata-table-grid { gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 1fr; gap: .15rem; } .metadata-table-card__relationship-summary { grid-template-columns: 3rem minmax(0, 1fr); } }
-</style>
+**FabricOps metadata describes how a governed table moves through the Governance and Engineering loop.**
 
-<div class="metadata-table-grid">
-<a class="metadata-table-card" href="metadata_data_steward/" aria-label="Open METADATA_DATA_STEWARD schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_STEWARD</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Know who is responsible for the data.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One registered Data Steward.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>steward_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_AGREEMENT</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_agreement/" aria-label="Open METADATA_DATA_AGREEMENT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_AGREEMENT</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Define why the data is shared, with whom, and under what conditions.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One version of one Data Agreement.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>agreement_id</code> <span class="metadata-table-card__key-separator">+</span> <code>agreement_version</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_STEWARD</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CONTRACT</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_contract/" aria-label="Open METADATA_DATA_CONTRACT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_CONTRACT</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One immutable Data Contract version for one governed table under one exact Data Agreement version.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>contract_id</code> <span class="metadata-table-card__key-separator">+</span> <code>contract_version</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_AGREEMENT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_catalogue/" aria-label="Open METADATA_DATA_CATALOGUE schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_CATALOGUE</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One table or column asset in one environment.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>column_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CONTRACT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_OBSERVATION</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_PROFILED</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_LINEAGE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ENRICHMENT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_ACCESS</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_source_observation/" aria-label="Open METADATA_SOURCE_OBSERVATION schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_SOURCE_OBSERVATION</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See what FabricOps previously observed about the source data.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One partition observation within one source-table observation.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>observation_id</code> <span class="metadata-table-card__key-separator">+</span> <code>partition_value</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_profiled/" aria-label="Open METADATA_DATA_PROFILED schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_PROFILED</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See the column-level profile metrics captured for a dataset snapshot.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One observed column in one profiling snapshot.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>profile_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_PROFILED_FREQUENCY</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_profiled_frequency/" aria-label="Open METADATA_DATA_PROFILED_FREQUENCY schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_PROFILED_FREQUENCY</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See the frequency distribution captured for a profiled column.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One flattened ranked value within one logical frequency distribution for a column Profile.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>frequency_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_PROFILED</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_lineage/" aria-label="Open METADATA_DATA_LINEAGE schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_LINEAGE</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See which registered tables participated as sources and targets in pipeline activities.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One registered table participating as a source or target in one pipeline activity.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>lineage_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_enrichment/" aria-label="Open METADATA_ENRICHMENT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_ENRICHMENT</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Add business and governance context to the data.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One appended enrichment value for one table or column identity in one environment.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>enrichment_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_data_access/" aria-label="Open METADATA_DATA_ACCESS schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_ACCESS</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See who has row-level access to the data.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One RLS assignment for one user and one Catalogue table in one environment.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>access_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_guardrail/" aria-label="Open METADATA_GUARDRAIL schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Define the expectations the data used in the ETL pipeline should meet.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One configured Guardrail rule for one Catalogue table or column in one environment.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>guardrail_rule_id</code> <span class="metadata-table-card__key-separator">+</span> <code>guardrail_version</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_RESULTS</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_guardrail_results/" aria-label="Open METADATA_GUARDRAIL_RESULTS schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL_RESULTS</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See whether the expectations of the data in the ETL pipeline run are met.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One runtime outcome for one Guardrail rule in one pipeline run.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>guardrail_result_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_ROW_RESULTS</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card" href="metadata_guardrail_row_results/" aria-label="Open METADATA_GUARDRAIL_ROW_RESULTS schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL_ROW_RESULTS</span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See the individual records that failed a Data Quality rule.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One failed record belonging to one Guardrail Result.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>guardrail_row_result_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_RESULTS</code>
-      </span>
-    </span>
-  </span>
-</a>
-</div>
+These tables live in the configured **Metadata Lakehouse** under its metadata schema. They record governance state, technical identity, profiling, lineage, observations, Guardrail definitions and results, Data Agreements, and Data Contracts.
+
+```text
+Governance                         Engineering metadata
+──────────                         ────────────────────
+METADATA_DATA_STEWARD              METADATA_DATA_CATALOGUE
+METADATA_DATA_AGREEMENT            METADATA_DATA_PROFILED
+METADATA_ENRICHMENT                METADATA_DATA_PROFILED_FREQUENCY
+METADATA_DATA_CONTRACT             METADATA_DATA_LINEAGE
+                                   METADATA_SOURCE_OBSERVATION
+                                   METADATA_GUARDRAIL
+                                   METADATA_GUARDRAIL_RESULTS
+                                   METADATA_DATA_ACCESS
+```
+
+The metadata model is centred on `METADATA_DATA_CATALOGUE`. Its canonical `table_id` identifies the governed logical table and is reused across the workflow.
+
+!!! note "Current implementation audit"
+
+    Two current metadata tables do not yet match the intended storage boundary and will be corrected in focused implementation PRs:
+
+    * `METADATA_GUARDRAIL_ROW_RESULTS` currently stores row-level DQ failure evidence in the Metadata Lakehouse. Failed records should instead live with the governed physical dataset in a table-specific DQ failure table.
+    * `METADATA_DATA_ACCESS` currently models row-level access assignments. Its intended metadata role is to record who has platform or SQL access to the physical table; row-level access configuration belongs with the physical dataset.
+
+## 2. Governed physical engineering table
+
+**The actual project data belongs in the configured Lakehouse or Warehouse, not in the Metadata Lakehouse.**
+
+`02_pipeline` reads, transforms, and writes project-specific data into the configured physical target. That target keeps its project-specific table name and schema while FabricOps represents it with one canonical `table_id`.
+
+```text
+FabricOps metadata
+       │
+       │ table_id
+       ▼
+Configured Lakehouse / Warehouse
+       │
+       └── business_schema.<physical_table>
+```
+
+The same `table_id` lets Governance, Engineering Development, Engineering Production, and downstream consumers refer to the same governed asset without moving business data into the metadata schema.
+
+## 3. Table-specific engineering support
+
+**Operational controls that act on rows belong beside the governed physical table in an engineering support schema.**
+
+For each governed `table_id`, FabricOps can maintain a one-to-one support set where the capability is required:
+
+| Support asset | Purpose | Relationship |
+| --- | --- | --- |
+| **PII token map** | Holds reversible mappings when Direct PII is tokenised. | One table-specific token map for one governed `table_id`. |
+| **DQ failure table** | Holds failed records and rule evidence required for investigation or remediation. | One table-specific failure table for one governed `table_id`. |
+| **Row access configuration** | Holds row-level assignments used to enforce RLS for that dataset. | One table-specific RLS configuration for one governed `table_id`. |
+
+These are **operational engineering assets**, not FabricOps workflow metadata. They may retain identifiers such as `table_id`, `guardrail_result_id`, and runtime audit fields for traceability.
+
+## Access has two different meanings
+
+FabricOps keeps physical access and row-level access separate:
+
+| Concern | Intended home |
+| --- | --- |
+| Who has Fabric or SQL permission to access the physical table | `METADATA_DATA_ACCESS` in the Metadata Lakehouse |
+| Which rows an authorised user may see | Table-specific row access configuration beside the physical table |
+
+The first records access to the asset. The second enforces what data within that asset the user can see.
+
+## Guardrail results versus failed data
+
+Run-level Guardrail outcomes are part of the FabricOps workflow and remain metadata:
+
+```text
+METADATA_GUARDRAIL
+        │
+        ▼
+METADATA_GUARDRAIL_RESULTS
+```
+
+The actual failed records are operational data. They belong in the table-specific DQ failure table, while retaining `guardrail_result_id` so each failed row can be traced back to the Guardrail execution that produced it.
+
+## Architecture rules
+
+1. Workflow metadata stays in the Metadata Lakehouse metadata schema.
+2. Project data stays in its configured Lakehouse or Warehouse business schema.
+3. Row-bearing enforcement assets stay with the governed physical dataset in an engineering support schema.
+4. One canonical `table_id` links the workflow metadata, physical table, and table-specific support assets.
+5. Support assets do not become a second metadata model; they exist to operate or enforce the physical dataset.
+6. Sensitive support assets, especially reversible PII mappings, use permissions appropriate to their contents.
+
+## Metadata table reference
+
+The individual pages below describe the currently implemented metadata schemas. Until the implementation-audit PRs land, they continue to reflect the physical schemas that exist on `main`.
+
+* [Data Steward](metadata/metadata_data_steward.md)
+* [Data Agreement](metadata/metadata_data_agreement.md)
+* [Data Contract](metadata/metadata_data_contract.md)
+* [Data Catalogue](metadata/metadata_data_catalogue.md)
+* [Source Observation](metadata/metadata_source_observation.md)
+* [Data Profiled](metadata/metadata_data_profiled.md)
+* [Data Profiled Frequency](metadata/metadata_data_profiled_frequency.md)
+* [Data Lineage](metadata/metadata_data_lineage.md)
+* [Enrichment](metadata/metadata_enrichment.md)
+* [Guardrail](metadata/metadata_guardrail.md)
+* [Guardrail Results](metadata/metadata_guardrail_results.md)
+* [Guardrail Row Results](metadata/metadata_guardrail_row_results.md) — current implementation exception
+* [Data Access](metadata/metadata_data_access.md) — current implementation exception
+
+## Related references
+
+* [How FabricOps works](../how-fabricops-works.md)
+* [FabricOps Engineering](engineering-cheat-sheet.md)
+* [DQ Rules](dq-rules/index.md)
