@@ -6,13 +6,15 @@ on:
       - feat/pii-token-map-support
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   regenerate:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
       - uses: actions/setup-python@v5
         with:
@@ -31,17 +33,16 @@ jobs:
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
           git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
-      - name: Collect changed generated artifacts
+      - name: Commit generated artifacts
         run: |
-          mkdir -p generated
-          git diff --name-only | while read path; do
-            mkdir -p "generated/$(dirname "$path")"
-            cp "$path" "generated/$path"
-          done
-          git diff --name-only > generated/changed-files.txt
-      - name: Upload generated files
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr1212-generated
-          path: generated
-          if-no-files-found: error
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/reference/_data/public-function-call-flows.json \
+                  docs/reference/_data/generated-artifacts.json \
+                  docs/reference/index.md
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "chore: regenerate affected reference artifacts"
+            git push origin HEAD:feat/pii-token-map-support
+          fi
