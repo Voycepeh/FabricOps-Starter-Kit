@@ -37,6 +37,7 @@ from .pipeline import (
     profile_dataframe,
     profile_frequency_distribution,
     write_pipeline_prep,
+    write_pii_token_map,
 )
 
 CONFIG_EXPORTS = (
@@ -73,6 +74,7 @@ PIPELINE_EXPORTS = (
     "profile_frequency_distribution",
     "read_pipeline_prep",
     "write_pipeline_prep",
+    "write_pii_token_map",
 )
 
 WIDGET_EXPORTS = (
