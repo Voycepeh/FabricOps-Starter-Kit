@@ -122,6 +122,8 @@ jobs:
           git commit -m "docs: regenerate Data Access metadata references"
 
       - name: Generate references second pass
+        env:
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
         run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
 
       - name: Confirm second pass is clean
