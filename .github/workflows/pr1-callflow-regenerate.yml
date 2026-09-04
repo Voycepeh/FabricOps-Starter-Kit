@@ -1,0 +1,50 @@
+name: PR1 call flow regeneration
+
+on:
+  push:
+    branches:
+      - feat/repurpose-data-access-metadata
+    paths:
+      - .github/workflows/pr1-callflow-regenerate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/repurpose-data-access-metadata
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --all-groups
+
+      - name: Generate public call flow first pass
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+
+      - name: Commit first pass outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json
+          git status --short
+          git commit -m "docs: regenerate public function call flows"
+
+      - name: Generate public call flow second pass
+        env:
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+
+      - name: Confirm second pass is clean
+        run: git diff --exit-code
+
+      - name: Push generated commit
+        run: git push origin HEAD:feat/repurpose-data-access-metadata
