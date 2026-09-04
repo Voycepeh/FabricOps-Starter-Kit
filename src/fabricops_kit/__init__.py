@@ -5,6 +5,7 @@ import tomllib
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
+from .access import scan_warehouse_access
 from .config import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
@@ -37,6 +38,10 @@ from .pipeline import (
     profile_dataframe,
     profile_frequency_distribution,
     write_pipeline_prep,
+)
+
+ACCESS_EXPORTS = (
+    "scan_warehouse_access",
 )
 
 CONFIG_EXPORTS = (
@@ -118,4 +123,4 @@ def _load_package_version() -> str:
 
 __version__ = _load_package_version()
 
-__all__ = [*CONFIG_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
+__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
