@@ -1,18 +1,11 @@
 <style>
 .fabricops-home-video {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   margin: 1.4rem 0 1rem;
   border-radius: 0.45rem;
   background: #050505;
-  color: #ffffff;
-  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .fabricops-home-primary {
@@ -190,9 +183,10 @@
 
 Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fabric.
 
-<div class="fabricops-home-video" role="img" aria-label="FabricOps overview video coming soon">
-  Video coming soon
-</div>
+<video class="fabricops-home-video" controls preload="metadata" playsinline aria-label="FabricOps overview video">
+  <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">
+  Your browser does not support embedded video. <a href="assets/FabricOps_Overview_Video_web.mp4">Open the FabricOps overview video</a>.
+</video>
 
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
