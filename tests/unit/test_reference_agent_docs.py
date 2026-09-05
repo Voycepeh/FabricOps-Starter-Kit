@@ -766,10 +766,11 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     image_reference = "../assets/fabricops-metadata-model.png"
 
     assert asset_path.exists()
-    assert "FabricOps uses one Metadata Lakehouse with two physical schemas" in text
+    intro = "FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas"
+    assert intro in text
     assert f"![FabricOps metadata model]({image_reference})" in text
     assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
-    assert text.index("FabricOps uses one Metadata Lakehouse") < text.index(image_reference)
+    assert text.index(intro) < text.index(image_reference)
     assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
     assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
 
