@@ -1,8 +1,10 @@
 # List of Metadata Tables
 
-FabricOps uses one Metadata Lakehouse with two physical schemas: governance-authored definitions in the configured governance schema, and engineering-written observations and execution records in the configured engineering schema. These pages are generated from the implemented metadata setup schema registry and canonical ownership map used by `00_env_config`.
+FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
 
-The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
+`table_id` is the shared identity that links metadata to the governed data asset.
+
+The cards below show the current implemented metadata tables and relationships.
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
@@ -10,11 +12,15 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 <style>
 .metadata-table-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }
-.metadata-table-card { display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid rgba(0, 150, 136, .24); border-radius: .7rem; background: rgba(0, 150, 136, .055); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }
-.metadata-table-card:hover { border-color: rgba(0, 150, 136, .48); background: rgba(0, 150, 136, .085); transform: translateY(-1px); }
+.metadata-table-card { --metadata-schema-accent: var(--md-default-fg-color--light); --metadata-schema-tint: color-mix(in srgb, var(--metadata-schema-accent) 10%, transparent); display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid var(--md-default-fg-color--lightest); border-left: .25rem solid var(--metadata-schema-accent); border-radius: .7rem; background: var(--md-default-bg-color); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }
+.metadata-table-card--governance { --metadata-schema-accent: #7e57c2; }
+.metadata-table-card--engineering { --metadata-schema-accent: #1976d2; }
+.metadata-table-card:hover { background: var(--metadata-schema-tint); transform: translateY(-1px); }
 .metadata-table-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
-.metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--md-primary-fg-color); overflow-wrap: anywhere; }
-.metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--md-primary-fg-color); }
+.metadata-table-card__identity { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; min-width: 0; }
+.metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--metadata-schema-accent); overflow-wrap: anywhere; }
+.metadata-table-card__schema { display: inline-flex; align-items: center; padding: .12rem .45rem; border: 1px solid color-mix(in srgb, var(--metadata-schema-accent) 38%, transparent); border-radius: 999px; background: var(--metadata-schema-tint); color: var(--metadata-schema-accent); font-size: .67rem; font-weight: 700; letter-spacing: .025em; line-height: 1.35; }
+.metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--metadata-schema-accent); }
 .metadata-table-card__purpose { line-height: 1.45; }
 .metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }
 .metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }
@@ -27,9 +33,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 </style>
 
 <div class="metadata-table-grid">
-<a class="metadata-table-card" href="metadata_data_steward/" aria-label="Open METADATA_DATA_STEWARD schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_data_steward/" aria-label="Open METADATA_DATA_STEWARD schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_STEWARD</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_STEWARD</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">Know who is responsible for the data.</span>
@@ -51,9 +60,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_agreement/" aria-label="Open METADATA_DATA_AGREEMENT schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_data_agreement/" aria-label="Open METADATA_DATA_AGREEMENT schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_AGREEMENT</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_AGREEMENT</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">Define why the data is shared, with whom, and under what conditions.</span>
@@ -81,9 +93,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_contract/" aria-label="Open METADATA_DATA_CONTRACT schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_data_contract/" aria-label="Open METADATA_DATA_CONTRACT schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_CONTRACT</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_CONTRACT</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.</span>
@@ -111,9 +126,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_catalogue/" aria-label="Open METADATA_DATA_CATALOGUE schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_catalogue/" aria-label="Open METADATA_DATA_CATALOGUE schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_CATALOGUE</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_CATALOGUE</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.</span>
@@ -171,9 +189,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_source_observation/" aria-label="Open METADATA_SOURCE_OBSERVATION schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_source_observation/" aria-label="Open METADATA_SOURCE_OBSERVATION schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_SOURCE_OBSERVATION</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_SOURCE_OBSERVATION</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See what FabricOps previously observed about the source data.</span>
@@ -195,9 +216,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_profiled/" aria-label="Open METADATA_DATA_PROFILED schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_profiled/" aria-label="Open METADATA_DATA_PROFILED schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_PROFILED</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_PROFILED</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See the column-level profile metrics captured for a dataset snapshot.</span>
@@ -225,9 +249,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_profiled_frequency/" aria-label="Open METADATA_DATA_PROFILED_FREQUENCY schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_profiled_frequency/" aria-label="Open METADATA_DATA_PROFILED_FREQUENCY schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_PROFILED_FREQUENCY</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_PROFILED_FREQUENCY</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See the frequency distribution captured for a profiled column.</span>
@@ -249,9 +276,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_lineage/" aria-label="Open METADATA_DATA_LINEAGE schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_lineage/" aria-label="Open METADATA_DATA_LINEAGE schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_LINEAGE</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_LINEAGE</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See which registered tables participated as sources and targets in pipeline activities.</span>
@@ -273,9 +303,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_enrichment/" aria-label="Open METADATA_ENRICHMENT schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_enrichment/" aria-label="Open METADATA_ENRICHMENT schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_ENRICHMENT</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_ENRICHMENT</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">Add business and governance context to the data.</span>
@@ -297,9 +330,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_data_access/" aria-label="Open METADATA_DATA_ACCESS schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_access/" aria-label="Open METADATA_DATA_ACCESS schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_DATA_ACCESS</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_DATA_ACCESS</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See the SQL permissions observed for governed tables, including direct and role-based access.</span>
@@ -321,9 +357,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_guardrail/" aria-label="Open METADATA_GUARDRAIL schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_guardrail/" aria-label="Open METADATA_GUARDRAIL schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_GUARDRAIL</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">Define the expectations the data used in the ETL pipeline should meet.</span>
@@ -351,9 +390,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_guardrail_results/" aria-label="Open METADATA_GUARDRAIL_RESULTS schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_guardrail_results/" aria-label="Open METADATA_GUARDRAIL_RESULTS schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL_RESULTS</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_GUARDRAIL_RESULTS</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See whether the expectations of the data in the ETL pipeline run are met.</span>
@@ -381,9 +423,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     </span>
   </span>
 </a>
-<a class="metadata-table-card" href="metadata_guardrail_row_results/" aria-label="Open METADATA_GUARDRAIL_ROW_RESULTS schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_guardrail_row_results/" aria-label="Open METADATA_GUARDRAIL_ROW_RESULTS schema">
   <span class="metadata-table-card__header">
-    <span class="metadata-table-card__title">METADATA_GUARDRAIL_ROW_RESULTS</span>
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_GUARDRAIL_ROW_RESULTS</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
   <span class="metadata-table-card__purpose">See the individual records that failed a Data Quality rule.</span>

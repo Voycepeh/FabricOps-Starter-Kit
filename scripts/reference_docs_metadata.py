@@ -104,12 +104,9 @@ USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/config/": CONFIG_USAGE_NOTE,
 }
 
-METADATA_REFERENCE_OVERVIEW_INTRO = (
-    "FabricOps uses one Metadata Lakehouse with two physical schemas: governance-authored definitions in the "
-    "configured governance schema, and engineering-written observations and execution records in the "
-    "configured engineering schema. These pages are generated from the implemented metadata setup schema registry "
-    "and canonical ownership map used by `00_env_config`."
-)
+METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
+
+`table_id` is the shared identity that links metadata to the governed data asset."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -123,8 +120,7 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
-    "The diagram below shows how the FabricOps metadata tables relate to one another across agreement, "
-    "profiling, guardrail, lineage, and pipeline-run evidence."
+    "The cards below show the current implemented metadata tables and relationships."
 )
 
 METADATA_TABLE_MODELS = {

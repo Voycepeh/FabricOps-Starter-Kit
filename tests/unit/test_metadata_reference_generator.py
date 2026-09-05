@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import (
+    CANONICAL_METADATA_TABLES,
+    metadata_table_owner,
+    metadata_table_schema_registry,
+)
 from scripts import generate_individual_function_reference_pages as generator
 from scripts.reference_docs_metadata import METADATA_REFERENCE_ORDER, METADATA_TABLE_MODELS
 
@@ -74,8 +78,12 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "metadata/metadata_data_profiled_frequency" not in first_landing
     for table_name in CANONICAL_METADATA_TABLES:
         slug = table_name.lower()
+        schema_owner = metadata_table_owner(table_name)
         assert first_landing.count(f'href="{slug}/"') == 1
         assert first_landing.count(f'>{table_name}</span>') == 1
+        card = first_landing.split(f'aria-label="Open {table_name} schema">', 1)[1].split("</a>", 1)[0]
+        assert f'metadata-table-card--{schema_owner}' in first_landing
+        assert f'<span class="metadata-table-card__schema">{schema_owner}</span>' in card
         page = first_pages[f"{slug}.md"]
         assert "## Writer functions" in page
         assert page.index("## Writer functions") < page.index("## Model")

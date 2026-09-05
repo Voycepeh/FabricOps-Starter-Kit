@@ -19,7 +19,11 @@ from typing import Any, Iterable
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
+from fabricops_kit.config.metadata_schemas import metadata_table_owner
 from scripts.generated_artifact_metadata import update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
@@ -4323,11 +4327,15 @@ def render_metadata_reference_index(
         "",
         "<style>",
         ".metadata-table-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }",
-        ".metadata-table-card { display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid rgba(0, 150, 136, .24); border-radius: .7rem; background: rgba(0, 150, 136, .055); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }",
-        ".metadata-table-card:hover { border-color: rgba(0, 150, 136, .48); background: rgba(0, 150, 136, .085); transform: translateY(-1px); }",
+        ".metadata-table-card { --metadata-schema-accent: var(--md-default-fg-color--light); --metadata-schema-tint: color-mix(in srgb, var(--metadata-schema-accent) 10%, transparent); display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid var(--md-default-fg-color--lightest); border-left: .25rem solid var(--metadata-schema-accent); border-radius: .7rem; background: var(--md-default-bg-color); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }",
+        ".metadata-table-card--governance { --metadata-schema-accent: #7e57c2; }",
+        ".metadata-table-card--engineering { --metadata-schema-accent: #1976d2; }",
+        ".metadata-table-card:hover { background: var(--metadata-schema-tint); transform: translateY(-1px); }",
         ".metadata-table-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }",
-        ".metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--md-primary-fg-color); overflow-wrap: anywhere; }",
-        ".metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--md-primary-fg-color); }",
+        ".metadata-table-card__identity { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; min-width: 0; }",
+        ".metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--metadata-schema-accent); overflow-wrap: anywhere; }",
+        ".metadata-table-card__schema { display: inline-flex; align-items: center; padding: .12rem .45rem; border: 1px solid color-mix(in srgb, var(--metadata-schema-accent) 38%, transparent); border-radius: 999px; background: var(--metadata-schema-tint); color: var(--metadata-schema-accent); font-size: .67rem; font-weight: 700; letter-spacing: .025em; line-height: 1.35; }",
+        ".metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--metadata-schema-accent); }",
         ".metadata-table-card__purpose { line-height: 1.45; }",
         ".metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }",
         ".metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }",
@@ -4343,13 +4351,17 @@ def render_metadata_reference_index(
     ]
     for table_name in reference_order:
         slug = table_name.lower()
+        schema_owner = metadata_table_owner(table_name)
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
         relationships = _metadata_relationships(table_name, table_models, include_inbound=True)
         lines.extend([
-            f'<a class="metadata-table-card" href="{slug}/" aria-label="Open {html_escape(table_name)} schema">',
+            f'<a class="metadata-table-card metadata-table-card--{schema_owner}" href="{slug}/" aria-label="Open {html_escape(table_name)} schema">',
             '  <span class="metadata-table-card__header">',
-            f'    <span class="metadata-table-card__title">{html_escape(table_name)}</span>',
+            '    <span class="metadata-table-card__identity">',
+            f'      <span class="metadata-table-card__title">{html_escape(table_name)}</span>',
+            f'      <span class="metadata-table-card__schema">{schema_owner}</span>',
+            '    </span>',
             '    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>',
             '  </span>',
             f'  <span class="metadata-table-card__purpose">{html_escape(purpose)}</span>',
