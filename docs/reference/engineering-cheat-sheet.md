@@ -288,23 +288,25 @@ expandEngineeringChoiceFromHash();
 
 ??? info "Governance as Code"
 
-    FabricOps keeps governance and engineering context in **shared metadata tables inside Fabric**, centred on one canonical `table_id` for each governed table.
+    FabricOps keeps governance and engineering context in one Metadata Lakehouse with two physical ownership boundaries, centred on one canonical `table_id` for each governed table.
 
-    Engineering writes technical context such as the Data Catalogue, Profile, Profile Frequency, and Lineage. Governance reads that same `table_id` and adds Enrichment, Guardrails, Data Agreements, and Data Contracts. `02_pipeline` can then resolve and validate those structured definitions instead of relying on a separate document-only governance process.
+    Governance writes authoritative definitions to the `governance` schema. Engineering reads those definitions, but does not own or mutate them during normal pipeline execution. Engineering/runtime writes FabricOps-defined discoveries, execution observations, and results to the `engineering` schema; Governance reads that context when reviewing and authoring definitions. `02_pipeline` can then resolve and validate the governed definitions instead of relying on a separate document-only governance process.
 
     ```text
-    Engineering metadata
-    Catalogue + Profile + Lineage
+    engineering schema (Engineering/runtime writes)
+    Catalogue + Profile + Lineage + Results
               ↓
           canonical table_id
               ↓
-    Governance metadata
-    Enrichment + Guardrails + Contract
+    governance schema (Governance writes)
+    Enrichment + Guardrails + Agreement + Contract
               ↓
         governed 02_pipeline
     ```
 
-    The goal is a hassle-free, self-contained Fabric operating model: the governed context travels with the engineering workflow through the shared Metadata Lakehouse. For the exact tables and fields, use the [Metadata Tables reference](metadata.md).
+    Governed physical output tables and project-specific support data are separate from both FabricOps metadata schemas. FabricOps owns how optional support DataFrames are prepared; the project owns whether they stay in memory or are persisted to a Lakehouse, Warehouse, or another project-approved location. Generic FabricOps Lakehouse and Warehouse writers are available when the project chooses persistence.
+
+    The goal is a self-contained Fabric operating model with explicit write ownership and a shared identity, not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
 
 <span id="pii-guardrail"></span>
 

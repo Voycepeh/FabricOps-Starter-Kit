@@ -1,6 +1,42 @@
 # List of Metadata Tables
 
-FabricOps uses one Metadata Lakehouse with two physical schemas: governance-authored definitions in the configured governance schema, and engineering-written observations and execution records in the configured engineering schema. These pages are generated from the implemented metadata setup schema registry and canonical ownership map used by `00_env_config`.
+FabricOps uses one Metadata Lakehouse with two physical schemas, while keeping its own metadata separate from the physical data that a project produces or chooses to retain. The canonical `table_id` connects all three concepts without making them the same kind of storage.
+
+## Storage and ownership
+
+| Concept | Schema | Write owner | Read by | What belongs here |
+| --- | --- | --- | --- | --- |
+| Governance-owned FabricOps metadata | Metadata Lakehouse, `governance` schema | Governance | Governance and Engineering/runtime | Authoritative governance definitions: Data Stewards, Data Agreements, Data Contracts, Enrichment, and Guardrails. |
+| Engineering-owned FabricOps metadata | Metadata Lakehouse, `engineering` schema | Engineering/runtime | Engineering/runtime and Governance | Discovered metadata, execution observations, and runtime results defined by FabricOps, including the Data Catalogue, Profiles, Profile Frequency, Lineage, Source Observation, and Guardrail Results. |
+| Governed physical and project support data | No FabricOps schema; a project-selected location, or memory only | Project engineering workflow | Project-defined consumers | Governed output tables and optional support data, such as DQ failure or PII mapping DataFrames. |
+
+The Metadata Lakehouse therefore contains two physical FabricOps schemas:
+
+```text
+Metadata Lakehouse
+├── governance
+│   └── governance-owned METADATA_* tables
+└── engineering
+    └── engineering/runtime-owned METADATA_* tables
+```
+
+The names `governance` and `engineering` are the physical schema defaults. Configuration fields can select the configured schema names, but FabricOps does not introduce a third physical `runtime` schema.
+
+### `table_id` connects the model
+
+`table_id` is the canonical identity for a governed table. It links FabricOps metadata in both schemas to the governed physical table and can also be carried by optional project support data when that data needs an explicit association. Sharing an identity does not turn support data into FabricOps metadata or move it into the Metadata Lakehouse.
+
+### Project support data stays project-owned
+
+!!! important
+    **FabricOps owns how support data is prepared. The project owns whether and where support data is persisted.**
+
+A workflow can keep optional support data in memory, write it to a Lakehouse, write it to a Warehouse, or use another project-approved location. When persistence is useful, the project can use the generic FabricOps Lakehouse or Warehouse writers. FabricOps does not mandate a physical support table for every result.
+
+Governed output tables are also physical project data, not `METADATA_*` tables. Their governed identity and definitions remain connected through `table_id`.
+
+!!! note "Current-state boundary"
+    The ownership split describes the implemented routing for the current canonical `METADATA_*` tables. It does not claim future DQ, PII, or access-persistence changes are complete. `METADATA_GUARDRAIL_ROW_RESULTS` remains part of the current metadata model, while optional DQ failure DataFrames and PII mapping DataFrames remain separate project support data unless a later implementation explicitly defines otherwise.
 
 The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
 

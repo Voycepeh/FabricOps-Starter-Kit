@@ -131,7 +131,7 @@
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-The shared Metadata Lakehouse carries FabricOps metadata between Governance and Engineering. Governance defines and approves the governed expectations, Engineering Development builds and validates the pipeline against them, Engineering Production resolves the active Data Contract at runtime, and project-specific consumer workspaces consume approved Production data.
+The shared Metadata Lakehouse carries FabricOps metadata in two ownership boundaries: Governance writes authoritative definitions in the `governance` schema, while Engineering/runtime writes discoveries, observations, and results in the `engineering` schema. Governance defines, Engineering discovers and runs, Governance reviews and activates, Engineering produces governed physical outputs, and projects decide whether supporting evidence should be persisted.
 
 <!-- VIDEO SLOT: Main How FabricOps Works overview -->
 
@@ -204,7 +204,7 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 - **[PySpark-first transformation](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path, with T-SQL for efficient Warehouse-side operations before data enters Spark.
 - **[Lakehouse-first engineering](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering while still supporting Warehouse as a relational source or curated serving layer.
 - **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
-- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — keep FabricOps self-contained in Fabric by recording Catalogue, Profile, Lineage, Enrichment, Guardrails, results, Agreements, and Contracts in shared metadata tables centred on the canonical `table_id`.
+- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — connect Governance-owned definitions and Engineering-owned observations through the canonical `table_id`, while preserving their separate write ownership.
 - **[Direct PII guardrail and token vault](reference/engineering-cheat-sheet.md#pii-guardrail)** — treat Direct PII as a runtime engineering constraint: raw PII must be absent or tokenised before governed reads/writes proceed, with reversible mappings isolated in a separately permissioned token vault.
 - **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
 - **[Incremental load implementation](reference/engineering-cheat-sheet.md#full-vs-incremental)** — use full, watermark, or partition-based processing according to source behaviour, scale, and recovery requirements.
@@ -318,15 +318,15 @@ The details live in the expandable workflow above. The key idea is simple: Gover
 
 <div class="fabricops-section-block" markdown>
 
-## Shared metadata carries the context
+## Ownership carries the context
 
-**The Data Catalogue sits at the centre of the FabricOps metadata model.**
+**One `table_id` connects two FabricOps metadata schemas to the governed physical output.**
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-Engineering and Governance write different metadata around the same governed `table_id` in the shared Metadata Lakehouse. Engineering records technical observations such as Catalogue, Profile, and Lineage context. Governance reads that context and adds Enrichment, Guardrails, Data Agreements, and Data Contracts.
+Governance writes authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads those definitions during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
 
-The important point is not the number of metadata tables. It is that Governance and Engineering work from the same structured context instead of maintaining separate copies of the definition.
+The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data, such as DQ failure or PII mapping DataFrames, is separate again: FabricOps prepares it, and the project decides whether to keep it in memory or persist it in a project-approved location. The important point is not the number of tables; it is the clear ownership boundary around one shared `table_id`.
 
 <!-- VIDEO SLOT: Shared metadata model -->
 
