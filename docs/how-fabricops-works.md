@@ -204,7 +204,7 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 - **[PySpark-first transformation](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path, with T-SQL for efficient Warehouse-side operations before data enters Spark.
 - **[Lakehouse-first engineering](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering while still supporting Warehouse as a relational source or curated serving layer.
 - **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
-- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — connect Governance-owned definitions and Engineering-owned observations through the canonical `table_id`, while preserving their separate write ownership.
+- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical identity of the governed data asset, with the Data Contract bridging that asset into contract-owned Enrichment and Guardrails while preserving separate write ownership.
 - **[Direct PII guardrail and token vault](reference/engineering-cheat-sheet.md#pii-guardrail)** — treat Direct PII as a runtime engineering constraint: raw PII must be absent or tokenised before governed reads/writes proceed, with reversible mappings isolated in a separately permissioned token vault.
 - **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
 - **[Incremental load implementation](reference/engineering-cheat-sheet.md#full-vs-incremental)** — use full, watermark, or partition-based processing according to source behaviour, scale, and recovery requirements.
@@ -219,15 +219,15 @@ The exact ETL implementation stays project-specific. FabricOps standardizes the 
 <summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code> and author the governed Data Contract definition</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering.
+Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering. Governance then creates or refines the Data Contract definition that binds the governed asset to its governance context.
 
-Governance can then add:
+As parts of that Data Contract definition, Governance can add:
 
 - **Enrichment**, such as business meaning, sensitivity classification, PII classification, and other table- or column-level context
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 
-Together, these records form the authored governed definition for that `table_id`. Governance can refine this definition before it is saved as an immutable Data Contract version.
+Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as definitions attached directly to `table_id`. Governance can refine the definition before saving an immutable Data Contract version for the governed asset.
 
 </div>
 </details>
@@ -236,7 +236,7 @@ Together, these records form the authored governed definition for that `table_id
 <summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Run the governed definition in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Engineering Development reruns the same `02_pipeline` using the authored Guardrails or a selected saved Data Contract version.
+Engineering Development reruns the same `02_pipeline` using the Guardrails in the authored Data Contract definition or a selected saved Data Contract version.
 
 The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
 
@@ -320,13 +320,13 @@ The details live in the expandable workflow above. The key idea is simple: Gover
 
 ## Ownership carries the context
 
-**One `table_id` connects two FabricOps metadata schemas to the governed physical output.**
+**`table_id` anchors the governed data asset across FabricOps.**
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-Governance writes authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads those definitions during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
+Engineering metadata describes the governed asset directly through `table_id`. Governance binds its governed definition to that asset through `METADATA_DATA_CONTRACT`; Enrichment and Guardrails belong to the contract definition and resolve the asset through the selected contract. Governance writes these authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads them during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
 
-The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data, such as DQ failure or PII mapping DataFrames, is separate again: FabricOps prepares it, and the project decides whether to keep it in memory or persist it in a project-approved location. The important point is not the number of tables; it is the clear ownership boundary around one shared `table_id`.
+The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data, such as DQ failure or PII mapping DataFrames, is separate again: FabricOps prepares it, and the project decides whether to keep it in memory or persist it in a project-approved location. The important point is not the number of tables; it is the clear ownership boundary and the Data Contract's role in bridging asset identity into contract-owned governance definitions.
 
 <!-- VIDEO SLOT: Shared metadata model -->
 

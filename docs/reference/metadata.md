@@ -1,6 +1,6 @@
 # List of Metadata Tables
 
-FabricOps uses one Metadata Lakehouse with two physical schemas, while keeping its own metadata separate from the physical data that a project produces or chooses to retain. The canonical `table_id` connects all three concepts without making them the same kind of storage.
+FabricOps uses one Metadata Lakehouse with two physical schemas, while keeping its own metadata separate from the physical data that a project produces or chooses to retain. The canonical `table_id` identifies the governed data asset without making every related record a direct child of that field.
 
 ## Storage and ownership
 
@@ -22,9 +22,22 @@ Metadata Lakehouse
 
 The names `governance` and `engineering` are the physical schema defaults. Configuration fields can select the configured schema names, but FabricOps does not introduce a third physical `runtime` schema.
 
-### `table_id` connects the model
+### `table_id` identifies the governed asset
 
-`table_id` is the canonical identity for a governed table. It links FabricOps metadata in both schemas to the governed physical table and can also be carried by optional project support data when that data needs an explicit association. Sharing an identity does not turn support data into FabricOps metadata or move it into the Metadata Lakehouse.
+`table_id` is the canonical identity of the governed data asset. Engineering metadata that describes the asset can reference it directly. Governance binds the asset to a governed definition through `METADATA_DATA_CONTRACT`; contract-owned definitions such as Enrichment and Guardrails resolve the governed table through that contract.
+
+```text
+METADATA_DATA_CATALOGUE
+          │ table_id
+          ▼
+METADATA_DATA_CONTRACT
+          │ contract_id / contract version
+          ├──────────────────┐
+          ▼                  ▼
+METADATA_ENRICHMENT   METADATA_GUARDRAIL
+```
+
+Optional project support data can carry `table_id` when it needs an explicit association with the governed asset. Sharing that identity does not turn support data into FabricOps metadata or move it into the Metadata Lakehouse.
 
 ### Project support data stays project-owned
 
@@ -36,7 +49,7 @@ A workflow can keep optional support data in memory, write it to a Lakehouse, wr
 Governed output tables are also physical project data, not `METADATA_*` tables. Their governed identity and definitions remain connected through `table_id`.
 
 !!! note "Current-state boundary"
-    The ownership split describes the implemented routing for the current canonical `METADATA_*` tables. It does not claim future DQ, PII, or access-persistence changes are complete. `METADATA_GUARDRAIL_ROW_RESULTS` remains part of the current metadata model, while optional DQ failure DataFrames and PII mapping DataFrames remain separate project support data unless a later implementation explicitly defines otherwise.
+    The ownership split describes the implemented routing for the current canonical `METADATA_*` tables. The contract-owned Enrichment and Guardrail relationship above is the intended conceptual ownership and lifecycle model; generated field and relationship documentation below continues to reflect the current physical implementation until the separate schema migration is implemented. This page does not claim future DQ, PII, or access-persistence changes are complete. `METADATA_GUARDRAIL_ROW_RESULTS` remains part of the current metadata model, while optional DQ failure DataFrames and PII mapping DataFrames remain separate project support data unless a later implementation explicitly defines otherwise.
 
 The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
 

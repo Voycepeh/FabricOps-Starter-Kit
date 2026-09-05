@@ -288,25 +288,30 @@ expandEngineeringChoiceFromHash();
 
 ??? info "Governance as Code"
 
-    FabricOps keeps governance and engineering context in one Metadata Lakehouse with two physical ownership boundaries, centred on one canonical `table_id` for each governed table.
+    FabricOps keeps governance and engineering context in one Metadata Lakehouse with two physical ownership boundaries. The canonical `table_id` identifies the governed data asset; it does not mean that every governance record hangs directly from that field.
 
-    Governance writes authoritative definitions to the `governance` schema. Engineering reads those definitions, but does not own or mutate them during normal pipeline execution. Engineering/runtime writes FabricOps-defined discoveries, execution observations, and results to the `engineering` schema; Governance reads that context when reviewing and authoring definitions. `02_pipeline` can then resolve and validate the governed definitions instead of relying on a separate document-only governance process.
+    Governance writes authoritative definitions to the `governance` schema. `METADATA_DATA_CONTRACT` binds the governed definition to the asset identified by `table_id`; Enrichment and Guardrails belong to that contract definition. Engineering reads those definitions through the selected or active Data Contract, but does not own or mutate them during normal pipeline execution. Engineering/runtime writes FabricOps-defined discoveries, execution observations, and results to the `engineering` schema; Governance reads that context when reviewing and authoring definitions.
 
     ```text
     engineering schema (Engineering/runtime writes)
     Catalogue + Profile + Lineage + Results
-              ↓
-          canonical table_id
-              ↓
+                       │
+                    table_id
+                       ▼
     governance schema (Governance writes)
-    Enrichment + Guardrails + Agreement + Contract
-              ↓
-        governed 02_pipeline
+                 Data Contract
+                  │         │
+             Enrichment  Guardrails
+                       │
+                       ▼
+              governed 02_pipeline
     ```
+
+    Data Agreements and Data Stewards are also Governance-owned, but they are not direct children of `table_id`. Engineering resolves the contract-owned Enrichment and Guardrails through the selected or active Data Contract when it runs the governed pipeline.
 
     Governed physical output tables and project-specific support data are separate from both FabricOps metadata schemas. FabricOps owns how optional support DataFrames are prepared; the project owns whether they stay in memory or are persisted to a Lakehouse, Warehouse, or another project-approved location. Generic FabricOps Lakehouse and Warehouse writers are available when the project chooses persistence.
 
-    The goal is a self-contained Fabric operating model with explicit write ownership and a shared identity, not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
+    The goal is a self-contained Fabric operating model with explicit write ownership, a canonical asset identity, and a clear contract bridge—not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
 
 <span id="pii-guardrail"></span>
 
