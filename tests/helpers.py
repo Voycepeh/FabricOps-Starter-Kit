@@ -34,7 +34,15 @@ def framework_config() -> FrameworkConfig:
                     "source": store("lakehouse", name="lh_source_dev"),
                     "unified": store("lakehouse", name="lh_unified_dev"),
                     "product": store("warehouse", name="wh_product_dev"),
-                    "metadata": store("lakehouse", name="lh_metadata_dev"),
+                    "metadata": FabricStore(
+                        env="dev",
+                        workspace_id="dev-workspace",
+                        item_id="dev-lakehouse-item",
+                        name="lh_metadata_dev",
+                        kind="lakehouse",
+                        schema_enabled=True,
+                        schema="metadata",
+                    ),
                     "warehouse": store("warehouse", name="wh_product_dev"),
                 }
             }

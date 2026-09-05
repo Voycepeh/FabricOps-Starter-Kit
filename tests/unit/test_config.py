@@ -345,6 +345,22 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     }
 
 
+def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
+    """Verify setup rejects an undifferentiated Metadata Lakehouse."""
+    cfg = framework_config()
+    metadata_store = cfg.path_config.paths["dev"]["metadata"]
+    cfg.path_config.paths["dev"]["metadata"] = FabricStore(
+        env=metadata_store.env,
+        workspace_id=metadata_store.workspace_id,
+        item_id=metadata_store.item_id,
+        name=metadata_store.name,
+        kind=metadata_store.kind,
+    )
+
+    with pytest.raises(ValueError, match="FabricOps Metadata Lakehouse must be schema-enabled"):
+        setup_metadata_tables(spark=object(), config=cfg, env="dev")
+
+
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
     """Verify setup metadata tables does not require an active steward by default."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry

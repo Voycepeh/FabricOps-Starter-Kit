@@ -186,8 +186,8 @@ def setup_metadata_tables(
     ------
     ValueError
         If the configuration is invalid, the resolved ``metadata`` target is
-        not a lakehouse, or ``require_active_steward=True`` and no active
-        steward rows exist after setup.
+        not a schema-enabled lakehouse, or ``require_active_steward=True`` and
+        no active steward rows exist after setup.
     RuntimeError
         If ``raise_on_failure=True`` and one or more metadata tables fail
         creation or validation after all tables have been processed.
@@ -315,6 +315,8 @@ def setup_metadata_tables(
     metadata_store = get_store(config=normalized, env=env, target="metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
+    if not getattr(metadata_store, "schema_enabled", False):
+        raise ValueError("FabricOps Metadata Lakehouse must be schema-enabled.")
     context = {"config": normalized, "env": env}
     registry = metadata_table_schema_registry()
 

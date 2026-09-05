@@ -1157,7 +1157,7 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 452,
+      "source_end_line": 454,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_start_line": 117,
       "supports_live_contract": true,
@@ -14076,7 +14076,7 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-      "raises_documentation": "ValueError\n    If the configuration is invalid, the resolved ``metadata`` target is\n    not a lakehouse, or ``require_active_steward=True`` and no active\n    steward rows exist after setup.\nRuntimeError\n    If ``raise_on_failure=True`` and one or more metadata tables fail\n    creation or validation after all tables have been processed.",
+      "raises_documentation": "ValueError\n    If the configuration is invalid, the resolved ``metadata`` target is\n    not a schema-enabled lakehouse, or ``require_active_steward=True`` and\n    no active steward rows exist after setup.\nRuntimeError\n    If ``raise_on_failure=True`` and one or more metadata tables fail\n    creation or validation after all tables have been processed.",
       "refactor_signals": [
         {
           "evidence": [
@@ -14111,7 +14111,7 @@
         "large_width_or_depth"
       ],
       "signature": "def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool=False, verbose: bool=True, raise_on_failure: bool=False) -> dict[str, Any]",
-      "source_end_line": 452,
+      "source_end_line": 454,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_start_line": 117,
       "summary": "Create or check the FabricOps metadata tables for one environment.",

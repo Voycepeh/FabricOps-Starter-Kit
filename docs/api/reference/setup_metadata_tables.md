@@ -31,7 +31,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:117`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L117-L452">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L117-L454">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -100,7 +100,7 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 ### Common failure causes
 
-- Missing or invalid metadata target configuration.
+- Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
 - Spark or Fabric lakehouse context is unavailable.
 - The caller lacks permission to create or inspect metadata tables.
 - An existing table is missing a required field or has an incompatible Spark field type.
