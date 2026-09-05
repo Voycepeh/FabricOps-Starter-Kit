@@ -165,7 +165,7 @@ def registered(monkeypatch):
             schema="dbo" if target == "warehouse" else None,
         ),
     )
-    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda config, env, target: None)
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda config, table: None)
     monkeypatch.setattr(
         module,
         "build_runtime_audit_fields",
