@@ -12,6 +12,10 @@ See the individual records that failed a Data Quality rule.
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One failed record belonging to one Guardrail Result.
 
 **Primary key:** `guardrail_row_result_id`

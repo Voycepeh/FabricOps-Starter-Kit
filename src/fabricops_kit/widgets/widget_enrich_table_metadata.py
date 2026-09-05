@@ -6,8 +6,9 @@ import html
 import importlib
 from typing import Any
 
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
+from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets import enrichment_shared as _enrichment
 from fabricops_kit.widgets import shared as _widget_shared
 
@@ -86,7 +87,7 @@ def widget_enrich_table_metadata(
         catalogue = read_lakehouse_table_core(
             _enrichment.CATALOGUE_TABLE,
             target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, _enrichment.CATALOGUE_TABLE),
             context=runtime_context,
             spark_session=spark_session,
         )

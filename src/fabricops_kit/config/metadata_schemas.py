@@ -21,6 +21,45 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_SOURCE_OBSERVATION",
 ]
 
+GOVERNANCE_METADATA_TABLES = (
+    "METADATA_DATA_STEWARD",
+    "METADATA_DATA_AGREEMENT",
+    "METADATA_DATA_CONTRACT",
+    "METADATA_ENRICHMENT",
+    "METADATA_GUARDRAIL",
+)
+
+ENGINEERING_METADATA_TABLES = tuple(
+    table_name for table_name in CANONICAL_METADATA_TABLES if table_name not in GOVERNANCE_METADATA_TABLES
+)
+
+METADATA_TABLE_OWNERSHIP = {
+    **{table_name: "governance" for table_name in GOVERNANCE_METADATA_TABLES},
+    **{table_name: "engineering" for table_name in ENGINEERING_METADATA_TABLES},
+}
+
+
+def metadata_table_owner(table_name: str) -> str:
+    """Return the authoritative writer class for a canonical metadata table."""
+    try:
+        return METADATA_TABLE_OWNERSHIP[table_name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown canonical metadata table: {table_name!r}.") from exc
+
+
+def metadata_table_physical_schema(config: Any, table_name: str) -> str:
+    """Return the configured physical schema for a canonical metadata table."""
+    owner = metadata_table_owner(table_name)
+    attribute = f"{owner}_metadata_schema"
+    default_schema = owner
+    configured_value = config.get(attribute, default_schema) if isinstance(config, dict) else getattr(
+        config, attribute, default_schema
+    )
+    schema_name = str(configured_value or "").strip()
+    if not schema_name:
+        raise ValueError(f"FrameworkConfig.{attribute} must be a non-empty schema name.")
+    return schema_name
+
 AUDIT_SCHEMA_FIELDS = [
     ("_committed_by", "string", False),
     ("_committed_at", "timestamp", False),
@@ -395,10 +434,15 @@ def metadata_table_field_names(schema: Any) -> list[str]:
 __all__ = [
     "AUDIT_SCHEMA_FIELDS",
     "CANONICAL_METADATA_TABLES",
+    "GOVERNANCE_METADATA_TABLES",
+    "ENGINEERING_METADATA_TABLES",
+    "METADATA_TABLE_OWNERSHIP",
     "audit_schema_fields",
     "coerce_metadata_row_types",
     "metadata_schema_type_name",
     "metadata_table_field_names",
     "metadata_table_schema_rows",
     "metadata_table_schema_registry",
+    "metadata_table_owner",
+    "metadata_table_physical_schema",
 ]

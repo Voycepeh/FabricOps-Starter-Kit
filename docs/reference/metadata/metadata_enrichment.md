@@ -12,6 +12,10 @@ Add business and governance context to the data.
 
 ## Model
 
+**Authoritative writer:** `governance`
+
+**Default physical schema:** `governance`
+
 **Grain:** One appended enrichment value for one table or column identity in one environment.
 
 **Primary key:** `enrichment_id`

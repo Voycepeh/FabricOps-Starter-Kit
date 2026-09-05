@@ -316,7 +316,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 34 |
+| Live-critical dependencies | 36 |
 
 ### Release history
 
@@ -332,6 +332,8 @@ Side effects
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>

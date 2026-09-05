@@ -40,8 +40,8 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
         "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
-        "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False, "
-        "verbose: 'bool' = True, raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
+        "require_active_steward: 'bool' = False, verbose: 'bool' = True, "
+        "raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
@@ -309,7 +309,10 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
 
     def read_table(table_name, *, target, schema=None, spark_session=None, context=None):
         assert target == "metadata"
-        assert schema is None
+        assert schema == ("governance" if table_name in {
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
+            "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
+        } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
             raise RuntimeError(f"Table {table_name} does not exist")
@@ -319,7 +322,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         df, table_name, *, target, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
     ):
         assert target == "metadata"
-        assert schema is None
+        assert schema in {"governance", "engineering"}
         assert mode == "overwrite"
         assert options is None
         assert verbose is False
@@ -340,6 +343,22 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     assert {table: metadata_table_schema_rows(schema) for table, schema in spark.created_schemas.items()} == {
         table: metadata_table_schema_rows(schema) for table, schema in expected_registry.items()
     }
+
+
+def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
+    """Verify setup rejects an undifferentiated Metadata Lakehouse."""
+    cfg = framework_config()
+    metadata_store = cfg.path_config.paths["dev"]["metadata"]
+    cfg.path_config.paths["dev"]["metadata"] = FabricStore(
+        env=metadata_store.env,
+        workspace_id=metadata_store.workspace_id,
+        item_id=metadata_store.item_id,
+        name=metadata_store.name,
+        kind=metadata_store.kind,
+    )
+
+    with pytest.raises(ValueError, match="FabricOps Metadata Lakehouse must be schema-enabled"):
+        setup_metadata_tables(spark=object(), config=cfg, env="dev")
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
@@ -382,8 +401,8 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     assert result["tables"] == CANONICAL_METADATA_TABLES
 
 
-def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
-    """Verify setup metadata tables reports explicit schema-qualified names."""
+def test_setup_metadata_tables_reports_configured_ownership_schemas(monkeypatch):
+    """Verify setup reports ownership-qualified table names from config."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     class Table:
@@ -416,14 +435,18 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
         lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]),
     )
 
-    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", metadata_schema="METADATA")
+    cfg = framework_config()
+    object.__setattr__(cfg, "governance_metadata_schema", "governed")
+    object.__setattr__(cfg, "engineering_metadata_schema", "operations")
+    result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
 
-    assert result["metadata_schema"] == "METADATA"
-    assert result["fully_qualified_tables"] == [f"METADATA.{name}" for name in CANONICAL_METADATA_TABLES]
+    assert result["metadata_schemas"] == {"governance": "governed", "engineering": "operations"}
+    assert result["fully_qualified_tables"][0] == "governed.METADATA_DATA_STEWARD"
+    assert "operations.METADATA_DATA_CATALOGUE" in result["fully_qualified_tables"]
 
 
-def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
-    """Verify setup metadata tables reports configured metadata schema."""
+def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(monkeypatch):
+    """Verify canonical ownership schemas replace the undifferentiated store schema."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     cfg = framework_config()
@@ -470,8 +493,8 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
 
     result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
 
-    assert result["metadata_schema"] == "dbo"
-    assert result["fully_qualified_tables"] == [f"dbo.{name}" for name in CANONICAL_METADATA_TABLES]
+    assert result["metadata_schemas"] == {"governance": "governance", "engineering": "engineering"}
+    assert all(not name.startswith("dbo.") for name in result["fully_qualified_tables"])
 
 
 def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):

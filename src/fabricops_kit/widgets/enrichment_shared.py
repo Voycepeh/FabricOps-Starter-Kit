@@ -7,8 +7,8 @@ from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
+from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
@@ -221,7 +221,7 @@ def write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env:
         spark_session.createDataFrame(coerced, schema=schema),
         ENRICHMENT_TABLE,
         target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
+        schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
         context={"config": config, "env": env},
         mode="append",
     )
@@ -233,7 +233,7 @@ def read_enrichment_records(config: Any, env: str, *, spark_session: Any) -> lis
         rows = read_lakehouse_table_core(
             ENRICHMENT_TABLE,
             target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
             context={"config": config, "env": env},
             spark_session=spark_session,
         )

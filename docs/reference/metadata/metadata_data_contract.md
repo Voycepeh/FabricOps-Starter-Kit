@@ -14,6 +14,10 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 ## Model
 
+**Authoritative writer:** `governance`
+
+**Default physical schema:** `governance`
+
 **Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.
 
 **Primary key:** `contract_id` + `contract_version`

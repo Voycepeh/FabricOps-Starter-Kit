@@ -12,6 +12,10 @@ See the SQL permissions observed for governed tables, including direct and role-
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One observed SQL permission row for one principal and one governed table within one access snapshot.
 
 **Primary key:** `access_id`

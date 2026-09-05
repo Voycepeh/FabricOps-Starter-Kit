@@ -454,6 +454,10 @@ class FrameworkConfig:
         Editable agreement table and widget definitions. Uses package defaults when omitted.
     audit_timezone : str, default="UTC"
         IANA timezone used for FabricOps-generated audit and technical timestamps.
+    governance_metadata_schema : str, default="governance"
+        Physical schema for governance-authored metadata definitions.
+    engineering_metadata_schema : str, default="engineering"
+        Physical schema for engineering-written metadata.
 
     Examples
     --------
@@ -467,10 +471,19 @@ class FrameworkConfig:
     governance_config: GovernanceConfig = field(default_factory=GovernanceConfig)
     data_agreement_config: DataAgreementConfig = field(default_factory=DataAgreementConfig)
     audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
+    governance_metadata_schema: str = "governance"
+    engineering_metadata_schema: str = "engineering"
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
         object.__setattr__(self, "audit_timezone", _validate_audit_timezone(self.audit_timezone))
+        for field_name in ("governance_metadata_schema", "engineering_metadata_schema"):
+            value = str(getattr(self, field_name) or "").strip()
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+                raise ValueError(f"{field_name} must be a simple non-empty schema name.")
+            object.__setattr__(self, field_name, value)
+        if self.governance_metadata_schema == self.engineering_metadata_schema:
+            raise ValueError("governance_metadata_schema and engineering_metadata_schema must be different.")
 
 
 @dataclass(frozen=True)

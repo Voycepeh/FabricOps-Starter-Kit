@@ -29,9 +29,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:114`
+`fabricops_kit/config/setup_metadata_tables.py:117`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L114-L447">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L117-L454">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -57,7 +57,6 @@ def setup_metadata_tables(
     spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
-    metadata_schema: str | None=None,
     require_active_steward: bool=False,
     verbose: bool=True,
     raise_on_failure: bool=False,
@@ -71,7 +70,7 @@ def setup_metadata_tables(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME, metadata_schema=METADATA_SCHEMA)
+setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)
 ```
 
 </div>
@@ -83,14 +82,13 @@ setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT
 | `spark` | `Any` | Yes | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
 | `config` | `FrameworkConfig \| dict[str, Any]` | Yes | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
 | `env` | `str` | Yes | Environment whose configured metadata lakehouse should be initialized or validated. |
-| `metadata_schema` | `str \| None` | No | Optional explicit schema for schema-enabled metadata lakehouses. When omitted, the configured metadata store schema is used where applicable. |
 | `require_active_steward` | `bool` | No | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
 | `verbose` | `bool` | No | Controls whether the concise per-table setup summary is printed. |
 | `raise_on_failure` | `bool` | No | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
 
 ## Returns
 
-dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schema, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, and active metadata counts.
+dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.
 
 ### Return interpretation
 
@@ -102,7 +100,7 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 ### Common failure causes
 
-- Missing or invalid metadata target configuration.
+- Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
 - Spark or Fabric lakehouse context is unavailable.
 - The caller lacks permission to create or inspect metadata tables.
 - An existing table is missing a required field or has an incompatible Spark field type.
@@ -118,8 +116,8 @@ Setup flow:
 1. Validate the supplied FabricOps configuration.
 2. Find the metadata lakehouse configured for the selected environment.
 3. Verify that the metadata target is a lakehouse.
-4. Resolve the metadata schema from ``metadata_schema`` or the configured
-   metadata store.
+4. Resolve each table's physical schema from its canonical ownership and
+   the configured governance/engineering schema names.
 5. Load the required FabricOps table definitions.
 6. Attempt to read each required metadata table.
 7. When a table is missing, create an empty Spark DataFrame using its
@@ -249,7 +247,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 35 |
+| Live-critical dependencies | 37 |
 
 ### Release history
 
@@ -265,6 +263,8 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>

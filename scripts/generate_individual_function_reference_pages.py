@@ -4434,6 +4434,7 @@ def generate_metadata_reference_pages() -> None:
     from fabricops_kit.config.metadata_schemas import (
         AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
+        metadata_table_owner,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
@@ -4582,6 +4583,10 @@ def generate_metadata_reference_pages() -> None:
             ),
             "",
             "## Model",
+            "",
+            f"**Authoritative writer:** `{metadata_table_owner(table_name)}`",
+            "",
+            f"**Default physical schema:** `{metadata_table_owner(table_name)}`",
             "",
             f"**Grain:** {model['grain']}",
             "",

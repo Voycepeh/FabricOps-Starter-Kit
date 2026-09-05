@@ -12,6 +12,10 @@ See the column-level profile metrics captured for a dataset snapshot.
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One observed column in one profiling snapshot.
 
 **Primary key:** `profile_id`

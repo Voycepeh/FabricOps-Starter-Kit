@@ -6,11 +6,47 @@ import pytest
 
 from fabricops_kit.config.metadata_schemas import (
     CANONICAL_METADATA_TABLES,
+    GOVERNANCE_METADATA_TABLES,
+    ENGINEERING_METADATA_TABLES,
     audit_schema_fields,
+    metadata_table_owner,
+    metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
 
 pytestmark = pytest.mark.unit
+
+
+def test_canonical_tables_have_one_authoritative_writer_class():
+    """Every canonical table belongs to exactly one ownership class."""
+    expected_owners = {
+        "METADATA_DATA_STEWARD": "governance",
+        "METADATA_DATA_AGREEMENT": "governance",
+        "METADATA_DATA_CONTRACT": "governance",
+        "METADATA_DATA_CATALOGUE": "engineering",
+        "METADATA_DATA_PROFILED": "engineering",
+        "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
+        "METADATA_DATA_LINEAGE": "engineering",
+        "METADATA_DATA_ACCESS": "engineering",
+        "METADATA_ENRICHMENT": "governance",
+        "METADATA_GUARDRAIL": "governance",
+        "METADATA_GUARDRAIL_RESULTS": "engineering",
+        "METADATA_GUARDRAIL_ROW_RESULTS": "engineering",
+        "METADATA_SOURCE_OBSERVATION": "engineering",
+    }
+    assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
+    assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
+    assert {table: metadata_table_owner(table) for table in CANONICAL_METADATA_TABLES} == expected_owners
+
+
+def test_physical_schema_resolution_uses_framework_ownership_config():
+    """Callers resolve schemas by canonical table name rather than literals."""
+    class Config:
+        governance_metadata_schema = "approved"
+        engineering_metadata_schema = "observed"
+
+    assert metadata_table_physical_schema(Config(), "METADATA_ENRICHMENT") == "approved"
+    assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
 
 
 def test_data_contract_uses_versioned_one_table_schema():

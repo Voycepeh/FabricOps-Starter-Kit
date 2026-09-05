@@ -12,6 +12,10 @@ No starter template or solution is traced for the public writer functions.
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One partition observation within one source-table observation.
 
 **Primary key:** `observation_id` + `partition_value`

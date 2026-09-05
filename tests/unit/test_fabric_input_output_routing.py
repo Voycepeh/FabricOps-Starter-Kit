@@ -583,8 +583,8 @@ def test_explicit_io_callables_are_public_exports_with_stable_signatures():
         assert inspect.signature(io_callable) == inspect.signature(owner_callable)
 
 
-def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
-    """Verify lakehouse table read with explicit schema uses schema physical path."""
+def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
+    """Verify canonical metadata reads ignore caller schemas in favor of ownership."""
     config = _io_config()
     context = {"config": config, "env": "dev"}
     spark = _Spark()
@@ -593,13 +593,13 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
         "METADATA_GUARDRAIL", target="metadata", schema="METADATA", spark_session=spark, context=context
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL"
     assert ("load", expected_path) in spark.read.calls
     assert spark.table_calls == []
 
 
-def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
-    """Verify lakehouse table write with explicit schema uses schema physical path."""
+def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
+    """Verify canonical metadata writes ignore caller schemas in favor of ownership."""
     config = _io_config()
     context = {"config": config, "env": "dev"}
     frame = _Frame()
@@ -615,13 +615,13 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
         context=context,
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL"
     assert ("save", expected_path) in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
 
-def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_config():
-    """Verify lakehouse schema enabled target routes paths and identifiers from config."""
+def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
+    """Verify canonical metadata ownership overrides a configured caller schema."""
     config = _schema_io_config()
     context = {"config": config, "env": "dev"}
     spark = _Spark()
@@ -644,7 +644,7 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     ) in spark.read.calls
     assert (
         "save",
-        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL",
+        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL",
     ) in frame.write.calls
 
 

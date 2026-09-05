@@ -9,7 +9,6 @@ from typing import Any, Mapping
 
 from fabricops_kit.config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from ..io.shared import (
-    configured_lakehouse_schema,
     get_spark_session,
     read_lakehouse_table_core,
     resolve_configured_lakehouse_table,
@@ -19,7 +18,7 @@ from ..io.shared import (
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_table_id, get_store
-from ..config.metadata_schemas import coerce_metadata_row_types
+from ..config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema
 
 
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
@@ -130,7 +129,7 @@ def persist_lineage_participation(
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
         "metadata",
         _LINEAGE_TABLE,
-        configured_lakehouse_schema(config, env, "metadata"),
+        metadata_table_physical_schema(config, _LINEAGE_TABLE),
         context=resolved_context,
     )
     (
@@ -675,7 +674,7 @@ def write_guardrail_result_row(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
         target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
+        schema=metadata_table_physical_schema(config, results_table),
         context={"config": config, "env": env},
         mode="append",
     )
@@ -1156,7 +1155,7 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     try:
         frame = read_lakehouse_table_core(
             DATA_CONTRACT_TABLE, target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session, context={"config": config, "env": env},
         )
     except Exception as exc:
@@ -1200,7 +1199,7 @@ def _resolve_data_contract_version(
         frame = read_lakehouse_table_core(
             DATA_CONTRACT_TABLE,
             target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session,
             context=context or {"config": config, "env": env},
         )
@@ -1246,7 +1245,7 @@ def resolve_catalogue_table_id(
     """Resolve one physical runtime table to its canonical Catalogue identity."""
     frame = read_lakehouse_table_core(
         CATALOGUE_TABLE, target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
+        schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session, context={"config": config, "env": env},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
@@ -1287,7 +1286,7 @@ def resolve_catalogue_table_identity(
     frame = read_lakehouse_table_core(
         CATALOGUE_TABLE,
         target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
+        schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session,
         context=context or {"config": config, "env": env},
     )
@@ -1695,7 +1694,7 @@ def load_table_guardrail_rules(
     try:
         return read_lakehouse_table_core(
             GUARDRAIL_TABLE, target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
             spark_session=spark_session, context=context or {"config": config, "env": env},
         )
     except Exception as exc:
@@ -2590,7 +2589,7 @@ def check_dq_runtime(
     write_lakehouse_table_core(
         spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
         "METADATA_GUARDRAIL_RESULTS", target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"), context=context, mode="append",
+        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
     )
 
     _, F, _ = _spark_sql_helpers()
@@ -2633,7 +2632,7 @@ def check_dq_runtime(
     if evidence.limit(1).count():
         write_lakehouse_table_core(
             evidence, "METADATA_GUARDRAIL_ROW_RESULTS", target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"), context=context, mode="append",
+            schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_ROW_RESULTS"), context=context, mode="append",
         )
     return result
 
@@ -2807,7 +2806,7 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
-    schema = configured_lakehouse_schema(config, env, "metadata")
+    schema = metadata_table_physical_schema(config, GUARDRAIL_TABLE)
     frame = read_lakehouse_table_core(GUARDRAIL_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()

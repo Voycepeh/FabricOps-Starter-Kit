@@ -1,6 +1,6 @@
 # List of Metadata Tables
 
-FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
+FabricOps uses one Metadata Lakehouse with two physical schemas: governance-authored definitions in the configured governance schema, and engineering-written observations and execution records in the configured engineering schema. These pages are generated from the implemented metadata setup schema registry and canonical ownership map used by `00_env_config`.
 
 The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
 

@@ -165,7 +165,7 @@ def registered(monkeypatch):
             schema="dbo" if target == "warehouse" else None,
         ),
     )
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda config, env, target: None)
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda config, table: None)
     monkeypatch.setattr(
         module,
         "build_runtime_audit_fields",
@@ -509,7 +509,7 @@ def test_frequency_replacement_is_scoped_to_profile_snapshot(monkeypatch):
         "resolve_configured_lakehouse_table",
         lambda *_args, **_kwargs: (None, None, None, "/metadata/frequency"),
     )
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: None)
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: None)
     monkeypatch.setattr(module, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: stored.extend(frame.rows))
 
     def replace(snapshot, values):
@@ -785,7 +785,7 @@ def test_catalogue_upsert_updates_type_without_deactivation_and_deactivates_remo
     monkeypatch.setitem(sys.modules, "delta", delta_module)
     monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/catalogue"))
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args, **_kwargs: None)
 
     _upsert_catalogue_identities(
         catalogue_df=CatalogueFrame(), config=object(), env="dev", spark_session=object(),
@@ -865,7 +865,7 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
         "resolve_configured_lakehouse_table",
         lambda *_args, **_kwargs: (None, None, None, "/metadata/catalogue"),
     )
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args, **_kwargs: None)
 
     schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
 

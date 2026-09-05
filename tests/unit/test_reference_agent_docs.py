@@ -243,7 +243,6 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     assert "spark=spark" in example
     assert "config=CONFIG" in example
     assert "env=ENVIRONMENT_NAME" in example
-    assert "metadata_schema=METADATA_SCHEMA" in example
 
 
 def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatch) -> None:
@@ -767,10 +766,10 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     image_reference = "../assets/fabricops-metadata-model.png"
 
     assert asset_path.exists()
-    assert "The diagram below shows how the FabricOps metadata tables relate to one another" in text
+    assert "FabricOps uses one Metadata Lakehouse with two physical schemas" in text
     assert f"![FabricOps metadata model]({image_reference})" in text
     assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
-    assert text.index("FabricOps metadata tables describe") < text.index(image_reference)
+    assert text.index("FabricOps uses one Metadata Lakehouse") < text.index(image_reference)
     assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
     assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
 

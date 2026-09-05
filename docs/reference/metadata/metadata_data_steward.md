@@ -12,6 +12,10 @@ Know who is responsible for the data.
 
 ## Model
 
+**Authoritative writer:** `governance`
+
+**Default physical schema:** `governance`
+
 **Grain:** One registered Data Steward.
 
 **Primary key:** `steward_id`
