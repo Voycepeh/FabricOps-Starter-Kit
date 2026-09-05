@@ -7,6 +7,9 @@ from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_t
 
 from .metadata_schemas import (
     CANONICAL_METADATA_TABLES,
+    GOVERNANCE_METADATA_TABLES,
+    ENGINEERING_METADATA_TABLES,
+    metadata_table_physical_schema,
     metadata_schema_type_name,
     metadata_table_field_names,
     metadata_table_schema_registry,
@@ -116,7 +119,6 @@ def setup_metadata_tables(
     spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
-    metadata_schema: str | None = None,
     require_active_steward: bool = False,
     verbose: bool = True,
     raise_on_failure: bool = False,
@@ -146,10 +148,6 @@ def setup_metadata_tables(
     env : str
         Environment whose configured metadata lakehouse should be initialized
         or validated.
-    metadata_schema : str | None, optional
-        Optional explicit schema for schema-enabled metadata lakehouses. When
-        omitted, the configured metadata store schema is used where
-        applicable.
     require_active_steward : bool, default=False
         When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active
         steward rows after setup. This option does not create a steward
@@ -164,12 +162,14 @@ def setup_metadata_tables(
     -------
     dict[str, Any]
         A dictionary summarizing the completed metadata lakehouse setup,
-        including the resolved metadata schema, metadata tables checked,
+        including the resolved governance and engineering metadata schemas,
+        metadata tables checked,
         tables created, existing tables successfully validated, failed tables,
         per-table messages, active steward readiness, fully qualified table
         names, and overall setup status. Key fields are ``status``,
-        ``data_agreement``, ``governance``, ``tables``, ``table_results``,
-        ``metadata_schema``, ``fully_qualified_tables``, ``created_tables``,
+        ``data_agreement``, ``governance``, ``engineering``, ``tables``,
+        ``table_results``,
+        ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,
         ``validated_tables``, ``failed_tables``, ``created_or_checked_tables``,
         ``warnings``, ``active_metadata_tables``, and
         ``active_metadata_table_count``.
@@ -178,8 +178,9 @@ def setup_metadata_tables(
         ``"partial_failure"`` when some tables succeed and some fail, and
         ``"failed"`` when all table operations fail. ``data_agreement``
         summarizes steward, agreement, and contract readiness. ``governance``
-        summarizes the remaining metadata tables. Active steward readiness
-        depends on whether active steward rows already exist.
+        summarizes governance-authored tables, and ``engineering`` summarizes
+        engineering-written tables. Active steward readiness depends on
+        whether active steward rows already exist.
 
     Raises
     ------
@@ -198,8 +199,8 @@ def setup_metadata_tables(
     1. Validate the supplied FabricOps configuration.
     2. Find the metadata lakehouse configured for the selected environment.
     3. Verify that the metadata target is a lakehouse.
-    4. Resolve the metadata schema from ``metadata_schema`` or the configured
-       metadata store.
+    4. Resolve each table's physical schema from its canonical ownership and
+       the configured governance/engineering schema names.
     5. Load the required FabricOps table definitions.
     6. Attempt to read each required metadata table.
     7. When a table is missing, create an empty Spark DataFrame using its
@@ -314,15 +315,6 @@ def setup_metadata_tables(
     metadata_store = get_store(config=normalized, env=env, target="metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-    resolved_metadata_schema = (
-        (str(metadata_schema).strip() or None)
-        if metadata_schema is not None
-        else (
-            str(getattr(metadata_store, "schema", "") or "").strip() or None
-            if getattr(metadata_store, "schema_enabled", False)
-            else None
-        )
-    )
     context = {"config": normalized, "env": env}
     registry = metadata_table_schema_registry()
 
@@ -335,6 +327,7 @@ def setup_metadata_tables(
     steward_table = None
 
     for index, (table_name, schema) in enumerate(registry.items(), start=1):
+        resolved_metadata_schema = metadata_table_physical_schema(normalized, table_name)
         try:
             created = False
             try:
@@ -404,7 +397,7 @@ def setup_metadata_tables(
     }
     if require_active_steward and not active_stewards:
         raise ValueError("METADATA_DATA_STEWARD has no active steward rows yet.")
-    governance_tables = [table for table in CANONICAL_METADATA_TABLES if table not in data_agreement_tables]
+    governance_tables = list(GOVERNANCE_METADATA_TABLES)
     governance_failed = [table for table in governance_tables if table in failed_tables]
     governance = {
         "status": "failed" if governance_failed else "ready",
@@ -413,16 +406,28 @@ def setup_metadata_tables(
         "validated_tables": [table for table in governance_tables if table in validated_tables],
         "failed_tables": governance_failed,
     }
-    fully_qualified_tables = [
-        f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in registry
-    ]
+    engineering_tables = list(ENGINEERING_METADATA_TABLES)
+    engineering_failed = [table for table in engineering_tables if table in failed_tables]
+    engineering = {
+        "status": "failed" if engineering_failed else "ready",
+        "tables": engineering_tables,
+        "created_tables": [table for table in engineering_tables if table in created_tables],
+        "validated_tables": [table for table in engineering_tables if table in validated_tables],
+        "failed_tables": engineering_failed,
+    }
+    metadata_schemas = {
+        "governance": normalized.governance_metadata_schema,
+        "engineering": normalized.engineering_metadata_schema,
+    }
+    fully_qualified_tables = [f"{metadata_table_physical_schema(normalized, table)}.{table}" for table in registry]
     result = {
         "status": status,
         "data_agreement": data_agreement,
         "governance": governance,
         "tables": list(registry),
         "table_results": table_results,
-        "metadata_schema": resolved_metadata_schema,
+        "metadata_schemas": metadata_schemas,
+        "engineering": engineering,
         "fully_qualified_tables": fully_qualified_tables,
         "created_tables": created_tables,
         "validated_tables": validated_tables,

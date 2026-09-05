@@ -15,6 +15,10 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One runtime outcome for one Guardrail rule in one pipeline run.
 
 **Primary key:** `guardrail_result_id`

@@ -14,6 +14,10 @@ See the frequency distribution captured for a profiled column.
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.
 
 **Primary key:** `frequency_id`

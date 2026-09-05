@@ -13,6 +13,10 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 ## Model
 
+**Authoritative writer:** `governance`
+
+**Default physical schema:** `governance`
+
 **Grain:** One configured Guardrail rule for one Catalogue table or column in one environment.
 
 **Primary key:** `guardrail_rule_id` + `guardrail_version`

@@ -12,6 +12,10 @@ The current structural registry of known table and column assets. table_id ident
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One table or column asset in one environment.
 
 **Primary key:** `environment_name` + `table_id` + `column_id`

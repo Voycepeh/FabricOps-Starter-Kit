@@ -105,8 +105,10 @@ USAGE_NOTE_BY_PATH_PREFIX = {
 }
 
 METADATA_REFERENCE_OVERVIEW_INTRO = (
-    "FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. "
-    "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`."
+    "FabricOps uses one Metadata Lakehouse with two physical schemas: governance-authored definitions in the "
+    "configured governance schema, and engineering-written observations and execution records in the "
+    "configured engineering schema. These pages are generated from the implemented metadata setup schema registry "
+    "and canonical ownership map used by `00_env_config`."
 )
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
@@ -1775,12 +1777,12 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "setup_metadata_tables": {
         "expanded_purpose": "Creates or validates the FabricOps metadata tables required by the framework in the configured metadata lakehouse. It establishes the physical metadata layer that later pipeline, profiling, guardrail, enrichment, and governance workflows read from and write to; it does not populate business metadata or register pipeline datasets.",
         "when_to_use": "Run during initial environment setup, after deploying a FabricOps version with metadata schema changes, or when recreating a development metadata environment. Do not use it as a substitute for setup_notebook, which resolves notebook execution context and configuration.",
-        "parameters": "spark is the Spark session used for metadata DDL/table-write operations; config is the FabricOps configuration used to resolve the selected env and metadata lakehouse target; env selects the environment; metadata_schema optionally qualifies schema-enabled metadata lakehouse tables; require_active_steward enforces existing active steward readiness; verbose controls setup output; raise_on_failure raises after all tables are processed if any table fails.",
-        "returns": "dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schema, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, and active metadata counts.",
+        "parameters": "spark is the Spark session used for metadata DDL/table-write operations; config is the FabricOps configuration used to resolve the selected env, metadata lakehouse target, governance metadata schema, and engineering metadata schema; env selects the environment; require_active_steward enforces existing active steward readiness; verbose controls setup output; raise_on_failure raises after all tables are processed if any table fails.",
+        "returns": "dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.",
         "side_effects": "Performs metadata-layer table creation and schema validation in the configured metadata lakehouse. Missing tables are created as empty Delta tables; existing tables are validated and are not silently accepted when incompatible.",
         "return_interpretation": "Use the returned status and per-table results to confirm that the physical metadata layer is ready. The function is primarily used for table-creation and validation side effects, not for registering business datasets.",
         "common_failure_causes": ["Missing or invalid metadata target configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing table is missing a required field or has an incompatible Spark field type.", "Nullability and field order are not validated; required field names and Spark data types are validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
-        "preferred_example": "setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME, metadata_schema=METADATA_SCHEMA)",
+        "preferred_example": "setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)",
     },
     "setup_notebook": {
         "expanded_purpose": "Prepares a Fabric notebook to use FabricOps consistently by validating environment configuration, resolving required data and metadata targets, collecting runtime identity, and returning a normalized NotebookSetupContext for downstream cells.",

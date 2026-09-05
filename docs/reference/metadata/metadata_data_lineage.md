@@ -12,6 +12,10 @@ See which registered tables participated as sources and targets in pipeline acti
 
 ## Model
 
+**Authoritative writer:** `engineering`
+
+**Default physical schema:** `engineering`
+
 **Grain:** One registered table participating as a source or target in one pipeline activity.
 
 **Primary key:** `lineage_id`

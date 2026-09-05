@@ -111,3 +111,30 @@ def test_guardrail_result_writer_has_single_shared_implementation():
         )
 
     assert writer_definitions == ["pipeline/shared.py:write_guardrail_result_row"]
+
+
+def test_pipeline_write_calls_do_not_target_governance_owned_tables():
+    """Statically prevent operational pipeline writers from mutating governance definitions."""
+    from fabricops_kit.config.metadata_schemas import GOVERNANCE_METADATA_TABLES
+
+    violations = []
+    for path in (SRC / "pipeline").glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        constants = {
+            node.targets[0].id: node.value.value
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        }
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or getattr(node.func, "id", "") != "write_lakehouse_table_core":
+                continue
+            for argument in node.args[1:2]:
+                table_name = argument.value if isinstance(argument, ast.Constant) else constants.get(getattr(argument, "id", ""))
+                if table_name in GOVERNANCE_METADATA_TABLES:
+                    violations.append(f"{path}:{node.lineno} writes {table_name}")
+    assert violations == []

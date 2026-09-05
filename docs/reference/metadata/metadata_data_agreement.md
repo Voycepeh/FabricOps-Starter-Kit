@@ -12,6 +12,10 @@ Define why the data is shared, with whom, and under what conditions.
 
 ## Model
 
+**Authoritative writer:** `governance`
+
+**Default physical schema:** `governance`
+
 **Grain:** One version of one Data Agreement.
 
 **Primary key:** `agreement_id` + `agreement_version`

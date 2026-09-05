@@ -153,7 +153,13 @@ def resolve_configured_lakehouse_table(
     target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str, str | None, str]:
     """Resolve a logical target and table through configured lakehouse metadata."""
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
+    config, env, resolved_context = resolve_fabric_context(context=context)
+    store, _env = resolve_target_store(target, "lakehouse", context=resolved_context)
+    if target.strip().lower() == "metadata":
+        from fabricops_kit.config.metadata_schemas import METADATA_TABLE_OWNERSHIP, metadata_table_physical_schema
+
+        if table_name in METADATA_TABLE_OWNERSHIP:
+            schema = metadata_table_physical_schema(config, table_name)
     table_value, schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
     return store, table_value, schema_value, path
 
