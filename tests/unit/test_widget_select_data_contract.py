@@ -77,7 +77,7 @@ def _render(monkeypatch, rows, *, env="dev", overrides=None):
     state_context = {"config": object(), "env": env, "data_contract_overrides": dict(overrides or {})}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], env, state_context))
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: "governance")
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "governance")
     def read_contracts(*_args, **kwargs):
         assert kwargs["schema"] == "governance"
         return _Frame(rows)
@@ -145,7 +145,7 @@ def test_production_requires_active_contract(monkeypatch):
     state_context = {"config": object(), "env": "prod", "data_contract_overrides": {}}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], "prod", state_context))
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
-    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: "governance")
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "governance")
     monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("missing")))
     with pytest.raises(ValueError, match="Production requires an active Data Contract"):
         module.widget_select_data_contract(table_id="table-a")

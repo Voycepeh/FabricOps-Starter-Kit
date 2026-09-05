@@ -195,7 +195,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     """Verify runtime result persistence identifies the exact Guardrail revision."""
     writes = []
     monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
-    monkeypatch.setattr(guardrails_shared, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(guardrails_shared, "metadata_table_physical_schema", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
         guardrails_shared,
         "write_lakehouse_table_core",

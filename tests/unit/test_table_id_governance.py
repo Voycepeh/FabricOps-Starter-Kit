@@ -42,7 +42,7 @@ def catalogue_row(table_id: str, table_name: str, *, active=True, level="table")
 def test_catalogue_resolver_isolates_canonical_table_id(monkeypatch):
     """Resolve A without selecting B's physical identity or processing authoring."""
     rows = [catalogue_row("table-a", "orders"), catalogue_row("table-b", "customers")]
-    monkeypatch.setattr(shared, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(rows))
 
     identity = shared.resolve_catalogue_table_identity(object(), "dev", "table-a")
@@ -61,7 +61,7 @@ def test_catalogue_resolver_rejects_blank_table_id(table_id):
 
 def test_catalogue_resolver_rejects_missing_duplicate_and_non_table_rows(monkeypatch):
     """Fail closed for absent, ambiguous, or non-table Catalogue identity rows."""
-    monkeypatch.setattr(shared, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     rows = [catalogue_row("table-a", "orders", level="column")]
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(rows))
     with pytest.raises(ValueError, match="No active registered Catalogue table"):

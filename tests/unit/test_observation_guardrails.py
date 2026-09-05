@@ -113,7 +113,7 @@ def _audit(at=None, activity_id="activity-tombstone"):
 
 def configure_changes(monkeypatch, history, rules=None):
     monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(changes, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(changes, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(changes, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(history))
     written = []
     monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))

@@ -315,7 +315,7 @@ def setup_metadata_tables(
     metadata_store = get_store(config=normalized, env=env, target="metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
-    if not getattr(metadata_store, "schema_enabled", False):
+    if metadata_store.schema_enabled is not True:
         raise ValueError("FabricOps Metadata Lakehouse must be schema-enabled.")
     context = {"config": normalized, "env": env}
     registry = metadata_table_schema_registry()

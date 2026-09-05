@@ -5,8 +5,9 @@ from __future__ import annotations
 import html
 from typing import Any
 
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import get_default_fabric_context, resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core
+from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
 from fabricops_kit.pipeline.shared import resolve_active_data_contract
 from fabricops_kit.widgets.shared import form_page, form_section, parse_data_contract_payload, pipeline_active_context, require_ipywidgets, status_message, widget_common
 
@@ -126,7 +127,7 @@ def widget_select_data_contract(
     config, env, resolved = resolve_fabric_context(context=context)
     spark = get_spark_session(spark_session)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
-    metadata_schema = configured_lakehouse_schema(config, env, "metadata")
+    metadata_schema = metadata_table_physical_schema(config, CONTRACT_TABLE)
     if env == "prod":
         versions = []
     else:

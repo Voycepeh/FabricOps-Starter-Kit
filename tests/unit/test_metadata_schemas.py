@@ -19,12 +19,24 @@ pytestmark = pytest.mark.unit
 
 def test_canonical_tables_have_one_authoritative_writer_class():
     """Every canonical table belongs to exactly one ownership class."""
+    expected_owners = {
+        "METADATA_DATA_STEWARD": "governance",
+        "METADATA_DATA_AGREEMENT": "governance",
+        "METADATA_DATA_CONTRACT": "governance",
+        "METADATA_DATA_CATALOGUE": "engineering",
+        "METADATA_DATA_PROFILED": "engineering",
+        "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
+        "METADATA_DATA_LINEAGE": "engineering",
+        "METADATA_DATA_ACCESS": "engineering",
+        "METADATA_ENRICHMENT": "governance",
+        "METADATA_GUARDRAIL": "governance",
+        "METADATA_GUARDRAIL_RESULTS": "engineering",
+        "METADATA_GUARDRAIL_ROW_RESULTS": "engineering",
+        "METADATA_SOURCE_OBSERVATION": "engineering",
+    }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
-    assert metadata_table_owner("METADATA_DATA_CONTRACT") == "governance"
-    assert metadata_table_owner("METADATA_GUARDRAIL") == "governance"
-    assert metadata_table_owner("METADATA_DATA_CATALOGUE") == "engineering"
-    assert metadata_table_owner("METADATA_GUARDRAIL_ROW_RESULTS") == "engineering"
+    assert {table: metadata_table_owner(table) for table in CANONICAL_METADATA_TABLES} == expected_owners
 
 
 def test_physical_schema_resolution_uses_framework_ownership_config():

@@ -9,10 +9,9 @@ from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import (
-    configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
     write_lakehouse_table_core,
 )
@@ -314,7 +313,7 @@ def _replace_frequency_rows(
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "metadata",
         PROFILED_FREQUENCY_TABLE,
-        configured_lakehouse_schema(config, env, "metadata"),
+        metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
         context={"config": config, "env": env},
     )
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
@@ -330,7 +329,7 @@ def _replace_frequency_rows(
             frequency_df,
             PROFILED_FREQUENCY_TABLE,
             target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
+            schema=metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
             context={"config": config, "env": env},
             mode="append",
         )
@@ -421,7 +420,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "metadata",
         CATALOGUE_TABLE,
-        configured_lakehouse_schema(config, env, "metadata"),
+        metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "env": env},
     )
     first = catalogue_df.select("environment_name", "table_id").first()
@@ -786,7 +785,7 @@ def profile_and_register_table(
         profiled_df,
         PROFILED_TABLE,
         target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
+        schema=metadata_table_physical_schema(config, PROFILED_TABLE),
         context={"config": config, "env": env},
         mode="append",
     )
