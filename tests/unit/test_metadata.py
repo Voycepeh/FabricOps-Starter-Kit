@@ -126,6 +126,7 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
 def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadata_cleanup():
     """Verify public callable list includes guardrail authoring helpers."""
     expected_public_callables = [
+        'scan_warehouse_access',
         'FabricStore',
         'PathConfig',
         'GovernanceConfig',
