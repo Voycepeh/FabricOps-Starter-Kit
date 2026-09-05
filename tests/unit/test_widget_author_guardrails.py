@@ -96,6 +96,8 @@ def _state(existing=()):
     return {
         "environment_name": "dev",
         "table_id": "table-orders",
+        "contract_id": "contract-orders",
+        "contract_version": 2,
         "table_name": "orders",
         "store_type": "lakehouse",
         "layer": "source",
@@ -129,11 +131,12 @@ def test_guardrail_records_use_only_stage4a_authoring_fields():
     """Verify that authored Guardrail rows use only the Stage 4A contract."""
     records = _records()
     expected = {
-        "guardrail_rule_id", "guardrail_version", "table_id", "column_id", "environment_name",
+        "guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "environment_name",
         "guardrail_type", "rule_id", "rule_type", "rule_parameters_json", "severity", "is_active",
     }
     assert all(set(row) == expected for row in records)
-    assert all(row["table_id"] == "table-orders" for row in records)
+    assert all(row["contract_id"] == "contract-orders" and row["contract_version"] == 2 for row in records)
+    assert all("table_id" not in row for row in records)
     assert all(not (set(row) & OBSOLETE_GUARDRAIL_FIELDS) for row in records)
 
 
@@ -243,13 +246,15 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
         }
         for column_id in ("col-a", "col-b")
     ]
-    rules = [{"table_id": "table-orders", "environment_name": "dev", "guardrail_type": "schema"}]
+    rules = [{"contract_id": "contract-orders", "contract_version": 2, "environment_name": "dev", "guardrail_type": "schema"}]
+    contracts = [{"contract_id": "contract-orders", "contract_version": 2, "table_id": "table-orders"}]
 
     def fake_read(config, env, table_name, *, spark_session):
         return {
             authoring.CATALOGUE_TABLE: catalogue,
             authoring.PROFILED_TABLE: profiles,
             authoring.GUARDRAIL_TABLE: rules,
+            authoring.DATA_CONTRACT_TABLE: contracts,
         }[table_name]
 
     monkeypatch.setattr(authoring, "read_metadata_table_or_empty", fake_read)
@@ -270,7 +275,8 @@ def test_widget_preview_uses_new_metadata_vocabulary(monkeypatch):
     _install_fake_notebook_widgets(monkeypatch)
     widget = _render_guardrail_authoring(_state(), context={"config": object(), "env": "dev"})
     preview = widget["controls"]["preview"].value
-    assert '"table_id": "table-orders"' in preview
+    assert '"contract_id": "contract-orders"' in preview
+    assert '"contract_version": 2' in preview
     assert '"guardrail_version": 1' in preview
     for field in OBSOLETE_GUARDRAIL_FIELDS:
         assert f'"{field}"' not in preview

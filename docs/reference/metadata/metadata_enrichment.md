@@ -16,21 +16,24 @@ Add business and governance context to the data.
 
 **Default physical schema:** `governance`
 
-**Grain:** One appended enrichment value for one table or column identity in one environment.
+**Grain:** One appended enrichment value for one exact Data Contract version and optional column identity.
 
 **Primary key:** `enrichment_id`
 
 **Relationships:**
 
+`METADATA_DATA_CONTRACT` **(N → 1)**
+via `contract_id` + `contract_version`
+
 `METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id` + `column_id`
+via `column_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 15 |
-| Business columns | 7 |
+| Total columns | 16 |
+| Business columns | 8 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -38,7 +41,8 @@ via `table_id` + `column_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `enrichment_id` | `string` | Identifier stored for `enrichment_id`. |
-| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `contract_id` | `string` | Stable identifier for the contract row. |
+| `contract_version` | `integer` | Version recorded for the contract row. |
 | `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `enrichment_level` | `string` | Metadata Enrichment field `enrichment_level`. |

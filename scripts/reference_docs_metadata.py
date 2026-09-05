@@ -106,7 +106,7 @@ USAGE_NOTE_BY_PATH_PREFIX = {
 
 METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
 
-`table_id` is the shared identity that links metadata to the governed data asset."""
+`table_id` identifies the governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -210,11 +210,12 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_ENRICHMENT": {
         "purpose": "Add business and governance context to the data.",
-        "grain": "One appended enrichment value for one table or column identity in one environment.",
+        "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Enrichment belongs to one exact governed Data Contract version; its table is resolved through that contract's table_id."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents enrichment from leaking between versions of a stable contract_id."},
+            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment retains the Catalogue column identity; table-level enrichment leaves column_id empty."},
         ],
         "relationships": [],
     },
@@ -229,10 +230,11 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_GUARDRAIL": {
         "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
-        "grain": "One configured Guardrail rule for one Catalogue table or column in one environment.",
+        "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
         "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many Guardrail rules can belong to one logical Catalogue table identity in an environment."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Guardrail rules belong to one exact governed Data Contract version; the governed table is resolved through that contract's table_id."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents rules from leaking between versions of a stable contract_id."},
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty."},
         ],
         "relationships": [
@@ -438,7 +440,8 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "contract_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "contract_version": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
@@ -454,7 +457,8 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "guardrail_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "table_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
+        "contract_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
+        "contract_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "column_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "environment_name": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "guardrail_type": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],

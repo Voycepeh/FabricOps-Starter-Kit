@@ -117,14 +117,19 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     duplicate_names = sorted({name for name in column_names if column_names.count(name) > 1})
     if duplicate_names:
         raise ValueError("Active METADATA_DATA_CATALOGUE columns contain duplicate column_name values: " + ", ".join(duplicate_names))
-    enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
-    enrichment_docs = [_fields(r, ("enrichment_id", "table_id", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
-    guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
+    def contract_key(row: dict[str, Any]) -> bool:
+        return (
+            str(row.get("contract_id") or "") == contract_id
+            and int(row.get("contract_version") or 0) == int(contract_version)
+        )
+    enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
+    enrichment_docs = [_fields(r, ("enrichment_id", "contract_id", "contract_version", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
+    guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
     guardrail_docs = []
     for row in guardrails:
         if row.get("is_active") is not True:
             continue
-        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "table_id", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
+        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
         rule_parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
         if not isinstance(rule_parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")

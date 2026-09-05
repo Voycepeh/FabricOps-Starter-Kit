@@ -22,6 +22,7 @@ pytestmark = pytest.mark.unit
 
 def _sources():
     audit = {"_committed_at": "2026-01-01T00:00:00", "_activity_id": "a"}
+    contract_id = _contract_id("agreement", "orders")
     return {
         "METADATA_DATA_STEWARD": [
             {"steward_id": "provider", "steward_name": "Provider", "steward_role": "Owner", "contact": "provider@example.invalid", "is_active": True, **audit},
@@ -33,12 +34,12 @@ def _sources():
             {"metadata_level": "column", "table_id": "orders", "column_id": "order_id", "column_name": "order_id", "data_type": "long", "environment_name": "dev", "is_active": True, **audit},
         ],
         "METADATA_ENRICHMENT": [
-            {"enrichment_id": "e1", "table_id": "orders", "column_id": None, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "description", "value": "Orders", **audit},
-            {"enrichment_id": "e2", "table_id": "orders", "column_id": "order_id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "description", "value": "Identifier", **audit},
+            {"enrichment_id": "e1", "contract_id": contract_id, "contract_version": 1, "column_id": None, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "description", "value": "Orders", **audit},
+            {"enrichment_id": "e2", "contract_id": contract_id, "contract_version": 1, "column_id": "order_id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "description", "value": "Identifier", **audit},
         ],
         "METADATA_GUARDRAIL": [
-            {"guardrail_rule_id": "g1", "guardrail_version": 2, "table_id": "orders", "column_id": "order_id", "environment_name": "dev", "guardrail_type": "quality", "rule_id": "not_null", "rule_type": "not_null", "rule_parameters_json": '{"threshold":1}', "severity": "error", "is_active": True, **audit},
-            {"guardrail_rule_id": "g2", "guardrail_version": 1, "table_id": "orders", "environment_name": "dev", "guardrail_type": "schema", "rule_id": "old", "rule_type": "schema", "rule_parameters_json": "{}", "severity": "warning", "is_active": False, **audit},
+            {"guardrail_rule_id": "g1", "guardrail_version": 2, "contract_id": contract_id, "contract_version": 1, "column_id": "order_id", "environment_name": "dev", "guardrail_type": "quality", "rule_id": "not_null", "rule_type": "not_null", "rule_parameters_json": '{"threshold":1}', "severity": "error", "is_active": True, **audit},
+            {"guardrail_rule_id": "g2", "guardrail_version": 1, "contract_id": contract_id, "contract_version": 1, "environment_name": "dev", "guardrail_type": "schema", "rule_id": "old", "rule_type": "schema", "rule_parameters_json": "{}", "severity": "warning", "is_active": False, **audit},
         ],
     }
 
@@ -78,9 +79,34 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert warnings == []
 
 
+def test_payload_uses_only_governance_rows_for_exact_contract_version():
+    """Prevent enrichment and Guardrails from leaking across contract versions."""
+    contract_id = _contract_id("agreement", "orders")
+    sources = _sources()
+    sources["METADATA_ENRICHMENT"].append({
+        **sources["METADATA_ENRICHMENT"][0], "enrichment_id": "future-enrichment",
+        "contract_version": 2, "value": "Future Orders",
+    })
+    sources["METADATA_GUARDRAIL"].append({
+        **sources["METADATA_GUARDRAIL"][0], "guardrail_rule_id": "future-rule",
+        "contract_version": 2,
+    })
+
+    payload, _ = _assemble_payload(
+        contract_id=contract_id, contract_version=1, agreement=_agreement(),
+        table_id="orders", usages=[], tables=sources, environment_name="dev",
+    )
+
+    assert [row["value"] for row in payload["enrichment"]["table"]] == ["Orders"]
+    assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]
+
+
 def test_payload_freezes_schema_once_in_table_columns():
     """Keep schema Guardrails as enforcement policy rather than structural authority."""
     sources = _sources()
+    for table in ("METADATA_ENRICHMENT", "METADATA_GUARDRAIL"):
+        for row in sources[table]:
+            row["contract_id"] = "contract"
     sources["METADATA_GUARDRAIL"][1].update(
         is_active=True,
         rule_type="minimum_required",
