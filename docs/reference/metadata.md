@@ -51,7 +51,7 @@ Governed output tables are also physical project data, not `METADATA_*` tables. 
 !!! note "Current-state boundary"
     The ownership split describes the implemented routing for the current canonical `METADATA_*` tables. The contract-owned Enrichment and Guardrail relationship above is the intended conceptual ownership and lifecycle model; generated field and relationship documentation below continues to reflect the current physical implementation until the separate schema migration is implemented. This page does not claim future DQ, PII, or access-persistence changes are complete. `METADATA_GUARDRAIL_ROW_RESULTS` remains part of the current metadata model, while optional DQ failure DataFrames and PII mapping DataFrames remain separate project support data unless a later implementation explicitly defines otherwise.
 
-The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
+The current-state physical diagram below reflects the implemented metadata relationships, including the temporary direct `table_id` fields on Enrichment and Guardrails. The intended contract-owned relationship described above will replace those links in the separate schema migration.
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
