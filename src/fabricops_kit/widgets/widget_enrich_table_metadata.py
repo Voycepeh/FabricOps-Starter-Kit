@@ -62,8 +62,10 @@ def widget_enrich_table_metadata(
     -----
     Table enrichment supports ``Description`` and ``Classification``. Column
     enrichment additionally supports ``Personal_identifier``. Saving appends
-    only non-empty changed values to ``METADATA_ENRICHMENT`` using ``table_id``,
-    optional ``column_id``, and ``environment_name``. Repeated unchanged saves
+    only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
+    ``contract_id`` and ``contract_version``, optional ``column_id``, and
+    ``environment_name``. The governed table is resolved through the contract.
+    Repeated unchanged saves
     produce no write.
 
     Examples
@@ -98,8 +100,25 @@ def widget_enrich_table_metadata(
         enrichment_rows = _enrichment.read_enrichment_records(config, env, spark_session=spark_session)
     except Exception as exc:
         raise RuntimeError(f"Unable to read METADATA_ENRICHMENT: {exc}") from exc
+    try:
+        contracts = read_lakehouse_table_core(
+            "METADATA_DATA_CONTRACT", target="metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
+            context=runtime_context, spark_session=spark_session,
+        )
+        contract_rows = _rows(contracts)
+    except Exception as exc:
+        raise RuntimeError(f"Unable to read METADATA_DATA_CONTRACT: {exc}") from exc
+    latest_contracts: dict[str, dict[str, Any]] = {}
+    for row in contract_rows:
+        if str(row.get("status") or "").lower() != "draft":
+            continue
+        table_id = str(row.get("table_id") or "")
+        current = latest_contracts.get(table_id)
+        if table_id and (current is None or int(row.get("contract_version") or 0) > int(current.get("contract_version") or 0)):
+            latest_contracts[table_id] = row
 
-    table_options = _enrichment.catalogue_table_options(catalogue_rows, environment_name=env)
+    table_options = [row for row in _enrichment.catalogue_table_options(catalogue_rows, environment_name=env) if row["table_id"] in latest_contracts]
     if not catalogue_rows:
         raise ValueError("METADATA_DATA_CATALOGUE has no catalogue rows available.")
     if not table_options:
@@ -247,11 +266,14 @@ def widget_enrich_table_metadata(
         if not table_id:
             return
         selected["table_id"] = table_id
+        selected.update(latest_contracts[table_id])
         selected["item_token"] = ""
         browser = _enrichment.catalogue_table_browser_state(
             catalogue_rows,
             table_id,
             environment_name=env,
+            contract_id=str(selected["contract_id"]),
+            contract_version=int(selected["contract_version"]),
             current_values=current_values,
         )
         state_holder["state"].clear()
@@ -266,7 +288,7 @@ def widget_enrich_table_metadata(
         )
         refresh_column_options()
 
-    spark_read_count = 2
+    spark_read_count = 3
 
     def filter_tables(*_: Any) -> None:
         query = str(table_search.value or "").strip().casefold()
@@ -298,7 +320,8 @@ def widget_enrich_table_metadata(
         inputs = [
             {
                 "enrichment_level": level,
-                "table_id": table_id,
+                "contract_id": str(selected["contract_id"]),
+                "contract_version": int(selected["contract_version"]),
                 "column_id": column_id,
                 "environment_name": env,
                 "enrichment_type": name,
@@ -324,12 +347,14 @@ def widget_enrich_table_metadata(
         original = originals[identity]
         for record in records:
             original[record["enrichment_type"]] = record["value"]
-            current_values[(level, table_id, column_id, record["enrichment_type"])] = dict(record)
+            current_values[(level, str(record["contract_id"]), int(record["contract_version"]), column_id, record["enrichment_type"])] = dict(record)
         drafts[identity] = dict(original)
         refreshed = _enrichment.catalogue_table_browser_state(
             catalogue_rows,
             table_id,
             environment_name=env,
+            contract_id=str(selected["contract_id"]),
+            contract_version=int(selected["contract_version"]),
             current_values=current_values,
         )
         state_holder["state"].clear()

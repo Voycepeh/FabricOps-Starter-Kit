@@ -60,19 +60,20 @@ def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> li
     return sorted(options, key=lambda row: (row["label"].casefold(), row["table_id"]))
 
 
-def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[str, str, str, str], dict[str, Any]]:
-    """Return latest enrichment by level, table, column, and enrichment type."""
-    latest: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[str, str, int, str, str], dict[str, Any]]:
+    """Return latest enrichment by level, contract version, column, and type."""
+    latest: dict[tuple[str, str, int, str, str], dict[str, Any]] = {}
     for row in _rows(rows):
         if str(row.get("environment_name") or "") != str(environment_name):
             continue
         level = str(row.get("enrichment_level") or "").lower()
-        table_id = str(row.get("table_id") or "")
+        contract_id = str(row.get("contract_id") or "")
+        contract_version = int(row.get("contract_version") or 0)
         column_id = str(row.get("column_id") or "")
         enrichment_type = str(row.get("enrichment_type") or "")
-        if not level or not table_id or not enrichment_type:
+        if not level or not contract_id or contract_version < 1 or not enrichment_type:
             continue
-        key = (level, table_id, column_id, enrichment_type)
+        key = (level, contract_id, contract_version, column_id, enrichment_type)
         order = (
             _sort_timestamp(row.get("_committed_at")),
             str(row.get("_activity_id") or ""),
@@ -87,16 +88,17 @@ def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[
 
 
 def _enrichment_values(
-    current_values: dict[tuple[str, str, str, str], dict[str, Any]],
+    current_values: dict[tuple[str, str, int, str, str], dict[str, Any]],
     *,
     level: str,
-    table_id: str,
+    contract_id: str,
+    contract_version: int,
     column_id: str = "",
 ) -> dict[str, str]:
     """Return enrichment values for one Catalogue identity."""
     result: dict[str, str] = {}
-    for (stored_level, stored_table_id, stored_column_id, enrichment_type), row in current_values.items():
-        if (stored_level, stored_table_id, stored_column_id) != (level, table_id, column_id):
+    for (stored_level, stored_contract_id, stored_version, stored_column_id, enrichment_type), row in current_values.items():
+        if (stored_level, stored_contract_id, stored_version, stored_column_id) != (level, contract_id, contract_version, column_id):
             continue
         result[enrichment_type] = str(row.get("value") or "")
     return result
@@ -107,7 +109,9 @@ def catalogue_table_browser_state(
     table_id: str,
     *,
     environment_name: str,
-    current_values: dict[tuple[str, str, str, str], dict[str, Any]],
+    contract_id: str,
+    contract_version: int,
+    current_values: dict[tuple[str, str, int, str, str], dict[str, Any]],
 ) -> dict[str, Any]:
     """Return one environment-specific Catalogue table and its column history."""
     rows = [
@@ -148,7 +152,8 @@ def catalogue_table_browser_state(
                 "enrichment_values": _enrichment_values(
                     current_values,
                     level="column",
-                    table_id=table_id,
+                    contract_id=contract_id,
+                    contract_version=contract_version,
                     column_id=column_id,
                 ),
             }
@@ -156,6 +161,8 @@ def catalogue_table_browser_state(
     columns.sort(key=lambda row: (row["status"] != "current", row["column_name"].casefold(), row["column_id"]))
     return {
         "table_id": table_id,
+        "contract_id": contract_id,
+        "contract_version": contract_version,
         "environment_name": environment_name,
         "table_name": str(table_row.get("table_name") or table_id),
         "table_row": dict(table_row),
@@ -163,7 +170,7 @@ def catalogue_table_browser_state(
         "removed_columns": [row for row in columns if row["status"] == "removed"],
         "all_historical_columns": columns,
         "current_enrichment_values": {
-            "table": _enrichment_values(current_values, level="table", table_id=table_id),
+            "table": _enrichment_values(current_values, level="table", contract_id=contract_id, contract_version=contract_version),
         },
     }
 
@@ -181,12 +188,13 @@ def build_enrichment_records(
         level = str(raw.get("enrichment_level") or "").strip().lower()
         if level not in {"table", "column"}:
             raise ValueError("enrichment_level must be 'table' or 'column'.")
-        table_id = str(raw.get("table_id") or "").strip()
+        contract_id = str(raw.get("contract_id") or "").strip()
+        contract_version = int(raw.get("contract_version") or 0)
         column_id = str(raw.get("column_id") or "").strip()
         enrichment_type = str(raw.get("enrichment_type") or "").strip()
         value = str(raw.get("value") or "").strip()
-        if not table_id:
-            raise ValueError("Enrichment rows require table_id.")
+        if not contract_id or contract_version < 1:
+            raise ValueError("Enrichment rows require contract_id and contract_version.")
         if level == "column" and not column_id:
             raise ValueError("Column enrichment rows require column_id.")
         if level == "table":
@@ -199,7 +207,8 @@ def build_enrichment_records(
         built.append(
             {
                 "enrichment_id": str(raw.get("enrichment_id") or uuid.uuid4()),
-                "table_id": table_id,
+                "contract_id": contract_id,
+                "contract_version": contract_version,
                 "column_id": column_id,
                 "environment_name": str(raw.get("environment_name") or env),
                 "enrichment_level": level,

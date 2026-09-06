@@ -174,7 +174,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("agreement_id", "string", False),
                 ("agreement_version", "string", False),
                 ("table_id", "string", False),
-                ("contract_payload_json", "string", False),
+                ("contract_payload_json", "string"),
                 ("status", "string", False),
                 ("is_active", "boolean", False),
                 *audit,
@@ -276,7 +276,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             "METADATA_ENRICHMENT",
             [
                 ("enrichment_id", "string"),
-                ("table_id", "string"),
+                ("contract_id", "string", False),
+                ("contract_version", "integer", False),
                 ("column_id", "string"),
                 ("environment_name", "string"),
                 ("enrichment_level", "string"),
@@ -290,7 +291,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             [
                 ("guardrail_rule_id", "string", False),
                 ("guardrail_version", "integer", False),
-                ("table_id", "string", False),
+                ("contract_id", "string", False),
+                ("contract_version", "integer", False),
                 ("column_id", "string"),
                 ("environment_name", "string", False),
                 ("guardrail_type", "string", False),

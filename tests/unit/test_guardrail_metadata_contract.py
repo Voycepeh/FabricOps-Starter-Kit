@@ -19,7 +19,8 @@ _AUDIT_COLUMNS = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
 _GUARDRAIL_COLUMNS = [
     "guardrail_rule_id",
     "guardrail_version",
-    "table_id",
+    "contract_id",
+    "contract_version",
     "column_id",
     "environment_name",
     "guardrail_type",
@@ -98,7 +99,8 @@ def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
     result_fields = set(_field_names("METADATA_GUARDRAIL_RESULTS"))
     row_result_fields = set(_field_names("METADATA_GUARDRAIL_ROW_RESULTS"))
 
-    assert {"table_id", "column_id"} <= guardrail_fields
+    assert {"contract_id", "contract_version", "column_id"} <= guardrail_fields
+    assert "table_id" not in guardrail_fields
     assert {"guardrail_rule_id", "guardrail_version"} <= result_fields
     assert "guardrail_result_id" in row_result_fields
     assert "guardrail_rule_id" not in row_result_fields
@@ -161,7 +163,8 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     source = {
         "guardrail_rule_id": "rule-1",
         "guardrail_version": 3,
-        "table_id": "table-id",
+        "contract_id": "contract-id",
+        "contract_version": 2,
         "column_id": "column-id",
         "metadata_table_key": "legacy-table-id",
         "metadata_column_key": "legacy-column-id",
@@ -180,7 +183,9 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
 
     assert list(row) == _GUARDRAIL_COLUMNS
     assert row["guardrail_version"] == 3
-    assert row["table_id"] == "table-id"
+    assert row["contract_id"] == "contract-id"
+    assert row["contract_version"] == 2
+    assert "table_id" not in row
     assert row["column_id"] == "column-id"
     assert row["rule_parameters_json"] == '{"a":1,"maximum_null_percent":0,"z":2}'
     assert json.loads(row["rule_parameters_json"])["maximum_null_percent"] == 0

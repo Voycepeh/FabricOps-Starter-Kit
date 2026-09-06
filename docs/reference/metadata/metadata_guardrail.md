@@ -17,21 +17,24 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 **Default physical schema:** `governance`
 
-**Grain:** One configured Guardrail rule for one Catalogue table or column in one environment.
+**Grain:** One configured Guardrail rule revision for one exact Data Contract version and optional column identity.
 
 **Primary key:** `guardrail_rule_id` + `guardrail_version`
 
 **Relationships:**
 
+`METADATA_DATA_CONTRACT` **(N → 1)**
+via `contract_id` + `contract_version`
+
 `METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id` + `column_id`
+via `column_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 19 |
-| Business columns | 11 |
+| Total columns | 20 |
+| Business columns | 12 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -40,7 +43,8 @@ via `table_id` + `column_id`
 | --- | --- | --- |
 | `guardrail_rule_id` | `string` | Stable identifier for the guardrail rule row. |
 | `guardrail_version` | `integer` | Metadata Guardrail field `guardrail_version`. |
-| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `contract_id` | `string` | Stable identifier for the contract row. |
+| `contract_version` | `integer` | Version recorded for the contract row. |
 | `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `guardrail_type` | `string` | Guardrail family recorded for the row. |

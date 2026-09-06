@@ -157,9 +157,10 @@ def widget_author_guardrails(
 
     Notes
     -----
-    The widget resolves ``table_id`` and ``column_id`` through the normalized
-    Catalogue and Profile metadata and writes only the Stage 4A
-    ``METADATA_GUARDRAIL`` contract.
+    The widget resolves a Data Contract version for the selected profiled
+    Catalogue table and writes ``METADATA_GUARDRAIL`` rows owned by its
+    ``contract_id`` and ``contract_version``. Runtime code resolves the
+    underlying ``table_id`` through ``METADATA_DATA_CONTRACT``.
 
     Examples
     --------

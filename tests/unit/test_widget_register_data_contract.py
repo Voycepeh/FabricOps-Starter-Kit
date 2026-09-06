@@ -22,6 +22,7 @@ pytestmark = pytest.mark.unit
 
 def _sources():
     audit = {"_committed_at": "2026-01-01T00:00:00", "_activity_id": "a"}
+    contract_id = _contract_id("agreement", "orders")
     return {
         "METADATA_DATA_STEWARD": [
             {"steward_id": "provider", "steward_name": "Provider", "steward_role": "Owner", "contact": "provider@example.invalid", "is_active": True, **audit},
@@ -33,12 +34,12 @@ def _sources():
             {"metadata_level": "column", "table_id": "orders", "column_id": "order_id", "column_name": "order_id", "data_type": "long", "environment_name": "dev", "is_active": True, **audit},
         ],
         "METADATA_ENRICHMENT": [
-            {"enrichment_id": "e1", "table_id": "orders", "column_id": None, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "description", "value": "Orders", **audit},
-            {"enrichment_id": "e2", "table_id": "orders", "column_id": "order_id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "description", "value": "Identifier", **audit},
+            {"enrichment_id": "e1", "contract_id": contract_id, "contract_version": 1, "column_id": None, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "description", "value": "Orders", **audit},
+            {"enrichment_id": "e2", "contract_id": contract_id, "contract_version": 1, "column_id": "order_id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "description", "value": "Identifier", **audit},
         ],
         "METADATA_GUARDRAIL": [
-            {"guardrail_rule_id": "g1", "guardrail_version": 2, "table_id": "orders", "column_id": "order_id", "environment_name": "dev", "guardrail_type": "quality", "rule_id": "not_null", "rule_type": "not_null", "rule_parameters_json": '{"threshold":1}', "severity": "error", "is_active": True, **audit},
-            {"guardrail_rule_id": "g2", "guardrail_version": 1, "table_id": "orders", "environment_name": "dev", "guardrail_type": "schema", "rule_id": "old", "rule_type": "schema", "rule_parameters_json": "{}", "severity": "warning", "is_active": False, **audit},
+            {"guardrail_rule_id": "g1", "guardrail_version": 2, "contract_id": contract_id, "contract_version": 1, "column_id": "order_id", "environment_name": "dev", "guardrail_type": "quality", "rule_id": "not_null", "rule_type": "not_null", "rule_parameters_json": '{"threshold":1}', "severity": "error", "is_active": True, **audit},
+            {"guardrail_rule_id": "g2", "guardrail_version": 1, "contract_id": contract_id, "contract_version": 1, "environment_name": "dev", "guardrail_type": "schema", "rule_id": "old", "rule_type": "schema", "rule_parameters_json": "{}", "severity": "warning", "is_active": False, **audit},
         ],
     }
 
@@ -78,9 +79,34 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert warnings == []
 
 
+def test_payload_uses_only_governance_rows_for_exact_contract_version():
+    """Prevent enrichment and Guardrails from leaking across contract versions."""
+    contract_id = _contract_id("agreement", "orders")
+    sources = _sources()
+    sources["METADATA_ENRICHMENT"].append({
+        **sources["METADATA_ENRICHMENT"][0], "enrichment_id": "future-enrichment",
+        "contract_version": 2, "value": "Future Orders",
+    })
+    sources["METADATA_GUARDRAIL"].append({
+        **sources["METADATA_GUARDRAIL"][0], "guardrail_rule_id": "future-rule",
+        "contract_version": 2,
+    })
+
+    payload, _ = _assemble_payload(
+        contract_id=contract_id, contract_version=1, agreement=_agreement(),
+        table_id="orders", usages=[], tables=sources, environment_name="dev",
+    )
+
+    assert [row["value"] for row in payload["enrichment"]["table"]] == ["Orders"]
+    assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]
+
+
 def test_payload_freezes_schema_once_in_table_columns():
     """Keep schema Guardrails as enforcement policy rather than structural authority."""
     sources = _sources()
+    for table in ("METADATA_ENRICHMENT", "METADATA_GUARDRAIL"):
+        for row in sources[table]:
+            row["contract_id"] = "contract"
     sources["METADATA_GUARDRAIL"][1].update(
         is_active=True,
         rule_type="minimum_required",
@@ -220,6 +246,9 @@ class _Frame:
     def collect(self):
         return list(self.rows)
 
+    def alias(self, _name):
+        return self
+
 
 class _Spark:
     def createDataFrame(self, rows, schema=None):
@@ -265,12 +294,12 @@ def _run_widget(monkeypatch, *, agreement_id="agreement-b", agreement_version="1
         table_id="orders",
         approved_usages=approved_usages,
     )
-    return state, writes
+    return state, writes, tables
 
 
 def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch):
     """Keep displayed Agreement, table, usages, and review in one initial state."""
-    state, writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    state, writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
     controls = state["_controls"]
     assert controls["agreement"].value == "agreement-b\n10.0.0"
     assert controls["table"].value == "orders"
@@ -282,7 +311,7 @@ def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch
 
 def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
     """Replace stale usage options and remove permissions absent from the new Agreement."""
-    state, _writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    state, _writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
     controls = state["_controls"]
     controls["agreement"].value = "agreement-a\n1.0.0"
     assert controls["approved_usages"].options == ["analytics", "research"]
@@ -291,36 +320,85 @@ def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
     assert state["review"]["agreement"]["agreement_id"] == "agreement-a"
 
 
-def test_widget_uses_numeric_agreement_versions_and_appends_contract_versions(monkeypatch):
-    """Resolve semantic versions and append exactly one immutable row per save."""
-    state, writes = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
+def test_widget_uses_numeric_agreement_versions_and_reopens_one_draft(monkeypatch):
+    """Resolve semantic versions and keep one open payload-free draft."""
+    state, writes, _tables = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
     assert state["agreement_version"] == "10.0.0"
     displayed_payload = state["review"]
     first = state["save"]()
     second = state["save"]()
-    assert len(writes) == 2
+    assert len(writes) == 1
     assert first["contract_version"] == 1
-    assert second["contract_version"] == 2
+    assert second["contract_version"] == 1
     assert first["contract_id"] == second["contract_id"]
-    assert json.loads(first["contract_payload_json"]) == displayed_payload
+    assert first["contract_payload_json"] == ""
+    assert displayed_payload["contract"]["status"] == "draft"
     assert first["status"] == "draft" and first["is_active"] is False
 
 
 def test_widget_different_agreement_table_lifecycle_has_different_identity(monkeypatch):
     """Separate contract lifecycles when the Agreement lifecycle changes."""
-    first, _writes = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
-    second, _writes = _run_widget(monkeypatch)
+    first, _writes, _tables = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
+    second, _writes, _tables = _run_widget(monkeypatch)
     assert first["contract_id"] != second["contract_id"]
 
 
 def test_widget_cannot_save_stale_usage_from_another_agreement(monkeypatch):
     """Discard a stale visible permission before building or saving the payload."""
-    state, writes = _run_widget(monkeypatch, approved_usages=["internal"])
+    state, writes, _tables = _run_widget(monkeypatch, approved_usages=["internal"])
     controls = state["_controls"]
     controls["agreement"].value = "agreement-a\n1.0.0"
     controls["approved_usages"].value = ("internal",)
     saved = state["save"]()
-    assert json.loads(saved["contract_payload_json"])["approved_usages"] == []
+    assert saved["contract_payload_json"] == ""
+    assert state["approved_usages"] == []
+    assert len(writes) == 1
+
+
+def test_create_draft_author_governance_then_freeze_exact_version(monkeypatch):
+    """Exercise the non-circular draft, authoring, and freeze lifecycle."""
+    state, writes, tables = _run_widget(
+        monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0",
+        approved_usages=["analytics"],
+    )
+    draft = state["save"]()
+    assert draft["status"] == "draft"
+    assert draft["contract_payload_json"] == ""
+
+    tables["METADATA_ENRICHMENT"].rows = [{
+        **_sources()["METADATA_ENRICHMENT"][0],
+        "contract_id": draft["contract_id"], "contract_version": draft["contract_version"],
+        "value": "Draft orders",
+    }]
+    tables["METADATA_GUARDRAIL"].rows = [{
+        **_sources()["METADATA_GUARDRAIL"][0],
+        "contract_id": draft["contract_id"], "contract_version": draft["contract_version"],
+    }, {
+        **_sources()["METADATA_GUARDRAIL"][0],
+        "guardrail_rule_id": "other-version", "contract_id": draft["contract_id"],
+        "contract_version": draft["contract_version"] + 1,
+    }]
+
+    class _Merge:
+        def alias(self, _name): return self
+        def merge(self, *_args): return self
+        def whenMatchedUpdateAll(self): return self
+        def execute(self): return None
+
+    delta = ModuleType("delta")
+    delta_tables = ModuleType("delta.tables")
+    delta_tables.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: _Merge())})
+    delta.tables = delta_tables
+    monkeypatch.setitem(sys.modules, "delta", delta)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
+    module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/contracts"))
+
+    frozen = state["freeze"]()
+    payload = json.loads(frozen["contract_payload_json"])
+    assert frozen["status"] == "frozen"
+    assert payload["enrichment"]["table"][0]["value"] == "Draft orders"
+    assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]
     assert len(writes) == 1
 
 

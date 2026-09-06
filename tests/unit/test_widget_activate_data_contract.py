@@ -42,7 +42,7 @@ def test_activation_is_idempotent_and_rejected_or_mismatched_versions_fail():
     """Avoid redundant writes and reject ineligible or invalid selections."""
     active = _contract(1, status="active", active=True)
     assert _contract_activation_changes([active], active) == []
-    with pytest.raises(ValueError, match="Rejected"):
+    with pytest.raises(ValueError, match="frozen"):
         _selected_contract([_contract(2, status="rejected")], "orders", "contract", 2)
     with pytest.raises(ValueError, match="does not belong"):
         _selected_contract([_contract(2, table_id="customers")], "orders", "contract", 2)
@@ -161,18 +161,16 @@ class _Spark:
         return _Frame(rows)
 
 
-def test_development_uses_mutable_guardrails_even_with_draft_or_active_contracts(monkeypatch):
-    """Never consult or pin Development checks to saved Data Contracts."""
-    authoring = _Frame([{"guardrail_rule_id": "new-development-rule"}])
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda name, **kwargs: authoring)
+def test_development_uses_active_contract_guardrails(monkeypatch):
+    """Resolve Development Guardrails through the active Data Contract by default."""
+    frozen = _contract(1, status="active", active=True, rule="contract-rule")
     monkeypatch.setattr(
-        pipeline_shared, "resolve_active_data_contract",
-        lambda *args, **kwargs: pytest.fail("Development must not resolve a Data Contract"),
+        pipeline_shared, "read_lakehouse_table_core", lambda name, **kwargs: _Frame([frozen]),
     )
     resolved = pipeline_shared.load_table_guardrail_rules(
-        {}, "dev", spark_session=_Spark(), table_id="catalogue-orders",
+        {}, "dev", spark_session=_Spark(), table_id="orders",
     )
-    assert resolved is authoring
+    assert resolved.collect()[0]["guardrail_rule_id"] == "contract-rule"
 
 
 def test_production_resolves_physical_table_through_catalogue_to_active_contract(monkeypatch):
@@ -224,9 +222,9 @@ def test_active_resolver_handles_zero_one_and_multiple_without_selecting_newest(
         pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
 
 
-@pytest.mark.parametrize("status", ["draft", "superseded"])
+@pytest.mark.parametrize("status", ["frozen", "superseded"])
 def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeypatch, status):
-    """Allow Development to execute an exact draft or superseded contract."""
+    """Allow Development to execute an exact frozen or superseded contract."""
     selected = _contract(2, status=status, rule="frozen-rule")
     monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame([selected]))
     rules = pipeline_shared.load_table_guardrail_rules(
@@ -261,7 +259,7 @@ def test_development_exact_override_validates_status_table_and_identity(monkeypa
         "spark_session": _Spark(), "table_id": "orders",
         "context": {"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
     }
-    with pytest.raises(ValueError, match="Rejected"):
+    with pytest.raises(ValueError, match="frozen"):
         pipeline_shared.load_table_guardrail_rules({}, "dev", **kwargs)
     rows[:] = [_contract(2, table_id="customers")]
     with pytest.raises(ValueError, match="does not belong"):
@@ -275,7 +273,7 @@ def test_development_exact_override_validates_status_table_and_identity(monkeypa
 
 
 def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_override(monkeypatch):
-    """Use mutable Rule B only for default Dev and frozen Rule A for selected/active contracts."""
+    """Use frozen rules for default, selected, and Production contract resolution."""
     authoring = _Frame([{"guardrail_rule_id": "rule-b"}])
     frozen = _contract(1, status="active", active=True, rule="rule-a")
 
@@ -286,7 +284,7 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     dev_default = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders", context={},
     )
-    assert dev_default.collect()[0]["guardrail_rule_id"] == "rule-b"
+    assert dev_default.collect()[0]["guardrail_rule_id"] == "rule-a"
     dev_selected = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
         context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
@@ -294,11 +292,11 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     assert dev_selected[0]["guardrail_rule_id"] == "rule-a"
 
     # The table-keyed selection must not leak into another table workflow.
-    dev_other_table = pipeline_shared.load_table_guardrail_rules(
-        {}, "dev", spark_session=_Spark(), table_id="customers",
-        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
-    ).collect()
-    assert dev_other_table[0]["guardrail_rule_id"] == "rule-b"
+    with pytest.raises(ValueError, match="No active Data Contract"):
+        pipeline_shared.load_table_guardrail_rules(
+            {}, "dev", spark_session=_Spark(), table_id="customers",
+            context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
+        )
 
     authoring._rows[0]["guardrail_rule_id"] = "rule-c"
     assert pipeline_shared.load_table_guardrail_rules(

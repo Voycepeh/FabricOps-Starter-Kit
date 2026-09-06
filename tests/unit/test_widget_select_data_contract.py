@@ -30,17 +30,17 @@ def _row(version: int, *, table_id: str = "table-a", status: str = "draft") -> d
 
 def test_contract_options_are_table_scoped_and_newest_first():
     """Only matching versions are offered in deterministic descending order."""
-    rows = [_row(2, status="superseded"), _row(4), _row(3, status="active"), _row(99, table_id="table-b")]
+    rows = [_row(2, status="superseded"), _row(4), _row(3, status="active"), _row(5, status="frozen"), _row(99, table_id="table-b")]
 
     options = _contract_options(rows, "table-a")
 
-    assert [row["contract_version"] for row in options] == [4, 3, 2]
-    assert [row["status"] for row in options] == ["draft", "active", "superseded"]
+    assert [row["contract_version"] for row in options] == [5, 3, 2]
+    assert [row["status"] for row in options] == ["frozen", "active", "superseded"]
 
 
 def test_contract_review_uses_only_frozen_payload():
     """Preview values come from the immutable payload."""
-    selected = _row(4)
+    selected = _row(4, status="frozen")
     review = _contract_review(selected)
 
     # Mutable authoring metadata is deliberately absent from this operation.
@@ -52,7 +52,7 @@ def test_contract_review_uses_only_frozen_payload():
 
 def test_contract_review_rejects_payload_identity_mismatch():
     """Frozen payload identity must agree with its metadata row."""
-    selected = _row(4)
+    selected = _row(4, status="frozen")
     payload = json.loads(selected["contract_payload_json"])
     payload["table"]["table_id"] = "wrong-table"
     selected["contract_payload_json"] = json.dumps(payload)
@@ -116,7 +116,7 @@ def test_rejected_contract_cannot_become_override(monkeypatch):
     """Rejected lifecycle rows cannot enter runtime context."""
     context, state = _render(monkeypatch, [_row(5, status="rejected")])
 
-    with pytest.raises(ValueError, match="Rejected"):
+    with pytest.raises(ValueError, match="not available"):
         state["select"]("contract-a", 5)
     assert context["data_contract_overrides"] == {}
 

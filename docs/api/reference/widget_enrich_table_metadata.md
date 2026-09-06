@@ -22,7 +22,7 @@ enrichment. Inactive columns remain visible as read-only history.
 
 `fabricops_kit/widgets/widget_enrich_table_metadata.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L28-L389">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L28-L414">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -92,8 +92,10 @@ Raises clear catalogue identity, metadata read, or metadata routing errors when 
 
 Table enrichment supports ``Description`` and ``Classification``. Column
 enrichment additionally supports ``Personal_identifier``. Saving appends
-only non-empty changed values to ``METADATA_ENRICHMENT`` using ``table_id``,
-optional ``column_id``, and ``environment_name``. Repeated unchanged saves
+only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
+``contract_id`` and ``contract_version``, optional ``column_id``, and
+``environment_name``. The governed table is resolved through the contract.
+Repeated unchanged saves
 produce no write.
 
 </div>

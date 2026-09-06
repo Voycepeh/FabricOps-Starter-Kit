@@ -12,9 +12,9 @@ Choose current authoring or one exact frozen Data Contract version for a canonic
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:77`
+`fabricops_kit/widgets/widget_select_data_contract.py:81`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L77-L212">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L81-L217">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -73,7 +73,8 @@ The default clears this table’s Development override; an exact selection store
 ## Raises / Errors
 
 ValueError
-    If ``table_id`` is empty, a version belongs to another table, or a rejected contract is selected.
+    If ``table_id`` is empty, a version belongs to another table, or a
+    non-frozen contract is selected.
 
 ### Common failure causes
 

@@ -1226,8 +1226,8 @@ def _resolve_data_contract_version(
         raise ValueError(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
-    if str(row.get("status") or "").strip().lower() == "rejected":
-        raise ValueError(f"Rejected Data Contract {contract_id!r} version {requested_version} cannot be used for Development testing.")
+    if str(row.get("status") or "").strip().lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before Development testing.")
     row["contract_payload"] = _contract_payload(row)
     return row
 
@@ -1691,16 +1691,13 @@ def load_table_guardrail_rules(
             table_id=table_id,
         )
         return spark_session.createDataFrame(rows) if rows else []
-    try:
-        return read_lakehouse_table_core(
-            GUARDRAIL_TABLE, target="metadata",
-            schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
-            spark_session=spark_session, context=context or {"config": config, "env": env},
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            raise ValueError("No guardrail rules exist; Governance must author and activate the required rule first.") from exc
-        raise
+    if not table_id:
+        raise ValueError("Guardrail resolution requires a canonical Catalogue table_id.")
+    contract = resolve_active_data_contract(
+        config, env, table_id, spark_session=spark_session, required=True
+    )
+    rows = contract_guardrail_rows(contract, environment_name=env, table_id=table_id)
+    return spark_session.createDataFrame(rows) if rows else []
 
 def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str, environment_name: str = "") -> dict | None:
     """Select the latest active approved table rule by canonical identity."""
@@ -2838,10 +2835,15 @@ def canonical_guardrail_rule_record(
     """Return one authored rule using only the canonical physical contract."""
     audit = build_runtime_audit_fields(config=config, env=env)
     parameters = _parse_parameters(record)
+    contract_id = str(record.get("contract_id") or "").strip()
+    contract_version = int(record.get("contract_version") or 0)
+    if not contract_id or contract_version < 1:
+        raise ValueError("Guardrail rows require contract_id and contract_version.")
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or ""),
         "guardrail_version": int(record.get("guardrail_version") or 1),
-        "table_id": str(record.get("table_id") or ""),
+        "contract_id": contract_id,
+        "contract_version": contract_version,
         "column_id": str(record.get("column_id") or ""),
         "environment_name": str(record.get("environment_name") or env),
         "guardrail_type": str(record.get("guardrail_type") or ""),
