@@ -38,6 +38,38 @@ def resolved_runtime_context(**overrides):
     return resolve_runtime_context(context=runtime_context(**overrides), active_context={})
 
 
+def active_contract_frame(spark_session, *, table_id, columns, guardrails):
+    """Return one active frozen Data Contract containing the supplied rules."""
+    contract_id = "contract-orders"
+    contract_version = 1
+    payload = {
+        "contract": {
+            "contract_id": contract_id,
+            "contract_version": contract_version,
+            "status": "frozen",
+        },
+        "table": {
+            "table_id": table_id,
+            "table_name": "orders",
+            "columns": [
+                {"column_id": f"column-{name}", "column_name": name, "data_type": data_type}
+                for name, data_type in columns
+            ],
+        },
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": guardrails,
+        "approved_usages": [],
+    }
+    return spark_session.createDataFrame([{
+        "contract_id": contract_id,
+        "contract_version": contract_version,
+        "table_id": table_id,
+        "contract_payload_json": json.dumps(payload),
+        "status": "active",
+        "is_active": True,
+    }])
+
+
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):
     """Verify spark schema validation and latest dq metadata are stable."""
     df = spark_session.createDataFrame([{"id": 1, "amount": 10.0, "extra": "new"}])
@@ -180,28 +212,30 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
         [("one", None, "open", 5, 3), ("two", "x", "closed", 1, 2)],
         "business_id string, required_value string, status string, upper int, lower int",
     )
-    metadata = spark_session.createDataFrame([
+    guardrails = [
         {
             "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
-            "table_id": table_key,
-            "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+            "guardrail_version": 1,
             "guardrail_type": "dq", "rule_type": "required_when", "column_name": "required_value",
-            "rule_parameters_json": json.dumps({"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"}),
-            "severity": "warning", "description": "required when open", "activation_state": "active",
-            "review_state": "governance_approved", "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+            "rule_parameters": {"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"},
+            "severity": "warning", "description": "required when open",
         },
         {
             "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
-            "table_id": table_key,
-            "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+            "guardrail_version": 1,
             "guardrail_type": "dq", "rule_type": "compare_columns", "column_name": "upper,lower",
-            "rule_parameters_json": json.dumps({"columns": ["upper", "lower"], "operator": "<="}),
-            "severity": "error", "description": "upper <= lower", "activation_state": "active",
-            "review_state": "governance_approved", "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+            "rule_parameters": {"columns": ["upper", "lower"], "operator": "<="},
+            "severity": "error", "description": "upper <= lower",
         },
-    ])
+    ]
+    contract = active_contract_frame(
+        spark_session,
+        table_id=table_key,
+        columns=[("business_id", "string"), ("required_value", "string"), ("status", "string"), ("upper", "integer"), ("lower", "integer")],
+        guardrails=guardrails,
+    )
     writes = []
-    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: contract)
     monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, **kwargs: writes.append((table, df.collect())))
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
@@ -245,17 +279,19 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
 
     table_key = build_table_id("lakehouse", "source", None, "orders")
     dataframe = spark_session.createDataFrame([("one", "ok")], "row_uuid string, value string")
-    metadata = spark_session.createDataFrame([{
+    guardrails = [{
         "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
-        "table_id": table_key,
-        "environment_name": "dev", "table_name": "orders", "guardrail_type": "dq",
+        "guardrail_version": 1, "guardrail_type": "dq",
         "rule_type": "allowed_values", "column_name": "value",
-        "rule_parameters_json": json.dumps({"columns": ["value"], "allowed_values": ["ok"]}),
-        "severity": "error", "activation_state": "active", "review_state": "governance_approved",
-        "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
-    }])
+        "rule_parameters": {"columns": ["value"], "allowed_values": ["ok"]},
+        "severity": "error",
+    }]
+    contract = active_contract_frame(
+        spark_session, table_id=table_key,
+        columns=[("row_uuid", "string"), ("value", "string")], guardrails=guardrails,
+    )
     writes = []
-    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: contract)
     monkeypatch.setattr(
         guardrails_shared,
         "write_lakehouse_table_core",
