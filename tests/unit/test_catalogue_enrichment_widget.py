@@ -76,8 +76,8 @@ def _build_widget(monkeypatch, *, auto_observe=False):
     reads = []
     writes = []
     contracts = [
-        {"contract_id": "contract-students", "contract_version": 1, "table_id": "table-students"},
-        {"contract_id": "contract-courses", "contract_version": 1, "table_id": "table-courses"},
+        {"contract_id": "contract-students", "contract_version": 1, "table_id": "table-students", "status": "draft"},
+        {"contract_id": "contract-courses", "contract_version": 1, "table_id": "table-courses", "status": "draft"},
     ]
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda table, *a, **k: reads.append(1) or (contracts if table == "METADATA_DATA_CONTRACT" else _catalogue_rows()))
     monkeypatch.setattr(enrichment_shared, "read_enrichment_records", lambda *a, **k: reads.append(1) or _existing_enrichment())

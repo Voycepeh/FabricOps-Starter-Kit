@@ -96,7 +96,7 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Manual activation currently permits draft, active, and superseded versions.
+Manual activation permits frozen, active, and superseded versions.
 It atomically marks the selected version active and supersedes the previous
 active version without changing any frozen payload or identity field. This
 interim workflow performs no external approval and promotes no Fabric item;

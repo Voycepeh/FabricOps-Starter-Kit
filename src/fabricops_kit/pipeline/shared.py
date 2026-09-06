@@ -1226,8 +1226,8 @@ def _resolve_data_contract_version(
         raise ValueError(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
-    if str(row.get("status") or "").strip().lower() == "rejected":
-        raise ValueError(f"Rejected Data Contract {contract_id!r} version {requested_version} cannot be used for Development testing.")
+    if str(row.get("status") or "").strip().lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before Development testing.")
     row["contract_payload"] = _contract_payload(row)
     return row
 

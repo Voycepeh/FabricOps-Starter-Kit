@@ -367,7 +367,7 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     for label in (
         "Prepare Data Contract", "Data Agreement", "Governed table",
         "Approved usages", "1. Agreement and table", "2. Approved usage",
-        "3. Governance review", "Save draft Data Contract",
+            "3. Draft contract", "Save draft Data Contract", "Freeze Data Contract",
     ):
         assert label in text
     assert controls["save"].click_callbacks

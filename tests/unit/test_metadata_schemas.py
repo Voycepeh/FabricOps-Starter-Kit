@@ -64,7 +64,7 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
         ("agreement_id", "StringType", False), ("agreement_version", "StringType", False),
-        ("table_id", "StringType", False), ("contract_payload_json", "StringType", False),
+        ("table_id", "StringType", False), ("contract_payload_json", "StringType", True),
         ("status", "StringType", False), ("is_active", "BooleanType", False),
     ]
 

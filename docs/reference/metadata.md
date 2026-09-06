@@ -101,10 +101,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.</span>
+  <span class="metadata-table-card__purpose">Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One immutable Data Contract version for one governed table under one exact Data Agreement version.</span>
+    <span>One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

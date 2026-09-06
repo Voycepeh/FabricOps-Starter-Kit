@@ -62,7 +62,7 @@ def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> li
 
 def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[str, str, int, str, str], dict[str, Any]]:
     """Return latest enrichment by level, contract version, column, and type."""
-    latest: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    latest: dict[tuple[str, str, int, str, str], dict[str, Any]] = {}
     for row in _rows(rows):
         if str(row.get("environment_name") or "") != str(environment_name):
             continue

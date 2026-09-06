@@ -101,8 +101,8 @@ def activate_contract_version(
     row = selected[0]
     if str(row.get("table_id") or "") != table_id:
         raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
-    if str(row.get("status") or "").lower() == "rejected":
-        raise ValueError("Rejected Data Contracts cannot be manually activated. Register a corrected version first.")
+    if str(row.get("status") or "").lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError("Only a frozen Data Contract version can be activated.")
     parse_data_contract_payload(row)
     active = [
         candidate for candidate in rows
@@ -1256,6 +1256,8 @@ def load_guardrail_authoring_targets(
     selectable_ids = sorted(set(table_rows) & profile_table_ids)
     latest_contracts: dict[str, dict[str, Any]] = {}
     for row in contracts:
+        if str(row.get("status") or "").lower() != "draft":
+            continue
         table_id = str(row.get("table_id") or "")
         if table_id not in selectable_ids:
             continue
@@ -1265,11 +1267,6 @@ def load_guardrail_authoring_targets(
     selectable_ids = [table_id for table_id in selectable_ids if table_id in latest_contracts]
     if not selectable_ids:
         raise ValueError("No profiled Catalogue table has a Data Contract version available for Guardrail authoring.")
-    if not selectable_ids:
-        raise ValueError(
-            "METADATA_DATA_PROFILED has no table that resolves to METADATA_DATA_CATALOGUE."
-        )
-
     def label(table_id: str) -> str:
         row = table_rows[table_id]
         location = " / ".join(

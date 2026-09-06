@@ -111,6 +111,8 @@ def widget_enrich_table_metadata(
         raise RuntimeError(f"Unable to read METADATA_DATA_CONTRACT: {exc}") from exc
     latest_contracts: dict[str, dict[str, Any]] = {}
     for row in contract_rows:
+        if str(row.get("status") or "").lower() != "draft":
+            continue
         table_id = str(row.get("table_id") or "")
         current = latest_contracts.get(table_id)
         if table_id and (current is None or int(row.get("contract_version") or 0) > int(current.get("contract_version") or 0)):

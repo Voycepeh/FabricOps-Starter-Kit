@@ -895,6 +895,7 @@
         "fabricops_kit.widgets.shared.write_rule_records",
         "fabricops_kit.widgets.shared.write_widget_metadata_row",
         "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
         "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract"
       ],
       "inbound_source_references": [
@@ -930,6 +931,8 @@
         "fabricops_kit.widgets.shared::<module>",
         "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
         "fabricops_kit.widgets.widget_enrich_table_metadata::<module>",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+        "fabricops_kit.widgets.widget_register_data_contract::<module>",
         "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
         "fabricops_kit.widgets.widget_select_data_contract::<module>"
       ],
@@ -2766,11 +2769,14 @@
       "function_name": "configured_lakehouse_schema",
       "function_type": "shared_function",
       "inbound_callers": [
-        "fabricops_kit.widgets.shared.activate_contract_version"
+        "fabricops_kit.widgets.shared.activate_contract_version",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"
       ],
       "inbound_source_references": [
         "fabricops_kit.widgets.shared.activate_contract_version",
-        "fabricops_kit.widgets.shared::<module>"
+        "fabricops_kit.widgets.shared::<module>",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+        "fabricops_kit.widgets.widget_register_data_contract::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
@@ -3405,7 +3411,8 @@
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
         "fabricops_kit.pipeline.shared.persist_lineage_participation",
         "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
-        "fabricops_kit.widgets.shared.activate_contract_version"
+        "fabricops_kit.widgets.shared.activate_contract_version",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"
       ],
       "inbound_source_references": [
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -3423,7 +3430,9 @@
         "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
         "fabricops_kit.pipeline.write_pii_token_map::<module>",
         "fabricops_kit.widgets.shared.activate_contract_version",
-        "fabricops_kit.widgets.shared::<module>"
+        "fabricops_kit.widgets.shared::<module>",
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+        "fabricops_kit.widgets.widget_register_data_contract::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
@@ -10060,7 +10069,7 @@
       "qualified_name": "fabricops_kit.widgets.shared.load_guardrail_authoring_targets",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1394,
+      "source_end_line": 1391,
       "source_path": "src/fabricops_kit/widgets/shared.py",
       "source_start_line": 1219,
       "supports_live_contract": false,
@@ -11138,7 +11147,7 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 412,
+      "source_end_line": 414,
       "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
       "source_start_line": 28,
       "supports_live_contract": false,
@@ -11283,6 +11292,34 @@
       "source_end_line": 79,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
       "source_start_line": 78,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_freeze_contract_row",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.widgets.widget_register_data_contract._freeze_contract_row",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 193,
+      "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
+      "source_start_line": 181,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11455,9 +11492,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 376,
+      "source_end_line": 459,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-      "source_start_line": 181,
+      "source_start_line": 196,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11981,7 +12018,7 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._contract_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 28,
+      "source_end_line": 32,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
       "source_start_line": 22,
       "supports_live_contract": false,
@@ -12009,9 +12046,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._contract_review",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 50,
+      "source_end_line": 54,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 31,
+      "source_start_line": 35,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12065,9 +12102,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._set_override",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 74,
+      "source_end_line": 78,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 53,
+      "source_start_line": 57,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12089,9 +12126,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 212,
+      "source_end_line": 217,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 77,
+      "source_start_line": 81,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14110,7 +14147,7 @@
       "source_start_line": 117,
       "summary": "Create or check the FabricOps metadata tables for one environment.",
       "transitive_function_count": 37,
-      "usage_notes": "Setup flow:\n\n1. Validate the supplied FabricOps configuration.\n2. Find the metadata lakehouse configured for the selected environment.\n3. Verify that the metadata target is a lakehouse.\n4. Resolve each table's physical schema from its canonical ownership and\n   the configured governance/engineering schema names.\n5. Load the required FabricOps table definitions.\n6. Attempt to read each required metadata table.\n7. When a table is missing, create an empty Spark DataFrame using its\n   required FabricOps table structure.\n8. Write that empty DataFrame to the metadata lakehouse using overwrite\n   mode to create the table.\n9. Read the created table again.\n10. Validate required column names and physical Spark data types.\n11. Continue processing the remaining tables when one table fails.\n12. Check whether at least one active steward record exists.\n13. Return overall, data-agreement, governance, and per-table setup\n    results.\n\n``data_agreement[\"active_steward_count\"]`` is retained for compatibility\nand reports readiness presence: ``1`` when at least one active steward\nexists and ``0`` otherwise. It is not a complete active steward population\ncount.\n\nThe canonical registry may expand in later compatible FabricOps releases.\nIn v0.2.0, metadata tables created or validated from\n``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,\n``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,\n``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,\n``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,\n``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and\n``METADATA_GUARDRAIL_RESULTS`` and ``METADATA_GUARDRAIL_ROW_RESULTS``.\n\nOf that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,\n``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and\n``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.\nEvery other metadata schema in the registry remains Preview.\n\nDetailed table contents:\n\n- ``METADATA_DATA_STEWARD`` is a person registry storing ``steward_id``,\n  ``steward_name``, ``steward_role``, ``contact``, ``is_active``,\n  ``custom_fields_json``, and the standard audit fields. Responsibility\n  effective periods remain on ``METADATA_DATA_AGREEMENT``.\n- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,\n  ``agreement_version``, ``agreement_name``, ``domain``,\n  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,\n  ``start_date``, ``expiry_date``, ``business_purpose``,\n  ``custom_fields_json``, and the standard audit fields.\n- ``METADATA_DATA_CONTRACT`` stores one immutable, versioned governed-table\n  definition through ``contract_id``, ``contract_version``, the exact\n  ``agreement_id`` and ``agreement_version``, ``table_id``,\n  ``contract_payload_json``, lifecycle status, activation state, and the\n  standard audit fields.\n- ``METADATA_DATA_CATALOGUE`` stores the current structural registry through\n  ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,\n  physical table context, ``column_name``, ``data_type``, profiling dates,\n  activation state, and the standard audit fields.\n- ``METADATA_DATA_PROFILED`` stores ``profile_id``,\n  ``profile_snapshot_id``, ``table_id``, ``column_id``,\n  ``environment_name``, ``data_type``,\n  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,\n  ``distinct_count``, ``distinct_percent``, ``mean_value``,\n  ``stddev_value``, ``min_value``, ``percentile_25_value``,\n  ``median_value``, ``percentile_75_value``, ``max_value``,\n  and the standard audit fields.\n- ``METADATA_DATA_PROFILED_FREQUENCY`` stores frequency rows through\n  ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,\n  percentage, rank, profiled row totals, and the standard audit fields.\n- ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,\n  ``environment_name``, ``pipeline_role``, and the\n  standard audit fields.\n- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,\n  approval, expiry, table and column identity, and audit information.\n- ``METADATA_ENRICHMENT`` stores business metadata enrichment,\n  classification, sensitivity, ownership, governance review, activation,\n  effective dates, and audit information.\n- ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,\n  parameters, severity, lifecycle, governance review, approval, effective\n  dates, and audit information.\n- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,\n  status, continuation decision, expected and actual values, result\n  payload, and audit information.\n- ``METADATA_GUARDRAIL_ROW_RESULTS`` stores compact failed-row and failed\n  DQ-rule evidence linked to its rule/run summary without copying complete\n  source rows.\n\nStandard audit fields are ``_committed_by``, ``_committed_at``,\n``_workspace_id``, ``_workspace_name``, ``_notebook_id``,\n``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.\n\nExisting tables are validated for required column names and\ncompatible Spark data types. Physical Spark/Delta nullability is\nintentionally not compared because persisted Fabric tables may report\nfields as nullable regardless of the canonical logical requirement. The\nlegacy ``frequency_json`` column specifically fails\n``METADATA_DATA_PROFILED`` validation; unrelated\nmetadata tables continue to permit additive columns.\nBecause normalized frequency persistence is a breaking physical-schema\nchange, existing metadata tables may need recreation through this setup\nflow; no automatic migration is performed.\nExisting tables are not automatically overwritten merely because they\nalready exist. Missing columns or incompatible types mark that table as\nfailed, processing continues for remaining metadata tables, and\n``raise_on_failure=True`` raises only after all tables have been processed\nwhen failures exist.\n\nA missing table is created by writing an empty Spark DataFrame with the\nrequired FabricOps table structure. This creates the metadata table structure but\ndoes not populate business metadata records. The function does not\nautomatically create steward records, agreements, contracts, catalogue\nrecords, profile records, lineage events, access assignments, enrichment\nrecords, guardrail rules, or guardrail results; those are populated by\ntheir respective FabricOps workflows.",
+      "usage_notes": "Setup flow:\n\n1. Validate the supplied FabricOps configuration.\n2. Find the metadata lakehouse configured for the selected environment.\n3. Verify that the metadata target is a lakehouse.\n4. Resolve each table's physical schema from its canonical ownership and\n   the configured governance/engineering schema names.\n5. Load the required FabricOps table definitions.\n6. Attempt to read each required metadata table.\n7. When a table is missing, create an empty Spark DataFrame using its\n   required FabricOps table structure.\n8. Write that empty DataFrame to the metadata lakehouse using overwrite\n   mode to create the table.\n9. Read the created table again.\n10. Validate required column names and physical Spark data types.\n11. Continue processing the remaining tables when one table fails.\n12. Check whether at least one active steward record exists.\n13. Return overall, data-agreement, governance, and per-table setup\n    results.\n\n``data_agreement[\"active_steward_count\"]`` is retained for compatibility\nand reports readiness presence: ``1`` when at least one active steward\nexists and ``0`` otherwise. It is not a complete active steward population\ncount.\n\nThe canonical registry may expand in later compatible FabricOps releases.\nIn v0.2.0, metadata tables created or validated from\n``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,\n``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,\n``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,\n``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,\n``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and\n``METADATA_GUARDRAIL_RESULTS`` and ``METADATA_GUARDRAIL_ROW_RESULTS``.\n\nOf that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,\n``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and\n``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.\nEvery other metadata schema in the registry remains Preview.\n\nDetailed table contents:\n\n- ``METADATA_DATA_STEWARD`` is a person registry storing ``steward_id``,\n  ``steward_name``, ``steward_role``, ``contact``, ``is_active``,\n  ``custom_fields_json``, and the standard audit fields. Responsibility\n  effective periods remain on ``METADATA_DATA_AGREEMENT``.\n- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,\n  ``agreement_version``, ``agreement_name``, ``domain``,\n  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,\n  ``start_date``, ``expiry_date``, ``business_purpose``,\n  ``custom_fields_json``, and the standard audit fields.\n- ``METADATA_DATA_CONTRACT`` first stores a payload-free draft identity\n  through ``contract_id``, ``contract_version``, the exact ``agreement_id``\n  and ``agreement_version``, and ``table_id``. Freezing the draft assembles\n  ``contract_payload_json``; lifecycle status, activation state, and the\n  standard audit fields complete the row.\n- ``METADATA_DATA_CATALOGUE`` stores the current structural registry through\n  ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,\n  physical table context, ``column_name``, ``data_type``, profiling dates,\n  activation state, and the standard audit fields.\n- ``METADATA_DATA_PROFILED`` stores ``profile_id``,\n  ``profile_snapshot_id``, ``table_id``, ``column_id``,\n  ``environment_name``, ``data_type``,\n  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,\n  ``distinct_count``, ``distinct_percent``, ``mean_value``,\n  ``stddev_value``, ``min_value``, ``percentile_25_value``,\n  ``median_value``, ``percentile_75_value``, ``max_value``,\n  and the standard audit fields.\n- ``METADATA_DATA_PROFILED_FREQUENCY`` stores frequency rows through\n  ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,\n  percentage, rank, profiled row totals, and the standard audit fields.\n- ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,\n  ``environment_name``, ``pipeline_role``, and the\n  standard audit fields.\n- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,\n  approval, expiry, table and column identity, and audit information.\n- ``METADATA_ENRICHMENT`` stores business metadata enrichment,\n  classification, sensitivity, ownership, governance review, activation,\n  effective dates, and audit information.\n- ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,\n  parameters, severity, lifecycle, governance review, approval, effective\n  dates, and audit information.\n- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,\n  status, continuation decision, expected and actual values, result\n  payload, and audit information.\n- ``METADATA_GUARDRAIL_ROW_RESULTS`` stores compact failed-row and failed\n  DQ-rule evidence linked to its rule/run summary without copying complete\n  source rows.\n\nStandard audit fields are ``_committed_by``, ``_committed_at``,\n``_workspace_id``, ``_workspace_name``, ``_notebook_id``,\n``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.\n\nExisting tables are validated for required column names and\ncompatible Spark data types. Physical Spark/Delta nullability is\nintentionally not compared because persisted Fabric tables may report\nfields as nullable regardless of the canonical logical requirement. The\nlegacy ``frequency_json`` column specifically fails\n``METADATA_DATA_PROFILED`` validation; unrelated\nmetadata tables continue to permit additive columns.\nBecause normalized frequency persistence is a breaking physical-schema\nchange, existing metadata tables may need recreation through this setup\nflow; no automatic migration is performed.\nExisting tables are not automatically overwritten merely because they\nalready exist. Missing columns or incompatible types mark that table as\nfailed, processing continues for remaining metadata tables, and\n``raise_on_failure=True`` raises only after all tables have been processed\nwhen failures exist.\n\nA missing table is created by writing an empty Spark DataFrame with the\nrequired FabricOps table structure. This creates the metadata table structure but\ndoes not populate business metadata records. The function does not\nautomatically create steward records, agreements, contracts, catalogue\nrecords, profile records, lineage events, access assignments, enrichment\nrecords, guardrail rules, or guardrail results; those are populated by\ntheir respective FabricOps workflows.",
       "width": 12
     },
     {
@@ -14313,7 +14350,7 @@
       "source_start_line": 55,
       "summary": "Select the frozen Data Contract version used by Production.",
       "transitive_function_count": 34,
-      "usage_notes": "Manual activation currently permits draft, active, and superseded versions.\nIt atomically marks the selected version active and supersedes the previous\nactive version without changing any frozen payload or identity field. This\ninterim workflow performs no external approval and promotes no Fabric item;\na later approved promotion workflow can call the same lifecycle operation.",
+      "usage_notes": "Manual activation permits frozen, active, and superseded versions.\nIt atomically marks the selected version active and supersedes the previous\nactive version without changing any frozen payload or identity field. This\ninterim workflow performs no external approval and promotes no Fabric item;\na later approved promotion workflow can call the same lifecycle operation.",
       "width": 14
     },
     {
@@ -14596,7 +14633,7 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_enrich_table_metadata(*, spark_session: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 412,
+      "source_end_line": 414,
       "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
       "source_start_line": 28,
       "summary": "Browse one environment's Catalogue and maintain table or column enrichment.",
@@ -14610,9 +14647,9 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 5,
-      "direct_call_count": 20,
+      "direct_call_count": 24,
       "discontinued_in": null,
-      "examples": ">>> state = widget_register_data_contract(\n...     agreement_id=\"agreement-123\",\n...     agreement_version=\"2\",\n...     table_id=\"orders\",\n...     approved_usages=[\"analytics\"],\n...     target=\"metadata\",\n...     spark_session=spark,\n... )\n>>> state[\"save\"]()",
+      "examples": ">>> state = widget_register_data_contract(\n...     agreement_id=\"agreement-123\",\n...     agreement_version=\"2\",\n...     table_id=\"orders\",\n...     approved_usages=[\"analytics\"],\n...     target=\"metadata\",\n...     spark_session=spark,\n... )\n>>> state[\"save\"]()\n>>> state[\"freeze\"]()",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -14691,7 +14728,7 @@
           "evidence": [
             {
               "depth": 5,
-              "width": 20
+              "width": 24
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -14709,19 +14746,19 @@
       "release_versions": [
         "0.2.0"
       ],
-      "returns_documentation": "dict\n    Mutable state with structured ``review`` and ``warnings`` values,\n    ``refresh`` and ``save`` callables, saved identity/version values, and\n    notebook controls under ``_controls``.",
-      "scope": 55,
+      "returns_documentation": "dict\n    Mutable state with structured ``review`` and ``warnings`` values,\n    ``refresh``, ``save``, and ``freeze`` callables, saved and frozen\n    identity/version values, and notebook controls under ``_controls``.",
+      "scope": 57,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_register_data_contract(*, agreement_id: str | None=None, agreement_version: str | None=None, table_id: str | None=None, approved_usages: list[str] | None=None, target: str='metadata', schema: str | None=None, spark_session=None, context=None)",
-      "source_end_line": 376,
+      "source_end_line": 459,
       "source_path": "src/fabricops_kit/widgets/widget_register_data_contract.py",
-      "source_start_line": 181,
-      "summary": "Review and save one immutable, versioned governed-table Data Contract.",
-      "transitive_function_count": 55,
-      "usage_notes": "Rendering does not write metadata. Each explicit save appends exactly one\n``draft`` row with ``is_active=False`` and the next version of a stable\ncontract identity derived from the Agreement lifecycle and ``table_id``.\nThe canonical payload freezes Agreement and steward context, current active\nCatalogue structure and processing, current enrichment, active Guardrail expectations,\nand the selected approved-usage subset. Runtime Guardrail result tables are\nneither read nor embedded. Historical contract versions are never updated.\nThis workflow does not submit, approve, promote, export, or enforce a\ncontract and requires a configured Microsoft Fabric metadata Lakehouse.",
-      "width": 20
+      "source_start_line": 196,
+      "summary": "Create, author, and freeze one versioned governed-table Data Contract.",
+      "transitive_function_count": 57,
+      "usage_notes": "Rendering does not write metadata. ``save`` creates or reopens exactly one\npayload-free ``draft`` row containing the deterministic contract identity,\nversion, Agreement identity, and ``table_id``. Enrichment and Guardrail\nauthoring can then target that exact draft version. ``freeze`` reads those\nexact-version definitions, assembles the canonical immutable payload, and\nchanges the version status to ``frozen``. Runtime Guardrail result tables\nare neither read nor embedded. Historical frozen versions are never\nmodified. This workflow requires a configured Microsoft Fabric metadata\nLakehouse.",
+      "width": 24
     },
     {
       "architecture_violation_count": 0,
@@ -14947,7 +14984,7 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
-      "raises_documentation": "ValueError\n    If ``table_id`` is empty, a version belongs to another table, or a rejected contract is selected.",
+      "raises_documentation": "ValueError\n    If ``table_id`` is empty, a version belongs to another table, or a\n    non-frozen contract is selected.",
       "refactor_signals": [
         {
           "evidence": [
@@ -14970,9 +15007,9 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_select_data_contract(table_id: str, *, spark_session=None, context=None)",
-      "source_end_line": 212,
+      "source_end_line": 217,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 77,
+      "source_start_line": 81,
       "summary": "Choose one whole Data Contract for a table's Development testing.",
       "transitive_function_count": 35,
       "usage_notes": "This is a read-only Development testing tool and never activates or changes\nData Contract metadata. Current authoring is the default.\nProduction ignores manual selection and uses its active Data Contract\nautomatically. Frozen previews are read only from ``contract_payload_json``.",
@@ -20657,6 +20694,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
       "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
       "violation_details": [],
@@ -20673,6 +20718,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.configured_lakehouse_schema",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared.get_spark_session",
       "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
       "violation_details": [],
@@ -20682,6 +20735,14 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared.read_lakehouse_table_core",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
       "violation_details": [],
       "violation_types": []
@@ -20770,6 +20831,14 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.widgets.widget_register_data_contract._contract_id",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.widgets.widget_register_data_contract._freeze_contract_row",
       "caller_qualified_name": "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
       "violation_details": [],
       "violation_types": []
@@ -21690,13 +21759,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 13,
-    "defined_function_count": 380,
+    "defined_function_count": 381,
     "detached_function_count": 22,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 30,
-    "relationship_count": 769,
+    "relationship_count": 773,
     "source_referenced_function_count": 20,
-    "used_function_count": 345
+    "used_function_count": 346
   },
   "used_functions": [
     "fabricops_kit.access.scan_warehouse_access._access_rows",
@@ -22010,6 +22079,7 @@
     "fabricops_kit.widgets.widget_register_data_contract._assemble_payload",
     "fabricops_kit.widgets.widget_register_data_contract._contract_id",
     "fabricops_kit.widgets.widget_register_data_contract._fields",
+    "fabricops_kit.widgets.widget_register_data_contract._freeze_contract_row",
     "fabricops_kit.widgets.widget_register_data_contract._json_safe",
     "fabricops_kit.widgets.widget_register_data_contract._json_value",
     "fabricops_kit.widgets.widget_register_data_contract._latest",

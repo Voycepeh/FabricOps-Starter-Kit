@@ -42,7 +42,7 @@ def test_activation_is_idempotent_and_rejected_or_mismatched_versions_fail():
     """Avoid redundant writes and reject ineligible or invalid selections."""
     active = _contract(1, status="active", active=True)
     assert _contract_activation_changes([active], active) == []
-    with pytest.raises(ValueError, match="Rejected"):
+    with pytest.raises(ValueError, match="frozen"):
         _selected_contract([_contract(2, status="rejected")], "orders", "contract", 2)
     with pytest.raises(ValueError, match="does not belong"):
         _selected_contract([_contract(2, table_id="customers")], "orders", "contract", 2)
@@ -222,9 +222,9 @@ def test_active_resolver_handles_zero_one_and_multiple_without_selecting_newest(
         pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
 
 
-@pytest.mark.parametrize("status", ["draft", "superseded"])
+@pytest.mark.parametrize("status", ["frozen", "superseded"])
 def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeypatch, status):
-    """Allow Development to execute an exact draft or superseded contract."""
+    """Allow Development to execute an exact frozen or superseded contract."""
     selected = _contract(2, status=status, rule="frozen-rule")
     monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame([selected]))
     rules = pipeline_shared.load_table_guardrail_rules(
@@ -259,7 +259,7 @@ def test_development_exact_override_validates_status_table_and_identity(monkeypa
         "spark_session": _Spark(), "table_id": "orders",
         "context": {"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
     }
-    with pytest.raises(ValueError, match="Rejected"):
+    with pytest.raises(ValueError, match="frozen"):
         pipeline_shared.load_table_guardrail_rules({}, "dev", **kwargs)
     rows[:] = [_contract(2, table_id="customers")]
     with pytest.raises(ValueError, match="does not belong"):

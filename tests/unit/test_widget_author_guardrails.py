@@ -247,7 +247,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
         for column_id in ("col-a", "col-b")
     ]
     rules = [{"contract_id": "contract-orders", "contract_version": 2, "environment_name": "dev", "guardrail_type": "schema"}]
-    contracts = [{"contract_id": "contract-orders", "contract_version": 2, "table_id": "table-orders"}]
+    contracts = [{"contract_id": "contract-orders", "contract_version": 2, "table_id": "table-orders", "status": "draft"}]
 
     def fake_read(config, env, table_name, *, spark_session):
         return {

@@ -246,6 +246,9 @@ class _Frame:
     def collect(self):
         return list(self.rows)
 
+    def alias(self, _name):
+        return self
+
 
 class _Spark:
     def createDataFrame(self, rows, schema=None):
@@ -291,12 +294,12 @@ def _run_widget(monkeypatch, *, agreement_id="agreement-b", agreement_version="1
         table_id="orders",
         approved_usages=approved_usages,
     )
-    return state, writes
+    return state, writes, tables
 
 
 def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch):
     """Keep displayed Agreement, table, usages, and review in one initial state."""
-    state, writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    state, writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
     controls = state["_controls"]
     assert controls["agreement"].value == "agreement-b\n10.0.0"
     assert controls["table"].value == "orders"
@@ -308,7 +311,7 @@ def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch
 
 def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
     """Replace stale usage options and remove permissions absent from the new Agreement."""
-    state, _writes = _run_widget(monkeypatch, approved_usages=["reporting"])
+    state, _writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
     controls = state["_controls"]
     controls["agreement"].value = "agreement-a\n1.0.0"
     assert controls["approved_usages"].options == ["analytics", "research"]
@@ -317,36 +320,85 @@ def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
     assert state["review"]["agreement"]["agreement_id"] == "agreement-a"
 
 
-def test_widget_uses_numeric_agreement_versions_and_appends_contract_versions(monkeypatch):
-    """Resolve semantic versions and append exactly one immutable row per save."""
-    state, writes = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
+def test_widget_uses_numeric_agreement_versions_and_reopens_one_draft(monkeypatch):
+    """Resolve semantic versions and keep one open payload-free draft."""
+    state, writes, _tables = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
     assert state["agreement_version"] == "10.0.0"
     displayed_payload = state["review"]
     first = state["save"]()
     second = state["save"]()
-    assert len(writes) == 2
+    assert len(writes) == 1
     assert first["contract_version"] == 1
-    assert second["contract_version"] == 2
+    assert second["contract_version"] == 1
     assert first["contract_id"] == second["contract_id"]
-    assert json.loads(first["contract_payload_json"]) == displayed_payload
+    assert first["contract_payload_json"] == ""
+    assert displayed_payload["contract"]["status"] == "draft"
     assert first["status"] == "draft" and first["is_active"] is False
 
 
 def test_widget_different_agreement_table_lifecycle_has_different_identity(monkeypatch):
     """Separate contract lifecycles when the Agreement lifecycle changes."""
-    first, _writes = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
-    second, _writes = _run_widget(monkeypatch)
+    first, _writes, _tables = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
+    second, _writes, _tables = _run_widget(monkeypatch)
     assert first["contract_id"] != second["contract_id"]
 
 
 def test_widget_cannot_save_stale_usage_from_another_agreement(monkeypatch):
     """Discard a stale visible permission before building or saving the payload."""
-    state, writes = _run_widget(monkeypatch, approved_usages=["internal"])
+    state, writes, _tables = _run_widget(monkeypatch, approved_usages=["internal"])
     controls = state["_controls"]
     controls["agreement"].value = "agreement-a\n1.0.0"
     controls["approved_usages"].value = ("internal",)
     saved = state["save"]()
-    assert json.loads(saved["contract_payload_json"])["approved_usages"] == []
+    assert saved["contract_payload_json"] == ""
+    assert state["approved_usages"] == []
+    assert len(writes) == 1
+
+
+def test_create_draft_author_governance_then_freeze_exact_version(monkeypatch):
+    """Exercise the non-circular draft, authoring, and freeze lifecycle."""
+    state, writes, tables = _run_widget(
+        monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0",
+        approved_usages=["analytics"],
+    )
+    draft = state["save"]()
+    assert draft["status"] == "draft"
+    assert draft["contract_payload_json"] == ""
+
+    tables["METADATA_ENRICHMENT"].rows = [{
+        **_sources()["METADATA_ENRICHMENT"][0],
+        "contract_id": draft["contract_id"], "contract_version": draft["contract_version"],
+        "value": "Draft orders",
+    }]
+    tables["METADATA_GUARDRAIL"].rows = [{
+        **_sources()["METADATA_GUARDRAIL"][0],
+        "contract_id": draft["contract_id"], "contract_version": draft["contract_version"],
+    }, {
+        **_sources()["METADATA_GUARDRAIL"][0],
+        "guardrail_rule_id": "other-version", "contract_id": draft["contract_id"],
+        "contract_version": draft["contract_version"] + 1,
+    }]
+
+    class _Merge:
+        def alias(self, _name): return self
+        def merge(self, *_args): return self
+        def whenMatchedUpdateAll(self): return self
+        def execute(self): return None
+
+    delta = ModuleType("delta")
+    delta_tables = ModuleType("delta.tables")
+    delta_tables.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: _Merge())})
+    delta.tables = delta_tables
+    monkeypatch.setitem(sys.modules, "delta", delta)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
+    module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/contracts"))
+
+    frozen = state["freeze"]()
+    payload = json.loads(frozen["contract_payload_json"])
+    assert frozen["status"] == "frozen"
+    assert payload["enrichment"]["table"][0]["value"] == "Draft orders"
+    assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]
     assert len(writes) == 1
 
 

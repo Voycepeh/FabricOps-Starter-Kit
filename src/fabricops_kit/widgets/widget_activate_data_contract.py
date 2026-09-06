@@ -28,8 +28,8 @@ def _selected_contract(rows: list[dict[str, Any]], table_id: str, contract_id: s
     row = matches[0]
     if str(row.get("table_id") or "") != table_id:
         raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
-    if str(row.get("status") or "").lower() == "rejected":
-        raise ValueError("Rejected Data Contracts cannot be manually activated. Register a corrected version first.")
+    if str(row.get("status") or "").lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError("Only a frozen Data Contract version can be activated.")
     _payload(row)
     return row
 
@@ -86,7 +86,7 @@ def widget_activate_data_contract(*, table_id: str | None = None, contract_id: s
 
     Notes
     -----
-    Manual activation currently permits draft, active, and superseded versions.
+    Manual activation permits frozen, active, and superseded versions.
     It atomically marks the selected version active and supersedes the previous
     active version without changing any frozen payload or identity field. This
     interim workflow performs no external approval and promotes no Fabric item;
