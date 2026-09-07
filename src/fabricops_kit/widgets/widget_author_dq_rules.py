@@ -563,7 +563,7 @@ def widget_author_dq_rules(
             "parameters": parameter_box,
             "parameter_controls": parameter_controls,
             "columns": column_controls,
-            "severity": action_control,
+            "action": action_control,
             "preview": preview,
             **target_controls,
         },

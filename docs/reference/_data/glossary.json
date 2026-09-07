@@ -251,7 +251,7 @@
     "aliases": ["DQ"],
     "category": "Data Governance concepts",
     "short_definition": "Whether data is fit for its intended use and meets the quality expectations that apply to it.",
-    "long_definition": "Data Quality describes whether data satisfies the expectations required for its intended use. In FabricOps authoring, Data Quality is a Guardrail subtype with rule-specific parameters; check_dq retains its dedicated runtime implementation and returns failed rows to the caller without persisting them automatically.",
+    "long_definition": "Data Quality describes whether data satisfies the expectations required for its intended use. In FabricOps authoring, Data Quality is a Guardrail subtype with rule-specific parameters; check_dq retains its dedicated runtime implementation and returns failed values to the caller without persisting them automatically.",
     "preferred_usage": "Use data quality in narrative text; use DQ after the meaning is established.",
     "avoid_usage": "quality alone when data quality is meant"
   },

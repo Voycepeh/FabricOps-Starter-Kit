@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:7`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L80">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L84">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -54,6 +54,7 @@ def check_dq(
 >>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
 >>> result["can_continue"]
 True
+>>> result["failed_values"].select("rule_id", "column_name", "raw_value").show()
 
 </div>
 
@@ -87,7 +88,7 @@ Production resolves the physical table through the Catalogue and evaluates
 frozen DQ rules from its active Data Contract. Development evaluates current
 active approved authoring rules in ``METADATA_GUARDRAIL``.
 Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
-Failed rows are returned to the caller and are never persisted automatically.
+Failed values are returned to the caller and are never persisted automatically.
 Block failures prevent continuation while Warn failures do not.
 
 </div>

@@ -222,6 +222,8 @@ def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
     monkeypatch.setattr(module.authoring, "load_guardrail_authoring_targets", fake_targets)
     widget = module.widget_author_dq_rules(spark_session=object(), context={"config": object(), "env": "dev"})
     controls = widget["controls"]
+    assert "action" in controls
+    assert "severity" not in controls
     assert list(controls["columns"]) == _state()["columns"]
     assert "maximum_null_percent" in controls["parameter_controls"]
     controls["rule_type"].value = "allowed_values"

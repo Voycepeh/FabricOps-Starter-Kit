@@ -65,7 +65,7 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
 !!! important "What happens next"
 
-    Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates current authoring, and writes summaries to `METADATA_GUARDRAIL_RESULTS` and returns DQ failed rows to the caller without persisting them automatically. Step 5 saves an immutable Data Contract version, Engineering selects and tests that exact saved version, and Governance activates the selected version for Production. Step 6 runs Production against the active contract.
+    Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 returns to the same `02_pipeline`, evaluates current authoring, and writes summaries to `METADATA_GUARDRAIL_RESULTS` and returns DQ failed values to the caller without persisting them automatically. Step 5 saves an immutable Data Contract version, Engineering selects and tests that exact saved version, and Governance activates the selected version for Production. Step 6 runs Production against the active contract.
 
 For exact APIs such as `read_pipeline_prep()`, `check_changes()`, `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 

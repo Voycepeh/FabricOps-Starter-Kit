@@ -35,8 +35,11 @@ def check_dq(
     dict
         Overall ``status`` and ``can_continue`` decision, concise ``summary``,
         one check per evaluated rule, the original DataFrame with DQ status columns,
-        and a ``failed_rows`` DataFrame containing rule, action, reason, row
-        identity, and evaluation context. Evaluated rules also include the
+        and a normalized ``failed_values`` DataFrame. Failure detail has one
+        row per failed rule, involved column, and source record, with a shared
+        ``failure_event_id``, row and rule identities, action, column role,
+        string ``raw_value``, original ``raw_value_type``, and reason. It does
+        not copy unrelated source columns. Evaluated rules also include the
         resolved ``run_id``.
 
     Raises
@@ -53,7 +56,7 @@ def check_dq(
     frozen DQ rules from its active Data Contract. Development evaluates current
     active approved authoring rules in ``METADATA_GUARDRAIL``.
     Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
-    Failed rows are returned to the caller and are never persisted automatically.
+    Failed values are returned to the caller and are never persisted automatically.
     Block failures prevent continuation while Warn failures do not.
 
     Examples
@@ -61,6 +64,7 @@ def check_dq(
     >>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
     >>> result["can_continue"]
     True
+    >>> result["failed_values"].select("rule_id", "column_name", "raw_value").show()
 
     See Also
     --------
