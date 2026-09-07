@@ -1,4 +1,4 @@
-"""Owner file for the ``scan_warehouse_access`` public access inventory function."""
+"""Owner file for the ``scan_workspace_access`` public access inventory function."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from uuid import uuid4
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.read_warehouse_query import read_warehouse_query
+from fabricops_kit.io.shared import read_sql_endpoint_query_core
 
 
 ACCESS_TABLE = "METADATA_DATA_ACCESS"
@@ -96,11 +96,11 @@ def _normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
     for value in values:
         target = str(value or "").strip()
         if not target:
-            raise ValueError("Warehouse access scan targets must be non-empty strings.")
+            raise ValueError("Workspace access scan targets must be non-empty strings.")
         if target not in normalised:
             normalised.append(target)
     if not normalised:
-        raise ValueError("At least one Warehouse target is required for access scanning.")
+        raise ValueError("At least one configured physical data item target is required for access scanning.")
     return normalised
 
 
@@ -109,7 +109,7 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
 
     frames = []
     for target in targets:
-        frame = read_warehouse_query(
+        frame = read_sql_endpoint_query_core(
             SQL_ACCESS_QUERY,
             target=target,
             spark_session=spark_session,
@@ -130,7 +130,6 @@ def _catalogue_tables(catalogue_df, *, environment_name: str, targets: list[str]
         catalogue_df.filter(
             (F.lower(F.col("metadata_level")) == F.lit("table"))
             & (F.col("environment_name") == F.lit(environment_name))
-            & (F.lower(F.col("store_type")) == F.lit("warehouse"))
             & F.col("is_active")
             & F.col("layer").isin(targets)
         )
@@ -247,7 +246,7 @@ def _unmatched_rows(mapped):
     )
 
 
-def scan_warehouse_access(
+def scan_workspace_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...] = "warehouse",
@@ -256,17 +255,17 @@ def scan_warehouse_access(
     spark_session=None,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Scan configured Fabric Warehouses for observable SQL permissions.
+    """Scan observable SQL permissions for registered governed physical tables.
 
     The scanner reads SQL permission catalogue views through the existing
-    read-only ``read_warehouse_query`` entry point. Each configured Warehouse
-    target is scanned separately, so FabricOps does not need to execute dynamic
-    ``DECLARE`` / ``EXEC`` SQL or weaken the read-only Warehouse IO contract.
+    read-only SQL endpoint connector. Each configured Warehouse or Lakehouse SQL
+    analytics endpoint target is scanned separately, without dynamic
+    ``DECLARE`` / ``EXEC`` SQL.
 
     Direct permissions and permissions inherited through explicit database
     role membership are returned separately. Object-level permissions map to
     one registered table. Schema-level and database-level permissions expand to
-    every active registered Warehouse table in that scope while preserving the
+    every active registered physical table in that scope while preserving the
     original SQL permission class in ``access_level``.
 
     Parameters
@@ -275,7 +274,9 @@ def scan_warehouse_access(
         ``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to
         canonical FabricOps ``table_id`` values.
     targets : str | list[str] | tuple[str, ...], default="warehouse"
-        One or more configured Warehouse target keys from ``00_env_config``.
+        One or more configured Warehouse or Lakehouse target keys from
+        ``00_env_config`` whose SQL endpoints expose the supported catalogue
+        views.
     environment_name : str, optional
         Metadata environment to scan. Defaults to the active FabricOps
         environment.
@@ -283,7 +284,7 @@ def scan_warehouse_access(
         Identifier shared by all rows in this scan. A UUID is generated when
         omitted.
     spark_session : object, optional
-        Spark session override passed to ``read_warehouse_query``.
+        Spark session override used by the Fabric SQL connector.
     context : dict[str, Any], optional
         Active FabricOps context override.
 
@@ -292,14 +293,25 @@ def scan_warehouse_access(
     dict[str, pyspark.sql.DataFrame]
         ``access`` contains rows aligned to ``METADATA_DATA_ACCESS`` and ready
         for persistence. ``unmatched`` contains observed permissions that could
-        not be linked to an active registered Warehouse table, so observations
+        not be linked to an active registered physical table, so observations
         are never silently discarded.
 
     Notes
     -----
-    This is a SQL permission inventory, not a complete Fabric authorization
-    inventory. Workspace roles, item sharing, OneLake Security, and Power BI
-    security are outside this scanner's scope.
+    This scans observable SQL permissions only; it is not a complete workspace
+    security inventory. Workspace roles, item sharing, OneLake Security, and
+    Power BI security are outside this scanner's scope. The function returns
+    DataFrames and never persists or changes permissions.
+
+    Examples
+    --------
+    >>> result = scan_workspace_access(
+    ...     catalogue_df,
+    ...     targets=["warehouse", "curated_lakehouse"],
+    ...     spark_session=spark,
+    ... )
+    >>> result["access"].display()
+    >>> result["unmatched"].display()
 
     """
     config, active_env, resolved_context = resolve_fabric_context(context=context)

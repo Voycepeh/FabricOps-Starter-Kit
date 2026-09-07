@@ -4,7 +4,7 @@ See the SQL permissions observed for governed tables, including direct and role-
 
 ## Writer functions
 
-* [`scan_warehouse_access`](../../api/reference/scan_warehouse_access.md)
+* [`scan_workspace_access`](../../api/reference/scan_workspace_access.md)
 
 ## Used in Workflow Template
 

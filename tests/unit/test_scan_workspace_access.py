@@ -1,9 +1,12 @@
-"""Unit tests for the Warehouse SQL access inventory scanner."""
+"""Unit tests for the workspace SQL access scanner."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 import importlib
+from types import SimpleNamespace
+
+import pytest
 
 
 AUDIT_FIELDS = {
@@ -55,7 +58,7 @@ def _catalogue(spark_session):
                 "metadata_level": "table",
                 "table_id": "table-other-target",
                 "environment_name": "dev",
-                "store_type": "Warehouse",
+                "store_type": "Lakehouse",
                 "layer": "silver",
                 "schema_name": "sales",
                 "table_name": "orders",
@@ -88,16 +91,16 @@ def _observations(spark_session):
     return spark_session.createDataFrame(rows, columns)
 
 
-def test_scan_warehouse_access_maps_table_schema_and_database_scopes(monkeypatch, spark_session):
+def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch, spark_session):
     """Map object, schema, and database permissions to governed tables."""
-    module = importlib.import_module("fabricops_kit.access.scan_warehouse_access")
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
     calls = []
 
     def fake_read(query, *, target, spark_session=None, context=None, **options):
         calls.append((query, target, context))
         return _observations(spark_session)
 
-    monkeypatch.setattr(module, "read_warehouse_query", fake_read)
+    monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
@@ -105,7 +108,7 @@ def test_scan_warehouse_access_maps_table_schema_and_database_scopes(monkeypatch
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
 
-    result = module.scan_warehouse_access(
+    result = module.scan_workspace_access(
         _catalogue(spark_session),
         targets="gold",
         access_snapshot_id="snapshot-1",
@@ -145,9 +148,9 @@ def test_scan_warehouse_access_maps_table_schema_and_database_scopes(monkeypatch
     assert "SP_EXECUTESQL" not in calls[0][0].upper()
 
 
-def test_scan_warehouse_access_scans_each_unique_target(monkeypatch, spark_session):
-    """Scan each unique configured Warehouse target once."""
-    module = importlib.import_module("fabricops_kit.access.scan_warehouse_access")
+def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_session):
+    """Scan each unique configured workspace data item target once."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
     calls = []
 
     empty = _observations(spark_session).limit(0)
@@ -156,7 +159,7 @@ def test_scan_warehouse_access_scans_each_unique_target(monkeypatch, spark_sessi
         calls.append(target)
         return empty
 
-    monkeypatch.setattr(module, "read_warehouse_query", fake_read)
+    monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
@@ -164,7 +167,7 @@ def test_scan_warehouse_access_scans_each_unique_target(monkeypatch, spark_sessi
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
 
-    result = module.scan_warehouse_access(
+    result = module.scan_workspace_access(
         _catalogue(spark_session),
         targets=["gold", "gold", "silver"],
         access_snapshot_id="snapshot-2",
@@ -174,3 +177,46 @@ def test_scan_warehouse_access_scans_each_unique_target(monkeypatch, spark_sessi
     assert calls == ["gold", "silver"]
     assert result["access"].count() == 0
     assert result["unmatched"].count() == 0
+
+
+def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_session):
+    """Do not restrict governed physical tables to Warehouse store types."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
+
+    tables = module._catalogue_tables(
+        _catalogue(spark_session), environment_name="dev", targets=["silver"]
+    )
+
+    assert [row._catalogue_table_id for row in tables.collect()] == ["table-other-target"]
+
+
+@pytest.mark.parametrize("kind", ["warehouse", "lakehouse"])
+def test_sql_endpoint_reader_supports_configured_physical_data_items(monkeypatch, kind):
+    """Address Warehouse and Lakehouse SQL analytics endpoints from configuration."""
+    module = importlib.import_module("fabricops_kit.io.shared")
+    store = SimpleNamespace(kind=kind)
+    calls = []
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
+    monkeypatch.setattr(module, "validate_select_query", lambda query: query)
+    monkeypatch.setattr(module, "get_spark_session", lambda spark_session: "spark")
+    monkeypatch.setattr(
+        module,
+        "read_warehouse_synapsesql",
+        lambda spark, resolved_store, query, options=None: calls.append(
+            (spark, resolved_store, query, options)
+        ) or "frame",
+    )
+
+    assert module.read_sql_endpoint_query_core("SELECT 1", target="item") == "frame"
+    assert calls == [("spark", store, "SELECT 1", None)]
+
+
+def test_sql_endpoint_reader_rejects_unsupported_target_configuration(monkeypatch):
+    """Reject configured targets that cannot expose SQL permission catalogue views."""
+    module = importlib.import_module("fabricops_kit.io.shared")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: SimpleNamespace(kind="files"))
+
+    with pytest.raises(ValueError, match="expected a warehouse or lakehouse store"):
+        module.read_sql_endpoint_query_core("SELECT 1", target="unsupported")

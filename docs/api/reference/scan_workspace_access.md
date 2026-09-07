@@ -1,4 +1,4 @@
-# `scan_warehouse_access`
+# `scan_workspace_access`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,19 +7,19 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Scan configured Fabric Warehouses for observable SQL permissions and link them to governed tables.
+Scan observable SQL permissions for registered governed physical tables across configured Fabric workspace data items.
 
 <div class="reference-docstring-intro" markdown="1">
 
 The scanner reads SQL permission catalogue views through the existing
-read-only ``read_warehouse_query`` entry point. Each configured Warehouse
-target is scanned separately, so FabricOps does not need to execute dynamic
-``DECLARE`` / ``EXEC`` SQL or weaken the read-only Warehouse IO contract.
+read-only SQL endpoint connector. Each configured Warehouse or Lakehouse SQL
+analytics endpoint target is scanned separately, without dynamic
+``DECLARE`` / ``EXEC`` SQL.
 
 Direct permissions and permissions inherited through explicit database
 role membership are returned separately. Object-level permissions map to
 one registered table. Schema-level and database-level permissions expand to
-every active registered Warehouse table in that scope while preserving the
+every active registered physical table in that scope while preserving the
 original SQL permission class in ``access_level``.
 
 </div>
@@ -27,9 +27,9 @@ original SQL permission class in ``access_level``.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access/scan_warehouse_access.py:250`
+`fabricops_kit/access/scan_workspace_access.py:249`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_warehouse_access.py#L250-L335">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L249-L347">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,7 +45,7 @@ Use for repeatable SQL permission inventory snapshots that should link back to g
 
 Do not use as a complete Fabric authorization inventory; workspace roles, item sharing, OneLake Security, and Power BI security are outside this scanner.
 
-Uses the existing read-only Warehouse query helper, preserves direct versus role-based permission evidence, expands schema/database scope across registered tables, and keeps unresolved observations visible.
+Uses configured Warehouse and Lakehouse SQL analytics endpoints, preserves direct versus role-based permission evidence, expands schema/database scope across registered tables, and keeps unresolved observations visible.
 
 
 ## Signature
@@ -53,7 +53,7 @@ Uses the existing read-only Warehouse query helper, preserves direct versus role
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def scan_warehouse_access(
+def scan_workspace_access(
     catalogue_df,
     targets: str | list[str] | tuple[str, ...]='warehouse',
     environment_name: str | None=None,
@@ -69,9 +69,13 @@ def scan_warehouse_access(
 
 <div class="reference-example-usage" markdown="1">
 
-```python
-result = scan_warehouse_access(catalogue_df, targets="warehouse", spark_session=spark)
-```
+>>> result = scan_workspace_access(
+...     catalogue_df,
+...     targets=["warehouse", "curated_lakehouse"],
+...     spark_session=spark,
+... )
+>>> result["access"].display()
+>>> result["unmatched"].display()
 
 </div>
 
@@ -80,10 +84,10 @@ result = scan_warehouse_access(catalogue_df, targets="warehouse", spark_session=
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `catalogue_df` | `pyspark.sql.DataFrame` | Yes | ``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to canonical FabricOps ``table_id`` values. |
-| `targets` | `str \| list[str] \| tuple[str, ...]` | No | One or more configured Warehouse target keys from ``00_env_config``. |
+| `targets` | `str \| list[str] \| tuple[str, ...]` | No | One or more configured Warehouse or Lakehouse target keys from ``00_env_config`` whose SQL endpoints expose the supported catalogue views. |
 | `environment_name` | `str \| None` | No | Metadata environment to scan. Defaults to the active FabricOps environment. |
 | `access_snapshot_id` | `str \| None` | No | Identifier shared by all rows in this scan. A UUID is generated when omitted. |
-| `spark_session` | `object` | No | Spark session override passed to ``read_warehouse_query``. |
+| `spark_session` | `object` | No | Spark session override used by the Fabric SQL connector. |
 | `context` | `dict[str, Any] \| None` | No | Active FabricOps context override. |
 
 ## Returns
@@ -96,11 +100,11 @@ Use result["access"] as the governed table-level snapshot and review result["unm
 
 ## Raises / Errors
 
-Raises ValueError when no valid Warehouse target is supplied and propagates configured Warehouse read or Spark errors.
+Raises ValueError when no valid workspace data item target is supplied and propagates configured SQL endpoint read or Spark errors.
 
 ### Common failure causes
 
-- A Warehouse target is not configured or accessible.
+- A workspace data item target is not configured or accessible.
 - Catalogue layer/schema/table identity does not match the observed SQL object.
 - The scanning identity cannot read the SQL permission catalogue views.
 
@@ -108,9 +112,10 @@ Raises ValueError when no valid Warehouse target is supplied and propagates conf
 
 <div class="reference-docstring-notes" markdown="1">
 
-This is a SQL permission inventory, not a complete Fabric authorization
-inventory. Workspace roles, item sharing, OneLake Security, and Power BI
-security are outside this scanner's scope.
+This scans observable SQL permissions only; it is not a complete workspace
+security inventory. Workspace roles, item sharing, OneLake Security, and
+Power BI security are outside this scanner's scope. The function returns
+DataFrames and never persists or changes permissions.
 
 </div>
 
