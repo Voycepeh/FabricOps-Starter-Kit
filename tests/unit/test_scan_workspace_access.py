@@ -189,6 +189,51 @@ def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_sessi
     assert result["unmatched"].count() == 0
 
 
+def test_scan_workspace_access_uses_environment_override_for_targets_and_catalogue(monkeypatch):
+    """Use an explicit environment consistently when active and requested environments differ."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
+    config = object()
+    catalogue_df = object()
+    calls = {}
+
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda **kwargs: (config, "active-env", {"config": config, "env": "active-env"}),
+    )
+    def fake_target_store_kinds(resolved_config, environment, targets):
+        calls["target_resolution"] = (resolved_config, environment, targets)
+        return {"warehouse": "warehouse"}
+
+    monkeypatch.setattr(module, "_target_store_kinds", fake_target_store_kinds)
+    monkeypatch.setattr(module, "_scan_targets", lambda **kwargs: "observations")
+
+    def fake_catalogue_tables(frame, *, environment_name, target_store_kinds):
+        calls["catalogue"] = (frame, environment_name, target_store_kinds)
+        return "catalogue_tables"
+
+    monkeypatch.setattr(module, "_catalogue_tables", fake_catalogue_tables)
+    monkeypatch.setattr(module, "_map_to_catalogue", lambda *args: "mapped")
+    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: {})
+    monkeypatch.setattr(module, "_access_rows", lambda *args, **kwargs: "access_df")
+    monkeypatch.setattr(module, "_unmatched_rows", lambda *args: "unmatched_df")
+
+    result = module.scan_workspace_access(
+        catalogue_df,
+        targets="warehouse",
+        environment_name="requested-env",
+        access_snapshot_id="snapshot",
+    )
+
+    assert calls["target_resolution"] == (config, "requested-env", ["warehouse"])
+    assert calls["catalogue"] == (
+        catalogue_df,
+        "requested-env",
+        {"warehouse": "warehouse"},
+    )
+    assert result == {"access": "access_df", "unmatched": "unmatched_df"}
+
+
 def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_session):
     """Do not restrict governed physical tables to Warehouse store types."""
     module = importlib.import_module("fabricops_kit.access.scan_workspace_access")

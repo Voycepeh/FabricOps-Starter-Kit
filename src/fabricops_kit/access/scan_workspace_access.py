@@ -363,7 +363,7 @@ def scan_workspace_access(
     config, active_env, resolved_context = resolve_fabric_context(context=context)
     resolved_environment = str(environment_name or active_env)
     resolved_targets = _normalise_targets(targets)
-    target_store_kinds = _target_store_kinds(config, active_env, resolved_targets)
+    target_store_kinds = _target_store_kinds(config, resolved_environment, resolved_targets)
     snapshot_id = str(access_snapshot_id or uuid4())
 
     observations = _scan_targets(
