@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import types
 
-from fabricops_kit.widgets import enrichment_shared
+from fabricops_kit.data_contract import shared as contract_shared
 
 
 def _audit_fields():
@@ -23,8 +23,8 @@ def _audit_fields():
 
 def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
     """Build column enrichment with Stage 3 asset IDs and environment."""
-    monkeypatch.setattr(enrichment_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
-    rows = enrichment_shared.build_enrichment_records(
+    monkeypatch.setattr(contract_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
+    rows = contract_shared.build_enrichment_records(
         [
             {
                 "enrichment_level": "column",
@@ -51,8 +51,8 @@ def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
 
 def test_table_enrichment_clears_column_id(monkeypatch):
     """Keep table enrichment attached to the table without a column ID."""
-    monkeypatch.setattr(enrichment_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
-    row = enrichment_shared.build_enrichment_records(
+    monkeypatch.setattr(contract_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
+    row = contract_shared.build_enrichment_records(
         [
             {
                 "enrichment_level": "table",
@@ -71,9 +71,9 @@ def test_table_enrichment_clears_column_id(monkeypatch):
 
 def test_column_enrichment_requires_column_id(monkeypatch):
     """Reject column enrichment when the selected Catalogue column ID is missing."""
-    monkeypatch.setattr(enrichment_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
+    monkeypatch.setattr(contract_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
     try:
-        enrichment_shared.build_enrichment_records(
+        contract_shared.build_enrichment_records(
             [
                 {
                     "enrichment_level": "column",

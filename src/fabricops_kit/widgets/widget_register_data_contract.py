@@ -9,6 +9,7 @@ from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.data_contract.shared import freeze_contract_record, validate_contract_draft
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_configured_lakehouse_table, write_lakehouse_table_core
@@ -178,21 +179,6 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     return payload, warnings
 
 
-def _freeze_contract_row(*, row: dict[str, Any], payload: dict[str, Any], audit: dict[str, Any]) -> dict[str, Any]:
-    """Return the lifecycle update that freezes one exact draft version."""
-    if str(row.get("status") or "").lower() != "draft":
-        raise ValueError("Only a draft Data Contract version can be frozen.")
-    if row.get("contract_payload_json") not in (None, ""):
-        raise ValueError("Draft Data Contract version already has a canonical payload.")
-    return {
-        **row,
-        "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
-        "status": "frozen",
-        "is_active": False,
-        **audit,
-    }
-
-
 def widget_register_data_contract(*, agreement_id: str | None = None, agreement_version: str | None = None, table_id: str | None = None, approved_usages: list[str] | None = None, target: str = "metadata", schema: str | None = None, spark_session=None, context=None):
     """Create, author, and freeze one versioned governed-table Data Contract.
 
@@ -331,7 +317,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
                 return existing[0]
             raise ValueError("The selected Data Contract version is no longer an open draft.")
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": state["agreement_id"], "agreement_version": state["agreement_version"], "table_id": state["table_id"], "contract_payload_json": None, "status": "draft", "is_active": False, **audit}
+        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": state["agreement_id"], "agreement_version": state["agreement_version"], "table_id": state["table_id"], "environment_name": env, "contract_payload_json": None, "status": "draft", "is_active": False, **audit}
         row = coerce_metadata_row_types(CONTRACT_TABLE, row)
         frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CONTRACT_TABLE])
         write_lakehouse_table_core(frame, CONTRACT_TABLE, target=target, schema=schema, mode="append", context=runtime_context)
@@ -355,13 +341,18 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         ]
         if not agreements_now:
             raise ValueError("The draft's exact Data Agreement version no longer exists.")
+        validate_contract_draft(
+            draft, catalogue_rows=fresh_tables["METADATA_DATA_CATALOGUE"],
+            enrichment_rows=fresh_tables["METADATA_ENRICHMENT"],
+            guardrail_rows=fresh_tables["METADATA_GUARDRAIL"], environment_name=env,
+        )
         payload, warnings = _assemble_payload(
             contract_id=str(draft["contract_id"]), contract_version=int(draft["contract_version"]),
             agreement=agreements_now[0], table_id=str(draft["table_id"]),
             usages=list(state.get("approved_usages") or []), tables=fresh_tables, environment_name=env,
         )
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        frozen = coerce_metadata_row_types(CONTRACT_TABLE, _freeze_contract_row(row=draft, payload=payload, audit=audit))
+        frozen = coerce_metadata_row_types(CONTRACT_TABLE, freeze_contract_record(draft=draft, payload=payload, audit=audit))
         try:
             from delta.tables import DeltaTable
         except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
