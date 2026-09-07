@@ -7,6 +7,7 @@ import inspect
 import types
 
 from fabricops_kit.widgets import enrichment_shared
+from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets import widget_enrich_table_metadata
 from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
@@ -80,10 +81,10 @@ def _build_widget(monkeypatch, *, auto_observe=False):
         {"contract_id": "contract-courses", "contract_version": 1, "table_id": "table-courses", "status": "draft"},
     ]
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda table, *a, **k: reads.append(1) or (contracts if table == "METADATA_DATA_CONTRACT" else _catalogue_rows()))
-    monkeypatch.setattr(enrichment_shared, "read_enrichment_records", lambda *a, **k: reads.append(1) or _existing_enrichment())
-    monkeypatch.setattr(enrichment_shared, "write_enrichment_records", lambda records, **kwargs: writes.append(records))
+    monkeypatch.setattr(contract_authoring, "read_all_enrichment", lambda *a, **k: reads.append(1) or _existing_enrichment())
+    monkeypatch.setattr(contract_authoring, "save_enrichment", lambda records, **kwargs: writes.append(records))
     monkeypatch.setattr(
-        enrichment_shared,
+        contract_authoring,
         "build_runtime_audit_fields",
         lambda **kwargs: {
             "_committed_by": "audit",

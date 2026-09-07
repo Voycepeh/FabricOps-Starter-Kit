@@ -11,7 +11,9 @@ import pytest
 
 import fabricops_kit
 from fabricops_kit.widgets import shared as authoring
+from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets import widget_author_guardrails
+guardrail_widget_module = __import__("importlib").import_module("fabricops_kit.widgets.widget_author_guardrails")
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
     _guardrail_records_from_selection,
@@ -286,8 +288,7 @@ def test_widget_save_uses_shared_canonical_writer_and_advances_version(monkeypat
     """Verify that saving uses the shared writer and advances Guardrail version."""
     _install_fake_notebook_widgets(monkeypatch)
     saved = []
-    monkeypatch.setattr(authoring, "canonicalize_records", lambda records, **kwargs: [dict(row) for row in records])
-    monkeypatch.setattr(authoring, "write_rule_records", lambda records, **kwargs: saved.append([dict(row) for row in records]))
+    monkeypatch.setattr(guardrail_widget_module, "save_guardrails", lambda records, **kwargs: saved.append([dict(row) for row in records]) or [dict(row) for row in records])
     widget = _render_guardrail_authoring(
         _state(), spark_session=object(), context={"config": object(), "env": "dev"}
     )
