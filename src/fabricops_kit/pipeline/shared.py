@@ -1390,7 +1390,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
                 "data_types": expected_schema,
             }
         adapted.append({
-            **raw,
+            **{name: value for name, value in raw.items() if name != "rule_parameters"},
             "table_id": table_id,
             "environment_name": environment_name,
             "rule_parameters_json": json.dumps(params, sort_keys=True),

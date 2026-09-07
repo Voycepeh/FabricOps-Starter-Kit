@@ -62,6 +62,41 @@ def test_review_and_guardrails_come_only_from_frozen_payload():
     assert rules[0]["guardrail_rule_id"] == "rule-a"
     assert rules[0]["table_id"] == "runtime-orders"
     assert json.loads(rules[0]["rule_parameters_json"]) == {"columns": ["id"]}
+    assert "rule_parameters" not in rules[0]
+
+
+def test_frozen_guardrail_adapter_serializes_heterogeneous_parameters():
+    """Keep mixed scalar and list parameters out of Spark schema inference."""
+    contract = _contract(1)
+    payload = json.loads(contract["contract_payload_json"])
+    payload["guardrails"] = [
+        {
+            "guardrail_rule_id": "conditional", "guardrail_version": 1,
+            "guardrail_type": "dq", "rule_id": "conditional",
+            "rule_type": "required_when",
+            "rule_parameters": {
+                "columns": ["id"], "condition_column": "status",
+                "condition_operator": "=", "condition_value": "open",
+            },
+            "severity": "warning",
+        },
+        {
+            "guardrail_rule_id": "comparison", "guardrail_version": 1,
+            "guardrail_type": "dq", "rule_id": "comparison",
+            "rule_type": "compare_columns",
+            "rule_parameters": {"columns": ["upper", "lower"], "operator": "<="},
+            "severity": "error",
+        },
+    ]
+    contract["contract_payload_json"] = json.dumps(payload)
+
+    rules = pipeline_shared.contract_guardrail_rows(
+        contract, environment_name="dev", table_id="orders",
+    )
+
+    assert all("rule_parameters" not in rule for rule in rules)
+    assert json.loads(rules[0]["rule_parameters_json"])["condition_column"] == "status"
+    assert json.loads(rules[1]["rule_parameters_json"])["columns"] == ["upper", "lower"]
 
 
 def _schema_contract(*, rule_type="strict", severity="blocking"):
