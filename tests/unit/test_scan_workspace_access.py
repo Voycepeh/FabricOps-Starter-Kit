@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from fabricops_kit.config.shared import build_table_id
+
 
 AUDIT_FIELDS = {
     "_committed_by": "tester@example.com",
@@ -26,7 +28,7 @@ def _catalogue(spark_session):
         [
             {
                 "metadata_level": "table",
-                "table_id": "table-orders",
+                "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
                 "environment_name": "dev",
                 "store_type": "Warehouse",
                 "layer": "gold",
@@ -36,7 +38,7 @@ def _catalogue(spark_session):
             },
             {
                 "metadata_level": "table",
-                "table_id": "table-customers",
+                "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
                 "environment_name": "dev",
                 "store_type": "Warehouse",
                 "layer": "gold",
@@ -46,7 +48,7 @@ def _catalogue(spark_session):
             },
             {
                 "metadata_level": "table",
-                "table_id": "table-archive",
+                "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
                 "environment_name": "dev",
                 "store_type": "Warehouse",
                 "layer": "gold",
@@ -56,7 +58,7 @@ def _catalogue(spark_session):
             },
             {
                 "metadata_level": "table",
-                "table_id": "table-other-target",
+                "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
                 "environment_name": "dev",
                 "store_type": "Lakehouse",
                 "layer": "silver",
@@ -107,10 +109,11 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
         lambda **kwargs: ({"config": "test"}, "dev", {"config": {"config": "test"}, "env": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
+    monkeypatch.setattr(module, "_target_store_kinds", lambda *args: {"warehouse": "warehouse"})
 
     result = module.scan_workspace_access(
         _catalogue(spark_session),
-        targets="gold",
+        targets="warehouse",
         access_snapshot_id="snapshot-1",
         spark_session=spark_session,
         context={"env": "dev"},
@@ -123,9 +126,11 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
     for row in access_rows:
         by_principal.setdefault(row["user_principal"], set()).add(row["table_id"])
 
-    assert by_principal["alice@example.com"] == {"table-orders"}
-    assert by_principal["bob@example.com"] == {"table-orders", "table-customers"}
-    assert by_principal["carol@example.com"] == {"table-orders", "table-customers"}
+    orders_id = build_table_id("warehouse", "warehouse", "sales", "orders")
+    customers_id = build_table_id("warehouse", "warehouse", "sales", "customers")
+    assert by_principal["alice@example.com"] == {orders_id}
+    assert by_principal["bob@example.com"] == {orders_id, customers_id}
+    assert by_principal["carol@example.com"] == {orders_id, customers_id}
     assert "dave@example.com" not in by_principal
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
@@ -135,14 +140,14 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
 
     assert len(unmatched_rows) == 1
     assert unmatched_rows[0]["user_name"] == "dave@example.com"
-    assert unmatched_rows[0]["target"] == "gold"
+    assert unmatched_rows[0]["target"] == "warehouse"
     assert unmatched_rows[0]["unmatched_reason"] == "not_registered_in_catalogue"
 
     expected_columns = module.metadata_table_schema_registry()[module.ACCESS_TABLE].fieldNames()
     assert result["access"].columns == expected_columns
 
     assert len(calls) == 1
-    assert calls[0][1] == "gold"
+    assert calls[0][1] == "warehouse"
     assert calls[0][0].lstrip().upper().startswith("WITH")
     assert "DECLARE" not in calls[0][0].upper()
     assert "SP_EXECUTESQL" not in calls[0][0].upper()
@@ -166,15 +171,20 @@ def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_sessi
         lambda **kwargs: ({}, "dev", {"config": {}, "env": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
+    monkeypatch.setattr(
+        module,
+        "_target_store_kinds",
+        lambda *args: {"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
+    )
 
     result = module.scan_workspace_access(
         _catalogue(spark_session),
-        targets=["gold", "gold", "silver"],
+        targets=["warehouse", "warehouse", "curated_lakehouse"],
         access_snapshot_id="snapshot-2",
         spark_session=spark_session,
     )
 
-    assert calls == ["gold", "silver"]
+    assert calls == ["warehouse", "curated_lakehouse"]
     assert result["access"].count() == 0
     assert result["unmatched"].count() == 0
 
@@ -184,10 +194,34 @@ def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_sessi
     module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
 
     tables = module._catalogue_tables(
-        _catalogue(spark_session), environment_name="dev", targets=["silver"]
+        _catalogue(spark_session),
+        environment_name="dev",
+        target_store_kinds={"curated_lakehouse": "lakehouse"},
     )
 
-    assert [row._catalogue_table_id for row in tables.collect()] == ["table-other-target"]
+    assert [row._catalogue_table_id for row in tables.collect()] == [
+        build_table_id("lakehouse", "curated_lakehouse", "sales", "orders")
+    ]
+
+
+def test_catalogue_relates_mixed_targets_by_canonical_physical_identity(spark_session):
+    """Relate configured item keys independently of medallion layer values."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
+
+    tables = module._catalogue_tables(
+        _catalogue(spark_session),
+        environment_name="dev",
+        target_store_kinds={"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
+    )
+
+    assert {(row._catalogue_target, row._catalogue_table_id) for row in tables.collect()} == {
+        ("warehouse", build_table_id("warehouse", "warehouse", "sales", "orders")),
+        ("warehouse", build_table_id("warehouse", "warehouse", "sales", "customers")),
+        (
+            "curated_lakehouse",
+            build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
+        ),
+    }
 
 
 @pytest.mark.parametrize("kind", ["warehouse", "lakehouse"])

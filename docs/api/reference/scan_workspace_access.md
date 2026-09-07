@@ -22,14 +22,19 @@ one registered table. Schema-level and database-level permissions expand to
 every active registered physical table in that scope while preserving the
 original SQL permission class in ``access_level``.
 
+Configured target keys are related to catalogue rows by reconstructing the
+canonical ``table_id`` from the configured item kind, target key, schema,
+and table name. The catalogue ``layer`` classification is not used as a
+physical item identifier.
+
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access/scan_workspace_access.py:249`
+`fabricops_kit/access/scan_workspace_access.py:290`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L249-L347">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L290-L394">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -105,7 +110,7 @@ Raises ValueError when no valid workspace data item target is supplied and propa
 ### Common failure causes
 
 - A workspace data item target is not configured or accessible.
-- Catalogue layer/schema/table identity does not match the observed SQL object.
+- Canonical Catalogue physical identity does not match the observed SQL object.
 - The scanning identity cannot read the SQL permission catalogue views.
 
 ## Notes

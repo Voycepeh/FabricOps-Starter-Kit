@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import build_table_id, get_store, resolve_fabric_context
 from fabricops_kit.io.shared import read_sql_endpoint_query_core
 
 
@@ -123,19 +123,60 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
     return result
 
 
-def _catalogue_tables(catalogue_df, *, environment_name: str, targets: list[str]):
+def _target_store_kinds(config, environment_name: str, targets: list[str]) -> dict[str, str]:
+    """Resolve each configured physical data item target to its store kind."""
+    return {
+        target: str(get_store(config, environment_name, target).kind).strip().lower()
+        for target in targets
+    }
+
+
+def _catalogue_tables(catalogue_df, *, environment_name: str, target_store_kinds: dict[str, str]):
     from pyspark.sql import functions as F
+    from pyspark.sql import types as T
+
+    spark = catalogue_df.sparkSession
+    targets = spark.createDataFrame(
+        list(target_store_kinds.items()),
+        T.StructType(
+            [
+                T.StructField("_catalogue_target", T.StringType(), False),
+                T.StructField("_target_store_type", T.StringType(), False),
+            ]
+        ),
+    )
+    canonical_table_id = F.udf(
+        lambda store_type, target, schema_name, table_name: build_table_id(
+            store_type,
+            target,
+            None if schema_name is None or not str(schema_name).strip() else schema_name,
+            table_name,
+        ),
+        T.StringType(),
+    )
 
     return (
         catalogue_df.filter(
             (F.lower(F.col("metadata_level")) == F.lit("table"))
             & (F.col("environment_name") == F.lit(environment_name))
             & F.col("is_active")
-            & F.col("layer").isin(targets)
+        )
+        .crossJoin(targets)
+        .filter(
+            (F.lower(F.col("store_type")) == F.col("_target_store_type"))
+            & (
+                F.col("table_id")
+                == canonical_table_id(
+                    F.col("store_type"),
+                    F.col("_catalogue_target"),
+                    F.col("schema_name"),
+                    F.col("table_name"),
+                )
+            )
         )
         .select(
             F.col("table_id").alias("_catalogue_table_id"),
-            F.col("layer").alias("_catalogue_target"),
+            F.col("_catalogue_target"),
             F.col("schema_name").alias("_catalogue_schema_name"),
             F.col("table_name").alias("_catalogue_table_name"),
         )
@@ -268,6 +309,11 @@ def scan_workspace_access(
     every active registered physical table in that scope while preserving the
     original SQL permission class in ``access_level``.
 
+    Configured target keys are related to catalogue rows by reconstructing the
+    canonical ``table_id`` from the configured item kind, target key, schema,
+    and table name. The catalogue ``layer`` classification is not used as a
+    physical item identifier.
+
     Parameters
     ----------
     catalogue_df : pyspark.sql.DataFrame
@@ -317,6 +363,7 @@ def scan_workspace_access(
     config, active_env, resolved_context = resolve_fabric_context(context=context)
     resolved_environment = str(environment_name or active_env)
     resolved_targets = _normalise_targets(targets)
+    target_store_kinds = _target_store_kinds(config, active_env, resolved_targets)
     snapshot_id = str(access_snapshot_id or uuid4())
 
     observations = _scan_targets(
@@ -327,7 +374,7 @@ def scan_workspace_access(
     catalogue_tables = _catalogue_tables(
         catalogue_df,
         environment_name=resolved_environment,
-        targets=resolved_targets,
+        target_store_kinds=target_store_kinds,
     )
     mapped = _map_to_catalogue(observations, catalogue_tables)
     audit_fields = build_runtime_audit_fields(
