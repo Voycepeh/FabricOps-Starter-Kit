@@ -172,9 +172,9 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
         "approved_usages": usages,
     }
     warnings = []
-    if not any(r.get("enrichment_type") == "description" and not r.get("column_id") for r in enrichment_docs):
+    if not any(r.get("enrichment_type") == "Description" and not r.get("column_id") for r in enrichment_docs):
         warnings.append("Table description is missing.")
-    described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "description"}
+    described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "Description"}
     if any(str(r.get("column_id")) not in described for r in column_docs):
         warnings.append("One or more column descriptions are missing.")
     if not guardrail_docs:

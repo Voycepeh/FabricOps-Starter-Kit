@@ -441,16 +441,16 @@ def test_contract_registration_preserves_processing_parameters():
     assert payload["table"]["processing"] == {"load_strategy": "scd2", "key_columns": ["order_id"], "effective_column": "effective_at", "tracked_columns": ["status"]}
 
 
-def test_payload_keeps_sensitivity_informational_and_drops_unsupported_enrichment():
-    """Freeze Sensitivity without turning Enrichment into runtime policy."""
+
+def test_payload_contains_only_canonical_descriptive_enrichment():
+    """Freeze only Description and Classification as descriptive metadata."""
     sources = _sources()
     base = sources["METADATA_ENRICHMENT"][1]
     sources["METADATA_ENRICHMENT"].extend([
-        {**base, "enrichment_id": "sensitive", "enrichment_type": "Sensitivity", "value": "restricted"},
+        {**base, "enrichment_id": "classification", "enrichment_type": "Classification", "value": "Restricted"},
+        {**base, "enrichment_id": "sensitivity", "enrichment_type": "Sensitivity", "value": "restricted"},
         {**base, "enrichment_id": "legacy", "enrichment_type": "Personal_identifier", "value": "direct PII"},
     ])
     payload, _ = _assemble_payload(contract_id=_contract_id("agreement", "orders"), contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
-    types = {row["enrichment_type"] for row in payload["enrichment"]["columns"]}
-    assert "Sensitivity" in types
-    assert "Personal_identifier" not in types
+    assert {row["enrichment_type"] for row in payload["enrichment"]["columns"]} == {"Description", "Classification"}
     assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]

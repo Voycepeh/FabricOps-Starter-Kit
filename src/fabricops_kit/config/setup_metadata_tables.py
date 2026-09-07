@@ -270,7 +270,7 @@ def setup_metadata_tables(
     - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
       approval, expiry, table and column identity, and audit information.
     - ``METADATA_ENRICHMENT`` stores exact-contract-version descriptions,
-      classifications, informational column sensitivity, and audit information.
+      classifications, and audit information.
       Enrichment has no direct ETL enforcement semantics.
     - ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,
       parameters, severity, lifecycle, governance review, approval, effective

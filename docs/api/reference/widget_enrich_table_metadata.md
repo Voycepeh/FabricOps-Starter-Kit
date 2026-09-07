@@ -22,7 +22,7 @@ enrichment. Inactive columns remain visible as read-only history.
 
 `fabricops_kit/widgets/widget_enrich_table_metadata.py:29`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L29-L415">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L29-L468">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,7 +70,7 @@ def widget_enrich_table_metadata(
 
 ## Returns
 
-Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.
+Standalone three-pane browser state with table and column selectors, draft-aware controls, explicit AI suggestion, record building, and save callbacks.
 
 ### Return interpretation
 
@@ -91,12 +91,14 @@ Raises clear catalogue identity, metadata read, or metadata routing errors when 
 <div class="reference-docstring-notes" markdown="1">
 
 Table enrichment supports ``Description`` and ``Classification``. Column
-enrichment additionally supports informational ``Sensitivity``. Enrichment
-is descriptive metadata only and has no direct ETL enforcement semantics.
-Saving appends only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
-``contract_id`` and ``contract_version``, optional ``column_id``, and
-``environment_name``. The governed table is resolved through the contract.
-Repeated unchanged saves
+enrichment uses the same two fields. ``Classification`` is selected from
+project-configured information-classification labels. Optional AI
+suggestions remain transient until a user reviews and saves them.
+Enrichment is descriptive metadata only and has no direct ETL enforcement
+semantics. Saving appends only non-empty changed values to
+``METADATA_ENRICHMENT`` using the exact ``contract_id`` and
+``contract_version``, optional ``column_id``, and ``environment_name``. The
+governed table is resolved through the contract. Repeated unchanged saves
 produce no write.
 
 </div>

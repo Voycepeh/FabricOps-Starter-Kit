@@ -222,11 +222,20 @@ Back in `01_governance`, Governance selects the same canonical `table_id` from t
 
 As parts of that Data Contract definition, Governance can add:
 
-- **Enrichment**, limited to descriptive table and column descriptions and classifications, plus informational column sensitivity
+- **Enrichment**, limited to descriptive table and column descriptions and information classifications
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 
 Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as definitions attached directly to `table_id`. Governance can refine the definition before saving an immutable Data Contract version for the governed asset.
+
+### AI-assisted governance authoring
+
+FabricOps can use Microsoft Fabric AI Functions to propose descriptions and
+information classifications from Data Catalogue and profiling context. The
+suggestions remain editable and require Governance review before they become
+part of the Data Contract. Classification options and AI authoring instructions
+are project-configurable through `00_env_config`; manual authoring remains
+available when AI assistance is disabled or unavailable.
 
 </div>
 </details>

@@ -6,6 +6,8 @@ import importlib
 import inspect
 import types
 
+import pytest
+
 from fabricops_kit.widgets import enrichment_shared
 from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets import widget_enrich_table_metadata
@@ -42,8 +44,7 @@ def _existing_enrichment():
         {"enrichment_id": "3", "table_id": "table-students", "column_id": "col-legacy", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Historical", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "4", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Student name", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "5", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "6", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Sensitivity", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "7", "table_id": "table-students", "column_id": "col-id", "environment_name": "prod", "enrichment_level": "column", "enrichment_type": "Description", "value": "Production identifier", "_committed_at": "2026-03-01", "_activity_id": "z"},
+                {"enrichment_id": "7", "table_id": "table-students", "column_id": "col-id", "environment_name": "prod", "enrichment_level": "column", "enrichment_type": "Description", "value": "Production identifier", "_committed_at": "2026-03-01", "_activity_id": "z"},
     ]
     for row in rows:
         row["contract_id"] = "contract-students"
@@ -71,7 +72,7 @@ def test_catalogue_browser_uses_stage2_ids_and_environment_isolation():
     assert next(row for row in state["current_columns"] if row["column_id"] == "col-id")["enrichment_values"]["Description"] == "Identifier"
 
 
-def _build_widget(monkeypatch, *, auto_observe=False):
+def _build_widget(monkeypatch, *, auto_observe=False, ai_enabled=False):
     module = importlib.import_module("fabricops_kit.widgets.widget_enrich_table_metadata")
     _install_fake_notebook_widgets(monkeypatch, auto_observe=auto_observe)
     reads = []
@@ -98,7 +99,14 @@ def _build_widget(monkeypatch, *, auto_observe=False):
         },
     )
     config = types.SimpleNamespace(
-        governance_config=types.SimpleNamespace(sensitivity_labels=["public", "restricted"])
+        governance_config=types.SimpleNamespace(
+            sensitivity_labels=["Public", "Internal", "Confidential", "Restricted"],
+            ai_enrichment={
+                "enabled": ai_enabled,
+                "description_prompt": "Configured description prompt",
+                "classification_prompt": "Configured classification prompt",
+            },
+        )
     )
     widget = widget_enrich_table_metadata(spark_session=object(), context={"config": config, "env": "dev"})
     return widget, reads, writes
@@ -122,25 +130,25 @@ def test_public_widget_is_standalone_and_writes_stage3_identity(monkeypatch):
     signature = inspect.signature(widget_enrich_table_metadata)
     assert list(signature.parameters) == ["spark_session", "context"]
     widget, reads, _ = _build_widget(monkeypatch)
-    assert widget["spark_read_count"] == 3
-    assert len(reads) == 3
+    assert widget["spark_read_count"] == 4
+    assert len(reads) == 4
     _select(widget, "column:col-id")
     assert widget["controls"]["Description"].value == "Identifier"
     assert widget["controls"]["Classification"].value == "retired-label"
-    assert widget["controls"]["Sensitivity"].layout.display == ""
-    _change(widget["controls"]["Sensitivity"], "restricted")
+    assert "retired-label" in widget["controls"]["Classification"].options
+    _change(widget["controls"]["Classification"], "Restricted")
     records = widget["build_records"]()
     assert [(row["enrichment_level"], row["contract_id"], row["contract_version"], row["column_id"], row["environment_name"], row["enrichment_type"]) for row in records] == [
-        ("column", "contract-students", 1, "col-id", "dev", "Sensitivity")
+        ("column", "contract-students", 1, "col-id", "dev", "Classification")
     ]
     assert "metadata_key" not in records[0]
     _select(widget, "table:table-students")
+    assert "Restricted" in widget["controls"]["Classification"].options
     _change(widget["controls"]["Description"], "Student table")
     record = widget["build_records"]()[0]
     assert (record["enrichment_level"], record["contract_id"], record["contract_version"], record["column_id"], record["environment_name"]) == (
         "table", "contract-students", 1, "", "dev"
     )
-    assert "Sensitivity" not in {row["enrichment_type"] for row in widget["build_records"]()}
 
 
 def test_change_detection_drafts_inactive_read_only_and_search_without_reads(monkeypatch):
@@ -163,7 +171,7 @@ def test_change_detection_drafts_inactive_read_only_and_search_without_reads(mon
     assert widget["build_records"]() == []
     widget["table_search"].value = "engineering"
     widget["table_search"]._observer({"name": "value", "new": "engineering"})
-    assert len(reads) == 3
+    assert len(reads) == 4
     assert list(widget["table_selector"].options) == [("Courses — Engineering Production / curated", "table-courses")]
 
 
@@ -179,7 +187,7 @@ def test_selection_hydration_does_not_create_or_cross_contaminate_drafts(monkeyp
     widget["column_selector"].value = "column:col-name"
     assert widget["controls"]["Description"].value == "Student name"
     assert widget["controls"]["Classification"].value == "public"
-    assert widget["controls"]["Sensitivity"].value == "public"
+    assert "public" in widget["controls"]["Classification"].options
     assert widget["drafts"] == {}
     widget["column_selector"].value = "column:col-id"
     assert widget["controls"]["Description"].value == "Identifier"
@@ -194,3 +202,78 @@ def test_empty_description_is_not_written(monkeypatch):
     _change(widget["controls"]["Description"], "   ")
     assert widget["save"]() == {"enrichment_records": []}
     assert writes == []
+
+
+def test_ai_suggestion_is_explicit_transient_and_uses_configured_prompts(monkeypatch):
+    """Populate editable fields only after an explicit, config-driven suggestion."""
+    calls = []
+
+    def fake_suggest(context, **kwargs):
+        calls.append((context, kwargs))
+        return {"Description": "AI draft", "Classification": "Restricted"}
+
+    monkeypatch.setattr(enrichment_shared, "suggest_enrichment", fake_suggest)
+    widget, _, writes = _build_widget(monkeypatch, ai_enabled=True)
+    _select(widget, "column:col-id")
+    assert writes == []
+    suggestion = widget["suggest"]()
+    assert suggestion == {"Description": "AI draft", "Classification": "Restricted"}
+    assert widget["controls"]["Description"].value == "AI draft"
+    assert widget["controls"]["Classification"].value == "Restricted"
+    assert calls[0][1]["description_prompt"] == "Configured description prompt"
+    assert calls[0][1]["classification_prompt"] == "Configured classification prompt"
+    assert calls[0][1]["classification_labels"] == ["Public", "Internal", "Confidential", "Restricted"]
+    assert writes == []
+    assert widget["save"]()["enrichment_records"]
+    assert len(writes) == 1
+
+
+def test_ai_disabled_keeps_manual_authoring_available(monkeypatch):
+    """Do not invoke AI when disabled and preserve the normal save path."""
+    widget, _, writes = _build_widget(monkeypatch, ai_enabled=False)
+    assert widget["suggest_button"].disabled is True
+    assert widget["suggest"]() == {}
+    _select(widget, "table:table-students")
+    _change(widget["controls"]["Classification"], "Internal")
+    assert widget["save"]()["enrichment_records"][0]["enrichment_type"] == "Classification"
+    assert len(writes) == 1
+
+
+def test_ai_service_constrains_classification_and_uses_both_prompts():
+    """Reject model output outside configured information-classification labels."""
+    prompts = []
+    answers = iter(["A concise description", "restricted"])
+
+    def invoke(prompt):
+        prompts.append(prompt)
+        return next(answers)
+
+    result = enrichment_shared.suggest_enrichment(
+        {"table_name": "orders"}, description_prompt="DESCRIPTION INSTRUCTION",
+        classification_prompt="CLASSIFICATION INSTRUCTION",
+        classification_labels=["Public", "Restricted"], invoke=invoke,
+    )
+    assert result == {"Description": "A concise description", "Classification": "Restricted"}
+    assert "DESCRIPTION INSTRUCTION" in prompts[0]
+    assert "CLASSIFICATION INSTRUCTION" in prompts[1]
+
+    with pytest.raises(ValueError, match="configured labels"):
+        enrichment_shared.suggest_enrichment(
+            {}, description_prompt="describe", classification_prompt="classify",
+            classification_labels=["Public"], invoke=lambda _prompt: "unknown",
+        )
+
+
+def test_ai_unavailable_reports_error_without_blocking_manual_save(monkeypatch):
+    """Keep manual authoring usable when Fabric AI Functions cannot run."""
+    monkeypatch.setattr(
+        enrichment_shared, "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("Fabric AI unavailable")),
+    )
+    widget, _, writes = _build_widget(monkeypatch, ai_enabled=True)
+    _select(widget, "table:table-students")
+    assert widget["suggest"]() == {}
+    assert "Manual authoring remains available" in widget["suggestion_status"].value
+    _change(widget["controls"]["Description"], "Human authored")
+    assert widget["save"]()["enrichment_records"][0]["value"] == "Human authored"
+    assert len(writes) == 1

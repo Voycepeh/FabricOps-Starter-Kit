@@ -509,7 +509,7 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-SENSITIVITY_LABELS = ["classified", "restricted", "public"]
+SENSITIVITY_LABELS = ["Public", "Internal", "Confidential", "Restricted"]
 
 
 @dataclass

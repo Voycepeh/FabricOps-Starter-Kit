@@ -313,6 +313,27 @@ expandEngineeringChoiceFromHash();
 
     The goal is a self-contained Fabric operating model with explicit write ownership, a canonical asset identity, and a clear contract bridge—not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
 
+### AI-assisted Enrichment authoring
+
+`widget_enrich_table_metadata()` can explicitly request a Description and
+Classification suggestion through Microsoft Fabric AI Functions. The helper
+sends compact technical context only: metadata level, table or column name,
+data type, existing Description, relevant profile metrics, and configured
+Classification labels. It does not introduce a raw-data sampling path.
+
+Projects configure the Description prompt, Classification prompt, enabled state,
+and information-classification labels in `00_env_config`. A Classification
+response must match one configured label. Suggestions exist only in widget
+memory and populate the normal editable controls; Governance can accept, edit,
+or replace them. Only the normal save path writes approved Description and
+Classification values to `METADATA_ENRICHMENT`, and Data Contract freeze remains
+the sign-off boundary. If AI Enrichment is disabled or Fabric AI Functions are
+unavailable, manual authoring continues unchanged.
+
+Classification describes how sensitive information is under the organisation's
+information-classification policy. PII detection and required runtime treatment
+belong to a dedicated future Guardrail workflow, not Enrichment.
+
 <span id="pyspark-first"></span>
 
 ??? info "PySpark-first transformation"

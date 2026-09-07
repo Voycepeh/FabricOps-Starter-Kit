@@ -332,6 +332,13 @@ class PathConfig:
             raise ValueError("paths must be a non-empty mapping of environments to targets.")
 
 
+DEFAULT_AI_ENRICHMENT = {
+    "enabled": False,
+    "description_prompt": "Write a concise business description using only the supplied metadata context. Return only the proposed description.",
+    "classification_prompt": "Choose the best information classification using only the configured labels and supplied metadata context. Return only the label.",
+}
+
+
 @dataclass(frozen=True)
 class GovernanceConfig:
     """Default governance-policy options for metadata/classification checks.
@@ -344,7 +351,11 @@ class GovernanceConfig:
         Mapping of rule keys to expected sensitivity labels used by governance
         notebook checks and reporting summaries.
     sensitivity_labels : list[str]
-        Controlled labels rendered by column metadata enrichment widgets.
+        Controlled information-classification labels rendered by table and
+        column metadata enrichment widgets.
+    ai_enrichment : dict[str, Any]
+        Optional AI Enrichment authoring settings. ``enabled`` controls the
+        assistant and the two prompt fields provide project instructions.
     enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
         Widget definitions for organization-specific enrichment fields. Each
         widget uses ``custom_fields`` entries keyed by ``key``.
@@ -353,7 +364,8 @@ class GovernanceConfig:
 
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
-    sensitivity_labels: list[str] = field(default_factory=lambda: ["classified", "restricted", "public"])
+    sensitivity_labels: list[str] = field(default_factory=lambda: ["Public", "Internal", "Confidential", "Restricted"])
+    ai_enrichment: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_AI_ENRICHMENT))
     enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
 
@@ -362,7 +374,13 @@ class GovernanceConfig:
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
         labels = [str(option).strip() for option in (self.sensitivity_labels or []) if str(option).strip()]
-        object.__setattr__(self, "sensitivity_labels", labels or ["classified", "restricted", "public"])
+        object.__setattr__(self, "sensitivity_labels", labels or ["Public", "Internal", "Confidential", "Restricted"])
+        ai_enrichment = {**DEFAULT_AI_ENRICHMENT, **dict(self.ai_enrichment or {})}
+        object.__setattr__(self, "ai_enrichment", {
+            "enabled": bool(ai_enrichment.get("enabled", False)),
+            "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
+            "classification_prompt": str(ai_enrichment.get("classification_prompt") or "").strip(),
+        })
         object.__setattr__(
             self,
             "enrichment_context_widget",

@@ -135,13 +135,13 @@ def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
     records = service.build_enrichment_records([
         {**common, "enrichment_level": "table", "enrichment_type": "Description"},
         {**common, "enrichment_level": "table", "enrichment_type": "Classification"},
-        {**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Sensitivity"},
+        {**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Classification"},
     ], env="dev")
-    assert [row["enrichment_type"] for row in records] == ["Description", "Classification", "Sensitivity"]
+    assert [row["enrichment_type"] for row in records] == ["Description", "Classification", "Classification"]
     with pytest.raises(ValueError, match="descriptive metadata only"):
         service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Personal_identifier"}], env="dev")
-    with pytest.raises(ValueError, match="Table enrichment_type"):
-        service.build_enrichment_records([{**common, "enrichment_level": "table", "enrichment_type": "Sensitivity"}], env="dev")
+    with pytest.raises(ValueError, match="Column enrichment_type"):
+        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Sensitivity"}], env="dev")
 
 
 def test_canonical_enrichment_state_removes_non_descriptive_rows():
@@ -152,4 +152,4 @@ def test_canonical_enrichment_state_removes_non_descriptive_rows():
         {"enrichment_level": "column", "enrichment_type": "Sensitivity"},
         {"enrichment_level": "column", "enrichment_type": "Personal_identifier"},
     ]
-    assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification", "Sensitivity"]
+    assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification"]

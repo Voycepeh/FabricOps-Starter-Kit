@@ -23,7 +23,7 @@ ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification"}),
-    "column": frozenset({"Description", "Classification", "Sensitivity"}),
+    "column": frozenset({"Description", "Classification"}),
 }
 
 
@@ -139,16 +139,18 @@ def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[di
 
 def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
     """Return only descriptive Enrichment rows supported by the canonical model."""
-    return [
-        row for row in row_dicts(rows)
-        if str(row.get("enrichment_type") or "").casefold()
-        in {
-            name.casefold()
-            for name in ENRICHMENT_TYPES_BY_LEVEL.get(
-                str(row.get("enrichment_level") or "").lower(), frozenset()
-            )
-        }
-    ]
+    canonical = []
+    for row in row_dicts(rows):
+        allowed = ENRICHMENT_TYPES_BY_LEVEL.get(
+            str(row.get("enrichment_level") or "").lower(), frozenset()
+        )
+        enrichment_type = next((
+            name for name in allowed
+            if name.casefold() == str(row.get("enrichment_type") or "").casefold()
+        ), None)
+        if enrichment_type is not None:
+            canonical.append({**row, "enrichment_type": enrichment_type})
+    return canonical
 
 
 def read_enrichment(
