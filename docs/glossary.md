@@ -31,7 +31,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="enrichment">
 <summary><strong>Enrichment</strong> — Business and governance information added to the Data Catalogue after technical metadata has been captured.</summary>
-<p>In FabricOps, Enrichment adds business and governance meaning to Data Catalogue metadata after technical metadata has been captured. It can add descriptions, ownership, sensitivity, classification, and other table- or column-level information used to understand and govern the data.</p>
+<p>In FabricOps, Enrichment is descriptive metadata owned by one exact Data Contract version. It stores table descriptions and classifications, plus column descriptions, classifications, and informational sensitivity. Enrichment has no direct ETL enforcement semantics; enforced runtime requirements belong in Guardrails.</p>
 <p><strong>Also known as:</strong> metadata enrichment, enrich metadata</p>
 </details>
 

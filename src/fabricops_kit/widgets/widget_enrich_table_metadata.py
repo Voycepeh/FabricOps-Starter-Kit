@@ -62,8 +62,9 @@ def widget_enrich_table_metadata(
     Notes
     -----
     Table enrichment supports ``Description`` and ``Classification``. Column
-    enrichment additionally supports ``Personal_identifier``. Saving appends
-    only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
+    enrichment additionally supports informational ``Sensitivity``. Enrichment
+    is descriptive metadata only and has no direct ETL enforcement semantics.
+    Saving appends only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
     ``contract_id`` and ``contract_version``, optional ``column_id``, and
     ``environment_name``. The governed table is resolved through the contract.
     Repeated unchanged saves
@@ -125,7 +126,7 @@ def widget_enrich_table_metadata(
     if not table_options:
         raise ValueError(f"METADATA_DATA_CATALOGUE has no active table rows for environment {env!r}.")
     current_values = _enrichment.latest_enrichment_values(enrichment_rows, environment_name=env)
-    classification_options, personal_options, _, _ = _widget_shared.enrichment_control_options(config)
+    sensitivity_options, _, _ = _widget_shared.enrichment_control_options(config)
     drafts: dict[tuple[str, str, str], dict[str, str]] = {}
     originals: dict[tuple[str, str, str], dict[str, str]] = {}
     selected: dict[str, Any] = {"table_id": "", "item_token": ""}
@@ -155,11 +156,11 @@ def widget_enrich_table_metadata(
     detail_title = widgets.HTML(value="")
     technical_detail = widgets.HTML(value="")
     description = widgets.Textarea(rows=5, **_widget_shared.widget_common(widgets, "Description", textarea=True))
-    classification = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Classification"))
-    personal = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Personal identifier"))
+    classification = widgets.Text(**_widget_shared.widget_common(widgets, "Classification"))
+    sensitivity = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Sensitivity"))
     save_button = widgets.Button(description="Save enrichment", button_style="success")
     unsaved = widgets.HTML(value="")
-    controls = {"Description": description, "Classification": classification, "Personal_identifier": personal}
+    controls = {"Description": description, "Classification": classification, "Sensitivity": sensitivity}
 
     def selected_identity() -> tuple[str, str, str]:
         token = str(selected.get("item_token") or "")
@@ -171,7 +172,7 @@ def widget_enrich_table_metadata(
         names = (
             ("Description", "Classification")
             if level == "table"
-            else ("Description", "Classification", "Personal_identifier")
+            else ("Description", "Classification", "Sensitivity")
         )
         return {name: str(controls[name].value or "") for name in names}
 
@@ -216,11 +217,10 @@ def widget_enrich_table_metadata(
         detail_state["is_rendering"] = True
         try:
             description.value = values.get("Description", "")
-            classification.options = options_with_current(classification_options, values.get("Classification", ""))
             classification.value = values.get("Classification", "")
-            personal.options = options_with_current(personal_options, values.get("Personal_identifier", ""))
-            personal.value = values.get("Personal_identifier", "")
-            personal.layout.display = "none" if level == "table" else ""
+            sensitivity.options = options_with_current(sensitivity_options, values.get("Sensitivity", ""))
+            sensitivity.value = values.get("Sensitivity", "")
+            sensitivity.layout.display = "none" if level == "table" else ""
             for control in controls.values():
                 control.disabled = removed
             save_button.disabled = removed
@@ -382,7 +382,7 @@ def widget_enrich_table_metadata(
             technical_detail,
             description,
             classification,
-            personal,
+            sensitivity,
             _widget_shared.action_row(widgets, [save_button]),
             unsaved,
         ],

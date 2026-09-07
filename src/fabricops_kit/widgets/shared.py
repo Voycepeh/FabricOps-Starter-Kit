@@ -510,7 +510,6 @@ GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
-PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 
 
 @dataclass
@@ -827,16 +826,15 @@ def _is_table_not_found_error(exc: Exception) -> bool:
     return any(marker in message for marker in not_found_markers) and not any(marker in message for marker in non_not_found_markers)
 
 
-def enrichment_control_options(config: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
+def enrichment_control_options(config: Any) -> tuple[list[str], list[dict[str, Any]], list[dict[str, Any]]]:
     """Return configured column metadata enrichment controls."""
     governance = getattr(config, "governance_config", None)
     sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
-    pii = list(getattr(governance, "pii_classifications", None) or PERSONAL_DATA_CLASSIFICATIONS)
     context_widget = getattr(governance, "enrichment_context_widget", None) or {}
     classification_widget = getattr(governance, "enrichment_classification_widget", None) or {}
     context_fields = list(context_widget.get("custom_fields", []) or [])
     classification_fields = list(classification_widget.get("custom_fields", []) or [])
-    return sensitivity, pii, context_fields, classification_fields
+    return sensitivity, context_fields, classification_fields
 
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:

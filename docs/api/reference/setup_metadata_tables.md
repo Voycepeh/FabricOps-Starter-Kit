@@ -186,9 +186,9 @@ Detailed table contents:
   standard audit fields.
 - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
   approval, expiry, table and column identity, and audit information.
-- ``METADATA_ENRICHMENT`` stores business metadata enrichment,
-  classification, sensitivity, ownership, governance review, activation,
-  effective dates, and audit information.
+- ``METADATA_ENRICHMENT`` stores exact-contract-version descriptions,
+  classifications, informational column sensitivity, and audit information.
+  Enrichment has no direct ETL enforcement semantics.
 - ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,
   parameters, severity, lifecycle, governance review, approval, effective
   dates, and audit information.

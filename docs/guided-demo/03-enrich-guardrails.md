@@ -33,9 +33,9 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
 ???+ success "Live — Add Enrichment"
 
-    Add or refine Enrichment such as business descriptions, classifications, and stewardship context.
+    Add or refine descriptive Enrichment: table descriptions and classifications, plus column descriptions, classifications, and informational sensitivity.
 
-    `METADATA_ENRICHMENT` attaches business context to the canonical `METADATA_DATA_CATALOGUE` identity rather than replacing the Engineering-written records.
+    `METADATA_ENRICHMENT` belongs to one exact Data Contract version through `contract_id` + `contract_version`. It is descriptive metadata only and has no direct ETL enforcement semantics. Put every executable runtime requirement in `METADATA_GUARDRAIL`.
 
 ???+ success "Live — Author Guardrails"
 

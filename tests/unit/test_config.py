@@ -142,6 +142,7 @@ def test_governance_config_uses_widget_custom_fields_contract():
     assert config.enrichment_classification_widget["custom_fields"][0]["key"] == "retention_class"
     assert not hasattr(config, legacy_context_field)
     assert not hasattr(config, legacy_classification_field)
+    assert not hasattr(config, "pii_classifications")
 
 
 def test_data_agreement_widgets_normalize_custom_fields_contract():

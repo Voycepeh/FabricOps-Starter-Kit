@@ -46,8 +46,8 @@ def test_draft_validation_returns_only_owned_governance_rows():
     draft = {"contract_id": "c", "contract_version": 2, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "environment_name": "dev", "status": "draft"}
     catalogue = [{"table_id": "t", "environment_name": "dev", "metadata_level": "table"}]
     enrichment = [
-        {"contract_id": "c", "contract_version": 2, "environment_name": "dev"},
-        {"contract_id": "c", "contract_version": 1, "environment_name": "dev"},
+        {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Description"},
+        {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Description"},
     ]
     guardrails = [
         {"contract_id": "c", "contract_version": 2, "environment_name": "dev"},
@@ -126,3 +126,30 @@ def test_freeze_record_is_immutable_payload_transition():
     assert frozen["status"] == "frozen"
     assert frozen["is_active"] is False
     assert '"contract_id":"c"' in frozen["contract_payload_json"]
+
+
+def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
+    """Allow only the minimal table and column descriptive fields."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    common = {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "value"}
+    records = service.build_enrichment_records([
+        {**common, "enrichment_level": "table", "enrichment_type": "Description"},
+        {**common, "enrichment_level": "table", "enrichment_type": "Classification"},
+        {**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Sensitivity"},
+    ], env="dev")
+    assert [row["enrichment_type"] for row in records] == ["Description", "Classification", "Sensitivity"]
+    with pytest.raises(ValueError, match="descriptive metadata only"):
+        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Personal_identifier"}], env="dev")
+    with pytest.raises(ValueError, match="Table enrichment_type"):
+        service.build_enrichment_records([{**common, "enrichment_level": "table", "enrichment_type": "Sensitivity"}], env="dev")
+
+
+def test_canonical_enrichment_state_removes_non_descriptive_rows():
+    """Exclude old or unknown types from current authoring and frozen state."""
+    rows = [
+        {"enrichment_level": "column", "enrichment_type": "Description"},
+        {"enrichment_level": "column", "enrichment_type": "Classification"},
+        {"enrichment_level": "column", "enrichment_type": "Sensitivity"},
+        {"enrichment_level": "column", "enrichment_type": "Personal_identifier"},
+    ]
+    assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification", "Sensitivity"]

@@ -42,7 +42,7 @@ def _existing_enrichment():
         {"enrichment_id": "3", "table_id": "table-students", "column_id": "col-legacy", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Historical", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "4", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Student name", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "5", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "6", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Personal_identifier", "value": "none", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "6", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Sensitivity", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "7", "table_id": "table-students", "column_id": "col-id", "environment_name": "prod", "enrichment_level": "column", "enrichment_type": "Description", "value": "Production identifier", "_committed_at": "2026-03-01", "_activity_id": "z"},
     ]
     for row in rows:
@@ -98,7 +98,7 @@ def _build_widget(monkeypatch, *, auto_observe=False):
         },
     )
     config = types.SimpleNamespace(
-        governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"])
+        governance_config=types.SimpleNamespace(sensitivity_labels=["public", "restricted"])
     )
     widget = widget_enrich_table_metadata(spark_session=object(), context={"config": config, "env": "dev"})
     return widget, reads, writes
@@ -127,12 +127,11 @@ def test_public_widget_is_standalone_and_writes_stage3_identity(monkeypatch):
     _select(widget, "column:col-id")
     assert widget["controls"]["Description"].value == "Identifier"
     assert widget["controls"]["Classification"].value == "retired-label"
-    assert "retired-label" in widget["controls"]["Classification"].options
-    assert widget["controls"]["Personal_identifier"].layout.display == ""
-    _change(widget["controls"]["Personal_identifier"], "none")
+    assert widget["controls"]["Sensitivity"].layout.display == ""
+    _change(widget["controls"]["Sensitivity"], "restricted")
     records = widget["build_records"]()
     assert [(row["enrichment_level"], row["contract_id"], row["contract_version"], row["column_id"], row["environment_name"], row["enrichment_type"]) for row in records] == [
-        ("column", "contract-students", 1, "col-id", "dev", "Personal_identifier")
+        ("column", "contract-students", 1, "col-id", "dev", "Sensitivity")
     ]
     assert "metadata_key" not in records[0]
     _select(widget, "table:table-students")
@@ -141,7 +140,7 @@ def test_public_widget_is_standalone_and_writes_stage3_identity(monkeypatch):
     assert (record["enrichment_level"], record["contract_id"], record["contract_version"], record["column_id"], record["environment_name"]) == (
         "table", "contract-students", 1, "", "dev"
     )
-    assert "Personal_identifier" not in {row["enrichment_type"] for row in widget["build_records"]()}
+    assert "Sensitivity" not in {row["enrichment_type"] for row in widget["build_records"]()}
 
 
 def test_change_detection_drafts_inactive_read_only_and_search_without_reads(monkeypatch):
@@ -180,7 +179,7 @@ def test_selection_hydration_does_not_create_or_cross_contaminate_drafts(monkeyp
     widget["column_selector"].value = "column:col-name"
     assert widget["controls"]["Description"].value == "Student name"
     assert widget["controls"]["Classification"].value == "public"
-    assert widget["controls"]["Personal_identifier"].value == "none"
+    assert widget["controls"]["Sensitivity"].value == "public"
     assert widget["drafts"] == {}
     widget["column_selector"].value = "column:col-id"
     assert widget["controls"]["Description"].value == "Identifier"

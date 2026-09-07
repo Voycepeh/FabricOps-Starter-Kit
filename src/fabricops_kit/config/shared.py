@@ -345,8 +345,6 @@ class GovernanceConfig:
         notebook checks and reporting summaries.
     sensitivity_labels : list[str]
         Controlled labels rendered by column metadata enrichment widgets.
-    pii_classifications : list[str]
-        Controlled PII classifications rendered by column metadata enrichment widgets.
     enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
         Widget definitions for organization-specific enrichment fields. Each
         widget uses ``custom_fields`` entries keyed by ``key``.
@@ -356,7 +354,6 @@ class GovernanceConfig:
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
     sensitivity_labels: list[str] = field(default_factory=lambda: ["classified", "restricted", "public"])
-    pii_classifications: list[str] = field(default_factory=lambda: ["direct PII", "indirect PII", "none"])
     enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
 
@@ -365,9 +362,7 @@ class GovernanceConfig:
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
         labels = [str(option).strip() for option in (self.sensitivity_labels or []) if str(option).strip()]
-        pii = [str(option).strip() for option in (self.pii_classifications or []) if str(option).strip()]
         object.__setattr__(self, "sensitivity_labels", labels or ["classified", "restricted", "public"])
-        object.__setattr__(self, "pii_classifications", pii or ["direct PII", "indirect PII", "none"])
         object.__setattr__(
             self,
             "enrichment_context_widget",

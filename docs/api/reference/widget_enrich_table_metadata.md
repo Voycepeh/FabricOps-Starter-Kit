@@ -91,8 +91,9 @@ Raises clear catalogue identity, metadata read, or metadata routing errors when 
 <div class="reference-docstring-notes" markdown="1">
 
 Table enrichment supports ``Description`` and ``Classification``. Column
-enrichment additionally supports ``Personal_identifier``. Saving appends
-only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
+enrichment additionally supports informational ``Sensitivity``. Enrichment
+is descriptive metadata only and has no direct ETL enforcement semantics.
+Saving appends only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
 ``contract_id`` and ``contract_version``, optional ``column_id``, and
 ``environment_name``. The governed table is resolved through the contract.
 Repeated unchanged saves

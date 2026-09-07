@@ -204,8 +204,7 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 - **[PySpark-first transformation](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path, with T-SQL for efficient Warehouse-side operations before data enters Spark.
 - **[Lakehouse-first engineering](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering while still supporting Warehouse as a relational source or curated serving layer.
 - **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
-- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical identity of the governed data asset, with the Data Contract bridging that asset into contract-owned Enrichment and Guardrails while preserving separate write ownership.
-- **[Direct PII guardrail and token vault](reference/engineering-cheat-sheet.md#pii-guardrail)** — treat Direct PII as a runtime engineering constraint: raw PII must be absent or tokenised before governed reads/writes proceed, with reversible mappings isolated in a separately permissioned token vault.
+- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical asset identity, keep descriptive Enrichment separate from executable Guardrails, and resolve both through an exact Data Contract version.
 - **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
 - **[Incremental load implementation](reference/engineering-cheat-sheet.md#full-vs-incremental)** — use full, watermark, or partition-based processing according to source behaviour, scale, and recovery requirements.
 - **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — persist successful progress atomically on governed target rows through `_watermark_value` or `_partition_bucket`.
@@ -223,7 +222,7 @@ Back in `01_governance`, Governance selects the same canonical `table_id` from t
 
 As parts of that Data Contract definition, Governance can add:
 
-- **Enrichment**, such as business meaning, sensitivity classification, PII classification, and other table- or column-level context
+- **Enrichment**, limited to descriptive table and column descriptions and classifications, plus informational column sensitivity
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 

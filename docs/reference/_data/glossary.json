@@ -35,7 +35,7 @@
     "aliases": ["metadata enrichment", "enrich metadata"],
     "category": "FabricOps concepts",
     "short_definition": "Business and governance information added to the Data Catalogue after technical metadata has been captured.",
-    "long_definition": "In FabricOps, Enrichment adds business and governance meaning to Data Catalogue metadata after technical metadata has been captured. It can add descriptions, ownership, sensitivity, classification, and other table- or column-level information used to understand and govern the data.",
+    "long_definition": "In FabricOps, Enrichment is descriptive metadata owned by one exact Data Contract version. It stores table descriptions and classifications, plus column descriptions, classifications, and informational sensitivity. Enrichment has no direct ETL enforcement semantics; enforced runtime requirements belong in Guardrails.",
     "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
     "avoid_usage": "metadata enrichment when enrichment is sufficient"
   },
