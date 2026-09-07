@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Governed rules that FabricOps evaluates against data and pipeline behaviour.</summary>
-<p>In FabricOps, Guardrails are versioned governed rules associated with a table or column. Active Guardrails can express expectations such as schema, freshness, profile behaviour, change behaviour, and data quality, and are evaluated during governed pipeline execution.</p>
+<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, and Data Quality use this same model while retaining their explicit runtime checks.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -171,7 +171,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-quality">
 <summary><strong>Data Quality</strong> — Whether data is fit for its intended use and meets the quality expectations that apply to it.</summary>
-<p>Data Quality describes whether data satisfies the expectations required for its intended use, including dimensions such as completeness, validity, consistency, uniqueness, accuracy, timeliness, and other context-specific requirements.</p>
+<p>Data Quality describes whether data satisfies the expectations required for its intended use. In FabricOps authoring, Data Quality is a Guardrail subtype with rule-specific parameters; check_dq retains its dedicated runtime implementation and returns failed values to the caller without persisting them automatically.</p>
 <p><strong>Also known as:</strong> DQ</p>
 </details>
 

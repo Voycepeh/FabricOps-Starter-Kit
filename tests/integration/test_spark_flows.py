@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pytest
 
@@ -152,7 +153,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
             "rule_key": "orders|amount_positive",
             "rule_type": "value_range",
             "columns": ["amount"],
-            "action": "Block",
+            "severity": "error",
             "description": "Amount must be non-negative",
             "review_status": "governance_approved",
             "minimum": 0,
@@ -346,7 +347,7 @@ def test_dq_failed_values_normalize_unique_combination(spark_session):
     from fabricops_kit.pipeline import shared
 
     dataframe = spark_session.createDataFrame(
-        [("c1", "2026-01-01"), ("c1", "2026-01-01")],
+        [("c1", date(2026, 1, 1)), ("c1", date(2026, 1, 1))],
         "customer_id string, order_date date",
     )
     rule = shared._validate_dq_rules([{
