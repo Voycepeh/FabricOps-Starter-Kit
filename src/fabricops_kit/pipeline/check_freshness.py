@@ -107,7 +107,7 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
     change_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="change",
+        guardrail_type="changes",
         table_id=table_id,
         environment_name=env,
     )

@@ -970,7 +970,7 @@ def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) ->
 
 from fabricops_kit.config.shared import is_table_not_found_error
 
-from fabricops_kit.pipeline.shared import canonical_guardrail_rule_record
+from fabricops_kit.data_contract.shared import canonical_guardrail_rule_record, normalize_guardrail_action
 
 def _guardrail_stable_json(value: Any) -> str:
     """Serialize authoring parameters deterministically."""
@@ -1057,7 +1057,7 @@ def build_rule_record(
     rule_id: str,
     rule_type: str,
     parameters: Mapping[str, Any] | None = None,
-    severity: str = "warning",
+    action: str = "Warn",
     column_name: str = "",
     identity_parameters: Mapping[str, Any] | None = None,
     guardrail_version: int | None = None,
@@ -1097,7 +1097,7 @@ def build_rule_record(
         "rule_id": str(rule_id),
         "rule_type": str(rule_type),
         "rule_parameters_json": _guardrail_stable_json(dict(parameters or {})),
-        "severity": str(severity),
+        "action": normalize_guardrail_action(action),
         "is_active": bool(is_active),
     }
 
@@ -1107,7 +1107,7 @@ def dq_records_from_selection(
     rule_id: str,
     selected_columns: Iterable[str],
     parameters: Mapping[str, Any] | None = None,
-    severity: str = "warning",
+    action: str = "Warn",
     column_selection: str = "independent",
 ) -> list[dict[str, Any]]:
     """Build canonical DQ authoring rows for the selected rule semantics."""
@@ -1120,12 +1120,12 @@ def dq_records_from_selection(
         return [
             build_rule_record(
                 state,
-                guardrail_type="dq",
+                guardrail_type="data_quality",
                 rule_id=rule_id,
                 rule_type=rule_id,
                 column_name=column,
                 parameters={"columns": [column], **values},
-                severity=severity,
+                action=action,
             )
             for column in columns
         ]
@@ -1140,11 +1140,11 @@ def dq_records_from_selection(
     return [
         build_rule_record(
             state,
-            guardrail_type="dq",
+            guardrail_type="data_quality",
             rule_id=rule_id,
             rule_type=rule_id,
             parameters={"columns": columns, **values},
-            severity=severity,
+            action=action,
             identity_parameters=identity_parameters,
         )
     ]

@@ -61,10 +61,10 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate without filtering or copying complete rows into metadata. |
+| `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate. |
 | `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
-| `run_id` | `str` | No | Pipeline run identity persisted with failed-row evidence. When omitted, the current Fabric activity identity is used. |
+| `run_id` | `str` | No | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
 
 ## Returns
@@ -86,10 +86,9 @@ RuntimeError
 Production resolves the physical table through the Catalogue and evaluates
 frozen DQ rules from its active Data Contract. Development evaluates current
 active approved authoring rules in ``METADATA_GUARDRAIL``.
-Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
-only failed row/rule pairs are appended to
-``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while
-warning failures do not.
+Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
+Failed rows are returned to the caller and are never persisted automatically.
+Block failures prevent continuation while Warn failures do not.
 
 </div>
 

@@ -439,39 +439,6 @@ The cards below show the current implemented metadata tables and relationships.
         <code>METADATA_GUARDRAIL</code>
       </span>
     </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_ROW_RESULTS</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card metadata-table-card--engineering" href="metadata_guardrail_row_results/" aria-label="Open METADATA_GUARDRAIL_ROW_RESULTS schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_GUARDRAIL_ROW_RESULTS</span>
-      <span class="metadata-table-card__schema">engineering</span>
-    </span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">See the individual records that failed a Data Quality rule.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One failed record belonging to one Guardrail Result.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>guardrail_row_result_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_RESULTS</code>
-      </span>
-    </span>
   </span>
 </a>
 </div>

@@ -277,7 +277,7 @@ def widget_author_dq_rules(
     rule_type: str = "missing_values",
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
-    severity: str = "warning",
+    action: str = "Warn",
     commit: bool = False,
 ) -> dict[str, Any]:
     """Configure Data Quality rules for relevant columns of a profiled table.
@@ -294,8 +294,8 @@ def widget_author_dq_rules(
         Columns initially selected on the resolved target.
     parameters : Mapping[str, Any], optional
         Initial values for the selected rule's dynamic parameter controls.
-    severity : str, default="warning"
-        Initial DQ failure severity.
+    action : str, default="Warn"
+        Initial Guardrail failure action.
     commit : bool, default=False
         Save the initial valid configuration immediately.
 
@@ -339,10 +339,10 @@ def widget_author_dq_rules(
     parameter_controls: dict[str, Any] = {}
     column_box = widgets.VBox()
     column_controls: dict[str, Any] = {}
-    severity_control = widgets.ToggleButtons(
-        options=["warning", "error"],
-        value=severity if severity in {"warning", "error"} else "warning",
-        description="Severity",
+    action_control = widgets.ToggleButtons(
+        options=["Warn", "Block"],
+        value=action if action in {"Warn", "Block"} else "Warn",
+        description="Action",
     )
     preview = shared.preview_region(widgets, widgets.Textarea(
         description="Canonical preview",
@@ -474,7 +474,7 @@ def widget_author_dq_rules(
             rule_id=str(definition["rule_id"]),
             selected_columns=columns,
             parameters=values,
-            severity=severity_control.value,
+            action=action_control.value,
             column_selection=selection_mode,
         )
 
@@ -530,7 +530,7 @@ def widget_author_dq_rules(
         render_columns(state)
 
     rule.observe(render_rule, names="value")
-    severity_control.observe(refresh_preview, names="value")
+    action_control.observe(refresh_preview, names="value")
     save_button = widgets.Button(description="Save DQ rules", button_style="primary")
     save_button.on_click(lambda _: save())
     workspace = shared.authoring_workspace(
@@ -539,7 +539,7 @@ def widget_author_dq_rules(
         selection=[rule, column_box],
         configuration=[
             parameter_box,
-            severity_control,
+            action_control,
             preview,
             shared.action_row(widgets, [save_button]),
         ],
@@ -563,7 +563,7 @@ def widget_author_dq_rules(
             "parameters": parameter_box,
             "parameter_controls": parameter_controls,
             "columns": column_controls,
-            "severity": severity_control,
+            "severity": action_control,
             "preview": preview,
             **target_controls,
         },

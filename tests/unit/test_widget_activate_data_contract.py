@@ -19,7 +19,7 @@ def _contract(version: int, *, status: str = "draft", active: bool = False, tabl
         "agreement": {"agreement_id": "agreement", "agreement_version": "1", "agreement_name": "Orders"},
         "table": {"table_id": table_id, "table_name": "orders", "schema_name": "sales", "columns": [{"column_id": "id", "column_name": "id", "data_type": "long"}]},
         "enrichment": {"table": [], "columns": []},
-        "guardrails": [{"guardrail_rule_id": rule, "guardrail_version": version, "guardrail_type": "dq", "rule_id": rule, "rule_type": "not_null", "rule_parameters": {"columns": ["id"]}, "severity": "error"}],
+        "guardrails": [{"guardrail_rule_id": rule, "guardrail_version": version, "guardrail_type": "data_quality", "rule_id": rule, "rule_type": "not_null", "rule_parameters": {"columns": ["id"]}, "action": "Block"}],
         "approved_usages": ["analytics"],
     }
     return {"contract_id": "contract", "contract_version": version, "table_id": table_id, "status": status, "is_active": active, "contract_payload_json": json.dumps(payload)}
@@ -72,20 +72,20 @@ def test_frozen_guardrail_adapter_serializes_heterogeneous_parameters():
     payload["guardrails"] = [
         {
             "guardrail_rule_id": "conditional", "guardrail_version": 1,
-            "guardrail_type": "dq", "rule_id": "conditional",
+            "guardrail_type": "data_quality", "rule_id": "conditional",
             "rule_type": "required_when",
             "rule_parameters": {
                 "columns": ["id"], "condition_column": "status",
                 "condition_operator": "=", "condition_value": "open",
             },
-            "severity": "warning",
+            "action": "Warn",
         },
         {
             "guardrail_rule_id": "comparison", "guardrail_version": 1,
-            "guardrail_type": "dq", "rule_id": "comparison",
+            "guardrail_type": "data_quality", "rule_id": "comparison",
             "rule_type": "compare_columns",
             "rule_parameters": {"columns": ["upper", "lower"], "operator": "<="},
-            "severity": "error",
+            "action": "Block",
         },
     ]
     contract["contract_payload_json"] = json.dumps(payload)

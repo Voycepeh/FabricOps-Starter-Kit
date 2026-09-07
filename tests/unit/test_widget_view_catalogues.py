@@ -102,36 +102,27 @@ def test_dataset_labels_are_consistent_and_pipeline_roles_are_explicit():
     assert dataset_label(row, "Target") == "[Target] raw / sales / orders"
 
 
-def test_guardrail_views_keep_stable_empty_schemas(spark_session):
-    """A selected dataset without an execution returns two typed empty views."""
+def test_guardrail_views_keep_stable_empty_schema(spark_session):
+    """A selected dataset without an execution returns a typed summary view."""
     results = spark_session.createDataFrame(
         [],
         "table_id string, run_id string, rule_type string, column_name string, status string, "
         "severity string, actual_value_json string, reason string, can_continue boolean, _committed_at timestamp",
     )
-    row_results = spark_session.createDataFrame(
-        [],
-        "table_id string, run_id string, rule_type string, row_identity string, "
-        "involved_columns_json string, failed_values_json string, failure_reason string",
-    )
-
-    views = _prepare_selected_guardrail_views(results, row_results, table_id="missing-key")
+    views = _prepare_selected_guardrail_views(results, table_id="missing-key")
 
     assert views["guardrail_results"].count() == 0
     assert views["guardrail_results"].columns == [
         "rule_type", "columns", "status", "severity", "failed_rows", "failed_percent",
         "total_count", "reason", "can_continue", "run_id",
     ]
-    assert views["guardrail_row_results"].count() == 0
-    assert views["guardrail_row_results"].columns == [
-        "rule_type", "row_identity", "involved_columns", "failed_values", "failure_reason", "run_id",
-    ]
 
 
-def test_widget_documents_normalized_five_view_contract():
+
+def test_widget_documents_normalized_summary_view_contract():
     """The public widget documents readable views without changing persisted schemas."""
     source = inspect.getsource(fabricops_kit.widget_view_catalogue)
-    assert "guardrail_row_results" in source
+    assert "guardrail_row_results" not in source
     assert "frequency rows are enriched with ``column_name``" in source
     assert "without\n    changing their persisted schemas" in source
 
@@ -336,10 +327,6 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
             ("dataset-key", "latest-run", "not_null", "Country", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":5}', latest_snapshot),
             ("unprofiled-key", "customer-run", "not_null", "customer_id", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":2}', later_snapshot),
         ], "table_id string, run_id string, rule_type string, column_name string, status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp"),
-        "METADATA_GUARDRAIL_ROW_RESULTS": spark_session.createDataFrame(
-            [],
-            "table_id string, run_id string, rule_type string, row_identity string, involved_columns_json string, failed_values_json string, failure_reason string",
-        ),
     }
     read_calls = []
 
@@ -377,13 +364,13 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     views = state["get_views"]()
     assert read_calls == [
         "METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
-        "METADATA_GUARDRAIL_RESULTS", "METADATA_GUARDRAIL_ROW_RESULTS",
+        "METADATA_GUARDRAIL_RESULTS",
     ]
     selection = state["get_selection"]()
     assert selection["profile_snapshot_id"] == "snapshot-latest"
     assert selection["profiled_at"] == latest_snapshot
     assert selection["profile_id"] == "profile-country"
-    assert set(views) == {"catalogue", "profile", "frequency", "guardrail_results", "guardrail_row_results"}
+    assert set(views) == {"catalogue", "profile", "frequency", "guardrail_results"}
     assert views["catalogue"].columns == [
         "metadata_level", "table_name", "column_name", "data_type", "store_type", "layer", "schema_name",
         "first_profiled_at", "last_profiled_at", "is_active", "table_id", "column_id",

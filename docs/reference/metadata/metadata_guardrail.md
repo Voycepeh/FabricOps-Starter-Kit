@@ -51,7 +51,7 @@ via `column_id`
 | `rule_id` | `string` | Rule identity stored by the authoring workflow. |
 | `rule_type` | `string` | Specific rule type recorded within the guardrail family. |
 | `rule_parameters_json` | `string` | Serialized rule parameters stored for the guardrail row. |
-| `severity` | `string` | Severity recorded for the guardrail intent or result. |
+| `action` | `string` | Warn or Block action applied when an authored Guardrail fails. |
 | `is_active` | `boolean` | Whether the row is currently active. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |

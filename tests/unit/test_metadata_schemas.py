@@ -31,7 +31,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_ENRICHMENT": "governance",
         "METADATA_GUARDRAIL": "governance",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
-        "METADATA_GUARDRAIL_ROW_RESULTS": "engineering",
         "METADATA_SOURCE_OBSERVATION": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)

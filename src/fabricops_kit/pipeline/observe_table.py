@@ -224,7 +224,7 @@ def _observe_table_core(
     )
     rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="change",
+        guardrail_type="changes",
         table_id=table_id,
         environment_name=env,
     )

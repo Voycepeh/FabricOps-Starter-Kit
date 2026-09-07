@@ -18,7 +18,7 @@ from fabricops_kit.widgets import shared
 
 CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
-_FAILURE_ACTIONS = (("Block pipeline", "blocking"), ("Warn only", "warning"))
+_FAILURE_ACTIONS = (("Block", "Block"), ("Warn", "Warn"))
 _FAILURE_SEVERITIES = {value for _, value in _FAILURE_ACTIONS}
 
 
@@ -35,9 +35,9 @@ def _guardrail_records_from_selection(
     maximum_age: int | float,
     maximum_age_unit: str,
     change_behaviour: str,
-    schema_severity: str = "blocking",
-    freshness_severity: str = "blocking",
-    change_severity: str = "blocking",
+    schema_action: str = "Block",
+    freshness_action: str = "Block",
+    change_action: str = "Block",
     partition_column: str = "",
     change_column: str = "",
     guardrail_version: int | None = None,
@@ -70,12 +70,12 @@ def _guardrail_records_from_selection(
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
     expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
-    severities = {
-        "schema": str(schema_severity),
-        "freshness": str(freshness_severity),
-        "change": str(change_severity),
+    actions = {
+        "schema": str(schema_action),
+        "freshness": str(freshness_action),
+        "change": str(change_action),
     }
-    if any(value not in _FAILURE_SEVERITIES for value in severities.values()):
+    if any(value not in _FAILURE_SEVERITIES for value in actions.values()):
         raise ValueError("Failure action must be Block pipeline or Warn only.")
 
     version = guardrail_version or (
@@ -95,7 +95,7 @@ def _guardrail_records_from_selection(
                 "columns": required,
                 "data_types": {name: data_types.get(name, "") for name in required},
             },
-            severity=severities["schema"],
+            action=actions["schema"],
             guardrail_version=version,
         ),
         authoring.build_rule_record(
@@ -108,12 +108,12 @@ def _guardrail_records_from_selection(
                 "maximum_age": age,
                 "maximum_age_unit": maximum_age_unit.lower(),
             },
-            severity=severities["freshness"],
+            action=actions["freshness"],
             guardrail_version=version,
         ),
         authoring.build_rule_record(
             state,
-            guardrail_type="change",
+            guardrail_type="changes",
             rule_id="changes",
             rule_type=expected_change,
             parameters={
@@ -123,7 +123,7 @@ def _guardrail_records_from_selection(
                 "partition_column": partition_column,
                 "change_column": change_column,
             },
-            severity=severities["change"],
+            action=actions["change"],
             guardrail_version=version,
         ),
     ]
@@ -234,7 +234,7 @@ def _render_guardrail_authoring(
     version_state = {"persisted": _guardrail_version(existing)}
     schema_rule = authoring.latest_rule(existing, "schema")
     freshness_rule = authoring.latest_rule(existing, "freshness")
-    change_rule = authoring.latest_rule(existing, "change")
+    change_rule = authoring.latest_rule(existing, "changes")
     schema_params = authoring.rule_parameters(schema_rule)
     freshness_params = authoring.rule_parameters(freshness_rule)
     change_params = authoring.rule_parameters(change_rule)
@@ -296,7 +296,7 @@ def _render_guardrail_authoring(
     )
     schema_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
-        value=str(schema_rule.get("severity") or "blocking"),
+        value=str(schema_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
     freshness_value = str(freshness_params.get("freshness_column") or "")
@@ -317,7 +317,7 @@ def _render_guardrail_authoring(
     )
     freshness_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
-        value=str(freshness_rule.get("severity") or "blocking"),
+        value=str(freshness_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
     behaviour = str(change_params.get("change_behaviour") or "Incremental append")
@@ -340,7 +340,7 @@ def _render_guardrail_authoring(
     )
     change_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
-        value=str(change_rule.get("severity") or "blocking"),
+        value=str(change_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
     preview = shared.preview_region(widgets, widgets.Textarea(
@@ -363,9 +363,9 @@ def _render_guardrail_authoring(
             maximum_age=maximum_age.value,
             maximum_age_unit=maximum_age_unit.value,
             change_behaviour=change_behaviour.value,
-            schema_severity=schema_failure_action.value,
-            freshness_severity=freshness_failure_action.value,
-            change_severity=change_failure_action.value,
+            schema_action=schema_failure_action.value,
+            freshness_action=freshness_failure_action.value,
+            change_action=change_failure_action.value,
             partition_column=partition_column.value,
             change_column=change_column.value,
             guardrail_version=version_state["persisted"] + 1,

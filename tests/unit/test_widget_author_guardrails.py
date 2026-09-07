@@ -134,7 +134,7 @@ def test_guardrail_records_use_only_stage4a_authoring_fields():
     records = _records()
     expected = {
         "guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "environment_name",
-        "guardrail_type", "rule_id", "rule_type", "rule_parameters_json", "severity", "is_active",
+        "guardrail_type", "rule_id", "rule_type", "rule_parameters_json", "action", "is_active",
     }
     assert all(set(row) == expected for row in records)
     assert all(row["contract_id"] == "contract-orders" and row["contract_version"] == 2 for row in records)
@@ -155,9 +155,9 @@ def test_schema_selection_serializes_required_columns_and_current_types():
 
 def test_freshness_uses_runtime_parameter_vocabulary_and_failure_severity():
     """Verify that Freshness rules use the runtime parameter vocabulary."""
-    freshness = _records(maximum_age=24, maximum_age_unit="Hours", freshness_severity="warning")[1]
+    freshness = _records(maximum_age=24, maximum_age_unit="Hours", freshness_action="Warn")[1]
     assert freshness["rule_type"] == "max_age"
-    assert freshness["severity"] == "warning"
+    assert freshness["action"] == "Warn"
     assert json.loads(freshness["rule_parameters_json"]) == {
         "freshness_column": "updated_at", "maximum_age": 24.0, "maximum_age_unit": "hours",
     }
@@ -198,7 +198,7 @@ def test_invalid_columns_age_and_failure_action_fail_clearly():
     with pytest.raises(ValueError, match="selected table schema"):
         _records(required_columns=["missing"])
     with pytest.raises(ValueError, match="Failure action"):
-        _records(schema_severity="error")
+        _records(schema_action="error")
 
 
 def test_rule_identity_is_stable_while_guardrail_version_advances():

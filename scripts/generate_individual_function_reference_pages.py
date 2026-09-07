@@ -143,7 +143,8 @@ METADATA_FIELD_DESCRIPTIONS = {
     "guardrail_type": "Guardrail family recorded for the row.",
     "rule_type": "Specific rule type recorded within the guardrail family.",
     "rule_parameters_json": "Serialized rule parameters stored for the guardrail row.",
-    "severity": "Severity recorded for the guardrail intent or result.",
+    "severity": "Severity recorded for a runtime Guardrail result.",
+    "action": "Warn or Block action applied when an authored Guardrail fails.",
     "description": "Human-readable description stored for the rule.",
     "activation_state": "Lifecycle activation state recorded for the row.",
     "review_status": "Review status recorded for the row.",
@@ -226,7 +227,6 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "check_changes", "check_dq",
     ],
-    "METADATA_GUARDRAIL_ROW_RESULTS": ["check_dq"],
     "METADATA_SOURCE_OBSERVATION": ["read_pipeline_prep"],
     "METADATA_GUARDRAIL": [
         "widget_author_guardrails",

@@ -248,21 +248,8 @@ METADATA_TABLE_MODELS = {
         "foreign_keys": [
             {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one configured Guardrail rule."},
         ],
-        "relationships": [
-            {"cardinality": "1:N", "statement": "One Guardrail Result can have many failed-record Guardrail Row Results through guardrail_result_id."},
-        ],
-    },
-    "METADATA_GUARDRAIL_ROW_RESULTS": {
-        "purpose": "See the individual records that failed a Data Quality rule.",
-        "grain": "One failed record belonging to one Guardrail Result.",
-        "primary_key": ["guardrail_row_result_id"],
-        "foreign_keys": [
-            {"local_field": "guardrail_result_id", "referenced_table": "METADATA_GUARDRAIL_RESULTS", "referenced_field": "guardrail_result_id", "cardinality": "N:1", "statement": "Many failed records can belong to one Guardrail Result."},
-        ],
         "relationships": [],
     },
-
-
 }
 
 METADATA_REFERENCE_ORDER = [
@@ -278,7 +265,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_ACCESS",
     "METADATA_GUARDRAIL",
     "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_GUARDRAIL_ROW_RESULTS",
 ]
 
 METADATA_TABLE_PURPOSES = {
@@ -452,21 +438,21 @@ METADATA_COLUMN_OWNERS = {
         "__default__": [
             "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
             "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
-            "fabricops_kit.pipeline.shared.canonical_guardrail_rule_record",
+            "fabricops_kit.data_contract.shared.canonical_guardrail_rule_record",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_rule_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "guardrail_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "contract_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "contract_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "column_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "environment_name": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "guardrail_type": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "rule_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "rule_type": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "rule_parameters_json": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "severity": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "is_active": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
+        "guardrail_rule_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "guardrail_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "contract_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "contract_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "column_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "environment_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "guardrail_type": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "rule_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "rule_type": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "rule_parameters_json": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "action": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "is_active": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "__default__": [
@@ -487,19 +473,6 @@ METADATA_COLUMN_OWNERS = {
         "severity": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "reason": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "result_payload_json": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
-    },
-    "METADATA_GUARDRAIL_ROW_RESULTS": {
-        "__default__": [
-            "fabricops_kit.pipeline.check_dq.check_dq",
-            "fabricops_kit.pipeline.shared.check_dq_runtime",
-        ],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_row_result_id": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "guardrail_result_id": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "row_identity": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "involved_columns_json": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "failed_values_json": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "failure_reason": ["fabricops_kit.pipeline.shared.check_dq_runtime"],
     },
     "METADATA_SOURCE_OBSERVATION": {
         "__default__": ["fabricops_kit.pipeline.observe_table._observe_table_core"],
@@ -1692,7 +1665,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Catalogue review',
   'use_when': 'Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.',
   'related_functions': ['profile_and_register_table', 'widget_register_data_contract'],
-  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected table_id.'},
+  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, and guardrail_results for the selected table_id.'},
 
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',

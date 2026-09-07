@@ -47,7 +47,7 @@ via `guardrail_rule_id`
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `can_continue` | `boolean` | Metadata Guardrail Results field `can_continue`. |
-| `severity` | `string` | Severity recorded for the guardrail intent or result. |
+| `severity` | `string` | Severity recorded for a runtime Guardrail result. |
 | `reason` | `string` | Human-readable runtime reason recorded for the guardrail outcome. |
 | `result_payload_json` | `string` | Serialized full runtime result payload written for the guardrail outcome. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |

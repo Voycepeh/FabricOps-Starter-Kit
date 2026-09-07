@@ -69,10 +69,10 @@ def change_rule(*, severity="blocking", rule_type="monitor_only", behaviour=None
         "table_id": "key",
         "table_name": "orders",
         "environment_name": "dev",
-        "guardrail_type": "change",
+        "guardrail_type": "changes",
         "rule_type": rule_type,
         "rule_parameters_json": parameters,
-        "severity": severity,
+        "action": "Block" if severity == "blocking" else "Warn",
         "is_active": True,
         "guardrail_rule_id": f"change_{rule_type}_{severity}",
         "guardrail_version": 1,
@@ -226,7 +226,7 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     assert result["can_continue"] is can_continue
     assert result["severity"] == severity
     assert result["guardrail_version"] == 1
-    assert result_writes[0]["guardrail_type"] == "change"
+    assert result_writes[0]["guardrail_type"] == "changes"
 
 
 def test_changes_rejects_cross_environment_observation(monkeypatch):

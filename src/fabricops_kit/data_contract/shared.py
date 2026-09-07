@@ -16,11 +16,12 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_schema_registry,
 )
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.pipeline.shared import canonical_guardrail_rule_record
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
+GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality"})
+GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification"}),
     "column": frozenset({"Description", "Classification"}),
@@ -45,6 +46,51 @@ def validate_contract_identity(contract_id: Any, contract_version: Any) -> tuple
     if not identity or version < 1:
         raise ValueError("contract_id and a positive contract_version are required.")
     return identity, version
+
+
+def normalize_guardrail_action(value: Any) -> str:
+    """Return the canonical user-facing Guardrail action."""
+    action = str(value or "Warn").strip().casefold()
+    aliases = {"warn": "Warn", "warning": "Warn", "block": "Block", "blocking": "Block", "error": "Block"}
+    try:
+        return aliases[action]
+    except KeyError as exc:
+        raise ValueError("Guardrail action must be Warn or Block.") from exc
+
+
+def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, env: str) -> dict[str, Any]:
+    """Build one canonical, exact-contract-version Guardrail authoring row."""
+    import json
+
+    audit = build_runtime_audit_fields(config=config, env=env)
+    contract_id, contract_version = validate_contract_identity(
+        record.get("contract_id"), record.get("contract_version")
+    )
+    guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
+    if guardrail_type not in GUARDRAIL_TYPES:
+        raise ValueError("guardrail_type must be Schema, Freshness, Changes, or Data Quality.")
+    raw_parameters = record.get("rule_parameters_json") or "{}"
+    try:
+        parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("rule_parameters_json must contain a JSON object.") from exc
+    if not isinstance(parameters, dict):
+        raise ValueError("rule_parameters_json must contain a JSON object.")
+    return {
+        "guardrail_rule_id": str(record.get("guardrail_rule_id") or "").strip(),
+        "guardrail_version": int(record.get("guardrail_version") or 1),
+        "contract_id": contract_id,
+        "contract_version": contract_version,
+        "column_id": str(record.get("column_id") or ""),
+        "environment_name": str(record.get("environment_name") or env),
+        "guardrail_type": guardrail_type,
+        "rule_id": str(record.get("rule_id") or "").strip(),
+        "rule_type": str(record.get("rule_type") or "").strip(),
+        "rule_parameters_json": json.dumps(parameters, default=str, sort_keys=True, separators=(",", ":")),
+        "action": normalize_guardrail_action(record.get("action")),
+        "is_active": bool(record.get("is_active", True)),
+        **audit,
+    }
 
 
 def select_contract_authoring_context(

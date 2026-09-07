@@ -101,7 +101,6 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
     | `METADATA_DATA_PROFILED` | Complete registered profiling records. |
     | `METADATA_DATA_LINEAGE` | Runtime source and target participation recorded by the profiling workflow. |
     | `METADATA_GUARDRAIL_RESULTS` | Guardrail outcomes and continuation decisions. |
-    | `METADATA_GUARDRAIL_ROW_RESULTS` | Failed-row records where a DQ rule records row-level failures. |
 
 ## Expected result
 
