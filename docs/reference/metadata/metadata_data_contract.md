@@ -34,8 +34,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 16 |
-| Business columns | 8 |
+| Total columns | 17 |
+| Business columns | 9 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -47,6 +47,7 @@ via `table_id`
 | `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
 | `agreement_version` | `string` | Canonical agreement version associated with the row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `contract_payload_json` | `string` | Serialized contract payload stored for the row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `is_active` | `boolean` | Whether the row is currently active. |

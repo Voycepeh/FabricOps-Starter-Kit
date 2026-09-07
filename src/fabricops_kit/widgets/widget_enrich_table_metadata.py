@@ -8,7 +8,7 @@ from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit import contract_authoring
+from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets import enrichment_shared as _enrichment
 from fabricops_kit.widgets import shared as _widget_shared

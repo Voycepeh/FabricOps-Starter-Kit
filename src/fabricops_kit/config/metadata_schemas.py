@@ -174,6 +174,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("agreement_id", "string", False),
                 ("agreement_version", "string", False),
                 ("table_id", "string", False),
+                ("environment_name", "string", False),
                 ("contract_payload_json", "string"),
                 ("status", "string", False),
                 ("is_active", "boolean", False),

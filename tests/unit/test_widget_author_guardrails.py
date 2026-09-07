@@ -11,7 +11,7 @@ import pytest
 
 import fabricops_kit
 from fabricops_kit.widgets import shared as authoring
-from fabricops_kit import contract_authoring
+from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets import widget_author_guardrails
 guardrail_widget_module = __import__("importlib").import_module("fabricops_kit.widgets.widget_author_guardrails")
 from fabricops_kit.widgets.widget_author_guardrails import (

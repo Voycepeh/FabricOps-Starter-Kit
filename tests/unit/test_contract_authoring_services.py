@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit import contract_authoring as service
+from fabricops_kit.data_contract import shared as service
 
 
 def test_exact_contract_version_and_environment_isolation():
@@ -43,7 +43,7 @@ def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
 
 def test_draft_validation_returns_only_owned_governance_rows():
     """Draft state excludes other versions and environments."""
-    draft = {"contract_id": "c", "contract_version": 2, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "status": "draft"}
+    draft = {"contract_id": "c", "contract_version": 2, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "environment_name": "dev", "status": "draft"}
     catalogue = [{"table_id": "t", "environment_name": "dev", "metadata_level": "table"}]
     enrichment = [
         {"contract_id": "c", "contract_version": 2, "environment_name": "dev"},
@@ -66,6 +66,43 @@ def test_draft_validation_returns_only_owned_governance_rows():
         )
 
 
+def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
+    """The same contract identity in another environment cannot leak into state."""
+    contracts = [
+        {"contract_id": "c", "contract_version": 2, "agreement_id": "dev-a", "agreement_version": "1", "table_id": "dev-t", "environment_name": "dev", "status": "draft"},
+        {"contract_id": "c", "contract_version": 2, "agreement_id": "prod-a", "agreement_version": "1", "table_id": "prod-t", "environment_name": "prod", "status": "draft"},
+    ]
+    tables = {
+        service.DATA_CONTRACT_TABLE: contracts,
+        "METADATA_DATA_CATALOGUE": [
+            {"table_id": "dev-t", "environment_name": "dev", "metadata_level": "table"},
+            {"table_id": "prod-t", "environment_name": "prod", "metadata_level": "table"},
+        ],
+        service.ENRICHMENT_TABLE: [],
+        service.GUARDRAIL_TABLE: [],
+    }
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(service, "read_lakehouse_table_core", lambda table, **_kwargs: tables[table])
+
+    state = service.get_contract_authoring_state(
+        config=object(), env="dev", spark_session=object(),
+        contract_id="c", contract_version=2,
+    )
+
+    assert state["contract"]["agreement_id"] == "dev-a"
+    assert state["table_id"] == "dev-t"
+
+
+def test_draft_environment_must_match_authoring_environment():
+    """Draft validation rejects cross-environment contract rows explicitly."""
+    draft = {"contract_id": "c", "contract_version": 1, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "environment_name": "prod", "status": "draft"}
+    with pytest.raises(ValueError, match="environment_name"):
+        service.validate_contract_draft(
+            draft, catalogue_rows=[], enrichment_rows=[], guardrail_rows=[],
+            environment_name="dev",
+        )
+
+
 def test_guardrail_save_uses_metadata_target(monkeypatch):
     """Guardrail persistence routes through the metadata target."""
     writes = []
@@ -83,7 +120,7 @@ def test_guardrail_save_uses_metadata_target(monkeypatch):
 def test_freeze_record_is_immutable_payload_transition():
     """Freezing serializes the payload and closes the draft."""
     frozen = service.freeze_contract_record(
-        draft={"contract_id": "c", "contract_version": 1, "status": "draft", "contract_payload_json": None},
+        draft={"contract_id": "c", "contract_version": 1, "environment_name": "dev", "status": "draft", "contract_payload_json": None},
         payload={"contract": {"contract_id": "c", "contract_version": 1}}, audit={"_activity_id": "freeze"},
     )
     assert frozen["status"] == "frozen"

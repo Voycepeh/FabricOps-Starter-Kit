@@ -168,7 +168,12 @@ def get_contract_authoring_state(
             schema=metadata_table_physical_schema(config, table_name),
             context=context, spark_session=spark_session,
         ))
-    matches = [row for row in tables[DATA_CONTRACT_TABLE] if str(row.get("contract_id") or "") == identity and int(row.get("contract_version") or 0) == version]
+    matches = [
+        row for row in tables[DATA_CONTRACT_TABLE]
+        if str(row.get("contract_id") or "") == identity
+        and int(row.get("contract_version") or 0) == version
+        and str(row.get("environment_name") or "") == str(env)
+    ]
     if not matches:
         raise ValueError("The exact Data Contract version does not exist.")
     draft = matches[0]
@@ -272,6 +277,11 @@ def validate_contract_draft(
 ) -> dict[str, Any]:
     """Validate structural completeness and return exact-version authoring state."""
     contract_id, version = validate_contract_identity(draft.get("contract_id"), draft.get("contract_version"))
+    draft_environment = str(draft.get("environment_name") or "").strip()
+    if draft_environment != str(environment_name):
+        raise ValueError(
+            "The draft environment_name must match the contract authoring environment."
+        )
     if str(draft.get("status") or "").lower() != "draft":
         raise ValueError("Only a draft Data Contract version can be authored or frozen.")
     table_id = str(draft.get("table_id") or "").strip()
