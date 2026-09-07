@@ -2653,8 +2653,12 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
             F.struct(
                 F.lit(column_name).alias("column_name"),
                 F.lit(column_role).alias("column_role"),
-                F.col(column_name).cast("string").alias("raw_value"),
-                F.lit(source_types[column_name]).alias("raw_value_type"),
+                (
+                    F.col(column_name).cast("string")
+                    if column_name in source_types
+                    else F.lit(None).cast("string")
+                ).alias("raw_value"),
+                F.lit(source_types.get(column_name, "missing")).alias("raw_value_type"),
             )
             for column_name, column_role in _dq_involved_column_roles(rule)
         ])

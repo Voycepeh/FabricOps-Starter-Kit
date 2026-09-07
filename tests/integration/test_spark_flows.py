@@ -415,3 +415,30 @@ def test_dq_authored_action_controls_runtime_continuation(
     assert result["status"] == expected_status
     assert result["can_continue"] is expected_can_continue
     assert {row.action for row in details} == {action}
+
+
+def test_dq_missing_column_returns_failed_value_detail(spark_session):
+    """A missing governed column fails cleanly and remains diagnosable."""
+    from fabricops_kit.pipeline import shared
+
+    dataframe = spark_session.createDataFrame([("row-1",)], "row_id string")
+    rule = shared._validate_dq_rules([{
+        "guardrail_rule_id": "gr-missing", "guardrail_version": 1,
+        "rule_id": "email-required", "rule_type": "missing_values",
+        "columns": ["customer_email"], "maximum_null_percent": 0,
+        "severity": "Block",
+    }])[0]
+
+    check = shared._run_dq_guardrail_checks(dataframe, "customers", [rule])[0]
+    failed_values = shared._dq_failed_values_dataframe(
+        dataframe, [rule], run_id="run-missing", row_identity_columns=["row_id"]
+    ).collect()
+
+    assert check["status"] == "failed"
+    assert check["failed_count"] == 1
+    assert len(failed_values) == 1
+    assert failed_values[0].column_name == "customer_email"
+    assert failed_values[0].column_role == "target"
+    assert failed_values[0].raw_value is None
+    assert failed_values[0].raw_value_type == "missing"
+    assert failed_values[0].action == "Block"
