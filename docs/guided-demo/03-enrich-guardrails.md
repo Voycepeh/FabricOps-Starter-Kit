@@ -33,9 +33,19 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
 ???+ success "Live — Add Enrichment"
 
-    Add or refine Enrichment such as business descriptions, classifications, and stewardship context.
+    Add or refine descriptive Enrichment: table and column descriptions plus information classifications selected from the project-configured labels.
 
-    `METADATA_ENRICHMENT` attaches business context to the canonical `METADATA_DATA_CATALOGUE` identity rather than replacing the Engineering-written records.
+    `METADATA_ENRICHMENT` belongs to one exact Data Contract version through `contract_id` + `contract_version`. It is descriptive metadata only and has no direct ETL enforcement semantics. Put every executable runtime requirement in `METADATA_GUARDRAIL`.
+
+    When AI Enrichment is enabled in `00_env_config`, select a table or column
+    and choose **✨ Suggest enrichment**. Review or edit the proposed Description
+    and Classification before using the normal save action; suggestions are not
+    persisted automatically.
+
+    Classification answers, “How sensitive is this information according to the
+    organisation's information-classification policy?” A future dedicated PII
+    Guardrail answers whether a field contains personal data and which runtime
+    treatment is required. PII detection and enforcement are not Enrichment.
 
 ???+ success "Live — Author Guardrails"
 

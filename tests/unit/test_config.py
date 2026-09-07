@@ -142,6 +142,7 @@ def test_governance_config_uses_widget_custom_fields_contract():
     assert config.enrichment_classification_widget["custom_fields"][0]["key"] == "retention_class"
     assert not hasattr(config, legacy_context_field)
     assert not hasattr(config, legacy_classification_field)
+    assert not hasattr(config, "pii_classifications")
 
 
 def test_data_agreement_widgets_normalize_custom_fields_contract():
@@ -161,13 +162,16 @@ def test_data_agreement_widgets_reject_blank_custom_field_keys():
         DataAgreementConfig(data_steward_widget={"custom_fields": [{"key": " "}]})
 
 
-def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
-    """Verify env config template does not expose prompt boilerplate or unused defaults."""
+def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
+    """Expose the focused AI Enrichment controls without obsolete prompt frameworks."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
     assert "AIPromptConfig" not in source
     assert "ai_prompt_config" not in source
+    assert '"description_prompt"' in source
+    assert '"classification_prompt"' in source
+    assert '"enabled": True' in source
     assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
     assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
     assert "GOVERNANCE_REVIEW_PROMPT_TEMPLATE" not in source
@@ -1495,3 +1499,22 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
     assert capsys.readouterr().out == ""
     assert result["status"] == "ready"
     assert result["data_agreement"]["active_steward_count"] == 0
+
+
+def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
+    """Keep prompts configurable and AI optional alongside Classification labels."""
+    config = GovernanceConfig(
+        sensitivity_labels=[" Public ", "Restricted"],
+        ai_enrichment={
+            "enabled": True,
+            "description_prompt": " describe ",
+            "classification_prompt": " classify ",
+        },
+    )
+    assert config.sensitivity_labels == ["Public", "Restricted"]
+    assert config.ai_enrichment == {
+        "enabled": True,
+        "description_prompt": "describe",
+        "classification_prompt": "classify",
+    }
+    assert GovernanceConfig().ai_enrichment["enabled"] is False

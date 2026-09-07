@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import importlib
+import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
@@ -10,6 +12,77 @@ from fabricops_kit.io.shared import read_lakehouse_table_core
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
+_PROFILE_CONTEXT_FIELDS = (
+    "row_count", "non_null_count", "null_count", "null_percent",
+    "distinct_count", "distinct_percent", "min_value", "max_value",
+)
+
+
+def build_ai_enrichment_context(
+    catalogue_row: dict[str, Any],
+    *,
+    metadata_level: str,
+    existing_description: str,
+    classification_labels: list[str],
+    profile_rows: Any = (),
+) -> dict[str, Any]:
+    """Build compact technical context for an Enrichment suggestion."""
+    column_id = str(catalogue_row.get("column_id") or "")
+    profiles = [
+        {name: row.get(name) for name in _PROFILE_CONTEXT_FIELDS if row.get(name) is not None}
+        for row in _rows(profile_rows)
+        if not column_id or str(row.get("column_id") or "") == column_id
+    ]
+    return {
+        "metadata_level": str(metadata_level),
+        "table_name": str(catalogue_row.get("table_name") or ""),
+        "column_name": str(catalogue_row.get("column_name") or ""),
+        "data_type": str(catalogue_row.get("data_type") or ""),
+        "existing_description": str(existing_description or ""),
+        "classification_labels": [str(label) for label in classification_labels],
+        "profile_evidence": profiles[:3],
+    }
+
+
+def _invoke_fabric_ai(prompt: str) -> str:
+    """Invoke the Microsoft Fabric AI Functions pandas extension."""
+    pandas = importlib.import_module("pandas")
+    frame = pandas.DataFrame([{"fabricops_prompt": prompt}])
+    ai = getattr(frame, "ai", None)
+    if ai is None or not hasattr(ai, "generate_response"):
+        raise RuntimeError(
+            "Microsoft Fabric AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
+        )
+    result = ai.generate_response(prompt="{fabricops_prompt}", output_col="fabricops_response")
+    return str(result.iloc[0]["fabricops_response"]).strip()
+
+
+def suggest_enrichment(
+    context: dict[str, Any],
+    *,
+    description_prompt: str,
+    classification_prompt: str,
+    classification_labels: list[str],
+    invoke: Any = None,
+) -> dict[str, str]:
+    """Return transient AI suggestions constrained to configured labels."""
+    labels = [str(label).strip() for label in classification_labels if str(label).strip()]
+    if not labels:
+        raise ValueError("At least one configured Classification label is required for AI suggestions.")
+    if not str(description_prompt).strip() or not str(classification_prompt).strip():
+        raise ValueError("AI Enrichment description and classification prompts are required.")
+    call = invoke or _invoke_fabric_ai
+    context_json = json.dumps(context, sort_keys=True, default=str)
+    description = str(call(f"{description_prompt.strip()}\n\nContext:\n{context_json}")).strip()
+    classification_raw = str(call(
+        f"{classification_prompt.strip()}\n\nAllowed labels: {json.dumps(labels)}\n\nContext:\n{context_json}"
+    )).strip().strip("`\"'")
+    classification = next(
+        (label for label in labels if label.casefold() == classification_raw.casefold()), None
+    )
+    if classification is None:
+        raise ValueError("AI Classification suggestion was not one of the configured labels.")
+    return {"Description": description, "Classification": classification}
 
 
 def _rows(value: Any) -> list[dict[str, Any]]:
@@ -147,6 +220,7 @@ def catalogue_table_browser_state(
                 "column_name": str(row.get("column_name") or column_id),
                 "status": "current" if active else "removed",
                 "last_observed_at": row.get("last_profiled_at"),
+                "catalogue_row": dict(row),
                 "enrichment_values": _enrichment_values(
                     current_values,
                     level="column",
@@ -178,5 +252,7 @@ __all__ = [
     "ENRICHMENT_TABLE",
     "catalogue_table_browser_state",
     "catalogue_table_options",
+    "build_ai_enrichment_context",
     "latest_enrichment_values",
+    "suggest_enrichment",
 ]

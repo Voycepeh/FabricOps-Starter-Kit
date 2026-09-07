@@ -9,7 +9,7 @@ from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.data_contract.shared import freeze_contract_record, validate_contract_draft
+from fabricops_kit.data_contract.shared import canonical_enrichment_state, freeze_contract_record, validate_contract_draft
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_configured_lakehouse_table, write_lakehouse_table_core
@@ -123,7 +123,10 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
             str(row.get("contract_id") or "") == contract_id
             and int(row.get("contract_version") or 0) == int(contract_version)
         )
-    enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
+    enrichment = _latest(canonical_enrichment_state(
+        r for r in tables["METADATA_ENRICHMENT"]
+        if contract_key(r) and str(r.get("environment_name") or "") == environment_name
+    ), ("enrichment_id",))
     enrichment_docs = [_fields(r, ("enrichment_id", "contract_id", "contract_version", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
     guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
     guardrail_docs = []
@@ -169,9 +172,9 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
         "approved_usages": usages,
     }
     warnings = []
-    if not any(r.get("enrichment_type") == "description" and not r.get("column_id") for r in enrichment_docs):
+    if not any(r.get("enrichment_type") == "Description" and not r.get("column_id") for r in enrichment_docs):
         warnings.append("Table description is missing.")
-    described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "description"}
+    described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "Description"}
     if any(str(r.get("column_id")) not in described for r in column_docs):
         warnings.append("One or more column descriptions are missing.")
     if not guardrail_docs:

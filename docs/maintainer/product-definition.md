@@ -152,7 +152,7 @@ The Guided Demo owns maintained execution instructions and contextual implementa
 
 Potential future AI-augmented workflows include:
 
-- **Enrichment suggestions:** propose business names, descriptions, classifications, sensitivity or PII hints, domains, and usage notes from schema, profile, and governed context for steward review.
+- **Enrichment suggestions:** propose business names, descriptions and information classifications from schema, profile, and governed context for steward review.
 - **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
 - **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, read strategy, load strategy, or load-strategy parameters, and identify items requiring explicit review before activation.
 - **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, resolved read strategy, applicable Guardrails, and governed load strategy to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.

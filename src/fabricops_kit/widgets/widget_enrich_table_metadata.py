@@ -50,7 +50,7 @@ def widget_enrich_table_metadata(
     -------
     dict[str, Any]
         Browser controls and selected table state, draft store,
-        ``build_records`` callback, and ``save`` callback.
+        ``suggest`` and ``build_records`` callbacks, and ``save`` callback.
 
     Raises
     ------
@@ -62,11 +62,14 @@ def widget_enrich_table_metadata(
     Notes
     -----
     Table enrichment supports ``Description`` and ``Classification``. Column
-    enrichment additionally supports ``Personal_identifier``. Saving appends
-    only non-empty changed values to ``METADATA_ENRICHMENT`` using the exact
-    ``contract_id`` and ``contract_version``, optional ``column_id``, and
-    ``environment_name``. The governed table is resolved through the contract.
-    Repeated unchanged saves
+    enrichment uses the same two fields. ``Classification`` is selected from
+    project-configured information-classification labels. Optional AI
+    suggestions remain transient until a user reviews and saves them.
+    Enrichment is descriptive metadata only and has no direct ETL enforcement
+    semantics. Saving appends only non-empty changed values to
+    ``METADATA_ENRICHMENT`` using the exact ``contract_id`` and
+    ``contract_version``, optional ``column_id``, and ``environment_name``. The
+    governed table is resolved through the contract. Repeated unchanged saves
     produce no write.
 
     Examples
@@ -110,6 +113,15 @@ def widget_enrich_table_metadata(
         contract_rows = _rows(contracts)
     except Exception as exc:
         raise RuntimeError(f"Unable to read METADATA_DATA_CONTRACT: {exc}") from exc
+    try:
+        profiled = read_lakehouse_table_core(
+            "METADATA_DATA_PROFILED", target="metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
+            context=runtime_context, spark_session=spark_session,
+        )
+        profile_rows = _rows(profiled)
+    except Exception as exc:
+        raise RuntimeError(f"Unable to read METADATA_DATA_PROFILED: {exc}") from exc
     latest_contracts: dict[str, dict[str, Any]] = {}
     for row in contract_rows:
         if str(row.get("status") or "").lower() != "draft":
@@ -125,7 +137,9 @@ def widget_enrich_table_metadata(
     if not table_options:
         raise ValueError(f"METADATA_DATA_CATALOGUE has no active table rows for environment {env!r}.")
     current_values = _enrichment.latest_enrichment_values(enrichment_rows, environment_name=env)
-    classification_options, personal_options, _, _ = _widget_shared.enrichment_control_options(config)
+    classification_options, _, _ = _widget_shared.enrichment_control_options(config)
+    governance_config = getattr(config, "governance_config", None)
+    ai_config = dict(getattr(governance_config, "ai_enrichment", None) or {})
     drafts: dict[tuple[str, str, str], dict[str, str]] = {}
     originals: dict[tuple[str, str, str], dict[str, str]] = {}
     selected: dict[str, Any] = {"table_id": "", "item_token": ""}
@@ -156,10 +170,12 @@ def widget_enrich_table_metadata(
     technical_detail = widgets.HTML(value="")
     description = widgets.Textarea(rows=5, **_widget_shared.widget_common(widgets, "Description", textarea=True))
     classification = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Classification"))
-    personal = widgets.Dropdown(options=[""], **_widget_shared.widget_common(widgets, "Personal identifier"))
+    suggest_button = widgets.Button(description="✨ Suggest enrichment")
+    suggest_button.disabled = not bool(ai_config.get("enabled", False))
+    suggestion_status = widgets.HTML(value="")
     save_button = widgets.Button(description="Save enrichment", button_style="success")
     unsaved = widgets.HTML(value="")
-    controls = {"Description": description, "Classification": classification, "Personal_identifier": personal}
+    controls = {"Description": description, "Classification": classification}
 
     def selected_identity() -> tuple[str, str, str]:
         token = str(selected.get("item_token") or "")
@@ -168,12 +184,7 @@ def widget_enrich_table_metadata(
         return level, table_id, "" if level == "table" else item_id
 
     def values_from_controls(level: str) -> dict[str, str]:
-        names = (
-            ("Description", "Classification")
-            if level == "table"
-            else ("Description", "Classification", "Personal_identifier")
-        )
-        return {name: str(controls[name].value or "") for name in names}
+        return {name: str(controls[name].value or "") for name in ("Description", "Classification")}
 
     def remember_draft(*_: Any) -> None:
         if detail_state["is_rendering"]:
@@ -196,7 +207,7 @@ def widget_enrich_table_metadata(
         level, table_id, column_id = selected_identity()
         browser = state_holder["state"]
         if level == "table":
-            item = {"column_name": browser["table_name"], "status": "current"}
+            item = {"column_name": browser["table_name"], "status": "current", "catalogue_row": browser["table_row"]}
             loaded = browser["current_enrichment_values"]["table"]
         else:
             item = next(row for row in browser["all_historical_columns"] if row["column_id"] == column_id)
@@ -216,11 +227,10 @@ def widget_enrich_table_metadata(
         detail_state["is_rendering"] = True
         try:
             description.value = values.get("Description", "")
-            classification.options = options_with_current(classification_options, values.get("Classification", ""))
+            classification.options = options_with_current(
+                classification_options, values.get("Classification", "")
+            )
             classification.value = values.get("Classification", "")
-            personal.options = options_with_current(personal_options, values.get("Personal_identifier", ""))
-            personal.value = values.get("Personal_identifier", "")
-            personal.layout.display = "none" if level == "table" else ""
             for control in controls.values():
                 control.disabled = removed
             save_button.disabled = removed
@@ -289,7 +299,45 @@ def widget_enrich_table_metadata(
         )
         refresh_column_options()
 
-    spark_read_count = 3
+    spark_read_count = 4
+
+    def suggest() -> dict[str, str]:
+        if not bool(ai_config.get("enabled", False)):
+            suggestion_status.value = "AI Enrichment is disabled in 00_env_config. Manual authoring remains available."
+            return {}
+        level, table_id, column_id = selected_identity()
+        browser = state_holder["state"]
+        item = (
+            {"catalogue_row": browser["table_row"]}
+            if level == "table"
+            else next(row for row in browser["all_historical_columns"] if row["column_id"] == column_id)
+        )
+        relevant_profiles = [
+            row for row in profile_rows
+            if str(row.get("table_id") or "") == table_id
+            and str(row.get("environment_name") or "") == str(env)
+        ]
+        context_value = _enrichment.build_ai_enrichment_context(
+            item["catalogue_row"], metadata_level=level,
+            existing_description=str(description.value or ""),
+            classification_labels=classification_options,
+            profile_rows=relevant_profiles,
+        )
+        try:
+            suggestion = _enrichment.suggest_enrichment(
+                context_value,
+                description_prompt=str(ai_config.get("description_prompt") or ""),
+                classification_prompt=str(ai_config.get("classification_prompt") or ""),
+                classification_labels=classification_options,
+            )
+        except Exception as exc:
+            suggestion_status.value = f"AI suggestion unavailable: {html.escape(str(exc))} Manual authoring remains available."
+            return {}
+        description.value = suggestion["Description"]
+        classification.value = suggestion["Classification"]
+        remember_draft()
+        suggestion_status.value = "AI suggestion applied to the editable fields. Review or edit it before saving."
+        return suggestion
 
     def filter_tables(*_: Any) -> None:
         query = str(table_search.value or "").strip().casefold()
@@ -371,6 +419,7 @@ def widget_enrich_table_metadata(
     column_search.observe(refresh_column_options, names="value")
     column_select.observe(render_detail, names="value")
     save_button.on_click(lambda _: save())
+    suggest_button.on_click(lambda _: suggest())
     filter_tables()
 
     workspace = _widget_shared.authoring_workspace(
@@ -382,7 +431,8 @@ def widget_enrich_table_metadata(
             technical_detail,
             description,
             classification,
-            personal,
+            _widget_shared.action_row(widgets, [suggest_button]),
+            suggestion_status,
             _widget_shared.action_row(widgets, [save_button]),
             unsaved,
         ],
@@ -407,6 +457,9 @@ def widget_enrich_table_metadata(
         "original_values": originals,
         "build_records": build_records,
         "save": save,
+        "suggest": suggest,
+        "suggest_button": suggest_button,
+        "suggestion_status": suggestion_status,
         "save_button": save_button,
         "status": status,
         "workspace": workspace,

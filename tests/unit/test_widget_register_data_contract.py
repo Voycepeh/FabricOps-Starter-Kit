@@ -439,3 +439,18 @@ def test_contract_registration_preserves_processing_parameters():
     sources = _sources(); sources["METADATA_DATA_CATALOGUE"][0].update(load_strategy="scd2", load_strategy_parameters_json='{"key_columns":["order_id"],"effective_column":"effective_at","tracked_columns":["status"]}')
     payload, _ = _assemble_payload(contract_id="c", contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
     assert payload["table"]["processing"] == {"load_strategy": "scd2", "key_columns": ["order_id"], "effective_column": "effective_at", "tracked_columns": ["status"]}
+
+
+
+def test_payload_contains_only_canonical_descriptive_enrichment():
+    """Freeze only Description and Classification as descriptive metadata."""
+    sources = _sources()
+    base = sources["METADATA_ENRICHMENT"][1]
+    sources["METADATA_ENRICHMENT"].extend([
+        {**base, "enrichment_id": "classification", "enrichment_type": "Classification", "value": "Restricted"},
+        {**base, "enrichment_id": "sensitivity", "enrichment_type": "Sensitivity", "value": "restricted"},
+        {**base, "enrichment_id": "legacy", "enrichment_type": "Personal_identifier", "value": "direct PII"},
+    ])
+    payload, _ = _assemble_payload(contract_id=_contract_id("agreement", "orders"), contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
+    assert {row["enrichment_type"] for row in payload["enrichment"]["columns"]} == {"Description", "Classification"}
+    assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]

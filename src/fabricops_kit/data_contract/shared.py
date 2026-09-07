@@ -21,6 +21,10 @@ from fabricops_kit.pipeline.shared import canonical_guardrail_rule_record
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
+ENRICHMENT_TYPES_BY_LEVEL = {
+    "table": frozenset({"Description", "Classification"}),
+    "column": frozenset({"Description", "Classification"}),
+}
 
 
 def row_dicts(value: Any) -> list[dict[str, Any]]:
@@ -127,16 +131,37 @@ def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[di
         if any(marker in message for marker in ("not found", "does not exist", "path does not exist")):
             return []
         raise
-    return [row for row in row_dicts(frame) if str(row.get("environment_name") or "") == str(env)]
+    return canonical_enrichment_state(
+        row for row in row_dicts(frame)
+        if str(row.get("environment_name") or "") == str(env)
+    )
+
+
+def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
+    """Return only descriptive Enrichment rows supported by the canonical model."""
+    canonical = []
+    for row in row_dicts(rows):
+        allowed = ENRICHMENT_TYPES_BY_LEVEL.get(
+            str(row.get("enrichment_level") or "").lower(), frozenset()
+        )
+        enrichment_type = next((
+            name for name in allowed
+            if name.casefold() == str(row.get("enrichment_type") or "").casefold()
+        ), None)
+        if enrichment_type is not None:
+            canonical.append({**row, "enrichment_type": enrichment_type})
+    return canonical
 
 
 def read_enrichment(
     *, config: Any, env: str, spark_session: Any, contract_id: str, contract_version: int
 ) -> list[dict[str, Any]]:
     """Read Enrichment owned by one exact Data Contract version."""
-    return read_contract_records(
-        ENRICHMENT_TABLE, config=config, env=env, spark_session=spark_session,
-        contract_id=contract_id, contract_version=contract_version,
+    return canonical_enrichment_state(
+        read_contract_records(
+            ENRICHMENT_TABLE, config=config, env=env, spark_session=spark_session,
+            contract_id=contract_id, contract_version=contract_version,
+        )
     )
 
 
@@ -210,8 +235,16 @@ def build_enrichment_records(
         if level == "column" and not column_id:
             raise ValueError("Column enrichment rows require column_id.")
         enrichment_type = str(raw.get("enrichment_type") or "").strip()
-        if not enrichment_type:
-            raise ValueError("Enrichment rows require enrichment_type.")
+        allowed_types = ENRICHMENT_TYPES_BY_LEVEL[level]
+        canonical_type = next(
+            (name for name in allowed_types if name.casefold() == enrichment_type.casefold()), None
+        )
+        if canonical_type is None:
+            raise ValueError(
+                f"{level.title()} enrichment_type must be one of: "
+                + ", ".join(sorted(allowed_types))
+                + ". Enrichment is descriptive metadata only."
+            )
         value = str(raw.get("value") or "").strip()
         if not value:
             continue
@@ -220,7 +253,7 @@ def build_enrichment_records(
             "contract_id": contract_id, "contract_version": contract_version,
             "column_id": column_id if level == "column" else "",
             "environment_name": row_env, "enrichment_level": level,
-            "enrichment_type": enrichment_type, "value": value,
+            "enrichment_type": canonical_type, "value": value,
             **{name: raw.get(name, default) for name, default in audit.items()},
         })
     return built
@@ -296,7 +329,10 @@ def validate_contract_draft(
         "contract": dict(draft), "contract_id": contract_id, "contract_version": version,
         "table_id": table_id, "environment_name": environment_name,
         "catalogue_rows": catalogue,
-        "enrichment": contract_version_records(enrichment_rows, contract_id=contract_id, contract_version=version, environment_name=environment_name),
+        "enrichment": canonical_enrichment_state(contract_version_records(
+            enrichment_rows, contract_id=contract_id, contract_version=version,
+            environment_name=environment_name,
+        )),
         "guardrails": contract_version_records(guardrail_rows, contract_id=contract_id, contract_version=version, environment_name=environment_name),
     }
 
