@@ -8,6 +8,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.contract_authoring import save_guardrails
 from fabricops_kit.pipeline.shared import (
     GUARDRAIL_CHANGE_BEHAVIOURS,
     resolve_guardrail_change_behaviour,
@@ -389,16 +390,8 @@ def _render_guardrail_authoring(
                 "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
             )
             return records
-        canonical_records = authoring.canonicalize_records(
-            records,
-            config=config,
-            env=env,
-        )
-        authoring.write_rule_records(
-            canonical_records,
-            config=config,
-            env=env,
-            spark_session=spark_session,
+        canonical_records = save_guardrails(
+            records, config=config, env=env, spark_session=spark_session
         )
         state_existing = state.get("existing_rules")
         if isinstance(state_existing, list):

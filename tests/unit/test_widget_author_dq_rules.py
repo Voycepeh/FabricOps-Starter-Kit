@@ -275,8 +275,7 @@ def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
         }
 
     monkeypatch.setattr(module.authoring, "load_guardrail_authoring_targets", fake_targets)
-    monkeypatch.setattr(module.authoring, "canonicalize_records", lambda records, **kwargs: records)
-    monkeypatch.setattr(module.authoring, "write_rule_records", lambda records, **kwargs: saved.append(records))
+    monkeypatch.setattr(module, "save_guardrails", lambda records, **kwargs: saved.append(records) or records)
     widget = module.widget_author_dq_rules(
         spark_session=object(), context={"config": object(), "env": "dev"},
         rule_type="unique_values", selected_columns=["student_id"],
@@ -293,5 +292,5 @@ def test_authoring_widgets_are_independent_and_use_shared_storage_model():
     dq_source = inspect.getsource(module)
     assert "widget_author_guardrails(" not in dq_source
     assert "widget_select_guardrail_target" not in dq_source
-    assert "authoring.canonicalize_records" in dq_source
-    assert "authoring.write_rule_records" in dq_source
+    assert "save_guardrails(" in dq_source
+    assert "authoring.write_rule_records" not in dq_source

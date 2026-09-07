@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
-import uuid
 
-from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
-from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.io.shared import read_lakehouse_table_core
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
@@ -175,92 +173,10 @@ def catalogue_table_browser_state(
     }
 
 
-def build_enrichment_records(
-    records: list[dict[str, Any]],
-    *,
-    config: Any = None,
-    env: str,
-) -> list[dict[str, Any]]:
-    """Build canonical environment-aware Enrichment rows."""
-    audit = build_runtime_audit_fields(config=config, env=env)
-    built: list[dict[str, Any]] = []
-    for raw in records:
-        level = str(raw.get("enrichment_level") or "").strip().lower()
-        if level not in {"table", "column"}:
-            raise ValueError("enrichment_level must be 'table' or 'column'.")
-        contract_id = str(raw.get("contract_id") or "").strip()
-        contract_version = int(raw.get("contract_version") or 0)
-        column_id = str(raw.get("column_id") or "").strip()
-        enrichment_type = str(raw.get("enrichment_type") or "").strip()
-        value = str(raw.get("value") or "").strip()
-        if not contract_id or contract_version < 1:
-            raise ValueError("Enrichment rows require contract_id and contract_version.")
-        if level == "column" and not column_id:
-            raise ValueError("Column enrichment rows require column_id.")
-        if level == "table":
-            column_id = ""
-        if not enrichment_type:
-            raise ValueError("Enrichment rows require enrichment_type.")
-        if not value:
-            continue
-        row_audit = {name: raw.get(name, value) for name, value in audit.items()}
-        built.append(
-            {
-                "enrichment_id": str(raw.get("enrichment_id") or uuid.uuid4()),
-                "contract_id": contract_id,
-                "contract_version": contract_version,
-                "column_id": column_id,
-                "environment_name": str(raw.get("environment_name") or env),
-                "enrichment_level": level,
-                "enrichment_type": enrichment_type,
-                "value": value,
-                **row_audit,
-            }
-        )
-    return built
-
-
-def write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
-    """Append canonical Enrichment records through the configured metadata target."""
-    if not records:
-        return
-    schema = metadata_table_schema_registry()[ENRICHMENT_TABLE]
-    coerced = [coerce_metadata_row_types(ENRICHMENT_TABLE, record) for record in records]
-    write_lakehouse_table_core(
-        spark_session.createDataFrame(coerced, schema=schema),
-        ENRICHMENT_TABLE,
-        target="metadata",
-        schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-        context={"config": config, "env": env},
-        mode="append",
-    )
-
-
-def read_enrichment_records(config: Any, env: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    """Read Enrichment rows from the configured metadata target."""
-    try:
-        rows = read_lakehouse_table_core(
-            ENRICHMENT_TABLE,
-            target="metadata",
-            schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-            context={"config": config, "env": env},
-            spark_session=spark_session,
-        )
-    except Exception as exc:
-        text = str(exc).lower()
-        if "not found" in text or "does not exist" in text or "path does not exist" in text:
-            return []
-        raise
-    return _rows(rows)
-
-
 __all__ = [
     "CATALOGUE_TABLE",
     "ENRICHMENT_TABLE",
-    "build_enrichment_records",
     "catalogue_table_browser_state",
     "catalogue_table_options",
     "latest_enrichment_values",
-    "read_enrichment_records",
-    "write_enrichment_records",
 ]

@@ -8,6 +8,7 @@ from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit import contract_authoring
 from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets import enrichment_shared as _enrichment
 from fabricops_kit.widgets import shared as _widget_shared
@@ -97,7 +98,7 @@ def widget_enrich_table_metadata(
     except Exception as exc:
         raise RuntimeError(f"Unable to read METADATA_DATA_CATALOGUE: {exc}") from exc
     try:
-        enrichment_rows = _enrichment.read_enrichment_records(config, env, spark_session=spark_session)
+        enrichment_rows = contract_authoring.read_all_enrichment(config=config, env=env, spark_session=spark_session)
     except Exception as exc:
         raise RuntimeError(f"Unable to read METADATA_ENRICHMENT: {exc}") from exc
     try:
@@ -330,7 +331,7 @@ def widget_enrich_table_metadata(
             for name, value in values.items()
             if value.strip() and value != before.get(name, "")
         ]
-        return _enrichment.build_enrichment_records(inputs, config=config, env=env)
+        return contract_authoring.build_enrichment_records(inputs, config=config, env=env)
 
     def save() -> dict[str, list[dict[str, Any]]]:
         records = build_records()
@@ -338,7 +339,7 @@ def widget_enrich_table_metadata(
             status.value = "No enrichment changes to save."
             return {"enrichment_records": []}
         try:
-            _enrichment.write_enrichment_records(records, config=config, env=env, spark_session=spark_session)
+            contract_authoring.save_enrichment(records, config=config, env=env, spark_session=spark_session)
         except Exception as exc:
             status.value = f"Enrichment write failed: {html.escape(str(exc))}"
             return {"enrichment_records": []}
