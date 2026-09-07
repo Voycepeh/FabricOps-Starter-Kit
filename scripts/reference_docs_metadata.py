@@ -106,7 +106,7 @@ USAGE_NOTE_BY_PATH_PREFIX = {
 
 METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
 
-`table_id` is the shared identity that links metadata to the governed data asset."""
+`table_id` identifies the governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -147,15 +147,15 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.",
-        "grain": "One immutable Data Contract version for one governed table under one exact Data Agreement version.",
+        "purpose": "Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.",
+        "grain": "One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Together with agreement_version, identifies the exact parent Data Agreement version."},
             {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Together with agreement_id, identifies the exact parent Data Agreement version."},
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Each Data Contract governs one logical Catalogue table."},
         ],
-        "relationships": [{"cardinality": "1:N", "statement": "One stable contract_id has monotonically increasing immutable contract_version rows."}],
+        "relationships": [{"cardinality": "1:N", "statement": "One stable contract_id has monotonically increasing contract_version rows; each version is authored as a draft and becomes immutable when frozen."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
@@ -210,11 +210,12 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_ENRICHMENT": {
         "purpose": "Add business and governance context to the data.",
-        "grain": "One appended enrichment value for one table or column identity in one environment.",
+        "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Enrichment belongs to one exact governed Data Contract version; its table is resolved through that contract's table_id."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents enrichment from leaking between versions of a stable contract_id."},
+            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment retains the Catalogue column identity; table-level enrichment leaves column_id empty."},
         ],
         "relationships": [],
     },
@@ -229,10 +230,11 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_GUARDRAIL": {
         "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
-        "grain": "One configured Guardrail rule for one Catalogue table or column in one environment.",
+        "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
         "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many Guardrail rules can belong to one logical Catalogue table identity in an environment."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Guardrail rules belong to one exact governed Data Contract version; the governed table is resolved through that contract's table_id."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents rules from leaking between versions of a stable contract_id."},
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty."},
         ],
         "relationships": [
@@ -438,7 +440,8 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "contract_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "contract_version": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
@@ -454,7 +457,8 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "guardrail_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
-        "table_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
+        "contract_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
+        "contract_version": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "column_id": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "environment_name": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
         "guardrail_type": ["fabricops_kit.pipeline.shared.canonical_guardrail_rule_record"],
@@ -1693,20 +1697,20 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',
   'function_type': 'callable',
-  'summary_override': 'Assemble and save a versioned Data Contract for one governed table.',
+  'summary_override': 'Create a draft Data Contract version and freeze its governed definition.',
   'symbol_name': 'widget_register_data_contract',
   'template_notebook': '01_governance',
   'template_segment': 'Contract registration',
-  'use_when': 'Use in 01_governance after an Agreement version is saved and governed table metadata is ready for contract review.',
+  'use_when': 'Use in 01_governance after an Agreement and Catalogue table exist: save the draft identity, author its Enrichment and Guardrails, then freeze it.',
   'parameters': 'See the source docstring for exact Agreement and table selection, approved usages, metadata target, Spark session, and context parameters.',
-  'returns': 'Mutable contract review state with structured governance context, completeness warnings, and an explicit save action.',
+  'returns': 'Mutable contract state with explicit save-draft and freeze actions, structured frozen review, and completeness warnings.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
   'related_functions': ['widget_render_data_agreement', 'widget_view_catalogue', 'widget_enrich_table_metadata'],
-  'expanded_purpose': 'Assembles one self-contained canonical FabricOps contract payload from the exact Agreement version, its stewards, one active Catalogue table and columns, current enrichment, and active Guardrail expectations. Each explicit save appends the next immutable draft version; runtime Guardrail results are excluded.',
-  'when_to_use': 'Use to review governed metadata and explicitly freeze a new draft contract version for one table before a later approval workflow.',
+  'expanded_purpose': 'Creates a payload-free draft containing the deterministic contract and table relationship. After Enrichment and Guardrails are authored against that exact contract_id and contract_version, freeze assembles one self-contained immutable payload from the Agreement, stewards, Catalogue structure, processing, and exact-version governance definitions. Runtime Guardrail results are excluded.',
+  'when_to_use': 'Use to establish the draft identity before authoring governance metadata, then freeze that exact version before testing and activation.',
   'do_not_use_when': 'Do not use to edit enrichment, descriptions, classifications, personal-identifier values, guardrails, or agreement metadata.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],
-  'return_interpretation': 'review exposes the assembled governance context without HTML parsing; save appends exactly one draft contract version and does not mutate history.',
+  'return_interpretation': 'save creates or reopens one payload-free draft; freeze assembles its exact-version governance rows and exposes the immutable payload in review.',
  'common_failure_causes': ['No exact saved Agreement version is selected.',
                             'The active environment has no active governed Catalogue tables.',
                             'The metadata target cannot be written.']},

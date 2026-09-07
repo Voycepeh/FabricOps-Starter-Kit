@@ -9,9 +9,9 @@ from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_configured_lakehouse_table, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import validated_processing
 from fabricops_kit.widgets.shared import action_row, form_page, form_section, require_ipywidgets, status_message, widget_common
 
@@ -117,14 +117,19 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     duplicate_names = sorted({name for name in column_names if column_names.count(name) > 1})
     if duplicate_names:
         raise ValueError("Active METADATA_DATA_CATALOGUE columns contain duplicate column_name values: " + ", ".join(duplicate_names))
-    enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
-    enrichment_docs = [_fields(r, ("enrichment_id", "table_id", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
-    guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
+    def contract_key(row: dict[str, Any]) -> bool:
+        return (
+            str(row.get("contract_id") or "") == contract_id
+            and int(row.get("contract_version") or 0) == int(contract_version)
+        )
+    enrichment = _latest([r for r in tables["METADATA_ENRICHMENT"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("enrichment_id",))
+    enrichment_docs = [_fields(r, ("enrichment_id", "contract_id", "contract_version", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
+    guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
     guardrail_docs = []
     for row in guardrails:
         if row.get("is_active") is not True:
             continue
-        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "table_id", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
+        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
         rule_parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
         if not isinstance(rule_parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")
@@ -150,7 +155,7 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     except ValueError as exc:
         raise ValueError(f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}") from exc
     payload = {
-        "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "draft"},
+        "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
         "agreement": agreement_doc,
         "stewards": steward_docs,
         "table": {
@@ -173,8 +178,23 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     return payload, warnings
 
 
+def _freeze_contract_row(*, row: dict[str, Any], payload: dict[str, Any], audit: dict[str, Any]) -> dict[str, Any]:
+    """Return the lifecycle update that freezes one exact draft version."""
+    if str(row.get("status") or "").lower() != "draft":
+        raise ValueError("Only a draft Data Contract version can be frozen.")
+    if row.get("contract_payload_json") not in (None, ""):
+        raise ValueError("Draft Data Contract version already has a canonical payload.")
+    return {
+        **row,
+        "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
+        "status": "frozen",
+        "is_active": False,
+        **audit,
+    }
+
+
 def widget_register_data_contract(*, agreement_id: str | None = None, agreement_version: str | None = None, table_id: str | None = None, approved_usages: list[str] | None = None, target: str = "metadata", schema: str | None = None, spark_session=None, context=None):
-    """Review and save one immutable, versioned governed-table Data Contract.
+    """Create, author, and freeze one versioned governed-table Data Contract.
 
     Parameters
     ----------
@@ -200,8 +220,8 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     -------
     dict
         Mutable state with structured ``review`` and ``warnings`` values,
-        ``refresh`` and ``save`` callables, saved identity/version values, and
-        notebook controls under ``_controls``.
+        ``refresh``, ``save``, and ``freeze`` callables, saved and frozen
+        identity/version values, and notebook controls under ``_controls``.
 
     Raises
     ------
@@ -211,15 +231,15 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
 
     Notes
     -----
-    Rendering does not write metadata. Each explicit save appends exactly one
-    ``draft`` row with ``is_active=False`` and the next version of a stable
-    contract identity derived from the Agreement lifecycle and ``table_id``.
-    The canonical payload freezes Agreement and steward context, current active
-    Catalogue structure and processing, current enrichment, active Guardrail expectations,
-    and the selected approved-usage subset. Runtime Guardrail result tables are
-    neither read nor embedded. Historical contract versions are never updated.
-    This workflow does not submit, approve, promote, export, or enforce a
-    contract and requires a configured Microsoft Fabric metadata Lakehouse.
+    Rendering does not write metadata. ``save`` creates or reopens exactly one
+    payload-free ``draft`` row containing the deterministic contract identity,
+    version, Agreement identity, and ``table_id``. Enrichment and Guardrail
+    authoring can then target that exact draft version. ``freeze`` reads those
+    exact-version definitions, assembles the canonical immutable payload, and
+    changes the version status to ``frozen``. Runtime Guardrail result tables
+    are neither read nor embedded. Historical frozen versions are never
+    modified. This workflow requires a configured Microsoft Fabric metadata
+    Lakehouse.
 
     Examples
     --------
@@ -232,6 +252,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     ...     spark_session=spark,
     ... )
     >>> state["save"]()
+    >>> state["freeze"]()
 
     See Also
     --------
@@ -253,7 +274,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     )
     active_table_rows = _latest([r for r in source["METADATA_DATA_CATALOGUE"] if str(r.get("environment_name") or "") == env and r.get("is_active") is not False and (str(r.get("metadata_level") or "").lower() == "table" or not r.get("column_id"))], ("table_id",))
     table_options = sorted({str(r.get("table_id") or "") for r in active_table_rows if r.get("table_id")})
-    state: dict[str, Any] = {"environment_name": env, "available_agreements": agreement_options, "available_table_ids": table_options, "agreement_id": agreement_id, "agreement_version": agreement_version, "table_id": table_id, "approved_usages": approved_usages, "review": None, "warnings": [], "saved_contract_id": None, "saved_contract_version": None, "_controls": {}}
+    state: dict[str, Any] = {"environment_name": env, "available_agreements": agreement_options, "available_table_ids": table_options, "agreement_id": agreement_id, "agreement_version": agreement_version, "table_id": table_id, "approved_usages": approved_usages, "review": None, "warnings": [], "saved_contract_id": None, "saved_contract_version": None, "frozen_contract_id": None, "frozen_contract_version": None, "_controls": {}}
 
     def refresh() -> dict[str, Any] | None:
         matches = [r for r in agreement_options if str(r.get("agreement_id") or "") == str(state.get("agreement_id") or "")]
@@ -278,16 +299,39 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         chosen = _selected_usages(state.get("approved_usages") if state.get("approved_usages") is not None else parent, parent)
         lifecycle_id = _contract_id(str(agreement["agreement_id"]), selected_table)
         versions = [int(r.get("contract_version") or 0) for r in contract_rows if str(r.get("contract_id") or "") == lifecycle_id]
-        payload, warnings = _assemble_payload(contract_id=lifecycle_id, contract_version=max(versions, default=0) + 1, agreement=agreement, table_id=selected_table, usages=chosen, tables=source, environment_name=env)
-        state.update({"approved_usages": chosen, "parent_approved_usages": parent, "contract_id": lifecycle_id, "next_contract_version": payload["contract"]["contract_version"], "review": payload, "warnings": warnings})
-        return payload
+        open_drafts = [
+            row for row in contract_rows
+            if str(row.get("contract_id") or "") == lifecycle_id
+            and str(row.get("status") or "").lower() == "draft"
+        ]
+        if len(open_drafts) > 1:
+            raise RuntimeError(f"Data Contract integrity error: {lifecycle_id!r} has multiple open draft versions.")
+        version = int(open_drafts[0]["contract_version"]) if open_drafts else max(versions, default=0) + 1
+        review = {
+            "contract": {"contract_id": lifecycle_id, "contract_version": version, "status": "draft"},
+            "agreement": {"agreement_id": agreement["agreement_id"], "agreement_version": agreement["agreement_version"]},
+            "table": {"table_id": selected_table},
+            "approved_usages": chosen,
+        }
+        state.update({"approved_usages": chosen, "parent_approved_usages": parent, "contract_id": lifecycle_id, "next_contract_version": version, "review": review, "warnings": []})
+        return review
 
     def save() -> dict[str, Any]:
-        payload = refresh()
-        if payload is None:
+        review = refresh()
+        if review is None:
             raise ValueError("Select a saved Data Agreement version and one active Catalogue table before saving.")
+        existing = [
+            row for row in contract_rows
+            if str(row.get("contract_id") or "") == state["contract_id"]
+            and int(row.get("contract_version") or 0) == int(state["next_contract_version"])
+        ]
+        if existing:
+            if str(existing[0].get("status") or "").lower() == "draft":
+                state.update(saved_contract_id=existing[0]["contract_id"], saved_contract_version=existing[0]["contract_version"])
+                return existing[0]
+            raise ValueError("The selected Data Contract version is no longer an open draft.")
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": state["agreement_id"], "agreement_version": state["agreement_version"], "table_id": state["table_id"], "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False), "status": "draft", "is_active": False, **audit}
+        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": state["agreement_id"], "agreement_version": state["agreement_version"], "table_id": state["table_id"], "contract_payload_json": None, "status": "draft", "is_active": False, **audit}
         row = coerce_metadata_row_types(CONTRACT_TABLE, row)
         frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CONTRACT_TABLE])
         write_lakehouse_table_core(frame, CONTRACT_TABLE, target=target, schema=schema, mode="append", context=runtime_context)
@@ -296,7 +340,44 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         refresh()
         return row
 
-    state["refresh"], state["save"] = refresh, save
+    def freeze() -> dict[str, Any]:
+        draft = save()
+        if str(draft.get("status") or "").lower() != "draft":
+            raise ValueError("Only an open draft Data Contract version can be frozen.")
+        fresh_tables = {
+            name: _rows(read_lakehouse_table_core(name, target=target, schema=schema, spark_session=spark_session, context=runtime_context))
+            for name in _SOURCE_TABLES
+        }
+        agreements_now = [
+            row for row in fresh_tables["METADATA_DATA_AGREEMENT"]
+            if str(row.get("agreement_id") or "") == str(draft["agreement_id"])
+            and str(row.get("agreement_version") or "") == str(draft["agreement_version"])
+        ]
+        if not agreements_now:
+            raise ValueError("The draft's exact Data Agreement version no longer exists.")
+        payload, warnings = _assemble_payload(
+            contract_id=str(draft["contract_id"]), contract_version=int(draft["contract_version"]),
+            agreement=agreements_now[0], table_id=str(draft["table_id"]),
+            usages=list(state.get("approved_usages") or []), tables=fresh_tables, environment_name=env,
+        )
+        audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+        frozen = coerce_metadata_row_types(CONTRACT_TABLE, _freeze_contract_row(row=draft, payload=payload, audit=audit))
+        try:
+            from delta.tables import DeltaTable
+        except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
+            raise RuntimeError("Delta Lake support is required to freeze a Data Contract.") from exc
+        frame = spark_session.createDataFrame([frozen], schema=metadata_table_schema_registry()[CONTRACT_TABLE])
+        physical_schema = metadata_table_physical_schema(config, CONTRACT_TABLE) if target.strip().lower() == "metadata" else schema or configured_lakehouse_schema(config, env, target)
+        _store, _table, _schema, path = resolve_configured_lakehouse_table(target, CONTRACT_TABLE, physical_schema, context=runtime_context)
+        (DeltaTable.forPath(spark_session, path).alias("target").merge(
+            frame.alias("source"),
+            "target.contract_id = source.contract_id AND target.contract_version = source.contract_version",
+        ).whenMatchedUpdateAll().execute())
+        contract_rows[contract_rows.index(draft)] = frozen
+        state.update(review=payload, warnings=warnings, frozen_contract_id=frozen["contract_id"], frozen_contract_version=frozen["contract_version"])
+        return frozen
+
+    state["refresh"], state["save"], state["freeze"] = refresh, save, freeze
     refresh()
     try:
         widgets = require_ipywidgets()
@@ -320,6 +401,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     usage_box = widgets.SelectMultiple(options=state.get("parent_approved_usages", []), value=tuple(state.get("approved_usages") or []), **widget_common(widgets, "Approved usages"))
     review_html, warning_html, status = widgets.HTML(), widgets.HTML(), status_message(widgets)
     save_button = widgets.Button(description="Save draft Data Contract", button_style="primary")
+    freeze_button = widgets.Button(description="Freeze Data Contract", button_style="success")
     synchronizing = False
 
     def render(*_args: Any) -> None:
@@ -364,8 +446,14 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         except ValueError as exc:
             status.value = html.escape(str(exc))
     save_button.on_click(on_save)
-    page = form_page(widgets, title="Prepare Data Contract", description="Review and freeze one governed table definition.", children=[form_section(widgets, title="1. Agreement and table", children=[agreement_control, table_control]), form_section(widgets, title="2. Approved usage", children=[usage_box]), form_section(widgets, title="3. Governance review", children=[warning_html, review_html]), action_row(widgets, [save_button]), status])
-    state["_controls"] = {"agreement": agreement_control, "table": table_control, "approved_usages": usage_box, "save": save_button, "review": review_html, "warnings": warning_html, "status": status, "page": page}
+    def on_freeze(_button: Any) -> None:
+        try:
+            frozen = freeze(); status.value = f"Frozen {html.escape(frozen['contract_id'])} version {frozen['contract_version']}."
+        except (ValueError, RuntimeError) as exc:
+            status.value = html.escape(str(exc))
+    freeze_button.on_click(on_freeze)
+    page = form_page(widgets, title="Prepare Data Contract", description="Create a draft, author its governance definition, then freeze it for testing and activation.", children=[form_section(widgets, title="1. Agreement and table", children=[agreement_control, table_control]), form_section(widgets, title="2. Approved usage", children=[usage_box]), form_section(widgets, title="3. Draft contract", children=[warning_html, review_html]), action_row(widgets, [save_button, freeze_button]), status])
+    state["_controls"] = {"agreement": agreement_control, "table": table_control, "approved_usages": usage_box, "save": save_button, "freeze": freeze_button, "review": review_html, "warnings": warning_html, "status": status, "page": page}
     from IPython import display as ip
     ip.display(page)
     return state

@@ -101,8 +101,8 @@ def activate_contract_version(
     row = selected[0]
     if str(row.get("table_id") or "") != table_id:
         raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
-    if str(row.get("status") or "").lower() == "rejected":
-        raise ValueError("Rejected Data Contracts cannot be manually activated. Register a corrected version first.")
+    if str(row.get("status") or "").lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError("Only a frozen Data Contract version can be activated.")
     parse_data_contract_payload(row)
     active = [
         candidate for candidate in rows
@@ -1023,7 +1023,8 @@ def _column_id_for_name(state: Mapping[str, Any], column_name: str) -> str:
 
 def _build_guardrail_rule_id(
     *,
-    table_id: str,
+    contract_id: str,
+    contract_version: int,
     column_id: str,
     guardrail_type: str,
     rule_id: str,
@@ -1031,7 +1032,8 @@ def _build_guardrail_rule_id(
 ) -> str:
     """Build a stable identity for one logical normalized Guardrail rule."""
     payload = {
-        "table_id": str(table_id),
+        "contract_id": str(contract_id),
+        "contract_version": int(contract_version),
         "column_id": str(column_id or ""),
         "guardrail_type": str(guardrail_type),
         "rule_id": str(rule_id),
@@ -1065,14 +1067,19 @@ def build_rule_record(
 ) -> dict[str, Any]:
     """Build one Stage 4A Guardrail row without obsolete identity or review fields."""
     table_id = str(state.get("table_id") or "").strip()
+    contract_id = str(state.get("contract_id") or "").strip()
+    contract_version = int(state.get("contract_version") or 0)
     environment_name = str(state.get("environment_name") or "").strip()
     if not table_id:
         raise ValueError("A selected profiled table with a canonical table_id is required.")
     if not environment_name:
         raise ValueError("The selected profiled table must have an environment_name.")
+    if not contract_id or contract_version < 1:
+        raise ValueError("A selected Data Contract version is required for Guardrail authoring.")
     column_id = _column_id_for_name(state, column_name) if column_name else ""
     guardrail_rule_id = _build_guardrail_rule_id(
-        table_id=table_id,
+        contract_id=contract_id,
+        contract_version=contract_version,
         column_id=column_id,
         guardrail_type=guardrail_type,
         rule_id=rule_id,
@@ -1084,7 +1091,8 @@ def build_rule_record(
     return {
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": int(version),
-        "table_id": table_id,
+        "contract_id": contract_id,
+        "contract_version": contract_version,
         "column_id": column_id,
         "environment_name": environment_name,
         "guardrail_type": str(guardrail_type),
@@ -1226,6 +1234,9 @@ def load_guardrail_authoring_targets(
     rules = read_metadata_table_or_empty(
         config, env, GUARDRAIL_TABLE, spark_session=spark_session
     )
+    contracts = read_metadata_table_or_empty(
+        config, env, DATA_CONTRACT_TABLE, spark_session=spark_session
+    )
     if not catalogue or not profiles:
         raise ValueError("No profiled Catalogue table is available for Guardrail authoring.")
 
@@ -1243,11 +1254,19 @@ def load_guardrail_authoring_targets(
         and str(row.get("table_id") or "").strip()
     }
     selectable_ids = sorted(set(table_rows) & profile_table_ids)
+    latest_contracts: dict[str, dict[str, Any]] = {}
+    for row in contracts:
+        if str(row.get("status") or "").lower() != "draft":
+            continue
+        table_id = str(row.get("table_id") or "")
+        if table_id not in selectable_ids:
+            continue
+        current = latest_contracts.get(table_id)
+        if current is None or int(row.get("contract_version") or 0) > int(current.get("contract_version") or 0):
+            latest_contracts[table_id] = dict(row)
+    selectable_ids = [table_id for table_id in selectable_ids if table_id in latest_contracts]
     if not selectable_ids:
-        raise ValueError(
-            "METADATA_DATA_PROFILED has no table that resolves to METADATA_DATA_CATALOGUE."
-        )
-
+        raise ValueError("No profiled Catalogue table has a Data Contract version available for Guardrail authoring.")
     def label(table_id: str) -> str:
         row = table_rows[table_id]
         location = " / ".join(
@@ -1337,13 +1356,16 @@ def load_guardrail_authoring_targets(
             dict(row)
             for row in rules
             if str(row.get("environment_name") or env) == env
-            and str(row.get("table_id") or "") == table_id
+            and str(row.get("contract_id") or "") == str(latest_contracts[table_id].get("contract_id") or "")
+            and int(row.get("contract_version") or 0) == int(latest_contracts[table_id].get("contract_version") or 0)
         ]
         state.clear()
         state.update(
             {
                 "environment_name": env,
                 "table_id": table_id,
+                "contract_id": str(latest_contracts[table_id]["contract_id"]),
+                "contract_version": int(latest_contracts[table_id]["contract_version"]),
                 "table_name": str(table.get("table_name") or ""),
                 "store_type": str(table.get("store_type") or ""),
                 "layer": str(table.get("layer") or ""),

@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.
+Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 **Default physical schema:** `governance`
 
-**Grain:** One immutable Data Contract version for one governed table under one exact Data Agreement version.
+**Grain:** One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.
 
 **Primary key:** `contract_id` + `contract_version`
 

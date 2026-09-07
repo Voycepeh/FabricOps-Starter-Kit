@@ -138,7 +138,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert not hasattr(governance, "GUARDRAIL_BASELINE_EVENT_TYPES")
     assert ["schema", "freshness", "profile_behavior", "dq"] == ["schema", "freshness", "profile_behavior", "dq"]
     assert not hasattr(governance_authoring, "GUARDRAIL_REVIEW_STATUSES")
-    assert {"guardrail_rule_id", "table_id", "column_id", "guardrail_type", "rule_parameters_json", "is_active"}.issubset(
+    assert {"guardrail_rule_id", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_parameters_json", "is_active"}.issubset(
         set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
     )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())

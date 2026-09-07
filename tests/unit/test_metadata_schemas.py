@@ -64,7 +64,7 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
         ("agreement_id", "StringType", False), ("agreement_version", "StringType", False),
-        ("table_id", "StringType", False), ("contract_payload_json", "StringType", False),
+        ("table_id", "StringType", False), ("contract_payload_json", "StringType", True),
         ("status", "StringType", False), ("is_active", "BooleanType", False),
     ]
 
@@ -202,12 +202,13 @@ def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision
     assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
 
 
-def test_stage3_enrichment_schema_uses_asset_ids_and_environment():
-    """Enrichment stores one table/column value against the Stage 2 asset IDs."""
+def test_stage3_enrichment_schema_uses_contract_version_and_environment():
+    """Enrichment belongs to an exact governed contract version."""
     fields = metadata_table_schema_registry()["METADATA_ENRICHMENT"].fieldNames()
     assert fields == [
         "enrichment_id",
-        "table_id",
+        "contract_id",
+        "contract_version",
         "column_id",
         "environment_name",
         "enrichment_level",
@@ -215,6 +216,7 @@ def test_stage3_enrichment_schema_uses_asset_ids_and_environment():
         "value",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
+    assert "table_id" not in fields
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key", "enrichment_name"}.isdisjoint(fields)
 
 

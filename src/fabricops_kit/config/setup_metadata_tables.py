@@ -244,11 +244,11 @@ def setup_metadata_tables(
       ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
       ``start_date``, ``expiry_date``, ``business_purpose``,
       ``custom_fields_json``, and the standard audit fields.
-    - ``METADATA_DATA_CONTRACT`` stores one immutable, versioned governed-table
-      definition through ``contract_id``, ``contract_version``, the exact
-      ``agreement_id`` and ``agreement_version``, ``table_id``,
-      ``contract_payload_json``, lifecycle status, activation state, and the
-      standard audit fields.
+    - ``METADATA_DATA_CONTRACT`` first stores a payload-free draft identity
+      through ``contract_id``, ``contract_version``, the exact ``agreement_id``
+      and ``agreement_version``, and ``table_id``. Freezing the draft assembles
+      ``contract_payload_json``; lifecycle status, activation state, and the
+      standard audit fields complete the row.
     - ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
       ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,
       physical table context, ``column_name``, ``data_type``, profiling dates,

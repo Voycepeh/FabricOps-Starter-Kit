@@ -43,6 +43,8 @@ def _state(existing=()):
     return {
         "environment_name": "dev",
         "table_id": "table-orders",
+        "contract_id": "contract-orders",
+        "contract_version": 2,
         "table_name": "orders",
         "columns": [row["column_name"] for row in rows],
         "column_ids": {row["column_name"]: row["column_id"] for row in rows},
@@ -124,7 +126,8 @@ def test_independent_rules_create_one_canonical_row_per_selected_column():
     assert [row["column_id"] for row in records] == ["col-student", "col-semester"]
     assert len({row["guardrail_rule_id"] for row in records}) == 2
     assert [json.loads(row["rule_parameters_json"])["columns"] for row in records] == [["student_id"], ["semester"]]
-    assert all(row["table_id"] == "table-orders" for row in records)
+    assert all(row["contract_id"] == "contract-orders" and row["contract_version"] == 2 for row in records)
+    assert all("table_id" not in row for row in records)
     assert all(row["rule_id"] == "unique_values" for row in records)
 
 

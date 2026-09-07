@@ -2,7 +2,7 @@
 
 FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
 
-`table_id` is the shared identity that links metadata to the governed data asset.
+`table_id` identifies the governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
 
 The cards below show the current implemented metadata tables and relationships.
 
@@ -101,10 +101,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.</span>
+  <span class="metadata-table-card__purpose">Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One immutable Data Contract version for one governed table under one exact Data Agreement version.</span>
+    <span>One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -122,6 +122,18 @@ The cards below show the current implemented metadata tables and relationships.
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_ENRICHMENT</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_GUARDRAIL</code>
       </span>
     </span>
   </span>
@@ -314,7 +326,7 @@ The cards below show the current implemented metadata tables and relationships.
   <span class="metadata-table-card__purpose">Add business and governance context to the data.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One appended enrichment value for one table or column identity in one environment.</span>
+    <span>One appended enrichment value for one exact Data Contract version and optional column identity.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -322,6 +334,12 @@ The cards below show the current implemented metadata tables and relationships.
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CONTRACT</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
@@ -368,7 +386,7 @@ The cards below show the current implemented metadata tables and relationships.
   <span class="metadata-table-card__purpose">Define the expectations the data used in the ETL pipeline should meet.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One configured Guardrail rule for one Catalogue table or column in one environment.</span>
+    <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -376,6 +394,12 @@ The cards below show the current implemented metadata tables and relationships.
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CONTRACT</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">

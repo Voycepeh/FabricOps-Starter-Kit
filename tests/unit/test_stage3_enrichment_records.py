@@ -28,7 +28,8 @@ def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
         [
             {
                 "enrichment_level": "column",
-                "table_id": "table-id",
+                "contract_id": "contract-id",
+                "contract_version": 2,
                 "column_id": "column-id",
                 "environment_name": "dev",
                 "enrichment_type": "Description",
@@ -40,7 +41,9 @@ def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
     )
     assert len(rows) == 1
     row = rows[0]
-    assert row["table_id"] == "table-id"
+    assert row["contract_id"] == "contract-id"
+    assert row["contract_version"] == 2
+    assert "table_id" not in row
     assert row["column_id"] == "column-id"
     assert row["environment_name"] == "dev"
     assert "metadata_key" not in row
@@ -53,7 +56,8 @@ def test_table_enrichment_clears_column_id(monkeypatch):
         [
             {
                 "enrichment_level": "table",
-                "table_id": "table-id",
+                "contract_id": "contract-id",
+                "contract_version": 2,
                 "column_id": "should-not-persist",
                 "enrichment_type": "Description",
                 "value": "Student table",
@@ -73,7 +77,8 @@ def test_column_enrichment_requires_column_id(monkeypatch):
             [
                 {
                     "enrichment_level": "column",
-                    "table_id": "table-id",
+                    "contract_id": "contract-id",
+                    "contract_version": 2,
                     "enrichment_type": "Description",
                     "value": "Student identifier",
                 }

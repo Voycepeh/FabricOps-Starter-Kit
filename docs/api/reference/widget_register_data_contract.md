@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Assemble and save a versioned Data Contract for one governed table.
+Create a draft Data Contract version and freeze its governed definition.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:176`
+`fabricops_kit/widgets/widget_register_data_contract.py:196`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L176-L371">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L196-L459">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,6 +63,7 @@ def widget_register_data_contract(
 ...     spark_session=spark,
 ... )
 >>> state["save"]()
+>>> state["freeze"]()
 
 </div>
 
@@ -81,11 +82,11 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable contract review state with structured governance context, completeness warnings, and an explicit save action.
+Mutable contract state with explicit save-draft and freeze actions, structured frozen review, and completeness warnings.
 
 ### Return interpretation
 
-review exposes the assembled governance context without HTML parsing; save appends exactly one draft contract version and does not mutate history.
+save creates or reopens one payload-free draft; freeze assembles its exact-version governance rows and exposes the immutable payload in review.
 
 ## Raises / Errors
 
@@ -101,15 +102,15 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 <div class="reference-docstring-notes" markdown="1">
 
-Rendering does not write metadata. Each explicit save appends exactly one
-``draft`` row with ``is_active=False`` and the next version of a stable
-contract identity derived from the Agreement lifecycle and ``table_id``.
-The canonical payload freezes Agreement and steward context, current active
-Catalogue structure and processing, current enrichment, active Guardrail expectations,
-and the selected approved-usage subset. Runtime Guardrail result tables are
-neither read nor embedded. Historical contract versions are never updated.
-This workflow does not submit, approve, promote, export, or enforce a
-contract and requires a configured Microsoft Fabric metadata Lakehouse.
+Rendering does not write metadata. ``save`` creates or reopens exactly one
+payload-free ``draft`` row containing the deterministic contract identity,
+version, Agreement identity, and ``table_id``. Enrichment and Guardrail
+authoring can then target that exact draft version. ``freeze`` reads those
+exact-version definitions, assembles the canonical immutable payload, and
+changes the version status to ``frozen``. Runtime Guardrail result tables
+are neither read nor embedded. Historical frozen versions are never
+modified. This workflow requires a configured Microsoft Fabric metadata
+Lakehouse.
 
 </div>
 

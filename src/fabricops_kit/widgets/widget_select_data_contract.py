@@ -22,7 +22,11 @@ def _row_dict(row: Any) -> dict[str, Any]:
 def _contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[str, Any]]:
     """Return newest-first selectable contract rows for one canonical table."""
     return sorted(
-        (dict(row) for row in rows if str(row.get("table_id") or "") == table_id),
+        (
+            dict(row) for row in rows
+            if str(row.get("table_id") or "") == table_id
+            and str(row.get("status") or "").lower() in {"frozen", "active", "superseded"}
+        ),
         key=lambda row: int(row.get("contract_version") or 0),
         reverse=True,
     )
@@ -102,7 +106,8 @@ def widget_select_data_contract(
     Raises
     ------
     ValueError
-        If ``table_id`` is empty, a version belongs to another table, or a rejected contract is selected.
+        If ``table_id`` is empty, a version belongs to another table, or a
+        non-frozen contract is selected.
 
     Notes
     -----

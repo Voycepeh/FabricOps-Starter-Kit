@@ -14,7 +14,7 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 
 `fabricops_kit/widgets/widget_author_guardrails.py:131`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L131-L215">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L131-L216">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,9 +83,10 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 <div class="reference-docstring-notes" markdown="1">
 
-The widget resolves ``table_id`` and ``column_id`` through the normalized
-Catalogue and Profile metadata and writes only the Stage 4A
-``METADATA_GUARDRAIL`` contract.
+The widget resolves a Data Contract version for the selected profiled
+Catalogue table and writes ``METADATA_GUARDRAIL`` rows owned by its
+``contract_id`` and ``contract_version``. Runtime code resolves the
+underlying ``table_id`` through ``METADATA_DATA_CONTRACT``.
 
 </div>
 
