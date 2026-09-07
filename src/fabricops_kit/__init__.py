@@ -5,7 +5,7 @@ import tomllib
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
-from .access import scan_warehouse_access
+from .access import scan_workspace_access
 from .config import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
@@ -41,7 +41,7 @@ from .pipeline import (
 )
 
 ACCESS_EXPORTS = (
-    "scan_warehouse_access",
+    "scan_workspace_access",
 )
 
 CONFIG_EXPORTS = (
