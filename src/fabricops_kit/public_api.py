@@ -27,6 +27,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_changes",
     "fabricops_kit.pipeline.check_dq.check_dq",
+    "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
     "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",

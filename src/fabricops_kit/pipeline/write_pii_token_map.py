@@ -12,9 +12,8 @@ from fabricops_kit.io.shared import (
     write_delta_path,
 )
 from fabricops_kit.pipeline.shared import (
-    add_target_audit_fields,
+    build_token_map_frame,
     resolve_catalogue_table_identity,
-    resolve_target_audit_fields,
 )
 
 
@@ -22,70 +21,6 @@ def _token_map_table_name(table_id: str, table_name: str) -> str:
     """Return one deterministic, readable token-map table name per governed table."""
     digest = hashlib.sha256(str(table_id).encode("utf-8")).hexdigest()[:8]
     return f"{table_name}__{digest}__pii_token_map"
-
-
-def _build_token_map_frame(
-    df,
-    *,
-    table_id: str,
-    column_id: str,
-    original_column: str,
-    token_column: str,
-    context: dict[str, Any],
-):
-    """Return one validated, deduplicated token-map frame for persistence."""
-    available = list(getattr(df, "columns", []) or [])
-    missing = [name for name in (original_column, token_column) if name not in available]
-    if missing:
-        raise ValueError(f"PII token-map column(s) do not exist in df: {', '.join(missing)}.")
-    if original_column == token_column:
-        raise ValueError("original_column and token_column must be different columns.")
-
-    from pyspark.sql import functions as F
-
-    original_field = next(field for field in df.schema.fields if field.name == original_column)
-    original_data_type = original_field.dataType.simpleString()
-    pairs = (
-        df.select(
-            F.col(original_column).cast("string").alias("original_value"),
-            F.col(token_column).cast("string").alias("token_value"),
-        )
-        .dropDuplicates(["original_value", "token_value"])
-    )
-    if pairs.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
-        raise ValueError("PII token-map original and token values must be non-null.")
-    original_conflict = (
-        pairs.groupBy("original_value")
-        .agg(F.countDistinct("token_value").alias("token_count"))
-        .where(F.col("token_count") > 1)
-        .limit(1)
-        .count()
-    )
-    if original_conflict:
-        raise ValueError("One original value cannot map to multiple token values in the same token-map write.")
-    token_conflict = (
-        pairs.groupBy("token_value")
-        .agg(F.countDistinct("original_value").alias("original_count"))
-        .where(F.col("original_count") > 1)
-        .limit(1)
-        .count()
-    )
-    if token_conflict:
-        raise ValueError("One token value cannot map to multiple original values in the same token-map write.")
-
-    mapping = (
-        pairs.withColumn("table_id", F.lit(table_id))
-        .withColumn("column_id", F.lit(column_id))
-        .withColumn("original_data_type", F.lit(original_data_type))
-        .select(
-            "table_id",
-            "column_id",
-            "original_value",
-            "token_value",
-            "original_data_type",
-        )
-    )
-    return add_target_audit_fields(mapping, resolve_target_audit_fields(context))
 
 
 def _upsert_token_map(mapping_df, path: str) -> str:
@@ -280,7 +215,7 @@ def write_pii_token_map(
         schema,
         context=context,
     )
-    mapping_df = _build_token_map_frame(
+    mapping_df = build_token_map_frame(
         df,
         table_id=identity["table_id"],
         column_id=column_id,

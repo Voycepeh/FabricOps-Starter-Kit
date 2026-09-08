@@ -182,3 +182,49 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
     assert row["action"] == action
     assert row["contract_id"] == "contract"
     assert row["contract_version"] == 2
+
+
+@pytest.mark.parametrize("treatment", ["tokenize", "remove"])
+@pytest.mark.parametrize("action", ["Warn", "Block"])
+def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
+    monkeypatch, treatment, action
+):
+    """Sensitive Data uses the normalized exact-version authoring contract."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    row = service.canonical_guardrail_rule_record(
+        {
+            "guardrail_rule_id": "sensitive-email",
+            "contract_id": "contract",
+            "contract_version": 2,
+            "column_id": "email-id",
+            "environment_name": "dev",
+            "guardrail_type": "sensitive_data",
+            "rule_id": "sensitive_data",
+            "rule_type": treatment,
+            "rule_parameters_json": f'{{"scope":"column","treatment":"{treatment}"}}',
+            "action": action,
+        },
+        config=None,
+        env="dev",
+    )
+    assert (row["contract_id"], row["contract_version"]) == ("contract", 2)
+    assert row["column_id"] == "email-id"
+    assert row["action"] == action
+
+
+@pytest.mark.parametrize("parameters", [
+    '{"scope":"table","treatment":"tokenize"}',
+    '{"scope":"column","treatment":"mask"}',
+])
+def test_sensitive_data_guardrail_rejects_invalid_scope_or_treatment(monkeypatch, parameters):
+    """Only explicit column-scoped tokenize/remove treatment is accepted."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    with pytest.raises(ValueError, match="Sensitive Data"):
+        service.canonical_guardrail_rule_record(
+            {
+                "guardrail_rule_id": "sensitive-email", "contract_id": "contract",
+                "contract_version": 2, "column_id": "email-id", "environment_name": "dev",
+                "guardrail_type": "sensitive_data", "rule_id": "sensitive_data",
+                "rule_type": "tokenize", "rule_parameters_json": parameters, "action": "Block",
+            }, config=None, env="dev",
+        )

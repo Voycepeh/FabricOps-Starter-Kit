@@ -20,7 +20,7 @@ from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_t
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
-GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality"})
+GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification"}),
@@ -68,7 +68,9 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     )
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
-        raise ValueError("guardrail_type must be Schema, Freshness, Changes, or Data Quality.")
+        raise ValueError(
+            "guardrail_type must be Schema, Freshness, Changes, Data Quality, or Sensitive Data."
+        )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
         parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
@@ -76,12 +78,20 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         raise ValueError("rule_parameters_json must contain a JSON object.") from exc
     if not isinstance(parameters, dict):
         raise ValueError("rule_parameters_json must contain a JSON object.")
+    column_id = str(record.get("column_id") or "").strip()
+    if guardrail_type == "sensitive_data":
+        if parameters.get("scope") != "column" or not column_id:
+            raise ValueError(
+                "Sensitive Data Guardrails require scope='column' and a canonical column_id."
+            )
+        if parameters.get("treatment") not in {"tokenize", "remove"}:
+            raise ValueError("Sensitive Data treatment must be tokenize or remove.")
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or "").strip(),
         "guardrail_version": int(record.get("guardrail_version") or 1),
         "contract_id": contract_id,
         "contract_version": contract_version,
-        "column_id": str(record.get("column_id") or ""),
+        "column_id": column_id,
         "environment_name": str(record.get("environment_name") or env),
         "guardrail_type": guardrail_type,
         "rule_id": str(record.get("rule_id") or "").strip(),

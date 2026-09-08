@@ -43,13 +43,14 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
     persisted automatically.
 
     Classification answers, “How sensitive is this information according to the
-    organisation's information-classification policy?” A future dedicated PII
-    Guardrail answers whether a field contains personal data and which runtime
-    treatment is required. PII detection and enforcement are not Enrichment.
+    organisation's information-classification policy?” A Sensitive Data
+    Guardrail separately identifies one canonical Catalogue column and requires
+    `tokenize` or `remove` treatment. Classification alone never changes a
+    DataFrame or creates a Guardrail.
 
 ???+ success "Live — Author Guardrails"
 
-    Author schema, freshness, profile-behaviour, and Data Quality Guardrails for the ETL workflow, then save the Governance records.
+    Author schema, freshness, profile-behaviour, Data Quality, and Sensitive Data Guardrails for the ETL workflow, then save the Governance records. Sensitive Data authoring selects one active Catalogue column, its canonical `column_id`, a Tokenize or Remove treatment, and a Warn or Block action against the exact contract version.
 
     | Metadata table | Governance responsibility |
     | --- | --- |
@@ -85,7 +86,7 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
 ??? info "Details — Table Guardrails versus DQ rules"
 
-    Schema, Freshness, and Changes Guardrails operate at the table boundary and can often be evaluated before reading all business rows. DQ rules evaluate the actual DataFrame and may also record row-level failures.
+    Schema, Freshness, and Changes Guardrails operate at the table boundary and can often be evaluated before reading all business rows. DQ rules evaluate the actual DataFrame and return detailed failures to caller code. Sensitive Data Guardrails transform or remove an explicitly governed column during preparation before the target write.
 
 ## Expected result
 

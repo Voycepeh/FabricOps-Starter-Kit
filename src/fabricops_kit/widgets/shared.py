@@ -1088,6 +1088,30 @@ def dq_records_from_selection(
         )
     ]
 
+def sensitive_data_record_from_selection(
+    state: Mapping[str, Any],
+    *,
+    column_name: str,
+    treatment: str,
+    action: str = "Block",
+    guardrail_version: int | None = None,
+) -> dict[str, Any]:
+    """Build one canonical column-scoped Sensitive Data Guardrail row."""
+    normalized_treatment = str(treatment or "").strip().lower()
+    if normalized_treatment not in {"tokenize", "remove"}:
+        raise ValueError("Sensitive Data treatment must be tokenize or remove.")
+    return build_rule_record(
+        state,
+        guardrail_type="sensitive_data",
+        rule_id="sensitive_data",
+        rule_type=normalized_treatment,
+        parameters={"scope": "column", "treatment": normalized_treatment},
+        action=action,
+        column_name=column_name,
+        guardrail_version=guardrail_version,
+    )
+
+
 def canonicalize_records(
     records: list[dict[str, Any]],
     *,

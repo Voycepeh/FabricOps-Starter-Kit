@@ -7,6 +7,7 @@ from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_changes import check_changes
 from fabricops_kit.pipeline.check_dq import check_dq
+from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.read_pipeline_prep import read_pipeline_prep
 from fabricops_kit.pipeline.write_pipeline_prep import write_pipeline_prep
 from fabricops_kit.pipeline.write_pii_token_map import write_pii_token_map
@@ -17,6 +18,7 @@ __all__ = [
     "check_freshness",
     "check_changes",
     "check_dq",
+    "check_sensitive_data",
     "read_pipeline_prep",
     "write_pipeline_prep",
     "write_pii_token_map",

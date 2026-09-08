@@ -45,9 +45,19 @@
     "aliases": ["guardrail"],
     "category": "FabricOps concepts",
     "short_definition": "Governed rules that FabricOps evaluates against data and pipeline behaviour.",
-    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, and Data Quality use this same model while retaining their explicit runtime checks.",
+    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
+  },
+  {
+    "id": "sensitive-data",
+    "term": "sensitive data",
+    "aliases": ["Sensitive Data Guardrail"],
+    "category": "Governance concepts",
+    "short_definition": "Information whose governed column requires an explicitly authored runtime treatment.",
+    "long_definition": "In FabricOps, Sensitive Data is a Guardrail subtype owned by one exact Data Contract version. V1 explicitly tokenizes or removes one canonical Catalogue column before a governed write. Information Classification in Enrichment remains descriptive and never triggers treatment by itself.",
+    "preferred_usage": "Use Sensitive Data Guardrail for explicit column treatment; use Classification for descriptive sensitivity labels.",
+    "avoid_usage": "anonymize, mask, or redact when the implemented treatment is tokenize or remove"
   },
   {
     "id": "enforcement",

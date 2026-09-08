@@ -121,6 +121,23 @@ def _records(**overrides):
     return _guardrail_records_from_selection(_state(), **values)
 
 
+@pytest.mark.parametrize("treatment", ["tokenize", "remove"])
+def test_sensitive_data_selection_uses_canonical_column_identity(treatment):
+    """The existing Guardrail service authors explicit column-scoped treatment."""
+    records = _records(
+        sensitive_column="extra", sensitive_treatment=treatment,
+        sensitive_action="Warn",
+    )
+    rule = next(row for row in records if row["guardrail_type"] == "sensitive_data")
+    assert rule["column_id"] == "col-extra"
+    assert rule["contract_id"] == "contract-orders"
+    assert rule["contract_version"] == 2
+    assert json.loads(rule["rule_parameters_json"]) == {
+        "scope": "column", "treatment": treatment,
+    }
+    assert rule["action"] == "Warn"
+
+
 def test_public_surface_keeps_two_standalone_authoring_widgets():
     """Verify that the public surface keeps only the two standalone widgets."""
     assert fabricops_kit.widget_author_guardrails is widget_author_guardrails
