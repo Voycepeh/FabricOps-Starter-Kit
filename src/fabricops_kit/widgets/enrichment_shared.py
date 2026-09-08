@@ -8,6 +8,10 @@ import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.data_contract.shared import (
+    normalize_guardrail_action,
+    validate_sensitive_data_parameters,
+)
 from fabricops_kit.io.shared import read_lakehouse_table_core
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -83,6 +87,88 @@ def suggest_enrichment(
     if classification is None:
         raise ValueError("AI Classification suggestion was not one of the configured labels.")
     return {"Description": description, "Classification": classification}
+
+
+def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
+    """Build compact metadata-only evidence for Sensitive Data suggestions."""
+    fields = (
+        "row_count", "non_null_count", "null_count", "null_percent",
+        "distinct_count", "distinct_percent", "min_value", "max_value",
+    )
+    columns = []
+    for row in state.get("catalogue_profile_rows", []):
+        columns.append({
+            "column_id": str(row.get("column_id") or ""),
+            "column_name": str(row.get("column_name") or ""),
+            "data_type": str(row.get("data_type") or ""),
+            "description": str(row.get("description") or ""),
+            "classification": str(row.get("classification") or ""),
+            "profile_evidence": {
+                name: row.get(name) for name in fields if row.get(name) is not None
+            },
+        })
+    return {
+        "table_id": str(state.get("table_id") or ""),
+        "contract_id": str(state.get("contract_id") or ""),
+        "contract_version": int(state.get("contract_version") or 0),
+        "columns": columns,
+    }
+
+
+def suggest_sensitive_data(
+    context: dict[str, Any], *, prompt: str, invoke: Any = None
+) -> list[dict[str, Any]]:
+    """Return validated transient Sensitive Data rule suggestions."""
+    if not str(prompt).strip():
+        raise ValueError("An AI Sensitive Data prompt is required.")
+    allowed_columns = {
+        str(row.get("column_name") or ""): str(row.get("column_id") or "")
+        for row in context.get("columns", [])
+        if str(row.get("column_name") or "") and str(row.get("column_id") or "")
+    }
+    instruction = (
+        f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
+        "Return JSON only as a list of objects with column, treatment, action, and parameters. "
+        "Allowed treatments: tokenize, mask, bucket, remove. Allowed actions: Warn, Block. "
+        "Classification is only an input signal, not an automatic rule. Do not include raw values.\n\n"
+        f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
+    )
+    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        candidates = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI Sensitive Data suggestion was not valid JSON.") from exc
+    if not isinstance(candidates, list):
+        raise ValueError("AI Sensitive Data suggestion must be a JSON list.")
+    suggestions = []
+    seen = set()
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        column_name = str(candidate.get("column") or "").strip()
+        if column_name not in allowed_columns or column_name in seen:
+            continue
+        try:
+            parameters = validate_sensitive_data_parameters({
+                "scope": "column",
+                "treatment": candidate.get("treatment"),
+                **dict(candidate.get("parameters") or {}),
+            })
+            action = normalize_guardrail_action(candidate.get("action"))
+        except (TypeError, ValueError):
+            continue
+        suggestions.append({
+            "column_name": column_name,
+            "column_id": allowed_columns[column_name],
+            "treatment": parameters.pop("treatment"),
+            "action": action,
+            "parameters": {key: value for key, value in parameters.items() if key != "scope"},
+            "is_active": True,
+        })
+        seen.add(column_name)
+    return suggestions
 
 
 def _rows(value: Any) -> list[dict[str, Any]]:
@@ -255,4 +341,6 @@ __all__ = [
     "build_ai_enrichment_context",
     "latest_enrichment_values",
     "suggest_enrichment",
+    "build_ai_sensitive_data_context",
+    "suggest_sensitive_data",
 ]

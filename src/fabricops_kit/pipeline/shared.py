@@ -656,7 +656,11 @@ def write_guardrail_result_row(
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     audit = build_runtime_audit_fields(config=config, env=env)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
-    payload = {key: value for key, value in result.items() if key != "dataframe"}
+    payload = {
+        key: value
+        for key, value in result.items()
+        if key not in {"dataframe", "support_mapping"}
+    }
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
@@ -694,6 +698,44 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approve
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
+
+
+def build_token_map_frame(
+    df,
+    *,
+    table_id: str,
+    column_id: str,
+    original_column: str,
+    token_column: str,
+    context: dict[str, Any],
+):
+    """Return one validated, deduplicated token-map frame for caller-owned use."""
+    available = list(getattr(df, "columns", []) or [])
+    missing = [name for name in (original_column, token_column) if name not in available]
+    if missing:
+        raise ValueError(f"PII token-map column(s) do not exist in df: {', '.join(missing)}.")
+    if original_column == token_column:
+        raise ValueError("original_column and token_column must be different columns.")
+
+    from pyspark.sql import functions as F
+
+    original_field = next(field for field in df.schema.fields if field.name == original_column)
+    pairs = df.select(
+        F.col(original_column).cast("string").alias("original_value"),
+        F.col(token_column).cast("string").alias("token_value"),
+    ).dropDuplicates(["original_value", "token_value"])
+    if pairs.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
+        raise ValueError("PII token-map original and token values must be non-null.")
+    if pairs.groupBy("original_value").agg(F.countDistinct("token_value").alias("n")).where(F.col("n") > 1).limit(1).count():
+        raise ValueError("One original value cannot map to multiple token values in the same token-map write.")
+    if pairs.groupBy("token_value").agg(F.countDistinct("original_value").alias("n")).where(F.col("n") > 1).limit(1).count():
+        raise ValueError("One token value cannot map to multiple original values in the same token-map write.")
+    mapping = pairs.withColumn("table_id", F.lit(table_id)).withColumn(
+        "column_id", F.lit(column_id)
+    ).withColumn("original_data_type", F.lit(original_field.dataType.simpleString())).select(
+        "table_id", "column_id", "original_value", "token_value", "original_data_type"
+    )
+    return add_target_audit_fields(mapping, resolve_target_audit_fields(context))
 
 GUARDRAIL_CHANGE_BEHAVIOURS = ("No changes expected", "Incremental append", "Snapshot overwrite")
 
@@ -1357,6 +1399,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
     if not isinstance(columns, list):
         raise ValueError("Active Data Contract table.columns must be a list.")
     expected_schema: dict[str, str] = {}
+    column_names_by_id: dict[str, str] = {}
     for index, column in enumerate(columns):
         if not isinstance(column, dict):
             raise ValueError(f"Active Data Contract table.columns[{index}] must be an object.")
@@ -1370,6 +1413,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
         if column_name in expected_schema:
             raise ValueError(f"Active Data Contract table.columns contains duplicate column_name {column_name!r}.")
         expected_schema[column_name] = data_type
+        column_names_by_id[column_id] = column_name
     rules = payload.get("guardrails")
     if not isinstance(rules, list):
         raise ValueError("Active Data Contract guardrails must be a list.")
@@ -1392,6 +1436,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
         adapted.append({
             **{name: value for name, value in raw.items() if name != "rule_parameters"},
             "table_id": table_id,
+            "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
             "environment_name": environment_name,
             "rule_parameters_json": json.dumps(params, sort_keys=True),
             "is_active": True,

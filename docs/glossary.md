@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Governed rules that FabricOps evaluates against data and pipeline behaviour.</summary>
-<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, and Data Quality use this same model while retaining their explicit runtime checks.</p>
+<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -156,6 +156,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>Data Sensitivity</strong> — How carefully data should be handled based on its confidentiality, privacy, business risk, or regulatory impact.</summary>
 <p>Data Sensitivity describes the level of care and protection data requires based on confidentiality, privacy, business risk, or regulatory requirements. It can influence access, masking, sharing, retention, and other governance controls.</p>
 <p><strong>Also known as:</strong> sensitivity</p>
+</details>
+
+<details id="sensitive-data">
+<summary><strong>sensitive data</strong> — Information whose governed column requires an explicitly authored runtime treatment.</summary>
+<p>In FabricOps, Sensitive Data is a Guardrail subtype owned by one exact Data Contract version. It explicitly tokenizes, masks, buckets, or removes one canonical Catalogue column before a governed write. Tokenize replaces values with opaque surrogates and may return a reversible project-owned mapping; Mask preserves approved portions and obscures the rest; Bucket replaces an exact numeric value with a coarse row-preserving category rather than aggregating rows; Remove drops the column. Information Classification in Enrichment remains descriptive and never triggers treatment by itself.</p>
+<p><strong>Also known as:</strong> Sensitive Data Guardrail</p>
 </details>
 
 <details id="pii">

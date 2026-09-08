@@ -149,6 +149,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'check_freshness',
             'check_changes',
             'check_dq',
+            'check_sensitive_data',
         'profile_and_register_table',
         'profile_dataframe',
         'profile_frequency_distribution',

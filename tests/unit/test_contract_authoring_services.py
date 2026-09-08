@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from fabricops_kit.data_contract import shared as service
@@ -182,3 +184,60 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
     assert row["action"] == action
     assert row["contract_id"] == "contract"
     assert row["contract_version"] == 2
+
+
+@pytest.mark.parametrize("treatment,extra", [
+    ("tokenize", {}),
+    ("mask", {"preserve_start": 1, "preserve_end": 3, "mask_character": "*"}),
+    ("bucket", {"bins": [0, 3000], "labels": ["<3k", "3k+"]}),
+    ("remove", {}),
+])
+@pytest.mark.parametrize("action", ["Warn", "Block"])
+def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
+    monkeypatch, treatment, extra, action
+):
+    """Sensitive Data uses the normalized exact-version authoring contract."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    row = service.canonical_guardrail_rule_record(
+        {
+            "guardrail_rule_id": "sensitive-email",
+            "contract_id": "contract",
+            "contract_version": 2,
+            "column_id": "email-id",
+            "environment_name": "dev",
+            "guardrail_type": "sensitive_data",
+            "rule_id": "sensitive_data",
+            "rule_type": treatment,
+            "rule_parameters_json": json.dumps({
+                "scope": "column", "treatment": treatment, **extra,
+            }),
+            "action": action,
+        },
+        config=None,
+        env="dev",
+    )
+    assert (row["contract_id"], row["contract_version"]) == ("contract", 2)
+    assert row["column_id"] == "email-id"
+    assert row["action"] == action
+
+
+@pytest.mark.parametrize("parameters", [
+    '{"scope":"table","treatment":"tokenize"}',
+    '{"scope":"column","treatment":"mask"}',
+    '{"scope":"column","treatment":"mask","preserve_start":-1,"preserve_end":0,"mask_character":"*"}',
+    '{"scope":"column","treatment":"bucket","bins":[0,0],"labels":["a","b"]}',
+    '{"scope":"column","treatment":"bucket","bins":[0,1],"labels":["a"]}',
+    '{"scope":"column","treatment":"redact"}',
+])
+def test_sensitive_data_guardrail_rejects_invalid_scope_or_treatment(monkeypatch, parameters):
+    """Malformed or unsupported treatment policies are rejected."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    with pytest.raises(ValueError, match="Sensitive Data"):
+        service.canonical_guardrail_rule_record(
+            {
+                "guardrail_rule_id": "sensitive-email", "contract_id": "contract",
+                "contract_version": 2, "column_id": "email-id", "environment_name": "dev",
+                "guardrail_type": "sensitive_data", "rule_id": "sensitive_data",
+                "rule_type": "tokenize", "rule_parameters_json": parameters, "action": "Block",
+            }, config=None, env="dev",
+        )

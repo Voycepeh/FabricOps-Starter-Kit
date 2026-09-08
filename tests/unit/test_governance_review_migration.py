@@ -57,6 +57,7 @@ EXPECTED_V1_CALLABLES = [
     'check_freshness',
     'check_changes',
     'check_dq',
+    'check_sensitive_data',
     'profile_and_register_table',
     'profile_dataframe',
     'profile_frequency_distribution',

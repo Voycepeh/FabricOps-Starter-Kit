@@ -81,7 +81,23 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
 ??? info "Preview — Validate the target and prepare the governed write"
 
-    Run target Schema and DQ checks on the transformed target DataFrame.
+    Run target Schema and DQ checks on the transformed target DataFrame. Then call
+    `check_sensitive_data()` explicitly and pass its returned `dataframe` to
+    `write_pipeline_prep()`. Call `stop_if_failed()` before the write so a failed
+    Block treatment cannot publish untreated data.
+
+    Tokenize replaces non-null values with opaque tokens that remain consistent within
+    the returned mapping and run, and returns the original/token
+    pairs as a caller-owned support DataFrame. Mask preserves approved leading and
+    trailing characters while obscuring the middle. Bucket replaces an exact numeric
+    value with a coarse category without aggregating or removing rows. Remove drops
+    the column. Only Tokenize returns a support mapping. FabricOps does
+    not persist that support DataFrame or raw values in Guardrail metadata. Projects
+    may persist mappings in an approved restricted store, use `write_pii_token_map()`
+    when suitable, or keep no recovery mapping. Persisted mappings can be supplied to
+    later runs to preserve established assignments; otherwise cross-run stability is
+    not guaranteed. Any approved non-sensitive analytics
+    or ML feature should be engineered before this enforcement step.
 
     Use `write_pipeline_prep()` with the target `table_id` to resolve that target's selected or active Data Contract, add governed audit/lifecycle fields, and prepare the physical writer settings, target state columns, and target Lineage.
 

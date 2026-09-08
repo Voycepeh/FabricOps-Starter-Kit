@@ -18,6 +18,7 @@ from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
     _guardrail_records_from_selection,
     _render_guardrail_authoring,
+    _render_sensitive_data_editor,
 )
 
 
@@ -119,6 +120,160 @@ def _records(**overrides):
     )
     values.update(overrides)
     return _guardrail_records_from_selection(_state(), **values)
+
+
+@pytest.mark.parametrize("treatment,parameters", [
+    ("tokenize", {}),
+    ("mask", {"preserve_start": 1, "preserve_end": 2, "mask_character": "*"}),
+    ("bucket", {"bins": [0, 10], "labels": ["low", "high"]}),
+    ("remove", {}),
+])
+def test_sensitive_data_selection_uses_canonical_column_identity(treatment, parameters):
+    """The existing Guardrail service authors explicit column-scoped treatment."""
+    records = _records(
+        sensitive_rules=[{
+            "column_name": "extra", "treatment": treatment, "action": "Warn",
+            "parameters": parameters,
+        }],
+    )
+    rule = next(row for row in records if row["guardrail_type"] == "sensitive_data")
+    assert rule["column_id"] == "col-extra"
+    assert rule["rule_id"] == "sensitive_data_col-extra"
+    assert rule["contract_id"] == "contract-orders"
+    assert rule["contract_version"] == 2
+    assert json.loads(rule["rule_parameters_json"]) == {
+        "scope": "column", "treatment": treatment, **parameters,
+    }
+    assert rule["action"] == "Warn"
+
+
+def test_multiple_sensitive_columns_have_independent_logical_identities():
+    """Each governed column produces one independently versioned logical rule."""
+    rules = [
+        {"column_name": "id", "treatment": "tokenize", "action": "Block"},
+        {"column_name": "extra", "treatment": "remove", "action": "Warn"},
+    ]
+    sensitive = [
+        row for row in _records(sensitive_rules=rules)
+        if row["guardrail_type"] == "sensitive_data"
+    ]
+    assert [row["column_id"] for row in sensitive] == ["col-id", "col-extra"]
+    assert len({row["rule_id"] for row in sensitive}) == 2
+    assert len({row["guardrail_rule_id"] for row in sensitive}) == 2
+
+
+def test_sensitive_editor_uses_one_control_set_not_one_per_column(monkeypatch):
+    """The compact editor instantiates treatment controls only for the edited rule."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    editor = _render_sensitive_data_editor(_state(), widgets=widgets, ai_config={})
+    assert set(editor["controls"]) == {
+        "column", "treatment", "action", "preserve_start", "preserve_end",
+        "mask_character", "bins", "labels",
+    }
+    assert len(editor["draft_rules"]) == 0
+
+
+def test_sensitive_editor_adds_edits_removes_and_retains_rules(monkeypatch):
+    """Draft rule actions retain independent columns and deactivate saved rules."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    saved = authoring.sensitive_data_record_from_selection(
+        _state(), column_name="id", treatment="tokenize", action="Block"
+    )
+    editor = _render_sensitive_data_editor(
+        _state([saved]), widgets=widgets, ai_config={}
+    )
+    controls = editor["controls"]
+    controls["column"].value = "extra"
+    controls["treatment"].value = "mask"
+    controls["preserve_start"].value = 1
+    controls["preserve_end"].value = 2
+    controls["mask_character"].value = "*"
+    added = editor["add_or_update"]()
+    assert added["treatment"] == "mask"
+    assert len([rule for rule in editor["draft_rules"] if rule["is_active"]]) == 2
+    editor["edit_rule"](added)
+    controls["action"].value = "Warn"
+    editor["add_or_update"]()
+    assert next(rule for rule in editor["draft_rules"] if rule["column_name"] == "extra")["action"] == "Warn"
+    persisted = next(rule for rule in editor["draft_rules"] if rule["column_name"] == "id")
+    editor["remove_rule"](persisted)
+    assert persisted["is_active"] is False
+
+
+def test_sensitive_editor_shows_only_relevant_treatment_fields(monkeypatch):
+    """Mask and Bucket options toggle for the single current editor."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    editor = _render_sensitive_data_editor(_state(), widgets=widgets, ai_config={})
+    editor["controls"]["treatment"].value = "mask"
+    editor["update_options"]()
+    assert editor["mask_options"].layout.display == ""
+    assert editor["bucket_options"].layout.display == "none"
+    editor["controls"]["treatment"].value = "bucket"
+    editor["update_options"]()
+    assert editor["mask_options"].layout.display == "none"
+    assert editor["bucket_options"].layout.display == ""
+
+
+def test_sensitive_ai_suggestions_are_draft_only(monkeypatch):
+    """Validated AI suggestions populate drafts without invoking persistence."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    suggestion = {
+        "column_name": "extra", "column_id": "col-extra", "treatment": "remove",
+        "action": "Block", "parameters": {}, "is_active": True,
+    }
+    prompts = []
+    def fake_suggest(*_args, **kwargs):
+        prompts.append(kwargs["prompt"])
+        return [suggestion]
+    monkeypatch.setattr(
+        guardrail_widget_module.enrichment_ai, "suggest_sensitive_data", fake_suggest,
+    )
+    editor = _render_sensitive_data_editor(
+        _state(), widgets=widgets,
+        ai_config={"enabled": True, "sensitive_data_prompt": "policy"},
+    )
+    assert editor["suggest"]() == [suggestion]
+    assert editor["draft_rules"][0]["column_name"] == "extra"
+    assert "persisted" in editor["draft_rules"][0]
+    assert prompts == ["policy"]
+
+
+def test_blank_sensitive_ai_prompt_disables_only_suggestions(monkeypatch):
+    """A missing dedicated prompt leaves the compact manual editor available."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    editor = _render_sensitive_data_editor(
+        _state(), widgets=widgets,
+        ai_config={"enabled": True, "description_prompt": "describe", "classification_prompt": "classify"},
+    )
+    assert editor["suggest_button"].disabled is True
+    assert editor["suggest"]() == []
+    assert "not configured" in editor["status"].value
+    assert editor["add_or_update"]()["treatment"] == "tokenize"
+
+
+def test_sensitive_ai_unavailable_keeps_manual_editor_usable(monkeypatch):
+    """AI failure is advisory and does not disable manual rule creation."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    monkeypatch.setattr(
+        guardrail_widget_module.enrichment_ai, "suggest_sensitive_data",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("unavailable")),
+    )
+    editor = _render_sensitive_data_editor(
+        _state(), widgets=widgets,
+        ai_config={"enabled": True, "sensitive_data_prompt": "policy"},
+    )
+    assert editor["suggest"]() == []
+    assert "Manual authoring remains available" in editor["status"].value
+    assert editor["add_or_update"]()["treatment"] == "tokenize"
+
+
+def test_classification_context_alone_does_not_create_sensitive_rule(monkeypatch):
+    """Classification remains advisory context until Suggest or Add is explicit."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    state = _state()
+    state["catalogue_profile_rows"][0]["classification"] = "Restricted"
+    editor = _render_sensitive_data_editor(state, widgets=widgets, ai_config={"enabled": False})
+    assert editor["draft_rules"] == []
 
 
 def test_public_surface_keeps_two_standalone_authoring_widgets():
@@ -257,6 +412,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
             authoring.PROFILED_TABLE: profiles,
             authoring.GUARDRAIL_TABLE: rules,
             authoring.DATA_CONTRACT_TABLE: contracts,
+            "METADATA_ENRICHMENT": [],
         }[table_name]
 
     monkeypatch.setattr(authoring, "read_metadata_table_or_empty", fake_read)

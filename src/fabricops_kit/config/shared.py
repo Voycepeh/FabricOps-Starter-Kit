@@ -336,6 +336,12 @@ DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
     "description_prompt": "Write a concise business description using only the supplied metadata context. Return only the proposed description.",
     "classification_prompt": "Choose the best information classification using only the configured labels and supplied metadata context. Return only the label.",
+    "sensitive_data_prompt": (
+        "Use only the supplied metadata and profile context to suggest advisory Sensitive Data rules "
+        "for active canonical columns. Use only tokenize, mask, bucket, or remove and return JSON. "
+        "Treat Classification as an input signal only, never include raw values, keep Bucket parameters "
+        "explicit, and leave final approval to Governance."
+    ),
 }
 
 
@@ -355,7 +361,7 @@ class GovernanceConfig:
         column metadata enrichment widgets.
     ai_enrichment : dict[str, Any]
         Optional AI Enrichment authoring settings. ``enabled`` controls the
-        assistant and the two prompt fields provide project instructions.
+        assistant and the three prompt fields provide project instructions.
     enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
         Widget definitions for organization-specific enrichment fields. Each
         widget uses ``custom_fields`` entries keyed by ``key``.
@@ -380,6 +386,7 @@ class GovernanceConfig:
             "enabled": bool(ai_enrichment.get("enabled", False)),
             "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
             "classification_prompt": str(ai_enrichment.get("classification_prompt") or "").strip(),
+            "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
         })
         object.__setattr__(
             self,

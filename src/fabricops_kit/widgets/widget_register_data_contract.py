@@ -133,7 +133,7 @@ def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dic
     for row in guardrails:
         if row.get("is_active") is not True:
             continue
-        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "severity"))
+        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "action", "severity"))
         rule_parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
         if not isinstance(rule_parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")

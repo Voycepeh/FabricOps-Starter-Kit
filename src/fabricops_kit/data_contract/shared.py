@@ -7,6 +7,7 @@ and keep widget rendering concerns out of governance metadata semantics.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+import math
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -20,8 +21,9 @@ from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_t
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
-GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality"})
+GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
+SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification"}),
     "column": frozenset({"Description", "Classification"}),
@@ -58,6 +60,49 @@ def normalize_guardrail_action(value: Any) -> str:
         raise ValueError("Guardrail action must be Warn or Block.") from exc
 
 
+def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate and normalize one column-scoped Sensitive Data policy."""
+    values = dict(parameters)
+    if values.get("scope") != "column":
+        raise ValueError("Sensitive Data Guardrails require scope='column'.")
+    treatment = str(values.get("treatment") or "").strip().lower()
+    if treatment not in SENSITIVE_DATA_TREATMENTS:
+        raise ValueError("Sensitive Data treatment must be tokenize, mask, bucket, or remove.")
+    normalized: dict[str, Any] = {"scope": "column", "treatment": treatment}
+    if treatment == "mask":
+        for name in ("preserve_start", "preserve_end"):
+            value = values.get(name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"Sensitive Data mask {name} must be an integer >= 0.")
+            normalized[name] = value
+        mask_character = str(values.get("mask_character") or "")
+        if not mask_character:
+            raise ValueError("Sensitive Data mask_character must be non-empty.")
+        normalized["mask_character"] = mask_character
+    elif treatment == "bucket":
+        bins = values.get("bins")
+        labels = values.get("labels")
+        if not isinstance(bins, list) or not bins:
+            raise ValueError("Sensitive Data bucket bins must be a non-empty list.")
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            for value in bins
+        ):
+            raise ValueError("Sensitive Data bucket bins must contain only finite numbers.")
+        numeric_bins = [float(value) for value in bins]
+        if any(left >= right for left, right in zip(numeric_bins, numeric_bins[1:])):
+            raise ValueError("Sensitive Data bucket bins must be strictly increasing.")
+        if not isinstance(labels, list) or len(labels) != len(numeric_bins):
+            raise ValueError("Sensitive Data bucket labels count must match bins count.")
+        normalized_labels = [str(label).strip() for label in labels]
+        if any(not label for label in normalized_labels):
+            raise ValueError("Sensitive Data bucket labels must be non-empty.")
+        normalized.update({"bins": numeric_bins, "labels": normalized_labels})
+    return normalized
+
+
 def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, env: str) -> dict[str, Any]:
     """Build one canonical, exact-contract-version Guardrail authoring row."""
     import json
@@ -68,7 +113,9 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     )
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
-        raise ValueError("guardrail_type must be Schema, Freshness, Changes, or Data Quality.")
+        raise ValueError(
+            "guardrail_type must be Schema, Freshness, Changes, Data Quality, or Sensitive Data."
+        )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
         parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
@@ -76,12 +123,17 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         raise ValueError("rule_parameters_json must contain a JSON object.") from exc
     if not isinstance(parameters, dict):
         raise ValueError("rule_parameters_json must contain a JSON object.")
+    column_id = str(record.get("column_id") or "").strip()
+    if guardrail_type == "sensitive_data":
+        if not column_id:
+            raise ValueError("Sensitive Data Guardrails require a canonical column_id.")
+        parameters = validate_sensitive_data_parameters(parameters)
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or "").strip(),
         "guardrail_version": int(record.get("guardrail_version") or 1),
         "contract_id": contract_id,
         "contract_version": contract_version,
-        "column_id": str(record.get("column_id") or ""),
+        "column_id": column_id,
         "environment_name": str(record.get("environment_name") or env),
         "guardrail_type": guardrail_type,
         "rule_id": str(record.get("rule_id") or "").strip(),

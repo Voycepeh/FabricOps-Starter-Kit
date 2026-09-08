@@ -909,7 +909,11 @@ def schema_version_options(rows: list[dict[str, Any]], table_id: str) -> list[tu
 
 from fabricops_kit.config.shared import is_table_not_found_error
 
-from fabricops_kit.data_contract.shared import canonical_guardrail_rule_record, normalize_guardrail_action
+from fabricops_kit.data_contract.shared import (
+    canonical_guardrail_rule_record,
+    normalize_guardrail_action,
+    validate_sensitive_data_parameters,
+)
 
 def _guardrail_stable_json(value: Any) -> str:
     """Serialize authoring parameters deterministically."""
@@ -1088,6 +1092,35 @@ def dq_records_from_selection(
         )
     ]
 
+def sensitive_data_record_from_selection(
+    state: Mapping[str, Any],
+    *,
+    column_name: str,
+    treatment: str,
+    action: str = "Block",
+    guardrail_version: int | None = None,
+    is_active: bool = True,
+    parameters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build one canonical column-scoped Sensitive Data Guardrail row."""
+    normalized_parameters = validate_sensitive_data_parameters({
+        "scope": "column", "treatment": treatment, **dict(parameters or {}),
+    })
+    normalized_treatment = normalized_parameters["treatment"]
+    column_id = _column_id_for_name(state, column_name)
+    return build_rule_record(
+        state,
+        guardrail_type="sensitive_data",
+        rule_id=f"sensitive_data_{column_id}",
+        rule_type=normalized_treatment,
+        parameters=normalized_parameters,
+        action=action,
+        column_name=column_name,
+        guardrail_version=guardrail_version,
+        is_active=is_active,
+    )
+
+
 def canonicalize_records(
     records: list[dict[str, Any]],
     *,
@@ -1173,6 +1206,9 @@ def load_guardrail_authoring_targets(
     )
     contracts = read_metadata_table_or_empty(
         config, env, DATA_CONTRACT_TABLE, spark_session=spark_session
+    )
+    enrichment = read_metadata_table_or_empty(
+        config, env, "METADATA_ENRICHMENT", spark_session=spark_session
     )
     if not catalogue or not profiles:
         raise ValueError("No profiled Catalogue table is available for Guardrail authoring.")
@@ -1265,6 +1301,19 @@ def load_guardrail_authoring_targets(
             and str(row.get("column_id") or "").strip()
         }
         evidence = []
+        contract_id = str(latest_contracts[table_id].get("contract_id") or "")
+        contract_version = int(latest_contracts[table_id].get("contract_version") or 0)
+        enrichment_values: dict[tuple[str, str], str] = {}
+        for row in enrichment:
+            if (
+                str(row.get("contract_id") or "") == contract_id
+                and int(row.get("contract_version") or 0) == contract_version
+                and str(row.get("environment_name") or env) == env
+            ):
+                enrichment_values[(
+                    str(row.get("column_id") or ""),
+                    str(row.get("enrichment_type") or ""),
+                )] = str(row.get("value") or "")
         for profile in snapshot:
             column_id = str(profile.get("column_id") or "")
             catalogue_column = catalogue_columns.get(column_id)
@@ -1282,6 +1331,16 @@ def load_guardrail_authoring_targets(
                     "profile_id": str(profile.get("profile_id") or ""),
                     "profile_snapshot_id": snapshot_id,
                     "_committed_at": profile.get("_committed_at"),
+                    **{
+                        name: profile.get(name)
+                        for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                        )
+                        if profile.get(name) is not None
+                    },
+                    "description": enrichment_values.get((column_id, "Description"), ""),
+                    "classification": enrichment_values.get((column_id, "Classification"), ""),
                 }
             )
         evidence.sort(key=lambda row: row["column_name"].casefold())

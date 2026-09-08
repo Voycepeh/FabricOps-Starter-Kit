@@ -277,3 +277,44 @@ def test_ai_unavailable_reports_error_without_blocking_manual_save(monkeypatch):
     _change(widget["controls"]["Description"], "Human authored")
     assert widget["save"]()["enrichment_records"][0]["value"] == "Human authored"
     assert len(writes) == 1
+
+
+def test_sensitive_ai_service_accepts_only_valid_active_column_rules():
+    """Discard non-canonical treatments and unknown columns before draft authoring."""
+    context = {
+        "table_id": "orders", "contract_id": "contract", "contract_version": 2,
+        "columns": [
+            {"column_name": "email", "column_id": "email-id", "data_type": "string"},
+            {"column_name": "salary", "column_id": "salary-id", "data_type": "double"},
+        ],
+    }
+    response = """[
+      {"column":"email","treatment":"mask","action":"Block","parameters":{"preserve_start":1,"preserve_end":3,"mask_character":"*"}},
+      {"column":"salary","treatment":"redact","action":"Warn","parameters":{}},
+      {"column":"unknown","treatment":"remove","action":"Block","parameters":{}}
+    ]"""
+    result = enrichment_shared.suggest_sensitive_data(
+        context, prompt="Configured governance policy", invoke=lambda _prompt: response
+    )
+    assert result == [{
+        "column_name": "email", "column_id": "email-id", "treatment": "mask",
+        "action": "Block",
+        "parameters": {"preserve_start": 1, "preserve_end": 3, "mask_character": "*"},
+        "is_active": True,
+    }]
+
+
+def test_sensitive_ai_context_contains_metadata_not_raw_samples():
+    """AI context uses compact Catalogue, Enrichment, and profile evidence only."""
+    context = enrichment_shared.build_ai_sensitive_data_context({
+        "table_id": "orders", "contract_id": "contract", "contract_version": 2,
+        "catalogue_profile_rows": [{
+            "column_name": "email", "column_id": "email-id", "data_type": "string",
+            "description": "Contact address", "classification": "Restricted",
+            "null_percent": 1.5, "raw_value": "must-not-leak",
+        }],
+    })
+    column = context["columns"][0]
+    assert column["classification"] == "Restricted"
+    assert column["profile_evidence"] == {"null_percent": 1.5}
+    assert "raw_value" not in str(context)
