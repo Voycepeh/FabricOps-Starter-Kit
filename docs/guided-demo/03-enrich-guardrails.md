@@ -50,7 +50,7 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
 ???+ success "Live — Author Guardrails"
 
-    Author schema, freshness, profile-behaviour, Data Quality, and Sensitive Data Guardrails for the ETL workflow, then save the Governance records. Sensitive Data authoring selects one active Catalogue column, its canonical `column_id`, a Tokenize or Remove treatment, and a Warn or Block action against the exact contract version.
+    Author schema, freshness, profile-behaviour, Data Quality, and Sensitive Data Guardrails for the ETL workflow, then save the Governance records. Sensitive Data authoring can enable one independent rule for each active Catalogue column, using its canonical `column_id`, a Tokenize or Remove treatment, and a Warn or Block action against the exact contract version. This supports mixed treatment such as tokenizing identity and email columns while removing a phone column.
 
     | Metadata table | Governance responsibility |
     | --- | --- |

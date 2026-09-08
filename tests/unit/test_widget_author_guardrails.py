@@ -125,17 +125,34 @@ def _records(**overrides):
 def test_sensitive_data_selection_uses_canonical_column_identity(treatment):
     """The existing Guardrail service authors explicit column-scoped treatment."""
     records = _records(
-        sensitive_column="extra", sensitive_treatment=treatment,
-        sensitive_action="Warn",
+        sensitive_rules=[{
+            "column_name": "extra", "treatment": treatment, "action": "Warn",
+        }],
     )
     rule = next(row for row in records if row["guardrail_type"] == "sensitive_data")
     assert rule["column_id"] == "col-extra"
+    assert rule["rule_id"] == "sensitive_data_col-extra"
     assert rule["contract_id"] == "contract-orders"
     assert rule["contract_version"] == 2
     assert json.loads(rule["rule_parameters_json"]) == {
         "scope": "column", "treatment": treatment,
     }
     assert rule["action"] == "Warn"
+
+
+def test_multiple_sensitive_columns_have_independent_logical_identities():
+    """Each governed column produces one independently versioned logical rule."""
+    rules = [
+        {"column_name": "id", "treatment": "tokenize", "action": "Block"},
+        {"column_name": "extra", "treatment": "remove", "action": "Warn"},
+    ]
+    sensitive = [
+        row for row in _records(sensitive_rules=rules)
+        if row["guardrail_type"] == "sensitive_data"
+    ]
+    assert [row["column_id"] for row in sensitive] == ["col-id", "col-extra"]
+    assert len({row["rule_id"] for row in sensitive}) == 2
+    assert len({row["guardrail_rule_id"] for row in sensitive}) == 2
 
 
 def test_public_surface_keeps_two_standalone_authoring_widgets():

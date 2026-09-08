@@ -27,18 +27,7 @@ def _runtime(monkeypatch, rules, writes):
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *_a, **_k: rules)
     monkeypatch.setattr(module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs["result"]))
 
-    def mapping(df, *, table_id, column_id, original_column, token_column, context):
-        del context
-        from pyspark.sql import functions as F
-        return df.select(
-            F.lit(table_id).alias("table_id"), F.lit(column_id).alias("column_id"),
-            F.col(original_column).cast("string").alias("original_value"),
-            F.col(token_column).cast("string").alias("token_value"),
-        ).dropDuplicates()
-    monkeypatch.setattr(module, "build_token_map_frame", mapping)
-
-
-def test_tokenize_is_deterministic_null_preserving_and_caller_owned(monkeypatch, spark_session):
+def test_tokenize_is_opaque_null_preserving_and_caller_owned(monkeypatch, spark_session):
     """Tokenization replaces raw values and only returns its one-to-one mapping."""
     writes = []
     _runtime(monkeypatch, [_rule(), {**_rule(), "guardrail_type": "data_quality"}], writes)
@@ -54,6 +43,43 @@ def test_tokenize_is_deterministic_null_preserving_and_caller_owned(monkeypatch,
     assert {row.original_value for row in mapping} == {"a@example.test", "b@example.test"}
     assert len(writes) == 1
     assert all("original_value" not in str(value) for value in writes)
+
+
+def test_multiple_sensitive_columns_apply_mixed_treatments(monkeypatch, spark_session):
+    """All exact-version column rules apply independently in one preparation."""
+    rules = [
+        _rule(),
+        {**_rule(treatment="remove", column_name="phone"),
+         "guardrail_rule_id": "sensitive-phone", "column_id": "phone-id"},
+    ]
+    _runtime(monkeypatch, rules, [])
+    frame = spark_session.createDataFrame(
+        [(1, "a@example.test", "555-0100"), (2, "a@example.test", None)],
+        ["id", "email", "phone"],
+    )
+    result = module.check_sensitive_data(frame, table_id="table-id")
+    assert result["dataframe"].columns == ["id", "email"]
+    assert result["dataframe"].select("email").distinct().count() == 1
+    assert {row.column_id for row in result["support_mapping"].collect()} == {"email-id"}
+    assert len(result["checks"]) == 2
+
+
+def test_existing_mapping_preserves_established_token(monkeypatch, spark_session):
+    """Caller-supplied persisted mappings retain established assignments."""
+    _runtime(monkeypatch, [_rule()], [])
+    frame = spark_session.createDataFrame(
+        [(1, "a@example.test"), (2, "new@example.test")], ["id", "email"]
+    )
+    existing = spark_session.createDataFrame(
+        [("table-id", "email-id", "a@example.test", "opaque-established")],
+        ["table_id", "column_id", "original_value", "token_value"],
+    )
+    result = module.check_sensitive_data(
+        frame, table_id="table-id", existing_mapping=existing
+    )
+    values = {row.id: row.email for row in result["dataframe"].collect()}
+    assert values[1] == "opaque-established"
+    assert values[2] != "new@example.test"
 
 
 def test_remove_drops_only_sensitive_column(monkeypatch, spark_session):

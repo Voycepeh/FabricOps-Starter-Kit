@@ -42,9 +42,7 @@ def _guardrail_records_from_selection(
     change_column: str = "",
     guardrail_version: int | None = None,
     config: Any = None,
-    sensitive_column: str = "",
-    sensitive_treatment: str = "",
-    sensitive_action: str = "Block",
+    sensitive_rules: Iterable[Mapping[str, Any]] = (),
 ) -> list[dict[str, Any]]:
     """Translate Schema, Freshness, and Changes controls into Stage 4A rows."""
     del config
@@ -130,14 +128,17 @@ def _guardrail_records_from_selection(
             guardrail_version=version,
         ),
     ]
-    if sensitive_column or sensitive_treatment:
-        records.append(authoring.sensitive_data_record_from_selection(
-            state,
-            column_name=sensitive_column,
-            treatment=sensitive_treatment,
-            action=sensitive_action,
-            guardrail_version=version,
-        ))
+    for sensitive_rule in sensitive_rules:
+        records.append(
+            authoring.sensitive_data_record_from_selection(
+                state,
+                column_name=str(sensitive_rule.get("column_name") or ""),
+                treatment=str(sensitive_rule.get("treatment") or ""),
+                action=str(sensitive_rule.get("action") or "Block"),
+                guardrail_version=version,
+                is_active=bool(sensitive_rule.get("is_active", True)),
+            )
+        )
     return records
 
 
@@ -247,11 +248,13 @@ def _render_guardrail_authoring(
     schema_rule = authoring.latest_rule(existing, "schema")
     freshness_rule = authoring.latest_rule(existing, "freshness")
     change_rule = authoring.latest_rule(existing, "changes")
-    sensitive_rule = authoring.latest_rule(existing, "sensitive_data")
+    sensitive_rules = [
+        row for row in existing
+        if str(row.get("guardrail_type") or "") == "sensitive_data"
+    ]
     schema_params = authoring.rule_parameters(schema_rule)
     freshness_params = authoring.rule_parameters(freshness_rule)
     change_params = authoring.rule_parameters(change_rule)
-    sensitive_params = authoring.rule_parameters(sensitive_rule)
     selected_required = set(schema_params.get("columns") or columns)
     schema_data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
@@ -357,33 +360,66 @@ def _render_guardrail_authoring(
         value=str(change_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
-    guardrail_type = widgets.Dropdown(
-        options=[("None", ""), ("Sensitive Data", "sensitive_data")],
-        value="sensitive_data" if sensitive_rule else "",
-        **shared.widget_common(widgets, "Guardrail type"),
-    )
-    sensitive_column_value = str(sensitive_rule.get("column_name") or "")
-    sensitive_column = widgets.Dropdown(
-        options=["", *columns],
-        value=sensitive_column_value if sensitive_column_value in columns else "",
-        **shared.widget_common(widgets, "Column"),
-    )
-    sensitive_treatment_value = str(sensitive_params.get("treatment") or "tokenize")
-    sensitive_treatment = widgets.Dropdown(
-        options=[("Tokenize", "tokenize"), ("Remove", "remove")],
-        value=sensitive_treatment_value if sensitive_treatment_value in {"tokenize", "remove"} else "tokenize",
-        **shared.widget_common(widgets, "Treatment"),
-    )
-    sensitive_failure_action = widgets.Dropdown(
-        options=_FAILURE_ACTIONS,
-        value=str(sensitive_rule.get("action") or "Block"),
-        **shared.widget_common(widgets, "Action"),
-    )
-    sensitive_identity = widgets.HTML()
-
-    def refresh_sensitive_identity(*_: Any) -> None:
-        column_id = str((state.get("column_ids") or {}).get(sensitive_column.value) or "")
-        sensitive_identity.value = f"<b>Canonical column identity</b><br><code>{html.escape(column_id)}</code>"
+    sensitive_by_column_id = {}
+    for row in sensitive_rules:
+        column_id = str(row.get("column_id") or "")
+        current = sensitive_by_column_id.get(column_id)
+        if current is None or (
+            int(row.get("guardrail_version") or 0), str(row.get("_committed_at") or "")
+        ) > (
+            int(current.get("guardrail_version") or 0),
+            str(current.get("_committed_at") or ""),
+        ):
+            sensitive_by_column_id[column_id] = row
+    sensitive_controls = {}
+    sensitive_rows = []
+    for name in columns:
+        column_id = str((state.get("column_ids") or {}).get(name) or "")
+        current_rule = sensitive_by_column_id.get(column_id, {})
+        params = authoring.rule_parameters(current_rule)
+        treatment = str(params.get("treatment") or "tokenize")
+        enabled = widgets.Checkbox(
+            value=bool(current_rule) and current_rule.get("is_active", True) is not False,
+            description="", indent=False,
+        )
+        treatment_control = widgets.Dropdown(
+            options=[("Tokenize", "tokenize"), ("Remove", "remove")],
+            value=treatment if treatment in {"tokenize", "remove"} else "tokenize",
+            description="",
+        )
+        action_control = widgets.Dropdown(
+            options=_FAILURE_ACTIONS,
+            value=str(current_rule.get("action") or "Block"),
+            description="",
+        )
+        sensitive_controls[name] = {
+            "enabled": enabled, "treatment": treatment_control, "action": action_control,
+        }
+        sensitive_rows.append(widgets.GridBox(
+            [enabled, widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
+             widgets.HTML(value=f"<code>{html.escape(column_id)}</code>"),
+             treatment_control, action_control],
+            layout=widgets.Layout(
+                width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
+                grid_gap="4px 12px", align_items="center",
+            ),
+        ))
+    sensitive_editor = widgets.VBox([
+        widgets.HTML(value=(
+            "<b>Column rules</b><br><span style='font-size:12px'>"
+            "Enable one independent Sensitive Data Guardrail per Catalogue column.</span>"
+        )),
+        widgets.GridBox(
+            [widgets.HTML(value="<b>Use</b>"), widgets.HTML(value="<b>Column</b>"),
+             widgets.HTML(value="<b>Canonical column ID</b>"),
+             widgets.HTML(value="<b>Treatment</b>"), widgets.HTML(value="<b>Action</b>")],
+            layout=widgets.Layout(
+                width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
+                grid_gap="4px 12px",
+            ),
+        ),
+        *sensitive_rows,
+    ])
     preview = shared.preview_region(widgets, widgets.Textarea(
         description="Canonical preview",
         disabled=True,
@@ -410,9 +446,15 @@ def _render_guardrail_authoring(
             partition_column=partition_column.value,
             change_column=change_column.value,
             guardrail_version=version_state["persisted"] + 1,
-            sensitive_column=sensitive_column.value if guardrail_type.value else "",
-            sensitive_treatment=sensitive_treatment.value if guardrail_type.value else "",
-            sensitive_action=sensitive_failure_action.value,
+            sensitive_rules=[
+                {"column_name": name, "treatment": controls["treatment"].value,
+                 "action": controls["action"].value,
+                 "is_active": controls["enabled"].value}
+                for name, controls in sensitive_controls.items()
+                if controls["enabled"].value
+                or str((state.get("column_ids") or {}).get(name) or "")
+                in sensitive_by_column_id
+            ],
         )
 
     def refresh_preview(*_: Any) -> None:
@@ -462,13 +504,11 @@ def _render_guardrail_authoring(
         partition_column,
         change_column,
         change_failure_action,
-        guardrail_type,
-        sensitive_column,
-        sensitive_treatment,
-        sensitive_failure_action,
+        *(control
+          for controls in sensitive_controls.values()
+          for control in controls.values()),
     ):
         control.observe(refresh_preview, names="value")
-    sensitive_column.observe(refresh_sensitive_identity, names="value")
     save_button.on_click(save)
 
     identity = shared.form_grid(
@@ -501,10 +541,7 @@ def _render_guardrail_authoring(
             shared.form_section(
                 widgets,
                 title="Sensitive Data",
-                children=[shared.form_grid(widgets, [
-                    guardrail_type, sensitive_column, sensitive_identity,
-                    sensitive_treatment, sensitive_failure_action,
-                ])],
+                children=[sensitive_editor],
             ),
         ],
         configuration=[
@@ -561,10 +598,7 @@ def _render_guardrail_authoring(
             "partition_column": partition_column,
             "change_column": change_column,
             "change_failure_action": change_failure_action,
-            "guardrail_type": guardrail_type,
-            "sensitive_column": sensitive_column,
-            "sensitive_treatment": sensitive_treatment,
-            "sensitive_failure_action": sensitive_failure_action,
+            "sensitive_rules": sensitive_controls,
             "preview": preview,
         },
         "build_records": build_records,
@@ -574,7 +608,6 @@ def _render_guardrail_authoring(
         "workspace": ui,
         "ui": ui,
     }
-    refresh_sensitive_identity()
     refresh_preview()
     if commit:
         result["records"] = save()

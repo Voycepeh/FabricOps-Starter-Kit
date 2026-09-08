@@ -7,7 +7,6 @@ from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import (
-    build_token_map_frame,
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
     write_guardrail_result_row,
@@ -30,7 +29,76 @@ def _parameters(rule: dict[str, Any]) -> dict[str, Any]:
     return parsed
 
 
-def check_sensitive_data(dataframe, *, table_id: str, run_id: str = "") -> dict:
+def _tokenize_column(dataframe, *, column_name, column_id, table_id, existing_mapping):
+    """Return a tokenized DataFrame and its validated caller-owned mapping."""
+    from pyspark.sql import functions as F
+
+    required = {"table_id", "column_id", "original_value", "token_value"}
+    if existing_mapping is None:
+        established = None
+    else:
+        missing = sorted(required - set(existing_mapping.columns))
+        if missing:
+            raise ValueError(
+                "existing_mapping is missing required column(s): " + ", ".join(missing) + "."
+            )
+        established = existing_mapping.where(
+            (F.col("table_id") == table_id) & (F.col("column_id") == column_id)
+        ).select("table_id", "column_id", "original_value", "token_value").dropDuplicates()
+        if established.where(
+            F.col("original_value").isNull() | F.col("token_value").isNull()
+        ).limit(1).count():
+            raise ValueError("Existing token mappings must contain non-null original and token values.")
+        if established.groupBy("original_value").agg(
+            F.countDistinct("token_value").alias("count")
+        ).where(F.col("count") > 1).limit(1).count():
+            raise ValueError("Existing mapping assigns multiple tokens to one original value.")
+        if established.groupBy("token_value").agg(
+            F.countDistinct("original_value").alias("count")
+        ).where(F.col("count") > 1).limit(1).count():
+            raise ValueError("Existing mapping reuses one token for multiple original values.")
+
+    original_type = dataframe.schema[column_name].dataType.simpleString()
+    originals = dataframe.where(F.col(column_name).isNotNull()).select(
+        F.col(column_name).cast("string").alias("original_value")
+    ).dropDuplicates()
+    unmatched = originals if established is None else originals.join(
+        established.select("original_value"), on="original_value", how="left_anti"
+    )
+    generated = unmatched.withColumn("token_value", F.expr("uuid()"))
+    generated = generated.withColumn("table_id", F.lit(table_id)).withColumn(
+        "column_id", F.lit(column_id)
+    ).select("table_id", "column_id", "original_value", "token_value")
+    available_mapping = generated if established is None else established.unionByName(generated)
+    mapping = available_mapping.join(originals, on="original_value", how="inner").withColumn(
+        "original_data_type", F.lit(original_type)
+    ).cache()
+    mapping.count()  # Materialize opaque UUID assignments once for this returned mapping/run.
+    original_temp = "__fabricops_sensitive_original"
+    token_temp = "__fabricops_sensitive_token"
+    while original_temp in dataframe.columns or token_temp in dataframe.columns:
+        original_temp += "_"
+        token_temp += "_"
+    lookup = mapping.select(
+        F.col("original_value").alias(original_temp),
+        F.col("token_value").alias(token_temp),
+    )
+    tokenized = dataframe.withColumn(original_temp, F.col(column_name).cast("string")).join(
+        F.broadcast(lookup), on=original_temp, how="left"
+    ).withColumn(
+        column_name,
+        F.when(F.col(original_temp).isNull(), F.lit(None)).otherwise(F.col(token_temp)),
+    ).drop(original_temp, token_temp)
+    return tokenized, mapping
+
+
+def check_sensitive_data(
+    dataframe,
+    *,
+    table_id: str,
+    run_id: str = "",
+    existing_mapping=None,
+) -> dict:
     """Apply exact-contract Sensitive Data Guardrails before a governed write.
 
     Parameters
@@ -41,6 +109,9 @@ def check_sensitive_data(dataframe, *, table_id: str, run_id: str = "") -> dict:
         Canonical identity used to resolve the applicable exact Data Contract version.
     run_id : str, optional
         Pipeline run identity recorded with Guardrail summary evidence.
+    existing_mapping : pyspark.sql.DataFrame, optional
+        Previously persisted mappings to reuse. Rows are scoped by ``table_id``
+        and ``column_id``; established original-to-token assignments are preserved.
 
     Returns
     -------
@@ -59,8 +130,10 @@ def check_sensitive_data(dataframe, *, table_id: str, run_id: str = "") -> dict:
     -----
     Only active ``sensitive_data`` Guardrails from the exact applicable Data
     Contract version are processed. Classification Enrichment is never read and
-    never triggers a transformation. ``tokenize`` uses deterministic SHA-256
-    tokens scoped by ``table_id`` and ``column_id`` and preserves nulls;
+    never triggers a transformation. ``tokenize`` creates opaque UUID tokens
+    that are consistent within the returned mapping/run and preserves nulls;
+    supplying ``existing_mapping`` preserves established assignments. Cross-run
+    stability otherwise requires the project to persist and supply the mapping.
     ``remove`` drops the governed column. Warn failures leave the input unchanged
     for that rule and permit continuation, while Block failures require callers
     to stop before writing. Raw values exist only in the returned support mapping
@@ -95,9 +168,7 @@ def check_sensitive_data(dataframe, *, table_id: str, run_id: str = "") -> dict:
     transformed = dataframe
     mappings = []
     checks = []
-    from pyspark.sql import functions as F
-
-    for index, rule in enumerate(rules):
+    for rule in rules:
         action = str(rule.get("action") or "Warn").strip().title()
         column_id = str(rule.get("column_id") or "").strip()
         column_name = str(rule.get("column_name") or "").strip()
@@ -117,21 +188,11 @@ def check_sensitive_data(dataframe, *, table_id: str, run_id: str = "") -> dict:
             if treatment == "remove":
                 transformed = transformed.drop(column_name)
             else:
-                original_temp = f"__fabricops_sensitive_original_{index}"
-                token_temp = f"__fabricops_sensitive_token_{index}"
-                staged = transformed.withColumn(original_temp, F.col(column_name)).withColumn(
-                    token_temp,
-                    F.when(F.col(original_temp).isNull(), F.lit(None)).otherwise(
-                        F.sha2(F.concat_ws("|", F.lit(identity["table_id"]), F.lit(column_id), F.col(original_temp).cast("string")), 256)
-                    ),
-                )
-                non_null = staged.where(F.col(original_temp).isNotNull())
-                mapping = build_token_map_frame(
-                    non_null, table_id=identity["table_id"], column_id=column_id,
-                    original_column=original_temp, token_column=token_temp, context=context,
+                transformed, mapping = _tokenize_column(
+                    transformed, column_name=column_name, column_id=column_id,
+                    table_id=identity["table_id"], existing_mapping=existing_mapping,
                 )
                 mappings.append(mapping)
-                transformed = staged.withColumn(column_name, F.col(token_temp)).drop(original_temp, token_temp)
         except Exception as exc:
             error = str(exc)
         passed = not error

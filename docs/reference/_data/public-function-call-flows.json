@@ -185,9 +185,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.shared.canonicalize_records",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 1125,
+      "source_end_line": 1128,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1115,
+      "source_start_line": 1118,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -205,9 +205,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.shared.write_rule_records",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 1178,
+      "source_end_line": 1181,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1159,
+      "source_start_line": 1162,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     }
   ],
@@ -5006,9 +5006,9 @@
       "qualified_name": "fabricops_kit.pipeline.check_sensitive_data._parameters",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 30,
+      "source_end_line": 29,
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
-      "source_start_line": 22,
+      "source_start_line": 21,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5034,9 +5034,37 @@
       "qualified_name": "fabricops_kit.pipeline.check_sensitive_data._rows",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 19,
+      "source_end_line": 18,
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
-      "source_start_line": 17,
+      "source_start_line": 16,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_tokenize_column",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.check_sensitive_data._tokenize_column",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 92,
+      "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
+      "source_start_line": 32,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5060,9 +5088,9 @@
       "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 168,
+      "source_end_line": 231,
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
-      "source_start_line": 33,
+      "source_start_line": 95,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8202,27 +8230,24 @@
       "transitive_live_dependents": []
     },
     {
-      "contract_classification": "preview_only_internal",
-      "contract_display": "Preview-only internal",
+      "contract_classification": "internal_function",
+      "contract_display": "Internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
       "function_name": "build_token_map_frame",
       "function_type": "shared_function",
       "inbound_callers": [
-        "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
         "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map"
       ],
       "inbound_source_references": [
-        "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
-        "fabricops_kit.pipeline.check_sensitive_data::<module>",
         "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
         "fabricops_kit.pipeline.write_pii_token_map::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "none",
       "live_since": null,
-      "public_flow_reachable": true,
+      "public_flow_reachable": false,
       "qualified_name": "fabricops_kit.pipeline.shared.build_token_map_frame",
       "release_history": [],
       "release_versions": [],
@@ -9813,11 +9838,13 @@
       "function_type": "private_function",
       "inbound_callers": [
         "fabricops_kit.widgets.shared.build_rule_record",
-        "fabricops_kit.widgets.shared.dq_records_from_selection"
+        "fabricops_kit.widgets.shared.dq_records_from_selection",
+        "fabricops_kit.widgets.shared.sensitive_data_record_from_selection"
       ],
       "inbound_source_references": [
         "fabricops_kit.widgets.shared.build_rule_record",
-        "fabricops_kit.widgets.shared.dq_records_from_selection"
+        "fabricops_kit.widgets.shared.dq_records_from_selection",
+        "fabricops_kit.widgets.shared.sensitive_data_record_from_selection"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
@@ -9906,9 +9933,9 @@
       "qualified_name": "fabricops_kit.widgets.shared._guardrail_coerce_rows",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1135,
+      "source_end_line": 1138,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1127,
+      "source_start_line": 1130,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -10380,9 +10407,9 @@
       "qualified_name": "fabricops_kit.widgets.shared.canonicalize_records",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1125,
+      "source_end_line": 1128,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1115,
+      "source_start_line": 1118,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -10947,9 +10974,9 @@
       "qualified_name": "fabricops_kit.widgets.shared.load_guardrail_authoring_targets",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1352,
+      "source_end_line": 1355,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1180,
+      "source_start_line": 1183,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11097,9 +11124,9 @@
       "qualified_name": "fabricops_kit.widgets.shared.read_metadata_table_or_empty",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1157,
+      "source_end_line": 1160,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1137,
+      "source_start_line": 1140,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11323,7 +11350,7 @@
       "qualified_name": "fabricops_kit.widgets.shared.sensitive_data_record_from_selection",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1112,
+      "source_end_line": 1115,
       "source_path": "src/fabricops_kit/widgets/shared.py",
       "source_start_line": 1091,
       "supports_live_contract": false,
@@ -11583,9 +11610,9 @@
       "qualified_name": "fabricops_kit.widgets.shared.write_rule_records",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1178,
+      "source_end_line": 1181,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1159,
+      "source_start_line": 1162,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11873,7 +11900,7 @@
       "qualified_name": "fabricops_kit.widgets.widget_author_guardrails._guardrail_records_from_selection",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 141,
+      "source_end_line": 142,
       "source_path": "src/fabricops_kit/widgets/widget_author_guardrails.py",
       "source_start_line": 30,
       "supports_live_contract": false,
@@ -11931,9 +11958,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_author_guardrails._render_guardrail_authoring",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 581,
+      "source_end_line": 614,
       "source_path": "src/fabricops_kit/widgets/widget_author_guardrails.py",
-      "source_start_line": 232,
+      "source_start_line": 233,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11955,9 +11982,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 229,
+      "source_end_line": 230,
       "source_path": "src/fabricops_kit/widgets/widget_author_guardrails.py",
-      "source_start_line": 144,
+      "source_start_line": 145,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -13268,6 +13295,7 @@
     "fabricops_kit.pipeline.shared._result_reason",
     "fabricops_kit.pipeline.shared._result_status",
     "fabricops_kit.pipeline.shared._schema_reason",
+    "fabricops_kit.pipeline.shared.build_token_map_frame",
     "fabricops_kit.pipeline.write_pii_token_map._token_map_table_name",
     "fabricops_kit.pipeline.write_pii_token_map._upsert_token_map",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
@@ -13665,6 +13693,12 @@
           "name": "run_id",
           "required": "No",
           "type": "str"
+        },
+        {
+          "description": "Previously persisted mappings to reuse. Rows are scoped by ``table_id`` and ``column_id``; established original-to-token assignments are preserved.",
+          "name": "existing_mapping",
+          "required": "No",
+          "type": "pyspark.sql.DataFrame, optional"
         }
       ],
       "public_import_path": "fabricops_kit.check_sensitive_data",
@@ -13690,17 +13724,17 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    ``dataframe`` contains every successfully applied treatment;\n    ``support_mapping`` contains caller-owned token mappings, or ``None``;\n    ``checks`` contains sanitized outcomes; and ``can_continue`` is false\n    only when a Block treatment fails. No mapping is persisted automatically.",
-      "scope": 51,
+      "scope": 49,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_sensitive_data(dataframe, *, table_id: str, run_id: str='') -> dict",
-      "source_end_line": 168,
+      "signature": "def check_sensitive_data(dataframe, *, table_id: str, run_id: str='', existing_mapping=None) -> dict",
+      "source_end_line": 231,
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
-      "source_start_line": 33,
+      "source_start_line": 95,
       "summary": "Apply exact-contract Sensitive Data Guardrails before a governed write.",
-      "transitive_function_count": 51,
-      "usage_notes": "Only active ``sensitive_data`` Guardrails from the exact applicable Data\nContract version are processed. Classification Enrichment is never read and\nnever triggers a transformation. ``tokenize`` uses deterministic SHA-256\ntokens scoped by ``table_id`` and ``column_id`` and preserves nulls;\n``remove`` drops the governed column. Warn failures leave the input unchanged\nfor that rule and permit continuation, while Block failures require callers\nto stop before writing. Raw values exist only in the returned support mapping\nand are excluded from ``METADATA_GUARDRAIL_RESULTS``.",
+      "transitive_function_count": 49,
+      "usage_notes": "Only active ``sensitive_data`` Guardrails from the exact applicable Data\nContract version are processed. Classification Enrichment is never read and\nnever triggers a transformation. ``tokenize`` creates opaque UUID tokens\nthat are consistent within the returned mapping/run and preserves nulls;\nsupplying ``existing_mapping`` preserves established assignments. Cross-run\nstability otherwise requires the project to persist and supply the mapping.\n``remove`` drops the governed column. Warn failures leave the input unchanged\nfor that rule and permit continuation, while Block failures require callers\nto stop before writing. Raw values exist only in the returned support mapping\nand are excluded from ``METADATA_GUARDRAIL_RESULTS``.",
       "width": 7
     },
     {
@@ -15459,10 +15493,10 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_author_guardrails(*, spark_session: Any, context: dict[str, Any] | None=None, commit: bool=False) -> dict[str, Any]",
-      "source_end_line": 229,
+      "source_end_line": 230,
       "source_path": "src/fabricops_kit/widgets/widget_author_guardrails.py",
-      "source_start_line": 144,
-      "summary": "Configure Schema, Freshness, and Change expectations for a profiled table.",
+      "source_start_line": 145,
+      "summary": "Configure table and Sensitive Data Guardrails for a profiled table.",
       "transitive_function_count": 69,
       "usage_notes": "The widget resolves a Data Contract version for the selected profiled\nCatalogue table and writes ``METADATA_GUARDRAIL`` rows owned by its\n``contract_id`` and ``contract_version``. Runtime code resolves the\nunderlying ``table_id`` through ``METADATA_DATA_CONTRACT``.",
       "width": 6
@@ -18513,7 +18547,7 @@
     {
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.pipeline.shared.build_token_map_frame",
+      "callee_qualified_name": "fabricops_kit.pipeline.check_sensitive_data._tokenize_column",
       "caller_qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
       "violation_details": [],
       "violation_types": []
@@ -21321,6 +21355,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.widgets.shared._column_id_for_name",
+      "caller_qualified_name": "fabricops_kit.widgets.shared.sensitive_data_record_from_selection",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.widgets.shared.build_rule_record",
       "caller_qualified_name": "fabricops_kit.widgets.shared.sensitive_data_record_from_selection",
       "violation_details": [],
@@ -23135,6 +23177,7 @@
     "fabricops_kit.pipeline.shared._result_reason",
     "fabricops_kit.pipeline.shared._result_status",
     "fabricops_kit.pipeline.shared._schema_reason",
+    "fabricops_kit.pipeline.shared.build_token_map_frame",
     "fabricops_kit.pipeline.write_pii_token_map._token_map_table_name",
     "fabricops_kit.pipeline.write_pii_token_map._upsert_token_map",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
@@ -23147,12 +23190,12 @@
   ],
   "summary": {
     "defined_but_not_used_count": 21,
-    "defined_function_count": 407,
-    "detached_function_count": 23,
+    "defined_function_count": 408,
+    "detached_function_count": 24,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 31,
-    "relationship_count": 833,
-    "source_referenced_function_count": 21,
+    "relationship_count": 834,
+    "source_referenced_function_count": 22,
     "used_function_count": 363
   },
   "used_functions": [
@@ -23277,6 +23320,7 @@
     "fabricops_kit.pipeline.check_schema.check_schema",
     "fabricops_kit.pipeline.check_sensitive_data._parameters",
     "fabricops_kit.pipeline.check_sensitive_data._rows",
+    "fabricops_kit.pipeline.check_sensitive_data._tokenize_column",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.observe_table._compact_rows",
     "fabricops_kit.pipeline.observe_table._identifier",
@@ -23370,7 +23414,6 @@
     "fabricops_kit.pipeline.shared.add_target_audit_fields",
     "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe",
     "fabricops_kit.pipeline.shared.build_profile_dataframe",
-    "fabricops_kit.pipeline.shared.build_token_map_frame",
     "fabricops_kit.pipeline.shared.catalogue_authored_processing",
     "fabricops_kit.pipeline.shared.changes_check_core",
     "fabricops_kit.pipeline.shared.check_dq_runtime",

@@ -86,11 +86,14 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
     `write_pipeline_prep()`. Call `stop_if_failed()` before the write so a failed
     Block treatment cannot publish untreated data.
 
-    Tokenize replaces non-null values deterministically and returns the original/token
+    Tokenize replaces non-null values with opaque tokens that remain consistent within
+    the returned mapping and run, and returns the original/token
     pairs as a caller-owned support DataFrame; Remove drops the column. FabricOps does
     not persist that support DataFrame or raw values in Guardrail metadata. Projects
     may persist mappings in an approved restricted store, use `write_pii_token_map()`
-    when suitable, or keep no recovery mapping. Any approved non-sensitive analytics
+    when suitable, or keep no recovery mapping. Persisted mappings can be supplied to
+    later runs to preserve established assignments; otherwise cross-run stability is
+    not guaranteed. Any approved non-sensitive analytics
     or ML feature should be engineered before this enforcement step.
 
     Use `write_pipeline_prep()` with the target `table_id` to resolve that target's selected or active Data Contract, add governed audit/lifecycle fields, and prepare the physical writer settings, target state columns, and target Lineage.

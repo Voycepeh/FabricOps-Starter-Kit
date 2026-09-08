@@ -854,7 +854,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Target guardrails',
   'use_when': 'Use after project feature engineering and before write_pipeline_prep for the governed target.',
   'do_not_use_when': 'Do not infer treatment from Classification or use this function as a persistence or recovery workflow.',
-  'parameters': 'DataFrame, canonical table_id, and optional run identity.',
+  'parameters': 'DataFrame, canonical table_id, optional run identity, and optional caller-supplied existing mapping.',
   'returns': 'Treated DataFrame, optional caller-owned token mapping, sanitized checks, and continuation decision.',
   'side_effects': 'Appends sanitized Guardrail summaries; never persists token mappings or raw sensitive values.',
   'preferred_example': 'sensitive_result = check_sensitive_data(transformed_df, table_id=table_id)',

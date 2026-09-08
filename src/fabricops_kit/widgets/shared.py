@@ -1095,20 +1095,23 @@ def sensitive_data_record_from_selection(
     treatment: str,
     action: str = "Block",
     guardrail_version: int | None = None,
+    is_active: bool = True,
 ) -> dict[str, Any]:
     """Build one canonical column-scoped Sensitive Data Guardrail row."""
     normalized_treatment = str(treatment or "").strip().lower()
     if normalized_treatment not in {"tokenize", "remove"}:
         raise ValueError("Sensitive Data treatment must be tokenize or remove.")
+    column_id = _column_id_for_name(state, column_name)
     return build_rule_record(
         state,
         guardrail_type="sensitive_data",
-        rule_id="sensitive_data",
+        rule_id=f"sensitive_data_{column_id}",
         rule_type=normalized_treatment,
         parameters={"scope": "column", "treatment": normalized_treatment},
         action=action,
         column_name=column_name,
         guardrail_version=guardrail_version,
+        is_active=is_active,
     )
 
 
