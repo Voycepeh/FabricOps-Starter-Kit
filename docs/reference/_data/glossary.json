@@ -53,7 +53,7 @@
     "id": "sensitive-data",
     "term": "sensitive data",
     "aliases": ["Sensitive Data Guardrail"],
-    "category": "Governance concepts",
+    "category": "Data Governance concepts",
     "short_definition": "Information whose governed column requires an explicitly authored runtime treatment.",
     "long_definition": "In FabricOps, Sensitive Data is a Guardrail subtype owned by one exact Data Contract version. It explicitly tokenizes, masks, buckets, or removes one canonical Catalogue column before a governed write. Tokenize replaces values with opaque surrogates and may return a reversible project-owned mapping; Mask preserves approved portions and obscures the rest; Bucket replaces an exact numeric value with a coarse row-preserving category rather than aggregating rows; Remove drops the column. Information Classification in Enrichment remains descriptive and never triggers treatment by itself.",
     "preferred_usage": "Use Sensitive Data Guardrail for explicit Tokenize, Mask, Bucket, or Remove column treatment; use Classification for descriptive sensitivity labels.",

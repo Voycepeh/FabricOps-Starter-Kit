@@ -59,6 +59,7 @@ GLOSSARY_GROUPS = [
             "metadata",
             "data-steward",
             "data-sensitivity",
+            "sensitive-data",
             "pii",
             "data-access",
             "data-quality",

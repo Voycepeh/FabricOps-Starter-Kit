@@ -10,6 +10,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 module = import_module("fabricops_kit.pipeline.write_pii_token_map")
+pipeline_shared = import_module("fabricops_kit.pipeline.shared")
 
 
 def _patch_runtime(monkeypatch):
@@ -37,7 +38,7 @@ def _patch_runtime(monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        module,
+        pipeline_shared,
         "resolve_target_audit_fields",
         lambda _context: {
             "_committed_at": "2026-09-04T00:00:00Z",

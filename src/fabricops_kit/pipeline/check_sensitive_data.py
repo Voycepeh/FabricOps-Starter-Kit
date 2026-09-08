@@ -115,7 +115,7 @@ def _mask_column(dataframe, *, column_name, parameters):
     else:
         end = F.lit("")
     masked = F.when(
-        length <= preserve_start + preserve_end, value
+        length <= preserve_start + preserve_end + 1, value
     ).otherwise(
         F.concat(
             start,
