@@ -11,7 +11,8 @@ import types
 import pytest
 
 import fabricops_kit
-from fabricops_kit.widgets.shared import _prepare_selected_guardrail_views, dataset_label
+from fabricops_kit.widgets.shared import dataset_label
+from fabricops_kit.widgets.widget_view_catalogue import _prepare_selected_guardrail_views
 
 pytestmark = pytest.mark.unit
 

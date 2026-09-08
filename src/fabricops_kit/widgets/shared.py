@@ -901,67 +901,6 @@ def schema_version_options(rows: list[dict[str, Any]], table_id: str) -> list[tu
     return result
 
 
-def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) -> dict[str, Any]:
-    """Prepare one selected dataset's latest persisted guardrail execution."""
-    from pyspark.sql import functions as F
-
-    scoped = results.filter(
-        (F.col("table_id") == table_id)
-        & F.col("run_id").isNotNull()
-        & (F.trim(F.col("run_id")) != "")
-    )
-    latest = (
-        scoped.select("run_id", "_committed_at")
-        .distinct()
-        .orderBy(F.col("_committed_at").desc_nulls_last(), F.col("run_id").desc())
-        .limit(1)
-        .collect()
-    )
-    selected_run_id = str(latest[0]["run_id"]) if latest else None
-    selected_results = (
-        scoped.filter(F.col("run_id") == selected_run_id)
-        if selected_run_id is not None
-        else scoped.limit(0)
-    )
-    actual = F.col("actual_value_json")
-    guardrail_results = selected_results.select(
-        "rule_type",
-        F.col("column_name").alias("columns"),
-        "status",
-        "severity",
-        F.get_json_object(actual, "$.failed_count").cast("long").alias("failed_rows"),
-        F.get_json_object(actual, "$.failed_percent").cast("double").alias("failed_percent"),
-        F.get_json_object(actual, "$.total_count").cast("long").alias("total_count"),
-        "reason",
-        "can_continue",
-        "run_id",
-    ).orderBy(
-        F.when(F.lower(F.col("status")) == "failed", 0)
-        .when(F.lower(F.col("status")) == "warning", 1)
-        .otherwise(2),
-        F.col("rule_type"),
-        F.col("columns"),
-    )
-    selected_row_results = (
-        row_results.filter(
-            (F.col("table_id") == table_id)
-            & (F.col("run_id") == selected_run_id)
-        )
-        if selected_run_id is not None
-        else row_results.limit(0)
-    )
-    guardrail_row_results = selected_row_results.select(
-        "rule_type",
-        "row_identity",
-        F.col("involved_columns_json").alias("involved_columns"),
-        F.col("failed_values_json").alias("failed_values"),
-        "failure_reason",
-        "run_id",
-    ).orderBy("row_identity", "rule_type", "failure_reason")
-    return {
-        "guardrail_results": guardrail_results,
-        "guardrail_row_results": guardrail_row_results,
-    }
 
 
 # ---------------------------------------------------------------------------
