@@ -88,7 +88,10 @@ Confirm that Step 3 has authored the required Guardrails, the source and target 
 
     Tokenize replaces non-null values with opaque tokens that remain consistent within
     the returned mapping and run, and returns the original/token
-    pairs as a caller-owned support DataFrame; Remove drops the column. FabricOps does
+    pairs as a caller-owned support DataFrame. Mask preserves approved leading and
+    trailing characters while obscuring the middle. Bucket replaces an exact numeric
+    value with a coarse category without aggregating or removing rows. Remove drops
+    the column. Only Tokenize returns a support mapping. FabricOps does
     not persist that support DataFrame or raw values in Guardrail metadata. Projects
     may persist mappings in an approved restricted store, use `write_pii_token_map()`
     when suitable, or keep no recovery mapping. Persisted mappings can be supplied to

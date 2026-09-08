@@ -12,9 +12,9 @@ Apply explicit Sensitive Data treatment before a governed write.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_sensitive_data.py:95`
+`fabricops_kit/pipeline/check_sensitive_data.py:149`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L95-L231">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L149-L298">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -84,7 +84,12 @@ never triggers a transformation. ``tokenize`` creates opaque UUID tokens
 that are consistent within the returned mapping/run and preserves nulls;
 supplying ``existing_mapping`` preserves established assignments. Cross-run
 stability otherwise requires the project to persist and supply the mapping.
-``remove`` drops the governed column. Warn failures leave the input unchanged
+``mask`` preserves configured leading and trailing characters and replaces
+each hidden character. ``bucket`` replaces numeric values with row-preserving
+labels: values below the first bin use the first label, each later bin is an
+inclusive lower boundary, and values at or above the final bin use the final
+label. Bucket does not aggregate rows. ``remove`` drops the governed column.
+Warn failures leave the input unchanged
 for that rule and permit continuation, while Block failures require callers
 to stop before writing. Raw values exist only in the returned support mapping
 and are excluded from ``METADATA_GUARDRAIL_RESULTS``.

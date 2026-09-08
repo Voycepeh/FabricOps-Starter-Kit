@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
@@ -92,6 +93,59 @@ def _tokenize_column(dataframe, *, column_name, column_id, table_id, existing_ma
     return tokenized, mapping
 
 
+def _mask_column(dataframe, *, column_name, parameters):
+    """Return rows with the configured middle characters obscured."""
+    from pyspark.sql import functions as F
+
+    preserve_start = parameters["preserve_start"]
+    preserve_end = parameters["preserve_end"]
+    value = F.col(column_name).cast("string")
+    length = F.length(value)
+    mask_literal = "'" + parameters["mask_character"].replace("'", "''") + "'"
+    hidden = F.expr(
+        f"repeat({mask_literal}, greatest(length(cast(`{column_name.replace('`', '``')}` as string)) "
+        f"- {preserve_start} - {preserve_end}, 0))"
+    )
+    if preserve_start:
+        start = F.substring(value, 1, preserve_start)
+    else:
+        start = F.lit("")
+    if preserve_end:
+        end = F.reverse(F.substring(F.reverse(value), 1, preserve_end))
+    else:
+        end = F.lit("")
+    masked = F.when(
+        length <= preserve_start + preserve_end, value
+    ).otherwise(
+        F.concat(
+            start,
+            hidden,
+            end,
+        )
+    )
+    return dataframe.withColumn(
+        column_name, F.when(F.col(column_name).isNull(), F.lit(None)).otherwise(masked)
+    )
+
+
+def _bucket_column(dataframe, *, column_name, parameters):
+    """Return rows with exact numeric values replaced by coarse labels."""
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import NumericType
+
+    if not isinstance(dataframe.schema[column_name].dataType, NumericType):
+        raise ValueError("Sensitive Data bucket treatment requires a numeric column.")
+    bins = parameters["bins"]
+    labels = parameters["labels"]
+    value = F.col(column_name)
+    bucket = F.lit(labels[0])
+    for boundary, label in zip(bins[1:], labels[1:]):
+        bucket = F.when(value >= F.lit(boundary), F.lit(label)).otherwise(bucket)
+    return dataframe.withColumn(
+        column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket)
+    )
+
+
 def check_sensitive_data(
     dataframe,
     *,
@@ -134,7 +188,12 @@ def check_sensitive_data(
     that are consistent within the returned mapping/run and preserves nulls;
     supplying ``existing_mapping`` preserves established assignments. Cross-run
     stability otherwise requires the project to persist and supply the mapping.
-    ``remove`` drops the governed column. Warn failures leave the input unchanged
+    ``mask`` preserves configured leading and trailing characters and replaces
+    each hidden character. ``bucket`` replaces numeric values with row-preserving
+    labels: values below the first bin use the first label, each later bin is an
+    inclusive lower boundary, and values at or above the final bin use the final
+    label. Bucket does not aggregate rows. ``remove`` drops the governed column.
+    Warn failures leave the input unchanged
     for that rule and permit continuation, while Block failures require callers
     to stop before writing. Raw values exist only in the returned support mapping
     and are excluded from ``METADATA_GUARDRAIL_RESULTS``.
@@ -175,26 +234,34 @@ def check_sensitive_data(
         treatment = ""
         error = ""
         try:
-            params = _parameters(rule)
-            treatment = str(params.get("treatment") or "").strip().lower()
+            params = validate_sensitive_data_parameters(_parameters(rule))
+            treatment = params["treatment"]
             if action not in {"Warn", "Block"}:
                 raise ValueError("Sensitive Data action must be Warn or Block.")
-            if params.get("scope") != "column" or not column_id or not column_name:
+            if not column_id or not column_name:
                 raise ValueError("Sensitive Data Guardrail has an unresolved column identity or invalid scope.")
-            if treatment not in {"tokenize", "remove"}:
-                raise ValueError(f"Unsupported Sensitive Data treatment: {treatment or '<blank>'}.")
             if column_name not in transformed.columns:
                 raise ValueError(f"Sensitive Data column {column_name!r} is missing from the DataFrame.")
             if treatment == "remove":
                 transformed = transformed.drop(column_name)
-            else:
+            elif treatment == "tokenize":
                 transformed, mapping = _tokenize_column(
                     transformed, column_name=column_name, column_id=column_id,
                     table_id=identity["table_id"], existing_mapping=existing_mapping,
                 )
                 mappings.append(mapping)
-        except Exception as exc:
+            elif treatment == "mask":
+                transformed = _mask_column(
+                    transformed, column_name=column_name, parameters=params
+                )
+            else:
+                transformed = _bucket_column(
+                    transformed, column_name=column_name, parameters=params
+                )
+        except ValueError as exc:
             error = str(exc)
+        except Exception:
+            error = f"{treatment.title() or 'Sensitive Data'} treatment could not be applied."
         passed = not error
         can_continue = passed or action == "Warn"
         check = {

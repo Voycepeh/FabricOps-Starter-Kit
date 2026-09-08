@@ -137,6 +137,7 @@ def _guardrail_records_from_selection(
                 action=str(sensitive_rule.get("action") or "Block"),
                 guardrail_version=version,
                 is_active=bool(sensitive_rule.get("is_active", True)),
+                parameters=sensitive_rule.get("parameters"),
             )
         )
     return records
@@ -382,9 +383,13 @@ def _render_guardrail_authoring(
             value=bool(current_rule) and current_rule.get("is_active", True) is not False,
             description="", indent=False,
         )
+        treatment_options = [
+            ("Tokenize", "tokenize"), ("Mask", "mask"),
+            ("Bucket", "bucket"), ("Remove", "remove"),
+        ]
         treatment_control = widgets.Dropdown(
-            options=[("Tokenize", "tokenize"), ("Remove", "remove")],
-            value=treatment if treatment in {"tokenize", "remove"} else "tokenize",
+            options=treatment_options,
+            value=treatment if treatment in {value for _, value in treatment_options} else "tokenize",
             description="",
         )
         action_control = widgets.Dropdown(
@@ -392,18 +397,55 @@ def _render_guardrail_authoring(
             value=str(current_rule.get("action") or "Block"),
             description="",
         )
+        preserve_start = widgets.BoundedIntText(
+            value=int(params.get("preserve_start", 0)), min=0,
+            **shared.widget_common(widgets, "Preserve start"),
+        )
+        preserve_end = widgets.BoundedIntText(
+            value=int(params.get("preserve_end", 0)), min=0,
+            **shared.widget_common(widgets, "Preserve end"),
+        )
+        mask_character = widgets.Text(
+            value=str(params.get("mask_character") or "*"),
+            **shared.widget_common(widgets, "Mask character"),
+        )
+        bins = widgets.Text(
+            value=", ".join(str(value) for value in params.get("bins", [])),
+            **shared.widget_common(widgets, "Numeric bins"),
+        )
+        labels = widgets.Text(
+            value=", ".join(str(value) for value in params.get("labels", [])),
+            **shared.widget_common(widgets, "Labels"),
+        )
+        mask_options = widgets.HBox([preserve_start, preserve_end, mask_character])
+        bucket_options = widgets.HBox([bins, labels])
+
+        def update_treatment_options(*_: Any, treatment_control=treatment_control,
+                                     mask_options=mask_options,
+                                     bucket_options=bucket_options) -> None:
+            mask_options.layout.display = "" if treatment_control.value == "mask" else "none"
+            bucket_options.layout.display = "" if treatment_control.value == "bucket" else "none"
+
+        treatment_control.observe(update_treatment_options, names="value")
+        update_treatment_options()
         sensitive_controls[name] = {
             "enabled": enabled, "treatment": treatment_control, "action": action_control,
+            "preserve_start": preserve_start, "preserve_end": preserve_end,
+            "mask_character": mask_character, "bins": bins, "labels": labels,
         }
-        sensitive_rows.append(widgets.GridBox(
-            [enabled, widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
-             widgets.HTML(value=f"<code>{html.escape(column_id)}</code>"),
-             treatment_control, action_control],
-            layout=widgets.Layout(
-                width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
-                grid_gap="4px 12px", align_items="center",
+        sensitive_rows.append(widgets.VBox([
+            widgets.GridBox(
+                [enabled, widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
+                 widgets.HTML(value=f"<code>{html.escape(column_id)}</code>"),
+                 treatment_control, action_control],
+                layout=widgets.Layout(
+                    width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
+                    grid_gap="4px 12px", align_items="center",
+                ),
             ),
-        ))
+            mask_options,
+            bucket_options,
+        ]))
     sensitive_editor = widgets.VBox([
         widgets.HTML(value=(
             "<b>Column rules</b><br><span style='font-size:12px'>"
@@ -447,9 +489,22 @@ def _render_guardrail_authoring(
             change_column=change_column.value,
             guardrail_version=version_state["persisted"] + 1,
             sensitive_rules=[
-                {"column_name": name, "treatment": controls["treatment"].value,
-                 "action": controls["action"].value,
-                 "is_active": controls["enabled"].value}
+                {
+                    "column_name": name,
+                    "treatment": controls["treatment"].value,
+                    "action": controls["action"].value,
+                    "is_active": controls["enabled"].value,
+                    "parameters": (
+                        {"preserve_start": controls["preserve_start"].value,
+                         "preserve_end": controls["preserve_end"].value,
+                         "mask_character": controls["mask_character"].value}
+                        if controls["treatment"].value == "mask"
+                        else ({
+                            "bins": [float(value.strip()) for value in controls["bins"].value.split(",") if value.strip()],
+                            "labels": [value.strip() for value in controls["labels"].value.split(",")],
+                        } if controls["treatment"].value == "bucket" else {})
+                    ),
+                }
                 for name, controls in sensitive_controls.items()
                 if controls["enabled"].value
                 or str((state.get("column_ids") or {}).get(name) or "")

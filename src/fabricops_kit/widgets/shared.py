@@ -909,7 +909,11 @@ def schema_version_options(rows: list[dict[str, Any]], table_id: str) -> list[tu
 
 from fabricops_kit.config.shared import is_table_not_found_error
 
-from fabricops_kit.data_contract.shared import canonical_guardrail_rule_record, normalize_guardrail_action
+from fabricops_kit.data_contract.shared import (
+    canonical_guardrail_rule_record,
+    normalize_guardrail_action,
+    validate_sensitive_data_parameters,
+)
 
 def _guardrail_stable_json(value: Any) -> str:
     """Serialize authoring parameters deterministically."""
@@ -1096,18 +1100,20 @@ def sensitive_data_record_from_selection(
     action: str = "Block",
     guardrail_version: int | None = None,
     is_active: bool = True,
+    parameters: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build one canonical column-scoped Sensitive Data Guardrail row."""
-    normalized_treatment = str(treatment or "").strip().lower()
-    if normalized_treatment not in {"tokenize", "remove"}:
-        raise ValueError("Sensitive Data treatment must be tokenize or remove.")
+    normalized_parameters = validate_sensitive_data_parameters({
+        "scope": "column", "treatment": treatment, **dict(parameters or {}),
+    })
+    normalized_treatment = normalized_parameters["treatment"]
     column_id = _column_id_for_name(state, column_name)
     return build_rule_record(
         state,
         guardrail_type="sensitive_data",
         rule_id=f"sensitive_data_{column_id}",
         rule_type=normalized_treatment,
-        parameters={"scope": "column", "treatment": normalized_treatment},
+        parameters=normalized_parameters,
         action=action,
         column_name=column_name,
         guardrail_version=guardrail_version,

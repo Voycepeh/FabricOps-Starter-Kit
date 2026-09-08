@@ -1,19 +1,22 @@
 """Sensitive Data Guardrail preparation tests."""
 
 from importlib import import_module
+import json
 
 import pytest
 
 module = import_module("fabricops_kit.pipeline.check_sensitive_data")
 
 
-def _rule(*, treatment="tokenize", action="Block", column_name="email", version=2):
+def _rule(*, treatment="tokenize", action="Block", column_name="email", version=2,
+          column_id="email-id", parameters=None):
     return {
         "guardrail_rule_id": f"sensitive-{version}", "guardrail_version": 1,
         "contract_id": "contract", "contract_version": version,
-        "table_id": "table-id", "column_id": "email-id", "column_name": column_name,
-        "guardrail_type": "sensitive_data", "rule_parameters_json":
-        f'{{"scope":"column","treatment":"{treatment}"}}',
+        "table_id": "table-id", "column_id": column_id, "column_name": column_name,
+        "guardrail_type": "sensitive_data", "rule_parameters_json": json.dumps({
+            "scope": "column", "treatment": treatment, **(parameters or {}),
+        }),
         "action": action, "is_active": True,
     }
 
@@ -62,6 +65,86 @@ def test_multiple_sensitive_columns_apply_mixed_treatments(monkeypatch, spark_se
     assert result["dataframe"].select("email").distinct().count() == 1
     assert {row.column_id for row in result["support_mapping"].collect()} == {"email-id"}
     assert len(result["checks"]) == 2
+
+
+@pytest.mark.parametrize("parameters,expected", [
+    ({"preserve_start": 1, "preserve_end": 0, "mask_character": "*"}, "S********"),
+    ({"preserve_start": 0, "preserve_end": 3, "mask_character": "*"}, "******67A"),
+    ({"preserve_start": 1, "preserve_end": 3, "mask_character": "*"}, "S*****67A"),
+])
+def test_mask_preserves_configured_portions(monkeypatch, spark_session, parameters, expected):
+    """Mask obscures exactly the middle while preserving rows and nulls."""
+    _runtime(monkeypatch, [_rule(treatment="mask", parameters=parameters)], [])
+    frame = spark_session.createDataFrame([(1, "S1234567A"), (2, "S1"), (3, None)], ["id", "email"])
+    result = module.check_sensitive_data(frame, table_id="table-id")
+    values = [row.email for row in result["dataframe"].orderBy("id").collect()]
+    assert values == [expected, "S1", None]
+    assert result["support_mapping"] is None
+
+
+def test_bucket_uses_open_ends_and_inclusive_lower_boundaries(monkeypatch, spark_session):
+    """Bucket preserves rows and maps exact boundaries using lower-bound labels."""
+    parameters = {
+        "bins": [0, 3000, 5000, 8000, 12000],
+        "labels": ["<3k", "3k-5k", "5k-8k", "8k-12k", "12k+"],
+    }
+    _runtime(monkeypatch, [_rule(treatment="bucket", column_name="salary", column_id="salary-id", parameters=parameters)], [])
+    frame = spark_session.createDataFrame(
+        [(1, -1.0), (2, 0.0), (3, 3000.0), (4, 8420.0), (5, 12000.0), (6, None)],
+        ["id", "salary"],
+    )
+    result = module.check_sensitive_data(frame, table_id="table-id")
+    assert [row.salary for row in result["dataframe"].orderBy("id").collect()] == [
+        "<3k", "<3k", "3k-5k", "8k-12k", "12k+", None,
+    ]
+    assert result["support_mapping"] is None
+
+
+@pytest.mark.parametrize("treatment,parameters,column_type", [
+    ("mask", {"preserve_start": -1, "preserve_end": 0, "mask_character": "*"}, "string"),
+    ("bucket", {"bins": [0, 0], "labels": ["low", "high"]}, "double"),
+    ("bucket", {"bins": [0, 10], "labels": ["low"]}, "double"),
+    ("bucket", {"bins": [0, 10], "labels": ["low", "high"]}, "string"),
+])
+@pytest.mark.parametrize("action,can_continue", [("Warn", True), ("Block", False)])
+def test_invalid_mask_or_bucket_policy_respects_action(
+    monkeypatch, spark_session, treatment, parameters, column_type, action, can_continue
+):
+    """Malformed policy and incompatible bucket input fail with Warn/Block semantics."""
+    _runtime(monkeypatch, [_rule(treatment=treatment, action=action, parameters=parameters)], [])
+    value = "not-numeric" if column_type == "string" else 1.0
+    frame = spark_session.createDataFrame([(1, value)], f"id int, email {column_type}")
+    result = module.check_sensitive_data(frame, table_id="table-id")
+    assert result["can_continue"] is can_continue
+    assert result["status"] == ("warning" if can_continue else "failed")
+    assert result["support_mapping"] is None
+
+
+def test_all_four_treatments_execute_independently(monkeypatch, spark_session):
+    """Tokenize, Mask, Bucket, and Remove apply in one exact contract version."""
+    rules = [
+        _rule(column_name="nric", column_id="nric-id"),
+        _rule(treatment="mask", column_name="phone", column_id="phone-id", parameters={
+            "preserve_start": 1, "preserve_end": 3, "mask_character": "*",
+        }),
+        _rule(treatment="bucket", column_name="salary", column_id="salary-id", parameters={
+            "bins": [0, 3000, 5000, 8000, 12000],
+            "labels": ["<3k", "3k-5k", "5k-8k", "8k-12k", "12k+"],
+        }),
+        _rule(treatment="remove", column_name="email", column_id="email-id"),
+    ]
+    _runtime(monkeypatch, rules, [])
+    frame = spark_session.createDataFrame(
+        [("S1234567A", "91234567", 8420, "a@example.test")],
+        ["nric", "phone", "salary", "email"],
+    )
+    result = module.check_sensitive_data(frame, table_id="table-id")
+    row = result["dataframe"].first()
+    assert result["dataframe"].columns == ["nric", "phone", "salary"]
+    assert row.nric != "S1234567A"
+    assert row.phone == "9****567"
+    assert row.salary == "8k-12k"
+    assert {mapping.column_id for mapping in result["support_mapping"].collect()} == {"nric-id"}
 
 
 def test_existing_mapping_preserves_established_token(monkeypatch, spark_session):

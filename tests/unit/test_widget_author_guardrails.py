@@ -121,12 +121,18 @@ def _records(**overrides):
     return _guardrail_records_from_selection(_state(), **values)
 
 
-@pytest.mark.parametrize("treatment", ["tokenize", "remove"])
-def test_sensitive_data_selection_uses_canonical_column_identity(treatment):
+@pytest.mark.parametrize("treatment,parameters", [
+    ("tokenize", {}),
+    ("mask", {"preserve_start": 1, "preserve_end": 2, "mask_character": "*"}),
+    ("bucket", {"bins": [0, 10], "labels": ["low", "high"]}),
+    ("remove", {}),
+])
+def test_sensitive_data_selection_uses_canonical_column_identity(treatment, parameters):
     """The existing Guardrail service authors explicit column-scoped treatment."""
     records = _records(
         sensitive_rules=[{
             "column_name": "extra", "treatment": treatment, "action": "Warn",
+            "parameters": parameters,
         }],
     )
     rule = next(row for row in records if row["guardrail_type"] == "sensitive_data")
@@ -135,7 +141,7 @@ def test_sensitive_data_selection_uses_canonical_column_identity(treatment):
     assert rule["contract_id"] == "contract-orders"
     assert rule["contract_version"] == 2
     assert json.loads(rule["rule_parameters_json"]) == {
-        "scope": "column", "treatment": treatment,
+        "scope": "column", "treatment": treatment, **parameters,
     }
     assert rule["action"] == "Warn"
 
