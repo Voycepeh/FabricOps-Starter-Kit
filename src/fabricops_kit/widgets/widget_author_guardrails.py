@@ -15,6 +15,7 @@ from fabricops_kit.pipeline.shared import (
 )
 from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
+from fabricops_kit.widgets import enrichment_shared as enrichment_ai
 
 CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
@@ -176,6 +177,11 @@ def widget_author_guardrails(
     Catalogue table and writes ``METADATA_GUARDRAIL`` rows owned by its
     ``contract_id`` and ``contract_version``. Runtime code resolves the
     underlying ``table_id`` through ``METADATA_DATA_CONTRACT``.
+    Sensitive Data uses one compact Add/Edit editor plus an authored-rule list;
+    it does not create treatment controls for every Catalogue column. When AI
+    Enrichment is enabled, suggestions use compact metadata context and populate
+    editable drafts only. Governance must review and save them through the same
+    normalized Guardrail service.
 
     Examples
     --------
@@ -231,6 +237,249 @@ def widget_author_guardrails(
     }
 
 
+def _load_sensitive_rules(state: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Return the latest independently authored Sensitive Data rules by column."""
+    latest = {}
+    names_by_id = {value: name for name, value in (state.get("column_ids") or {}).items()}
+    for row in state.get("existing_rules") or ():
+        if str(row.get("guardrail_type") or "") != "sensitive_data":
+            continue
+        column_id = str(row.get("column_id") or "")
+        current = latest.get(column_id)
+        order = (int(row.get("guardrail_version") or 0), str(row.get("_committed_at") or ""))
+        current_order = (
+            int(current.get("guardrail_version") or 0), str(current.get("_committed_at") or "")
+        ) if current else (-1, "")
+        if order > current_order:
+            params = authoring.rule_parameters(row)
+            latest[column_id] = {
+                "column_name": names_by_id.get(column_id, ""),
+                "column_id": column_id,
+                "treatment": str(params.get("treatment") or "tokenize"),
+                "action": str(row.get("action") or "Block"),
+                "parameters": {
+                    key: value for key, value in params.items()
+                    if key not in {"scope", "treatment"}
+                },
+                "is_active": row.get("is_active", True) is not False,
+                "persisted": True,
+            }
+    return list(latest.values())
+
+
+def _sensitive_rule_from_controls(controls: Mapping[str, Any], state: Mapping[str, Any]) -> dict[str, Any]:
+    """Build and canonically validate one editable Sensitive Data draft."""
+    treatment = str(controls["treatment"].value)
+    parameters = {}
+    if treatment == "mask":
+        parameters = {
+            "preserve_start": controls["preserve_start"].value,
+            "preserve_end": controls["preserve_end"].value,
+            "mask_character": controls["mask_character"].value,
+        }
+    elif treatment == "bucket":
+        parameters = {
+            "bins": [
+                float(value.strip()) for value in str(controls["bins"].value).split(",")
+                if value.strip()
+            ],
+            "labels": [
+                value.strip() for value in str(controls["labels"].value).split(",")
+            ],
+        }
+    record = authoring.sensitive_data_record_from_selection(
+        state,
+        column_name=str(controls["column"].value),
+        treatment=treatment,
+        action=str(controls["action"].value),
+        parameters=parameters,
+    )
+    return {
+        "column_name": str(controls["column"].value),
+        "column_id": record["column_id"],
+        "treatment": treatment,
+        "action": record["action"],
+        "parameters": parameters,
+        "is_active": True,
+        "persisted": False,
+    }
+
+
+def _render_sensitive_data_rule_list(widgets, drafts, container, *, edit_rule, remove_rule) -> None:
+    """Render compact authored-rule summaries with Edit and Remove actions."""
+    rows = []
+    for draft in drafts:
+        if not draft.get("is_active", True):
+            continue
+        edit = widgets.Button(description="Edit")
+        remove = widgets.Button(description="Remove", button_style="warning")
+        edit.on_click(lambda _, item=draft: edit_rule(item))
+        remove.on_click(lambda _, item=draft: remove_rule(item))
+        rows.append(widgets.GridBox(
+            [widgets.HTML(value=f"<code>{html.escape(draft['column_name'])}</code>"),
+             widgets.HTML(value=html.escape(str(draft["treatment"]).title())),
+             widgets.HTML(value=html.escape(str(draft["action"]))), edit, remove],
+            layout=widgets.Layout(
+                width="100%", grid_template_columns="1fr 120px 100px 80px 90px",
+                grid_gap="4px 10px", align_items="center",
+            ),
+        ))
+    container.children = tuple(rows) if rows else (
+        widgets.HTML(value="<i>No Sensitive Data rules authored.</i>"),
+    )
+
+
+def _render_sensitive_data_editor(
+    state: Mapping[str, Any], *, widgets: Any, ai_config: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Render one compact Sensitive Data rule editor and transient rule list."""
+    drafts = _load_sensitive_rules(state)
+    column = widgets.Dropdown(
+        options=list(state.get("columns") or ()),
+        **shared.widget_common(widgets, "Column"),
+    )
+    treatment = widgets.Dropdown(
+        options=[("Tokenize", "tokenize"), ("Mask", "mask"),
+                 ("Bucket", "bucket"), ("Remove", "remove")],
+        value="tokenize", **shared.widget_common(widgets, "Treatment"),
+    )
+    action = widgets.Dropdown(options=_FAILURE_ACTIONS, value="Block", **shared.widget_common(widgets, "Action"))
+    preserve_start = widgets.BoundedIntText(value=0, min=0, **shared.widget_common(widgets, "Preserve start"))
+    preserve_end = widgets.BoundedIntText(value=0, min=0, **shared.widget_common(widgets, "Preserve end"))
+    mask_character = widgets.Text(value="*", **shared.widget_common(widgets, "Mask character"))
+    bins = widgets.Text(**shared.widget_common(widgets, "Numeric bins"))
+    labels = widgets.Text(**shared.widget_common(widgets, "Labels"))
+    mask_options = widgets.HBox([preserve_start, preserve_end, mask_character])
+    bucket_options = widgets.HBox([bins, labels])
+    add_update = widgets.Button(description="Add / Update rule", button_style="primary")
+    suggest_button = widgets.Button(description="✨ Suggest Sensitive Data")
+    suggest_button.disabled = not bool(ai_config.get("enabled", False))
+    status = widgets.HTML()
+    current_rules = widgets.VBox()
+    editing = {"column_id": ""}
+    change_callback = {"value": None}
+    controls = {
+        "column": column, "treatment": treatment, "action": action,
+        "preserve_start": preserve_start, "preserve_end": preserve_end,
+        "mask_character": mask_character, "bins": bins, "labels": labels,
+    }
+
+    def update_options(*_: Any) -> None:
+        mask_options.layout.display = "" if treatment.value == "mask" else "none"
+        bucket_options.layout.display = "" if treatment.value == "bucket" else "none"
+
+    def edit_rule(draft) -> None:
+        editing["column_id"] = draft["column_id"]
+        column.value = draft["column_name"]
+        treatment.value = draft["treatment"]
+        action.value = draft["action"]
+        params = draft.get("parameters") or {}
+        preserve_start.value = int(params.get("preserve_start", 0))
+        preserve_end.value = int(params.get("preserve_end", 0))
+        mask_character.value = str(params.get("mask_character") or "*")
+        bins.value = ", ".join(str(value) for value in params.get("bins", []))
+        labels.value = ", ".join(str(value) for value in params.get("labels", []))
+        update_options()
+
+    def remove_rule(draft) -> None:
+        if draft.get("persisted"):
+            draft["is_active"] = False
+        else:
+            drafts.remove(draft)
+        if editing["column_id"] == draft["column_id"]:
+            editing["column_id"] = ""
+        _render_sensitive_data_rule_list(
+            widgets, drafts, current_rules, edit_rule=edit_rule, remove_rule=remove_rule
+        )
+        if change_callback["value"]:
+            change_callback["value"]()
+
+    def add_or_update(*_: Any) -> dict[str, Any]:
+        try:
+            draft = _sensitive_rule_from_controls(controls, state)
+        except (TypeError, ValueError) as exc:
+            status.value = f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
+            return {}
+        current = next((item for item in drafts if item["column_id"] == draft["column_id"]), None)
+        if current:
+            persisted = current.get("persisted", False)
+            current.update(draft)
+            current["persisted"] = persisted
+        else:
+            drafts.append(draft)
+        editing["column_id"] = draft["column_id"]
+        status.value = "Draft rule updated. Use Save Guardrails to persist it."
+        _render_sensitive_data_rule_list(
+            widgets, drafts, current_rules, edit_rule=edit_rule, remove_rule=remove_rule
+        )
+        if change_callback["value"]:
+            change_callback["value"]()
+        return draft
+
+    def suggest() -> list[dict[str, Any]]:
+        if not bool(ai_config.get("enabled", False)):
+            status.value = "AI Enrichment is disabled in 00_env_config. Manual authoring remains available."
+            return []
+        try:
+            suggestions = enrichment_ai.suggest_sensitive_data(
+                enrichment_ai.build_ai_sensitive_data_context(dict(state)),
+                prompt="\n".join(
+                    str(ai_config.get(name) or "").strip()
+                    for name in ("description_prompt", "classification_prompt")
+                    if str(ai_config.get(name) or "").strip()
+                ),
+            )
+        except Exception as exc:
+            status.value = f"AI suggestion unavailable: {html.escape(str(exc))} Manual authoring remains available."
+            return []
+        if not suggestions:
+            status.value = "AI returned no valid Sensitive Data rules. Manual authoring remains available."
+            return []
+        for suggestion in suggestions:
+            current = next((item for item in drafts if item["column_id"] == suggestion["column_id"]), None)
+            if current:
+                persisted = current.get("persisted", False)
+                current.update(suggestion)
+                current["persisted"] = persisted
+            else:
+                drafts.append({**suggestion, "persisted": False})
+        _render_sensitive_data_rule_list(
+            widgets, drafts, current_rules, edit_rule=edit_rule, remove_rule=remove_rule
+        )
+        status.value = "AI suggestions added to draft rules. Review or edit them before saving."
+        if change_callback["value"]:
+            change_callback["value"]()
+        return suggestions
+
+    def set_on_change(callback) -> None:
+        change_callback["value"] = callback
+
+    treatment.observe(update_options, names="value")
+    add_update.on_click(add_or_update)
+    suggest_button.on_click(lambda _: suggest())
+    update_options()
+    _render_sensitive_data_rule_list(
+        widgets, drafts, current_rules, edit_rule=edit_rule, remove_rule=remove_rule
+    )
+    ui = widgets.VBox([
+        shared.action_row(widgets, [suggest_button]),
+        widgets.HTML(value="<b>Add / Edit rule</b>"),
+        shared.form_grid(widgets, [column, treatment, action]),
+        mask_options, bucket_options,
+        shared.action_row(widgets, [add_update]), status,
+        widgets.HTML(value="<b>Current rules</b>"), current_rules,
+    ])
+    return {
+        "ui": ui, "controls": controls, "draft_rules": drafts,
+        "add_or_update": add_or_update, "edit_rule": edit_rule,
+        "remove_rule": remove_rule, "suggest": suggest,
+        "suggest_button": suggest_button, "status": status,
+        "mask_options": mask_options, "bucket_options": bucket_options,
+        "current_rules": current_rules, "update_options": update_options,
+        "set_on_change": set_on_change,
+    }
+
+
 def _render_guardrail_authoring(
     state: Mapping[str, Any],
     *,
@@ -249,10 +498,6 @@ def _render_guardrail_authoring(
     schema_rule = authoring.latest_rule(existing, "schema")
     freshness_rule = authoring.latest_rule(existing, "freshness")
     change_rule = authoring.latest_rule(existing, "changes")
-    sensitive_rules = [
-        row for row in existing
-        if str(row.get("guardrail_type") or "") == "sensitive_data"
-    ]
     schema_params = authoring.rule_parameters(schema_rule)
     freshness_params = authoring.rule_parameters(freshness_rule)
     change_params = authoring.rule_parameters(change_rule)
@@ -361,107 +606,11 @@ def _render_guardrail_authoring(
         value=str(change_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
-    sensitive_by_column_id = {}
-    for row in sensitive_rules:
-        column_id = str(row.get("column_id") or "")
-        current = sensitive_by_column_id.get(column_id)
-        if current is None or (
-            int(row.get("guardrail_version") or 0), str(row.get("_committed_at") or "")
-        ) > (
-            int(current.get("guardrail_version") or 0),
-            str(current.get("_committed_at") or ""),
-        ):
-            sensitive_by_column_id[column_id] = row
-    sensitive_controls = {}
-    sensitive_rows = []
-    for name in columns:
-        column_id = str((state.get("column_ids") or {}).get(name) or "")
-        current_rule = sensitive_by_column_id.get(column_id, {})
-        params = authoring.rule_parameters(current_rule)
-        treatment = str(params.get("treatment") or "tokenize")
-        enabled = widgets.Checkbox(
-            value=bool(current_rule) and current_rule.get("is_active", True) is not False,
-            description="", indent=False,
-        )
-        treatment_options = [
-            ("Tokenize", "tokenize"), ("Mask", "mask"),
-            ("Bucket", "bucket"), ("Remove", "remove"),
-        ]
-        treatment_control = widgets.Dropdown(
-            options=treatment_options,
-            value=treatment if treatment in {value for _, value in treatment_options} else "tokenize",
-            description="",
-        )
-        action_control = widgets.Dropdown(
-            options=_FAILURE_ACTIONS,
-            value=str(current_rule.get("action") or "Block"),
-            description="",
-        )
-        preserve_start = widgets.BoundedIntText(
-            value=int(params.get("preserve_start", 0)), min=0,
-            **shared.widget_common(widgets, "Preserve start"),
-        )
-        preserve_end = widgets.BoundedIntText(
-            value=int(params.get("preserve_end", 0)), min=0,
-            **shared.widget_common(widgets, "Preserve end"),
-        )
-        mask_character = widgets.Text(
-            value=str(params.get("mask_character") or "*"),
-            **shared.widget_common(widgets, "Mask character"),
-        )
-        bins = widgets.Text(
-            value=", ".join(str(value) for value in params.get("bins", [])),
-            **shared.widget_common(widgets, "Numeric bins"),
-        )
-        labels = widgets.Text(
-            value=", ".join(str(value) for value in params.get("labels", [])),
-            **shared.widget_common(widgets, "Labels"),
-        )
-        mask_options = widgets.HBox([preserve_start, preserve_end, mask_character])
-        bucket_options = widgets.HBox([bins, labels])
-
-        def update_treatment_options(*_: Any, treatment_control=treatment_control,
-                                     mask_options=mask_options,
-                                     bucket_options=bucket_options) -> None:
-            mask_options.layout.display = "" if treatment_control.value == "mask" else "none"
-            bucket_options.layout.display = "" if treatment_control.value == "bucket" else "none"
-
-        treatment_control.observe(update_treatment_options, names="value")
-        update_treatment_options()
-        sensitive_controls[name] = {
-            "enabled": enabled, "treatment": treatment_control, "action": action_control,
-            "preserve_start": preserve_start, "preserve_end": preserve_end,
-            "mask_character": mask_character, "bins": bins, "labels": labels,
-        }
-        sensitive_rows.append(widgets.VBox([
-            widgets.GridBox(
-                [enabled, widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
-                 widgets.HTML(value=f"<code>{html.escape(column_id)}</code>"),
-                 treatment_control, action_control],
-                layout=widgets.Layout(
-                    width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
-                    grid_gap="4px 12px", align_items="center",
-                ),
-            ),
-            mask_options,
-            bucket_options,
-        ]))
-    sensitive_editor = widgets.VBox([
-        widgets.HTML(value=(
-            "<b>Column rules</b><br><span style='font-size:12px'>"
-            "Enable one independent Sensitive Data Guardrail per Catalogue column.</span>"
-        )),
-        widgets.GridBox(
-            [widgets.HTML(value="<b>Use</b>"), widgets.HTML(value="<b>Column</b>"),
-             widgets.HTML(value="<b>Canonical column ID</b>"),
-             widgets.HTML(value="<b>Treatment</b>"), widgets.HTML(value="<b>Action</b>")],
-            layout=widgets.Layout(
-                width="100%", grid_template_columns="60px 1fr 1fr 140px 120px",
-                grid_gap="4px 12px",
-            ),
-        ),
-        *sensitive_rows,
-    ])
+    governance_config = getattr(config, "governance_config", None)
+    ai_config = dict(getattr(governance_config, "ai_enrichment", None) or {})
+    sensitive_editor = _render_sensitive_data_editor(
+        state, widgets=widgets, ai_config=ai_config
+    )
     preview = shared.preview_region(widgets, widgets.Textarea(
         description="Canonical preview",
         disabled=True,
@@ -488,28 +637,7 @@ def _render_guardrail_authoring(
             partition_column=partition_column.value,
             change_column=change_column.value,
             guardrail_version=version_state["persisted"] + 1,
-            sensitive_rules=[
-                {
-                    "column_name": name,
-                    "treatment": controls["treatment"].value,
-                    "action": controls["action"].value,
-                    "is_active": controls["enabled"].value,
-                    "parameters": (
-                        {"preserve_start": controls["preserve_start"].value,
-                         "preserve_end": controls["preserve_end"].value,
-                         "mask_character": controls["mask_character"].value}
-                        if controls["treatment"].value == "mask"
-                        else ({
-                            "bins": [float(value.strip()) for value in controls["bins"].value.split(",") if value.strip()],
-                            "labels": [value.strip() for value in controls["labels"].value.split(",")],
-                        } if controls["treatment"].value == "bucket" else {})
-                    ),
-                }
-                for name, controls in sensitive_controls.items()
-                if controls["enabled"].value
-                or str((state.get("column_ids") or {}).get(name) or "")
-                in sensitive_by_column_id
-            ],
+            sensitive_rules=sensitive_editor["draft_rules"],
         )
 
     def refresh_preview(*_: Any) -> None:
@@ -523,6 +651,8 @@ def _render_guardrail_authoring(
             message.value = (
                 f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
             )
+
+    sensitive_editor["set_on_change"](refresh_preview)
 
     def save(*_: Any) -> list[dict[str, Any]]:
         records = build_records()
@@ -559,9 +689,6 @@ def _render_guardrail_authoring(
         partition_column,
         change_column,
         change_failure_action,
-        *(control
-          for controls in sensitive_controls.values()
-          for control in controls.values()),
     ):
         control.observe(refresh_preview, names="value")
     save_button.on_click(save)
@@ -596,7 +723,7 @@ def _render_guardrail_authoring(
             shared.form_section(
                 widgets,
                 title="Sensitive Data",
-                children=[sensitive_editor],
+                children=[sensitive_editor["ui"]],
             ),
         ],
         configuration=[
@@ -653,7 +780,7 @@ def _render_guardrail_authoring(
             "partition_column": partition_column,
             "change_column": change_column,
             "change_failure_action": change_failure_action,
-            "sensitive_rules": sensitive_controls,
+            "sensitive_data": sensitive_editor,
             "preview": preview,
         },
         "build_records": build_records,

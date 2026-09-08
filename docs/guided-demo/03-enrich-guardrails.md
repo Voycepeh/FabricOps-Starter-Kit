@@ -52,6 +52,13 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
     Author schema, freshness, profile-behaviour, Data Quality, and Sensitive Data Guardrails for the ETL workflow, then save the Governance records. Sensitive Data authoring can enable one independent rule for each active Catalogue column, using its canonical `column_id`, a Tokenize, Mask, Bucket, or Remove treatment, and a Warn or Block action against the exact contract version.
 
+    Use **✨ Suggest Sensitive Data** when AI Enrichment is enabled to populate
+    validated draft rules from compact Catalogue, Enrichment, and profiling
+    context. Suggestions never save automatically: Governance must review or edit
+    each rule, including proposed Bucket boundaries, before using **Save Guardrails**.
+    If AI is disabled or unavailable, the compact Add / Edit rule workflow remains
+    fully usable.
+
     | Metadata table | Governance responsibility |
     | --- | --- |
     | `METADATA_DATA_CATALOGUE` | Read the table and column identity and structure written by `02_pipeline`. |

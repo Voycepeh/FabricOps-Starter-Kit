@@ -12,9 +12,9 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_guardrails.py:146`
+`fabricops_kit/widgets/widget_author_guardrails.py:147`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L146-L231">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L147-L237">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,6 +87,11 @@ The widget resolves a Data Contract version for the selected profiled
 Catalogue table and writes ``METADATA_GUARDRAIL`` rows owned by its
 ``contract_id`` and ``contract_version``. Runtime code resolves the
 underlying ``table_id`` through ``METADATA_DATA_CONTRACT``.
+Sensitive Data uses one compact Add/Edit editor plus an authored-rule list;
+it does not create treatment controls for every Catalogue column. When AI
+Enrichment is enabled, suggestions use compact metadata context and populate
+editable drafts only. Governance must review and save them through the same
+normalized Guardrail service.
 
 </div>
 

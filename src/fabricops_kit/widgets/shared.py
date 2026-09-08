@@ -1207,6 +1207,9 @@ def load_guardrail_authoring_targets(
     contracts = read_metadata_table_or_empty(
         config, env, DATA_CONTRACT_TABLE, spark_session=spark_session
     )
+    enrichment = read_metadata_table_or_empty(
+        config, env, "METADATA_ENRICHMENT", spark_session=spark_session
+    )
     if not catalogue or not profiles:
         raise ValueError("No profiled Catalogue table is available for Guardrail authoring.")
 
@@ -1298,6 +1301,19 @@ def load_guardrail_authoring_targets(
             and str(row.get("column_id") or "").strip()
         }
         evidence = []
+        contract_id = str(latest_contracts[table_id].get("contract_id") or "")
+        contract_version = int(latest_contracts[table_id].get("contract_version") or 0)
+        enrichment_values: dict[tuple[str, str], str] = {}
+        for row in enrichment:
+            if (
+                str(row.get("contract_id") or "") == contract_id
+                and int(row.get("contract_version") or 0) == contract_version
+                and str(row.get("environment_name") or env) == env
+            ):
+                enrichment_values[(
+                    str(row.get("column_id") or ""),
+                    str(row.get("enrichment_type") or ""),
+                )] = str(row.get("value") or "")
         for profile in snapshot:
             column_id = str(profile.get("column_id") or "")
             catalogue_column = catalogue_columns.get(column_id)
@@ -1315,6 +1331,16 @@ def load_guardrail_authoring_targets(
                     "profile_id": str(profile.get("profile_id") or ""),
                     "profile_snapshot_id": snapshot_id,
                     "_committed_at": profile.get("_committed_at"),
+                    **{
+                        name: profile.get(name)
+                        for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                        )
+                        if profile.get(name) is not None
+                    },
+                    "description": enrichment_values.get((column_id, "Description"), ""),
+                    "classification": enrichment_values.get((column_id, "Classification"), ""),
                 }
             )
         evidence.sort(key=lambda row: row["column_name"].casefold())
