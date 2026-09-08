@@ -57,7 +57,9 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
     context. Suggestions never save automatically: Governance must review or edit
     each rule, including proposed Bucket boundaries, before using **Save Guardrails**.
     If AI is disabled or unavailable, the compact Add / Edit rule workflow remains
-    fully usable.
+    fully usable. Configure the advisory instruction with
+    `governance_config.ai_enrichment.sensitive_data_prompt`; Description and
+    Classification prompts remain separate and are not combined for this action.
 
     | Metadata table | Governance responsibility |
     | --- | --- |

@@ -353,7 +353,10 @@ def _render_sensitive_data_editor(
     bucket_options = widgets.HBox([bins, labels])
     add_update = widgets.Button(description="Add / Update rule", button_style="primary")
     suggest_button = widgets.Button(description="✨ Suggest Sensitive Data")
-    suggest_button.disabled = not bool(ai_config.get("enabled", False))
+    suggest_button.disabled = not (
+        bool(ai_config.get("enabled", False))
+        and str(ai_config.get("sensitive_data_prompt") or "").strip()
+    )
     status = widgets.HTML()
     current_rules = widgets.VBox()
     editing = {"column_id": ""}
@@ -420,14 +423,14 @@ def _render_sensitive_data_editor(
         if not bool(ai_config.get("enabled", False)):
             status.value = "AI Enrichment is disabled in 00_env_config. Manual authoring remains available."
             return []
+        sensitive_prompt = str(ai_config.get("sensitive_data_prompt") or "").strip()
+        if not sensitive_prompt:
+            status.value = "Sensitive Data AI prompt is not configured. Manual authoring remains available."
+            return []
         try:
             suggestions = enrichment_ai.suggest_sensitive_data(
                 enrichment_ai.build_ai_sensitive_data_context(dict(state)),
-                prompt="\n".join(
-                    str(ai_config.get(name) or "").strip()
-                    for name in ("description_prompt", "classification_prompt")
-                    if str(ai_config.get(name) or "").strip()
-                ),
+                prompt=sensitive_prompt,
             )
         except Exception as exc:
             status.value = f"AI suggestion unavailable: {html.escape(str(exc))} Manual authoring remains available."

@@ -221,17 +221,34 @@ def test_sensitive_ai_suggestions_are_draft_only(monkeypatch):
         "column_name": "extra", "column_id": "col-extra", "treatment": "remove",
         "action": "Block", "parameters": {}, "is_active": True,
     }
+    prompts = []
+    def fake_suggest(*_args, **kwargs):
+        prompts.append(kwargs["prompt"])
+        return [suggestion]
     monkeypatch.setattr(
-        guardrail_widget_module.enrichment_ai, "suggest_sensitive_data",
-        lambda *_args, **_kwargs: [suggestion],
+        guardrail_widget_module.enrichment_ai, "suggest_sensitive_data", fake_suggest,
     )
     editor = _render_sensitive_data_editor(
         _state(), widgets=widgets,
-        ai_config={"enabled": True, "classification_prompt": "policy"},
+        ai_config={"enabled": True, "sensitive_data_prompt": "policy"},
     )
     assert editor["suggest"]() == [suggestion]
     assert editor["draft_rules"][0]["column_name"] == "extra"
     assert "persisted" in editor["draft_rules"][0]
+    assert prompts == ["policy"]
+
+
+def test_blank_sensitive_ai_prompt_disables_only_suggestions(monkeypatch):
+    """A missing dedicated prompt leaves the compact manual editor available."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    editor = _render_sensitive_data_editor(
+        _state(), widgets=widgets,
+        ai_config={"enabled": True, "description_prompt": "describe", "classification_prompt": "classify"},
+    )
+    assert editor["suggest_button"].disabled is True
+    assert editor["suggest"]() == []
+    assert "not configured" in editor["status"].value
+    assert editor["add_or_update"]()["treatment"] == "tokenize"
 
 
 def test_sensitive_ai_unavailable_keeps_manual_editor_usable(monkeypatch):
@@ -243,7 +260,7 @@ def test_sensitive_ai_unavailable_keeps_manual_editor_usable(monkeypatch):
     )
     editor = _render_sensitive_data_editor(
         _state(), widgets=widgets,
-        ai_config={"enabled": True, "classification_prompt": "policy"},
+        ai_config={"enabled": True, "sensitive_data_prompt": "policy"},
     )
     assert editor["suggest"]() == []
     assert "Manual authoring remains available" in editor["status"].value

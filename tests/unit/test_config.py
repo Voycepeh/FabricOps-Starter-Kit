@@ -171,6 +171,7 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
     assert "ai_prompt_config" not in source
     assert '"description_prompt"' in source
     assert '"classification_prompt"' in source
+    assert '"sensitive_data_prompt"' in source
     assert '"enabled": True' in source
     assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
     assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
@@ -1509,6 +1510,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "enabled": True,
             "description_prompt": " describe ",
             "classification_prompt": " classify ",
+            "sensitive_data_prompt": " sensitive rules ",
         },
     )
     assert config.sensitivity_labels == ["Public", "Restricted"]
@@ -1516,5 +1518,10 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         "enabled": True,
         "description_prompt": "describe",
         "classification_prompt": "classify",
+        "sensitive_data_prompt": "sensitive rules",
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
+    default_prompt = GovernanceConfig().ai_enrichment["sensitive_data_prompt"]
+    assert all(term in default_prompt for term in ("tokenize", "mask", "bucket", "remove"))
+    assert "Classification" in default_prompt
+    assert "raw values" in default_prompt
