@@ -2668,8 +2668,11 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
         ), 256)
         reason = f"Row failed {rule['rule_type']} rule {rule['rule_id']}."
         action = "Block" if rule["severity"] == "error" else "Warn"
+        evaluated = source.withColumn(
+            "_fabricops_dq_failed", _dq_failed_expression(source, rule)
+        )
         frames.append(
-            source.filter(_dq_failed_expression(source, rule))
+            evaluated.filter(F.col("_fabricops_dq_failed"))
             .select(
                 event_id.alias("failure_event_id"), F.lit(run_id).alias("run_id"),
                 row_identity.alias("row_identity"),

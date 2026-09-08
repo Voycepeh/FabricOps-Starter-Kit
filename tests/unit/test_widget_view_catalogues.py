@@ -396,7 +396,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     state["_controls"]["profile_id"].value = "profile-comment"
     assert state["get_selection"]()["profile_id"] == "profile-comment"
     assert state["get_views"]()["frequency"].count() == 0
-    assert len(read_calls) == 5
+    assert len(read_calls) == 4
 
     state["_controls"]["search"].value = "does not exist"
     assert state["_controls"]["dataset"].value is None
