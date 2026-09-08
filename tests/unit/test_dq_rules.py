@@ -354,3 +354,16 @@ def test_compare_columns_rejects_same_column_and_unknown_operator():
         governance._validate_dq_rules([_rule("compare_columns", columns=["a", "a"], operator="=")])
     with pytest.raises(ValueError, match="unsupported operator"):
         governance._validate_dq_rules([_rule("compare_columns", columns=["a", "b"], operator="contains")])
+
+
+@pytest.mark.parametrize(
+    ("action", "runtime_severity"),
+    [("Warn", "warning"), ("Block", "error")],
+)
+def test_authored_guardrail_action_maps_to_dq_runtime_severity(action, runtime_severity):
+    """Canonical Warn and Block actions map to DQ continuation semantics."""
+    assert governance._normalize_dq_severity(action) == runtime_severity
+    status = "warning" if runtime_severity == "warning" else "failed"
+    result = governance._summarize_dq_guardrail([{"status": status}])
+    assert result["status"] == status
+    assert result["can_continue"] is (action == "Warn")

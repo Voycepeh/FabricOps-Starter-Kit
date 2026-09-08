@@ -153,3 +153,32 @@ def test_canonical_enrichment_state_removes_non_descriptive_rows():
         {"enrichment_level": "column", "enrichment_type": "Personal_identifier"},
     ]
     assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification"]
+
+
+@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "changes", "data_quality"])
+@pytest.mark.parametrize("action", ["Warn", "Block"])
+def test_guardrail_service_normalizes_all_supported_types_and_actions(
+    monkeypatch, guardrail_type, action
+):
+    """All authoring subtypes use one exact-version Guardrail service contract."""
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    row = service.canonical_guardrail_rule_record(
+        {
+            "guardrail_rule_id": "rule",
+            "contract_id": "contract",
+            "contract_version": 2,
+            "environment_name": "dev",
+            "guardrail_type": guardrail_type,
+            "rule_id": "rule",
+            "rule_type": "specific_rule",
+            "rule_parameters_json": '{"threshold":1}',
+            "action": action,
+        },
+        config=None,
+        env="dev",
+    )
+
+    assert row["guardrail_type"] == guardrail_type
+    assert row["action"] == action
+    assert row["contract_id"] == "contract"
+    assert row["contract_version"] == 2

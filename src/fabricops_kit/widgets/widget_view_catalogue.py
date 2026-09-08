@@ -143,7 +143,7 @@ def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
     return frame.select(*[name for name in preferred if name in frame.columns])
 
 
-def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) -> dict[str, Any]:
+def _prepare_selected_guardrail_views(results, *, table_id: str) -> dict[str, Any]:
     """Prepare the selected dataset's latest persisted guardrail execution."""
     from pyspark.sql import functions as F
 
@@ -184,26 +184,7 @@ def _prepare_selected_guardrail_views(results, row_results, *, table_id: str) ->
         F.col("rule_type"),
         F.col("columns"),
     )
-    selected_row_results = (
-        row_results.filter(
-            (F.col("table_id") == table_id)
-            & (F.col("run_id") == selected_run_id)
-        )
-        if selected_run_id is not None
-        else row_results.limit(0)
-    )
-    guardrail_row_results = selected_row_results.select(
-        "rule_type",
-        "row_identity",
-        F.col("involved_columns_json").alias("involved_columns"),
-        F.col("failed_values_json").alias("failed_values"),
-        "failure_reason",
-        "run_id",
-    ).orderBy("row_identity", "rule_type", "failure_reason")
-    return {
-        "guardrail_results": guardrail_results,
-        "guardrail_row_results": guardrail_row_results,
-    }
+    return {"guardrail_results": guardrail_results}
 
 
 def _build_catalogue_widget(
@@ -396,7 +377,6 @@ def _build_catalogue_widget(
                 ("profile", "METADATA_DATA_PROFILED"),
                 ("frequency", "METADATA_DATA_PROFILED_FREQUENCY"),
                 ("guardrail_results", "METADATA_GUARDRAIL_RESULTS"),
-                ("guardrail_row_results", "METADATA_GUARDRAIL_ROW_RESULTS"),
             ):
                 source_frames[name] = read_lakehouse_table_core(
                     table_name,
@@ -473,7 +453,6 @@ def _build_catalogue_widget(
         views.update(
             _prepare_selected_guardrail_views(
                 source_frames["guardrail_results"],
-                source_frames["guardrail_row_results"],
                 table_id=table_id,
             )
         )
@@ -617,7 +596,7 @@ def widget_view_catalogue(
     dict
         Common state with ``get_selection``, ``get_views``, and ``refresh``.
         ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,
-        ``guardrail_results``, and ``guardrail_row_results`` Spark DataFrames.
+        and ``guardrail_results`` Spark DataFrames.
         Catalogue and profile views expose readable asset/column fields first;
         frequency rows are enriched with ``column_name`` through the normalized
         ``profile_id`` relationship.
@@ -640,7 +619,7 @@ def widget_view_catalogue(
     --------
     >>> view = widget_view_catalogue(mode="explore", spark_session=spark)
     >>> sorted(view["get_views"]())
-    ['catalogue', 'frequency', 'guardrail_results', 'guardrail_row_results', 'profile']
+    ['catalogue', 'frequency', 'guardrail_results', 'profile']
 
     See Also
     --------

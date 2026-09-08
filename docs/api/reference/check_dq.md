@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:7`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L80">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L84">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -54,6 +54,7 @@ def check_dq(
 >>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
 >>> result["can_continue"]
 True
+>>> result["failed_values"].select("rule_id", "column_name", "raw_value").show()
 
 </div>
 
@@ -61,10 +62,10 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate without filtering or copying complete rows into metadata. |
+| `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate. |
 | `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
-| `run_id` | `str` | No | Pipeline run identity persisted with failed-row evidence. When omitted, the current Fabric activity identity is used. |
+| `run_id` | `str` | No | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
 
 ## Returns
@@ -86,10 +87,9 @@ RuntimeError
 Production resolves the physical table through the Catalogue and evaluates
 frozen DQ rules from its active Data Contract. Development evaluates current
 active approved authoring rules in ``METADATA_GUARDRAIL``.
-Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
-only failed row/rule pairs are appended to
-``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while
-warning failures do not.
+Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
+Failed values are returned to the caller and are never persisted automatically.
+Block failures prevent continuation while Warn failures do not.
 
 </div>
 

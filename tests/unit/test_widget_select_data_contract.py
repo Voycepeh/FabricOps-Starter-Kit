@@ -15,7 +15,7 @@ def _row(version: int, *, table_id: str = "table-a", status: str = "draft") -> d
         "contract": {"contract_id": "contract-a", "contract_version": version},
         "agreement": {"agreement_name": "Product Agreement", "agreement_version": 2},
         "table": {"table_id": table_id, "schema_name": "demo", "table_name": "orders", "columns": [{"column_name": "id"}], "processing": {"load_strategy": "scd1", "key_columns": ["id"]}},
-        "guardrails": [{"guardrail_type": "dq", "rule_id": "frozen-rule"}],
+        "guardrails": [{"guardrail_type": "data_quality", "rule_id": "frozen-rule"}],
         "approved_usages": ["Analytics"],
     }
     return {
@@ -44,7 +44,7 @@ def test_contract_review_uses_only_frozen_payload():
     review = _contract_review(selected)
 
     # Mutable authoring metadata is deliberately absent from this operation.
-    assert review["guardrails"] == {"dq": 1}
+    assert review["guardrails"] == {"data_quality": 1}
     assert review["guardrail_details"][0]["rule_id"] == "frozen-rule"
     assert review["schema_columns"] == 1
     assert review["processing"]["load_strategy"] == "scd1"

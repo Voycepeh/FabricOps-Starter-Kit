@@ -1730,7 +1730,7 @@ def evaluate_changes_guardrail(
 ) -> dict:
     """Apply approved change intent to an observation comparison result."""
     rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="change", dataset_name=dataset_name,
+        rules_df, guardrail_type="changes", dataset_name=dataset_name,
         table_name=table_name, environment_name=environment_name,
         table_id=table_id,
     )
@@ -1746,7 +1746,7 @@ def evaluate_changes_guardrail(
     else:
         rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
         source_pattern = _string_value(params.get("source_pattern") or result.get("source_pattern") or "snapshot").lower()
-    severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
+    severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     result.update({
@@ -1958,7 +1958,7 @@ def _guardrail_schema_check_base(
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
             preset = {"strict": "strict", "minimum_required": "allow_new_columns", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-            severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
+            severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
 
@@ -2180,7 +2180,7 @@ def freshness_check_core(
                 else:
                     max_lag_days = params.get("max_lag_days")
                     max_age_seconds = None
-                severity = _catalogue_value(rule, "severity") or "blocking"
+                severity = ("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")
 
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
@@ -2326,7 +2326,7 @@ def _canonical_dq_rule_type(rule_type: Any) -> str:
 def _normalize_dq_severity(severity: Any) -> str:
     """Normalize guardrail/DQ severity labels for DQ validation."""
     value = str(severity or "warning").strip().lower()
-    return "error" if value in {"blocking", "error"} else "warning"
+    return "error" if value in {"block", "blocking", "error"} else "warning"
 
 def _spark_sql_helpers():
     """Return Spark SQL helper modules lazily for DQ runtime helpers."""
@@ -2434,7 +2434,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
         raise ValueError("DQ metadata must include table_id for canonical table scoping.")
     latest = metadata_df.filter(F.col("table_id") == table_id)
     if "guardrail_type" in columns:
-        latest = latest.filter(F.lower(F.col("guardrail_type")).isin("dq", "quality"))
+        latest = latest.filter(F.lower(F.col("guardrail_type")) == "data_quality")
     if env is not None and "environment_name" in columns:
         latest = latest.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
@@ -2484,7 +2484,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
                 "rule_key": str(row.get("rule_key") or row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
-                "severity": _normalize_dq_severity(row.get("severity")),
+                "severity": _normalize_dq_severity(row.get("action") or row.get("severity")),
                 "description": str(row.get("description") or ""),
                 "review_status": str(row.get("review_status") or ""),
                 **params,
@@ -2507,7 +2507,7 @@ def check_dq_runtime(
     row_identity_columns: list[str] | None = None,
     context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Evaluate governed DQ rules and persist rule summaries and failed-row evidence."""
+    """Evaluate governed DQ rules, persist summaries, and return failed values."""
     spark_session = getattr(dataframe, "sparkSession", None)
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_dq requires a Spark DataFrame in the active Microsoft Fabric runtime.")
@@ -2549,6 +2549,7 @@ def check_dq_runtime(
         "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
     }
     if not rules:
+        result["failed_values"] = _empty_dq_failed_values(spark_session)
         return result
 
     audit = build_runtime_audit_fields(config=config, env=env)
@@ -2571,7 +2572,7 @@ def check_dq_runtime(
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": ",".join(rule["columns"]),
-            "guardrail_type": "dq",
+            "guardrail_type": "data_quality",
             "rule_type": rule["rule_type"],
             "status": check["status"],
             "can_continue": check["status"] != "failed",
@@ -2589,10 +2590,54 @@ def check_dq_runtime(
         schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
     )
 
+    result["failed_values"] = _dq_failed_values_dataframe(
+        dataframe, rules, run_id=resolved_run_id, row_identity_columns=identities,
+    )
+    return result
+
+
+def _dq_failed_value_schema():
+    """Return the stable normalized schema for caller-owned DQ failure details."""
+    from pyspark.sql.types import StringType, StructField, StructType
+
+    nullable = {"raw_value"}
+    return StructType([
+        StructField(name, StringType(), name in nullable)
+        for name in (
+            "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+            "rule_id", "rule_type", "action", "column_name", "column_role",
+            "raw_value", "raw_value_type", "failure_reason",
+        )
+    ])
+
+
+def _empty_dq_failed_values(spark_session):
+    """Return an empty DataFrame with the canonical failed-values schema."""
+    return spark_session.createDataFrame([], _dq_failed_value_schema())
+
+
+def _dq_involved_column_roles(rule: Mapping[str, Any]) -> list[tuple[str, str]]:
+    """Return each involved column and its semantic role for one DQ rule."""
+    columns = [str(name) for name in rule.get("columns") or ()]
+    rule_type = str(rule.get("rule_type") or "")
+    if rule_type == "compare_columns":
+        return [(columns[0], "left"), (columns[1], "right")]
+    role = "participating" if rule_type == "unique_combination" else "target"
+    roles = [(name, role) for name in columns]
+    condition = str(rule.get("condition_column") or "").strip()
+    if condition and condition not in columns:
+        roles.append((condition, "condition"))
+    return roles
+
+
+def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_columns: list[str]):
+    """Return one failed rule, involved column, and source record per row."""
     _, F, _ = _spark_sql_helpers()
-    if identities:
+    source_columns = list(dataframe.columns)
+    source_types = dict(dataframe.dtypes)
+    if row_identity_columns:
         row_identity = F.to_json(
-            F.struct(*[F.col(name).alias(name) for name in identities]),
+            F.struct(*[F.col(name).alias(name) for name in row_identity_columns]),
             {"ignoreNullFields": "false"},
         )
     else:
@@ -2601,37 +2646,56 @@ def check_dq_runtime(
             {"ignoreNullFields": "false"},
         )
         row_identity = F.sha2(canonical_row, 256)
-    evidence_frames = []
+    source = dataframe.withColumn("_fabricops_failure_source_id", F.monotonically_increasing_id())
+    frames = []
     for rule in rules:
-        involved = list(dict.fromkeys([*rule["columns"], str(rule.get("condition_column") or "")]))
-        involved = [name for name in involved if name and name in source_columns]
-        details = {key: value for key, value in rule.items() if key not in {"description", "guardrail_rule_id", "rule_id", "rule_key", "severity"}}
-        evidence_frames.append(dataframe.filter(_dq_failed_expression(dataframe, rule)).select(
-            F.expr("uuid()").alias("guardrail_row_result_id"),
-            F.lit(result_ids[rule["rule_id"]]).alias("guardrail_result_id"),
-            F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
-            F.lit(table_id).alias("table_id"), F.lit(env).alias("environment_name"),
-            F.lit(dataset_name).alias("dataset_name"), F.lit(table_name).alias("table_name"),
-            row_identity.alias("row_identity"), F.lit(rule["rule_type"]).alias("rule_type"),
-            F.lit(json.dumps(involved)).alias("involved_columns_json"),
-            F.to_json(
-                F.struct(*[F.col(name).alias(name) for name in involved]),
-                {"ignoreNullFields": "false"},
-            ).alias("failed_values_json"),
-            F.lit(json.dumps(details, default=str, sort_keys=True)).alias("rule_details_json"),
-            F.lit(f"Row failed {rule['rule_type']} rule {rule['rule_id']}.").alias("failure_reason"),
-            F.lit(resolved_run_id).alias("run_id"),
-            *[F.lit(value).cast("timestamp" if key == "_committed_at" else "string").alias(key) for key, value in audit.items()],
-        ))
-    evidence = evidence_frames[0]
-    for frame in evidence_frames[1:]:
-        evidence = evidence.unionByName(frame)
-    if evidence.limit(1).count():
-        write_lakehouse_table_core(
-            evidence, "METADATA_GUARDRAIL_ROW_RESULTS", target="metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_ROW_RESULTS"), context=context, mode="append",
+        details = F.array(*[
+            F.struct(
+                F.lit(column_name).alias("column_name"),
+                F.lit(column_role).alias("column_role"),
+                (
+                    F.col(column_name).cast("string")
+                    if column_name in source_types
+                    else F.lit(None).cast("string")
+                ).alias("raw_value"),
+                F.lit(source_types.get(column_name, "missing")).alias("raw_value_type"),
+            )
+            for column_name, column_role in _dq_involved_column_roles(rule)
+        ])
+        event_id = F.sha2(F.concat_ws(
+            "|", F.lit(run_id), F.lit(rule["guardrail_rule_id"]),
+            F.col("_fabricops_failure_source_id").cast("string"),
+        ), 256)
+        reason = f"Row failed {rule['rule_type']} rule {rule['rule_id']}."
+        action = "Block" if rule["severity"] == "error" else "Warn"
+        evaluated = source.withColumn(
+            "_fabricops_dq_failed", _dq_failed_expression(source, rule)
         )
-    return result
+        frames.append(
+            evaluated.filter(F.col("_fabricops_dq_failed"))
+            .select(
+                event_id.alias("failure_event_id"), F.lit(run_id).alias("run_id"),
+                row_identity.alias("row_identity"),
+                F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
+                F.lit(rule["rule_id"]).alias("rule_id"),
+                F.lit(rule["rule_type"]).alias("rule_type"), F.lit(action).alias("action"),
+                F.explode(details).alias("detail"), F.lit(reason).alias("failure_reason"),
+            )
+            .select(
+                "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+                "rule_id", "rule_type", "action", "detail.column_name",
+                "detail.column_role", "detail.raw_value", "detail.raw_value_type",
+                "failure_reason",
+            )
+        )
+    if not frames:
+        return _empty_dq_failed_values(dataframe.sparkSession)
+    failed_values = frames[0]
+    for frame in frames[1:]:
+        failed_values = failed_values.unionByName(frame)
+    return dataframe.sparkSession.createDataFrame(
+        failed_values.rdd, _dq_failed_value_schema()
+    )
 
 def _dq_failed_expression(df, rule: dict[str, Any]):
     """Build a Spark boolean expression identifying rows that fail one DQ rule."""
@@ -2807,14 +2871,12 @@ def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     frame = read_lakehouse_table_core(GUARDRAIL_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
-        return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
+        return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "data_quality")
     return frame
 
 # ---------------------------------------------------------------------------
 # Canonical Guardrail rule/runtime adapters
 # ---------------------------------------------------------------------------
-
-GUARDRAIL_ROW_RESULTS_TABLE = "METADATA_GUARDRAIL_ROW_RESULTS"
 
 def _stable_json(value: Any) -> str:
     return json.dumps(value, default=str, sort_keys=True, separators=(",", ":"))
@@ -2825,35 +2887,6 @@ def _parse_parameters(row: Mapping[str, Any]) -> dict[str, Any]:
         return json.loads(raw) if isinstance(raw, str) else dict(raw or {})
     except (TypeError, json.JSONDecodeError):
         return {}
-
-def canonical_guardrail_rule_record(
-    record: Mapping[str, Any],
-    *,
-    config: Any,
-    env: str,
-) -> dict[str, Any]:
-    """Return one authored rule using only the canonical physical contract."""
-    audit = build_runtime_audit_fields(config=config, env=env)
-    parameters = _parse_parameters(record)
-    contract_id = str(record.get("contract_id") or "").strip()
-    contract_version = int(record.get("contract_version") or 0)
-    if not contract_id or contract_version < 1:
-        raise ValueError("Guardrail rows require contract_id and contract_version.")
-    return {
-        "guardrail_rule_id": str(record.get("guardrail_rule_id") or ""),
-        "guardrail_version": int(record.get("guardrail_version") or 1),
-        "contract_id": contract_id,
-        "contract_version": contract_version,
-        "column_id": str(record.get("column_id") or ""),
-        "environment_name": str(record.get("environment_name") or env),
-        "guardrail_type": str(record.get("guardrail_type") or ""),
-        "rule_id": str(record.get("rule_id") or ""),
-        "rule_type": str(record.get("rule_type") or ""),
-        "rule_parameters_json": _stable_json(parameters),
-        "severity": str(record.get("severity") or "warning"),
-        "is_active": bool(record.get("is_active", True)),
-        **audit,
-    }
 
 def _select_rule(
     rules_df: Any,

@@ -258,7 +258,7 @@ def _observation_changes(
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="change",
+        guardrail_type="changes",
         table_id=table_id,
         environment_name=env,
     )
@@ -287,7 +287,7 @@ def _observation_changes(
         "status": "changed" if has_changes else "unchanged",
         "can_continue": True,
         "check_type": "changes",
-        "guardrail_type": "change",
+        "guardrail_type": "changes",
         "changed": has_changes,
         "first_observation": first_observation,
         "new_partitions": new,
@@ -324,7 +324,7 @@ def _observation_changes(
             store_type="",
             layer="",
             schema_name=None,
-            guardrail_type="change",
+            guardrail_type="changes",
             rule_type=str(result.get("rule_type") or "monitor_only"),
             result=result,
         )

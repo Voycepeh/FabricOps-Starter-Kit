@@ -54,7 +54,6 @@ nav:
           - Enrichment: reference/metadata/metadata_enrichment.md
           - Guardrail: reference/metadata/metadata_guardrail.md
           - Guardrail Results: reference/metadata/metadata_guardrail_results.md
-          - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
           - Data Contract: reference/metadata/metadata_data_contract.md
           - Data Access: reference/metadata/metadata_data_access.md
       - Functions:

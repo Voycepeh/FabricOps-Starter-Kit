@@ -17,14 +17,13 @@ def check_dq(
     Parameters
     ----------
     dataframe : pyspark.sql.DataFrame
-        Source or target rows to evaluate without filtering or copying complete
-        rows into metadata.
+        Source or target rows to evaluate.
     table_id : str
         Canonical identity of an active registered Catalogue table.
     dataset_name : str, optional
         Governed dataset identity used to further scope rules when supplied.
     run_id : str, optional
-        Pipeline run identity persisted with failed-row evidence. When omitted,
+        Pipeline run identity persisted with summary evidence. When omitted,
         the current Fabric activity identity is used.
     row_identity_columns : list[str], optional
         Business-key columns used for row identity. When omitted, an existing
@@ -35,8 +34,13 @@ def check_dq(
     -------
     dict
         Overall ``status`` and ``can_continue`` decision, concise ``summary``,
-        one check per evaluated rule, and the original DataFrame with DQ status
-        columns. Evaluated rules also include the resolved ``run_id``.
+        one check per evaluated rule, the original DataFrame with DQ status columns,
+        and a normalized ``failed_values`` DataFrame. Failure detail has one
+        row per failed rule, involved column, and source record, with a shared
+        ``failure_event_id``, row and rule identities, action, column role,
+        string ``raw_value``, original ``raw_value_type``, and reason. It does
+        not copy unrelated source columns. Evaluated rules also include the
+        resolved ``run_id``.
 
     Raises
     ------
@@ -51,16 +55,16 @@ def check_dq(
     Production resolves the physical table through the Catalogue and evaluates
     frozen DQ rules from its active Data Contract. Development evaluates current
     active approved authoring rules in ``METADATA_GUARDRAIL``.
-    Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``;
-    only failed row/rule pairs are appended to
-    ``METADATA_GUARDRAIL_ROW_RESULTS``. Error failures block continuation while
-    warning failures do not.
+    Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
+    Failed values are returned to the caller and are never persisted automatically.
+    Block failures prevent continuation while Warn failures do not.
 
     Examples
     --------
     >>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
     >>> result["can_continue"]
     True
+    >>> result["failed_values"].select("rule_id", "column_name", "raw_value").show()
 
     See Also
     --------

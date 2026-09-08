@@ -8,8 +8,8 @@ from datetime import datetime
 import pytest
 
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
-from fabricops_kit.pipeline import shared as guardrail_shared
-guardrails_shared = guardrail_shared
+from fabricops_kit.data_contract import shared as guardrail_shared
+from fabricops_kit.pipeline import shared as guardrails_shared
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -27,7 +27,7 @@ _GUARDRAIL_COLUMNS = [
     "rule_id",
     "rule_type",
     "rule_parameters_json",
-    "severity",
+    "action",
     "is_active",
     *_AUDIT_COLUMNS,
 ]
@@ -90,23 +90,19 @@ def test_guardrail_metadata_tables_have_exact_stage4a_columns() -> None:
     """Lock the exact physical columns of all three normalized Guardrail tables."""
     assert _field_names("METADATA_GUARDRAIL") == _GUARDRAIL_COLUMNS
     assert _field_names("METADATA_GUARDRAIL_RESULTS") == _RESULT_COLUMNS
-    assert _field_names("METADATA_GUARDRAIL_ROW_RESULTS") == _ROW_RESULT_COLUMNS
+    assert "METADATA_GUARDRAIL_ROW_RESULTS" not in metadata_table_schema_registry()
 
 
 def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
     """Verify each metadata layer stores only the relational identity it owns."""
     guardrail_fields = set(_field_names("METADATA_GUARDRAIL"))
     result_fields = set(_field_names("METADATA_GUARDRAIL_RESULTS"))
-    row_result_fields = set(_field_names("METADATA_GUARDRAIL_ROW_RESULTS"))
 
     assert {"contract_id", "contract_version", "column_id"} <= guardrail_fields
     assert "table_id" not in guardrail_fields
     assert {"guardrail_rule_id", "guardrail_version"} <= result_fields
-    assert "guardrail_result_id" in row_result_fields
-    assert "guardrail_rule_id" not in row_result_fields
-    assert "table_id" not in result_fields | row_result_fields
-    assert "column_id" not in result_fields | row_result_fields
-    assert "run_id" not in row_result_fields
+    assert "table_id" not in result_fields
+    assert "column_id" not in result_fields
 
 
 def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
@@ -141,7 +137,6 @@ def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
     for table_name in (
         "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
-        "METADATA_GUARDRAIL_ROW_RESULTS",
     ):
         assert obsolete.isdisjoint(_field_names(table_name))
 
@@ -152,7 +147,6 @@ def test_standard_eight_audit_fields_are_present_on_all_guardrail_tables() -> No
     for table_name in (
         "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
-        "METADATA_GUARDRAIL_ROW_RESULTS",
     ):
         assert _field_names(table_name)[-8:] == _AUDIT_COLUMNS
 
@@ -169,11 +163,11 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "metadata_table_key": "legacy-table-id",
         "metadata_column_key": "legacy-column-id",
         "environment_name": "dev",
-        "guardrail_type": "dq",
+        "guardrail_type": "data_quality",
         "rule_id": "missing_values",
         "rule_type": "missing_values",
         "rule_parameters_json": '{"z":2,"maximum_null_percent":0,"a":1}',
-        "severity": "warning",
+        "action": "Warn",
         "is_active": True,
         "review_status": "approved",
         "table_name": "orders",

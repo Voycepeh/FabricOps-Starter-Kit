@@ -42,7 +42,7 @@ def widget_author_dq_rules(
     rule_type: str='missing_values',
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
-    severity: str='warning',
+    action: str='Warn',
     commit: bool=False,
 ) -> dict[str, Any]:
 ```
@@ -66,7 +66,7 @@ def widget_author_dq_rules(
 | `rule_type` | `str` | No | Initially selected canonical DQ rule ID. |
 | `selected_columns` | `Iterable[str] \| None` | No | Columns initially selected on the resolved target. |
 | `parameters` | `Mapping[str, Any] \| None` | No | Initial values for the selected rule's dynamic parameter controls. |
-| `severity` | `str` | No | Initial DQ failure severity. |
+| `action` | `str` | No | Initial Guardrail failure action. |
 | `commit` | `bool` | No | Save the initial valid configuration immediately. |
 
 ## Returns

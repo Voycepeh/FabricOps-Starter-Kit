@@ -58,7 +58,6 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
     | `METADATA_ENRICHMENT` | Add descriptive business context and classifications. |
     | `METADATA_GUARDRAIL` | Author executable Guardrail rules for the ETL workflow. |
     | `METADATA_GUARDRAIL_RESULTS` | Inspect Guardrail evaluation results written by Engineering; do not edit those recorded results. |
-    | `METADATA_GUARDRAIL_ROW_RESULTS` | Inspect row-level failures written by Engineering where applicable. |
 
 ??? info "Details — How the metadata moves between Engineering and Governance"
 
@@ -77,7 +76,6 @@ Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATAL
 
         GUARDRAIL --> RERUN["02_pipeline rerun"]
         RERUN --> RESULTS["METADATA_GUARDRAIL_RESULTS"]
-        RERUN --> ROWRESULTS["METADATA_GUARDRAIL_ROW_RESULTS"]
         RERUN --> DECISION{"Can continue?"}
         DECISION -->|Yes| CONTINUE["Continue pipeline"]
         DECISION -->|No| BLOCK["Block pipeline"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pytest
 
@@ -84,7 +85,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "column_name": "id",
                 "rule_type": "missing_values",
                 "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
-                "severity": "error",
+                "action": "Block",
                 "description": "Required",
                 "is_active": True,
                 "review_status": "governance_approved",
@@ -102,7 +103,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "column_name": "id",
                 "rule_type": "missing_values",
                 "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
-                "severity": "error",
+                "action": "Block",
                 "description": "Required",
                 "is_active": False,
                 "review_status": "governance_approved",
@@ -131,7 +132,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
                 "column_name": "amount",
                 "rule_type": "value_range",
                 "rule_parameters_json": json.dumps({"minimum": 0, "minimum_inclusive": False}),
-                "severity": "error",
+                "action": "Block",
                 "description": "Amount must be non-negative",
                 "is_active": True,
                 "review_status": "governance_approved",
@@ -202,8 +203,8 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     assert written_row["_activity_id"] == "activity-result-001"
 
 
-def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(spark_session, monkeypatch):
-    """Persist one summary per rule and one compact evidence row per failed row/rule."""
+def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_session, monkeypatch):
+    """Persist one summary per rule and return normalized failed values without persisting them."""
     from fabricops_kit.config.shared import build_table_id
     from fabricops_kit.pipeline import shared as guardrails_shared
 
@@ -216,16 +217,16 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
         {
             "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
             "guardrail_version": 1,
-            "guardrail_type": "dq", "rule_type": "required_when", "column_name": "required_value",
+            "guardrail_type": "data_quality", "rule_type": "required_when", "column_name": "required_value",
             "rule_parameters": {"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"},
-            "severity": "warning", "description": "required when open",
+            "action": "Warn", "description": "required when open",
         },
         {
             "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
             "guardrail_version": 1,
-            "guardrail_type": "dq", "rule_type": "compare_columns", "column_name": "upper,lower",
+            "guardrail_type": "data_quality", "rule_type": "compare_columns", "column_name": "upper,lower",
             "rule_parameters": {"columns": ["upper", "lower"], "operator": "<="},
-            "severity": "error", "description": "upper <= lower",
+            "action": "Block", "description": "upper <= lower",
         },
     ]
     contract = active_contract_frame(
@@ -256,20 +257,31 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
         "DQ_FAILED_ROW_PERCENT": 50.0, "DQ_CHECKED_AT": result["summary"]["DQ_CHECKED_AT"],
     }
     summaries = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_RESULTS")
-    evidence = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_ROW_RESULTS")
+    evidence = result["failed_values"].collect()
+    assert [table for table, _rows in writes] == ["METADATA_GUARDRAIL_RESULTS"]
     assert len(summaries) == 2
     assert {row.run_id for row in summaries} == {"run-9"}
-    assert len(evidence) == 2  # the same source row failed both rules
+    assert len(evidence) == 4  # two failed rules, each involving two columns
     assert {row.guardrail_rule_id for row in evidence} == {"gr-required", "gr-compare"}
-    assert {row.guardrail_result_id for row in evidence} == {row.guardrail_result_id for row in summaries}
     assert all(json.loads(row.row_identity) == {"business_id": "one"} for row in evidence)
-    compare = next(row for row in evidence if row.guardrail_rule_id == "gr-compare")
-    assert json.loads(compare.involved_columns_json) == ["upper", "lower"]
-    assert json.loads(compare.failed_values_json) == {"upper": 5, "lower": 3}
-    conditional = next(row for row in evidence if row.guardrail_rule_id == "gr-required")
-    assert json.loads(conditional.involved_columns_json) == ["required_value", "status"]
-    assert json.loads(conditional.failed_values_json) == {"required_value": None, "status": "open"}
-    assert conditional.run_id == "run-9"
+    assert set(evidence[0].asDict()) == {
+        "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+        "rule_id", "rule_type", "action", "column_name", "column_role",
+        "raw_value", "raw_value_type", "failure_reason",
+    }
+    compare = [row for row in evidence if row.guardrail_rule_id == "gr-compare"]
+    assert {row.column_name: (row.column_role, row.raw_value, row.raw_value_type) for row in compare} == {
+        "upper": ("left", "5", "int"), "lower": ("right", "3", "int"),
+    }
+    assert len({row.failure_event_id for row in compare}) == 1
+    conditional = [row for row in evidence if row.guardrail_rule_id == "gr-required"]
+    assert {row.column_name: (row.column_role, row.raw_value) for row in conditional} == {
+        "required_value": ("target", None), "status": ("condition", "open"),
+    }
+    assert len({row.failure_event_id for row in conditional}) == 1
+    assert {row.action for row in conditional} == {"Warn"}
+    assert {row.action for row in compare} == {"Block"}
+
 
 
 def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_session, monkeypatch):
@@ -281,10 +293,10 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     dataframe = spark_session.createDataFrame([("one", "ok")], "row_uuid string, value string")
     guardrails = [{
         "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
-        "guardrail_version": 1, "guardrail_type": "dq",
+        "guardrail_version": 1, "guardrail_type": "data_quality",
         "rule_type": "allowed_values", "column_name": "value",
         "rule_parameters": {"columns": ["value"], "allowed_values": ["ok"]},
-        "severity": "error",
+        "action": "Block",
     }]
     contract = active_contract_frame(
         spark_session, table_id=table_key,
@@ -310,6 +322,13 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     assert result["status"] == "passed"
     assert result["run_id"] == "activity-auto-run-1"
     assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 0
+    assert result["failed_values"].count() == 0
+    assert result["failed_values"].columns == [
+        "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+        "rule_id", "rule_type", "action", "column_name", "column_role",
+        "raw_value", "raw_value_type", "failure_reason",
+    ]
+    assert "value" not in result["failed_values"].columns
     assert [table for table, _rows in writes] == ["METADATA_GUARDRAIL_RESULTS"]
     assert {row.run_id for row in writes[0][1]} == {"activity-auto-run-1"}
 
@@ -321,3 +340,106 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     assert {rows[0].run_id for _table, rows in writes} == {
         "activity-auto-run-1", "activity-auto-run-2",
     }
+
+
+def test_dq_failed_values_normalize_unique_combination(spark_session):
+    """Composite uniqueness failures emit one typed value per participating column."""
+    from fabricops_kit.pipeline import shared
+
+    dataframe = spark_session.createDataFrame(
+        [("c1", date(2026, 1, 1)), ("c1", date(2026, 1, 1))],
+        "customer_id string, order_date date",
+    )
+    rule = shared._validate_dq_rules([{
+        "guardrail_rule_id": "gr-unique", "guardrail_version": 1,
+        "rule_id": "unique-order", "rule_type": "unique_combination",
+        "columns": ["customer_id", "order_date"], "severity": "error",
+    }])[0]
+
+    rows = shared._dq_failed_values_dataframe(
+        dataframe, [rule], run_id="run-unique", row_identity_columns=[]
+    ).collect()
+
+    assert len(rows) == 4
+    assert {row.column_name for row in rows} == {"customer_id", "order_date"}
+    assert {row.column_role for row in rows} == {"participating"}
+    assert {row.raw_value_type for row in rows} == {"string", "date"}
+    assert len({row.failure_event_id for row in rows}) == 2
+
+
+def test_dq_no_rules_returns_canonical_empty_failed_values(spark_session, monkeypatch):
+    """No governed DQ rules returns the stable detail schema without writes."""
+    from fabricops_kit.pipeline import shared
+
+    dataframe = spark_session.createDataFrame([(1, "unused")], "row_id int, extra string")
+    writes = []
+    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [])
+    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append(args))
+
+    result = shared.check_dq_runtime(
+        dataframe, framework_config(), "dev", "orders", table_id="orders",
+        target="source", store_type="lakehouse", schema_name=None,
+    )
+
+    assert result["failed_values"].count() == 0
+    assert result["failed_values"].columns == [
+        "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+        "rule_id", "rule_type", "action", "column_name", "column_role",
+        "raw_value", "raw_value_type", "failure_reason",
+    ]
+    assert "extra" not in result["failed_values"].columns
+    assert writes == []
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_status", "expected_can_continue"),
+    [("Warn", "warning", True), ("Block", "failed", False)],
+)
+def test_dq_authored_action_controls_runtime_continuation(
+    spark_session, action, expected_status, expected_can_continue
+):
+    """Warn continues and Block stops when the same DQ rule fails."""
+    from fabricops_kit.pipeline import shared
+
+    dataframe = spark_session.createDataFrame([(None,)], "value string")
+    rule = shared._validate_dq_rules([{
+        "guardrail_rule_id": f"gr-{action.lower()}", "guardrail_version": 1,
+        "rule_id": "required", "rule_type": "missing_values", "columns": ["value"],
+        "maximum_null_percent": 0, "severity": action,
+    }])[0]
+    check = shared._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
+    result = shared._summarize_dq_guardrail([check])
+    details = shared._dq_failed_values_dataframe(
+        dataframe, [rule], run_id="run-action", row_identity_columns=[]
+    ).collect()
+
+    assert result["status"] == expected_status
+    assert result["can_continue"] is expected_can_continue
+    assert {row.action for row in details} == {action}
+
+
+def test_dq_missing_column_returns_failed_value_detail(spark_session):
+    """A missing governed column fails cleanly and remains diagnosable."""
+    from fabricops_kit.pipeline import shared
+
+    dataframe = spark_session.createDataFrame([("row-1",)], "row_id string")
+    rule = shared._validate_dq_rules([{
+        "guardrail_rule_id": "gr-missing", "guardrail_version": 1,
+        "rule_id": "email-required", "rule_type": "missing_values",
+        "columns": ["customer_email"], "maximum_null_percent": 0,
+        "severity": "Block",
+    }])[0]
+
+    check = shared._run_dq_guardrail_checks(dataframe, "customers", [rule])[0]
+    failed_values = shared._dq_failed_values_dataframe(
+        dataframe, [rule], run_id="run-missing", row_identity_columns=["row_id"]
+    ).collect()
+
+    assert check["status"] == "failed"
+    assert check["failed_count"] == 1
+    assert len(failed_values) == 1
+    assert failed_values[0].column_name == "customer_email"
+    assert failed_values[0].column_role == "target"
+    assert failed_values[0].raw_value is None
+    assert failed_values[0].raw_value_type == "missing"
+    assert failed_values[0].action == "Block"

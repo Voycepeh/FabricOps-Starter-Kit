@@ -17,7 +17,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_ENRICHMENT",
     "METADATA_GUARDRAIL",
     "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_GUARDRAIL_ROW_RESULTS",
     "METADATA_SOURCE_OBSERVATION",
 ]
 
@@ -300,7 +299,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("rule_id", "string", False),
                 ("rule_type", "string", False),
                 ("rule_parameters_json", "string", False),
-                ("severity", "string", False),
+                ("action", "string", False),
                 ("is_active", "boolean", False),
                 *audit,
             ],
@@ -318,18 +317,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("severity", "string", False),
                 ("reason", "string"),
                 ("result_payload_json", "string", False),
-                *audit,
-            ],
-        ),
-        "METADATA_GUARDRAIL_ROW_RESULTS": build_metadata_schema(
-            "METADATA_GUARDRAIL_ROW_RESULTS",
-            [
-                ("guardrail_row_result_id", "string", False),
-                ("guardrail_result_id", "string", False),
-                ("row_identity", "string", False),
-                ("involved_columns_json", "string", False),
-                ("failed_values_json", "string", False),
-                ("failure_reason", "string", False),
                 *audit,
             ],
         ),
