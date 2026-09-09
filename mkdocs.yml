@@ -75,7 +75,6 @@ nav:
           - compare_columns: reference/dq-rules/compare-columns.md
   - Releases:
       - Overview: releases/index.md
-      - 0.2.0: releases/0.2.0/index.md
       - 0.1.0: releases/0.1.0/index.md
   - Maintainer:
       - Product Definition: maintainer/product-definition.md

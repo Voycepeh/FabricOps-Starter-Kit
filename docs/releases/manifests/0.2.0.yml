@@ -1,11 +1,11 @@
 release_version: 0.2.0
-release_status: live
-release_date: 2026-08-07
-source_ref: v0.2.0
-source_ref_note: Canonical Git release tag for the frozen v0.2.0 release contract.
+release_status: preparing
+release_date: null
+source_ref: main
+source_ref_note: Preparing replacement v0.2.0 release contract against latest main.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
-release_motivation: FabricOps 0.2.0 expands the supported package contract from notebook setup and Fabric input/output into metadata setup, dataframe profiling, normalized frequency profiling, catalogue registration, and profiling lineage evidence. Formal package releases govern public functions and metadata schemas only; notebook templates, samples, skills, and DQ assets remain independently maintained outside the package release contract.
+release_motivation: FabricOps 0.2.0 is being revalidated and prepared for republication. The replacement release will define a narrower supported engineering and metadata foundation, with later governance and guardrail capabilities remaining Preview until separately validated.
 functions:
   - name: display_guardrail_results
     qualified_name: fabricops_kit.pipeline.display_guardrail_results
