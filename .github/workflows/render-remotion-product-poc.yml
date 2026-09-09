@@ -1,6 +1,10 @@
 name: Render Remotion product POC
 
 on:
+  pull_request:
+    paths:
+      - 'video/remotion/product-poc/**'
+      - '.github/workflows/render-remotion-product-poc.yml'
   workflow_dispatch:
 
 permissions:
