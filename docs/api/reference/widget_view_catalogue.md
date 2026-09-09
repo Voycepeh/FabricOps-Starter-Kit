@@ -12,9 +12,9 @@ Select catalogue evidence through an explicit pipeline, agreement, or explore da
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_catalogue.py:567`
+`fabricops_kit/widgets/widget_view_catalogue.py:545`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L567-L702">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L545-L680">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

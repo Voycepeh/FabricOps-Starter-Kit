@@ -158,23 +158,61 @@ def test_official_governance_workflow_inventory():
 
 
 def test_01_governance_supports_the_complete_governance_lifecycle():
-    """Governance retains the durable capabilities from both former templates."""
+    """Governance uses the unified, table-scoped Data Contract authoring path."""
     source = _notebook_source("01_governance.ipynb")
     required_functions = {
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_view_catalogue",
+        "widget_author_data_contract",
+        "widget_activate_data_contract",
     }
-    # The unified-editor notebook migration is deferred to the next focused
-    # 01_governance cleanup PR.
 
     assert required_functions <= {node.id for tree in (
         _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, source)
         for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
     ) if tree is not None for node in ast.walk(tree) if isinstance(node, ast.Name)}
     assert 'target="metadata"' in source
-    assert 'mode="agreement"' in source
+    assert 'mode="explore"' in source
+    assert 'TABLE_ID = table_selection["table_id"]' in source
+    assert 'contract_authoring["table_id"] == TABLE_ID' in source
+    assert "Data Steward" in source
+    assert "Data Agreement" in source
+    for demoted_widget in (
+        "widget_enrich_table_metadata",
+        "widget_author_guardrails",
+        "widget_author_dq_rules",
+        "widget_register_data_contract",
+    ):
+        assert demoted_widget not in source
+        assert f"fabricops_kit.widgets.{demoted_widget}" not in source
+    authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
+    assert "widget_select_data_contract" not in authoring_cell
+    assert "widget_activate_data_contract" not in authoring_cell
+    assert "widget_activate_data_contract(" in _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "METADATA_SCHEMA" not in source
+
+
+def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
+    """Guided Demo Steps 3–6 preserve lifecycle order and responsibility boundaries."""
+    step_3 = (ROOT / "docs/guided-demo/03-enrich-guardrails.md").read_text(encoding="utf-8")
+    step_4 = (ROOT / "docs/guided-demo/04-run-pipeline-with-guardrails.md").read_text(encoding="utf-8")
+    step_5 = (ROOT / "docs/guided-demo/05-create-data-contract.md").read_text(encoding="utf-8")
+    step_6 = (ROOT / "docs/guided-demo/06-promote-to-production.md").read_text(encoding="utf-8")
+    overview = (ROOT / "docs/guided-demo.md").read_text(encoding="utf-8")
+
+    assert "Author and Freeze the Data Contract" in step_3
+    assert "widget_author_data_contract" in step_3
+    assert "Data Agreement is not linked in this step" in step_3
+    assert "Select and Validate the Data Contract" in step_4
+    assert "widget_select_data_contract" in step_4
+    assert "Selection is not activation" in step_4
+    assert "Link the Data Agreement and Activate" in step_5
+    assert "widget_activate_data_contract" in step_5
+    assert "not a technical activation gate" in step_5
+    assert "Promote and run Production" in step_6
+    assert "Production never falls back to mutable authoring metadata" in step_6
+    assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote" in overview
 
 
 def test_02_pipeline_uses_public_cloneable_governed_blocks():
@@ -188,7 +226,7 @@ def test_02_pipeline_uses_public_cloneable_governed_blocks():
     assert 'target_prep["completion"]' not in source
     for state in (
         "SOURCES", "SOURCE_PREPS", "SOURCE_DFS", "SOURCE_PROFILES", "SOURCE_RESULTS",
-        "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS", "TARGET_CONTRACTS",
+        "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS",
     ):
         assert f"{state} = {{}}" in source
     assert "globals()" not in source
@@ -236,8 +274,8 @@ def test_02_pipeline_selects_registered_target_and_data_contract_by_table_id():
     assert 'target_selection = target_catalogue["get_selection"]()' in selection
     assert '"table_id": target_selection["table_id"]' in selection
     assert "<canonical table_id already created in FabricOps metadata>" not in source
-    assert "TARGET_CONTRACTS[TARGET] = widget_select_data_contract(" in contract
-    assert 'table_id=target["table_id"]' in contract
+    assert "CONTRACT_SELECTION = widget_select_data_contract()" in contract
+    assert "table_id=" not in contract
     assert 'target_table_id=target["table_id"]' in source
     assert "TARGET_LOAD_STRATEGY" not in source
 
@@ -363,7 +401,7 @@ def test_02_pipeline_keeps_main_governed_path_runnable():
 @pytest.mark.parametrize(
     ("notebook_name", "state_name"),
     [
-        ("01_governance.ipynb", "agreement_catalogue_view"),
+        ("01_governance.ipynb", "catalogue_widget"),
         ("99_explore.ipynb", "data_catalogue_view"),
     ],
 )

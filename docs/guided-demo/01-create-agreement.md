@@ -38,7 +38,7 @@ Confirm that the correct Fabric Environment is attached, `00_env_config` has bee
 
 ???+ success "Live — Understand what comes next"
 
-    At this stage the Data Agreement exists before the Data Catalogue has been created. Step 5 returns to `01_governance` after `02_pipeline` has produced Data Catalogue, Data Profiled, and Data Lineage records and creates a table-level Data Contract under the exact Data Agreement version.
+    At this stage the Data Agreement exists independently. Step 3 later authors and freezes a table-centric Data Contract without Agreement linkage; Step 5 links the tested frozen version to this exact Data Agreement version during activation.
 
 ## Expected result
 

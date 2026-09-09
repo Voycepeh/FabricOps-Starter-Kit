@@ -64,6 +64,8 @@ def active_contract_frame(spark_session, *, table_id, columns, guardrails):
     return spark_session.createDataFrame([{
         "contract_id": contract_id,
         "contract_version": contract_version,
+        "agreement_id": "agreement-orders",
+        "agreement_version": "1.0.0",
         "table_id": table_id,
         "contract_payload_json": json.dumps(payload),
         "status": "active",

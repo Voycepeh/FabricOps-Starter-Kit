@@ -101,10 +101,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.</span>
+  <span class="metadata-table-card__purpose">Author and freeze one table-centric schema, processing, Enrichment, and Guardrail snapshot; link an exact Data Agreement version only when activating it for Production.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.</span>
+    <span>One Data Contract lifecycle version for one governed table; its payload becomes immutable when frozen and its Data Agreement linkage is populated at activation.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

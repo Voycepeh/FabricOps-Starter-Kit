@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import sys
+from types import ModuleType
 
 import pytest
 
 from fabricops_kit.pipeline import shared as pipeline_shared
 from fabricops_kit.widgets.shared import _contract_activation_changes
+from fabricops_kit.widgets import shared as widget_shared
 from fabricops_kit.widgets.widget_activate_data_contract import _compact_review, _payload, _selected_contract
 
 pytestmark = pytest.mark.unit
@@ -16,23 +19,26 @@ pytestmark = pytest.mark.unit
 def _contract(version: int, *, status: str = "draft", active: bool = False, table_id: str = "orders", rule: str = "rule-a"):
     payload = {
         "contract": {"contract_id": "contract", "contract_version": version, "status": "draft"},
-        "agreement": {"agreement_id": "agreement", "agreement_version": "1", "agreement_name": "Orders"},
         "table": {"table_id": table_id, "table_name": "orders", "schema_name": "sales", "columns": [{"column_id": "id", "column_name": "id", "data_type": "long"}]},
         "enrichment": {"table": [], "columns": []},
         "guardrails": [{"guardrail_rule_id": rule, "guardrail_version": version, "guardrail_type": "data_quality", "rule_id": rule, "rule_type": "not_null", "rule_parameters": {"columns": ["id"]}, "action": "Block"}],
         "approved_usages": ["analytics"],
     }
-    return {"contract_id": "contract", "contract_version": version, "table_id": table_id, "status": status, "is_active": active, "contract_payload_json": json.dumps(payload)}
+    return {"contract_id": "contract", "contract_version": version, "agreement_id": "agreement" if active else None, "agreement_version": "1" if active else None, "table_id": table_id, "status": status, "is_active": active, "contract_payload_json": json.dumps(payload)}
 
 
 def test_activation_supersedes_previous_version_without_mutating_frozen_fields():
     """Change only lifecycle fields when a newer frozen version is activated."""
     rows = [_contract(1, status="active", active=True), _contract(2), _contract(3)]
     before = [(row["contract_version"], row["contract_payload_json"]) for row in rows]
-    changes = _contract_activation_changes(rows, rows[1])
+    changes = _contract_activation_changes(rows, rows[1], agreement_id="agreement", agreement_version="1")
     assert changes == [
         {"contract_id": "contract", "contract_version": 1, "status": "superseded", "is_active": False},
-        {"contract_id": "contract", "contract_version": 2, "status": "active", "is_active": True},
+        {
+            "contract_id": "contract", "contract_version": 2,
+            "status": "active", "is_active": True,
+            "agreement_id": "agreement", "agreement_version": "1",
+        },
     ]
     assert rows[2]["status"] == "draft"
     assert [(row["contract_version"], row["contract_payload_json"]) for row in rows] == before
@@ -40,14 +46,87 @@ def test_activation_supersedes_previous_version_without_mutating_frozen_fields()
 
 def test_activation_is_idempotent_and_rejected_or_mismatched_versions_fail():
     """Avoid redundant writes and reject ineligible or invalid selections."""
-    active = _contract(1, status="active", active=True)
-    assert _contract_activation_changes([active], active) == []
+    active = {**_contract(1, status="active", active=True), "agreement_id": "agreement", "agreement_version": "1"}
+    assert _contract_activation_changes([active], active, agreement_id="agreement", agreement_version="1") == []
     with pytest.raises(ValueError, match="frozen"):
         _selected_contract([_contract(2, status="rejected")], "orders", "contract", 2)
     with pytest.raises(ValueError, match="does not belong"):
         _selected_contract([_contract(2, table_id="customers")], "orders", "contract", 2)
     with pytest.raises(ValueError, match="does not exist"):
         _selected_contract([], "orders", "contract", 99)
+
+
+def test_activation_requires_exact_existing_agreement_and_rejects_conflicting_relink(monkeypatch):
+    """Validate Agreement linkage before any lifecycle update and fail closed on relink."""
+    frozen = _contract(2, status="frozen")
+    frames = {
+        widget_shared.DATA_CONTRACT_TABLE: _Frame([frozen]),
+        "METADATA_DATA_AGREEMENT": _Frame([{"agreement_id": "agreement", "agreement_version": "2"}]),
+    }
+    monkeypatch.setattr(widget_shared, "read_lakehouse_table_core", lambda name, **_kwargs: frames[name])
+    with pytest.raises(ValueError, match="exact Data Agreement"):
+        widget_shared.activate_contract_version(
+            config=object(), env="dev", table_id="orders", contract_id="contract",
+            contract_version=2, agreement_id="", agreement_version="", spark_session=_Spark(),
+        )
+    with pytest.raises(ValueError, match="does not exist"):
+        widget_shared.activate_contract_version(
+            config=object(), env="dev", table_id="orders", contract_id="contract",
+            contract_version=2, agreement_id="agreement", agreement_version="99", spark_session=_Spark(),
+        )
+
+    active = {**_contract(2, status="active", active=True), "agreement_id": "agreement", "agreement_version": "2"}
+    frames[widget_shared.DATA_CONTRACT_TABLE] = _Frame([active])
+    result = widget_shared.activate_contract_version(
+        config=object(), env="dev", table_id="orders", contract_id="contract",
+        contract_version=2, agreement_id="agreement", agreement_version="2", spark_session=_Spark(),
+    )
+    assert result == {
+        "changed": False, "contract_id": "contract", "contract_version": 2, "changes": [],
+    }
+    with pytest.raises(ValueError, match="cannot be relinked"):
+        widget_shared.activate_contract_version(
+            config=object(), env="dev", table_id="orders", contract_id="contract",
+            contract_version=2, agreement_id="other", agreement_version="1", spark_session=_Spark(),
+        )
+
+
+def test_activation_writes_linkage_and_supersedes_atomically(monkeypatch):
+    """Persist linkage with the selected activation while preserving the frozen payload."""
+    prior = _contract(1, status="active", active=True)
+    selected = _contract(2, status="frozen")
+    assert selected["agreement_id"] is None
+    assert selected["agreement_version"] is None
+    frames = {
+        widget_shared.DATA_CONTRACT_TABLE: _Frame([prior, selected]),
+        "METADATA_DATA_AGREEMENT": _Frame([{"agreement_id": "agreement", "agreement_version": "2"}]),
+    }
+    monkeypatch.setattr(widget_shared, "read_lakehouse_table_core", lambda name, **_kwargs: frames[name])
+    monkeypatch.setattr(widget_shared, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/contracts"))
+    captured = {}
+
+    class _Merge:
+        def alias(self, _name): return self
+        def merge(self, source, _condition): captured["rows"] = source._rows; return self
+        def whenMatchedUpdate(self, *, set): captured["set"] = set; return self
+        def execute(self): return None
+
+    delta = ModuleType("delta")
+    delta_tables = ModuleType("delta.tables")
+    delta_tables.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: _Merge())})
+    delta.tables = delta_tables
+    monkeypatch.setitem(sys.modules, "delta", delta)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
+    payload_before = selected["contract_payload_json"]
+    result = widget_shared.activate_contract_version(
+        config=object(), env="dev", table_id="orders", contract_id="contract",
+        contract_version=2, agreement_id="agreement", agreement_version="2", spark_session=_Spark(),
+    )
+    assert result["changes"][0]["status"] == "superseded"
+    assert result["changes"][1]["agreement_id"] == "agreement"
+    assert result["changes"][1]["agreement_version"] == "2"
+    assert selected["contract_payload_json"] == payload_before
+    assert captured["set"]["agreement_id"].startswith("coalesce")
 
 
 def test_review_and_guardrails_come_only_from_frozen_payload():
@@ -190,6 +269,9 @@ class _Frame:
     def collect(self):
         return self._rows
 
+    def alias(self, _name):
+        return self
+
 
 class _Spark:
     def createDataFrame(self, rows):
@@ -254,6 +336,18 @@ def test_active_resolver_handles_zero_one_and_multiple_without_selecting_newest(
     rows[:] = [_contract(2, table_id="customers")]
     assert pipeline_shared.resolve_active_data_contract({}, "prod", "orders", required=False) is None
     with pytest.raises(ValueError, match="No active"):
+        pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
+
+
+def test_active_resolver_rejects_null_agreement_linkage(monkeypatch):
+    """Never allow Production to use an active contract without an exact Agreement."""
+    row = _contract(1, status="active", active=True)
+    row["agreement_id"] = None
+    row["agreement_version"] = None
+    monkeypatch.setattr(
+        pipeline_shared, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame([row])
+    )
+    with pytest.raises(RuntimeError, match="no exact Data Agreement linkage"):
         pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
 
 

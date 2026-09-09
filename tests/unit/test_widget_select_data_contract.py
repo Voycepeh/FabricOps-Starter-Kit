@@ -1,7 +1,8 @@
-"""Tests for the read-only Development Data Contract selector."""
+"""Tests for notebook-scoped immutable Data Contract selection."""
 
 from __future__ import annotations
 
+import inspect
 import json
 
 import pytest
@@ -10,142 +11,119 @@ import fabricops_kit.widgets.widget_select_data_contract as module
 from fabricops_kit.widgets.widget_select_data_contract import _contract_options, _contract_review
 
 
-def _row(version: int, *, table_id: str = "table-a", status: str = "draft") -> dict:
+def _row(version: int, *, table_id: str = "table-a", status: str = "frozen", active: bool = False) -> dict:
     payload = {
-        "contract": {"contract_id": "contract-a", "contract_version": version},
-        "agreement": {"agreement_name": "Product Agreement", "agreement_version": 2},
-        "table": {"table_id": table_id, "schema_name": "demo", "table_name": "orders", "columns": [{"column_name": "id"}], "processing": {"load_strategy": "scd1", "key_columns": ["id"]}},
-        "guardrails": [{"guardrail_type": "data_quality", "rule_id": "frozen-rule"}],
-        "approved_usages": ["Analytics"],
+        "contract": {"contract_id": f"contract-{table_id}", "contract_version": version},
+        "table": {"table_id": table_id, "schema_name": "demo", "table_name": table_id, "columns": [{"column_name": "id"}], "processing": {"load_strategy": "scd1", "key_columns": ["id"]}},
+        "guardrails": [{"guardrail_type": "data_quality", "rule_id": f"rule-{table_id}"}],
+        "enrichment": {"table": [], "columns": []},
     }
     return {
-        "contract_id": "contract-a",
-        "contract_version": version,
-        "table_id": table_id,
-        "status": status,
-        "is_active": status == "active",
+        "contract_id": f"contract-{table_id}", "contract_version": version,
+        "table_id": table_id, "status": status, "is_active": active,
         "contract_payload_json": json.dumps(payload),
     }
 
 
-def test_contract_options_are_table_scoped_and_newest_first():
-    """Only matching versions are offered in deterministic descending order."""
-    rows = [_row(2, status="superseded"), _row(4), _row(3, status="active"), _row(5, status="frozen"), _row(99, table_id="table-b")]
+class _Frame:
+    def __init__(self, rows): self.rows = rows
+    def collect(self): return self.rows
 
-    options = _contract_options(rows, "table-a")
 
-    assert [row["contract_version"] for row in options] == [5, 3, 2]
-    assert [row["status"] for row in options] == ["frozen", "active", "superseded"]
+def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=None):
+    context = {
+        "config": object(), "env": env, "notebook_id": "notebook-1",
+        "workspace_id": "workspace-1", "data_contract_overrides": dict(overrides or {}),
+    }
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], env, context_obj))
+    context_obj = context
+    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: (
+        pairs or [("Source", "table-a"), ("Target", "table-b")],
+        {"notebook_id": "notebook-1", "workspace_id": "workspace-1", "environment_name": env},
+    ))
+    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame(rows))
+    monkeypatch.setattr(module, "resolve_active_data_contract", lambda _c, _e, tid, **_kwargs: (active or {})[tid])
+    monkeypatch.setattr(module, "get_default_fabric_context", lambda: context_obj)
+    monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
+    return context_obj, module.widget_select_data_contract(context=context_obj)
+
+
+def test_contract_options_are_table_scoped_immutable_and_newest_first():
+    """Filter lifecycle states and unrelated tables."""
+    rows = [_row(2, status="superseded"), _row(4, status="draft"), _row(3, status="active"), _row(5), _row(6, status="rejected"), _row(99, table_id="table-b")]
+    assert [row["contract_version"] for row in _contract_options(rows, "table-a")] == [5, 3, 2]
 
 
 def test_contract_review_uses_only_frozen_payload():
-    """Preview values come from the immutable payload."""
-    selected = _row(4, status="frozen")
-    review = _contract_review(selected)
-
-    # Mutable authoring metadata is deliberately absent from this operation.
+    """Build reviews from immutable table payload content."""
+    review = _contract_review(_row(4))
     assert review["guardrails"] == {"data_quality": 1}
-    assert review["guardrail_details"][0]["rule_id"] == "frozen-rule"
-    assert review["schema_columns"] == 1
     assert review["processing"]["load_strategy"] == "scd1"
+    assert "agreement" not in review
 
 
-def test_contract_review_rejects_payload_identity_mismatch():
-    """Frozen payload identity must agree with its metadata row."""
-    selected = _row(4, status="frozen")
-    payload = json.loads(selected["contract_payload_json"])
-    payload["table"]["table_id"] = "wrong-table"
-    selected["contract_payload_json"] = json.dumps(payload)
-
-    with pytest.raises(ValueError, match="table_id does not match"):
-        _contract_review(selected)
-
-
-class _Frame:
-    def __init__(self, rows):
-        self.rows = rows
-
-    def collect(self):
-        return self.rows
-
-
-class _Store:
-    kind = "lakehouse"
-
-
-def _render(monkeypatch, rows, *, env="dev", overrides=None):
-    state_context = {"config": object(), "env": env, "data_contract_overrides": dict(overrides or {})}
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], env, state_context))
-    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
-    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "governance")
-    def read_contracts(*_args, **kwargs):
-        assert kwargs["schema"] == "governance"
-        return _Frame(rows)
-
-    monkeypatch.setattr(module, "read_lakehouse_table_core", read_contracts)
-    monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: rows[0] if rows else None)
-    monkeypatch.setattr(module, "get_default_fabric_context", lambda: state_context)
-    monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
-    return state_context, module.widget_select_data_contract(table_id="table-a")
-
-
-def test_default_and_exact_selection_feed_active_context(monkeypatch):
-    """Default clears overrides and exact selection updates the active context."""
-    context, state = _render(monkeypatch, [_row(4), _row(3, status="active")])
-
-    assert context["data_contract_overrides"] == {}
-    state["select"]("contract-a", 3)
+def test_selector_resolves_multiple_lineage_tables_and_preserves_roles(monkeypatch):
+    """Discover and independently select every notebook Lineage table."""
+    rows = [_row(3), _row(2, table_id="table-b")]
+    context, state = _render(monkeypatch, rows)
+    assert state["notebook"]["notebook_id"] == "notebook-1"
+    assert state["lineage_tables"] == [
+        {"pipeline_role": "Source", "table_id": "table-a"},
+        {"pipeline_role": "Target", "table_id": "table-b"},
+    ]
+    state["select"]("table-a", "contract-table-a", 3)
+    state["select"]("table-b", "contract-table-b", 2)
     assert context["data_contract_overrides"] == {
-        "table-a": {"contract_id": "contract-a", "contract_version": 3},
+        "table-a": {"contract_id": "contract-table-a", "contract_version": 3},
+        "table-b": {"contract_id": "contract-table-b", "contract_version": 2},
     }
-    assert state["review"]["guardrail_details"][0]["rule_id"] == "frozen-rule"
 
 
-def test_selection_updates_only_its_table_entry(monkeypatch):
-    """Selecting or clearing table A preserves table B's independent override."""
-    table_b = {"table-b": {"contract_id": "contract-b", "contract_version": 2}}
-    context, state = _render(monkeypatch, [_row(3, status="active")], overrides=table_b)
-
-    state["select"]("contract-a", 3)
-    assert context["data_contract_overrides"]["table-b"] == table_b["table-b"]
-    state["select"]()
-    assert context["data_contract_overrides"] == table_b
-
-
-def test_rejected_contract_cannot_become_override(monkeypatch):
-    """Rejected lifecycle rows cannot enter runtime context."""
-    context, state = _render(monkeypatch, [_row(5, status="rejected")])
-
+def test_selection_isolated_and_unrelated_contracts_not_available(monkeypatch):
+    """Prevent selection from leaking across table identities."""
+    context, state = _render(monkeypatch, [_row(3), _row(9, table_id="unrelated"), _row(2, table_id="table-b")])
+    with pytest.raises(ValueError, match="not linked"):
+        state["select"]("unrelated", "contract-unrelated", 9)
     with pytest.raises(ValueError, match="not available"):
-        state["select"]("contract-a", 5)
+        state["select"]("table-a", "contract-table-b", 2)
     assert context["data_contract_overrides"] == {}
 
 
-def test_production_never_accepts_manual_override(monkeypatch):
-    """Production remains automatic even when a version is requested."""
-    context, state = _render(monkeypatch, [_row(3, status="active")], env="prod")
+def test_missing_frozen_version_fails_actionably(monkeypatch):
+    """Require a frozen version for every discovered Development table."""
+    with pytest.raises(ValueError, match="Freeze a version in 01_governance"):
+        _render(monkeypatch, [_row(1, status="draft"), _row(2, table_id="table-b")])
 
-    state["select"]("contract-a", 3)
+
+def test_production_resolves_each_active_contract_and_ignores_overrides(monkeypatch):
+    """Resolve active Production versions and clear Development overrides."""
+    active = {"table-a": _row(3, status="active", active=True), "table-b": _row(2, table_id="table-b", status="active", active=True)}
+    context, state = _render(monkeypatch, [], env="prod", overrides={"table-a": {"contract_id": "wrong", "contract_version": 99}}, active=active)
     assert context["data_contract_overrides"] == {}
-    assert state["message"] == "Using active Data Contract v3"
+    assert state["resolved_contracts"]["table-a"]["contract_version"] == 3
+    assert state["resolved_contracts"]["table-b"]["contract_version"] == 2
+    with pytest.raises(ValueError, match="resolved automatically"):
+        state["select"]("table-a", "contract-table-a", 3)
 
 
-def test_selector_exposes_only_canonical_identity():
-    """Remove all physical-coordinate selector parameters."""
-    import inspect
-    parameters = inspect.signature(module.widget_select_data_contract).parameters
-    assert "table_id" in parameters
-    assert {"table_name", "target", "schema"}.isdisjoint(parameters)
-    with pytest.raises(ValueError, match="table_id must be a non-empty"):
-        module.widget_select_data_contract(table_id=" ")
-
-
-def test_production_requires_active_contract(monkeypatch):
-    """Never fall back to current authoring or latest contract in Production."""
-    state_context = {"config": object(), "env": "prod", "data_contract_overrides": {}}
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (state_context["config"], "prod", state_context))
-    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
-    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "governance")
+def test_production_zero_active_fails_clearly(monkeypatch):
+    """Fail Production when a discovered table has no active version."""
     monkeypatch.setattr(module, "resolve_active_data_contract", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("missing")))
-    with pytest.raises(ValueError, match="Production requires an active Data Contract"):
-        module.widget_select_data_contract(table_id="table-a")
+    context = {"config": object(), "env": "prod", "notebook_id": "n", "data_contract_overrides": {}}
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], "prod", context_obj))
+    context_obj = context
+    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: ([('Target', 'table-a')], {}))
+    with pytest.raises(ValueError, match="exactly one active"):
+        module.widget_select_data_contract(context=context)
+
+
+def test_selector_no_longer_accepts_manual_table_id():
+    """Keep notebook discovery as the only normal selector scope."""
+    parameters = inspect.signature(module.widget_select_data_contract).parameters
+    assert "table_id" not in parameters
+    assert set(parameters) == {"spark_session", "context"}
+    assert "Current authoring" not in inspect.getsource(module.widget_select_data_contract)

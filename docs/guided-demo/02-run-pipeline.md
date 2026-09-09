@@ -12,7 +12,7 @@ At the end of this module, you will have run a complete ETL and written `METADAT
 
     No Guardrails or Data Contract have been created for the demo table yet. That is expected.
 
-    The ETL still runs end to end. In Step 3, Governance reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then writes `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL`. Step 4 reruns this same pipeline with those Guardrails. Step 5 saves the governed definition as an immutable Data Contract version, Engineering selects and tests that exact saved version, and Governance activates the selected version for Production. Step 6 runs the same pipeline in Production against the active contract.
+    The ETL still runs end to end. In Step 3, Governance selects the target `table_id`, authors Enrichment and Guardrails in the unified editor, and freezes the Data Contract version. Step 4 selects and validates that exact version in `02_pipeline`. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the same pipeline in Production against the active contract.
 
 ## Learning objectives
 
@@ -52,17 +52,17 @@ Run the full ETL
 Write Catalogue / Profiled / Lineage metadata
         ↓
 Step 3
-Read Catalogue + Profiled
-Write Enrichment + Guardrail
+Select table_id
+Author Enrichment + Guardrails
+Freeze Data Contract version
         ↓
 Step 4
-Run the same ETL again
-Validate current authoring
+Select the frozen version for table_id
+Run the same ETL and validate
         ↓
 Step 5
-Save an immutable Data Contract
-Select and test the saved version
-Activate the selected version
+Link the tested version to the Data Agreement
+Activate the linked version
         ↓
 Step 6
 Run the same ETL in Production
@@ -78,4 +78,4 @@ The important point is that FabricOps does not require a separate basic pipeline
 Need an exact function signature or parameter instead of the learning path? Use the [Function Reference](../reference/index.md).
 
 **Previous:** [Step 1: Create data stewards and a data agreement](01-create-agreement.md)  
-**Next after completing this module:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)
+**Next after completing this module:** [Step 3: Author and freeze the Data Contract](03-enrich-guardrails.md)

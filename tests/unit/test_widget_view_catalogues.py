@@ -167,6 +167,7 @@ def _run_pipeline_widget(monkeypatch, *, context=None):
     monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", functions)
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
+    monkeypatch.setattr(module.widget_shared, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
     monkeypatch.setattr(module, "_collect_catalogue_inventory", lambda *_args: [{"table_id": "table-id"}])
     monkeypatch.setattr(module, "_build_catalogue_widget", lambda **kwargs: kwargs)
     explicit = {"config": object(), "env": "dev", **(context or {})}
@@ -240,7 +241,7 @@ def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake
 
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     fake_notebookutils.runtime.context.clear()
-    with pytest.raises(ValueError, match="active FabricOps context or Fabric runtime context"):
+    with pytest.raises(ValueError, match="current notebook_id"):
         module.widget_view_catalogue(mode="pipeline", context={"config": object(), "env": "dev"})
 
 

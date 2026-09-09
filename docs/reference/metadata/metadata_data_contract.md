@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Establish a governed table version as a draft, then freeze its schema, processing, enrichment, Guardrails, approved usages, and Data Agreement relationship.
+Author and freeze one table-centric schema, processing, Enrichment, and Guardrail snapshot; link an exact Data Agreement version only when activating it for Production.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Establish a governed table version as a draft, then freeze its schema, processin
 
 **Default physical schema:** `governance`
 
-**Grain:** One Data Contract lifecycle version for one governed table under one exact Data Agreement version; its payload becomes immutable when frozen.
+**Grain:** One Data Contract lifecycle version for one governed table; its payload becomes immutable when frozen and its Data Agreement linkage is populated at activation.
 
 **Primary key:** `contract_id` + `contract_version`
 

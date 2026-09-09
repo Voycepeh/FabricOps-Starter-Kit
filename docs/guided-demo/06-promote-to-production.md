@@ -41,9 +41,9 @@ As an operating practice, the version should have been tested in Development and
 
     Open the promoted `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
 
-    Run the Data Contract selector area. In Production it is read only and shows the active Data Contract version for the table.
+    Run `widget_select_data_contract()`. It uses the same current-notebook Lineage discovery as Development. In Production it is read only and shows the one active Data Contract version for every discovered Source and Target `table_id`; Development overrides are ignored.
 
-    Production never falls back to mutable authoring metadata.
+    Production never falls back to mutable authoring metadata. Runtime uses the active version's saved immutable Guardrails and processing definition.
 
     ```text
     physical Production table
@@ -84,7 +84,7 @@ As an operating practice, the version should have been tested in Development and
 
 You should understand the Production path as **promote the validated `02_pipeline` → resolve the active saved Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's saved immutable Guardrails and processing definition around the same canonical ETL lifecycle.
 
-**Previous:** [Step 5: Save, test, and activate the Data Contract](05-create-data-contract.md)  
+**Previous:** [Step 5: Link the Data Agreement and activate](05-create-data-contract.md)
 **Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
 See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`read_pipeline_prep()`](../api/reference/read_pipeline_prep.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).

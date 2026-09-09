@@ -10,6 +10,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 import math
 from typing import Any
+import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import (
@@ -31,12 +32,76 @@ ENRICHMENT_TYPES_BY_LEVEL = {
     "column": frozenset({"Description", "Classification"}),
 }
 CONTRACT_SOURCE_TABLES = (
-    "METADATA_DATA_AGREEMENT",
-    "METADATA_DATA_STEWARD",
     "METADATA_DATA_CATALOGUE",
     ENRICHMENT_TABLE,
     GUARDRAIL_TABLE,
 )
+_CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
+
+
+def contract_lifecycle_id(table_id: str, environment_name: str) -> str:
+    """Return the stable table/environment identity for one Data Contract lifecycle."""
+    table = str(table_id or "").strip()
+    environment = str(environment_name or "").strip()
+    if not table or not environment:
+        raise ValueError("table_id and environment_name are required for a Data Contract lifecycle.")
+    return str(uuid.uuid5(_CONTRACT_NAMESPACE, f"{environment}\n{table}"))
+
+
+def create_contract_draft(
+    *, table_id: str, config: Any, env: str, spark_session: Any,
+    context: Mapping[str, Any] | None = None, target: str = "metadata",
+    schema: str | None = None,
+) -> dict[str, Any]:
+    """Create or reopen the one agreement-free draft for a governed table."""
+    lifecycle_id = contract_lifecycle_id(table_id, env)
+    runtime_context = {"config": config, "env": env, **dict(context or {})}
+    catalogue_rows = row_dicts(read_lakehouse_table_core(
+        "METADATA_DATA_CATALOGUE", target=target,
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        spark_session=spark_session, context=runtime_context,
+    ))
+    if not any(
+        str(row.get("table_id") or "") == str(table_id).strip()
+        and str(row.get("environment_name") or "") == env
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+        for row in catalogue_rows
+    ):
+        raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
+    rows = row_dicts(read_lakehouse_table_core(
+        DATA_CONTRACT_TABLE, target=target, schema=schema,
+        spark_session=spark_session, context=runtime_context,
+    ))
+    owned = [
+        row for row in rows
+        if str(row.get("contract_id") or "") == lifecycle_id
+        and str(row.get("environment_name") or "") == env
+    ]
+    drafts = [row for row in owned if str(row.get("status") or "").lower() == "draft"]
+    if len(drafts) > 1:
+        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple open drafts.")
+    if drafts:
+        return dict(drafts[0])
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
+        "contract_id": lifecycle_id,
+        "contract_version": max((int(item.get("contract_version") or 0) for item in owned), default=0) + 1,
+        "agreement_id": None,
+        "agreement_version": None,
+        "table_id": str(table_id).strip(),
+        "environment_name": env,
+        "contract_payload_json": None,
+        "status": "draft",
+        "is_active": False,
+        **audit,
+    })
+    write_lakehouse_table_core(
+        spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]),
+        DATA_CONTRACT_TABLE, target=target, schema=schema,
+        context=runtime_context, mode="append",
+    )
+    return row
 
 
 def row_dicts(value: Any) -> list[dict[str, Any]]:
@@ -484,10 +549,10 @@ def validate_contract_draft(
     if str(draft.get("status") or "").lower() != "draft":
         raise ValueError("Only a draft Data Contract version can be authored or frozen.")
     table_id = str(draft.get("table_id") or "").strip()
-    agreement_id = str(draft.get("agreement_id") or "").strip()
-    agreement_version = str(draft.get("agreement_version") or "").strip()
-    if not table_id or not agreement_id or not agreement_version:
-        raise ValueError("A draft requires table_id and an exact Data Agreement identity.")
+    if not table_id:
+        raise ValueError("A draft requires one governed table_id.")
+    if draft.get("agreement_id") not in (None, "") or draft.get("agreement_version") not in (None, ""):
+        raise ValueError("Draft Data Contracts cannot be linked to a Data Agreement before activation.")
     catalogue = [row for row in row_dicts(catalogue_rows) if str(row.get("environment_name") or "") == environment_name and str(row.get("table_id") or "") == table_id]
     if not any(str(row.get("metadata_level") or "").lower() == "table" for row in catalogue):
         raise ValueError("The draft table_id has no table-level Catalogue row in the authoring environment.")
@@ -518,8 +583,6 @@ def freeze_contract_record(*, draft: Mapping[str, Any], payload: Mapping[str, An
 def assemble_contract_payload(
     *,
     draft: Mapping[str, Any],
-    agreement: Mapping[str, Any],
-    approved_usages: list[str] | None,
     tables: Mapping[str, Any],
     environment_name: str,
 ) -> tuple[dict[str, Any], list[str]]:
@@ -597,22 +660,6 @@ def assemble_contract_payload(
         item["rule_parameters"] = parameters
         guardrail_docs.append(item)
 
-    steward_ids = {
-        str(agreement.get("provider_steward_id") or ""),
-        str(agreement.get("recipient_steward_id") or ""),
-    }
-    stewards = _latest(
-        [row for row in row_dicts(tables["METADATA_DATA_STEWARD"])
-         if str(row.get("steward_id") or "") in steward_ids and row.get("is_active") is not False],
-        ("steward_id",),
-    )
-    agreement_doc = _fields(agreement, ("agreement_id", "agreement_version", "agreement_name", "domain", "business_purpose", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date"))
-    agreement_doc["approved_usages"] = parse_approved_usages(agreement.get("approved_usage_json"))
-    parent_usages = agreement_doc["approved_usages"]
-    usages = select_approved_usages(
-        parent_usages if approved_usages is None else approved_usages,
-        parent_usages,
-    )
     parameters = _json_value(table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={})
     if not isinstance(parameters, dict):
         raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
@@ -624,8 +671,6 @@ def assemble_contract_payload(
         ) from exc
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
-        "agreement": agreement_doc,
-        "stewards": [_fields(row, ("steward_id", "steward_name", "steward_role", "contact")) for row in stewards],
         "table": {
             **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
             "columns": column_docs,
@@ -636,7 +681,6 @@ def assemble_contract_payload(
             "columns": [row for row in enrichment_docs if row.get("column_id")],
         },
         "guardrails": guardrail_docs,
-        "approved_usages": usages,
     }
     warnings = []
     if not any(row.get("enrichment_type") == "Description" and not row.get("column_id") for row in enrichment_docs):
@@ -652,7 +696,6 @@ def assemble_contract_payload(
 def freeze_contract(
     *,
     draft: Mapping[str, Any],
-    approved_usages: list[str] | None = None,
     config: Any,
     env: str,
     spark_session: Any,
@@ -673,21 +716,13 @@ def freeze_contract(
         ))
         for name in CONTRACT_SOURCE_TABLES
     }
-    agreement = next((
-        row for row in tables["METADATA_DATA_AGREEMENT"]
-        if str(row.get("agreement_id") or "") == str(draft.get("agreement_id") or "")
-        and str(row.get("agreement_version") or "") == str(draft.get("agreement_version") or "")
-    ), None)
-    if agreement is None:
-        raise ValueError("The draft's exact Data Agreement version no longer exists.")
     validate_contract_draft(
         draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
         enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
         environment_name=env,
     )
     payload, warnings = assemble_contract_payload(
-        draft=draft, agreement=agreement, approved_usages=approved_usages,
-        tables=tables, environment_name=env,
+        draft=draft, tables=tables, environment_name=env,
     )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(

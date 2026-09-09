@@ -5,7 +5,7 @@ from __future__ import annotations
 import html
 from typing import Any
 
-from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
+from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import read_lakehouse_table_core
 import fabricops_kit.widgets.shared as widget_shared
 
@@ -45,37 +45,15 @@ def _resolve_pipeline_catalogue_scope(
     runtime_context: dict[str, Any],
 ) -> tuple[set[str], list[tuple[str, str]], dict[str, Any], dict[str, Any]]:
     """Resolve notebook-lineage table IDs and pipeline-role choices."""
-    runtime = resolve_runtime_context(context=context)
-    notebook_id = str(runtime.get("notebook_id") or "").strip()
-    notebook_name = str(runtime.get("notebook_name") or notebook_id).strip()
-    workspace_id = str(runtime.get("workspace_id") or "").strip()
-    if not notebook_id:
-        raise ValueError(
-            "Unable to resolve the current notebook_id from the active FabricOps context or Fabric runtime context."
-        )
-    from pyspark.sql import functions as F
-
-    lineage = read_lakehouse_table_core(
-        "METADATA_DATA_LINEAGE",
-        target=target,
-        schema=schema,
-        spark_session=spark_session,
-        context=runtime_context,
+    pairs, selection_context = widget_shared.resolve_notebook_lineage_tables(
+        environment_name=environment_name, target=target, schema=schema,
+        spark_session=spark_session, context=context, runtime_context=runtime_context,
     )
-    predicate = (F.col("_notebook_id") == notebook_id) & (F.col("environment_name") == environment_name)
-    if workspace_id:
-        predicate &= F.col("_workspace_id") == workspace_id
-    pairs = sorted(
-        {
-            (str(row["pipeline_role"] or "").strip().title(), str(row["table_id"] or "").strip())
-            for row in lineage.filter(predicate).select("pipeline_role", "table_id").distinct().collect()
-            if row["table_id"] and row["pipeline_role"]
-        }
-    )
+    notebook_name = str(selection_context["notebook_name"])
     return (
         {table_id for _role, table_id in pairs},
         pairs,
-        {"notebook_id": notebook_id, "notebook_name": notebook_name, "environment_name": environment_name},
+        selection_context,
         {"Notebook": notebook_name, "Environment": environment_name, "Linked datasets": len(pairs)},
     )
 

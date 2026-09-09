@@ -170,8 +170,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             [
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
-                ("agreement_id", "string", False),
-                ("agreement_version", "string", False),
+                ("agreement_id", "string", True),
+                ("agreement_version", "string", True),
                 ("table_id", "string", False),
                 ("environment_name", "string", False),
                 ("contract_payload_json", "string"),
@@ -376,7 +376,10 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     coerced = dict(row)
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
-            coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
+            if coerced[field.name] is None and field.nullable:
+                coerced[field.name] = None
+            else:
+                coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
     return coerced
 
 

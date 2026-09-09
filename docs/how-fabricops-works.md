@@ -215,10 +215,10 @@ The exact ETL implementation stays project-specific. FabricOps standardizes the 
 </details>
 
 <details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code> and author the governed Data Contract definition</span></span><span class="fabricops-step-chevron"></span></summary>
+<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code>, author the Data Contract, and freeze the version</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering. Governance then creates or refines the Data Contract definition that binds the governed asset to its governance context.
+Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering. Governance then uses `widget_author_data_contract()` to author and freeze one table-centric Data Contract version.
 
 As parts of that Data Contract definition, Governance can add:
 
@@ -226,7 +226,9 @@ As parts of that Data Contract definition, Governance can add:
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 
-Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as definitions attached directly to `table_id`. Governance can refine the definition before saving an immutable Data Contract version for the governed asset.
+Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
+
+The Data Agreement is not linked at this authoring stage. Governance makes that explicit linkage after the frozen version has been tested, as part of Step 5.
 
 ### AI-assisted governance authoring
 
@@ -241,10 +243,10 @@ available when AI assistance is disabled or unavailable.
 </details>
 
 <details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Run the governed definition in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
+<summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Select the frozen Data Contract in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Engineering Development reruns the same `02_pipeline` using the Guardrails in the authored Data Contract definition or a selected saved Data Contract version.
+Engineering Development uses `widget_select_data_contract()` for each relevant `table_id`, selects the exact frozen version, and reruns the same `02_pipeline` with its saved immutable Guardrails and processing definition.
 
 The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
 
@@ -254,14 +256,12 @@ If the expectations do not yet work, the workflow returns to `01_governance` so 
 </details>
 
 <details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Save the Data Contract, link the Data Agreement, test the saved version, then activate it</span></span><span class="fabricops-step-chevron"></span></summary>
+<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Link the tested Data Contract to the Data Agreement and activate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Once the governed definition is ready, Governance uses `01_governance` to save an immutable Data Contract version for one canonical `table_id` under one exact Data Agreement version.
+After Engineering has tested the frozen version, Governance explicitly links that version to the required Data Agreement and verifies the Agreement version, Data Stewards, purpose, and approved usages. This linkage was not finalized during Step 3 authoring.
 
-That saved immutable version captures the governed context for the table, including its Catalogue/schema, Enrichment, active Guardrails, governed usages, target load strategy and load-strategy parameters, and the relevant Data Agreement and Steward context.
-
-Engineering Development selects and tests that exact saved version in `02_pipeline`. After governance sign-off, Governance activates the selected version in `01_governance` so Engineering Production is allowed to resolve it.
+After governance sign-off, Governance activates the linked version in `01_governance` so Engineering Production resolves it. Testing and sign-off remain operating practice rather than a technically enforced activation gate.
 
 <!-- VIDEO SLOT: Data Agreement and Data Contract lifecycle -->
 
@@ -304,21 +304,20 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: author, validate, save, test, activate
+## The core loop: author, freeze, select, validate, link, activate, promote
 
 The heart of FabricOps is the iterative loop between Governance and Engineering Development:
 
 ```mermaid
 flowchart TD
-    AUTHOR["Author"] --> VALIDATE["Validate"] --> SAVE["Save Contract"] --> TEST["Test Saved Version"] --> ACTIVATE["Activate"] --> PROD["Production Resolves Active Contract"]
-    VALIDATE -. "Fail · refine" .-> AUTHOR
-    TEST -. "Fail · author and save new version" .-> AUTHOR
+    AUTHOR["Author"] --> FREEZE["Freeze"] --> SELECT["Select"] --> VALIDATE["Validate"] --> LINK["Link Data Agreement"] --> ACTIVATE["Activate"] --> PROMOTE["Promote"] --> PROD["Production Resolves Active Contract"]
+    VALIDATE -. "Fail · author and freeze new version" .-> AUTHOR
 
     classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class SAVE,ACTIVATE focal;
+    class FREEZE,ACTIVATE focal;
 ```
 
-The details live in the expandable workflow above. The key idea is simple: Governance authors the governed definition, Engineering validates it, Governance saves an immutable Data Contract version, Engineering tests that exact saved version, Governance activates the selected version, and Production resolves the active contract. Testing and governance sign-off are part of the recommended operating workflow; activation is not currently blocked by a recorded approval state.
+The details live in the expandable workflow above. The key idea is simple: **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
 

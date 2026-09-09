@@ -1,107 +1,50 @@
-# Step 3: Enrich the Data Catalogue and Author Guardrails
+# Step 3: Author and Freeze the Data Contract
 
-**Return to `01_governance` after `02_pipeline` has produced Data Catalogue and Data Profiled records. Governance reads those records, enriches the Data Catalogue, and authors Guardrails.**
-
-!!! info "Key concepts for this step"
-
-    [**Enrichment**](../glossary.md#enrichment) — business and governance information added after technical metadata has been captured.  
-    [**Data Sensitivity**](../glossary.md#data-sensitivity) — how carefully data should be handled based on confidentiality, privacy, or risk.  
-    [**Data Quality**](../glossary.md#data-quality) — the governed expectations data must meet for its intended use.  
-    [**Guardrails**](../glossary.md#guardrails) — the governed rules FabricOps applies to data and pipelines.
-
-    These concepts are the Governance focus for this step. Open the [Glossary](../glossary.md) only when another term becomes relevant.
+**Return to `01_governance`, select the governed `table_id`, and use one unified editor to author and freeze its Data Contract definition.**
 
 ## High-level flow
 
 ```text
-Read METADATA_DATA_CATALOGUE + METADATA_DATA_PROFILED
-→ Write METADATA_ENRICHMENT
-→ Write METADATA_GUARDRAIL
+METADATA_DATA_CATALOGUE + METADATA_DATA_PROFILED
+                         ↓
+                 governed table_id
+                         ↓
+             Data Contract version
+             ├── Enrichment
+             └── Guardrails
+                         ↓
+                  Review → Freeze
 ```
+
+!!! important "The Data Agreement is not linked in this step"
+
+    Step 3 is table-centric. It binds descriptive Enrichment and executable Guardrails to one governed `table_id` and freezes that definition. Governance explicitly links the tested version to the required Data Agreement later in Step 5, together with the activation decision.
 
 ## Before you begin
 
-Confirm that Step 2 completed successfully and the relevant `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` records exist in the configured metadata target.
+Complete Step 2 so `02_pipeline` has registered the target in `METADATA_DATA_CATALOGUE` and written its latest `METADATA_DATA_PROFILED` snapshot to the metadata target configured by `00_env_config`.
 
-???+ success "Live — Review Engineering records"
+## What to do
 
-    1. Open `01_governance` in the Governance workspace.
-    2. Select the governed dataset.
-    3. Inspect the `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` records written by `02_pipeline`.
+1. Open `01_governance` in the Governance workspace and run `00_env_config`.
+2. Review the Catalogue and Profiled records produced by Engineering, then select the target's canonical `table_id`.
+3. Run `widget_author_data_contract(table_id=TABLE_ID, spark_session=spark)`. The unified editor creates or reopens the agreement-free draft for that table and environment.
+4. In **Enrichment**, author descriptive table and column context and classifications. Enrichment is descriptive metadata only; it does not enforce runtime behavior.
+5. In **Guardrails**, author the enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements that apply to the table.
+6. Open **Review** and confirm the table identity, schema, Enrichment, Guardrails, and processing definition.
+7. Freeze the version. The saved definition is immutable; later revisions require a new version.
 
-    Governance reads those records from the shared metadata store. It does not create a second copy of them.
+`widget_author_data_contract(...)` is the normal authoring UX. Enrichment, Guardrail, DQ-rule, and contract-registration widgets are not separate journeys in the canonical workflow.
 
-???+ success "Live — Add Enrichment"
+??? info "Sensitive Data and DQ ownership"
 
-    Add or refine descriptive Enrichment: table and column descriptions plus information classifications selected from the project-configured labels.
+    Sensitive Data treatment can tokenize, mask, bucket, or remove an explicitly governed column. Token support mappings remain caller-owned and outside FabricOps metadata; they are not persisted automatically.
 
-    `METADATA_ENRICHMENT` belongs to one exact Data Contract version through `contract_id` + `contract_version`. It is descriptive metadata only and has no direct ETL enforcement semantics. Put every executable runtime requirement in `METADATA_GUARDRAIL`.
-
-    When AI Enrichment is enabled in `00_env_config`, select a table or column
-    and choose **✨ Suggest enrichment**. Review or edit the proposed Description
-    and Classification before using the normal save action; suggestions are not
-    persisted automatically.
-
-    Classification answers, “How sensitive is this information according to the
-    organisation's information-classification policy?” A Sensitive Data
-    Guardrail separately identifies one canonical Catalogue column and requires
-    `tokenize`, `mask`, `bucket`, or `remove` treatment. Classification alone never changes a
-    DataFrame or creates a Guardrail.
-
-???+ success "Live — Author Guardrails"
-
-    Author schema, freshness, profile-behaviour, Data Quality, and Sensitive Data Guardrails for the ETL workflow, then save the Governance records. Sensitive Data authoring can enable one independent rule for each active Catalogue column, using its canonical `column_id`, a Tokenize, Mask, Bucket, or Remove treatment, and a Warn or Block action against the exact contract version.
-
-    Use **✨ Suggest Sensitive Data** when AI Enrichment is enabled to populate
-    validated draft rules from compact Catalogue, Enrichment, and profiling
-    context. Suggestions never save automatically: Governance must review or edit
-    each rule, including proposed Bucket boundaries, before using **Save Guardrails**.
-    If AI is disabled or unavailable, the compact Add / Edit rule workflow remains
-    fully usable. Configure the advisory instruction with
-    `governance_config.ai_enrichment.sensitive_data_prompt`; Description and
-    Classification prompts remain separate and are not combined for this action.
-
-    | Metadata table | Governance responsibility |
-    | --- | --- |
-    | `METADATA_DATA_CATALOGUE` | Read the table and column identity and structure written by `02_pipeline`. |
-    | `METADATA_DATA_PROFILED` | Read the registered profile metrics written by `02_pipeline`. |
-    | `METADATA_ENRICHMENT` | Add descriptive business context and classifications. |
-    | `METADATA_GUARDRAIL` | Author executable Guardrail rules for the ETL workflow. |
-    | `METADATA_GUARDRAIL_RESULTS` | Inspect Guardrail evaluation results written by Engineering; do not edit those recorded results. |
-
-??? info "Details — How the metadata moves between Engineering and Governance"
-
-    `02_pipeline` first writes the technical metadata Governance needs. `01_governance` then adds Enrichment and Guardrails against the same governed table identity. When Engineering reruns the pipeline, those Guardrails are evaluated and the resulting records are written back to the metadata store.
-
-    ```mermaid
-    flowchart LR
-        PIPELINE["02_pipeline"] --> CATALOGUE["METADATA_DATA_CATALOGUE"]
-        PIPELINE --> PROFILED["METADATA_DATA_PROFILED"]
-        PIPELINE --> LINEAGE["METADATA_DATA_LINEAGE"]
-
-        CATALOGUE --> GOV["01_governance"]
-        PROFILED --> GOV
-        GOV --> ENRICHMENT["METADATA_ENRICHMENT"]
-        GOV --> GUARDRAIL["METADATA_GUARDRAIL"]
-
-        GUARDRAIL --> RERUN["02_pipeline rerun"]
-        RERUN --> RESULTS["METADATA_GUARDRAIL_RESULTS"]
-        RERUN --> DECISION{"Can continue?"}
-        DECISION -->|Yes| CONTINUE["Continue pipeline"]
-        DECISION -->|No| BLOCK["Block pipeline"]
-    ```
-
-    The diagram uses the actual FabricOps metadata tables involved in this part of the workflow.
-
-??? info "Details — Table Guardrails versus DQ rules"
-
-    Schema, Freshness, and Changes Guardrails operate at the table boundary and can often be evaluated before reading all business rows. DQ rules evaluate the actual DataFrame and return detailed failures to caller code. Sensitive Data Guardrails transform or remove an explicitly governed column during preparation before the target write.
+    DQ is authored as a Guardrail. At runtime, `check_dq()` returns row-level failed values as a caller-owned DataFrame, while `METADATA_GUARDRAIL_RESULTS` stores the evaluation summary and continuation decision.
 
 ## Expected result
 
-You should now have reviewed `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, written `METADATA_ENRICHMENT`, and authored `METADATA_GUARDRAIL` records ready for the newer guarded `02_pipeline` path to evaluate.
+One frozen Data Contract version binds the reviewed Enrichment and Guardrails to the selected `table_id`. It has **not** been selected for Development, linked to a Data Agreement, activated for Production, or deployed.
 
-**Previous:** [Step 2: Run the Development pipeline](02-run-pipeline.md)  
-**Next:** [Step 4: Rerun the Development pipeline with Guardrails](04-run-pipeline-with-guardrails.md)
-
-See also: [METADATA_ENRICHMENT](../reference/metadata/metadata_enrichment.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [List of DQ Rules](../reference/dq-rules/index.md).
+**Previous:** [Step 2: Run the Development pipeline](02-run-pipeline.md)
+**Next:** [Step 4: Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)
