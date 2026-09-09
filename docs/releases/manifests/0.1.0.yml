@@ -276,7 +276,7 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_notebook_registry.md
     status: preview
     schema_since: 0.1.0
-    schema_fingerprint: 8c139a75b7889aa7b6b68b4388763394b6be5c3d47
+    schema_fingerprint: 8c139a75b788d8309d239bfe7606d34fb3c6a1b03db2988b55bc66baee11a5f9
     rationale: notebook registry deferred beyond v0.1.0
     introduced_in: 0.1.0
   - name: METADATA_PIPELINE_RUNS
