@@ -95,6 +95,8 @@ def test_activation_writes_linkage_and_supersedes_atomically(monkeypatch):
     """Persist linkage with the selected activation while preserving the frozen payload."""
     prior = _contract(1, status="active", active=True)
     selected = _contract(2, status="frozen")
+    assert selected["agreement_id"] is None
+    assert selected["agreement_version"] is None
     frames = {
         widget_shared.DATA_CONTRACT_TABLE: _Frame([prior, selected]),
         "METADATA_DATA_AGREEMENT": _Frame([{"agreement_id": "agreement", "agreement_version": "2"}]),
