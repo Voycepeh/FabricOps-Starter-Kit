@@ -16,14 +16,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the operating model
 
 You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A and 0B prepare and configure the environment before that workflow begins.**
 
-```mermaid
-flowchart TD
-    S0A["0A · Prepare"] --> S0B["0B · Configure"] --> S1["1 · Steward + Agreement"] --> S2["2 · ETL / Profile / Catalogue"] --> S3["3 · Author + Freeze"] --> S4["4 · Select + Validate"] --> S5["5 · Link Agreement + Activate"] --> S6["6 · Promote + Run"] --> S7["7 · Consume Production"]
-    S4 -. "Validation fails · refine and freeze a new version" .-> S3
-
-    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class S3,S4,S5 focal;
-```
+See the canonical stage-level lifecycle in [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop). This page keeps the detailed learning path below instead of repeating that diagram.
 
 The non-linear part is **Steps 3, 4, and 5**. Governance authors and freezes a table-centric Data Contract definition in Step 3. Engineering selects and validates that exact frozen version for the same `table_id` in Step 4. Governance explicitly links the tested version to the required Data Agreement and activates it in Step 5. If validation shows the definition needs work, return to Step 3 and freeze a new version after refinement.
 

@@ -162,23 +162,16 @@ For the deeper engineering reasoning behind `00_env_config`, FabricOps I/O funct
 
 ```mermaid
 flowchart LR
-    subgraph GOV[Governance]
-        S1["1 · Steward + Agreement"]
-        S3["3 · Author + Freeze"]
-        S5["5 · Link Agreement + Activate"]
-    end
-    subgraph DEV[Engineering Development]
-        S2["2 · ETL / Profile / Catalogue"]
-        S4["4 · Select + Validate"]
-    end
-    subgraph PROD[Engineering Production]
-        S6["6 · Promote + Run"]
-    end
-    subgraph CON[Consumers]
-        S7["7 · Consume Production"]
-    end
+    S1["1 · Data Stewards & Data Agreement"]
+    S2["2 · ETL, Profile & Catalogue"]
+    S3["3 · Author Data Contract"]
+    S4["4 · ETL with Data Contract Guardrails"]
+    S5["5 · Activate & Promote"]
+    S6["6 · Run Production Pipeline"]
+    S7["7 · Consume Production Data"]
+
     S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
-    S4 -. "Validation fails · refine and freeze a new version" .-> S3
+    S4 -. "Validation fails" .-> S3
 ```
 
 FabricOps deliberately loops between Governance and Engineering Development before the approved pipeline runs in Production. Scan the seven stages below, then expand a stage when you need the implementation detail.
@@ -323,20 +316,9 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: author, freeze, select, validate, link, activate, promote, run
+## The contract transition
 
-The heart of FabricOps is the iterative loop between Governance and Engineering Development:
-
-```mermaid
-flowchart TD
-    AUTHOR["Author"] --> FREEZE["Freeze"] --> SELECT["Select"] --> VALIDATE["Validate"] --> LINK["Link Data Agreement"] --> ACTIVATE["Activate"] --> PROMOTE["Promote"] --> PROD["Run Production"]
-    VALIDATE -. "Fail · author and freeze new version" .-> AUTHOR
-
-    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class FREEZE,ACTIVATE focal;
-```
-
-The details live in the expandable workflow above. The key idea is simple: **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
+The lifecycle diagram and expandable steps above show the complete loop. The contract transition is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
 
@@ -346,40 +328,39 @@ The details live in the expandable workflow above. The key idea is simple: **Aut
 
 ## The Data Contract boundaries
 
-**Authoring, activation, and runtime resolution are separate decisions.**
+**Authoring and activation are separate Governance decisions.**
 
-=== "Author"
-
-    ```mermaid
-    flowchart TD
+```mermaid
+flowchart LR
+    subgraph AUTHOR[Author]
         TABLE["table_id"] --> CONTRACT["Data Contract version"]
         CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
         CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Changes<br/>Data Quality · Sensitive Data"]
         CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
-    ```
-
-    Enrichment is descriptive metadata only. Guardrails are enforced requirements with a **Warn** or **Block** action. A blocking requirement stops governed write continuation. No Data Agreement is linked while this table-centric definition is authored and frozen.
-
-=== "Activate"
-
-    ```mermaid
-    flowchart TD
+    end
+    subgraph ACTIVATE[Activate]
         TESTED["Tested frozen Data Contract version"] --> LINK["Explicit linkage"]
         AGREEMENT["Data Agreement version"] --> LINK
         LINK --> ACTIVE["ACTIVE for Production"]
-    ```
+    end
+```
 
-    The exact Data Agreement version is selected and linked only during Step 5 activation.
+During **Author**, Enrichment is descriptive metadata only. Guardrails are enforced requirements with a **Warn** or **Block** action; a blocking requirement stops governed write continuation. No Data Agreement is linked while this table-centric definition is authored and frozen.
 
-=== "Resolve"
+During **Activate**, Governance selects and explicitly links the exact Data Agreement version only after the frozen Data Contract version has been tested.
 
-    ```mermaid
-    flowchart LR
-        DEVNB["DEV notebook_id"] --> DEVLINEAGE["METADATA_DATA_LINEAGE"] --> DEVTABLES["linked table_id values"] --> DEVSELECT["one selectable frozen version<br/>per table_id"]
-        PRODNB["PROD notebook_id"] --> PRODLINEAGE["METADATA_DATA_LINEAGE"] --> PRODTABLES["linked table_id values"] --> PRODACTIVE["exactly one active version<br/>per table_id"]
-    ```
+### Resolve by notebook Lineage
 
-    Development selections are independent per table. Production selection is automatic: zero or multiple active versions for any required table fail the run.
+```mermaid
+flowchart LR
+    NB["notebook_id"] --> LIN["METADATA_DATA_LINEAGE"]
+    LIN --> T["linked table_id values"]
+
+    T --> DEV["Development<br/>select frozen version per table_id"]
+    T --> PROD["Production<br/>resolve active version per table_id"]
+```
+
+Development selections are independent per linked `table_id`. Production has no manual selection and requires exactly one active version per linked `table_id`; zero or multiple active versions fail the run.
 
 </div>
 
@@ -393,16 +374,7 @@ The details live in the expandable workflow above. The key idea is simple: **Aut
 
 Engineering metadata describes the governed asset directly through `table_id`. Governance binds its governed definition to that asset through `METADATA_DATA_CONTRACT`; Enrichment and Guardrails belong to the contract definition and resolve the asset through the selected contract. Governance writes these authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads them during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
 
-The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data is separate again:
-
-```mermaid
-flowchart LR
-    DQ["DQ failed_rows DataFrame"] --> OWNER["Caller-owned support data"]
-    TOKENS["Sensitive Data token mapping DataFrame"] --> OWNER
-    OWNER --> INSPECT["Inspect"]
-    OWNER --> DISCARD["Discard"]
-    OWNER --> PERSIST["Optional project-owned persistence<br/>in an approved restricted location"]
-```
+The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data is separate again: DQ `failed_rows` and Sensitive Data token mappings are caller-owned DataFrames that a project may inspect, discard, or optionally persist in an approved project-owned location.
 
 `METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not failing business rows. `check_sensitive_data()` returns governed/transformed data and may also return a token/support mapping; a project may keep it in memory or use `write_pii_token_map()` where appropriate. These DataFrames are not FabricOps metadata and are never persisted automatically. FabricOps does not prescribe a mandatory PII vault or detokenization framework.
 
