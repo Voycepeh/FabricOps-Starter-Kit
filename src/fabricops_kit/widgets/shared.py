@@ -39,6 +39,48 @@ _STATUS_MIN_HEIGHT = "32px"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
+def resolve_notebook_lineage_tables(
+    *, environment_name: str, target: str, schema: str | None,
+    spark_session: Any, context: Any, runtime_context: dict[str, Any],
+) -> tuple[list[tuple[str, str]], dict[str, Any]]:
+    """Resolve current-notebook pipeline roles and table IDs from Data Lineage."""
+    runtime = config_shared.resolve_runtime_context(context=context)
+    notebook_id = str(runtime.get("notebook_id") or "").strip()
+    notebook_name = str(runtime.get("notebook_name") or notebook_id).strip()
+    workspace_id = str(runtime.get("workspace_id") or "").strip()
+    if not notebook_id:
+        raise ValueError(
+            "Unable to resolve the current notebook_id. Run 00_env_config in the Fabric notebook before selecting Data Contracts."
+        )
+    from pyspark.sql import functions as F
+
+    lineage = read_lakehouse_table_core(
+        "METADATA_DATA_LINEAGE", target=target, schema=schema,
+        spark_session=spark_session, context=runtime_context,
+    )
+    predicate = (
+        (F.col("_notebook_id") == notebook_id)
+        & (F.col("environment_name") == environment_name)
+    )
+    if workspace_id:
+        predicate &= F.col("_workspace_id") == workspace_id
+    pairs = sorted({
+        (str(row["pipeline_role"] or "").strip().title(), str(row["table_id"] or "").strip())
+        for row in lineage.filter(predicate).select("pipeline_role", "table_id").distinct().collect()
+        if row["table_id"] and row["pipeline_role"]
+    })
+    if not pairs:
+        scope = f" in workspace {workspace_id!r}" if workspace_id else ""
+        raise ValueError(
+            f"No METADATA_DATA_LINEAGE tables are registered for notebook_id {notebook_id!r}{scope} "
+            f"and environment {environment_name!r}. Run the baseline pipeline to register Lineage first."
+        )
+    return pairs, {
+        "notebook_id": notebook_id, "notebook_name": notebook_name,
+        "workspace_id": workspace_id or None, "environment_name": environment_name,
+    }
+
+
 def parse_data_contract_payload(row: Mapping[str, Any]) -> dict[str, Any]:
     """Parse and validate the immutable identity in one contract payload."""
     try:
@@ -56,7 +98,10 @@ def parse_data_contract_payload(row: Mapping[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _contract_activation_changes(rows: list[dict[str, Any]], selected: dict[str, Any]) -> list[dict[str, Any]]:
+def _contract_activation_changes(
+    rows: list[dict[str, Any]], selected: dict[str, Any],
+    *, agreement_id: str, agreement_version: str,
+) -> list[dict[str, Any]]:
     """Return lifecycle-only mutations for one selected contract version."""
     changes = [
         {"contract_id": prior["contract_id"], "contract_version": int(prior["contract_version"]), "status": "superseded", "is_active": False}
@@ -69,7 +114,12 @@ def _contract_activation_changes(rows: list[dict[str, Any]], selected: dict[str,
         )
     ]
     if selected.get("is_active") is not True or str(selected.get("status") or "").lower() != "active":
-        changes.append({"contract_id": selected["contract_id"], "contract_version": int(selected["contract_version"]), "status": "active", "is_active": True})
+        changes.append({
+            "contract_id": selected["contract_id"],
+            "contract_version": int(selected["contract_version"]),
+            "status": "active", "is_active": True,
+            "agreement_id": agreement_id, "agreement_version": agreement_version,
+        })
     return changes
 
 
@@ -80,12 +130,18 @@ def activate_contract_version(
     table_id: str,
     contract_id: str,
     contract_version: int,
+    agreement_id: str,
+    agreement_version: str,
     target: str = "metadata",
     schema: str | None = None,
     spark_session=None,
     context=None,
 ) -> dict[str, Any]:
     """Activate one frozen version and supersede the prior active version."""
+    agreement_id = str(agreement_id or "").strip()
+    agreement_version = str(agreement_version or "").strip()
+    if not agreement_id or not agreement_version:
+        raise ValueError("Select an exact Data Agreement version before activation.")
     frame = read_lakehouse_table_core(
         DATA_CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=context,
@@ -104,6 +160,28 @@ def activate_contract_version(
     if str(row.get("status") or "").lower() not in {"frozen", "active", "superseded"}:
         raise ValueError("Only a frozen Data Contract version can be activated.")
     parse_data_contract_payload(row)
+    current_agreement = (
+        str(row.get("agreement_id") or "").strip(),
+        str(row.get("agreement_version") or "").strip(),
+    )
+    requested_agreement = (agreement_id, agreement_version)
+    if row.get("is_active") is True and current_agreement != requested_agreement:
+        raise ValueError("An active Data Contract cannot be relinked to a different Data Agreement.")
+    agreement_frame = read_lakehouse_table_core(
+        "METADATA_DATA_AGREEMENT", target=target,
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_AGREEMENT"),
+        spark_session=spark_session, context=context,
+    )
+    agreement_rows = [
+        candidate.asDict(recursive=True) if hasattr(candidate, "asDict") else dict(candidate)
+        for candidate in agreement_frame.collect()
+    ]
+    if not any(
+        str(candidate.get("agreement_id") or "") == agreement_id
+        and str(candidate.get("agreement_version") or "") == agreement_version
+        for candidate in agreement_rows
+    ):
+        raise ValueError("Selected Data Agreement version does not exist.")
     active = [
         candidate for candidate in rows
         if str(candidate.get("table_id") or "") == table_id
@@ -111,7 +189,9 @@ def activate_contract_version(
     ]
     if len(active) > 1:
         raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
-    changes = _contract_activation_changes(rows, row)
+    changes = _contract_activation_changes(
+        rows, row, agreement_id=agreement_id, agreement_version=agreement_version
+    )
     if not changes:
         return {"changed": False, "contract_id": contract_id, "contract_version": int(contract_version), "changes": []}
     try:
@@ -131,7 +211,11 @@ def activate_contract_version(
     (
         DeltaTable.forPath(spark_session, path).alias("target")
         .merge(source.alias("source"), "target.contract_id = source.contract_id AND target.contract_version = source.contract_version")
-        .whenMatchedUpdate(set={"status": "source.status", "is_active": "source.is_active"})
+        .whenMatchedUpdate(set={
+            "status": "source.status", "is_active": "source.is_active",
+            "agreement_id": "coalesce(source.agreement_id, target.agreement_id)",
+            "agreement_version": "coalesce(source.agreement_version, target.agreement_version)",
+        })
         .execute()
     )
     return {"changed": True, "contract_id": contract_id, "contract_version": int(contract_version), "changes": changes}

@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Author one exact Data Contract version through a unified, contract-centric widget.
+Create or reopen and author one agreement-free, table-centric Data Contract draft.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/widgets/widget_author_data_contract.py:76`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_data_contract.py#L76-L357">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_data_contract.py#L76-L361">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,8 +37,7 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_author_data_contract(
-    contract_id: str,
-    contract_version: int,
+    table_id: str,
     spark_session: Any,
     context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
@@ -50,9 +49,7 @@ def widget_author_data_contract(
 
 <div class="reference-example-usage" markdown="1">
 
->>> form = widget_author_data_contract(
-...     contract_id="orders-contract", contract_version=3, spark_session=spark
-... )
+>>> form = widget_author_data_contract(table_id="table-orders", spark_session=spark)
 >>> render_review = form["render_section"]
 >>> render_review("Review")
 
@@ -62,8 +59,7 @@ def widget_author_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `contract_id` | `str` | Yes | Exact Data Contract lifecycle identity to author. |
-| `contract_version` | `int` | Yes | Exact positive draft version to author. Section changes never re-resolve it. |
+| `table_id` | `str` | Yes | Canonical governed table identity. The widget creates or reopens its one agreement-free draft in the active environment. |
 | `spark_session` | `Any` | Yes | Active Microsoft Fabric Spark session used by the authoring services. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the ``FABRIC_CONTEXT`` created by ``00_env_config``. |
 
@@ -73,7 +69,7 @@ Exact-version state, compact controls, the displayed UI, and validation and free
 
 ### Return interpretation
 
-The returned state remains pinned to the requested contract_id and contract_version; saves delegate to contract-authoring services.
+The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.
 
 ## Raises / Errors
 
@@ -81,7 +77,7 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 ### Common failure causes
 
-- The exact draft version does not exist.
+- The table_id has no active Catalogue row.
 - The metadata target cannot be read or written.
 - A subtype-specific Guardrail value is invalid.
 

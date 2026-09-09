@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Choose current authoring or one exact frozen Data Contract version for a canonical target table identity.
+Resolve current-notebook Lineage and select one immutable Data Contract independently per table.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:81`
+`fabricops_kit/widgets/widget_select_data_contract.py:84`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L81-L217">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L84-L258">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,7 +36,7 @@ They help users write values into the correct underlying metadata tables without
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_select_data_contract(table_id: str, *, spark_session=None, context=None)
+def widget_select_data_contract(*, spark_session=None, context=None)
 ```
 
 </div>
@@ -45,8 +45,8 @@ def widget_select_data_contract(table_id: str, *, spark_session=None, context=No
 
 <div class="reference-example-usage" markdown="1">
 
->>> selection = widget_select_data_contract(table_id="table-orders")
->>> selection["select"]()  # current authoring
+>>> selection = widget_select_data_contract()
+>>> selection["select"]("table-orders", "orders-contract", 3)
 
 </div>
 
@@ -54,42 +54,43 @@ def widget_select_data_contract(table_id: str, *, spark_session=None, context=No
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical table identity already stored in FabricOps metadata. |
 | `spark_session` | `object` | No | Spark session override. |
-| `context` | `dict` | No | FabricOps context normally established by ``00_env_config``. |
+| `context` | `dict` | No | FabricOps context normally established by ``00_env_config``. The current ``notebook_id``, optional ``workspace_id``, and environment scope Lineage. |
 
 ## Returns
 
 dict
-    Read-only selection state, available versions, frozen preview, controls,
-    and a ``select`` callable. Each exact selection is stored under its
-    canonical table identity in ``data_contract_overrides``; selecting
-    current authoring removes only that table's entry.
+    Notebook scope, role-preserving table states, table-scoped resolved
+    contracts, controls, and a Development ``select`` callable.
 
 ### Return interpretation
 
-The default clears this table’s Development override; an exact selection stores its contract ID and version under the canonical table ID in the active Fabric context.
+Development selections are stored independently under each discovered table_id in data_contract_overrides; Production returns the read-only active mapping and ignores overrides.
 
 ## Raises / Errors
 
 ValueError
-    If ``table_id`` is empty, a version belongs to another table, or a
-    non-frozen contract is selected.
+    If notebook identity or Lineage is missing, a table has no eligible
+    immutable version, or a requested version is unavailable.
+RuntimeError
+    If Production has multiple active versions for a lineage-linked table.
 
 ### Common failure causes
 
-- The canonical target table_id is empty or has no Data Contract versions.
-- The selected version is rejected or belongs to another table.
+- The current notebook identity or Lineage is missing.
+- A discovered table has no eligible immutable version.
+- The selected version belongs to another table.
 - The frozen contract payload is invalid.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-This is a read-only Development testing tool and never activates or changes
-Data Contract metadata. Current authoring is the default.
-Production ignores manual selection and uses its active Data Contract
-automatically. Frozen previews are read only from ``contract_payload_json``.
+Development independently selects a frozen, active, or superseded immutable
+version for each Lineage-linked ``table_id`` and stores it in
+``data_contract_overrides``. Draft and rejected versions are excluded.
+Production ignores overrides, exposes no picker, and resolves exactly one
+active version per linked table. This widget never activates metadata.
 
 </div>
 

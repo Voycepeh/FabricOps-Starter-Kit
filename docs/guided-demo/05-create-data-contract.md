@@ -22,8 +22,8 @@ Confirm Engineering Development selected and validated the exact frozen version 
 
 ## What to do
 
-1. In `01_governance`, select the tested frozen Data Contract version and review its `table_id`, immutable Enrichment, Guardrails, schema, and processing definition.
-2. Select the required Data Agreement and explicitly confirm the linkage between that Agreement and this tested version. Verify the provider and recipient Data Stewards, purpose, approved usages, and applicable Agreement version.
+1. In `01_governance`, run `widget_activate_data_contract(...)` and select the tested frozen Data Contract version. Review its `table_id`, immutable Enrichment, Guardrails, schema, and processing definition.
+2. In the same activation flow, select the required Data Agreement and its exact version. Review the proposed linkage and verify the provider and recipient Data Stewards, purpose, approved usages, and applicable Agreement version.
 3. Record any required governance sign-off through the organisation's operating process.
 4. Use `widget_activate_data_contract(...)` to activate that exact frozen version for its governed `table_id`.
 5. Confirm it is the one active Data Contract version Production will resolve.

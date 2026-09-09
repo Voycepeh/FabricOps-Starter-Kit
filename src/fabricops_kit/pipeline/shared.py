@@ -1218,6 +1218,10 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     row = dict(active[0])
     if str(row.get("status") or "").lower() != "active":
         raise RuntimeError(f"Data Contract integrity error: active version for {table_id!r} does not have status='active'.")
+    if not str(row.get("agreement_id") or "").strip() or not str(row.get("agreement_version") or "").strip():
+        raise RuntimeError(
+            f"Data Contract integrity error: active version for {table_id!r} has no exact Data Agreement linkage."
+        )
     row["contract_payload"] = _contract_payload(row)
     return row
 

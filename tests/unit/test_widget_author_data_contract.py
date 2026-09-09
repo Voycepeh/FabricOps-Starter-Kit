@@ -77,7 +77,7 @@ def _state(column_count: int = 3):
     return {
         "contract": {
             "contract_id": "contract-orders", "contract_version": 3,
-            "table_id": "table-orders", "agreement_id": "finance", "agreement_version": "1",
+            "table_id": "table-orders", "agreement_id": None, "agreement_version": None,
             "environment_name": "dev", "status": "draft", "contract_payload_json": None,
         },
         "contract_id": "contract-orders", "contract_version": 3,
@@ -103,8 +103,9 @@ def widget(monkeypatch):
     """Build a service-isolated unified authoring widget."""
     state = _state()
     _install_widgets(monkeypatch)
-    calls = {"loads": [], "enrichment": [], "guardrails": [], "validate": [], "freeze": []}
+    calls = {"drafts": [], "loads": [], "enrichment": [], "guardrails": [], "validate": [], "freeze": []}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module.contract_authoring, "create_contract_draft", lambda **kwargs: calls["drafts"].append(kwargs) or state["contract"])
     monkeypatch.setattr(module.contract_authoring, "validate_contract_identity", lambda cid, version: (cid, int(version)))
     def load(**kwargs):
         calls["loads"].append((kwargs["contract_id"], kwargs["contract_version"]))
@@ -121,8 +122,8 @@ def widget(monkeypatch):
         "warnings": [],
     })
     result = module.widget_author_data_contract(
-        contract_id="contract-orders", contract_version=3,
-        spark_session=object(), context={"config": object(), "env": "dev"},
+        table_id="table-orders", spark_session=object(),
+        context={"config": object(), "env": "dev"},
     )
     return result, calls
 
@@ -204,9 +205,10 @@ def test_html_escaping_and_large_schema_widget_model_regression(monkeypatch):
     state = _state(100)
     state["catalogue_rows"][0]["table_name"] = '<script>alert("x")</script>'
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module.contract_authoring, "create_contract_draft", lambda **_kwargs: state["contract"])
     monkeypatch.setattr(module.contract_authoring, "validate_contract_identity", lambda cid, version: (cid, int(version)))
     monkeypatch.setattr(module.contract_authoring, "get_contract_authoring_state", lambda **_kwargs: state)
-    result = module.widget_author_data_contract(contract_id="contract-orders", contract_version=3, spark_session=object())
+    result = module.widget_author_data_contract(table_id="table-orders", spark_session=object())
     overview = result["ui"].children[0]
     assert "&lt;script&gt;" in overview.value and "<script>" not in overview.value
     enrichment = result["render_section"]("Enrichment")

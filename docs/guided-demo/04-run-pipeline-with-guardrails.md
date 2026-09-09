@@ -16,8 +16,8 @@ Confirm Step 3 froze the intended version and that `02_pipeline` is using the En
 ## What to do
 
 1. Open `02_pipeline` in Engineering Development.
-2. For each relevant target `table_id`, run `widget_select_data_contract(...)`.
-3. Choose the exact frozen Data Contract version authored in Step 3. Selection is table-scoped: choosing a version for one `table_id` does not affect another table.
+2. Run `widget_select_data_contract()`. It resolves the current `notebook_id`, optional `workspace_id`, and environment, then discovers every Source and Target `table_id` associated with this notebook through `METADATA_DATA_LINEAGE`.
+3. For every discovered table, choose the exact frozen Data Contract version to test. Each Source or Target selection is independent and stored under that table's key in `data_contract_overrides`.
 4. Run the governed pipeline through its visible Extract, Transform, and Load path.
 5. Evaluate the saved immutable requirements with the modular runtime functions: `check_schema()`, `check_freshness()`, `check_changes()`, `check_dq()`, and `check_sensitive_data()` where applicable.
 6. Confirm Warn/Block continuation behavior and the saved processing definition behave as intended.
@@ -25,11 +25,7 @@ Confirm Step 3 froze the intended version and that `02_pipeline` is using the En
 
 !!! important "Selection is not activation"
 
-    `widget_select_data_contract(...)` sets the Development runtime context for the same `table_id`. It does not activate the version, link it to a Data Agreement, or change what Production resolves.
-
-??? info "Preview — validate mutable current authoring"
-
-    The selector may still expose mutable current authoring for advanced or Preview investigation. That path is not the canonical lifecycle. Normal validation starts from the frozen version so Engineering tests the exact immutable definition Governance can later link and activate.
+    `widget_select_data_contract()` sets Development runtime context independently for each discovered `table_id`. It does not activate a version, link it to a Data Agreement, or change what Production resolves.
 
 ??? info "Sensitive Data support mappings"
 

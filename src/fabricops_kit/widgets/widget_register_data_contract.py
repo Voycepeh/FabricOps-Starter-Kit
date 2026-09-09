@@ -5,10 +5,9 @@ from __future__ import annotations
 import html
 import json
 from typing import Any
-import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.data_contract.shared import freeze_contract, parse_approved_usages, select_approved_usages
+from fabricops_kit.data_contract.shared import contract_lifecycle_id, freeze_contract, parse_approved_usages, select_approved_usages
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
@@ -19,7 +18,6 @@ _SOURCE_TABLES = (
     "METADATA_DATA_AGREEMENT", "METADATA_DATA_STEWARD", "METADATA_DATA_CATALOGUE",
     "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
 )
-_CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
 def _rows(frame: Any) -> list[dict[str, Any]]:
@@ -40,9 +38,9 @@ def _latest(rows: list[dict[str, Any]], identity: tuple[str, ...]) -> list[dict[
     return [selected[key] for key in sorted(selected)]
 
 
-def _contract_id(agreement_id: str, table_id: str) -> str:
-    """Build the stable business identity for one Agreement lifecycle/table."""
-    return str(uuid.uuid5(_CONTRACT_NAMESPACE, f"{agreement_id.strip()}\n{table_id.strip()}"))
+def _contract_id(environment_name: str, table_id: str) -> str:
+    """Build the stable business identity for one environment/table lifecycle."""
+    return contract_lifecycle_id(table_id, environment_name)
 
 
 def _agreement_version_key(value: Any) -> tuple[int, int, int]:
@@ -138,27 +136,14 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
     state: dict[str, Any] = {"environment_name": env, "available_agreements": agreement_options, "available_table_ids": table_options, "agreement_id": agreement_id, "agreement_version": agreement_version, "table_id": table_id, "approved_usages": approved_usages, "review": None, "warnings": [], "saved_contract_id": None, "saved_contract_version": None, "frozen_contract_id": None, "frozen_contract_version": None, "_controls": {}}
 
     def refresh() -> dict[str, Any] | None:
-        matches = [r for r in agreement_options if str(r.get("agreement_id") or "") == str(state.get("agreement_id") or "")]
-        if not matches:
-            state["review"], state["warnings"] = None, ["Select a saved Data Agreement."]
-            return None
-        selected_version = str(state.get("agreement_version") or "")
-        agreement = next(
-            (r for r in matches if str(r.get("agreement_version") or "") == selected_version),
-            max(matches, key=lambda r: _agreement_version_key(r.get("agreement_version"))) if not selected_version else None,
-        )
-        if agreement is None:
-            raise ValueError("Select an exact saved Data Agreement version.")
-        state["agreement_version"] = str(agreement["agreement_version"])
         selected_table = str(state.get("table_id") or "")
         if not selected_table:
             state["review"], state["warnings"] = None, ["Select one governed table."]
             return None
         if selected_table not in table_options:
             raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
-        parent = parse_approved_usages(agreement.get("approved_usage_json"))
-        chosen = select_approved_usages(state.get("approved_usages") if state.get("approved_usages") is not None else parent, parent)
-        lifecycle_id = _contract_id(str(agreement["agreement_id"]), selected_table)
+        chosen: list[str] = []
+        lifecycle_id = _contract_id(env, selected_table)
         versions = [int(r.get("contract_version") or 0) for r in contract_rows if str(r.get("contract_id") or "") == lifecycle_id]
         open_drafts = [
             row for row in contract_rows
@@ -170,17 +155,15 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         version = int(open_drafts[0]["contract_version"]) if open_drafts else max(versions, default=0) + 1
         review = {
             "contract": {"contract_id": lifecycle_id, "contract_version": version, "status": "draft"},
-            "agreement": {"agreement_id": agreement["agreement_id"], "agreement_version": agreement["agreement_version"]},
             "table": {"table_id": selected_table},
-            "approved_usages": chosen,
         }
-        state.update({"approved_usages": chosen, "parent_approved_usages": parent, "contract_id": lifecycle_id, "next_contract_version": version, "review": review, "warnings": []})
+        state.update({"approved_usages": chosen, "parent_approved_usages": [], "agreement_id": None, "agreement_version": None, "contract_id": lifecycle_id, "next_contract_version": version, "review": review, "warnings": []})
         return review
 
     def save() -> dict[str, Any]:
         review = refresh()
         if review is None:
-            raise ValueError("Select a saved Data Agreement version and one active Catalogue table before saving.")
+            raise ValueError("Select one active Catalogue table before saving.")
         existing = [
             row for row in contract_rows
             if str(row.get("contract_id") or "") == state["contract_id"]
@@ -192,7 +175,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
                 return existing[0]
             raise ValueError("The selected Data Contract version is no longer an open draft.")
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": state["agreement_id"], "agreement_version": state["agreement_version"], "table_id": state["table_id"], "environment_name": env, "contract_payload_json": None, "status": "draft", "is_active": False, **audit}
+        row = {"contract_id": state["contract_id"], "contract_version": state["next_contract_version"], "agreement_id": None, "agreement_version": None, "table_id": state["table_id"], "environment_name": env, "contract_payload_json": None, "status": "draft", "is_active": False, **audit}
         row = coerce_metadata_row_types(CONTRACT_TABLE, row)
         frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CONTRACT_TABLE])
         write_lakehouse_table_core(frame, CONTRACT_TABLE, target=target, schema=schema, mode="append", context=runtime_context)
@@ -206,7 +189,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         if str(draft.get("status") or "").lower() != "draft":
             raise ValueError("Only an open draft Data Contract version can be frozen.")
         result = freeze_contract(
-            draft=draft, approved_usages=list(state.get("approved_usages") or []),
+            draft=draft,
             config=config, env=env, spark_session=spark_session,
             context=runtime_context, target=target, schema=schema,
         )

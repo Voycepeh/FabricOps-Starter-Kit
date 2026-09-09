@@ -21,6 +21,38 @@ def test_exact_contract_version_and_environment_isolation():
     ) == [rows[1]]
 
 
+def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
+    """Create one agreement-free table draft and reopen it without version churn."""
+    catalogue = [{
+        "table_id": "orders", "environment_name": "dev",
+        "metadata_level": "table", "is_active": True,
+    }]
+    contracts: list[dict] = []
+    writes = []
+
+    def read(name, **_kwargs):
+        return catalogue if name == "METADATA_DATA_CATALOGUE" else contracts
+
+    monkeypatch.setattr(service, "read_lakehouse_table_core", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _name, row: row)
+    monkeypatch.setattr(service, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
+    spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
+    first = service.create_contract_draft(
+        table_id="orders", config=object(), env="dev", spark_session=spark,
+    )
+    contracts.append(first)
+    second = service.create_contract_draft(
+        table_id="orders", config=object(), env="dev", spark_session=spark,
+    )
+    assert first == second
+    assert first["agreement_id"] is None
+    assert first["agreement_version"] is None
+    assert first["contract_id"] == service.contract_lifecycle_id("orders", "dev")
+    assert len(writes) == 1
+
+
 @pytest.mark.parametrize("contract_id,version", [("", 1), ("c", 0), ("c", "bad")])
 def test_invalid_contract_identity_is_rejected(contract_id, version):
     """Missing and malformed contract identities fail clearly."""
@@ -45,7 +77,7 @@ def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
 
 def test_draft_validation_returns_only_owned_governance_rows():
     """Draft state excludes other versions and environments."""
-    draft = {"contract_id": "c", "contract_version": 2, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "environment_name": "dev", "status": "draft"}
+    draft = {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "t", "environment_name": "dev", "status": "draft"}
     catalogue = [{"table_id": "t", "environment_name": "dev", "metadata_level": "table"}]
     enrichment = [
         {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Description"},
@@ -71,8 +103,8 @@ def test_draft_validation_returns_only_owned_governance_rows():
 def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
     """The same contract identity in another environment cannot leak into state."""
     contracts = [
-        {"contract_id": "c", "contract_version": 2, "agreement_id": "dev-a", "agreement_version": "1", "table_id": "dev-t", "environment_name": "dev", "status": "draft"},
-        {"contract_id": "c", "contract_version": 2, "agreement_id": "prod-a", "agreement_version": "1", "table_id": "prod-t", "environment_name": "prod", "status": "draft"},
+        {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "dev-t", "environment_name": "dev", "status": "draft"},
+        {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "prod-t", "environment_name": "prod", "status": "draft"},
     ]
     tables = {
         service.DATA_CONTRACT_TABLE: contracts,
@@ -91,13 +123,13 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
         contract_id="c", contract_version=2,
     )
 
-    assert state["contract"]["agreement_id"] == "dev-a"
+    assert state["contract"]["agreement_id"] is None
     assert state["table_id"] == "dev-t"
 
 
 def test_draft_environment_must_match_authoring_environment():
     """Draft validation rejects cross-environment contract rows explicitly."""
-    draft = {"contract_id": "c", "contract_version": 1, "agreement_id": "a", "agreement_version": "1", "table_id": "t", "environment_name": "prod", "status": "draft"}
+    draft = {"contract_id": "c", "contract_version": 1, "agreement_id": None, "agreement_version": None, "table_id": "t", "environment_name": "prod", "status": "draft"}
     with pytest.raises(ValueError, match="environment_name"):
         service.validate_contract_draft(
             draft, catalogue_rows=[], enrichment_rows=[], guardrail_rows=[],

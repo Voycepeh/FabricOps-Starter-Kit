@@ -75,8 +75,7 @@ def _authoring_rule_state(state: Mapping[str, Any]) -> dict[str, Any]:
 
 def widget_author_data_contract(
     *,
-    contract_id: str,
-    contract_version: int,
+    table_id: str,
     spark_session: Any,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -84,10 +83,9 @@ def widget_author_data_contract(
 
     Parameters
     ----------
-    contract_id : str
-        Exact Data Contract lifecycle identity to author.
-    contract_version : int
-        Exact positive draft version to author. Section changes never re-resolve it.
+    table_id : str
+        Canonical governed table identity. The widget creates or reopens its one
+        agreement-free draft in the active environment.
     spark_session : Any
         Active Microsoft Fabric Spark session used by the authoring services.
     context : dict[str, Any], optional
@@ -96,13 +94,13 @@ def widget_author_data_contract(
     Returns
     -------
     dict[str, Any]
-        Exact-version state, the compact controls, the displayed UI, and callable
+        Table-owned exact-version state, compact controls, displayed UI, and callable
         ``render_section``, ``validate``, and ``freeze`` actions.
 
     Raises
     ------
     ValueError
-        If the exact draft version does not exist or authored input is invalid.
+        If the table has no active Catalogue row or authored input is invalid.
     RuntimeError
         If Fabric context, metadata routing, or freezing is unavailable.
 
@@ -115,9 +113,7 @@ def widget_author_data_contract(
 
     Examples
     --------
-    >>> form = widget_author_data_contract(
-    ...     contract_id="orders-contract", contract_version=3, spark_session=spark
-    ... )
+    >>> form = widget_author_data_contract(table_id="table-orders", spark_session=spark)
     >>> render_review = form["render_section"]
     >>> render_review("Review")
 
@@ -129,7 +125,16 @@ def widget_author_data_contract(
     from IPython import display as ip
 
     config, env, _ = resolve_fabric_context(context=context)
-    identity, version = contract_authoring.validate_contract_identity(contract_id, contract_version)
+    table_id = str(table_id or "").strip()
+    if not table_id:
+        raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
+    draft = contract_authoring.create_contract_draft(
+        table_id=table_id, config=config, env=env, spark_session=spark_session,
+        context=context,
+    )
+    identity, version = contract_authoring.validate_contract_identity(
+        draft["contract_id"], draft["contract_version"]
+    )
     state = contract_authoring.get_contract_authoring_state(
         config=config, env=env, spark_session=spark_session,
         contract_id=identity, contract_version=version,
@@ -159,7 +164,6 @@ def widget_author_data_contract(
         total = len(state.get("available_columns") or [])
         values = [
             ("Table", table_row.get("table_name") or state["table_id"]), ("table_id", state["table_id"]),
-            ("Agreement", contract.get("agreement_name") or contract.get("agreement_id")),
             ("Processing", table_row.get("load_strategy")), ("Contract ID", identity),
             ("Exact version", version), ("Lifecycle", contract.get("status")),
             ("Enrichment", f"{len(described)}/{total} columns"),

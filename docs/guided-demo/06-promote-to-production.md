@@ -41,7 +41,7 @@ As an operating practice, the version should have been tested in Development and
 
     Open the promoted `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
 
-    Run the Data Contract selector area. In Production it is read only and shows the one active Data Contract version for each governed `table_id`.
+    Run `widget_select_data_contract()`. It uses the same current-notebook Lineage discovery as Development. In Production it is read only and shows the one active Data Contract version for every discovered Source and Target `table_id`; Development overrides are ignored.
 
     Production never falls back to mutable authoring metadata. Runtime uses the active version's saved immutable Guardrails and processing definition.
 

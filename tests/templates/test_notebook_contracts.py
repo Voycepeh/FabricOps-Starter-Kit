@@ -165,6 +165,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_agreement",
         "widget_view_catalogue",
         "widget_author_data_contract",
+        "widget_activate_data_contract",
     }
 
     assert required_functions <= {node.id for tree in (
@@ -185,8 +186,10 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     ):
         assert demoted_widget not in source
         assert f"fabricops_kit.widgets.{demoted_widget}" not in source
-    assert "widget_select_data_contract" not in source
-    assert "widget_activate_data_contract" not in source
+    authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
+    assert "widget_select_data_contract" not in authoring_cell
+    assert "widget_activate_data_contract" not in authoring_cell
+    assert "widget_activate_data_contract(" in _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "METADATA_SCHEMA" not in source
 
 
@@ -223,7 +226,7 @@ def test_02_pipeline_uses_public_cloneable_governed_blocks():
     assert 'target_prep["completion"]' not in source
     for state in (
         "SOURCES", "SOURCE_PREPS", "SOURCE_DFS", "SOURCE_PROFILES", "SOURCE_RESULTS",
-        "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS", "TARGET_CONTRACTS",
+        "TARGETS", "TARGET_DFS", "TARGET_PREPS", "TARGET_RESULTS",
     ):
         assert f"{state} = {{}}" in source
     assert "globals()" not in source
@@ -271,8 +274,8 @@ def test_02_pipeline_selects_registered_target_and_data_contract_by_table_id():
     assert 'target_selection = target_catalogue["get_selection"]()' in selection
     assert '"table_id": target_selection["table_id"]' in selection
     assert "<canonical table_id already created in FabricOps metadata>" not in source
-    assert "TARGET_CONTRACTS[TARGET] = widget_select_data_contract(" in contract
-    assert 'table_id=target["table_id"]' in contract
+    assert "CONTRACT_SELECTION = widget_select_data_contract()" in contract
+    assert "table_id=" not in contract
     assert 'target_table_id=target["table_id"]' in source
     assert "TARGET_LOAD_STRATEGY" not in source
 

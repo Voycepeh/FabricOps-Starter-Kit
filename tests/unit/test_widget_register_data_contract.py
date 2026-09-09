@@ -23,22 +23,22 @@ def _selected_usages(selected, parent):
 
 
 def _assemble_payload(*, contract_id, contract_version, agreement, table_id, usages, tables, environment_name):
-    """Invoke service-owned payload assembly with an exact draft identity."""
+    """Invoke table-centric payload assembly with an agreement-free draft."""
+    del agreement, usages
     return assemble_contract_payload(
         draft={
             "contract_id": contract_id, "contract_version": contract_version,
-            "table_id": table_id, "agreement_id": agreement["agreement_id"],
-            "agreement_version": agreement["agreement_version"],
+            "table_id": table_id, "agreement_id": None,
+            "agreement_version": None,
             "environment_name": environment_name, "status": "draft",
         },
-        agreement=agreement, approved_usages=usages, tables=tables,
-        environment_name=environment_name,
+        tables=tables, environment_name=environment_name,
     )
 
 
 def _sources():
     audit = {"_committed_at": "2026-01-01T00:00:00", "_activity_id": "a"}
-    contract_id = _contract_id("agreement", "orders")
+    contract_id = _contract_id("dev", "orders")
     return {
         "METADATA_DATA_STEWARD": [
             {"steward_id": "provider", "steward_name": "Provider", "steward_role": "Owner", "contact": "provider@example.invalid", "is_active": True, **audit},
@@ -64,10 +64,10 @@ def _agreement():
     return {"agreement_id": "agreement", "agreement_version": "3", "agreement_name": "Order sharing", "domain": "sales", "business_purpose": "Analytics", "provider_steward_id": "provider", "recipient_steward_id": "recipient", "approved_usage_json": '["analytics","reporting"]'}
 
 
-def test_contract_identity_is_stable_for_agreement_lifecycle_and_table():
+def test_contract_identity_is_stable_for_environment_and_table():
     """Use one stable ID across versions while separating table lifecycles."""
-    assert _contract_id("agreement", "orders") == _contract_id("agreement", "orders")
-    assert _contract_id("agreement", "orders") != _contract_id("agreement", "customers")
+    assert _contract_id("dev", "orders") == _contract_id("dev", "orders")
+    assert _contract_id("dev", "orders") != _contract_id("dev", "customers")
 
 
 def test_usage_must_be_a_parent_agreement_subset():
@@ -79,30 +79,24 @@ def test_usage_must_be_a_parent_agreement_subset():
 
 def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     """Freeze governed definitions, not volatile Guardrail evidence."""
-    kwargs = {"contract_id": _contract_id("agreement", "orders"), "contract_version": 1, "agreement": _agreement(), "table_id": "orders", "usages": ["analytics"], "tables": _sources(), "environment_name": "dev"}
+    kwargs = {"contract_id": _contract_id("dev", "orders"), "contract_version": 1, "agreement": _agreement(), "table_id": "orders", "usages": ["analytics"], "tables": _sources(), "environment_name": "dev"}
     first, warnings = _assemble_payload(**kwargs)
     second, _ = _assemble_payload(**kwargs)
     assert json.dumps(first, sort_keys=True, separators=(",", ":")) == json.dumps(second, sort_keys=True, separators=(",", ":"))
-    assert first["agreement"]["agreement_version"] == "3"
-    assert first["approved_usages"] == ["analytics"]
     assert first["table"]["table_id"] == "orders"
     assert first["table"]["processing"] == {"load_strategy": "scd1", "key_columns": ["order_id"]}
     assert first["table"]["columns"] == [{"column_id": "order_id", "column_name": "order_id", "data_type": "long"}]
-    assert {row["steward_id"] for row in first["stewards"]} == {"provider", "recipient"}
     assert first["enrichment"]["table"][0]["value"] == "Orders"
     assert [row["guardrail_rule_id"] for row in first["guardrails"]] == ["g1"]
     assert first["guardrails"][0]["rule_parameters"] == {"threshold": 1}
     assert "results" not in json.dumps(first).lower()
     assert warnings == []
-    assert set(first) == {
-        "contract", "agreement", "stewards", "table", "enrichment",
-        "guardrails", "approved_usages",
-    }
+    assert set(first) == {"contract", "table", "enrichment", "guardrails"}
 
 
 def test_payload_uses_only_governance_rows_for_exact_contract_version():
     """Prevent enrichment and Guardrails from leaking across contract versions."""
-    contract_id = _contract_id("agreement", "orders")
+    contract_id = _contract_id("dev", "orders")
     sources = _sources()
     sources["METADATA_ENRICHMENT"].append({
         **sources["METADATA_ENRICHMENT"][0], "enrichment_id": "future-enrichment",
@@ -156,7 +150,7 @@ def test_contract_versions_freeze_catalogue_processing_independently():
     """Keep earlier payloads unchanged when current Catalogue processing changes."""
     sources = _sources()
     kwargs = {
-        "contract_id": _contract_id("agreement", "orders"),
+        "contract_id": _contract_id("dev", "orders"),
         "agreement": _agreement(),
         "table_id": "orders",
         "usages": ["analytics"],
@@ -319,63 +313,15 @@ def _run_widget(monkeypatch, *, agreement_id="agreement-b", agreement_version="1
     return state, writes, tables
 
 
-def test_widget_initializes_visible_controls_from_supplied_selection(monkeypatch):
-    """Keep displayed Agreement, table, usages, and review in one initial state."""
+def test_demoted_registration_helper_creates_agreement_free_table_draft(monkeypatch):
+    """Draft identity and ownership remain table-centric even in the demoted helper."""
     state, writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
-    controls = state["_controls"]
-    assert controls["agreement"].value == "agreement-b\n10.0.0"
-    assert controls["table"].value == "orders"
-    assert controls["approved_usages"].options == ["internal", "reporting"]
-    assert controls["approved_usages"].value == ("reporting",)
-    assert state["review"]["agreement"]["agreement_version"] == "10.0.0"
-    assert writes == []
-
-
-def test_widget_agreement_change_refreshes_and_intersects_usages(monkeypatch):
-    """Replace stale usage options and remove permissions absent from the new Agreement."""
-    state, _writes, _tables = _run_widget(monkeypatch, approved_usages=["reporting"])
-    controls = state["_controls"]
-    controls["agreement"].value = "agreement-a\n1.0.0"
-    assert controls["approved_usages"].options == ["analytics", "research"]
-    assert controls["approved_usages"].value == ()
-    assert state["approved_usages"] == []
-    assert state["review"]["agreement"]["agreement_id"] == "agreement-a"
-
-
-def test_widget_uses_numeric_agreement_versions_and_reopens_one_draft(monkeypatch):
-    """Resolve semantic versions and keep one open payload-free draft."""
-    state, writes, _tables = _run_widget(monkeypatch, agreement_version=None, approved_usages=["internal"])
-    assert state["agreement_version"] == "10.0.0"
-    displayed_payload = state["review"]
-    first = state["save"]()
-    second = state["save"]()
+    draft = state["save"]()
+    assert draft["agreement_id"] is None
+    assert draft["agreement_version"] is None
+    assert state["review"]["table"] == {"table_id": "orders"}
+    assert "agreement" not in state["review"]
     assert len(writes) == 1
-    assert first["contract_version"] == 1
-    assert second["contract_version"] == 1
-    assert first["contract_id"] == second["contract_id"]
-    assert first["contract_payload_json"] == ""
-    assert displayed_payload["contract"]["status"] == "draft"
-    assert first["status"] == "draft" and first["is_active"] is False
-
-
-def test_widget_different_agreement_table_lifecycle_has_different_identity(monkeypatch):
-    """Separate contract lifecycles when the Agreement lifecycle changes."""
-    first, _writes, _tables = _run_widget(monkeypatch, agreement_id="agreement-a", agreement_version="1.0.0")
-    second, _writes, _tables = _run_widget(monkeypatch)
-    assert first["contract_id"] != second["contract_id"]
-
-
-def test_widget_cannot_save_stale_usage_from_another_agreement(monkeypatch):
-    """Discard a stale visible permission before building or saving the payload."""
-    state, writes, _tables = _run_widget(monkeypatch, approved_usages=["internal"])
-    controls = state["_controls"]
-    controls["agreement"].value = "agreement-a\n1.0.0"
-    controls["approved_usages"].value = ("internal",)
-    saved = state["save"]()
-    assert saved["contract_payload_json"] == ""
-    assert state["approved_usages"] == []
-    assert len(writes) == 1
-
 
 def test_create_draft_author_governance_then_freeze_exact_version(monkeypatch):
     """Exercise the non-circular draft, authoring, and freeze lifecycle."""
@@ -385,7 +331,7 @@ def test_create_draft_author_governance_then_freeze_exact_version(monkeypatch):
     )
     draft = state["save"]()
     assert draft["status"] == "draft"
-    assert draft["contract_payload_json"] == ""
+    assert draft["contract_payload_json"] is None
 
     tables["METADATA_ENRICHMENT"].rows = [{
         **_sources()["METADATA_ENRICHMENT"][0],
@@ -477,6 +423,6 @@ def test_payload_contains_only_canonical_descriptive_enrichment():
         {**base, "enrichment_id": "sensitivity", "enrichment_type": "Sensitivity", "value": "restricted"},
         {**base, "enrichment_id": "legacy", "enrichment_type": "Personal_identifier", "value": "direct PII"},
     ])
-    payload, _ = _assemble_payload(contract_id=_contract_id("agreement", "orders"), contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
+    payload, _ = _assemble_payload(contract_id=_contract_id("dev", "orders"), contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
     assert {row["enrichment_type"] for row in payload["enrichment"]["columns"]} == {"Description", "Classification"}
     assert [row["guardrail_rule_id"] for row in payload["guardrails"]] == ["g1"]
