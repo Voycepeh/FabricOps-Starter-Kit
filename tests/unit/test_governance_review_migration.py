@@ -63,6 +63,7 @@ EXPECTED_V1_CALLABLES = [
     'profile_frequency_distribution',
     'read_pipeline_prep',
     'write_pipeline_prep',
+    'widget_author_data_contract',
     'widget_render_data_steward',
     'widget_render_data_agreement',
     'widget_enrich_table_metadata',

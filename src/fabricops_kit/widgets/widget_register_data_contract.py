@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
 import html
 import json
 from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.data_contract.shared import canonical_enrichment_state, freeze_contract_record, validate_contract_draft
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
+from fabricops_kit.data_contract.shared import freeze_contract, parse_approved_usages, select_approved_usages
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, get_spark_session, read_lakehouse_table_core, resolve_configured_lakehouse_table, write_lakehouse_table_core
-from fabricops_kit.pipeline.shared import validated_processing
+from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.widgets.shared import action_row, form_page, form_section, require_ipywidgets, status_message, widget_common
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -29,33 +27,6 @@ def _rows(frame: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
 
 
-def _json_value(value: Any, *, field: str, default: Any) -> Any:
-    """Parse a JSON metadata value with an actionable field error."""
-    if value in (None, ""):
-        return default
-    try:
-        return json.loads(str(value))
-    except (TypeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{field} must contain valid JSON.") from exc
-
-
-def _approved_usages(value: Any) -> list[str]:
-    """Return a normalized approved-usage list."""
-    parsed = _json_value(value, field="approved_usage_json", default=[])
-    if not isinstance(parsed, list) or any(not isinstance(item, str) for item in parsed):
-        raise ValueError("approved_usage_json must be a JSON list of strings.")
-    return list(dict.fromkeys(item.strip() for item in parsed if item.strip()))
-
-
-def _selected_usages(selected: Any, parent: list[str]) -> list[str]:
-    """Validate and order the contract usage subset by its parent Agreement."""
-    values = list(dict.fromkeys(str(item).strip() for item in (selected or []) if str(item).strip()))
-    invalid = sorted(set(values) - set(parent))
-    if invalid:
-        raise ValueError("Data Contract approved usages must be a subset of the parent Data Agreement approved usages. Invalid value(s): " + ", ".join(invalid))
-    return [item for item in parent if item in values]
-
-
 def _latest(rows: list[dict[str, Any]], identity: tuple[str, ...]) -> list[dict[str, Any]]:
     """Select the latest audit row for each logical identity."""
     selected: dict[tuple[str, ...], dict[str, Any]] = {}
@@ -67,17 +38,6 @@ def _latest(rows: list[dict[str, Any]], identity: tuple[str, ...]) -> list[dict[
         if current_rank is None or rank > current_rank:
             selected[key] = row
     return [selected[key] for key in sorted(selected)]
-
-
-def _json_safe(value: Any) -> Any:
-    """Convert Spark-compatible scalar values into JSON-compatible values."""
-    if isinstance(value, (date, datetime)):
-        return value.isoformat()
-    return value
-
-
-def _fields(row: dict[str, Any], names: tuple[str, ...]) -> dict[str, Any]:
-    return {name: _json_safe(row.get(name)) for name in names}
 
 
 def _contract_id(agreement_id: str, table_id: str) -> str:
@@ -92,94 +52,6 @@ def _agreement_version_key(value: Any) -> tuple[int, int, int]:
         return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
     except (TypeError, ValueError):
         return (0, 0, 0)
-
-
-def _assemble_payload(*, contract_id: str, contract_version: int, agreement: dict[str, Any], table_id: str, usages: list[str], tables: dict[str, list[dict[str, Any]]], environment_name: str) -> tuple[dict[str, Any], list[str]]:
-    """Assemble a deterministic, self-contained FabricOps contract document."""
-    catalogue = [r for r in tables["METADATA_DATA_CATALOGUE"] if str(r.get("table_id") or "") == table_id and str(r.get("environment_name") or "") == environment_name and r.get("is_active") is not False]
-    current = _latest(catalogue, ("table_id", "column_id"))
-    table_rows = [r for r in current if str(r.get("metadata_level") or "").lower() == "table" or not r.get("column_id")]
-    if not table_rows:
-        raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
-    table = table_rows[-1]
-    columns = [r for r in current if r.get("column_id")]
-    column_docs = [_fields(r, ("column_id", "column_name", "data_type")) for r in columns]
-    incomplete_columns = [
-        str(row.get("column_name") or row.get("column_id") or "<blank>")
-        for row in column_docs
-        if any(not str(row.get(name) or "").strip() for name in ("column_id", "column_name", "data_type"))
-    ]
-    if incomplete_columns:
-        raise ValueError(
-            "Active METADATA_DATA_CATALOGUE columns must define column_id, column_name, and data_type before a Data Contract can be assembled: "
-            + ", ".join(incomplete_columns)
-        )
-    column_names = [str(row["column_name"]).strip() for row in column_docs]
-    duplicate_names = sorted({name for name in column_names if column_names.count(name) > 1})
-    if duplicate_names:
-        raise ValueError("Active METADATA_DATA_CATALOGUE columns contain duplicate column_name values: " + ", ".join(duplicate_names))
-    def contract_key(row: dict[str, Any]) -> bool:
-        return (
-            str(row.get("contract_id") or "") == contract_id
-            and int(row.get("contract_version") or 0) == int(contract_version)
-        )
-    enrichment = _latest(canonical_enrichment_state(
-        r for r in tables["METADATA_ENRICHMENT"]
-        if contract_key(r) and str(r.get("environment_name") or "") == environment_name
-    ), ("enrichment_id",))
-    enrichment_docs = [_fields(r, ("enrichment_id", "contract_id", "contract_version", "column_id", "enrichment_level", "enrichment_type", "value")) for r in enrichment]
-    guardrails = _latest([r for r in tables["METADATA_GUARDRAIL"] if contract_key(r) and str(r.get("environment_name") or "") == environment_name], ("guardrail_rule_id",))
-    guardrail_docs = []
-    for row in guardrails:
-        if row.get("is_active") is not True:
-            continue
-        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "action", "severity"))
-        rule_parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
-        if not isinstance(rule_parameters, dict):
-            raise ValueError("rule_parameters_json must contain a JSON object.")
-        if str(row.get("guardrail_type") or "").strip().lower() == "schema":
-            rule_parameters = {
-                name: value for name, value in rule_parameters.items()
-                if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
-            }
-        item["rule_parameters"] = rule_parameters
-        guardrail_docs.append(item)
-    steward_ids = {str(agreement.get("provider_steward_id") or ""), str(agreement.get("recipient_steward_id") or "")}
-    stewards = _latest([r for r in tables["METADATA_DATA_STEWARD"] if str(r.get("steward_id") or "") in steward_ids and r.get("is_active") is not False], ("steward_id",))
-    steward_docs = [_fields(r, ("steward_id", "steward_name", "steward_role", "contact")) for r in stewards]
-    agreement_doc = _fields(agreement, ("agreement_id", "agreement_version", "agreement_name", "domain", "business_purpose", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date"))
-    agreement_doc["approved_usages"] = _approved_usages(agreement.get("approved_usage_json"))
-    parameters = _json_value(
-        table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={},
-    )
-    if not isinstance(parameters, dict):
-        raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
-    try:
-        processing = validated_processing({**parameters, "load_strategy": table.get("load_strategy")})
-    except ValueError as exc:
-        raise ValueError(f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}") from exc
-    payload = {
-        "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
-        "agreement": agreement_doc,
-        "stewards": steward_docs,
-        "table": {
-            **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
-            "columns": column_docs,
-            "processing": processing,
-        },
-        "enrichment": {"table": [r for r in enrichment_docs if not r.get("column_id")], "columns": [r for r in enrichment_docs if r.get("column_id")]},
-        "guardrails": guardrail_docs,
-        "approved_usages": usages,
-    }
-    warnings = []
-    if not any(r.get("enrichment_type") == "Description" and not r.get("column_id") for r in enrichment_docs):
-        warnings.append("Table description is missing.")
-    described = {str(r.get("column_id")) for r in enrichment_docs if r.get("enrichment_type") == "Description"}
-    if any(str(r.get("column_id")) not in described for r in column_docs):
-        warnings.append("One or more column descriptions are missing.")
-    if not guardrail_docs:
-        warnings.append("No active Guardrails are configured.")
-    return payload, warnings
 
 
 def widget_register_data_contract(*, agreement_id: str | None = None, agreement_version: str | None = None, table_id: str | None = None, approved_usages: list[str] | None = None, target: str = "metadata", schema: str | None = None, spark_session=None, context=None):
@@ -284,8 +156,8 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
             return None
         if selected_table not in table_options:
             raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
-        parent = _approved_usages(agreement.get("approved_usage_json"))
-        chosen = _selected_usages(state.get("approved_usages") if state.get("approved_usages") is not None else parent, parent)
+        parent = parse_approved_usages(agreement.get("approved_usage_json"))
+        chosen = select_approved_usages(state.get("approved_usages") if state.get("approved_usages") is not None else parent, parent)
         lifecycle_id = _contract_id(str(agreement["agreement_id"]), selected_table)
         versions = [int(r.get("contract_version") or 0) for r in contract_rows if str(r.get("contract_id") or "") == lifecycle_id]
         open_drafts = [
@@ -333,40 +205,14 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
         draft = save()
         if str(draft.get("status") or "").lower() != "draft":
             raise ValueError("Only an open draft Data Contract version can be frozen.")
-        fresh_tables = {
-            name: _rows(read_lakehouse_table_core(name, target=target, schema=schema, spark_session=spark_session, context=runtime_context))
-            for name in _SOURCE_TABLES
-        }
-        agreements_now = [
-            row for row in fresh_tables["METADATA_DATA_AGREEMENT"]
-            if str(row.get("agreement_id") or "") == str(draft["agreement_id"])
-            and str(row.get("agreement_version") or "") == str(draft["agreement_version"])
-        ]
-        if not agreements_now:
-            raise ValueError("The draft's exact Data Agreement version no longer exists.")
-        validate_contract_draft(
-            draft, catalogue_rows=fresh_tables["METADATA_DATA_CATALOGUE"],
-            enrichment_rows=fresh_tables["METADATA_ENRICHMENT"],
-            guardrail_rows=fresh_tables["METADATA_GUARDRAIL"], environment_name=env,
+        result = freeze_contract(
+            draft=draft, approved_usages=list(state.get("approved_usages") or []),
+            config=config, env=env, spark_session=spark_session,
+            context=runtime_context, target=target, schema=schema,
         )
-        payload, warnings = _assemble_payload(
-            contract_id=str(draft["contract_id"]), contract_version=int(draft["contract_version"]),
-            agreement=agreements_now[0], table_id=str(draft["table_id"]),
-            usages=list(state.get("approved_usages") or []), tables=fresh_tables, environment_name=env,
-        )
-        audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        frozen = coerce_metadata_row_types(CONTRACT_TABLE, freeze_contract_record(draft=draft, payload=payload, audit=audit))
-        try:
-            from delta.tables import DeltaTable
-        except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-            raise RuntimeError("Delta Lake support is required to freeze a Data Contract.") from exc
-        frame = spark_session.createDataFrame([frozen], schema=metadata_table_schema_registry()[CONTRACT_TABLE])
-        physical_schema = metadata_table_physical_schema(config, CONTRACT_TABLE) if target.strip().lower() == "metadata" else schema or configured_lakehouse_schema(config, env, target)
-        _store, _table, _schema, path = resolve_configured_lakehouse_table(target, CONTRACT_TABLE, physical_schema, context=runtime_context)
-        (DeltaTable.forPath(spark_session, path).alias("target").merge(
-            frame.alias("source"),
-            "target.contract_id = source.contract_id AND target.contract_version = source.contract_version",
-        ).whenMatchedUpdateAll().execute())
+        frozen = result["contract"]
+        payload = result["payload"]
+        warnings = result["warnings"]
         contract_rows[contract_rows.index(draft)] = frozen
         state.update(review=payload, warnings=warnings, frozen_contract_id=frozen["contract_id"], frozen_contract_version=frozen["contract_version"])
         return frozen
@@ -414,7 +260,7 @@ def widget_register_data_contract(*, agreement_id: str | None = None, agreement_
             None,
         )
         allowed_before_refresh = (
-            _approved_usages(selected_agreement_row.get("approved_usage_json"))
+            parse_approved_usages(selected_agreement_row.get("approved_usage_json"))
             if selected_agreement_row else []
         )
         state["table_id"] = table_control.value or None

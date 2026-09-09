@@ -12,6 +12,7 @@ from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widg
 
 
 LIVE_WIDGETS = {
+    "widget_author_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_register_data_contract",
