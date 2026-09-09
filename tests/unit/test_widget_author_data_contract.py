@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import sys
 import types
 
@@ -111,7 +112,11 @@ def widget(monkeypatch):
     monkeypatch.setattr(module.contract_authoring, "validate_contract_draft", lambda *args, **kwargs: calls["validate"].append((args, kwargs)) or {
         "contract": state["contract"], "enrichment": state["enrichment"], "guardrails": state["guardrails"],
     })
-    monkeypatch.setattr(module.contract_authoring, "freeze_contract", lambda **kwargs: calls["freeze"].append(kwargs) or {**kwargs["draft"], "status": "frozen"})
+    monkeypatch.setattr(module.contract_authoring, "freeze_contract", lambda **kwargs: calls["freeze"].append(kwargs) or {
+        "contract": {**kwargs["draft"], "status": "frozen"},
+        "payload": {"contract": {"contract_id": kwargs["draft"]["contract_id"]}},
+        "warnings": [],
+    })
     result = module.widget_author_data_contract(
         contract_id="contract-orders", contract_version=3,
         spark_session=object(), context={"config": object(), "env": "dev"},
@@ -124,6 +129,8 @@ def test_exact_version_overview_and_existing_guardrails(widget):
     result, calls = widget
     assert calls["loads"] == [("contract-orders", 3)]
     assert result["state"]["table_id"] == "table-orders"
+    assert "Orders" in result["ui"].children[0].value
+    assert "table-orders" in result["ui"].children[0].value
     assert "SCD2" in result["ui"].children[2].children[0].value
     guardrail = result["render_section"]("Guardrails")
     assert "Required: column_0" in guardrail.children[0].value
@@ -174,6 +181,18 @@ def test_review_validates_and_freezes_through_authoritative_services(widget):
     assert calls["validate"]
     result["controls"]["freeze"].click()
     assert calls["freeze"][0]["draft"]["contract_version"] == 3
+    assert calls["freeze"][0]["draft"]["contract_id"] == "contract-orders"
+    assert "payload" not in calls["freeze"][0]
+    source = inspect.getsource(module.widget_author_data_contract)
+    assert '"agreement"' not in source
+    assert '"stewards"' not in source
+    assert '"approved_usages"' not in source
+    registration = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+    registration_source = inspect.getsource(registration.widget_register_data_contract)
+    assert "freeze_contract(" in source
+    assert "freeze_contract(" in registration_source
+    assert "assemble_contract_payload(" not in source
+    assert "assemble_contract_payload(" not in registration_source
 
 
 def test_html_escaping_and_large_schema_widget_model_regression(monkeypatch):

@@ -11,13 +11,29 @@ import pytest
 
 import fabricops_kit
 from fabricops_kit.widgets import widget_register_data_contract as public_widget
-from fabricops_kit.widgets.widget_register_data_contract import (
-    _assemble_payload,
-    _contract_id,
-    _selected_usages,
-)
+from fabricops_kit.data_contract.shared import assemble_contract_payload, select_approved_usages
+from fabricops_kit.widgets.widget_register_data_contract import _contract_id
 
 pytestmark = pytest.mark.unit
+
+
+def _selected_usages(selected, parent):
+    """Invoke the service-owned approved-usage validation in legacy-shaped tests."""
+    return select_approved_usages(selected, parent)
+
+
+def _assemble_payload(*, contract_id, contract_version, agreement, table_id, usages, tables, environment_name):
+    """Invoke service-owned payload assembly with an exact draft identity."""
+    return assemble_contract_payload(
+        draft={
+            "contract_id": contract_id, "contract_version": contract_version,
+            "table_id": table_id, "agreement_id": agreement["agreement_id"],
+            "agreement_version": agreement["agreement_version"],
+            "environment_name": environment_name, "status": "draft",
+        },
+        agreement=agreement, approved_usages=usages, tables=tables,
+        environment_name=environment_name,
+    )
 
 
 def _sources():
@@ -68,6 +84,7 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     second, _ = _assemble_payload(**kwargs)
     assert json.dumps(first, sort_keys=True, separators=(",", ":")) == json.dumps(second, sort_keys=True, separators=(",", ":"))
     assert first["agreement"]["agreement_version"] == "3"
+    assert first["approved_usages"] == ["analytics"]
     assert first["table"]["table_id"] == "orders"
     assert first["table"]["processing"] == {"load_strategy": "scd1", "key_columns": ["order_id"]}
     assert first["table"]["columns"] == [{"column_id": "order_id", "column_name": "order_id", "data_type": "long"}]
@@ -77,6 +94,10 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert first["guardrails"][0]["rule_parameters"] == {"threshold": 1}
     assert "results" not in json.dumps(first).lower()
     assert warnings == []
+    assert set(first) == {
+        "contract", "agreement", "stewards", "table", "enrichment",
+        "guardrails", "approved_usages",
+    }
 
 
 def test_payload_uses_only_governance_rows_for_exact_contract_version():
@@ -392,7 +413,11 @@ def test_create_draft_author_governance_then_freeze_exact_version(monkeypatch):
     monkeypatch.setitem(sys.modules, "delta", delta)
     monkeypatch.setitem(sys.modules, "delta.tables", delta_tables)
     module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
-    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/contracts"))
+    service = importlib.import_module("fabricops_kit.data_contract.shared")
+    monkeypatch.setattr(service, "read_lakehouse_table_core", module.read_lakehouse_table_core)
+    monkeypatch.setattr(service, "build_runtime_audit_fields", module.build_runtime_audit_fields)
+    io_shared = importlib.import_module("fabricops_kit.io.shared")
+    monkeypatch.setattr(io_shared, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/metadata/contracts"))
 
     frozen = state["freeze"]()
     payload = json.loads(frozen["contract_payload_json"])

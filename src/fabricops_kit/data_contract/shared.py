@@ -7,6 +7,7 @@ and keep widget rendering concerns out of governance metadata semantics.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date, datetime
 import math
 from typing import Any
 
@@ -17,6 +18,7 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_schema_registry,
 )
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.pipeline.shared import validated_processing
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
@@ -28,6 +30,13 @@ ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification"}),
     "column": frozenset({"Description", "Classification"}),
 }
+CONTRACT_SOURCE_TABLES = (
+    "METADATA_DATA_AGREEMENT",
+    "METADATA_DATA_STEWARD",
+    "METADATA_DATA_CATALOGUE",
+    ENRICHMENT_TABLE,
+    GUARDRAIL_TABLE,
+)
 
 
 def row_dicts(value: Any) -> list[dict[str, Any]]:
@@ -36,6 +45,65 @@ def row_dicts(value: Any) -> list[dict[str, Any]]:
         return []
     source = value.collect() if hasattr(value, "collect") else value
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source]
+
+
+def parse_approved_usages(value: Any) -> list[str]:
+    """Return the canonical approved-usage list stored by a Data Agreement."""
+    parsed = _json_value(value, field="approved_usage_json", default=[])
+    if not isinstance(parsed, list) or any(not isinstance(item, str) for item in parsed):
+        raise ValueError("approved_usage_json must be a JSON list of strings.")
+    return list(dict.fromkeys(item.strip() for item in parsed if item.strip()))
+
+
+def select_approved_usages(selected: Any, parent: list[str]) -> list[str]:
+    """Validate and order a Data Contract usage subset by its Data Agreement."""
+    values = list(dict.fromkeys(str(item).strip() for item in (selected or []) if str(item).strip()))
+    invalid = sorted(set(values) - set(parent))
+    if invalid:
+        raise ValueError(
+            "Data Contract approved usages must be a subset of the parent Data Agreement "
+            "approved usages. Invalid value(s): " + ", ".join(invalid)
+        )
+    return [item for item in parent if item in values]
+
+
+def _json_value(value: Any, *, field: str, default: Any) -> Any:
+    """Parse a JSON metadata value with an actionable field error."""
+    import json
+
+    if value in (None, ""):
+        return default
+    try:
+        return json.loads(str(value))
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{field} must contain valid JSON.") from exc
+
+
+def _latest(rows: Iterable[Mapping[str, Any]], identity: tuple[str, ...]) -> list[dict[str, Any]]:
+    """Select the latest audit row for each logical identity."""
+    selected: dict[tuple[str, ...], dict[str, Any]] = {}
+    for value in rows:
+        row = dict(value)
+        key = tuple(str(row.get(field) or "") for field in identity)
+        rank = (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or ""))
+        current = selected.get(key)
+        current_rank = (
+            (str(current.get("_committed_at") or ""), str(current.get("_activity_id") or ""))
+            if current else None
+        )
+        if current_rank is None or rank > current_rank:
+            selected[key] = row
+    return [selected[key] for key in sorted(selected)]
+
+
+def _json_safe(value: Any) -> Any:
+    """Convert Spark-compatible scalar values into JSON-compatible values."""
+    return value.isoformat() if isinstance(value, (date, datetime)) else value
+
+
+def _fields(row: Mapping[str, Any], names: tuple[str, ...]) -> dict[str, Any]:
+    """Select canonical payload fields from one metadata row."""
+    return {name: _json_safe(row.get(name)) for name in names}
 
 
 def validate_contract_identity(contract_id: Any, contract_version: Any) -> tuple[str, int]:
@@ -447,21 +515,180 @@ def freeze_contract_record(*, draft: Mapping[str, Any], payload: Mapping[str, An
     return {**dict(draft), "contract_payload_json": json.dumps(dict(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=False), "status": "frozen", "is_active": False, **dict(audit)}
 
 
+def assemble_contract_payload(
+    *,
+    draft: Mapping[str, Any],
+    agreement: Mapping[str, Any],
+    approved_usages: list[str] | None,
+    tables: Mapping[str, Any],
+    environment_name: str,
+) -> tuple[dict[str, Any], list[str]]:
+    """Assemble the canonical immutable payload for one exact Data Contract draft."""
+    contract_id, contract_version = validate_contract_identity(
+        draft.get("contract_id"), draft.get("contract_version")
+    )
+    table_id = str(draft.get("table_id") or "")
+    catalogue = [
+        row for row in row_dicts(tables["METADATA_DATA_CATALOGUE"])
+        if str(row.get("table_id") or "") == table_id
+        and str(row.get("environment_name") or "") == environment_name
+        and row.get("is_active") is not False
+    ]
+    current = _latest(catalogue, ("table_id", "column_id"))
+    table_rows = [
+        row for row in current
+        if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
+    ]
+    if not table_rows:
+        raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
+    table = table_rows[-1]
+    columns = [row for row in current if row.get("column_id")]
+    column_docs = [_fields(row, ("column_id", "column_name", "data_type")) for row in columns]
+    incomplete = [
+        str(row.get("column_name") or row.get("column_id") or "<blank>")
+        for row in column_docs
+        if any(not str(row.get(name) or "").strip() for name in ("column_id", "column_name", "data_type"))
+    ]
+    if incomplete:
+        raise ValueError(
+            "Active METADATA_DATA_CATALOGUE columns must define column_id, column_name, "
+            "and data_type before a Data Contract can be assembled: " + ", ".join(incomplete)
+        )
+    column_names = [str(row["column_name"]).strip() for row in column_docs]
+    duplicates = sorted({name for name in column_names if column_names.count(name) > 1})
+    if duplicates:
+        raise ValueError(
+            "Active METADATA_DATA_CATALOGUE columns contain duplicate column_name values: "
+            + ", ".join(duplicates)
+        )
+
+    def owned(row: Mapping[str, Any]) -> bool:
+        return (
+            str(row.get("contract_id") or "") == contract_id
+            and int(row.get("contract_version") or 0) == contract_version
+            and str(row.get("environment_name") or "") == environment_name
+        )
+
+    enrichment = _latest(
+        canonical_enrichment_state(row for row in row_dicts(tables[ENRICHMENT_TABLE]) if owned(row)),
+        ("enrichment_id",),
+    )
+    enrichment_docs = [
+        _fields(row, ("enrichment_id", "contract_id", "contract_version", "column_id", "enrichment_level", "enrichment_type", "value"))
+        for row in enrichment
+    ]
+    guardrails = _latest(
+        [row for row in row_dicts(tables[GUARDRAIL_TABLE]) if owned(row)],
+        ("guardrail_rule_id",),
+    )
+    guardrail_docs = []
+    for row in guardrails:
+        if row.get("is_active") is not True:
+            continue
+        item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "action", "severity"))
+        parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
+        if not isinstance(parameters, dict):
+            raise ValueError("rule_parameters_json must contain a JSON object.")
+        if str(row.get("guardrail_type") or "").strip().lower() == "schema":
+            parameters = {
+                name: value for name, value in parameters.items()
+                if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
+            }
+        item["rule_parameters"] = parameters
+        guardrail_docs.append(item)
+
+    steward_ids = {
+        str(agreement.get("provider_steward_id") or ""),
+        str(agreement.get("recipient_steward_id") or ""),
+    }
+    stewards = _latest(
+        [row for row in row_dicts(tables["METADATA_DATA_STEWARD"])
+         if str(row.get("steward_id") or "") in steward_ids and row.get("is_active") is not False],
+        ("steward_id",),
+    )
+    agreement_doc = _fields(agreement, ("agreement_id", "agreement_version", "agreement_name", "domain", "business_purpose", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date"))
+    agreement_doc["approved_usages"] = parse_approved_usages(agreement.get("approved_usage_json"))
+    parent_usages = agreement_doc["approved_usages"]
+    usages = select_approved_usages(
+        parent_usages if approved_usages is None else approved_usages,
+        parent_usages,
+    )
+    parameters = _json_value(table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={})
+    if not isinstance(parameters, dict):
+        raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
+    try:
+        processing = validated_processing({**parameters, "load_strategy": table.get("load_strategy")})
+    except ValueError as exc:
+        raise ValueError(
+            f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
+        ) from exc
+    payload = {
+        "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
+        "agreement": agreement_doc,
+        "stewards": [_fields(row, ("steward_id", "steward_name", "steward_role", "contact")) for row in stewards],
+        "table": {
+            **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
+            "columns": column_docs,
+            "processing": processing,
+        },
+        "enrichment": {
+            "table": [row for row in enrichment_docs if not row.get("column_id")],
+            "columns": [row for row in enrichment_docs if row.get("column_id")],
+        },
+        "guardrails": guardrail_docs,
+        "approved_usages": usages,
+    }
+    warnings = []
+    if not any(row.get("enrichment_type") == "Description" and not row.get("column_id") for row in enrichment_docs):
+        warnings.append("Table description is missing.")
+    described = {str(row.get("column_id")) for row in enrichment_docs if row.get("enrichment_type") == "Description"}
+    if any(str(row.get("column_id")) not in described for row in column_docs):
+        warnings.append("One or more column descriptions are missing.")
+    if not guardrail_docs:
+        warnings.append("No active Guardrails are configured.")
+    return payload, warnings
+
+
 def freeze_contract(
     *,
     draft: Mapping[str, Any],
-    payload: Mapping[str, Any],
+    approved_usages: list[str] | None = None,
     config: Any,
     env: str,
     spark_session: Any,
     context: Mapping[str, Any] | None = None,
+    target: str = "metadata",
+    schema: str | None = None,
 ) -> dict[str, Any]:
-    """Validate and persist the immutable transition for one exact draft version."""
+    """Load, validate, assemble, and freeze one exact authoritative draft version."""
     from delta.tables import DeltaTable
 
-    from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+    from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
     runtime_context = {"config": config, "env": env, **dict(context or {})}
+    tables = {
+        name: row_dicts(read_lakehouse_table_core(
+            name, target=target, schema=schema, spark_session=spark_session,
+            context=runtime_context,
+        ))
+        for name in CONTRACT_SOURCE_TABLES
+    }
+    agreement = next((
+        row for row in tables["METADATA_DATA_AGREEMENT"]
+        if str(row.get("agreement_id") or "") == str(draft.get("agreement_id") or "")
+        and str(row.get("agreement_version") or "") == str(draft.get("agreement_version") or "")
+    ), None)
+    if agreement is None:
+        raise ValueError("The draft's exact Data Agreement version no longer exists.")
+    validate_contract_draft(
+        draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
+        enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
+        environment_name=env,
+    )
+    payload, warnings = assemble_contract_payload(
+        draft=draft, agreement=agreement, approved_usages=approved_usages,
+        tables=tables, environment_name=env,
+    )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(
         DATA_CONTRACT_TABLE,
@@ -471,9 +698,13 @@ def freeze_contract(
         [frozen], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]
     )
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "metadata",
+        target,
         DATA_CONTRACT_TABLE,
-        metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        (
+            metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
+            if target.strip().lower() == "metadata"
+            else schema or configured_lakehouse_schema(config, env, target)
+        ),
         context=runtime_context,
     )
     (
@@ -487,4 +718,4 @@ def freeze_contract(
         .whenMatchedUpdateAll()
         .execute()
     )
-    return frozen
+    return {"contract": frozen, "payload": payload, "warnings": warnings}

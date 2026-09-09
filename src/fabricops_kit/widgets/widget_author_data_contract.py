@@ -284,16 +284,15 @@ def widget_author_data_contract(
         )
 
     def freeze() -> dict[str, Any]:
-        validated = validate()
-        payload = {
-            "contract": validated["contract"], "table": {"table_id": state["table_id"], "columns": state["available_columns"]},
-            "enrichment": validated["enrichment"], "guardrails": validated["guardrails"],
-        }
-        frozen = contract_authoring.freeze_contract(
-            draft=state["contract"], payload=payload, config=config, env=env,
+        validate()
+        result = contract_authoring.freeze_contract(
+            draft=state["contract"], config=config, env=env,
             spark_session=spark_session, context=context,
         )
+        frozen = result["contract"]
         state["contract"] = frozen
+        state["review"] = result["payload"]
+        state["warnings"] = result["warnings"]
         return frozen
 
     def review() -> Any:
@@ -333,11 +332,16 @@ def widget_author_data_contract(
     section_control.observe(lambda change: render_section(change["new"]), names="value")
 
     contract = state["contract"]
+    table_row = next(
+        (row for row in state["catalogue_rows"] if str(row.get("metadata_level") or "").lower() == "table"),
+        {},
+    )
+    table_name = table_row.get("table_name") or state["table_id"]
     header = widgets.HTML(value=(
         '<style>.fabricops-contract-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}'
         '.fabricops-contract-card{border:1px solid #ddd;border-radius:6px;padding:10px;display:flex;flex-direction:column}'
         '.fabricops-contract-table{width:100%;border-collapse:collapse}.fabricops-contract-table th,.fabricops-contract-table td{padding:7px;border-bottom:1px solid #ddd;text-align:left}</style>'
-        f'<h2 style="margin-bottom:2px">{_escape(state["table_id"])}</h2>'
+        f'<h2 style="margin-bottom:2px">{_escape(table_name)}</h2>'
         f'<div>table_id: <code>{_escape(state["table_id"])}</code></div>'
         f'<div><b>Contract v{_escape(version)}</b> · {_escape(contract.get("status", "draft")).upper()} · <code>{_escape(identity)}</code></div>'
     ))
