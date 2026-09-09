@@ -1,11 +1,11 @@
 release_version: 0.2.0
-release_status: live
-release_date: 2026-08-07
-source_ref: v0.2.0
-source_ref_note: Canonical Git release tag for the frozen v0.2.0 release contract.
+release_status: preparing
+release_date: null
+source_ref: main
+source_ref_note: Preparing replacement v0.2.0 release contract against latest main.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
-release_motivation: FabricOps 0.2.0 expands the supported package contract from notebook setup and Fabric input/output into metadata setup, dataframe profiling, normalized frequency profiling, catalogue registration, and profiling lineage evidence. Formal package releases govern public functions and metadata schemas only; notebook templates, samples, skills, and DQ assets remain independently maintained outside the package release contract.
+release_motivation: FabricOps 0.2.0 is being revalidated and prepared for republication. The replacement release will define a narrower supported engineering and metadata foundation, with later governance and guardrail capabilities remaining Preview until separately validated.
 functions:
   - name: display_guardrail_results
     qualified_name: fabricops_kit.pipeline.display_guardrail_results
@@ -294,17 +294,8 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: f57bb30d25d4ef9a49e4bacf1d6c65542d337b6ae0c62c332b8ebdcc49e86eff
+    schema_fingerprint: 79a9b10cc65c7ba225795a84d100fbf5e8863ed5ba9c2891adff435c2913b541
     rationale: Stable v0.2.0 profiling metadata contract.
-    introduced_in: 0.2.0
-  - name: METADATA_DATA_LINEAGE_TABLE
-    source_path: src/fabricops_kit/config/metadata_schemas.py
-    documentation_path: docs/reference/metadata/metadata_data_lineage_table.md
-    status: discontinued
-    schema_since: 0.1.0
-    schema_fingerprint: 58e4884d8315f6dcc8a291b2a291d6c42e00d8dfd64034e892f41d8933064661
-    discontinued_in: 0.2.0
-    rationale: No longer part of the canonical metadata schema registry.
     introduced_in: 0.1.0
   - name: METADATA_DATA_PROFILED
     source_path: src/fabricops_kit/config/metadata_schemas.py
@@ -312,16 +303,16 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: 29054258497f6bc8d6ead1f709752c552ccda9688f879cb17fb7de11443e06e0
+    schema_fingerprint: f9a64dc7e9674165f1ac1dfca0fa41b48f83407be81e24b58518a4069852c0bf
     rationale: Stable v0.2.0 profiling metadata contract.
-    introduced_in: 0.2.0
+    introduced_in: 0.1.0
   - name: METADATA_DATA_PROFILED_FREQUENCY
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_profiled_frequency.md
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: a1fe57fd965608504ca1fed4cd41b5b7cae012c0a598f0edf0963a8dc50a2bb3
+    schema_fingerprint: 77a5ca64df562b74f739e389b0d12a97f0f36a7ac06d39d4ea964b5346c975b7
     rationale: Stable v0.2.0 profiling metadata contract.
     introduced_in: 0.2.0
   - name: METADATA_DATA_STEWARD
@@ -329,7 +320,7 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_data_steward.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: 08311069057dcfc5eee75ddb18d561bd024799bd2ed93a2510b53e0b1cb947c1
+    schema_fingerprint: 4ee7cc2d03a38e8926d358603b925d368309238e95499c6e6d5b74e6ad71dc2e
     rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
     introduced_in: 0.1.0
   - name: METADATA_ENRICHMENT
@@ -337,56 +328,22 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_enrichment.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: bec352aec7b2929a1685ab753ba112ea4b5d0088411c0a9db123c55fd734d395
-    introduced_in: 0.2.0
-  - name: METADATA_ENRICHMENT_RULES
-    source_path: src/fabricops_kit/config/metadata_schemas.py
-    documentation_path: docs/reference/metadata/metadata_enrichment_rules.md
-    status: discontinued
-    schema_since: 0.1.0
-    schema_fingerprint: f0f4885aa254f875e1cf741e41287860fff0ee617a3de92d41d0c77e073c936d
-    discontinued_in: 0.2.0
-    rationale: No longer part of the canonical metadata schema registry.
+    schema_fingerprint: 23e72629ed56862135016a5985ccb30a0be30fb73ecb0fb4859507da09773b19c
+    rationale: enrichment model still being stabilised
     introduced_in: 0.1.0
   - name: METADATA_GUARDRAIL
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: 41111bd4af5f562016e255c3b75d7c6be5b59f5d44fab6986c96f3e5d6b39669
-    introduced_in: 0.2.0
+    schema_fingerprint: 0af2b5edc0b60d2e0d645dbe6ea3b3403b0cc05aee0e8ef4905916ba1deff5d
+    rationale: guardrail authoring and enforcement model still being stabilised
+    introduced_in: 0.1.0
   - name: METADATA_GUARDRAIL_RESULTS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_results.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: 7ed0ff12e79fa28e6d4f626e08233f402ca39da8fe9e6168922e622b9f58e4a3
-    rationale: DQ rule and result contract still Preview
-    introduced_in: 0.1.0
-  - name: METADATA_GUARDRAIL_RULES
-    source_path: src/fabricops_kit/config/metadata_schemas.py
-    documentation_path: docs/reference/metadata/metadata_guardrail_rules.md
-    status: discontinued
-    schema_since: 0.1.0
-    schema_fingerprint: cce4dc9ca7b53abba619b39efe2ef5c229143453c50155df19665dc4be5c3d47
-    discontinued_in: 0.2.0
-    rationale: No longer part of the canonical metadata schema registry.
-    introduced_in: 0.1.0
-  - name: METADATA_NOTEBOOK_REGISTRY
-    source_path: src/fabricops_kit/config/metadata_schemas.py
-    documentation_path: docs/reference/metadata/metadata_notebook_registry.md
-    status: discontinued
-    schema_since: 0.1.0
-    schema_fingerprint: 8c139a75b788d8309d239bfe7606d34fb3c6a1b03db2988b55bc66baee11a5f9
-    discontinued_in: 0.2.0
-    rationale: No longer part of the canonical metadata schema registry.
-    introduced_in: 0.1.0
-  - name: METADATA_PIPELINE_RUNS
-    source_path: src/fabricops_kit/config/metadata_schemas.py
-    documentation_path: docs/reference/metadata/metadata_pipeline_runs.md
-    status: discontinued
-    schema_since: 0.1.0
-    schema_fingerprint: 236362572e50f3aa36ec9ef16e44a5a97825bd314db9f1a36bbe27ead8c3b145
-    discontinued_in: 0.2.0
-    rationale: No longer part of the canonical metadata schema registry.
+    schema_fingerprint: d8c722dd371e730375bc8241c708590706358083a01eed70b37c5d8676e428c0
+    rationale: DQ enforcement workflow remains Preview
     introduced_in: 0.1.0
