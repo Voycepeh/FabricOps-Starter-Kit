@@ -11095,6 +11095,7 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+        "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
         "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
         "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
         "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
@@ -11107,6 +11108,7 @@
       "inbound_source_references": [
         "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
         "fabricops_kit.widgets.widget_activate_data_contract::<module>",
+        "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
         "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
         "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
         "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
@@ -12369,7 +12371,7 @@
       "qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 351,
+      "source_end_line": 357,
       "source_path": "src/fabricops_kit/widgets/widget_author_data_contract.py",
       "source_start_line": 76,
       "supports_live_contract": false,
@@ -15834,9 +15836,9 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 6,
-      "direct_call_count": 17,
+      "direct_call_count": 18,
       "discontinued_in": null,
-      "examples": ">>> form = widget_author_data_contract(\n...     contract_id=\"orders-contract\", contract_version=3, spark_session=spark\n... )\n>>> form[\"render_section\"](\"Review\")",
+      "examples": ">>> form = widget_author_data_contract(\n...     contract_id=\"orders-contract\", contract_version=3, spark_session=spark\n... )\n>>> render_review = form[\"render_section\"]\n>>> render_review(\"Review\")",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -15892,7 +15894,7 @@
           "evidence": [
             {
               "depth": 6,
-              "width": 17
+              "width": 18
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -15904,18 +15906,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict[str, Any]\n    Exact-version state, the compact controls, the displayed UI, and callable\n    ``render_section``, ``validate``, and ``freeze`` actions.",
-      "scope": 74,
+      "scope": 76,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_author_data_contract(*, contract_id: str, contract_version: int, spark_session: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 351,
+      "source_end_line": 357,
       "source_path": "src/fabricops_kit/widgets/widget_author_data_contract.py",
       "source_start_line": 76,
       "summary": "Open one exact Data Contract version in a unified authoring experience.",
-      "transitive_function_count": 74,
+      "transitive_function_count": 76,
       "usage_notes": "This is the primary contract-centric authoring UX. Passive headers, summaries,\ntables, badges, and previews are aggregated HTML; ipywidgets are reserved for\ninteraction and only the current section/subtype editor is mounted. Governance\nvalidation and persistence remain in the Data Contract authoring service layer.",
-      "width": 17
+      "width": 18
     },
     {
       "architecture_violation_count": 0,
@@ -22525,6 +22527,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.widgets.shared.form_page",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.widgets.shared.require_ipywidgets",
       "caller_qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
       "violation_details": [],
@@ -24180,7 +24190,7 @@
     "detached_function_count": 24,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 32,
-    "relationship_count": 880,
+    "relationship_count": 881,
     "source_referenced_function_count": 22,
     "used_function_count": 381
   },

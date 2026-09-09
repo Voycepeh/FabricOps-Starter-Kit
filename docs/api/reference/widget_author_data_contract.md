@@ -14,7 +14,7 @@ Author one exact Data Contract version through a unified, contract-centric widge
 
 `fabricops_kit/widgets/widget_author_data_contract.py:76`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_data_contract.py#L76-L351">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_data_contract.py#L76-L357">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -53,7 +53,8 @@ def widget_author_data_contract(
 >>> form = widget_author_data_contract(
 ...     contract_id="orders-contract", contract_version=3, spark_session=spark
 ... )
->>> form["render_section"]("Review")
+>>> render_review = form["render_section"]
+>>> render_review("Review")
 
 </div>
 

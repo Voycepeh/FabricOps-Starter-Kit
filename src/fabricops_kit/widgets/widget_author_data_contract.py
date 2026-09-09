@@ -118,7 +118,8 @@ def widget_author_data_contract(
     >>> form = widget_author_data_contract(
     ...     contract_id="orders-contract", contract_version=3, spark_session=spark
     ... )
-    >>> form["render_section"]("Review")
+    >>> render_review = form["render_section"]
+    >>> render_review("Review")
 
     See Also
     --------
@@ -337,15 +338,20 @@ def widget_author_data_contract(
         {},
     )
     table_name = table_row.get("table_name") or state["table_id"]
-    header = widgets.HTML(value=(
+    styles = widgets.HTML(value=(
         '<style>.fabricops-contract-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}'
         '.fabricops-contract-card{border:1px solid #ddd;border-radius:6px;padding:10px;display:flex;flex-direction:column}'
         '.fabricops-contract-table{width:100%;border-collapse:collapse}.fabricops-contract-table th,.fabricops-contract-table td{padding:7px;border-bottom:1px solid #ddd;text-align:left}</style>'
-        f'<h2 style="margin-bottom:2px">{_escape(table_name)}</h2>'
-        f'<div>table_id: <code>{_escape(state["table_id"])}</code></div>'
-        f'<div><b>Contract v{_escape(version)}</b> · {_escape(contract.get("status", "draft")).upper()} · <code>{_escape(identity)}</code></div>'
     ))
-    ui = widgets.VBox((header, section_control, editor, status))
+    ui = shared.form_page(
+        widgets,
+        title=str(table_name),
+        description=(
+            f'table_id: {state["table_id"]} · Contract v{version} · '
+            f'{str(contract.get("status") or "draft").upper()} · {identity}'
+        ),
+        children=(styles, section_control, editor, status),
+    )
     render_section("Overview")
     ip.display(ui)
     return {"state": state, "controls": controls, "ui": ui, "render_section": render_section, "validate": validate, "freeze": freeze}

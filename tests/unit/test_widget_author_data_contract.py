@@ -42,6 +42,8 @@ def _install_widgets(monkeypatch):
             self._click = callback
         def click(self):
             self._click(self)
+        def add_class(self, _name):
+            return None
     class Box(Widget):
         def __init__(self, children=(), *args, **kwargs):
             super().__init__(*args, **kwargs); self.children = tuple(children)
@@ -52,6 +54,7 @@ def _install_widgets(monkeypatch):
     fake = types.SimpleNamespace(
         Combobox=Widget, Textarea=Widget, Button=Widget, HTML=HTML, ToggleButtons=Widget,
         Dropdown=Widget, SelectMultiple=SelectMultiple, FloatText=Widget, VBox=Box, GridBox=type("GridBox", (Box,), {}),
+        Layout=lambda **kwargs: types.SimpleNamespace(**kwargs),
     )
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: fake)
     monkeypatch.setitem(sys.modules, "IPython", types.SimpleNamespace(display=types.SimpleNamespace(display=lambda *_args: None)))
@@ -131,7 +134,7 @@ def test_exact_version_overview_and_existing_guardrails(widget):
     assert result["state"]["table_id"] == "table-orders"
     assert "Orders" in result["ui"].children[0].value
     assert "table-orders" in result["ui"].children[0].value
-    assert "SCD2" in result["ui"].children[2].children[0].value
+    assert "SCD2" in result["render_section"]("Overview").value
     guardrail = result["render_section"]("Guardrails")
     assert "Required: column_0" in guardrail.children[0].value
     assert ("Data Quality", "Data Quality") in result["controls"]["guardrail_type"].options
@@ -204,7 +207,7 @@ def test_html_escaping_and_large_schema_widget_model_regression(monkeypatch):
     monkeypatch.setattr(module.contract_authoring, "validate_contract_identity", lambda cid, version: (cid, int(version)))
     monkeypatch.setattr(module.contract_authoring, "get_contract_authoring_state", lambda **_kwargs: state)
     result = module.widget_author_data_contract(contract_id="contract-orders", contract_version=3, spark_session=object())
-    overview = result["ui"].children[2].children[0]
+    overview = result["ui"].children[0]
     assert "&lt;script&gt;" in overview.value and "<script>" not in overview.value
     enrichment = result["render_section"]("Enrichment")
     assert sum(isinstance(child, widgets.HTML) for child in enrichment.children) == 1
