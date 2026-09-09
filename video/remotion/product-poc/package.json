@@ -1,0 +1,15 @@
+{
+  "name": "fabricops-remotion-poc",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts FabricOpsHero out/FabricOpsHero.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.506",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.506"
+  }
+}
