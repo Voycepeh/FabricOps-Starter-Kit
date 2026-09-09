@@ -18,9 +18,8 @@ You will progressively take the same governed pipeline through the FabricOps lif
 
 ```mermaid
 flowchart TD
-    S0A["0A · Prepare"] --> S0B["0B · Configure"] --> S1["1 · Govern"] --> S2["2 · Engineer"] --> S3["3 · Author"] --> S4["4 · Validate"] --> S5["5 · Save / Test / Activate"] --> S6["6 · Production"] --> S7["7 · Consume"]
-    S4 -. "Fail · refine" .-> S3
-    S5 -. "Test fails · author and save new version" .-> S3
+    S0A["0A · Prepare"] --> S0B["0B · Configure"] --> S1["1 · Steward + Agreement"] --> S2["2 · ETL / Profile / Catalogue"] --> S3["3 · Author + Freeze"] --> S4["4 · Select + Validate"] --> S5["5 · Link Agreement + Activate"] --> S6["6 · Promote + Run"] --> S7["7 · Consume Production"]
+    S4 -. "Validation fails · refine and freeze a new version" .-> S3
 
     classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
     class S3,S4,S5 focal;
@@ -28,7 +27,7 @@ flowchart TD
 
 The non-linear part is **Steps 3, 4, and 5**. Governance authors and freezes a table-centric Data Contract definition in Step 3. Engineering selects and validates that exact frozen version for the same `table_id` in Step 4. Governance explicitly links the tested version to the required Data Agreement and activates it in Step 5. If validation shows the definition needs work, return to Step 3 and freeze a new version after refinement.
 
-The canonical lifecycle is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote**.
+The canonical transition is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**.
 
 Testing and governance sign-off are part of the recommended operating workflow. The current implementation does not technically block activation based on a recorded pass or approval state.
 
@@ -47,7 +46,7 @@ The demo is intentionally action-oriented. Each module tells you what to do, wha
 | [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Select the `table_id`, author Enrichment and Guardrails in the unified editor, review, and freeze the version. | One immutable, table-centric Data Contract version is ready for validation. |
 | [4. Select and validate the Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | Engineering Development | `02_pipeline` | Select the frozen version for the same `table_id`, run the pipeline, and inspect Guardrail behavior and results. | The exact frozen version is tested against the ETL. |
 | [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | Governance | `01_governance` | Explicitly link the tested version to the required Data Agreement, complete sign-off, and activate it. | One tested, linked version is designated active for Production resolution. |
-| [6. Run the Production pipeline](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline using the organisation's deployment process, resolve the active Data Contract, and run the governed Production pipeline. | Production executes against the active saved immutable contract definition. |
+| [6. Promote and Run Production](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline using the organisation's deployment process, resolve the active Data Contract, and run the governed Production pipeline. | Production executes against the active saved immutable contract definition. |
 | [7. Consume approved Production data](guided-demo/99-explore-via-notebook.md) | Project-Specific Consumer | `99_explore` | Consume approved Production data without duplicating the Production engineering workflow. | Downstream BI, AI, data science, and exploration use the trusted Production source. |
 
 ## How to use each module
