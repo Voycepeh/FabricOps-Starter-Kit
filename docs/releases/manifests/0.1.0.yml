@@ -5,7 +5,7 @@ source_ref: v0.1.0
 source_ref_note: Canonical Git release tag for the frozen v0.1.0 release contract.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
-release_motivation: FabricOps 0.1.0 establishes the supported Fabric lakehouse and warehouse input/output public functions. Formal package releases govern public functions and metadata schemas only; notebook templates, samples, skills, and DQ assets remain manually maintained outside the package release contract.
+release_motivation: FabricOps 0.1.0 establishes the configuration-driven engineering foundation for Microsoft Fabric. The starter workflow uses the 00_env_config notebook template to centralize environment and Fabric item configuration, while the first supported package contract provides the core Lakehouse and Warehouse read/write functions that consume that configuration. Notebook templates remain independently maintained outside the formal package compatibility contract.
 functions:
   - name: display_guardrail_results
     qualified_name: fabricops_kit.pipeline.display_guardrail_results
