@@ -54,11 +54,11 @@ That is intentional. The same `02_pipeline` template can complete the ETL withou
 ```text
 Step 2: run ETL and write Catalogue / Profiled / Lineage metadata
         ↓
-Step 3: read Catalogue + Profiled; write Enrichment + Guardrail
+Step 3: select table_id; author Enrichment + Guardrails; freeze the version
         ↓
-Step 4: rerun the same ETL and validate current authoring
+Step 4: select the frozen version and validate it in the same ETL
         ↓
-Step 5: save an immutable Data Contract, select and test it, then activate the selected version
+Step 5: link the tested version to the Data Agreement and activate it
         ↓
 Step 6: run the same ETL in Production against the active contract
 ```

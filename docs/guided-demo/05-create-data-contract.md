@@ -1,96 +1,44 @@
-# Step 5: Save, test, and activate the Data Contract
+# Step 5: Link the Data Agreement and Activate
 
-**Use `01_governance` to save one immutable Data Contract version for one governed table, select and test that exact saved version in Engineering Development, then activate the selected version Production should resolve.**
+**Governance explicitly links the tested frozen Data Contract version to the required Data Agreement, then activates that version for Production resolution.**
 
-!!! info "Key concepts for this step"
+## High-level flow
 
-    **Data Agreement**, **Data Contract**, **Guardrails**, and **Governance as Code** explain what is being saved and why Production should resolve an immutable version rather than mutable authoring.
-
-    A Data Agreement records the provider-to-recipient Data Steward relationship. A Data Contract is table-centric: one contract lifecycle is tied to one governed `table_id` under one exact Data Agreement version. Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
-
-## Save, select, test, then activate
-
-Saving a Data Contract and promoting a notebook are separate lifecycle concerns. `widget_author_data_contract()` is the primary UX for authoring and freezing an exact draft Data Contract version. Engineering Development then uses `widget_select_data_contract()` to select and test that exact saved version. Governance can complete its required sign-off process before using `widget_activate_data_contract()` to designate the version Production should resolve.
-
-```mermaid
-flowchart LR
-    AUTHOR["Governance Authoring"] --> SAVE["Save Contract vN"] --> SELECT["Select vN"] --> TEST["Test vN"] --> ACTIVATE["Activate vN"] --> PROD["Production Resolves vN"]
-    TEST -. "Fail · refine and save new version" .-> AUTHOR
-
-    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class SAVE,ACTIVATE focal;
+```text
+tested frozen Data Contract version + selected Data Agreement
+                              ↓
+                  explicit Governance linkage
+                              ↓
+                    activate for Production
 ```
 
-**Save** creates an immutable Data Contract version. **Select** chooses the exact saved version Development should use. **Test** validates that selected version in Engineering Development. **Activate** designates the saved version Production may resolve. **Promote** moves the validated notebook/runtime artefact into Engineering Production using the organisation's deployment process; FabricOps does not currently perform that deployment step.
+!!! important "This linkage did not happen in Step 3"
 
-!!! important "Test and sign-off are workflow practice, not an activation gate"
-
-    FabricOps recommends testing the saved version and completing governance sign-off before activation. The current implementation does not technically require a recorded passing test or approval state before `widget_activate_data_contract()` can activate a saved version.
+    Step 3 authored and froze a table-centric definition: `table_id` plus Enrichment and Guardrails. Step 5 is the explicit governance decision that associates the tested version with the required Data Agreement and designates it for Production.
 
 ## Before you begin
 
-Confirm that the relevant Data Agreement exists, the table is registered in the Data Catalogue, Enrichment has been added where needed, and Guardrails plus target load strategy and parameters have been authored and re-validated in Engineering Development.
+Confirm Engineering Development selected and validated the exact frozen version for the same `table_id`. Identify the required Data Agreement and complete the organisation's review and sign-off practice.
 
-???+ success "Live — Save a versioned Data Contract"
+## What to do
 
-    1. Open `01_governance` in the Governance workspace.
-    2. Run `00_env_config`.
-    3. Open `widget_author_data_contract()` for the exact draft version.
-    4. Confirm the draft is pinned to the intended Data Agreement version and governed table.
-    5. Review the contract preview, including table structure, Enrichment, Guardrails, target load strategy and parameters, Data Stewards, and governed usages.
-    6. Save the Data Contract. FabricOps appends a new immutable draft version for that table lifecycle.
+1. In `01_governance`, select the tested frozen Data Contract version and review its `table_id`, immutable Enrichment, Guardrails, schema, and processing definition.
+2. Select the required Data Agreement and explicitly confirm the linkage between that Agreement and this tested version. Verify the provider and recipient Data Stewards, purpose, approved usages, and applicable Agreement version.
+3. Record any required governance sign-off through the organisation's operating process.
+4. Use `widget_activate_data_contract(...)` to activate that exact frozen version for its governed `table_id`.
+5. Confirm it is the one active Data Contract version Production will resolve.
 
-### What a saved Data Contract captures
+!!! warning "Test and sign-off are operating practice, not a technical activation gate"
 
-`widget_author_data_contract()` validates and freezes the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
+    The current implementation does not technically enforce a recorded passing Development test or approval state before activation. Governance must verify those conditions as operating practice before invoking activation.
 
-| Saved item | What is captured |
-| --- | --- |
-| Exact Data Agreement version | Agreement identity and version plus its name, domain, business purpose, validity dates, provider and recipient Steward IDs, and approved usages. |
-| Provider and recipient Data Stewards | The selected Stewards' IDs, names, roles, and contacts. |
-| Governed `table_id` and physical identity | The canonical `table_id` plus environment, store type, layer, schema, and table name from `METADATA_DATA_CATALOGUE`. |
-| Table structure / schema | The active Catalogue columns with their `column_id`, column name, and data type. |
-| Enrichment | Current table- and column-level `METADATA_ENRICHMENT` values, including enrichment level, type, and value. |
-| Active Guardrails | Active `METADATA_GUARDRAIL` rules, including the exact Guardrail version, type, rule identity, severity, and rule parameters. |
-| Target load strategy | The Catalogue `load_strategy`, such as `overwrite`, `append`, `scd1`, or `scd2`, when configured. |
-| Load-strategy parameters | The configured `load_strategy_parameters_json` values required by the selected target strategy. |
-| Governed usages | The selected approved-usage subset, which must remain within the parent Data Agreement's approved usages. |
-
-Runtime records are not part of the saved immutable definition. `METADATA_GUARDRAIL_RESULTS`, Source Observation evidence and run/audit state continue to describe individual executions rather than the contract itself.
-
-???+ success "Live — Understand the one-table contract boundary"
-
-    Each Data Contract lifecycle governs one canonical `table_id`. Multiple historical versions may exist for that table, and one Data Agreement can support multiple table-level Data Contracts.
-
-    Saving a new version does not mutate historical versions. The saved contract contains the exact governed definition shown above for that point in the lifecycle.
-
-??? info "Preview — Select and test the saved version in Development"
-
-    After the contract exists, return to `02_pipeline` in Engineering Development and use `widget_select_data_contract()` for the same table.
-
-    **Current authoring** uses mutable Governance Guardrails plus the Development-authored target load strategy and parameters.
-
-    **Data Contract vN** makes the same checks and target-write preparation use the saved immutable Guardrails, target load strategy, and load-strategy parameters from that exact contract version.
-
-    Run the pipeline and confirm the selected contract behaves as expected. The selector is read only. It does not activate or change the Data Contract.
-
-??? info "Preview — Complete governance sign-off and activate the selected version"
-
-    After the saved version has been tested in Development and any required governance sign-off has been completed, open `widget_activate_data_contract()` and activate that exact saved version for Production.
-
-    Manual activation is the current lifecycle mechanism. It selects the saved version FabricOps Production runtime should resolve, but it does not copy notebooks, move data, or implement the external approval/promotion workflow.
-
-    The activation widget does not currently verify a recorded Development test result or governance approval state. Those checks remain part of the operating process around the activation action.
-
-??? note "Planned — Notebook/runtime promotion"
-
-    FabricOps currently separates Data Contract saving, Development testing, governance sign-off, and activation from promotion into Engineering Production. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
+Activation changes Data Contract lifecycle state. It does not copy notebooks, deploy code, move data, or promote `02_pipeline`; promotion remains Step 6.
 
 ## Expected result
 
-You should now understand the Data Contract lifecycle as **save immutable version → select and test the saved version → activate the selected version**. Governance sign-off can sit between testing and activation as an operating requirement, but the current FabricOps implementation does not enforce it as a technical activation gate. Notebook/runtime promotion remains a separate lifecycle concern.
+The tested frozen Data Contract version is visibly associated with the required Data Agreement and is the one active version Production resolves for the governed `table_id`. No notebook has been promoted by this action.
 
-**Previous:** [Step 4: Validate with Guardrails / Data Contract](04-run-pipeline-with-guardrails.md)  
+**Previous:** [Step 4: Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)
 **Next:** [Step 6: Promote and run Production with the active Data Contract](06-promote-to-production.md)
 
-See also: [`widget_author_data_contract()`](../api/reference/widget_author_data_contract.md), [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
+See also: [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md) and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).

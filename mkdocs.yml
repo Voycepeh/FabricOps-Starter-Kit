@@ -33,10 +33,10 @@ nav:
           - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
           - "Unit 4 - Transform and Load": guided-demo/02-run-pipeline/transform-and-load.md
           - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md
-      - Step 3 - Review and Author Guardrails: guided-demo/03-enrich-guardrails.md
-      - Step 4 - Validate Guardrails: guided-demo/04-run-pipeline-with-guardrails.md
-      - Step 5 - Create and Activate Data Contract: guided-demo/05-create-data-contract.md
-      - Step 6 - Run Production with Active Contract: guided-demo/06-promote-to-production.md
+      - Step 3 - Author and Freeze Data Contract: guided-demo/03-enrich-guardrails.md
+      - Step 4 - Select and Validate Data Contract: guided-demo/04-run-pipeline-with-guardrails.md
+      - Step 5 - Link Data Agreement and Activate: guided-demo/05-create-data-contract.md
+      - Step 6 - Promote and Run Production: guided-demo/06-promote-to-production.md
       - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
   - Resources & Reference:
       - Notebook Templates: notebook-templates.md
