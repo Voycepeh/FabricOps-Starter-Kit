@@ -445,3 +445,46 @@ def freeze_contract_record(*, draft: Mapping[str, Any], payload: Mapping[str, An
     if draft.get("contract_payload_json") not in (None, ""):
         raise ValueError("Draft Data Contract version already has a canonical payload.")
     return {**dict(draft), "contract_payload_json": json.dumps(dict(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=False), "status": "frozen", "is_active": False, **dict(audit)}
+
+
+def freeze_contract(
+    *,
+    draft: Mapping[str, Any],
+    payload: Mapping[str, Any],
+    config: Any,
+    env: str,
+    spark_session: Any,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate and persist the immutable transition for one exact draft version."""
+    from delta.tables import DeltaTable
+
+    from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+
+    runtime_context = {"config": config, "env": env, **dict(context or {})}
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    frozen = coerce_metadata_row_types(
+        DATA_CONTRACT_TABLE,
+        freeze_contract_record(draft=draft, payload=payload, audit=audit),
+    )
+    frame = spark_session.createDataFrame(
+        [frozen], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]
+    )
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "metadata",
+        DATA_CONTRACT_TABLE,
+        metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        context=runtime_context,
+    )
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(
+            frame.alias("source"),
+            "target.contract_id = source.contract_id AND "
+            "target.contract_version = source.contract_version",
+        )
+        .whenMatchedUpdateAll()
+        .execute()
+    )
+    return frozen
