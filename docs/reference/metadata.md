@@ -1,8 +1,10 @@
 # List of Metadata Tables
 
-FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
+FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns authored governance definitions, while Engineering/runtime owns technical observations, profiling, Lineage, Access, and runtime results. Governed outputs, DQ `failed_rows` DataFrames, and optional Sensitive Data token mappings remain project-owned physical or support data rather than FabricOps metadata.
 
-`table_id` identifies the governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
+`table_id` is the canonical bridge for a governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
+
+`scan_workspace_access(...)` scans observable SQL permissions for registered governed physical tables across configured Fabric data items. It is not a complete Fabric authorization inventory and does not cover workspace roles, item sharing, OneLake Security, or Power BI security. For exploration, use **scan → inspect → no persistence**. For a pipeline or project workflow, use **scan → optional transform → optional generic persistence**.
 
 The cards below show the current implemented metadata tables and relationships.
 
@@ -296,7 +298,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See which registered tables participated as sources and targets in pipeline activities.</span>
+  <span class="metadata-table-card__purpose">See which registered tables participated as sources and targets in pipeline activities; the current notebook's Lineage defines Data Contract resolution scope.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One registered table participating as a source or target in one pipeline activity.</span>
@@ -323,7 +325,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Add business and governance context to the data.</span>
+  <span class="metadata-table-card__purpose">Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One appended enrichment value for one exact Data Contract version and optional column identity.</span>
@@ -356,7 +358,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See the SQL permissions observed for governed tables, including direct and role-based access.</span>
+  <span class="metadata-table-card__purpose">See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One observed SQL permission row for one principal and one governed table within one access snapshot.</span>
@@ -383,7 +385,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define the expectations the data used in the ETL pipeline should meet.</span>
+  <span class="metadata-table-card__purpose">Define enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements with Warn or Block actions.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>
@@ -422,7 +424,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See whether the expectations of the data in the ETL pipeline run are met.</span>
+  <span class="metadata-table-card__purpose">Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One runtime outcome for one Guardrail rule in one pipeline run.</span>

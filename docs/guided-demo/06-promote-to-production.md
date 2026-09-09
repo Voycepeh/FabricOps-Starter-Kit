@@ -1,4 +1,4 @@
-# Step 6: Promote and run Production with the active Data Contract
+# Step 6: Promote and Run Production
 
 **Promote the validated `02_pipeline` into Engineering Production, then run it so FabricOps resolves the one active Data Contract for each governed table automatically.**
 

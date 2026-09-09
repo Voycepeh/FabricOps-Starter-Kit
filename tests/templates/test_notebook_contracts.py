@@ -210,9 +210,9 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "Link the Data Agreement and Activate" in step_5
     assert "widget_activate_data_contract" in step_5
     assert "not a technical activation gate" in step_5
-    assert "Promote and run Production" in step_6
+    assert "Promote and Run Production" in step_6
     assert "Production never falls back to mutable authoring metadata" in step_6
-    assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote" in overview
+    assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production" in overview
 
 
 def test_02_pipeline_uses_public_cloneable_governed_blocks():

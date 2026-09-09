@@ -11,7 +11,8 @@ METADATA_DATA_CATALOGUE + METADATA_DATA_PROFILED
                          ↓
              Data Contract version
              ├── Enrichment
-             └── Guardrails
+             ├── Guardrails
+             └── immutable schema / processing definition
                          ↓
                   Review → Freeze
 ```

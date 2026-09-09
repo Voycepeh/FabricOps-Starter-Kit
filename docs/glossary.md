@@ -25,7 +25,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned definition of the guarantees and expectations for one governed table that downstream consumers can depend on.</summary>
-<p>In FabricOps, a Data Contract is tied to one governed table_id and one exact Data Agreement version. Each immutable contract version freezes the table identity and schema, processing definition, current enrichment, active Guardrails, approved usages, and the relevant Agreement and Data Steward context so consumers have a stable definition of what to expect from that table.</p>
+<p>In FabricOps, a Data Contract is authored for one governed table_id. Each frozen immutable version captures the table identity and schema, processing definition, current Enrichment, and active Guardrails. After Development validation, Governance explicitly links the tested frozen version to one exact Data Agreement version during activation for Production.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 

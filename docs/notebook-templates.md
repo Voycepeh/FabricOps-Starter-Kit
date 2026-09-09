@@ -37,9 +37,8 @@ Use it to:
 
 - create Data Stewards and Data Agreements
 - review Data Catalogue, Data Profiled, and Data Lineage records written by `02_pipeline`
-- add Enrichment
-- define Guardrails
-- create the Data Contract before promotion
+- select a governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the definition, and freeze an immutable Data Contract version
+- after Development validation, explicitly link the tested frozen version to a Data Agreement version and activate it for Production
 
 The operating pattern is **Governance → Engineering → Governance**: `01_governance` → `02_pipeline` → `01_governance`.
 
@@ -59,7 +58,8 @@ Use it to:
 - transform the data
 - profile source and target tables
 - write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records
-- read current authored Enrichment and Guardrails in Development, or frozen definitions from a selected or active Data Contract
+- discover linked `table_id` values from the current notebook's `METADATA_DATA_LINEAGE`
+- select one frozen Data Contract version per linked table in Development; resolve exactly one active version per linked table automatically in Production
 - evaluate Guardrails and write Guardrail Results
 - write the governed target output
 
@@ -95,4 +95,4 @@ Use it to:
 
 ## Next step
 
-Follow the [Guided Demo](guided-demo.md) to create the Data Agreement, run the Development pipeline, define Guardrails, re-validate the pipeline, create the Data Contract, promote to Production, and consume governed Production data.
+Follow the [Guided Demo](guided-demo.md) through **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**, then consume approved Production data.

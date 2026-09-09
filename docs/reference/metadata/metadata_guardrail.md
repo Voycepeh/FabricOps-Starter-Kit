@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL
 
-Define the expectations the data used in the ETL pipeline should meet.
+Define enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements with Warn or Block actions.
 
 ## Writer functions
 

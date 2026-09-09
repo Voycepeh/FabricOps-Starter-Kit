@@ -1,6 +1,6 @@
 # METADATA_DATA_LINEAGE
 
-See which registered tables participated as sources and targets in pipeline activities.
+See which registered tables participated as sources and targets in pipeline activities; the current notebook's Lineage defines Data Contract resolution scope.
 
 ## Writer functions
 
