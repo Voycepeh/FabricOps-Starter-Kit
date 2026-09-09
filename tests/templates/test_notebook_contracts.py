@@ -163,11 +163,8 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     required_functions = {
         "widget_render_data_steward",
         "widget_render_data_agreement",
-        "widget_register_data_contract",
+        "widget_author_data_contract",
         "widget_view_catalogue",
-        "widget_enrich_table_metadata",
-        "widget_author_guardrails",
-        "widget_author_dq_rules",
     }
 
     assert required_functions <= {node.id for tree in (

@@ -4,11 +4,11 @@ Add business and governance context to the data.
 
 ## Writer functions
 
-* [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
+* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Guardrail governance review
+* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
 
 ## Model
 

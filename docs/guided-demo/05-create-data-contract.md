@@ -10,7 +10,7 @@
 
 ## Save, select, test, then activate
 
-Saving a Data Contract and promoting a notebook are separate lifecycle concerns. `widget_register_data_contract()` saves a new immutable Data Contract version. Engineering Development then uses `widget_select_data_contract()` to select and test that exact saved version. Governance can complete its required sign-off process before using `widget_activate_data_contract()` to designate the version Production should resolve.
+Saving a Data Contract and promoting a notebook are separate lifecycle concerns. `widget_author_data_contract()` is the primary UX for authoring and freezing an exact draft Data Contract version. Engineering Development then uses `widget_select_data_contract()` to select and test that exact saved version. Governance can complete its required sign-off process before using `widget_activate_data_contract()` to designate the version Production should resolve.
 
 ```mermaid
 flowchart LR
@@ -35,14 +35,14 @@ Confirm that the relevant Data Agreement exists, the table is registered in the 
 
     1. Open `01_governance` in the Governance workspace.
     2. Run `00_env_config`.
-    3. Open `widget_register_data_contract()`.
-    4. Select the exact Data Agreement version and one governed table.
+    3. Open `widget_author_data_contract()` for the exact draft version.
+    4. Confirm the draft is pinned to the intended Data Agreement version and governed table.
     5. Review the contract preview, including table structure, Enrichment, Guardrails, target load strategy and parameters, Data Stewards, and governed usages.
     6. Save the Data Contract. FabricOps appends a new immutable draft version for that table lifecycle.
 
 ### What a saved Data Contract captures
 
-`widget_register_data_contract()` assembles the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
+`widget_author_data_contract()` validates and freezes the contract from the current `METADATA_DATA_AGREEMENT`, `METADATA_DATA_STEWARD`, `METADATA_DATA_CATALOGUE`, `METADATA_ENRICHMENT`, and active `METADATA_GUARDRAIL` records for the selected table.
 
 | Saved item | What is captured |
 | --- | --- |
@@ -93,4 +93,4 @@ You should now understand the Data Contract lifecycle as **save immutable versio
 **Previous:** [Step 4: Validate with Guardrails / Data Contract](04-run-pipeline-with-guardrails.md)  
 **Next:** [Step 6: Promote and run Production with the active Data Contract](06-promote-to-production.md)
 
-See also: [`widget_register_data_contract()`](../api/reference/widget_register_data_contract.md), [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
+See also: [`widget_author_data_contract()`](../api/reference/widget_author_data_contract.md), [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).

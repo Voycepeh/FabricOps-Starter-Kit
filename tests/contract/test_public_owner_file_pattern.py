@@ -31,6 +31,16 @@ SHARED_HELPER_FILENAMES = {
 # an existing package cannot be moved as part of the current PR scope.
 FORBIDDEN_FILENAME_ALLOWLIST: dict[str, set[str]] = {}
 
+# These Preview widgets were intentionally removed from the normal package
+# surface while their implementation remains available to the governance
+# notebook pending its separately scoped cleanup.
+IMPLEMENTATION_ONLY_WIDGETS = {
+    "widget_author_dq_rules",
+    "widget_author_guardrails",
+    "widget_enrich_table_metadata",
+    "widget_register_data_contract",
+}
+
 
 def _package_dirs() -> list[Path]:
     """Return first-level FabricOps package directories that contain Python files."""
@@ -152,6 +162,8 @@ def test_package_init_re_exports_public_owner_functions() -> None:
         assert init_path.exists(), f"{package_dir} must expose its supported surface through __init__.py."
 
         package_exports = _all_exports(init_path)
+        if package_dir.name == "widgets":
+            owner_public_functions -= IMPLEMENTATION_ONLY_WIDGETS
         assert owner_public_functions <= package_exports, (
             f"{init_path} should re-export public owner functions. "
             f"Missing: {sorted(owner_public_functions - package_exports)}"

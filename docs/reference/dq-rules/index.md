@@ -76,7 +76,7 @@ Supported conditional and column-comparison operators are `=`, `!=`, `>`, `>=`, 
 Column order is meaningful: this rule checks `end_date >= start_date`.
 
 !!! note "Freshness is a dedicated guardrail"
-    Use [`check_freshness()`](../../api/reference/check_freshness.md) and the Freshness section of `widget_author_guardrails()`. Freshness is not duplicated as a DQ rule.
+    Use [`check_freshness()`](../../api/reference/check_freshness.md) and the Freshness section of `widget_author_data_contract()`. Freshness is not duplicated as a DQ rule.
 
 !!! important "No custom-expression rule"
     FabricOps intentionally does not support free-form SQL, arbitrary Python, or plugin execution in the lightweight DQ vocabulary.

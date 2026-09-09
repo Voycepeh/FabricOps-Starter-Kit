@@ -4,12 +4,11 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 ## Writer functions
 
-* [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
-* [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
+* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Guardrail authoring
+* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
 
 ## Model
 
