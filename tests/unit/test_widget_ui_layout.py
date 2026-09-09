@@ -15,13 +15,9 @@ LIVE_WIDGETS = {
     "widget_author_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_register_data_contract",
     "widget_activate_data_contract",
     "widget_select_data_contract",
     "widget_view_catalogue",
-    "widget_enrich_table_metadata",
-    "widget_author_guardrails",
-    "widget_author_dq_rules",
 }
 
 

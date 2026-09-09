@@ -66,17 +66,13 @@ EXPECTED_V1_CALLABLES = [
     'widget_author_data_contract',
     'widget_render_data_steward',
     'widget_render_data_agreement',
-    'widget_enrich_table_metadata',
-    'widget_author_guardrails',
     'widget_view_catalogue',
-    'widget_register_data_contract',
     'widget_activate_data_contract',
     'widget_select_data_contract',
-    'widget_author_dq_rules',
 ]
 
-def test_public_callable_list_includes_guardrail_authoring_widgets():
-    """Verify public callable list includes guardrail authoring widgets."""
+def test_public_callable_list_matches_compact_authoring_surface():
+    """Verify the package root exposes only the compact authoring surface."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(EXPECTED_V1_CALLABLES)
     assert "get_selected_agreement" not in fabricops_kit.__all__
@@ -87,13 +83,10 @@ def test_widget_public_callables_live_under_widgets_package():
     import fabricops_kit.widgets as widgets
 
     widget_names = {
-        'widget_author_dq_rules',
-        'widget_author_guardrails',
+        'widget_author_data_contract',
         'widget_view_catalogue',
-        'widget_register_data_contract',
         'widget_activate_data_contract',
         'widget_select_data_contract',
-        'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
     }
@@ -113,13 +106,10 @@ def test_widget_modules_do_not_call_public_widget_functions():
     root = Path(__file__).parents[2]
     widgets_dir = root / "src" / "fabricops_kit" / "widgets"
     public_widget_names = {
-        'widget_author_dq_rules',
-        'widget_author_guardrails',
+        'widget_author_data_contract',
         'widget_view_catalogue',
-        'widget_register_data_contract',
         'widget_activate_data_contract',
         'widget_select_data_contract',
-        'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
     }
@@ -400,8 +390,20 @@ def test_99_explore_uses_metadata_catalogue_widget():
 def test_root_public_governance_and_widget_imports_still_work():
     """Verify supported root governance and widget imports remain available."""
     for name in [
-        "widget_author_dq_rules",
-        "widget_author_guardrails",
-        "widget_enrich_table_metadata",
+        "widget_author_data_contract",
+        "widget_render_data_steward",
+        "widget_render_data_agreement",
+        "widget_view_catalogue",
+        "widget_select_data_contract",
+        "widget_activate_data_contract",
     ]:
         assert callable(getattr(fabricops_kit, name))
+
+    for name in [
+        "widget_enrich_table_metadata",
+        "widget_author_guardrails",
+        "widget_author_dq_rules",
+        "widget_register_data_contract",
+    ]:
+        assert name not in fabricops_kit.__all__
+        assert not hasattr(fabricops_kit, name)

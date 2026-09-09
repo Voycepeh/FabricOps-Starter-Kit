@@ -123,7 +123,7 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
     assert offenders == []
 
 
-def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadata_cleanup():
+def test_public_callable_list_uses_compact_contract_authoring_surface():
     """Verify public callable list includes guardrail authoring helpers."""
     expected_public_callables = [
         'scan_workspace_access',
@@ -158,13 +158,9 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'widget_author_data_contract',
         'widget_render_data_steward',
         'widget_render_data_agreement',
-        'widget_enrich_table_metadata',
-        'widget_author_guardrails',
         'widget_view_catalogue',
-        'widget_register_data_contract',
             'widget_activate_data_contract',
             'widget_select_data_contract',
-            'widget_author_dq_rules',
     ]
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)

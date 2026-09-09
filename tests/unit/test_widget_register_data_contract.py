@@ -10,7 +10,7 @@ from types import ModuleType
 import pytest
 
 import fabricops_kit
-from fabricops_kit.widgets import widget_register_data_contract as public_widget
+from fabricops_kit.widgets.widget_register_data_contract import widget_register_data_contract
 from fabricops_kit.data_contract.shared import assemble_contract_payload, select_approved_usages
 from fabricops_kit.widgets.widget_register_data_contract import _contract_id
 
@@ -189,11 +189,12 @@ def test_payload_rejects_inactive_or_unknown_table():
         _assemble_payload(contract_id="c", contract_version=1, agreement=_agreement(), table_id="orders", usages=[], tables=sources, environment_name="dev")
 
 
-def test_public_export_remains_the_owner_entrypoint():
-    """Keep the entrypoint while deleting obsolete inventory helpers."""
+def test_owner_entrypoint_remains_implementation_only():
+    """Keep the implementation importable without restoring its public export."""
     module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
-    assert fabricops_kit.widget_register_data_contract is public_widget
-    assert module.widget_register_data_contract is public_widget
+    assert module.widget_register_data_contract is widget_register_data_contract
+    assert "widget_register_data_contract" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "widget_register_data_contract")
     assert not hasattr(module, "_latest_inventory")
     assert not hasattr(module, "_compare_schemas")
 

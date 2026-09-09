@@ -10,7 +10,7 @@ import pytest
 
 from fabricops_kit.widgets import enrichment_shared
 from fabricops_kit.data_contract import shared as contract_authoring
-from fabricops_kit.widgets import widget_enrich_table_metadata
+from fabricops_kit.widgets.widget_enrich_table_metadata import widget_enrich_table_metadata
 from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
 
