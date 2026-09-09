@@ -1,6 +1,6 @@
 # METADATA_DATA_ACCESS
 
-See the SQL permissions observed for governed tables, including direct and role-based access.
+See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.
 
 ## Writer functions
 

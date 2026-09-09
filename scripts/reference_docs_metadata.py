@@ -104,14 +104,16 @@ USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/config/": CONFIG_USAGE_NOTE,
 }
 
-METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns governance definitions, while Engineering owns discovered metadata and runtime results.
+METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns authored governance definitions, while Engineering/runtime owns technical observations, profiling, Lineage, Access, and runtime results. Governed outputs, DQ `failed_rows` DataFrames, and optional Sensitive Data token mappings remain project-owned physical or support data rather than FabricOps metadata.
 
-`table_id` identifies the governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version."""
+`table_id` is the canonical bridge for a governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
+
+`scan_workspace_access(...)` scans observable SQL permissions for registered governed physical tables across configured Fabric data items. It is not a complete Fabric authorization inventory and does not cover workspace roles, item sharing, OneLake Security, or Power BI security. For exploration, use **scan → inspect → no persistence**. For a pipeline or project workflow, use **scan → optional transform → optional generic persistence**."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the complete, immutable, versioned governed definition of one table under one exact Data Agreement version. Its canonical FabricOps payload freezes the agreement, stewardship, catalogue structure, enrichment, active Guardrail expectations, and narrowed approved usages needed for later approval and export.\n\n"
+    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. After Development validates that frozen version, activation explicitly links one exact Data Agreement version for Production.\n\n"
     "One Data Agreement can govern multiple Data Contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
@@ -200,7 +202,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_LINEAGE": {
-        "purpose": "See which registered tables participated as sources and targets in pipeline activities.",
+        "purpose": "See which registered tables participated as sources and targets in pipeline activities; the current notebook's Lineage defines Data Contract resolution scope.",
         "grain": "One registered table participating as a source or target in one pipeline activity.",
         "primary_key": ["lineage_id"],
         "foreign_keys": [
@@ -209,7 +211,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_ENRICHMENT": {
-        "purpose": "Add business and governance context to the data.",
+        "purpose": "Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.",
         "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
@@ -220,7 +222,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See the SQL permissions observed for governed tables, including direct and role-based access.",
+        "purpose": "See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.",
         "grain": "One observed SQL permission row for one principal and one governed table within one access snapshot.",
         "primary_key": ["access_id"],
         "foreign_keys": [
@@ -229,7 +231,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_GUARDRAIL": {
-        "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
+        "purpose": "Define enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements with Warn or Block actions.",
         "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
         "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
@@ -242,7 +244,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "See whether the expectations of the data in the ETL pipeline run are met.",
+        "purpose": "Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.",
         "grain": "One runtime outcome for one Guardrail rule in one pipeline run.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [

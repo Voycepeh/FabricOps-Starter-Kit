@@ -25,8 +25,8 @@
     "aliases": ["data contracts"],
     "category": "FabricOps concepts",
     "short_definition": "A versioned definition of the guarantees and expectations for one governed table that downstream consumers can depend on.",
-    "long_definition": "In FabricOps, a Data Contract is tied to one governed table_id and one exact Data Agreement version. Each immutable contract version freezes the table identity and schema, processing definition, current enrichment, active Guardrails, approved usages, and the relevant Agreement and Data Steward context so consumers have a stable definition of what to expect from that table.",
-    "preferred_usage": "Use data contract for the table-level governed expectations associated with one Data Agreement.",
+    "long_definition": "In FabricOps, a Data Contract is authored for one governed table_id. Each frozen immutable version captures the table identity and schema, processing definition, current Enrichment, and active Guardrails. After Development validation, Governance explicitly links the tested frozen version to one exact Data Agreement version during activation for Production.",
+    "preferred_usage": "Use data contract for table-level governed expectations; describe Data Agreement linkage only at activation.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
   },
   {

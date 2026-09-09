@@ -1,6 +1,6 @@
 # METADATA_ENRICHMENT
 
-Add business and governance context to the data.
+Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.
 
 ## Writer functions
 

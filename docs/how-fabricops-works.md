@@ -246,9 +246,9 @@ available when AI assistance is disabled or unavailable.
 <summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Select the frozen Data Contract in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
 <div class="fabricops-step-body" markdown>
 
-Engineering Development uses `widget_select_data_contract()` for each relevant `table_id`, selects the exact frozen version, and reruns the same `02_pipeline` with its saved immutable Guardrails and processing definition.
+Engineering Development uses `widget_select_data_contract()` in `02_pipeline`. FabricOps resolves the current `notebook_id`, follows `METADATA_DATA_LINEAGE` to every linked Source and Target `table_id`, and lets the developer select one exact frozen version independently for each table.
 
-The pipeline evaluates the governed expectations against the real ETL and writes Guardrail Results, plus row-level results where applicable.
+The pipeline evaluates the governed expectations against the real ETL and writes summary and continuation evidence to `METADATA_GUARDRAIL_RESULTS`. Any DQ `failed_rows` remain a caller-owned DataFrame; FabricOps does not persist failing business rows automatically.
 
 If the expectations do not yet work, the workflow returns to `01_governance` so Governance can refine the definition before Engineering validates it again.
 
@@ -280,7 +280,7 @@ After governance sign-off, Governance activates the linked version in `01_govern
 
 Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
 
-At runtime, the Production `02_pipeline` resolves the active Data Contract for each governed `table_id` and executes the pipeline against those saved immutable expectations.
+At runtime, Production uses the same current-notebook `METADATA_DATA_LINEAGE` scope. For every linked `table_id`, zero active contracts or more than one active contract fails resolution; exactly one active contract is used automatically. Production does not manually select contract versions.
 
 </div>
 </details>
@@ -304,22 +304,51 @@ Consumer workspaces do not recreate the Production pipeline or maintain their ow
 
 <div class="fabricops-section-block" markdown>
 
-## The core loop: author, freeze, select, validate, link, activate, promote
+## The contract transition
 
-The heart of FabricOps is the iterative loop between Governance and Engineering Development:
-
-```mermaid
-flowchart TD
-    AUTHOR["Author"] --> FREEZE["Freeze"] --> SELECT["Select"] --> VALIDATE["Validate"] --> LINK["Link Data Agreement"] --> ACTIVATE["Activate"] --> PROMOTE["Promote"] --> PROD["Production Resolves Active Contract"]
-    VALIDATE -. "Fail · author and freeze new version" .-> AUTHOR
-
-    classDef focal fill:#f2eff8,stroke:#6750a4,stroke-width:2px,color:#20242d;
-    class FREEZE,ACTIVATE focal;
-```
-
-The details live in the expandable workflow above. The key idea is simple: **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
+The lifecycle diagram and expandable steps above show the complete loop. The contract transition is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
 
 <!-- VIDEO SLOT: Governance as Code / core loop -->
+
+</div>
+
+<div class="fabricops-section-block" markdown>
+
+## The Data Contract boundaries
+
+**Authoring and activation are separate Governance decisions.**
+
+```mermaid
+flowchart LR
+    subgraph AUTHOR[Author]
+        TABLE["table_id"] --> CONTRACT["Data Contract version"]
+        CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
+        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Changes<br/>Data Quality · Sensitive Data"]
+        CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
+    end
+    subgraph ACTIVATE[Activate]
+        TESTED["Tested frozen Data Contract version"] --> LINK["Explicit linkage"]
+        AGREEMENT["Data Agreement version"] --> LINK
+        LINK --> ACTIVE["ACTIVE for Production"]
+    end
+```
+
+During **Author**, Enrichment is descriptive metadata only. Guardrails are enforced requirements with a **Warn** or **Block** action; a blocking requirement stops governed write continuation. No Data Agreement is linked while this table-centric definition is authored and frozen.
+
+During **Activate**, Governance selects and explicitly links the exact Data Agreement version only after the frozen Data Contract version has been tested.
+
+### Resolve by notebook Lineage
+
+```mermaid
+flowchart LR
+    NB["notebook_id"] --> LIN["METADATA_DATA_LINEAGE"]
+    LIN --> T["linked table_id values"]
+
+    T --> DEV["Development<br/>select frozen version per table_id"]
+    T --> PROD["Production<br/>resolve active version per table_id"]
+```
+
+Development selections are independent per linked `table_id`. Production has no manual selection and requires exactly one active version per linked `table_id`; zero or multiple active versions fail the run.
 
 </div>
 
@@ -333,7 +362,11 @@ The details live in the expandable workflow above. The key idea is simple: **Aut
 
 Engineering metadata describes the governed asset directly through `table_id`. Governance binds its governed definition to that asset through `METADATA_DATA_CONTRACT`; Enrichment and Guardrails belong to the contract definition and resolve the asset through the selected contract. Governance writes these authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads them during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
 
-The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data, such as DQ failure or PII mapping DataFrames, is separate again: FabricOps prepares it, and the project decides whether to keep it in memory or persist it in a project-approved location. The important point is not the number of tables; it is the clear ownership boundary and the Data Contract's role in bridging asset identity into contract-owned governance definitions.
+The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data is separate again: DQ `failed_rows` and Sensitive Data token mappings are caller-owned DataFrames that a project may inspect, discard, or optionally persist in an approved project-owned location.
+
+`METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not failing business rows. `check_sensitive_data()` returns governed/transformed data and may also return a token/support mapping; a project may keep it in memory or use `write_pii_token_map()` where appropriate. These DataFrames are not FabricOps metadata and are never persisted automatically. FabricOps does not prescribe a mandatory PII vault or detokenization framework.
+
+The important point is not the number of tables; it is the clear ownership boundary and the Data Contract's role in bridging asset identity into contract-owned governance definitions.
 
 <!-- VIDEO SLOT: Shared metadata model -->
 

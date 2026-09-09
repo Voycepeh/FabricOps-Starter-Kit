@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-See whether the expectations of the data in the ETL pipeline run are met.
+Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.
 
 ## Writer functions
 
