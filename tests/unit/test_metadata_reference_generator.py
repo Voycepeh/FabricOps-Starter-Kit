@@ -115,8 +115,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert 'href="metadata_data_profiled_frequency/"' in first_landing
 
     contract_page = first_pages["metadata_data_contract.md"]
-    assert "[`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)" in contract_page
-    assert "[`01_governance`](../../notebook-templates.md) — Contract registration" in contract_page
+    assert "[`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)" in contract_page
+    assert "widget_register_data_contract.md" not in contract_page
+    assert "[`01_governance`](../../notebook-templates.md) — Data Contract authoring" in contract_page
     assert contract_page.count("`METADATA_DATA_AGREEMENT` **(N → 1)**") == 1
     assert "via `agreement_id` + `agreement_version`" in contract_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page

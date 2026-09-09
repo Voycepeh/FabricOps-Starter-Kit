@@ -702,7 +702,7 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
 def test_public_callable_usage_notes_are_family_standardized() -> None:
     """Verify generated Usage notes come from path-first family defaults and overrides."""
     io_text = (API_REFERENCE_DIR / "read_lakehouse_table.md").read_text(encoding="utf-8")
-    widget_text = (API_REFERENCE_DIR / "widget_author_dq_rules.md").read_text(encoding="utf-8")
+    widget_text = (API_REFERENCE_DIR / "widget_author_data_contract.md").read_text(encoding="utf-8")
     pipeline_text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
     setup_text = (API_REFERENCE_DIR / "setup_metadata_tables.md").read_text(encoding="utf-8")
 

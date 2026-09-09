@@ -12,7 +12,7 @@ import pytest
 import fabricops_kit
 from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.data_contract import shared as contract_authoring
-from fabricops_kit.widgets import widget_author_guardrails
+from fabricops_kit.widgets.widget_author_guardrails import widget_author_guardrails
 guardrail_widget_module = __import__("importlib").import_module("fabricops_kit.widgets.widget_author_guardrails")
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
@@ -276,12 +276,16 @@ def test_classification_context_alone_does_not_create_sensitive_rule(monkeypatch
     assert editor["draft_rules"] == []
 
 
-def test_public_surface_keeps_two_standalone_authoring_widgets():
-    """Verify that the public surface keeps only the two standalone widgets."""
-    assert fabricops_kit.widget_author_guardrails is widget_author_guardrails
-    assert callable(fabricops_kit.widget_author_dq_rules)
-    assert "widget_select_guardrail_target" not in fabricops_kit.__all__
-    assert not hasattr(fabricops_kit, "widget_select_guardrail_target")
+def test_legacy_guardrail_widgets_are_implementation_only():
+    """Keep owner-module coverage without restoring the fragmented public API."""
+    from fabricops_kit.widgets.widget_author_dq_rules import widget_author_dq_rules
+
+    assert callable(widget_author_guardrails)
+    assert callable(widget_author_dq_rules)
+    assert "widget_author_guardrails" not in fabricops_kit.__all__
+    assert "widget_author_dq_rules" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "widget_author_guardrails")
+    assert not hasattr(fabricops_kit, "widget_author_dq_rules")
 
 
 def test_guardrail_records_use_only_stage4a_authoring_fields():

@@ -5,12 +5,12 @@ Establish a governed table version as a draft, then freeze its schema, processin
 ## Writer functions
 
 * [`widget_activate_data_contract`](../../api/reference/widget_activate_data_contract.md)
-* [`widget_register_data_contract`](../../api/reference/widget_register_data_contract.md)
+* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
 
 ## Used in Workflow Template
 
 * [`01_governance`](../../notebook-templates.md) — Contract activation
-* [`01_governance`](../../notebook-templates.md) — Contract registration
+* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
 
 ## Model
 

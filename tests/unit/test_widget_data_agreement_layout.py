@@ -11,10 +11,7 @@ import pytest
 import fabricops_kit.widgets.shared as shared
 import fabricops_kit.widgets.widget_render_data_agreement as agreement_widget
 import fabricops_kit.widgets.widget_render_data_steward as steward_widget
-import fabricops_kit.widgets as widgets_package
-from fabricops_kit.widgets import widget_register_data_contract as contract_callable
 contract_widget = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
-widgets_package.widget_register_data_contract = contract_callable
 from tests.helpers import agreement_config, agreement_row, steward_row
 from tests.unit.test_agreements import _FakeWidget, _FakeWidgets
 

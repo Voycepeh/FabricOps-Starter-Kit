@@ -315,7 +315,7 @@ expandEngineeringChoiceFromHash();
 
 ### AI-assisted Enrichment authoring
 
-`widget_enrich_table_metadata()` can explicitly request a Description and
+The Enrichment section of `widget_author_data_contract()` can explicitly request a Description and
 Classification suggestion through Microsoft Fabric AI Functions. The helper
 sends compact technical context only: metadata level, table or column name,
 data type, existing Description, relevant profile metrics, and configured

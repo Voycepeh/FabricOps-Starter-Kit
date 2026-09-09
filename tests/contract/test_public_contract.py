@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
+from fabricops_kit import widgets
 from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
 
 pytestmark = pytest.mark.contract
@@ -407,6 +408,20 @@ def test_package_root_expected_public_names_are_present() -> None:
     }
 
     assert expected_names <= set(fabricops_kit.__all__)
+
+
+def test_legacy_contract_authoring_widgets_are_not_public_exports() -> None:
+    """Verify fragmented Preview authoring widgets remain implementation-only."""
+    demoted = {
+        "widget_author_dq_rules",
+        "widget_author_guardrails",
+        "widget_enrich_table_metadata",
+        "widget_register_data_contract",
+    }
+
+    assert demoted.isdisjoint(fabricops_kit.__all__)
+    assert demoted.isdisjoint(widgets.__all__)
+    assert all(not hasattr(fabricops_kit, name) for name in demoted)
 
 
 def test_package_root_widget_exports_are_lazy() -> None:

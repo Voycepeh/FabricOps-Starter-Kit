@@ -123,7 +123,7 @@ def widget_author_data_contract(
 
     See Also
     --------
-    widget_register_data_contract, widget_activate_data_contract
+    widget_activate_data_contract
 
     """
     from IPython import display as ip
