@@ -21,6 +21,7 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
+    "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
     "fabricops_kit.access.scan_workspace_access",
     "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
     "fabricops_kit.pipeline.check_schema",

@@ -86,6 +86,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Established the configuration-driven engineering starter workflow through the `00_env_config` notebook template, centralizing environment and Fabric item configuration used by the supported I/O functions.
 - Stable Fabric lakehouse and warehouse read/write helpers as the only Live v0.1.0 public API surface.
 - Notebook templates, samples, skills, and DQ assets remain manually maintained outside the formal package release contract.
 - Generated lifecycle-aware release contracts and reference material.
