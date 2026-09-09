@@ -1,0 +1,21 @@
+{
+  "name": "fabricops-product-poc",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.339",
+    "@remotion/google-fonts": "4.0.339",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remotion": "4.0.339"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
+  }
+}
