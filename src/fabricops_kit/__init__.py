@@ -31,7 +31,6 @@ from .io import (
 from .pipeline import (
     check_changes,
     check_dq,
-    check_and_profile_source,
     check_freshness,
     check_schema,
     check_sensitive_data,
@@ -75,7 +74,6 @@ PIPELINE_EXPORTS = (
     "check_freshness",
     "check_changes",
     "check_dq",
-    "check_and_profile_source",
     "check_sensitive_data",
     "profile_and_register_table",
     "profile_dataframe",

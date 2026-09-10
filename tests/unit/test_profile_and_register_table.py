@@ -222,15 +222,8 @@ def test_profile_registration_call_flow_records_shared_frequency_implementation(
         for row in payload["relationships"]
         if row["caller_qualified_name"] == root["qualified_name"]
     }
-    assert not direct_callees
-    core_name = "fabricops_kit.pipeline.profile_and_register_table._profile_and_register_table_core"
-    core_callees = {
-        row["callee_qualified_name"]
-        for row in payload["relationships"]
-        if row["caller_qualified_name"] == core_name
-    }
-    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in core_callees
-    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in core_callees
+    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
 
 
 def test_profile_and_register_table_signature_requires_profile_role():
@@ -248,6 +241,8 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "frequency_top_n",
         "frequency_max_distinct_percent",
         "frequency_profile_df",
+        "processing_scope",
+        "register_profile",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty
 
@@ -958,3 +953,56 @@ def test_catalogue_upsert_preserves_asset_lifecycle_across_schema_evolution(
     register([("id", "bigint"), ("total_amount", "float"), ("customer_id", "string")])
     assert stored[("dev", "column", table_id, amount_id)]["is_active"] is False
     assert stored[("dev", "column", table_id, build_column_id(table_id, "total_amount"))]["is_active"] is True
+
+
+def test_incremental_source_profile_is_diagnostic(monkeypatch):
+    """Incremental subsets return a diagnostic profile without metadata writes."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda frame: ("diagnostic", frame))
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: pytest.fail("metadata registration"))
+    frame = object()
+
+    result = profile_and_register_table(
+        frame,
+        profile_role="source",
+        table={"table_id": "source"},
+        processing_scope={
+            "type": "watermark",
+            "column": "modified_datetime",
+            "lower_bound": 1,
+            "upper_bound": 2,
+            "lower_inclusive": False,
+            "upper_inclusive": True,
+        },
+    )
+
+    assert result == ("diagnostic", frame)
+
+
+def test_query_source_profile_can_remain_diagnostic(monkeypatch):
+    """A full but query-shaped source can explicitly avoid canonical registration."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda frame: ("diagnostic", frame))
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: pytest.fail("metadata registration"))
+    frame = object()
+
+    result = profile_and_register_table(
+        frame,
+        profile_role="source",
+        table={"table_id": "source"},
+        processing_scope={"type": "full_dataset"},
+        register_profile=False,
+    )
+
+    assert result == ("diagnostic", frame)
+
+
+def test_skipped_source_cannot_be_profiled():
+    """Skip preparation prevents downstream profiling work."""
+    with pytest.raises(ValueError, match="must not be profiled"):
+        profile_and_register_table(
+            object(),
+            profile_role="source",
+            table={"table_id": "source"},
+            processing_scope={"type": "skip"},
+        )

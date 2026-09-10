@@ -227,7 +227,6 @@ def test_02_pipeline_imports_required_public_apis_and_keeps_minimal_state():
         "write_pipeline_prep",
         "write_lakehouse_table",
         "profile_and_register_table",
-        "check_and_profile_source",
         "widget_select_data_contract",
         "widget_view_catalogue",
     ):
@@ -285,10 +284,12 @@ def test_02_pipeline_source_blocks_are_cloneable_and_compact():
 
     for index in (1, 2, 3):
         runner = _cell_by_id("02_pipeline.ipynb", f"source-{index}-run").source
-        assert runner.count("if ") <= 1
-        assert len(runner.splitlines()) <= 22
+        assert runner.count("if ") <= 2
+        assert len(runner.splitlines()) <= 28
         assert "read_pipeline_prep(" in runner
-        assert "check_and_profile_source(" in runner
+        assert "check_schema(" in runner
+        assert "check_dq(" in runner
+        assert "profile_and_register_table(" in runner
         assert "SOURCE_PREPS[SOURCE] = source_prep" in runner
         assert "SOURCE_DFS[SOURCE] = source_df" in runner
 
@@ -382,15 +383,25 @@ def test_02_pipeline_transformation_consumes_all_sources():
 
 
 def test_02_pipeline_delegates_canonical_vs_diagnostic_source_profiles():
-    """FabricOps owns profile mode while the SQL aggregate remains explicitly diagnostic."""
+    """The visible profiler receives scope while the SQL aggregate opts out of registration."""
     orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
     products = _cell_by_id("02_pipeline.ipynb", "source-2-run").source
     history = _cell_by_id("02_pipeline.ipynb", "source-3-run").source
 
-    assert "register_full_profile" not in orders + products
-    assert "register_full_profile=False" in history
+    assert 'processing_scope=source_prep["scope"]' in orders + products + history
+    assert "register_profile" not in orders + products
+    assert "register_profile=False" in history
     for branch_wall in ("observation", "changes", "check_freshness", "source_results"):
         assert branch_wall not in orders + products + history
+
+
+def test_02_pipeline_keeps_every_source_check_visible():
+    """Each source block names its schema and DQ Guardrails before profiling."""
+    for index in (1, 2, 3):
+        runner = _cell_by_id("02_pipeline.ipynb", f"source-{index}-run").source
+        assert runner.index("check_schema(") < runner.index("profile_and_register_table(")
+        assert runner.index("check_dq(") < runner.index("profile_and_register_table(")
+        assert 'source_dq["can_continue"]' in runner
 
 
 def test_02_pipeline_prepares_target_before_publication_and_uses_all_values():

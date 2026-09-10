@@ -27,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:822`
+`fabricops_kit/pipeline/profile_and_register_table.py:478`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L822-L1080">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L478-L838">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -64,6 +64,8 @@ def profile_and_register_table(
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
     frequency_profile_df=None,
+    processing_scope=None,
+    register_profile: bool=True,
 ):
 ```
 
@@ -95,6 +97,8 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold are skipped and produce no child frequency rows. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns remain skipped. Explicit ``frequency_columns`` selections override this threshold. |
 | `frequency_profile_df` | `pyspark.sql.DataFrame` | No | Optional caller-provided Spark DataFrame to use only for frequency distribution calculation. ``None`` preserves full-source frequency profiling. When supplied, it must contain every selected frequency column, may contain extra columns, and must use a compatible Spark session when this can be determined. The caller is responsible for preparing, persisting, refreshing, and governing this DataFrame; this function does not verify whether it is random, representative, sampled, persisted, or otherwise suitable for the caller's purpose. |
+| `processing_scope` | `mapping` | No | Runtime scope returned by ``read_pipeline_prep()["scope"]``. A source ``incremental_subset`` scope returns a diagnostic profile without writing canonical metadata. Full-dataset and omitted scopes retain canonical registration behaviour. |
+| `register_profile` | `bool` | No | Whether a full source profile represents the registered physical table and should become canonical metadata. Set to ``False`` for an engineer-authored query result that does not represent the complete registered table. Incremental subsets are diagnostic regardless of this value. |
 
 ## Returns
 
@@ -274,13 +278,79 @@ publication. Guardrail execution is a separate workflow.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 0 |
+| Live-critical dependencies | 61 |
 
 ### Release history
 
 | Status | Version |
 | --- | --- |
 | Live | 0.2.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_column_id</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.validate_processing_scope</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._automatic_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._normalize_choice</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._processing_definition</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._replace_frequency_rows</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._require_non_empty_string</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._scalar_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_frequency_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_processing_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_resolved_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
+</ul>
 
 
 </details>
