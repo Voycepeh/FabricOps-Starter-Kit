@@ -4,10 +4,10 @@ import {
   DataflowGen248Item,
   Environment48Item,
   Fabric48Color,
+  GroupWorkspace48NonItem,
   Lakehouse48Item,
   Notebook48Item,
   Pipeline48Item,
-  Workspace48Item,
 } from '@fabric-msft/svg-icons';
 import {theme} from '../theme';
 
@@ -27,7 +27,7 @@ export const SELECTED_FABRIC_ICONS = {
   environment: {icon: Environment48Item, label: 'Environment'},
   dataPipeline: {icon: Pipeline48Item, label: 'Data Pipeline'},
   dataflowGen2: {icon: DataflowGen248Item, label: 'Dataflow Gen2'},
-  workspace: {icon: Workspace48Item, label: 'Workspace'},
+  workspace: {icon: GroupWorkspace48NonItem, label: 'Workspace'},
 } as const;
 
 export const FabricIconCard = ({icon: Icon, label, style}: FabricIconCardProps) => (
