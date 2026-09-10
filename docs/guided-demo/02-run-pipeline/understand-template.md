@@ -1,8 +1,8 @@
 # Unit 1: Understand the `02_pipeline` template
 
-**`02_pipeline` is the reusable Engineering template for a complete FabricOps ETL run.**
+**`02_pipeline` is the reusable Engineering template for a complete FabricOps pipeline run.**
 
-You do not assemble the FabricOps lifecycle by calling every framework function yourself. The template already provides the standard structure around your project-specific ETL logic.
+You do not assemble the FabricOps lifecycle by calling every framework function yourself. The template already provides the standard structure around your project-specific processing logic.
 
 FabricOps deliberately uses the notebook as the visible governed engineering unit, while native Fabric Pipelines can orchestrate it when scheduling or dependencies are required. Read more in [Notebook first — vs Pipeline vs Dataflow Gen2](../../reference/engineering-cheat-sheet.md#notebook-first).
 
@@ -11,18 +11,18 @@ FabricOps deliberately uses the notebook as the visible governed engineering uni
 The notebook follows one visible engineering flow:
 
 ```text
-Environment → Extract → Transform → Load
+Environment → Read → Transform → Write
 ```
 
 FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, governed processing preparation, and target-backed incremental state where those capabilities are configured.
 
-In this notebook, **Extract**, **Transform**, and **Load** name the ETL stages. **Source** and **target** remain technical terms for the datasets and FabricOps configuration or lineage relationships used within those stages.
+In this notebook, **Read**, **Transform**, and **Write** name the user-facing stages. **Source** and **target** remain technical terms for datasets and FabricOps configuration, processing, and lineage relationships used within those stages.
 
 Your project mainly supplies:
 
-1. the Extract configuration,
+1. the Read configuration,
 2. the transformation logic,
-3. the Load configuration,
+3. the Write configuration,
 4. the processing strategy when incremental behaviour is required.
 
 ## Pipeline design rule
@@ -51,23 +51,23 @@ flowchart LR
 
 At this point in the learning path, no Guardrails or Data Contract have been created for the demo table.
 
-That is intentional. The same `02_pipeline` template can complete the ETL without those enforcement layers. In later modules you will add governance around this same pipeline rather than build a different pipeline.
+That is intentional. The same `02_pipeline` template can complete the pipeline without those enforcement layers. In later modules you will add governance around this same pipeline rather than build a different pipeline.
 
 ```text
-Step 2: run ETL and write Catalogue / Profiled / Lineage metadata
+Step 2: run the pipeline and write Catalogue / Profiled / Lineage metadata
         ↓
 Step 3: select table_id; author Enrichment + Guardrails; freeze the version
         ↓
-Step 4: select the frozen version and validate it in the same ETL
+Step 4: select the frozen version and validate it in the same pipeline
         ↓
 Step 5: link the tested version to the Data Agreement and activate it
         ↓
-Step 6: run the same ETL in Production against the active contract
+Step 6: run the same pipeline in Production against the active contract
 ```
 
 ## What stays project-owned
 
-FabricOps does not hide business transformations. Joins, filters, derivations, aggregations, enrichment, and reshaping remain visible in the **User defined transformation** section of the notebook.
+FabricOps does not hide business transformations. Joins, filters, derivations, aggregations, enrichment, and reshaping remain visible in the **Transform** section of the notebook.
 
 This separation lets the framework standardise the pipeline boundary while keeping business logic explicit and reviewable.
 
