@@ -149,6 +149,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'check_freshness',
             'check_changes',
             'check_dq',
+            'check_and_profile_source',
             'check_sensitive_data',
         'profile_and_register_table',
         'profile_dataframe',

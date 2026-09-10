@@ -222,8 +222,15 @@ def test_profile_registration_call_flow_records_shared_frequency_implementation(
         for row in payload["relationships"]
         if row["caller_qualified_name"] == root["qualified_name"]
     }
-    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
-    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
+    assert not direct_callees
+    core_name = "fabricops_kit.pipeline.profile_and_register_table._profile_and_register_table_core"
+    core_callees = {
+        row["callee_qualified_name"]
+        for row in payload["relationships"]
+        if row["caller_qualified_name"] == core_name
+    }
+    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in core_callees
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in core_callees
 
 
 def test_profile_and_register_table_signature_requires_profile_role():
