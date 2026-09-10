@@ -1,8 +1,8 @@
 export const VIDEO_CONFIG = {
   sizes: {
-    openingArtifactWidth: 220,
-    openingArtifactHeight: 168,
-    openingArtifactIcon: 120,
+    openingArtifactWidth: 240,
+    openingArtifactHeight: 184,
+    openingArtifactIcon: 132,
     notebookWidth: 440,
     notebookHeight: 230,
     contractWidth: 360,
@@ -12,7 +12,7 @@ export const VIDEO_CONFIG = {
   },
   text: {
     fabricHero: 126,
-    artifactLabel: 28,
+    artifactLabel: 24,
     hero: 164,
     title: 66,
     subtitle: 46,
