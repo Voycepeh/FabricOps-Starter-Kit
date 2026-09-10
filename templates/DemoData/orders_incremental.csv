@@ -1,0 +1,4 @@
+order_id,customer_id,order_datetime,modified_datetime,product_id,quantity,unit_price,discount,order_status,shipping_country
+O1013,C001,2026-08-07T09:10:00,2026-08-07T09:15:00,P002,1,89.00,0.00,PROCESSING,Singapore
+O1014,C009,2026-08-07T11:45:00,2026-08-07T11:50:00,P003,1,249.00,0.05,PROCESSING,Singapore
+O1015,C002,2026-08-07T15:20:00,2026-08-07T15:25:00,P006,1,159.00,0.00,SHIPPED,Singapore
