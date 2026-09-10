@@ -5,7 +5,7 @@ export const Root = () => (
   <Composition
     id="FabricOpsHero"
     component={FabricOpsHero}
-    durationInFrames={900}
+    durationInFrames={1800}
     fps={30}
     width={1920}
     height={1080}
