@@ -14,7 +14,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the operating model
 
 ## What you'll build
 
-You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A and 0B prepare and configure the environment before that workflow begins.**
+You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A prepares the Fabric artifacts and raw inputs, while 0B configures the environment and lands the managed demo sources before that workflow begins.**
 
 See the canonical stage-level lifecycle in [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop). This page keeps the detailed learning path below instead of repeating that diagram.
 
@@ -32,8 +32,8 @@ The demo is intentionally action-oriented. Each module tells you what to do, wha
 
 | Module | Workspace | Notebook | What you do | What FabricOps records / proves |
 | --- | --- | --- | --- | --- |
-| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items needed by the demo. | The operating environment exists and is ready for the notebook workflow. |
-| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` | Configure environment-aware Fabric routing and create or validate the Governance metadata tables. | Logical stores resolve to the correct environment-specific Fabric items. |
+| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items and upload the canonical raw Orders demo files. | The physical environment and raw inputs are ready for configuration-driven setup. |
+| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` + plain PySpark notebook | Configure environment-aware Fabric routing, create or validate Governance metadata tables, then read the raw demo files and seed the managed Lakehouse/Warehouse sources. | Logical stores resolve correctly and basic FabricOps I/O works from a plain configured notebook before `02_pipeline`. |
 | [1. Data Stewards and Data Agreement](guided-demo/01-create-agreement.md) | Governance | `01_governance` | Create provider and recipient Data Stewards and a Data Agreement. | The governed sharing relationship is established. |
 | [2. ETL, Profile, and Catalogue](guided-demo/02-run-pipeline.md) | Engineering Development | `02_pipeline` | Run the complete ETL for the governed target. | Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records are written for the governed `table_id`. |
 | [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Select the `table_id`, author Enrichment and Guardrails in the unified editor, review, and freeze the version. | One immutable, table-centric Data Contract version is ready for validation. |

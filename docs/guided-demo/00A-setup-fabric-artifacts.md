@@ -1,6 +1,6 @@
 # Step 0A: Prepare Fabric artifacts
 
-**Prepare the Fabric workspaces, stores, Environment, notebook templates, and demo files needed for the Guided Demo.**
+**Prepare the Fabric workspaces, stores, Environment, notebook templates, and raw demo files needed for the Guided Demo.**
 
 This is normally a one-time setup that you adapt to your own Fabric environment.
 
@@ -17,7 +17,7 @@ This is normally a one-time setup that you adapt to your own Fabric environment.
 ## High-level flow
 
 ```text
-Workspaces → Stores → Fabric Environment → Notebook templates → Demo data
+Workspaces → Stores → Fabric Environment → Notebook templates → Raw demo files
 ```
 
 ???+ success "Live — Create the Fabric workspaces"
@@ -49,6 +49,8 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
     These example names map approximately to **Bronze → Silver → Gold** as `source → unified → product`. They are not mandatory FabricOps names. Your own `00_env_config` can use `bronze`, `silver`, and `gold` directly, keep `source`, `unified`, and `product`, or define additional organisation-specific layers as required.
 
     For this Guided Demo, keep the example names `source`, `unified`, and `product` so the remaining steps match the supplied configuration and screenshots.
+
+    Create a `demo` schema in the schema-enabled Source Lakehouse, Unified Lakehouse, and Product Warehouse. The raw files themselves live under the Source Lakehouse `Files` area; the `demo` schema is used for the managed tables created from them in Step 0B.
 
     **Engineering Production**
 
@@ -88,19 +90,32 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
 
         Keep the notebook prefix and add the project or task name when useful, for example `01_governance_projectname` or `02_pipeline_emaildata`.
 
-???+ success "Live — Upload the Guided Demo data files"
+???+ success "Live — Upload the Guided Demo files"
 
-    Download the files from the GitHub [`templates/DemoData`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData) folder.
+    Download the files from the GitHub [`templates/DemoData`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData) folder and upload the canonical demo inputs to the Source Lakehouse under `Files/DemoData/`.
 
-    | Demo data | Purpose |
-    | --- | --- |
-    | `laptop_inventory_demo.csv` | Main demo dataset used across the governed workflow. |
-    | `demo.csv` | Simple CSV read example. |
-    | `demo.xlsx` | Simple Excel read example. |
-    | `demo.parquet` | Simple Parquet read example. |
+    The Guided Demo uses one coherent Orders story:
+
+    | Demo data | Business role | Prepare in Step 0A |
+    | --- | --- | --- |
+    | `orders.csv` | Transactional Orders baseline | Upload to `Files/DemoData/`. |
+    | `orders.json` | Format-equivalent Orders baseline | Upload to `Files/DemoData/`. |
+    | `orders.parquet` | Format-equivalent Orders baseline | Upload to `Files/DemoData/`. |
+    | `orders.xlsx` | Format-equivalent Orders baseline | Upload to `Files/DemoData/`. |
+    | `products.csv` | Product/reference data | Upload to `Files/DemoData/`. |
+    | `order_history.csv` | Historical customer/order data | Upload to `Files/DemoData/`. |
+    | `orders_incremental.csv` | Later Orders watermark batch | Upload to `Files/DemoData/` but keep separate from the baseline. |
+
+    `orders.csv`, `orders.json`, `orders.parquet`, and `orders.xlsx` contain the same 120-row logical Orders baseline. Step 0B uses one of those equivalent readers from a plain PySpark notebook, then lands the demo data into managed Lakehouse and Warehouse tables for the later `02_pipeline` walkthrough.
+
+    Additional partition and negative fixtures in `templates/DemoData` are used later for release acceptance and targeted validation; they are not part of the normal setup path.
+
+    !!! note "Do not seed the managed tables yet"
+
+        Step 0A stops at physical Fabric setup and raw-file upload. Step 0B deliberately performs the first FabricOps reads and writes so the demo can show configuration-driven engineering from a plain PySpark notebook before introducing the governed `02_pipeline` template.
 
 ## Expected result
 
-You should now have the required workspaces, configured stores, Fabric Environment, editable notebook copies, and demo data files.
+You should now have the required workspaces, configured stores, Fabric Environment, editable notebook copies, the `demo` schemas, and the canonical raw demo files under the Source Lakehouse `Files/DemoData/` path.
 
 **Next:** [Step 0B: Set up the operating environment](00B-run-environment-setup.md).
