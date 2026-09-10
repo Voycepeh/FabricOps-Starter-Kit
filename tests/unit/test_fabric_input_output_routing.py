@@ -92,6 +92,31 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     assert metadata_spark.table_calls == []
 
 
+def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
+    """A canonical table identity removes physical-coordinate notebook wiring."""
+    from fabricops_kit.pipeline import shared as pipeline_shared
+
+    config = _schema_io_config()
+    context = {"config": config, "env": "dev"}
+    spark = _Spark()
+    monkeypatch.setattr(
+        pipeline_shared,
+        "resolve_catalogue_table_identity",
+        lambda *_args, **_kwargs: {
+            "table_id": "orders-id",
+            "store_type": "lakehouse",
+            "target": "unified",
+            "schema": "dbo",
+            "table_name": "orders",
+        },
+    )
+
+    io.read_lakehouse_table(table_id="orders-id", spark_session=spark, context=context)
+
+    expected = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/dbo/orders"
+    assert ("load", expected) in spark.read.calls
+
+
 def test_lakehouse_table_write_routes_to_configured_store():
     """Verify lakehouse table write routes to configured store."""
     config = _io_config()

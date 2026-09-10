@@ -14,8 +14,9 @@ from .shared import (
 
 
 def read_lakehouse_table(
-    table_name: str,
+    table_name: str | None = None,
     *,
+    table_id: str | None = None,
     target: str = "source",
     schema: str | None = None,
     spark_session=None,
@@ -45,9 +46,12 @@ def read_lakehouse_table(
 
     Parameters
     ----------
-    table_name : str
+    table_name : str, optional
         Lakehouse table name. Pass schemas with ``schema`` rather than as a
-        qualified name.
+        qualified name. Omit it when ``table_id`` is supplied.
+    table_id : str, optional
+        Canonical registered table identity. When supplied, FabricOps resolves
+        ``table_name``, ``target``, and ``schema`` from the Catalogue.
     target : str, default="source"
         Logical Lakehouse target from ``00_env_config``, such as ``source`` or
         ``unified``. FabricOps resolves this target to the configured physical
@@ -112,6 +116,24 @@ def read_lakehouse_table(
     DataFrame.
 
     """
+    if table_id is not None:
+        if table_name is not None or target != "source" or schema is not None:
+            raise ValueError("table_id cannot be combined with table_name, target, or schema.")
+        from fabricops_kit.config.shared import resolve_fabric_context
+        from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
+
+        config, env, resolved_context = resolve_fabric_context(context=context)
+        identity = resolve_catalogue_table_identity(
+            config, env, table_id, spark_session=spark_session, context=resolved_context,
+        )
+        if identity["store_type"] != "lakehouse":
+            raise ValueError(f"table_id {table_id!r} does not identify a Lakehouse table.")
+        table_name = identity["table_name"]
+        target = identity["target"]
+        schema = identity["schema"]
+        context = resolved_context
+    if table_name is None:
+        raise ValueError("Provide table_name or table_id.")
     scope = None if processing_scope is None else validate_processing_scope(processing_scope)
     if scope is not None and scope["type"] == "skip":
         raise ValueError("The current source was resolved to skip and must not be read.")

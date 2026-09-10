@@ -488,6 +488,8 @@ def profile_and_register_table(
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
     frequency_profile_df=None,
+    processing_scope: Mapping[str, Any] | None = None,
+    complete_table: bool = True,
 ):
     """Profile a supplied Spark DataFrame and save its metadata records.
     
@@ -562,6 +564,13 @@ def profile_and_register_table(
         preparing, persisting, refreshing, and governing this DataFrame; this
         function does not verify whether it is random, representative, sampled,
         persisted, or otherwise suitable for the caller's purpose.
+    processing_scope : mapping, optional
+        Runtime scope returned by ``read_pipeline_prep``. Watermark, partition,
+        multiple-source, and skip scopes are diagnostic and are not persisted
+        as the canonical full-table profile.
+    complete_table : bool, default=True
+        Whether the DataFrame represents the complete physical registered
+        table. Set ``False`` for custom query results.
     
     Returns
     -------
@@ -737,6 +746,9 @@ def profile_and_register_table(
         normalized_profile_role, load_strategy, load_strategy_parameters
     )
     _validate_processing_columns(df, write_parameters_json)
+    scope_type = str((processing_scope or {"type": "full_dataset"}).get("type") or "")
+    if not complete_table or scope_type != "full_dataset":
+        return build_profile_dataframe(df)
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)

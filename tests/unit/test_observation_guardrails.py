@@ -292,9 +292,15 @@ def test_governed_guardrail_public_signatures_are_minimal():
     import inspect
     from fabricops_kit import check_schema
 
-    assert str(inspect.signature(check_schema)) == "(table_id: str, *, dataframe=None) -> dict"
-    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None) -> dict"
-    assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
+    assert str(inspect.signature(check_schema)) == "(table_id: str, *, dataframe=None, enabled: bool = True, raise_on_failure: bool = False) -> dict"
+    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None, enabled: bool = True, raise_on_failure: bool = False) -> dict"
+
+
+def test_guardrail_checks_can_skip_before_contract_metadata_exists():
+    from fabricops_kit import check_schema
+
+    assert check_schema("orders", enabled=False)["can_continue"] is True
+    assert check_freshness(None, enabled=False)["can_continue"] is True
 
 
 def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
@@ -390,7 +396,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
     )]
 
 
-def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
+def test_schema_can_raise_on_blocking_result(monkeypatch):
     schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
     result = {
         "status": "failed",
@@ -414,6 +420,9 @@ def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: result)
     monkeypatch.setattr(schema_module, "schema_check_core", lambda *args, **kwargs: result.copy())
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: events.append("recorded"))
-    monkeypatch.setattr(schema_module, "stop_if_failed", lambda checked: events.append(("gate", checked["can_continue"])))
-    schema_module.check_schema("catalogue-orders", dataframe=object())
-    assert events == ["recorded", ("gate", False)]
+    returned = schema_module.check_schema("catalogue-orders", dataframe=object())
+    assert returned["can_continue"] is False
+    assert events == ["recorded"]
+
+    with pytest.raises(RuntimeError, match="blocking schema Guardrail"):
+        schema_module.check_schema("catalogue-orders", dataframe=object(), raise_on_failure=True)

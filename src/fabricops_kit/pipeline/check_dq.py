@@ -11,6 +11,8 @@ def check_dq(
     dataset_name: str = "",
     run_id: str = "",
     row_identity_columns: list[str] | None = None,
+    enabled: bool = True,
+    raise_on_failure: bool = False,
 ) -> dict:
     """Evaluate active governed DQ rules and persist runtime evidence.
 
@@ -29,6 +31,11 @@ def check_dq(
         Business-key columns used for row identity. When omitted, an existing
         row UUID/ID is preferred and a deterministic content hash is the
         fallback.
+    enabled : bool, default=True
+        Whether Data Contract validation is enabled for this notebook run.
+        ``False`` returns a continuation-safe skipped result without metadata IO.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking DQ result cannot continue.
 
     Returns
     -------
@@ -48,7 +55,8 @@ def check_dq(
         If configured identity columns are absent or governed rule metadata is
         invalid.
     RuntimeError
-        If Spark is unavailable in the Microsoft Fabric runtime.
+        If Spark is unavailable in the Microsoft Fabric runtime, or
+        ``raise_on_failure=True`` and a blocking DQ result cannot continue.
 
     Notes
     -----
@@ -71,14 +79,19 @@ def check_dq(
     check_schema, check_freshness, check_changes
 
     """
+    if not enabled:
+        return {"status": "skipped", "can_continue": True, "checks": []}
     config, env, context = resolve_fabric_context()
     spark_session = getattr(dataframe, "sparkSession", None)
     identity = resolve_catalogue_table_identity(
         config, env, table_id, spark_session=spark_session, context=context,
     )
-    return check_dq_runtime(
+    result = check_dq_runtime(
         dataframe, config, env, identity["table_name"], table_id=identity["table_id"],
         target=identity["target"], store_type=identity["store_type"], schema_name=identity["schema"],
         dataset_name=dataset_name, run_id=run_id,
         row_identity_columns=row_identity_columns, context=context,
     )
+    if raise_on_failure and not result["can_continue"]:
+        raise RuntimeError(f"A blocking DQ Guardrail failed for table_id {identity['table_id']!r}.")
+    return result

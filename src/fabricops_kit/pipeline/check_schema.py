@@ -14,13 +14,15 @@ from fabricops_kit.pipeline.shared import (
     schema_check_core,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.shared import stop_if_failed, write_guardrail_result_row
+from fabricops_kit.pipeline.shared import write_guardrail_result_row
 
 
 def check_schema(
     table_id: str,
     *,
     dataframe=None,
+    enabled: bool = True,
+    raise_on_failure: bool = False,
 ) -> dict:
     """Check a persisted or supplied schema against configured schema intent.
 
@@ -31,6 +33,11 @@ def check_schema(
     dataframe : DataFrame, optional
         Incoming DataFrame whose schema should be checked. When omitted, the
         schema of the configured physical table is checked.
+    enabled : bool, default=True
+        Whether Data Contract validation is enabled for this notebook run.
+        ``False`` returns a continuation-safe skipped result without metadata IO.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking schema result cannot continue.
 
     Returns
     -------
@@ -44,8 +51,9 @@ def check_schema(
     ValueError
         If the target is unsupported or no active approved Schema guardrail
         exists for the resolved table.
-    SchemaDriftError
-        If an active blocking schema guardrail rejects the checked schema.
+    RuntimeError
+        If ``raise_on_failure=True`` and a blocking schema result cannot
+        continue.
 
     Notes
     -----
@@ -59,6 +67,8 @@ def check_schema(
     True
 
     """
+    if not enabled:
+        return {"status": "skipped", "can_continue": True, "checks": []}
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     identity = resolve_catalogue_table_identity(
@@ -119,5 +129,6 @@ def check_schema(
             schema_name=schema_name, guardrail_type="schema",
             rule_type=str(result.get("rule_type")), result=result,
         )
-    stop_if_failed(result)
+    if raise_on_failure and not result["can_continue"]:
+        raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result

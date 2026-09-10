@@ -36,7 +36,13 @@ def _is_source_observation(observation) -> bool:
     return _OBSERVATION_COLUMNS <= columns
 
 
-def check_freshness(observation, *, table_id: str | None = None) -> dict:
+def check_freshness(
+    observation,
+    *,
+    table_id: str | None = None,
+    enabled: bool = True,
+    raise_on_failure: bool = False,
+) -> dict:
     """Check whether a source satisfies configured freshness intent.
     
     Parameters
@@ -46,12 +52,25 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
     table_id : str, optional
         Canonical registered table identity. When supplied, it must match the
         identity carried by the observation.
+    enabled : bool, default=True
+        Whether Data Contract validation is enabled for this notebook run.
+        ``False`` returns a continuation-safe skipped result without metadata IO.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking freshness result cannot continue.
     
     Returns
     -------
     dict
         Structured freshness evidence and continuation decision. Governed
         observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.
+
+    Raises
+    ------
+    ValueError
+        If the observation or configured freshness rule is invalid.
+    RuntimeError
+        If ``raise_on_failure=True`` and a blocking freshness result cannot
+        continue.
 
     Notes
     -----
@@ -64,6 +83,8 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
     >>> result = check_freshness(observation)
 
     """
+    if not enabled:
+        return {"status": "skipped", "can_continue": True, "checks": []}
     if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
     rows = observation_rows(observation)
@@ -148,4 +169,6 @@ def check_freshness(observation, *, table_id: str | None = None) -> dict:
             rule_type=str(result.get("rule_type") or ""),
             result=result,
         )
+    if raise_on_failure and not result["can_continue"]:
+        raise RuntimeError(f"A blocking freshness Guardrail failed for table_id {table_id!r}.")
     return result

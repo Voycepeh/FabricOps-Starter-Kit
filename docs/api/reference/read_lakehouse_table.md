@@ -37,7 +37,7 @@ Source Lakehouse as Delta first, then read it with this callable.
 
 `fabricops_kit/io/read_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L16-L122">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L16-L144">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -61,7 +61,8 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 
 ```python
 def read_lakehouse_table(
-    table_name: str,
+    table_name: str | None=None,
+    table_id: str | None=None,
     target: str='source',
     schema: str | None=None,
     spark_session=None,
@@ -87,7 +88,8 @@ catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", target="metadata"
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. |
+| `table_name` | `str \| None` | No | Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied. |
+| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``target``, and ``schema`` from the Catalogue. |
 | `target` | `str` | No | Logical Lakehouse target from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path. |
 | `schema` | `str \| None` | No | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
@@ -160,7 +162,7 @@ DataFrame.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 20 |
+| Live-critical dependencies | 23 |
 
 ### Release history
 
@@ -188,10 +190,13 @@ DataFrame.
 <li><code>fabricops_kit.io.shared.apply_lakehouse_processing_scope</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.read_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.validate_processing_scope</code></li>
+<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 </ul>
 
 

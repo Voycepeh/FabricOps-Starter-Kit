@@ -12,9 +12,9 @@ Select catalogue evidence through an explicit pipeline, agreement, or explore da
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_catalogue.py:545`
+`fabricops_kit/widgets/widget_view_catalogue.py:598`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L545-L680">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L598-L735">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -74,7 +74,9 @@ def widget_view_catalogue(
 ## Returns
 
 dict
-    Common state with ``get_selection``, ``get_views``, and ``refresh``.
+    Common state with ``get_selection``, ``get_views``, ``refresh``, and
+    ``show``. ``show(table_id=...)`` refreshes and displays Catalogue,
+    Profile, and Frequency metadata for one canonical table identity.
     ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,
     and ``guardrail_results`` Spark DataFrames.
     Catalogue and profile views expose readable asset/column fields first;

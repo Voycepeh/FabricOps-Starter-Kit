@@ -13,7 +13,11 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.check_changes import _observation_changes
 from fabricops_kit.pipeline.observe_table import _observe_table_core
-from fabricops_kit.pipeline.shared import persist_lineage_participation, resolve_catalogue_table_identity
+from fabricops_kit.pipeline.shared import (
+    persist_lineage_participation,
+    resolve_catalogue_table_identity,
+    resolve_physical_table_identity,
+)
 
 
 _SOURCE_STRATEGIES = {"full_dataset", "incremental_watermark", "incremental_partition"}
@@ -316,10 +320,16 @@ def _watermark_scope(
 
 
 def read_pipeline_prep(
-    source_table_id: str,
+    source_table_id: str | None = None,
     *,
+    source_target: str | None = None,
+    source_schema: str | None = None,
+    source_table: str | None = None,
     source_read_strategy: str,
     target_table_id: str | None = None,
+    target_target: str | None = None,
+    target_schema: str | None = None,
+    target_table: str | None = None,
     source_watermark_column: str | None = None,
     source_partition_column: str | None = None,
 ) -> dict[str, Any]:
@@ -327,14 +337,29 @@ def read_pipeline_prep(
 
     Parameters
     ----------
-    source_table_id : str
-        Canonical identity of one registered source table. FabricOps resolves
-        its physical coordinates from the Catalogue.
+    source_table_id : str, optional
+        Canonical identity of one registered source table. Omit it and supply
+        ``source_target``, ``source_schema``, and ``source_table`` to resolve
+        the same identity deterministically from configured physical identity.
+    source_target : str, optional
+        Configured source target key. Mutually exclusive with ``source_table_id``.
+    source_schema : str, optional
+        Physical source schema, when the configured store uses schemas.
+    source_table : str, optional
+        Physical source table name. Required with ``source_target`` when
+        ``source_table_id`` is omitted.
     source_read_strategy : {"full_dataset", "incremental_watermark", "incremental_partition"}
         Engineer-authored rule for identifying source data to process.
     target_table_id : str or None, default=None
         Governed target whose ``_watermark_value`` or ``_partition_bucket``
         stores successful incremental progress. Required for incremental strategies.
+    target_target : str, optional
+        Configured target key used for target-backed incremental progress.
+    target_schema : str, optional
+        Physical target schema, when the configured store uses schemas.
+    target_table : str, optional
+        Physical target table name. Required with ``target_target`` when
+        ``target_table_id`` is omitted for incremental processing.
     source_watermark_column : str or None, default=None
         Physical source progress column required by ``incremental_watermark``.
     source_partition_column : str or None, default=None
@@ -388,14 +413,19 @@ def read_pipeline_prep(
         watermark_column=source_watermark_column,
         partition_column=source_partition_column,
     )
-    if source_processing["read_strategy"] in {"incremental_watermark", "incremental_partition"} and (
-        not isinstance(target_table_id, str) or not target_table_id.strip()
-    ):
-        raise ValueError(f"target_table_id is required for {source_processing['read_strategy']} target-state resolution.")
+    if not source_table_id and (source_target is None or source_table is None):
+        raise ValueError("Provide source_table_id or both source_target and source_table.")
     config, env, context = resolve_fabric_context()
-    source_identity = resolve_catalogue_table_identity(
-        config, env, source_table_id, context=context
-    )
+    source_coordinates = (source_target, source_schema, source_table)
+    if source_table_id and any(value is not None for value in source_coordinates):
+        raise ValueError("source_table_id cannot be combined with source_target, source_schema, or source_table.")
+    if source_table_id:
+        source_identity = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
+    else:
+        source_identity = resolve_physical_table_identity(
+            config, env, target=source_target, schema=source_schema, table_name=source_table
+        )
+    source_identity["store_type"] = source_identity.get("store_type") or source_identity["store_kind"]
     source_identity["store_kind"] = source_identity["store_type"]
     persist_lineage_participation(
         table_id=str(source_identity["table_id"]),
@@ -407,9 +437,21 @@ def read_pipeline_prep(
     changes = None
     if strategy == "full_dataset":
         runtime = {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}
-    elif strategy == "incremental_watermark":
-        target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+    else:
+        target_coordinates = (target_target, target_schema, target_table)
+        if not target_table_id and (target_target is None or target_table is None):
+            raise ValueError("Provide target_table_id or both target_target and target_table for incremental processing.")
+        if target_table_id and any(value is not None for value in target_coordinates):
+            raise ValueError("target_table_id cannot be combined with target_target, target_schema, or target_table.")
+        if target_table_id:
+            target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+        else:
+            target_identity = resolve_physical_table_identity(
+                config, env, target=target_target, schema=target_schema, table_name=target_table
+            )
+        target_identity["store_type"] = target_identity.get("store_type") or target_identity["store_kind"]
         target_identity["store_kind"] = target_identity["store_type"]
+    if strategy == "incremental_watermark":
         spark = get_spark_session()
         runtime = _watermark_scope(
             source_identity,
@@ -420,9 +462,7 @@ def read_pipeline_prep(
             spark_session=spark,
             context=context,
         )
-    else:
-        target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
-        target_identity["store_kind"] = target_identity["store_type"]
+    elif strategy == "incremental_partition":
         spark = get_spark_session()
         successful_partitions = _target_partitions(
             target_identity, spark_session=spark, context=context,
@@ -437,6 +477,7 @@ def read_pipeline_prep(
         }
         runtime = _partition_scope(changes, change_processing, source_processing["partition_column"])
     return {
+        "table_id": source_identity["table_id"],
         "source": source_identity,
         **({"target": target_identity} if strategy in {"incremental_watermark", "incremental_partition"} else {}),
         "source_processing": source_processing,

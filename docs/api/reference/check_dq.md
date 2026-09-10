@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:7`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L84">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L97">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -42,6 +42,8 @@ def check_dq(
     dataset_name: str='',
     run_id: str='',
     row_identity_columns: list[str] | None=None,
+    enabled: bool=True,
+    raise_on_failure: bool=False,
 ) -> dict:
 ```
 
@@ -67,6 +69,8 @@ True
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
 | `run_id` | `str` | No | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
+| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
+| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking DQ result cannot continue. |
 
 ## Returns
 
@@ -78,7 +82,8 @@ ValueError
     If configured identity columns are absent or governed rule metadata is
     invalid.
 RuntimeError
-    If Spark is unavailable in the Microsoft Fabric runtime.
+    If Spark is unavailable in the Microsoft Fabric runtime, or
+    ``raise_on_failure=True`` and a blocking DQ result cannot continue.
 
 ## Notes
 

@@ -14,7 +14,7 @@ Check whether source timing satisfies direct or approved freshness intent.
 
 `fabricops_kit/pipeline/check_freshness.py:39`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L39-L151">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L39-L174">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,7 +36,12 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_freshness(observation, *, table_id: str | None=None) -> dict
+def check_freshness(
+    observation,
+    table_id: str | None=None,
+    enabled: bool=True,
+    raise_on_failure: bool=False,
+) -> dict:
 ```
 
 </div>
@@ -56,6 +61,8 @@ def check_freshness(observation, *, table_id: str | None=None) -> dict
 | --- | --- | --- | --- |
 | `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
 | `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, it must match the identity carried by the observation. |
+| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
+| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking freshness result cannot continue. |
 
 ## Returns
 
@@ -63,7 +70,11 @@ Structured freshness evidence and continuation decision.
 
 ## Raises / Errors
 
-Not documented yet
+ValueError
+    If the observation or configured freshness rule is invalid.
+RuntimeError
+    If ``raise_on_failure=True`` and a blocking freshness result cannot
+    continue.
 
 ## Notes
 

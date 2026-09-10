@@ -232,8 +232,8 @@ def test_02_pipeline_imports_required_public_apis_and_keeps_minimal_state():
     ):
         assert name in imports
 
-    assert "SOURCE_PREPS = {}" in imports
-    assert "SOURCE_DFS = {}" in imports
+    assert "EXTRACT_PREPS = {}" in imports
+    assert "EXTRACT_DFS = {}" in imports
     assert "PIPELINE_SHOULD_RUN = True" in imports
 
     for removed_state in (
@@ -254,200 +254,147 @@ def test_02_pipeline_imports_required_public_apis_and_keeps_minimal_state():
     assert "from fabricops_kit.io" not in source
 
 
-def test_02_pipeline_renders_shared_widgets_once():
-    """Catalogue and Development contract selection are notebook-scoped controls."""
+def test_02_pipeline_renders_notebook_scoped_controls_once():
+    """Contract and Catalogue widgets remain notebook-scoped, not identity inputs."""
     source = _notebook_source("02_pipeline.ipynb")
     controls = _cell_by_id("02_pipeline.ipynb", "shared-catalogue").source
 
     assert source.count("widget_view_catalogue(") == 1
     assert source.count("widget_select_data_contract(") == 1
-    assert 'catalogue_widget = widget_view_catalogue(' in controls
     assert "VALIDATE_DATA_CONTRACTS = False" in controls
-    assert "CONTRACT_SELECTION = (" in controls
-
-    for cell_id in ("source-1-run", "source-2-run", "source-3-run", "target-config"):
-        assert 'catalogue_widget["get_selection"]()' in _cell_by_id("02_pipeline.ipynb", cell_id).source
-
-
-def test_02_pipeline_source_blocks_are_cloneable():
-    """Every source uses the same config names and identical execution skeleton."""
-    required_names = (
-        "SOURCE =",
-        "SOURCE_NAME =",
-        "SOURCE_STORE_TYPE =",
-        "SOURCE_TARGET =",
-        "SOURCE_SCHEMA =",
-        "SOURCE_TABLE =",
-        "SOURCE_READER =",
-        "SOURCE_QUERY =",
-        "SOURCE_READ_STRATEGY =",
-        "SOURCE_WATERMARK_COLUMN =",
-        "SOURCE_PARTITION_COLUMN =",
-        "SOURCE_DRIVES_PIPELINE =",
-    )
-    configs = [
-        _cell_by_id("02_pipeline.ipynb", f"source-{index}-config").source
-        for index in (1, 2, 3)
-    ]
-    for config in configs:
-        for name in required_names:
-            assert name in config
-
-    runners = [
-        _cell_by_id("02_pipeline.ipynb", f"source-{index}-run").source
-        for index in (1, 2, 3)
-    ]
-    assert runners[0] == runners[1] == runners[2]
-
-    assert 'SOURCE = 1' in configs[0]
-    assert 'SOURCE_TABLE = "orders"' in configs[0]
-    assert 'SOURCE = 2' in configs[1]
-    assert 'SOURCE_TABLE = "products"' in configs[1]
-    assert 'SOURCE = 3' in configs[2]
-    assert 'SOURCE_TABLE = "order_history"' in configs[2]
+    assert 'widget_view_catalogue(mode="explore"' in controls
+    assert 'catalogue_widget["get_selection"]()' not in source
+    assert "notebook name" in source
 
 
-def test_02_pipeline_source_runner_supports_lakehouse_and_warehouse_query_reads():
-    """The cloneable runner dispatches only from the small source configuration."""
-    runner = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
-    history_config = _cell_by_id("02_pipeline.ipynb", "source-3-config").source
+def test_02_pipeline_uses_etl_roles_without_framework_wiring():
+    """The user-facing notebook reads as Extract, Transform, and Load."""
+    source = _notebook_source("02_pipeline.ipynb")
 
-    assert "read_pipeline_prep(" in runner
-    assert "source_table_id=SOURCE_TABLE_ID" in runner
-    assert 'SOURCE_READER == "lakehouse_table"' in runner
-    assert "read_lakehouse_table(" in runner
-    assert 'processing_scope=source_prep["scope"]' in runner
-    assert 'SOURCE_READER == "warehouse_query"' in runner
-    assert "read_warehouse_query(" in runner
-
-    for column in (
-        "customer_id",
-        "historical_order_count",
-        "historical_net_amount",
-        "latest_historical_order_datetime",
+    for heading in (
+        "## EXTRACT 1 — Orders",
+        "## EXTRACT 2 — Products",
+        "## EXTRACT 3 — Order History",
+        "## LOAD 1 — Curated Orders",
     ):
-        assert column in history_config
-    assert "FROM demo.order_history" in history_config
+        assert heading in source
+    for legacy_role in ("SOURCE_PREPS", "SOURCE_DFS", "SOURCE_NAME", "TARGET_NAME", "TARGET_TABLE_ID"):
+        assert legacy_role not in source
+    assert "pre_read_results" not in source
+    assert "extract_checks" not in source
+    assert "target_checks" not in source
+    assert "all(result" not in source
+    assert source.count("if VALIDATE_DATA_CONTRACTS") == 1
+    assert 'read_lakehouse_table(\n        table_id=EXTRACT_TABLE_ID' in source
+    assert 'catalogue_widget["show"](table_id=EXTRACT_TABLE_ID)' in source
 
 
-def test_02_pipeline_keeps_strategy_and_runtime_mode_distinct():
-    """Configured strategies remain distinct from runtime modes returned by preparation."""
+def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
+    """Engineers provide physical identity while prep owns deterministic table_id."""
     source = _notebook_source("02_pipeline.ipynb")
-    orders = _cell_by_id("02_pipeline.ipynb", "source-1-config").source
-    runner = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
+    for cell_id in ("source-1-config", "source-2-config", "source-3-config", "target-config"):
+        assert "TABLE_ID =" not in _cell_by_id("02_pipeline.ipynb", cell_id).source
+    for cell_id in ("source-1-run", "source-2-run", "source-3-run"):
+        runner = _cell_by_id("02_pipeline.ipynb", cell_id).source
+        assert "read_pipeline_prep(" in runner
+        assert "source_target=EXTRACT_TARGET" in runner
+        assert 'EXTRACT_TABLE_ID = extract_prep["table_id"]' in runner
+    target = _cell_by_id("02_pipeline.ipynb", "target-guard").source
+    assert "write_pipeline_prep(" in target
+    assert "target=LOAD_TARGET" in target
+    assert 'LOAD_TABLE_ID = load_prep["target"]["table_id"]' in target
+    assert "build_table_id" not in source
 
-    for strategy in ("full_dataset", "incremental_watermark", "incremental_partition"):
-        assert strategy in source
-    for runtime_mode in ("full_dataset", "incremental_subset", "skip"):
-        assert runtime_mode in source
 
-    assert 'SOURCE_READ_STRATEGY = "incremental_watermark"' in orders
-    assert 'SOURCE_WATERMARK_COLUMN = "modified_datetime"' in orders
-    assert "target_table_id=TARGET_TABLE_ID if SOURCE_READ_STRATEGY != \"full_dataset\" else None" in runner
-    assert 'PIPELINE_SHOULD_RUN = source_prep["read_mode"] != "skip"' in runner
+def test_02_pipeline_has_explicit_source_readers_without_dispatch_tree():
+    """Each source visibly chooses its physical reader without generic dispatch."""
+    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
+    products = _cell_by_id("02_pipeline.ipynb", "source-2-run").source
+    history = _cell_by_id("02_pipeline.ipynb", "source-3-run").source
+
+    assert "read_lakehouse_table(" in orders
+    assert 'processing_scope=extract_prep["scope"]' in orders
+    assert "read_lakehouse_table(" in products
+    assert "read_warehouse_query(" in history
+    assert "EXTRACT_QUERY" in history
+    assert "SOURCE_READER" not in _notebook_source("02_pipeline.ipynb")
+    assert "elif" not in orders + products + history
 
 
-def test_02_pipeline_keeps_only_target_identity_as_an_early_incremental_anchor():
-    """The target workflow stays under Load even though incremental prep needs its table_id."""
+def test_02_pipeline_keeps_checks_and_profiles_visible_in_order():
+    """Prep, checks, physical IO, profiling, storage, and views stay scan-visible."""
+    for index in (1, 2, 3):
+        runner = _cell_by_id("02_pipeline.ipynb", f"source-{index}-run").source
+        assert runner.index("read_pipeline_prep(") < runner.index("extract_df = read_")
+        assert runner.index("extract_df = read_") < runner.index("check_schema(")
+        assert runner.index("check_schema(") < runner.index("check_dq(")
+        assert "raise_on_failure=True" in runner
+        assert runner.index("check_dq(") < runner.index("profile_and_register_table(")
+        assert runner.index("profile_and_register_table(") < runner.index("EXTRACT_PREPS[EXTRACT]")
+        assert 'catalogue_widget["show"](table_id=EXTRACT_TABLE_ID)' in runner
+    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
+    assert "check_freshness(" in orders
+    assert orders.index("check_freshness(") < orders.index("extract_df = read_lakehouse_table(")
+
+
+def test_02_pipeline_preserves_incremental_orders_and_one_skip_branch():
+    """Orders owns bounded incremental work and one obvious downstream skip gate."""
     source = _notebook_source("02_pipeline.ipynb")
-    anchor = _cell_by_id("02_pipeline.ipynb", "target-anchor").source
-    target = _cell_by_id("02_pipeline.ipynb", "target-config").source
+    orders_config = _cell_by_id("02_pipeline.ipynb", "source-1-config").source
+    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
 
-    assert 'TARGET_TABLE_ID = target_anchor["table_id"]' in anchor
-    assert source.index("## Pipeline configuration") < source.index("# E. Extract")
-    assert source.index("# L. Load") < source.index("TARGET = 1")
-    assert 'target_selection = catalogue_widget["get_selection"]()' in target
-    assert 'target_selection["table_id"] != TARGET_TABLE_ID' in target
-
-
-def test_02_pipeline_orders_drives_skip_without_blocking_cloneable_reference_sources():
-    """Orders decides whether downstream physical work runs; other source blocks reuse the same runner."""
-    runner = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
-
-    assert "if SOURCE_DRIVES_PIPELINE:" in runner
-    assert 'PIPELINE_SHOULD_RUN = source_prep["read_mode"] != "skip"' in runner
-    assert "if PIPELINE_SHOULD_RUN:" in runner
-    assert "SOURCE_DFS[SOURCE] = None" in runner
-
-    for cell_id in ("transform", "target-guard", "target-prepare", "target-publish", "target-evidence"):
+    assert 'EXTRACT_READ_STRATEGY = "incremental_watermark"' in orders_config
+    assert 'EXTRACT_WATERMARK_COLUMN = "modified_datetime"' in orders_config
+    assert 'processing_scope=extract_prep["scope"]' in orders
+    assert 'PIPELINE_SHOULD_RUN = extract_prep["read_mode"] != "skip"' in orders
+    assert source.count('extract_prep["read_mode"] != "skip"') == 1
+    for cell_id in ("source-2-run", "source-3-run", "transform", "target-config", "target-guard", "target-prepare", "target-publish", "target-evidence"):
         assert "if PIPELINE_SHOULD_RUN:" in _cell_by_id("02_pipeline.ipynb", cell_id).source
 
 
-def test_02_pipeline_transformation_consumes_all_sources():
-    """Visible project-owned PySpark joins the three numeric source outputs."""
-    source = _cell_by_id("02_pipeline.ipynb", "transform").source
+def test_02_pipeline_profile_registration_owns_canonical_vs_diagnostic_scope():
+    """One visible profiling API receives enough context to avoid partial replacement."""
+    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
+    products = _cell_by_id("02_pipeline.ipynb", "source-2-run").source
+    history = _cell_by_id("02_pipeline.ipynb", "source-3-run").source
+    for runner in (orders, products, history):
+        assert "profile_and_register_table(" in runner
+        assert 'processing_scope=extract_prep["scope"]' in runner
+    assert "complete_table=False" in history
+    assert "profile_dataframe(" not in orders + products + history
 
+
+def test_02_pipeline_transform_is_explicit_project_pyspark():
+    """Visible project-owned PySpark consumes all three source outputs."""
+    transform = _cell_by_id("02_pipeline.ipynb", "transform").source
     for index in (1, 2, 3):
-        assert f"SOURCE_DFS[{index}]" in source
-    assert source.count(".join(") == 2
-    assert 'on="product_id"' in source
-    assert 'on="customer_id"' in source
-    assert '"modified_datetime"' in source
-    assert "order_net_amount" in source
+        assert f"EXTRACT_DFS[{index}]" in transform
+    assert transform.count(".join(") == 2
+    assert ".withColumn(" in transform
 
 
-def test_02_pipeline_profiles_full_sources_without_replacing_partial_profiles():
-    """Full table reads may register profiles; slices and query aggregates remain diagnostic."""
-    runner = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
-    tree = ast.parse(runner)
-
-    assert 'SOURCE_READER == "warehouse_query"' in runner
-    assert "profile_dataframe(source_df)" in runner
-    assert 'source_prep["read_mode"] == "full_dataset"' in runner
-    assert "profile_and_register_table(" in runner
-
-    mode_if = next(
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.If)
-        and "read_mode" in ast.unparse(node.test)
-        and "full_dataset" in ast.unparse(node.test)
-    )
-    assert "profile_and_register_table(" in ast.unparse(mode_if.body)
-    assert "profile_dataframe(" in ast.unparse(mode_if.orelse)
-
-
-def test_02_pipeline_prepares_target_before_publication_and_uses_all_values():
-    """The target block consumes the exact governed preparation result."""
+def test_02_pipeline_target_order_is_prep_checks_write_read_profile_view():
+    """Target orchestration stays explicit and consumes every preparation value."""
     source = _notebook_source("02_pipeline.ipynb")
-    prepare = _cell_by_id("02_pipeline.ipynb", "target-prepare").source
-    publish = _cell_by_id("02_pipeline.ipynb", "target-publish").source
-
-    assert source.index("write_pipeline_prep(") < source.index("write_lakehouse_table(")
-    assert "source_preps=[SOURCE_PREPS[1], SOURCE_PREPS[2], SOURCE_PREPS[3]]" in prepare
-    assert 'prepared_target_df = target_prep["df"].persist()' in prepare
-
-    for argument in (
-        'mode=target_prep["mode"]',
-        'options=target_prep["options"]',
-        'load_strategy=target_prep["load_strategy"]',
-        'load_strategy_parameters=target_prep["load_strategy_parameters"]',
-        'processing_scope=target_prep["scope"]',
-    ):
-        assert argument in publish
-
-
-def test_02_pipeline_preserves_distributed_write_processing_and_evidence():
-    """The writer explicitly repartitions in Spark and produces full-table governed evidence."""
+    prep = _cell_by_id("02_pipeline.ipynb", "target-guard").source
+    checks = _cell_by_id("02_pipeline.ipynb", "target-prepare").source
     publish = _cell_by_id("02_pipeline.ipynb", "target-publish").source
     evidence = _cell_by_id("02_pipeline.ipynb", "target-evidence").source
-    markdown = _notebook_source("02_pipeline.ipynb")
 
-    assert "profile_dataframe(prepared_target_df)" in publish
-    assert "write_lakehouse_table(" in publish
+    assert "source_preps=[" in prep
+    for index in (1, 2, 3):
+        assert f"EXTRACT_PREPS[{index}]" in prep
+    assert "check_schema(" in checks and "check_dq(" in checks
+    assert source.index("write_pipeline_prep(") < source.index("check_schema(", source.index("# L. Load"))
+    assert "raise_on_failure=True" in checks
+    assert source.index("check_dq(", source.index("# L. Load")) < source.index("write_lakehouse_table(")
+    for argument in ('mode=load_prep["mode"]', 'options=load_prep["options"]', 'processing_scope=load_prep["scope"]'):
+        assert argument in publish
     assert "repartition_by=4" in publish
-    assert ".unpersist()" in publish
     assert "read_lakehouse_table(" in evidence
-    assert "profile_and_register_table(" in evidence
-    assert 'profile_role="target"' in evidence
-    assert "METADATA_DATA_CATALOGUE" in markdown
-    assert "METADATA_DATA_PROFILED" in markdown
-    assert "METADATA_DATA_PROFILED_FREQUENCY" in markdown
-    assert "METADATA_DATA_LINEAGE" in markdown
-    assert "Python threads" in markdown
-    assert "multiple independent writers" in markdown
-    assert "ThreadPool" not in markdown
-    assert "multiprocessing" not in markdown
+    assert evidence.index("read_lakehouse_table(") < evidence.index("profile_and_register_table(")
+    assert 'catalogue_widget["show"](table_id=LOAD_TABLE_ID)' in evidence
+    assert "ThreadPool" not in source and "multiprocessing" not in source
 
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():

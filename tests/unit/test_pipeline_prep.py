@@ -77,8 +77,8 @@ def test_full_dataset_source_can_prepare_before_any_target_exists(monkeypatch):
     assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
 
 
-def test_read_prep_requires_source_table_id():
-    with pytest.raises(TypeError, match="source_table_id"):
+def test_read_prep_requires_source_identity():
+    with pytest.raises(ValueError, match="source_table_id or both source_target"):
         read_module.read_pipeline_prep(source_read_strategy="full_dataset")
 
 
@@ -183,7 +183,7 @@ def test_warehouse_target_watermark_uses_governed_target_query(monkeypatch):
 
 def test_incremental_watermark_requires_governed_target_identity(monkeypatch):
     identity = _patch_source_identity(monkeypatch)
-    with pytest.raises(ValueError, match="target_table_id is required"):
+    with pytest.raises(ValueError, match="target_table_id or both target_target"):
         read_module.read_pipeline_prep(
             source_table_id=identity["table_id"],
             source_read_strategy="incremental_watermark",

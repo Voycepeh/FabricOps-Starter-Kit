@@ -504,7 +504,60 @@ def _build_catalogue_widget(
             last_dataset_value = str(dataset.value)
         refresh()
 
-    state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
+    def show(*, table_id: str) -> None:
+        """Refresh and display stored metadata scoped to one table identity."""
+        from IPython import display as ip
+        from pyspark.sql import functions as F
+
+        requested = str(table_id or "").strip()
+        if not requested:
+            raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
+        source_frames.clear()
+        for name, table_name in (
+            ("catalogue", "METADATA_DATA_CATALOGUE"),
+            ("profile", "METADATA_DATA_PROFILED"),
+            ("frequency", "METADATA_DATA_PROFILED_FREQUENCY"),
+            ("guardrail_results", "METADATA_GUARDRAIL_RESULTS"),
+        ):
+            source_frames[name] = read_lakehouse_table_core(
+                table_name,
+                target=target,
+                schema=schema,
+                spark_session=spark_session,
+                context=runtime_context,
+            )
+        value = next(
+            (candidate for candidate, (_role, candidate_id) in option_context.items() if candidate_id == requested),
+            None,
+        )
+        if value is None:
+            matches = (
+                source_frames["catalogue"]
+                .filter(
+                    (F.col("environment_name") == runtime_context["env"])
+                    & (F.col("metadata_level") == "table")
+                    & (F.col("table_id") == requested)
+                    & F.col("is_active")
+                )
+                .limit(1)
+                .collect()
+            )
+            if not matches:
+                raise ValueError(f"No active Catalogue table exists for table_id {requested!r}.")
+            row = matches[0].asDict(recursive=True)
+            rows_by_table_id[requested] = row
+            value = f"\x1f{requested}"
+            option_context[value] = (None, requested)
+            options.append((_reader_dataset_label(row, None), value))
+            options.sort(key=lambda item: (item[0].casefold(), item[1]))
+            dataset.options = options
+        dataset.value = value
+        refresh_loaded_views()
+        views = get_views()
+        for name in ("catalogue", "profile", "frequency"):
+            ip.display(views[name])
+
+    state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh, "show": show})
     refresh()
     dataset.observe(lambda change: select_dataset(change) if change.get("name") == "value" else None, names="value")
     profile_column.observe(
@@ -572,7 +625,9 @@ def widget_view_catalogue(
     Returns
     -------
     dict
-        Common state with ``get_selection``, ``get_views``, and ``refresh``.
+        Common state with ``get_selection``, ``get_views``, ``refresh``, and
+        ``show``. ``show(table_id=...)`` refreshes and displays Catalogue,
+        Profile, and Frequency metadata for one canonical table identity.
         ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,
         and ``guardrail_results`` Spark DataFrames.
         Catalogue and profile views expose readable asset/column fields first;
