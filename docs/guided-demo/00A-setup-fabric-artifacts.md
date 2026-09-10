@@ -88,19 +88,39 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Demo dat
 
         Keep the notebook prefix and add the project or task name when useful, for example `01_governance_projectname` or `02_pipeline_emaildata`.
 
-???+ success "Live — Upload the Guided Demo data files"
+???+ success "Live — Prepare the Guided Demo data"
 
     Download the files from the GitHub [`templates/DemoData`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData) folder.
 
-    | Demo data | Purpose |
-    | --- | --- |
-    | `laptop_inventory_demo.csv` | Main demo dataset used across the governed workflow. |
-    | `demo.csv` | Simple CSV read example. |
-    | `demo.xlsx` | Simple Excel read example. |
-    | `demo.parquet` | Simple Parquet read example. |
+    The canonical Guided Demo uses one coherent Orders story with three physical inputs:
+
+    | Demo data | Business role | Prepare in Fabric |
+    | --- | --- | --- |
+    | `orders.csv` | Transactional Orders source | Upload to the source Lakehouse Files area. This is the canonical baseline for the normal demo. |
+    | `products.csv` | Product/reference data | Upload to a Lakehouse Files area, then use FabricOps read/write helpers to seed the Product reference Lakehouse table used by the future ETL. |
+    | `order_history.csv` | Historical customer/order data | Upload to a Lakehouse Files area, then use FabricOps read/write helpers to seed the Warehouse table queried by `read_warehouse_query()`. |
+
+    The future ETL combines these three sources into the curated Orders product:
+
+    ```text
+    Orders file source
+    + Product reference Lakehouse table
+    + Historical customer/order metrics from Warehouse SQL
+    → Curated Orders product
+    ```
+
+    `orders.json`, `orders.parquet`, and `orders.xlsx` contain the same 120-row Orders baseline and are available for physical reader validation with `read_lakehouse_json()`, `read_lakehouse_parquet()`, and `read_lakehouse_excel()` without changing the downstream business story.
+
+    For incremental-watermark testing, use `modified_datetime`:
+
+    1. Load `orders.csv`: first run should process the full dataset.
+    2. Run again without changing the source: the next run should skip.
+    3. Append `orders_incremental.csv`: the next run should process only the later watermark range.
+
+    `orders_incremental.csv` is intentionally kept separate so the baseline can be reset and the three-run sequence repeated deterministically.
 
 ## Expected result
 
-You should now have the required workspaces, configured stores, Fabric Environment, editable notebook copies, and demo data files.
+You should now have the required workspaces, configured stores, Fabric Environment, editable notebook copies, and the canonical Orders demo inputs ready for the Guided Demo.
 
 **Next:** [Step 0B: Set up the operating environment](00B-run-environment-setup.md).
