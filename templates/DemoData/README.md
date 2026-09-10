@@ -54,3 +54,5 @@ The normal baseline remains valid so the engineering demo is deterministic. Fail
 | `orders.xlsx` | `read_lakehouse_excel()` |
 
 `orders.json` uses JSON Lines, which matches Spark's normal JSON-reader behaviour. `orders.xlsx` contains the same canonical table on a worksheet. When `orders.csv` changes, regenerate all three variants from it and verify row, column, and value equivalence.
+
+The previous standalone `*_demo` fixtures were removed. The canonical Orders scenario above now owns the Guided Demo data surface.
