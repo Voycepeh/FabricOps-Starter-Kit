@@ -143,9 +143,8 @@ def _observe_table_core(
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
 
-    This internal helper cheaply records row count plus earliest and latest
-    change values by source partition so ``read_pipeline_prep()`` can determine
-    the governed source-read scope without first reading the full business table.
+    This internal helper records row count plus earliest and latest change
+    values by source partition for the explicit source-observation workflow.
 
     Parameters
     ----------
@@ -231,7 +230,7 @@ def _observe_table_core(
     if rule is None:
         raise ValueError(
             f"No active approved source-change rule exists for {table_id!r}; "
-            "Governance must author and activate one before read_pipeline_prep() can run."
+            "Governance must author and activate one before source observation can run."
         )
     partition_value, change_value = resolve_change_rule_observation_columns(rule)
     metadata_schema = metadata_table_physical_schema(config, OBSERVATION_TABLE)

@@ -71,23 +71,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="full-dataset">
-<summary><strong>Full Dataset</strong> — The FabricOps source-read strategy that reads the complete physical source dataset for a run.</summary>
-<p>In FabricOps, Full Dataset is the explicit source_read_strategy that reads the complete physical source dataset for the run rather than resolving an incremental subset.</p>
-</details>
-
-<details id="incremental-watermark">
-<summary><strong>Incremental Watermark</strong> — The FabricOps source-read strategy that processes rows after the last successfully committed watermark.</summary>
-<p>In FabricOps, Incremental Watermark resolves a bounded row-level range from the maximum governed target `_watermark_value` to the current source upper watermark. The current implementation requires the configured watermark column to be non-null and globally unique for every source row so the range can be processed deterministically without skipping tied late-arriving rows.</p>
-</details>
-
-<details id="incremental-partition">
-<summary><strong>Incremental Partition</strong> — The FabricOps source-read strategy that processes whole logical data buckets when those buckets are new or changed.</summary>
-<p>In FabricOps, Incremental Partition observes a configured logical partition column and resolves new, changed, or reappeared bucket values into an incremental subset. Safety rules can fall back to a full-dataset read or stop execution when the target write strategy cannot safely apply the detected changes.</p>
-</details>
-
-<details id="incremental-subset">
-<summary><strong>Incremental Subset</strong> — The FabricOps runtime read mode used when only part of the source needs to be processed for the current run.</summary>
-<p>Incremental Subset is a resolved FabricOps runtime read mode. It is produced after source-read preparation determines the exact watermark range or logical partition values required for the current run.</p>
+<summary><strong>Full Dataset</strong> — A complete physical dataset used as the input to a FabricOps pipeline run.</summary>
+<p>In FabricOps, Full Dataset means the complete physical source is read for the run, without a source-side incremental scope or skip decision.</p>
 </details>
 
 </details>
@@ -264,7 +249,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="physical-partitioning">
 <summary><strong>Physical Partitioning</strong> — Organizing stored data physically by one or more partition columns to improve management or data skipping.</summary>
-<p>Physical Partitioning controls how data files are organized by partition values in storage. In FabricOps this is distinct from the Incremental Partition source-read strategy, which operates on logical source buckets.</p>
+<p>Physical Partitioning controls how data files are organized by partition values in storage. It is a target storage and performance concern, distinct from project-owned source filtering.</p>
 <p><strong>Also known as:</strong> partition_by</p>
 </details>
 

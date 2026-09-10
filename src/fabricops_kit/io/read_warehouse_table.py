@@ -4,13 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import (
-    build_warehouse_scoped_query,
-    get_spark_session,
-    read_warehouse_synapsesql,
-    resolve_configured_warehouse_table,
-    validate_processing_scope,
-)
+from .shared import get_spark_session, read_warehouse_synapsesql, resolve_configured_warehouse_table
 
 
 def read_warehouse_table(
@@ -20,15 +14,11 @@ def read_warehouse_table(
     target: str = "warehouse",
     spark_session=None,
     context: dict[str, Any] | None = None,
-    processing_scope: dict[str, Any] | None = None,
     **options,
 ):
     """Read every row and every column from a Microsoft Fabric Warehouse table.
 
-    Without a processing scope, this is equivalent to
-    ``SELECT * FROM schema.table_name``. With a governed watermark or
-    partition scope, FabricOps generates a validated single-table predicate
-    and executes it in Warehouse before rows are transferred to Spark.
+    This is equivalent to ``SELECT * FROM schema.table_name``.
 
     Use this callable only for intentional full-table extracts such as small
     lookup tables, reference tables, smoke tests, or cases where every row and
@@ -63,11 +53,6 @@ def read_warehouse_table(
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
-    processing_scope : dict[str, Any], optional
-        Runtime scope returned in ``read_pipeline_prep(...)["scope"]``.
-        Watermark and partition predicates are executed in Warehouse before
-        rows reach Spark. ``skip`` raises without resolving or reading the
-        business table. Omit this argument for the existing complete read.
     **options
         Additional Fabric Warehouse Spark connector reader options. Required
         Fabric connector options are always set from ``00_env_config``.
@@ -78,12 +63,6 @@ def read_warehouse_table(
         A Spark DataFrame containing all rows and columns returned from the
         resolved Warehouse table.
 
-    Raises
-    ------
-    ValueError
-        If ``processing_scope`` is malformed or resolves the source to
-        ``skip``.
-
     Notes
     -----
     FabricOps resolves the configured Warehouse target and table name, then
@@ -91,20 +70,14 @@ def read_warehouse_table(
 
     ``df = read_warehouse_table(schema="dbo", table_name="DimDepartment")``
 
-    ``source_df = read_warehouse_table(schema="dbo", table_name="Bookings", processing_scope=read_prep["scope"])``
-
     Use ``read_warehouse_query`` instead when you need selected columns, row
     filtering, aggregation, joins, row limits, or other caller-controlled SQL
     pushdown before Spark receives rows.
 
     """
-    scope = None if processing_scope is None else validate_processing_scope(processing_scope)
-    if scope is not None and scope["type"] == "skip":
-        raise ValueError("The current source was resolved to skip and must not be read.")
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
         target, schema, table_name, context=context
     )
-    sql = None if scope is None else build_warehouse_scoped_query(schema_value, table_value, scope)
     return read_warehouse_synapsesql(
-        get_spark_session(spark_session), store, object_name if sql is None else sql, options=options
+        get_spark_session(spark_session), store, object_name, options=options
     )

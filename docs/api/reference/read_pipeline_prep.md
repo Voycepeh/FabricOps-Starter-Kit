@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Prepare governed source observation and read scope without reading business data.
+Resolve governed source identity and register source Lineage before reading business data.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:322`
+`fabricops_kit/pipeline/read_pipeline_prep.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L322-L487">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L15-L91">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -41,13 +41,6 @@ def read_pipeline_prep(
     source_target: str | None=None,
     source_schema: str | None=None,
     source_table: str | None=None,
-    source_read_strategy: str,
-    target_table_id: str | None=None,
-    target_target: str | None=None,
-    target_schema: str | None=None,
-    target_table: str | None=None,
-    source_watermark_column: str | None=None,
-    source_partition_column: str | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -58,13 +51,12 @@ def read_pipeline_prep(
 <div class="reference-example-usage" markdown="1">
 
 >>> prep = read_pipeline_prep(
-...     source_table_id="warehouse:source:dbo:bookings",
-...     source_read_strategy="incremental_watermark",
-...     target_table_id="lakehouse:unified:dbo:bookings",
-...     source_watermark_column="modified_datetime",
+...     source_target="source",
+...     source_schema="dbo",
+...     source_table="bookings",
 ... )
->>> prep["read_mode"] in {"skip", "full_dataset", "incremental_subset"}
-True
+>>> prep["table_id"]
+'warehouse:source:dbo:bookings'
 
 </div>
 
@@ -76,38 +68,24 @@ True
 | `source_target` | `str \| None` | No | Configured source target key. Mutually exclusive with ``source_table_id``. |
 | `source_schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
 | `source_table` | `str \| None` | No | Physical source table name. Required with ``source_target`` when ``source_table_id`` is omitted. |
-| `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
-| `target_table_id` | `str \| None` | No | Governed target whose ``_watermark_value`` or ``_partition_bucket`` stores successful incremental progress. Required for incremental strategies. |
-| `target_target` | `str \| None` | No | Configured target key used for target-backed incremental progress. |
-| `target_schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
-| `target_table` | `str \| None` | No | Physical target table name. Required with ``target_target`` when ``target_table_id`` is omitted for incremental processing. |
-| `source_watermark_column` | `str \| None` | No | Physical source progress column required by ``incremental_watermark``. |
-| `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
 
 ## Returns
 
-Registered source identity, target identity for watermark processing, observation and change state, and skip, full, or incremental read scope.
+Canonical source table_id and resolved physical source identity.
 
 ## Raises / Errors
 
 ValueError
-    If source identity, configuration, target watermark state, or the resulting
-    processing scope is invalid.
+    If the source identity is incomplete, conflicting, or is not registered.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.
-The first watermark run remains a ``full_dataset`` read, while its scope
-retains the watermark column and captured upper bound so write preparation
-can verify that target-backed progress reaches the inspected source state.
-Successful watermark progress is the maximum target ``_watermark_value``.
-Successful partition progress is the set of target ``_partition_bucket``
-values. Source Observation remains change-detection evidence and neither
-strategy uses a secondary checkpoint commit. Partition change safety resolves
-the source table's own processing through :func:`check_changes`; target
-selection and publication are intentionally outside this function.
+This preparation boundary identifies the source and registers its Lineage;
+it does not read business rows or make incremental-processing decisions.
+Use the resolved ``table_id`` with :func:`read_lakehouse_table`, or use the
+resolved source coordinates when reading a Warehouse query.
 
 </div>
 

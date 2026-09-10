@@ -241,7 +241,6 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "frequency_top_n",
         "frequency_max_distinct_percent",
         "frequency_profile_df",
-        "processing_scope",
         "complete_table",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty

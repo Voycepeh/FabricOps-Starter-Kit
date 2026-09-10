@@ -29,7 +29,7 @@ configured in ``00_env_config`` for the active environment.
 
 `fabricops_kit/pipeline/profile_and_register_table.py:477`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L477-L827">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L477-L821">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -64,7 +64,6 @@ def profile_and_register_table(
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
     frequency_profile_df=None,
-    processing_scope: Mapping[str, Any] | None=None,
     complete_table: bool=True,
 ):
 ```
@@ -97,7 +96,6 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold are skipped and produce no child frequency rows. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns remain skipped. Explicit ``frequency_columns`` selections override this threshold. |
 | `frequency_profile_df` | `pyspark.sql.DataFrame` | No | Optional caller-provided Spark DataFrame to use only for frequency distribution calculation. ``None`` preserves full-source frequency profiling. When supplied, it must contain every selected frequency column, may contain extra columns, and must use a compatible Spark session when this can be determined. The caller is responsible for preparing, persisting, refreshing, and governing this DataFrame; this function does not verify whether it is random, representative, sampled, persisted, or otherwise suitable for the caller's purpose. |
-| `processing_scope` | `Mapping[str, Any] \| None` | No | Runtime scope returned by ``read_pipeline_prep``. Watermark, partition, multiple-source, and skip scopes are diagnostic and are not persisted as the canonical full-table profile. |
 | `complete_table` | `bool` | No | Whether the DataFrame represents the complete physical registered table. Set ``False`` for custom query results. |
 
 ## Returns

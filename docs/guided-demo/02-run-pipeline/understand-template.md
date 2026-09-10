@@ -14,7 +14,7 @@ The notebook follows one visible engineering flow:
 Environment → Read → Transform → Write
 ```
 
-FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, governed processing preparation, and target-backed incremental state where those capabilities are configured.
+FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, source identity preparation, and governed target processing.
 
 In this notebook, **Read**, **Transform**, and **Write** name the user-facing stages. **Source** and **target** remain technical terms for datasets and FabricOps configuration, processing, and lineage relationships used within those stages.
 
