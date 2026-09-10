@@ -64,6 +64,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> config-driven engineering</p>
 </details>
 
+<details id="etl-stages">
+<summary><strong>ETL stages</strong> — The user-facing stages of the canonical 02_pipeline engineering flow: Extract, Transform, and Load.</summary>
+<p>In FabricOps, Extract, Transform, and Load name the user-facing ETL stages in 02_pipeline. Extract prepares and reads input data, Transform contains project-owned business logic, and Load prepares and writes the governed output. Source and target remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration or API fields such as target="source" or target="unified"; they should not be used as competing notebook stage names.</p>
+<p><strong>Also known as:</strong> Extract → Transform → Load, Extract, Transform, Load</p>
+</details>
+
 <details id="full-dataset">
 <summary><strong>Full Dataset</strong> — The FabricOps source-read strategy that reads the complete physical source dataset for a run.</summary>
 <p>In FabricOps, Full Dataset is the explicit source_read_strategy that reads the complete physical source dataset for the run rather than resolving an incremental subset.</p>
