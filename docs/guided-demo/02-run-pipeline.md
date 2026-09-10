@@ -4,9 +4,13 @@
 
 **Approx. 30 min · 5 units · Engineering Development**
 
-The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific source, transformation, target, and processing configuration.
+The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific Extract, Transform, Load, and processing configuration.
 
 At the end of this module, you will have run a complete ETL and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
+
+!!! info "ETL stage terminology"
+
+    In `02_pipeline`, **Extract**, **Transform**, and **Load** are the user-facing ETL stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `target="source"` or `target="unified"`.
 
 !!! info "Why Guardrails are skipped in this first run"
 
