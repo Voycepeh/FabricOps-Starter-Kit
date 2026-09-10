@@ -17,7 +17,7 @@ export const OpeningPlatform = () => {
       return <div key={item.label} style={{position: 'absolute', left: item.x, top: item.y, opacity: enter * (1 - artifactExit), transform: `translate(${Math.cos(angle) * artifactExit * 95}px, ${Math.sin(angle) * artifactExit * 95 + (1 - enter) * 38}px) scale(${0.8 + enter * 0.2 - artifactExit * 0.08})`}}><Artifact icon={item.icon} label={item.label} /></div>;
     })}
     <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: 1 - heroExit, transform: `scale(${0.9 + platform * 0.1 - heroExit * 0.05})`}}>
-      <div style={{fontSize: text.fabricHero, lineHeight: 0.92, fontWeight: 840, letterSpacing: -7, textAlign: 'center', color: '#fff', textShadow: '0 24px 80px #000'}}>Microsoft<br />Fabric</div>
+      <div style={{fontSize: text.fabricHero, lineHeight: 1, fontWeight: 840, letterSpacing: -7, textAlign: 'center', textShadow: '0 24px 80px #000'}}><span style={{color: '#fff'}}>Microsoft</span> <span style={{color: '#38d991'}}>Fabric</span></div>
     </div>
   </div>;
 };
