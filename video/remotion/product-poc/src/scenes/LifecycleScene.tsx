@@ -37,7 +37,7 @@ const StepCard = ({number, label, color, enter, active}: {number: number; label:
 export const LifecycleScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const exit = interpolate(frame, [505, 540], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const exit = interpolate(frame, [475, 510], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const loop = interpolate(frame, [205, 245], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     {workspaces.map((workspace, index) => {
