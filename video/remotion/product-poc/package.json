@@ -4,6 +4,7 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
+    "render:overview": "remotion render src/index.ts FabricOpsOverview out/fabricops-overview.mp4",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
