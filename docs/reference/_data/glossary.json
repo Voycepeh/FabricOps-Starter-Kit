@@ -100,6 +100,16 @@
     "avoid_usage": "using configuration-driven engineering to mean that all business transformation logic must be configurable"
   },
   {
+    "id": "read-transform-write",
+    "term": "Read / Transform / Write",
+    "aliases": ["Read → Transform → Write", "RTW"],
+    "category": "FabricOps concepts",
+    "short_definition": "The user-facing stages of the canonical 02_pipeline engineering flow: Read, Transform, and Write.",
+    "long_definition": "In FabricOps, Read, Transform, and Write name the user-facing stages in 02_pipeline. Read prepares and reads one or more upstream sources, Transform contains project-owned business logic, and Write prepares and publishes one governed output. Source and target remain technical terms for datasets, lineage roles, processing state, and FabricOps configuration or API fields such as target=\"source\" or target=\"unified\"; they are not competing notebook stage names.",
+    "preferred_usage": "Use Read, Transform, and Write for 02_pipeline stage names; use source and target only for the technical dataset, lineage, processing, or configuration concepts they describe.",
+    "avoid_usage": "Extract or Load as user-facing 02_pipeline stage labels"
+  },
+  {
     "id": "full-dataset",
     "term": "full dataset",
     "aliases": [],
