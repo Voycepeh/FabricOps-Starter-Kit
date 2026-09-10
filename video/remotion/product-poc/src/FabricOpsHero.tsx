@@ -2,6 +2,7 @@ import type {ReactNode} from 'react';
 import {AbsoluteFill, Sequence} from 'remotion';
 import {CTA} from './scenes/CTA';
 import {FabricOpsReveal} from './scenes/FabricOpsReveal';
+import {LifecycleScene} from './scenes/LifecycleScene';
 import {NotebookJourney} from './scenes/NotebookJourney';
 import {OpeningPlatform} from './scenes/OpeningPlatform';
 import {font, theme} from './theme';
@@ -19,6 +20,7 @@ export const FabricOpsHero = () => (
     <Scene from={SCENE_STARTS.opening} duration={VIDEO_CONFIG.scenes.opening}><OpeningPlatform /></Scene>
     <Scene from={SCENE_STARTS.fabricOps} duration={VIDEO_CONFIG.scenes.fabricOps}><FabricOpsReveal /></Scene>
     <Scene from={SCENE_STARTS.notebooks} duration={VIDEO_CONFIG.scenes.notebooks}><NotebookJourney /></Scene>
+    <Scene from={SCENE_STARTS.workflow} duration={VIDEO_CONFIG.scenes.workflow}><LifecycleScene /></Scene>
     <Scene from={SCENE_STARTS.cta} duration={VIDEO_CONFIG.scenes.cta}><CTA /></Scene>
   </AbsoluteFill>
 );
