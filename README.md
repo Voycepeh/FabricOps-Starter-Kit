@@ -2,6 +2,8 @@
 
 **Microsoft Fabric gives you the platform. FabricOps gives you the operating practice.**
 
+[![Documentation Home](https://img.shields.io/badge/Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+
 FabricOps, short for **Fabric Operations**, provides plug-and-play Data Engineering and Data Governance foundations for Microsoft Fabric.
 
 It gives teams a repeatable operating model across **Governance ↔ Data Engineering → AI and BI analytics**, using standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.
