@@ -21,6 +21,7 @@ def check_schema(
     table_id: str,
     *,
     dataframe=None,
+    enabled: bool = True,
 ) -> dict:
     """Check a persisted or supplied schema against configured schema intent.
 
@@ -31,6 +32,9 @@ def check_schema(
     dataframe : DataFrame, optional
         Incoming DataFrame whose schema should be checked. When omitted, the
         schema of the configured physical table is checked.
+    enabled : bool, default=True
+        Whether Data Contract validation is enabled for this notebook run.
+        ``False`` returns a continuation-safe skipped result without metadata IO.
 
     Returns
     -------
@@ -59,6 +63,8 @@ def check_schema(
     True
 
     """
+    if not enabled:
+        return {"status": "skipped", "can_continue": True, "checks": []}
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     identity = resolve_catalogue_table_identity(

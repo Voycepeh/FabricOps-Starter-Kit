@@ -1862,8 +1862,9 @@
     {
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
-      "direct_live_dependent_count": 1,
+      "direct_live_dependent_count": 2,
       "direct_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
       ],
       "discontinued_in": null,
@@ -1871,6 +1872,7 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.access.scan_workspace_access.scan_workspace_access",
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_target_store",
@@ -1900,6 +1902,7 @@
       "inbound_source_references": [
         "fabricops_kit.access.scan_workspace_access.scan_workspace_access",
         "fabricops_kit.access.scan_workspace_access::<module>",
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_target_store",
@@ -1959,13 +1962,12 @@
       "source_path": "src/fabricops_kit/config/shared.py",
       "source_start_line": 91,
       "supports_live_contract": true,
-      "transitive_live_dependent_count": 9,
+      "transitive_live_dependent_count": 8,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
-        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
@@ -3143,7 +3145,7 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 122,
+      "source_end_line": 144,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 16,
       "supports_live_contract": true,
@@ -4315,8 +4317,10 @@
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 333,
       "supports_live_contract": true,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
+      "transitive_live_dependent_count": 1,
+      "transitive_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+      ]
     },
     {
       "contract_classification": "preview_only_internal",
@@ -5294,7 +5298,7 @@
       "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 84,
+      "source_end_line": 97,
       "source_path": "src/fabricops_kit/pipeline/check_dq.py",
       "source_start_line": 7,
       "supports_live_contract": false,
@@ -5348,7 +5352,7 @@
       "qualified_name": "fabricops_kit.pipeline.check_freshness.check_freshness",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 151,
+      "source_end_line": 174,
       "source_path": "src/fabricops_kit/pipeline/check_freshness.py",
       "source_start_line": 39,
       "supports_live_contract": false,
@@ -5374,7 +5378,7 @@
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 123,
+      "source_end_line": 129,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
       "source_start_line": 20,
       "supports_live_contract": false,
@@ -7819,8 +7823,8 @@
       "transitive_live_dependents": []
     },
     {
-      "contract_classification": "preview_only_internal",
-      "contract_display": "Preview-only internal",
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -7847,7 +7851,7 @@
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "transitive_live_dependency",
       "live_since": null,
       "public_flow_reachable": true,
       "qualified_name": "fabricops_kit.pipeline.shared._row_to_dict",
@@ -7856,9 +7860,11 @@
       "source_end_line": 2091,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 2084,
-      "supports_live_contract": false,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 1,
+      "transitive_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+      ]
     },
     {
       "contract_classification": "preview_only_internal",
@@ -9142,14 +9148,17 @@
       "transitive_live_dependents": []
     },
     {
-      "contract_classification": "preview_only_internal",
-      "contract_display": "Preview-only internal",
-      "direct_live_dependent_count": 0,
-      "direct_live_dependents": [],
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
+      "direct_live_dependent_count": 1,
+      "direct_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+      ],
       "discontinued_in": null,
       "function_name": "resolve_catalogue_table_identity",
       "function_type": "shared_function",
       "inbound_callers": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
@@ -9160,6 +9169,7 @@
         "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
       ],
       "inbound_source_references": [
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.check_changes._observation_changes",
         "fabricops_kit.pipeline.check_changes::<module>",
         "fabricops_kit.pipeline.check_dq.check_dq",
@@ -9178,7 +9188,7 @@
         "fabricops_kit.pipeline.write_pipeline_prep::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "live_since": null,
       "public_flow_reachable": true,
       "qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
@@ -9187,7 +9197,7 @@
       "source_end_line": 1380,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 1320,
-      "supports_live_contract": false,
+      "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
     },
@@ -13696,7 +13706,7 @@
       "qualified_name": "fabricops_kit.widgets.widget_view_catalogue._build_catalogue_widget",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 542,
+      "source_end_line": 595,
       "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
       "source_start_line": 168,
       "supports_live_contract": false,
@@ -13916,9 +13926,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 680,
+      "source_end_line": 735,
       "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
-      "source_start_line": 545,
+      "source_start_line": 598,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14143,6 +14153,18 @@
           "name": "row_identity_columns",
           "required": "No",
           "type": "list[str] | None"
+        },
+        {
+          "description": "Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO.",
+          "name": "enabled",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Raise ``RuntimeError`` when a blocking DQ result cannot continue.",
+          "name": "raise_on_failure",
+          "required": "No",
+          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.check_dq",
@@ -14150,7 +14172,7 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
-      "raises_documentation": "ValueError\n    If configured identity columns are absent or governed rule metadata is\n    invalid.\nRuntimeError\n    If Spark is unavailable in the Microsoft Fabric runtime.",
+      "raises_documentation": "ValueError\n    If configured identity columns are absent or governed rule metadata is\n    invalid.\nRuntimeError\n    If Spark is unavailable in the Microsoft Fabric runtime, or\n    ``raise_on_failure=True`` and a blocking DQ result cannot continue.",
       "refactor_signals": [
         {
           "evidence": [
@@ -14172,8 +14194,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_dq(dataframe, *, table_id: str, dataset_name: str='', run_id: str='', row_identity_columns: list[str] | None=None) -> dict",
-      "source_end_line": 84,
+      "signature": "def check_dq(dataframe, *, table_id: str, dataset_name: str='', run_id: str='', row_identity_columns: list[str] | None=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
+      "source_end_line": 97,
       "source_path": "src/fabricops_kit/pipeline/check_dq.py",
       "source_start_line": 7,
       "summary": "Evaluate active governed DQ rules and persist runtime evidence.",
@@ -14218,6 +14240,18 @@
           "name": "table_id",
           "required": "No",
           "type": "str | None"
+        },
+        {
+          "description": "Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO.",
+          "name": "enabled",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Raise ``RuntimeError`` when a blocking freshness result cannot continue.",
+          "name": "raise_on_failure",
+          "required": "No",
+          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.check_freshness",
@@ -14225,7 +14259,7 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_freshness.check_freshness",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If the observation or configured freshness rule is invalid.\nRuntimeError\n    If ``raise_on_failure=True`` and a blocking freshness result cannot\n    continue.",
       "refactor_signals": [
         {
           "evidence": [
@@ -14247,8 +14281,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_freshness(observation, *, table_id: str | None=None) -> dict",
-      "source_end_line": 151,
+      "signature": "def check_freshness(observation, *, table_id: str | None=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
+      "source_end_line": 174,
       "source_path": "src/fabricops_kit/pipeline/check_freshness.py",
       "source_start_line": 39,
       "summary": "Check whether a source satisfies configured freshness intent.",
@@ -14293,6 +14327,12 @@
           "name": "dataframe",
           "required": "No",
           "type": "DataFrame, optional"
+        },
+        {
+          "description": "Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO.",
+          "name": "enabled",
+          "required": "No",
+          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.check_schema",
@@ -14322,8 +14362,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_schema(table_id: str, *, dataframe=None) -> dict",
-      "source_end_line": 123,
+      "signature": "def check_schema(table_id: str, *, dataframe=None, enabled: bool=True) -> dict",
+      "source_end_line": 129,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
       "source_start_line": 20,
       "summary": "Check a persisted or supplied schema against configured schema intent.",
@@ -15154,19 +15194,20 @@
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "contract_risk": "live",
-      "depth": 4,
-      "direct_call_count": 5,
+      "depth": 6,
+      "direct_call_count": 7,
       "discontinued_in": null,
       "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_table.py",
-        "src/fabricops_kit/io/shared.py"
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "read_lakehouse_table",
       "has_architecture_violation": false,
-      "has_large_width_or_depth": false,
+      "has_large_width_or_depth": true,
       "lifecycle_status": "live",
       "live_critical_dependencies": [
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
@@ -15185,20 +15226,29 @@
         "fabricops_kit.io.shared.apply_lakehouse_processing_scope",
         "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io.shared.read_delta_path",
+        "fabricops_kit.io.shared.read_lakehouse_table_core",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.resolve_target_store",
-        "fabricops_kit.io.shared.validate_processing_scope"
+        "fabricops_kit.io.shared.validate_processing_scope",
+        "fabricops_kit.pipeline.shared._row_to_dict",
+        "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
       ],
-      "live_critical_dependency_count": 20,
+      "live_critical_dependency_count": 23,
       "live_since": "0.1.0",
-      "max_depth": 4,
+      "max_depth": 6,
       "parameters": [
         {
-          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.",
+          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied.",
           "name": "table_name",
-          "required": "Yes",
-          "type": "str"
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``target``, and ``schema`` from the Catalogue.",
+          "name": "table_id",
+          "required": "No",
+          "type": "str | None"
         },
         {
           "description": "Logical Lakehouse target from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path.",
@@ -15232,11 +15282,25 @@
         }
       ],
       "public_import_path": "fabricops_kit.read_lakehouse_table",
-      "public_signals": [],
+      "public_signals": [
+        "large_width_or_depth"
+      ],
       "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "raises_documentation": "ValueError\n    If ``processing_scope`` is malformed or resolves the source to\n    ``skip``.",
-      "refactor_signals": [],
-      "refactor_summary": "No refactor signals detected.",
+      "refactor_signals": [
+        {
+          "evidence": [
+            {
+              "depth": 6,
+              "width": 7
+            }
+          ],
+          "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
+          "severity": "warning",
+          "signal": "large_width_or_depth"
+        }
+      ],
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "live",
@@ -15252,16 +15316,18 @@
         "0.2.0"
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the governed rows and all columns\n    in the resolved Lakehouse Delta table. The data is evaluated when a\n    downstream Spark action runs.",
-      "scope": 20,
-      "signals": [],
-      "signature": "def read_lakehouse_table(table_name: str, *, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, processing_scope: dict[str, Any] | None=None, **options)",
-      "source_end_line": 122,
+      "scope": 23,
+      "signals": [
+        "large_width_or_depth"
+      ],
+      "signature": "def read_lakehouse_table(table_name: str | None=None, *, table_id: str | None=None, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, processing_scope: dict[str, Any] | None=None, **options)",
+      "source_end_line": 144,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 16,
       "summary": "Resolve a configured Lakehouse Delta table and return a Spark DataFrame.",
-      "transitive_function_count": 20,
+      "transitive_function_count": 23,
       "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options. Filtering and column selection are applied later\nthrough normal Spark DataFrame operations. Conceptual examples:\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\")``\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\", schema=\"sales\")``\n\n``orders_df = read_lakehouse_table(table_name=\"sales_orders\", target=\"source\")``\n\n``recent_orders_df = orders_df.select(\"order_id\", \"customer_id\", \"order_date\", \"amount\").where(\"order_date >= '2026-01-01'\")``\n\n``source_df = read_lakehouse_table(table_name=\"orders\", processing_scope=read_prep[\"scope\"])``\n\nGoverned watermark scopes use ``column > lower_bound`` and\n``column <= upper_bound``. Spark may push these filters and compatible\ndownstream projections into the Delta scan during execution.\n\nThis function does not read through the Warehouse SQL connector, execute a\nSQL query, write or copy the table, register metadata, create the table,\nmutate the source table, or automatically cache or persist the returned\nDataFrame.",
-      "width": 5
+      "width": 7
     },
     {
       "architecture_violation_count": 0,
@@ -16458,15 +16524,15 @@
       "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
-      "returns_documentation": "dict\n    Common state with ``get_selection``, ``get_views``, and ``refresh``.\n    ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,\n    and ``guardrail_results`` Spark DataFrames.\n    Catalogue and profile views expose readable asset/column fields first;\n    frequency rows are enriched with ``column_name`` through the normalized\n    ``profile_id`` relationship.",
+      "returns_documentation": "dict\n    Common state with ``get_selection``, ``get_views``, ``refresh``, and\n    ``show``. ``show(table_id=...)`` refreshes and displays Catalogue,\n    Profile, and Frequency metadata for one canonical table identity.\n    ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,\n    and ``guardrail_results`` Spark DataFrames.\n    Catalogue and profile views expose readable asset/column fields first;\n    frequency rows are enriched with ``column_name`` through the normalized\n    ``profile_id`` relationship.",
       "scope": 38,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None=None, spark_session=None, target: str='metadata', schema: str | None=None, context=None)",
-      "source_end_line": 680,
+      "source_end_line": 735,
       "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
-      "source_start_line": 545,
+      "source_start_line": 598,
       "summary": "Select catalogue evidence using an explicit workflow scope.",
       "transitive_function_count": 38,
       "usage_notes": "Microsoft Fabric is the execution runtime. Pipeline mode derives its scope\nfrom current-notebook lineage, agreement mode derives it from registered\ncontracts, and explore mode includes the current environment inventory.\nThe widget reads the normalized catalogue/profile/frequency tables without\nchanging their persisted schemas.",
@@ -18034,6 +18100,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
+      "caller_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared.apply_lakehouse_processing_scope",
       "caller_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "violation_details": [],
@@ -18067,6 +18141,14 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared.validate_processing_scope",
+      "caller_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
       "caller_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "violation_details": [],
       "violation_types": []
@@ -24067,7 +24149,7 @@
   "release_contract": {
     "discontinued_public_function_count": 0,
     "latest_release_version": "0.2.0",
-    "live_critical_internal_count": 104,
+    "live_critical_internal_count": 106,
     "live_public_function_count": 13,
     "preview_public_function_count": 15,
     "release_versions": [
@@ -24143,7 +24225,7 @@
     "detached_function_count": 62,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 893,
+    "relationship_count": 895,
     "source_referenced_function_count": 60,
     "used_function_count": 342
   },

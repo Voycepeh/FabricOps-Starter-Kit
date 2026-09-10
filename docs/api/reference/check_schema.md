@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L123">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L129">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,7 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_schema(table_id: str, *, dataframe=None) -> dict
+def check_schema(table_id: str, *, dataframe=None, enabled: bool=True) -> dict
 ```
 
 </div>
@@ -57,6 +57,7 @@ True
 | --- | --- | --- | --- |
 | `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataframe` | `DataFrame` | No | Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked. |
+| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
 
 ## Returns
 

@@ -292,9 +292,15 @@ def test_governed_guardrail_public_signatures_are_minimal():
     import inspect
     from fabricops_kit import check_schema
 
-    assert str(inspect.signature(check_schema)) == "(table_id: str, *, dataframe=None) -> dict"
-    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None) -> dict"
-    assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
+    assert str(inspect.signature(check_schema)) == "(table_id: str, *, dataframe=None, enabled: bool = True) -> dict"
+    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None, enabled: bool = True, raise_on_failure: bool = False) -> dict"
+
+
+def test_guardrail_checks_can_skip_before_contract_metadata_exists():
+    from fabricops_kit import check_schema
+
+    assert check_schema("orders", enabled=False)["can_continue"] is True
+    assert check_freshness(None, enabled=False)["can_continue"] is True
 
 
 def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):

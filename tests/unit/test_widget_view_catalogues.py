@@ -125,6 +125,7 @@ def test_widget_documents_normalized_summary_view_contract():
     source = inspect.getsource(fabricops_kit.widget_view_catalogue)
     assert "guardrail_row_results" not in source
     assert "frequency rows are enriched with ``column_name``" in source
+    assert "``show(table_id=...)``" in source
     assert "without\n    changing their persisted schemas" in source
 
 
@@ -350,7 +351,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
         target="metadata",
         schema=None,
         spark_session=object(),
-        runtime_context={},
+        runtime_context={"env": "dev"},
         empty_message="No inventory.",
     )
 
@@ -395,10 +396,17 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     assert {row.value for row in frequency_rows} == {None, "current"}
     assert {row.run_id for row in views["guardrail_results"].collect()} == {"latest-run"}
 
+    state["show"](table_id="dataset-key")
+    assert len(displayed) == 4
+    assert read_calls[-4:] == [
+        "METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
+        "METADATA_GUARDRAIL_RESULTS",
+    ]
+
     state["_controls"]["profile_id"].value = "profile-comment"
     assert state["get_selection"]()["profile_id"] == "profile-comment"
     assert state["get_views"]()["frequency"].count() == 0
-    assert len(read_calls) == 4
+    assert len(read_calls) == 8
 
     state["_controls"]["search"].value = "does not exist"
     assert state["_controls"]["dataset"].value is None

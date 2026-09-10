@@ -33,6 +33,22 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
     assert captured["context"] is context
 
 
+def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
+    """Notebook validation mode removes result-list orchestration."""
+    module = importlib.import_module("fabricops_kit.pipeline.check_dq")
+    assert module.check_dq(object(), table_id="orders", enabled=False) == {
+        "status": "skipped", "can_continue": True, "checks": [],
+    }
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
+        "table_id": "orders", "store_type": "lakehouse", "target": "source",
+        "schema": "sales", "table_name": "orders",
+    })
+    monkeypatch.setattr(module, "check_dq_runtime", lambda *_args, **_kwargs: {"can_continue": False})
+    with pytest.raises(RuntimeError, match="blocking DQ Guardrail"):
+        module.check_dq(object(), table_id="orders", raise_on_failure=True)
+
+
 def _rule(rule_type: str, **kwargs):
     rule = {"rule_id": f"r_{rule_type}", "rule_type": rule_type, "columns": ["id"], "severity": "error", "description": "test"}
     rule.update(kwargs)
