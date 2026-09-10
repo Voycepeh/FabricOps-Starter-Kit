@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:157`
+`fabricops_kit/pipeline/write_pipeline_prep.py:158`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L157-L333">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L158-L361">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -38,7 +38,12 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def write_pipeline_prep(
     df,
-    target_table_id: str,
+    target_table_id: str | None=None,
+    target: str | None=None,
+    schema: str | None=None,
+    table_name: str | None=None,
+    load_strategy: str | None=None,
+    load_strategy_parameters: dict[str, Any] | None=None,
     source_preps: list[dict[str, Any]],
 ) -> dict[str, Any]:
 ```
@@ -64,7 +69,12 @@ def write_pipeline_prep(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `target_table_id` | `str` | Yes | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
+| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
+| `target` | `str \| None` | No | Configured target key supplied instead of ``target_table_id``. |
+| `schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
+| `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |
+| `load_strategy` | `str \| None` | No | Current authored load strategy when physical identity is supplied. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters belonging to the authored load strategy. |
 | `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Watermark source values must remain present through transformation so target state can be persisted on each row. |
 
 ## Returns

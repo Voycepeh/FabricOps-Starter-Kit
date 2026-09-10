@@ -10,6 +10,7 @@ from fabricops_kit.pipeline.shared import (
     catalogue_authored_processing,
     persist_lineage_participation,
     resolve_catalogue_table_identity,
+    resolve_physical_table_identity,
     resolve_table_processing_definition,
     resolve_target_audit_fields,
 )
@@ -157,7 +158,12 @@ def _source_scope(source_preps: list[dict[str, Any]]) -> dict[str, Any]:
 def write_pipeline_prep(
     df,
     *,
-    target_table_id: str,
+    target_table_id: str | None = None,
+    target: str | None = None,
+    schema: str | None = None,
+    table_name: str | None = None,
+    load_strategy: str | None = None,
+    load_strategy_parameters: dict[str, Any] | None = None,
     source_preps: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Prepare governed target write inputs without physically writing the target.
@@ -166,9 +172,20 @@ def write_pipeline_prep(
     ----------
     df : pyspark.sql.DataFrame
         Business target DataFrame after target schema and DQ checks pass.
-    target_table_id : str
+    target_table_id : str, optional
         Canonical registered target identity used to resolve physical target
         metadata and target-owned processing.
+    target : str, optional
+        Configured target key supplied instead of ``target_table_id``.
+    schema : str, optional
+        Physical target schema, when the configured store uses schemas.
+    table_name : str, optional
+        Physical target table name. Required with ``target`` when
+        ``target_table_id`` is omitted.
+    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
+        Current authored load strategy when physical identity is supplied.
+    load_strategy_parameters : dict, optional
+        Parameters belonging to the authored load strategy.
     source_preps : list of dict
         Results returned by :func:`read_pipeline_prep` for the sources that fed
         this target. Watermark source values must remain present through
@@ -223,13 +240,24 @@ def write_pipeline_prep(
 
     """
     config, env, context = resolve_fabric_context()
-    target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+    coordinates = (target, schema, table_name)
+    if target_table_id and any(value is not None for value in coordinates):
+        raise ValueError("target_table_id cannot be combined with target, schema, or table_name.")
+    if target_table_id:
+        target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+        authored_processing = catalogue_authored_processing(target_identity)
+    else:
+        target_identity = resolve_physical_table_identity(
+            config, env, target=target, schema=schema, table_name=table_name
+        )
+        target_identity["store_type"] = target_identity["store_kind"]
+        authored_processing = {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
     processing = resolve_table_processing_definition(
         config,
         env,
         target_identity["table_id"],
         context=context,
-        authored_processing=catalogue_authored_processing(target_identity),
+        authored_processing=authored_processing,
     )
     prepared_scope = _source_scope(source_preps)
     scope = prepared_scope["scope"]

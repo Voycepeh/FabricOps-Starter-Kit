@@ -12,9 +12,9 @@ Prepare governed source observation and read scope without reading business data
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:318`
+`fabricops_kit/pipeline/read_pipeline_prep.py:322`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L318-L446">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L322-L487">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,9 +37,15 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def read_pipeline_prep(
-    source_table_id: str,
+    source_table_id: str | None=None,
+    source_target: str | None=None,
+    source_schema: str | None=None,
+    source_table: str | None=None,
     source_read_strategy: str,
     target_table_id: str | None=None,
+    target_target: str | None=None,
+    target_schema: str | None=None,
+    target_table: str | None=None,
     source_watermark_column: str | None=None,
     source_partition_column: str | None=None,
 ) -> dict[str, Any]:
@@ -66,9 +72,15 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `source_table_id` | `str` | Yes | Canonical identity of one registered source table. FabricOps resolves its physical coordinates from the Catalogue. |
+| `source_table_id` | `str \| None` | No | Canonical identity of one registered source table. Omit it and supply ``source_target``, ``source_schema``, and ``source_table`` to resolve the same identity deterministically from configured physical identity. |
+| `source_target` | `str \| None` | No | Configured source target key. Mutually exclusive with ``source_table_id``. |
+| `source_schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
+| `source_table` | `str \| None` | No | Physical source table name. Required with ``source_target`` when ``source_table_id`` is omitted. |
 | `source_read_strategy` | `str` | Yes | Engineer-authored rule for identifying source data to process. |
 | `target_table_id` | `str \| None` | No | Governed target whose ``_watermark_value`` or ``_partition_bucket`` stores successful incremental progress. Required for incremental strategies. |
+| `target_target` | `str \| None` | No | Configured target key used for target-backed incremental progress. |
+| `target_schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
+| `target_table` | `str \| None` | No | Physical target table name. Required with ``target_target`` when ``target_table_id`` is omitted for incremental processing. |
 | `source_watermark_column` | `str \| None` | No | Physical source progress column required by ``incremental_watermark``. |
 | `source_partition_column` | `str \| None` | No | Logical bucket column required by ``incremental_partition``. |
 

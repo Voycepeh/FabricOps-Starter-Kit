@@ -6200,7 +6200,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 815,
+      "source_end_line": 827,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "supports_live_contract": true,
@@ -6299,9 +6299,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._coerce_watermark_boundary",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 257,
+      "source_end_line": 261,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 247,
+      "source_start_line": 251,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6327,9 +6327,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._partition_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 90,
+      "source_end_line": 94,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 54,
+      "source_start_line": 58,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6355,9 +6355,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._source_processing_definition",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 51,
+      "source_end_line": 55,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 23,
+      "source_start_line": 27,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6383,9 +6383,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._source_upper_watermark",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 244,
+      "source_end_line": 248,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 203,
+      "source_start_line": 207,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6411,9 +6411,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._target_partitions",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 200,
+      "source_end_line": 204,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 144,
+      "source_start_line": 148,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6439,9 +6439,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._target_watermark",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 141,
+      "source_end_line": 145,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 93,
+      "source_start_line": 97,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6467,9 +6467,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep._watermark_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 315,
+      "source_end_line": 319,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 260,
+      "source_start_line": 264,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6493,9 +6493,9 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 446,
+      "source_end_line": 487,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 318,
+      "source_start_line": 322,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9272,12 +9272,18 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.pipeline.profile_and_register_table._validate_resolved_identity",
-        "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
+        "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table",
+        "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep"
       ],
       "inbound_source_references": [
         "fabricops_kit.pipeline.profile_and_register_table._validate_resolved_identity",
         "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table",
-        "fabricops_kit.pipeline.profile_and_register_table::<module>"
+        "fabricops_kit.pipeline.profile_and_register_table::<module>",
+        "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
+        "fabricops_kit.pipeline.read_pipeline_prep::<module>",
+        "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+        "fabricops_kit.pipeline.write_pipeline_prep::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
@@ -9738,9 +9744,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._delta_literal",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 26,
+      "source_end_line": 27,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 18,
+      "source_start_line": 19,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9766,9 +9772,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._overwrite_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 133,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 63,
+      "source_start_line": 64,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9794,9 +9800,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._replace_where",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 32,
+      "source_end_line": 33,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 29,
+      "source_start_line": 30,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9822,9 +9828,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._source_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 154,
+      "source_end_line": 155,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 136,
+      "source_start_line": 137,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9850,9 +9856,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._validate_watermark_progress",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 60,
+      "source_end_line": 61,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 35,
+      "source_start_line": 36,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -9876,9 +9882,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 333,
+      "source_end_line": 361,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 157,
+      "source_start_line": 158,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14571,6 +14577,18 @@
           "name": "frequency_profile_df",
           "required": "No",
           "type": "pyspark.sql.DataFrame, optional"
+        },
+        {
+          "description": "Runtime scope returned by ``read_pipeline_prep``. Watermark, partition, multiple-source, and skip scopes are diagnostic and are not persisted as the canonical full-table profile.",
+          "name": "processing_scope",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Whether the DataFrame represents the complete physical registered table. Set ``False`` for custom query results.",
+          "name": "complete_table",
+          "required": "No",
+          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.profile_and_register_table",
@@ -14607,8 +14625,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def profile_and_register_table(df, *, profile_role, table=None, target=None, table_name=None, schema=None, load_strategy=None, load_strategy_parameters=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None)",
-      "source_end_line": 815,
+      "signature": "def profile_and_register_table(df, *, profile_role, table=None, target=None, table_name=None, schema=None, load_strategy=None, load_strategy_parameters=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None, processing_scope: Mapping[str, Any] | None=None, complete_table: bool=True)",
+      "source_end_line": 827,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "summary": "Profile a supplied Spark DataFrame and save its metadata records.",
@@ -15251,7 +15269,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 8,
-      "direct_call_count": 10,
+      "direct_call_count": 11,
       "discontinued_in": null,
       "examples": ">>> prep = read_pipeline_prep(\n...     source_table_id=\"warehouse:source:dbo:bookings\",\n...     source_read_strategy=\"incremental_watermark\",\n...     target_table_id=\"lakehouse:unified:dbo:bookings\",\n...     source_watermark_column=\"modified_datetime\",\n... )\n>>> prep[\"read_mode\"] in {\"skip\", \"full_dataset\", \"incremental_subset\"}\nTrue",
       "files_touched": [
@@ -15274,10 +15292,28 @@
       "max_depth": 8,
       "parameters": [
         {
-          "description": "Canonical identity of one registered source table. FabricOps resolves its physical coordinates from the Catalogue.",
+          "description": "Canonical identity of one registered source table. Omit it and supply ``source_target``, ``source_schema``, and ``source_table`` to resolve the same identity deterministically from configured physical identity.",
           "name": "source_table_id",
-          "required": "Yes",
-          "type": "str"
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Configured source target key. Mutually exclusive with ``source_table_id``.",
+          "name": "source_target",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical source schema, when the configured store uses schemas.",
+          "name": "source_schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical source table name. Required with ``source_target`` when ``source_table_id`` is omitted.",
+          "name": "source_table",
+          "required": "No",
+          "type": "str | None"
         },
         {
           "description": "Engineer-authored rule for identifying source data to process.",
@@ -15288,6 +15324,24 @@
         {
           "description": "Governed target whose ``_watermark_value`` or ``_partition_bucket`` stores successful incremental progress. Required for incremental strategies.",
           "name": "target_table_id",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Configured target key used for target-backed incremental progress.",
+          "name": "target_target",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical target schema, when the configured store uses schemas.",
+          "name": "target_schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical target table name. Required with ``target_target`` when ``target_table_id`` is omitted for incremental processing.",
+          "name": "target_table",
           "required": "No",
           "type": "str | None"
         },
@@ -15315,7 +15369,7 @@
           "evidence": [
             {
               "depth": 8,
-              "width": 10
+              "width": 11
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -15327,18 +15381,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Canonical source identity, normalized ``source_processing``, and one\n    runtime ``read_mode`` plus ``scope``. The resolved table is recorded as\n    source Lineage for the current activity. For watermark processing, the\n    governed target identity is also returned.",
-      "scope": 110,
+      "scope": 111,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def read_pipeline_prep(source_table_id: str, *, source_read_strategy: str, target_table_id: str | None=None, source_watermark_column: str | None=None, source_partition_column: str | None=None) -> dict[str, Any]",
-      "source_end_line": 446,
+      "signature": "def read_pipeline_prep(source_table_id: str | None=None, *, source_target: str | None=None, source_schema: str | None=None, source_table: str | None=None, source_read_strategy: str, target_table_id: str | None=None, target_target: str | None=None, target_schema: str | None=None, target_table: str | None=None, source_watermark_column: str | None=None, source_partition_column: str | None=None) -> dict[str, Any]",
+      "source_end_line": 487,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
-      "source_start_line": 318,
+      "source_start_line": 322,
       "summary": "Prepare an explicit governed source read without reading business rows.",
-      "transitive_function_count": 110,
+      "transitive_function_count": 111,
       "usage_notes": "Watermark subsets use the bounded interval ``(lower_bound, upper_bound]``.\nThe first watermark run remains a ``full_dataset`` read, while its scope\nretains the watermark column and captured upper bound so write preparation\ncan verify that target-backed progress reaches the inspected source state.\nSuccessful watermark progress is the maximum target ``_watermark_value``.\nSuccessful partition progress is the set of target ``_partition_bucket``\nvalues. Source Observation remains change-detection evidence and neither\nstrategy uses a secondary checkpoint commit. Partition change safety resolves\nthe source table's own processing through :func:`check_changes`; target\nselection and publication are intentionally outside this function.",
-      "width": 10
+      "width": 11
     },
     {
       "architecture_violation_count": 0,
@@ -16614,7 +16668,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 10,
+      "direct_call_count": 11,
       "discontinued_in": null,
       "examples": ">>> write_prep = write_pipeline_prep(\n...     transformed_df,\n...     target_table_id=\"lakehouse:unified:dbo:students\",\n...     source_preps=[read_prep],\n... )\n>>> write_prep[\"mode\"]\n'append'",
       "files_touched": [
@@ -16643,8 +16697,38 @@
         {
           "description": "Canonical registered target identity used to resolve physical target metadata and target-owned processing.",
           "name": "target_table_id",
-          "required": "Yes",
-          "type": "str"
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Configured target key supplied instead of ``target_table_id``.",
+          "name": "target",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical target schema, when the configured store uses schemas.",
+          "name": "schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Physical target table name. Required with ``target`` when ``target_table_id`` is omitted.",
+          "name": "table_name",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Current authored load strategy when physical identity is supplied.",
+          "name": "load_strategy",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Parameters belonging to the authored load strategy.",
+          "name": "load_strategy_parameters",
+          "required": "No",
+          "type": "dict[str, Any] | None"
         },
         {
           "description": "Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Watermark source values must remain present through transformation so target state can be persisted on each row.",
@@ -16664,7 +16748,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 10
+              "width": 11
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -16676,18 +16760,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Audited target DataFrame, physical writer mode/options, the unchanged\n    resolved processing definition, its prepared scope, and target Lineage preparation.",
-      "scope": 50,
+      "scope": 55,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def write_pipeline_prep(df, *, target_table_id: str, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 333,
+      "signature": "def write_pipeline_prep(df, *, target_table_id: str | None=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
+      "source_end_line": 361,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 157,
+      "source_start_line": 158,
       "summary": "Prepare governed target write inputs without physically writing the target.",
-      "transitive_function_count": 50,
+      "transitive_function_count": 55,
       "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter or commit source progress. It persists target Lineage at the governed\npreparation boundary. Lakehouse and Warehouse\ntargets use the same governed strategy definition; each writer applies its\nengine-specific physical execution only after this preparation succeeds.\nOverwrite is full-table for an explicitly configured ``full_dataset`` source\nand for the first ``incremental_watermark`` population whose scope retains\nits captured upper bound. Later Lakehouse incremental watermark and\npartition reads require a matching canonical scope and use ``replaceWhere``;\nlater Warehouse incremental overwrite is rejected because no equivalent\nscoped replacement is implemented. For incremental-watermark processing,\nincluding its first ``full_dataset`` population, this function evaluates\nthe transformed DataFrame before publication and requires its maximum\n``_watermark_value`` to equal the captured source upper bound. Empty or\ntruncated output fails rather than leaving target-backed progress\npermanently behind the processed window.",
-      "width": 10
+      "width": 11
     },
     {
       "architecture_violation_count": 0,
@@ -19838,6 +19922,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
+      "caller_qualified_name": "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared._normalize_datatype",
       "caller_qualified_name": "fabricops_kit.pipeline.shared._actual_schema",
       "violation_details": [],
@@ -21431,6 +21523,14 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
+      "caller_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
       "caller_qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "violation_details": [],
       "violation_types": []
@@ -24043,7 +24143,7 @@
     "detached_function_count": 62,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 891,
+    "relationship_count": 893,
     "source_referenced_function_count": 60,
     "used_function_count": 342
   },
