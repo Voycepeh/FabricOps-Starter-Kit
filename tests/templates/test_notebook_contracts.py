@@ -121,7 +121,7 @@ def test_template_notebooks_are_valid_and_code_cells_compile(notebook_path: Path
     for cell_index, source in _code_cells(notebook_path):
         tree = _parse_code_cell(notebook_path, cell_index, source)
         if tree is not None:
-            compile(tree, filename=f"{path}:{cell_index}", mode="exec")
+            compile(tree, filename=f"{notebook_path}:{cell_index}", mode="exec")
 
 
 @pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
