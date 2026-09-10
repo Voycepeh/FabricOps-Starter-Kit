@@ -346,8 +346,8 @@ def test_02_pipeline_prepares_target_before_publication_and_uses_all_values():
         assert argument in publish
 
 
-def test_02_pipeline_preserves_spark_parallel_target_processing_and_evidence():
-    """Prepared target work stays Spark-distributed and produces full-table governed evidence."""
+def test_02_pipeline_preserves_distributed_write_processing_and_evidence():
+    """The writer explicitly repartitions in Spark and produces full-table governed evidence."""
     prepare = _cell_by_id("02_pipeline.ipynb", "target-prepare").source
     publish = _cell_by_id("02_pipeline.ipynb", "target-publish").source
     evidence = _cell_by_id("02_pipeline.ipynb", "target-evidence").source
@@ -356,6 +356,7 @@ def test_02_pipeline_preserves_spark_parallel_target_processing_and_evidence():
     assert ".persist()" in prepare
     assert "profile_dataframe(prepared_target_df)" in publish
     assert "write_lakehouse_table(" in publish
+    assert "repartition_by=4" in publish
     assert ".unpersist()" in publish
     assert "read_lakehouse_table(" in evidence
     assert "profile_and_register_table(" in evidence
@@ -364,6 +365,8 @@ def test_02_pipeline_preserves_spark_parallel_target_processing_and_evidence():
     assert "METADATA_DATA_PROFILED" in markdown
     assert "METADATA_DATA_PROFILED_FREQUENCY" in markdown
     assert "METADATA_DATA_LINEAGE" in markdown
+    assert "Python threads" in markdown
+    assert "multiple writers" in markdown
     assert "ThreadPool" not in markdown
     assert "multiprocessing" not in markdown
 
