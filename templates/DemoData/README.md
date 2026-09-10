@@ -44,4 +44,13 @@ The normal baseline remains valid so the engineering demo is deterministic. Fail
 
 ## File-format variants
 
-The canonical logical Orders baseline is `orders.csv`. Equivalent JSON, Parquet, and Excel copies should be generated from this exact dataset so readers can be swapped without changing the downstream ETL story. Those binary/file-format copies are maintained separately from this scenario-definition change.
+`orders.csv` is the canonical logical Orders baseline. The following files contain the same 120 logical rows and columns so the Guided Demo can swap file readers without changing downstream ETL logic:
+
+| File | FabricOps reader |
+| --- | --- |
+| `orders.csv` | `read_lakehouse_csv()` |
+| `orders.json` | `read_lakehouse_json()` |
+| `orders.parquet` | `read_lakehouse_parquet()` |
+| `orders.xlsx` | `read_lakehouse_excel()` |
+
+`orders.json` uses JSON Lines, which matches Spark's normal JSON-reader behaviour. `orders.xlsx` contains the same canonical table on a worksheet. When `orders.csv` changes, regenerate all three variants from it and verify row, column, and value equivalence.
