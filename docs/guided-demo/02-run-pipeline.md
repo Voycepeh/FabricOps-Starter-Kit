@@ -1,29 +1,29 @@
 # Module 2: Engineer and run a data pipeline
 
-**Use the pre-wired `02_pipeline` template to run a complete FabricOps ETL in Engineering Development.**
+**Use the pre-wired `02_pipeline` template to run a complete FabricOps pipeline in Engineering Development.**
 
 **Approx. 30 min · 5 units · Engineering Development**
 
-The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific Extract, Transform, Load, and processing configuration.
+The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific Read, Transform, Write, and processing configuration.
 
-At the end of this module, you will have run a complete ETL and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
+At the end of this module, you will have run the complete pipeline and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
 
-!!! info "ETL stage terminology"
+!!! info "Pipeline stage terminology"
 
-    In `02_pipeline`, **Extract**, **Transform**, and **Load** are the user-facing ETL stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `target="source"` or `target="unified"`.
+    In `02_pipeline`, **Read**, **Transform**, and **Write** are the user-facing stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `target="source"` or `target="unified"`.
 
 !!! info "Why Guardrails are skipped in this first run"
 
     No Guardrails or Data Contract have been created for the demo table yet. That is expected.
 
-    The ETL still runs end to end. In Step 3, Governance selects the target `table_id`, authors Enrichment and Guardrails in the unified editor, and freezes the Data Contract version. Step 4 selects and validates that exact version in `02_pipeline`. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the same pipeline in Production against the active contract.
+    The pipeline still runs end to end. In Step 3, Governance selects the target `table_id`, authors Enrichment and Guardrails in the unified editor, and freezes the Data Contract version. Step 4 selects and validates that exact version in `02_pipeline`. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the same pipeline in Production against the active contract.
 
 ## Learning objectives
 
 By the end of this module, you'll be able to:
 
 - understand what the `02_pipeline` template already handles for you,
-- run a complete Extract → Transform → Load flow with demo data,
+- run a complete Read → Transform → Write flow with demo data,
 - configure Lakehouse or Warehouse sources and targets,
 - keep project-specific transformation logic visible in the intended notebook section,
 - choose Full Dataset, Incremental Watermark, or Incremental Partition processing when required,
@@ -43,7 +43,7 @@ Before starting this module:
 | Unit | What you'll learn |
 | --- | --- |
 | [1. Understand the `02_pipeline` template](02-run-pipeline/understand-template.md) | See what FabricOps wires automatically and what remains project-owned. |
-| [2. Run the baseline ETL](02-run-pipeline/run-baseline-etl.md) | Execute the complete development ETL before any Guardrails exist. |
+| [2. Run the baseline ETL](02-run-pipeline/run-baseline-etl.md) | Execute the complete development pipeline before any Guardrails exist. |
 | [3. Configure sources](02-run-pipeline/configure-sources.md) | Use Lakehouse files/tables or Warehouse tables/SQL without hardcoded Fabric routing. |
 | [4. Transform and load](02-run-pipeline/transform-and-load.md) | Add project logic and write to Lakehouse or Warehouse targets. |
 | [5. Choose processing behaviour and review results](02-run-pipeline/processing-and-results.md) | Understand full/incremental processing and inspect the concrete metadata records handed to Governance. |
@@ -52,7 +52,7 @@ Before starting this module:
 
 ```text
 Step 2
-Run the full ETL
+Run the full pipeline
 Write Catalogue / Profiled / Lineage metadata
         ↓
 Step 3
@@ -62,14 +62,14 @@ Freeze Data Contract version
         ↓
 Step 4
 Select the frozen version for table_id
-Run the same ETL and validate
+Run the same pipeline and validate
         ↓
 Step 5
 Link the tested version to the Data Agreement
 Activate the linked version
         ↓
 Step 6
-Run the same ETL in Production
+Run the same pipeline in Production
 against the active contract
 ```
 
