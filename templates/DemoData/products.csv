@@ -1,7 +1,9 @@
 product_id,product_name,product_category
-P001,Ultrabook Pro,Laptops
+P001,Laptop Sleeve,Accessories
 P002,Wireless Mouse,Accessories
-P003,27-inch Monitor,Displays
-P004,USB-C Hub,Accessories
-P005,Tablet Plus,Tablets
-P006,Mechanical Keyboard,Accessories
+P003,Mechanical Keyboard,Peripherals
+P004,USB-C Dock,Peripherals
+P005,27-inch Monitor,Displays
+P006,Webcam,Peripherals
+P007,Noise-Cancel Headset,Audio
+P008,Laptop Stand,Accessories
