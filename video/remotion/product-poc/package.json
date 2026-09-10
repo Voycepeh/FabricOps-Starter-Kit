@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fabric-msft/svg-icons": "6.1.0",
     "@remotion/cli": "4.0.339",
     "react": "19.2.4",
     "react-dom": "19.2.4",
