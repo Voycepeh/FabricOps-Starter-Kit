@@ -15,18 +15,12 @@ export type FabricIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 export const FABRIC_ICON = Fabric48Color;
 
 export const OPENING_ARTIFACTS: Array<{icon: FabricIconComponent; label: string; x: number; y: number}> = [
-  {icon: Notebook48Item, label: 'Notebook', x: 175, y: 170},
-  {icon: Lakehouse48Item, label: 'Lakehouse', x: 455, y: 118},
-  {icon: DataWarehouse48Item, label: 'Warehouse', x: 770, y: 145},
-  {icon: Environment48Item, label: 'Environment', x: 1080, y: 115},
-  {icon: Pipeline48Item, label: 'Data Pipeline', x: 1395, y: 170},
-  {icon: DataflowGen248Item, label: 'Dataflow Gen2', x: 1520, y: 410},
-  {icon: Notebook48Item, label: 'Notebook', x: 1320, y: 680},
-  {icon: Lakehouse48Item, label: 'Lakehouse', x: 1015, y: 745},
-  {icon: DataWarehouse48Item, label: 'Warehouse', x: 685, y: 735},
-  {icon: Environment48Item, label: 'Environment', x: 350, y: 685},
-  {icon: Pipeline48Item, label: 'Data Pipeline', x: 160, y: 445},
-  {icon: DataflowGen248Item, label: 'Dataflow Gen2', x: 565, y: 410},
+  {icon: Notebook48Item, label: 'Notebook', x: 300, y: 170},
+  {icon: Lakehouse48Item, label: 'Lakehouse', x: 870, y: 90},
+  {icon: DataWarehouse48Item, label: 'Warehouse', x: 1440, y: 170},
+  {icon: Environment48Item, label: 'Environment', x: 300, y: 720},
+  {icon: Pipeline48Item, label: 'Data Pipeline', x: 870, y: 820},
+  {icon: DataflowGen248Item, label: 'Dataflow Gen2', x: 1440, y: 720},
 ];
 
 export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label: string}) => (
