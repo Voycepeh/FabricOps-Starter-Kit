@@ -16,11 +16,13 @@ Environment → Extract → Transform → Load
 
 FabricOps supplies the surrounding operational behaviour such as configured IO, profiling, metadata registration, lineage, governed processing preparation, and target-backed incremental state where those capabilities are configured.
 
+In this notebook, **Extract**, **Transform**, and **Load** name the ETL stages. **Source** and **target** remain technical terms for the datasets and FabricOps configuration or lineage relationships used within those stages.
+
 Your project mainly supplies:
 
-1. the source configuration,
+1. the Extract configuration,
 2. the transformation logic,
-3. the target configuration,
+3. the Load configuration,
 4. the processing strategy when incremental behaviour is required.
 
 ## Pipeline design rule
