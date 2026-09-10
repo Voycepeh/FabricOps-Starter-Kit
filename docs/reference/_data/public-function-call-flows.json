@@ -5378,7 +5378,7 @@
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 129,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
       "source_start_line": 20,
       "supports_live_contract": false,
@@ -9544,25 +9544,21 @@
       "transitive_live_dependents": []
     },
     {
-      "contract_classification": "preview_only_internal",
-      "contract_display": "Preview-only internal",
+      "contract_classification": "internal_function",
+      "contract_display": "Internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
       "function_name": "stop_if_failed",
       "function_type": "shared_function",
-      "inbound_callers": [
-        "fabricops_kit.pipeline.check_schema.check_schema"
-      ],
+      "inbound_callers": [],
       "inbound_source_references": [
-        "fabricops_kit.pipeline.check_schema.check_schema",
-        "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "none",
       "live_since": null,
-      "public_flow_reachable": true,
+      "public_flow_reachable": false,
       "qualified_name": "fabricops_kit.pipeline.shared.stop_if_failed",
       "release_history": [],
       "release_versions": [],
@@ -13952,6 +13948,7 @@
     "fabricops_kit.pipeline.shared._result_status",
     "fabricops_kit.pipeline.shared._schema_reason",
     "fabricops_kit.pipeline.shared.build_token_map_frame",
+    "fabricops_kit.pipeline.shared.stop_if_failed",
     "fabricops_kit.pipeline.write_pii_token_map._token_map_table_name",
     "fabricops_kit.pipeline.write_pii_token_map._upsert_token_map",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
@@ -14296,7 +14293,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 13,
+      "direct_call_count": 12,
       "discontinued_in": null,
       "examples": ">>> result = check_schema(table_id=\"lakehouse||source||dbo||orders\")\n>>> result[\"can_continue\"]\nTrue",
       "files_touched": [
@@ -14333,6 +14330,12 @@
           "name": "enabled",
           "required": "No",
           "type": "bool"
+        },
+        {
+          "description": "Raise ``RuntimeError`` when a blocking schema result cannot continue.",
+          "name": "raise_on_failure",
+          "required": "No",
+          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.check_schema",
@@ -14340,13 +14343,13 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
-      "raises_documentation": "ValueError\n    If the target is unsupported or no active approved Schema guardrail\n    exists for the resolved table.\nSchemaDriftError\n    If an active blocking schema guardrail rejects the checked schema.",
+      "raises_documentation": "ValueError\n    If the target is unsupported or no active approved Schema guardrail\n    exists for the resolved table.\nRuntimeError\n    If ``raise_on_failure=True`` and a blocking schema result cannot\n    continue.",
       "refactor_signals": [
         {
           "evidence": [
             {
               "depth": 7,
-              "width": 13
+              "width": 12
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -14358,18 +14361,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Structured guardrail status, continuation decision, checks, and schema\n    differences. Governed configured-table checks append the outcome to\n    ``METADATA_GUARDRAIL_RESULTS``.",
-      "scope": 68,
+      "scope": 67,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_schema(table_id: str, *, dataframe=None, enabled: bool=True) -> dict",
-      "source_end_line": 129,
+      "signature": "def check_schema(table_id: str, *, dataframe=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
       "source_start_line": 20,
       "summary": "Check a persisted or supplied schema against configured schema intent.",
-      "transitive_function_count": 68,
+      "transitive_function_count": 67,
       "usage_notes": "Production resolves the physical table through the Catalogue and uses its\nactive frozen Data Contract. Development uses mutable authoring metadata.",
-      "width": 13
+      "width": 12
     },
     {
       "architecture_violation_count": 0,
@@ -19253,14 +19256,6 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared.select_table_guardrail_rule",
-      "caller_qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.pipeline.shared.stop_if_failed",
       "caller_qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
       "violation_details": [],
       "violation_types": []
@@ -24174,6 +24169,7 @@
     "fabricops_kit.pipeline.shared._result_status",
     "fabricops_kit.pipeline.shared._schema_reason",
     "fabricops_kit.pipeline.shared.build_token_map_frame",
+    "fabricops_kit.pipeline.shared.stop_if_failed",
     "fabricops_kit.pipeline.write_pii_token_map._token_map_table_name",
     "fabricops_kit.pipeline.write_pii_token_map._upsert_token_map",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
@@ -24222,12 +24218,12 @@
   "summary": {
     "defined_but_not_used_count": 24,
     "defined_function_count": 428,
-    "detached_function_count": 62,
+    "detached_function_count": 63,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 895,
-    "source_referenced_function_count": 60,
-    "used_function_count": 342
+    "relationship_count": 894,
+    "source_referenced_function_count": 61,
+    "used_function_count": 341
   },
   "used_functions": [
     "fabricops_kit.access.scan_workspace_access._access_rows",
@@ -24480,7 +24476,6 @@
     "fabricops_kit.pipeline.shared.resolve_target_audit_fields",
     "fabricops_kit.pipeline.shared.schema_check_core",
     "fabricops_kit.pipeline.shared.select_table_guardrail_rule",
-    "fabricops_kit.pipeline.shared.stop_if_failed",
     "fabricops_kit.pipeline.shared.validated_processing",
     "fabricops_kit.pipeline.shared.write_guardrail_result_row",
     "fabricops_kit.pipeline.write_pipeline_prep._delta_literal",

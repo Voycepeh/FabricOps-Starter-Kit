@@ -328,6 +328,7 @@ def test_02_pipeline_keeps_checks_and_profiles_visible_in_order():
         assert runner.index("read_pipeline_prep(") < runner.index("extract_df = read_")
         assert runner.index("extract_df = read_") < runner.index("check_schema(")
         assert runner.index("check_schema(") < runner.index("check_dq(")
+        assert "raise_on_failure=True" in runner
         assert runner.index("check_dq(") < runner.index("profile_and_register_table(")
         assert runner.index("profile_and_register_table(") < runner.index("EXTRACT_PREPS[EXTRACT]")
         assert 'catalogue_widget["show"](table_id=EXTRACT_TABLE_ID)' in runner
@@ -384,7 +385,8 @@ def test_02_pipeline_target_order_is_prep_checks_write_read_profile_view():
     for index in (1, 2, 3):
         assert f"EXTRACT_PREPS[{index}]" in prep
     assert "check_schema(" in checks and "check_dq(" in checks
-    assert source.index("write_pipeline_prep(") < source.index("check_schema(LOAD_TABLE_ID")
+    assert source.index("write_pipeline_prep(") < source.index("check_schema(", source.index("# L. Load"))
+    assert "raise_on_failure=True" in checks
     assert source.index("check_dq(", source.index("# L. Load")) < source.index("write_lakehouse_table(")
     for argument in ('mode=load_prep["mode"]', 'options=load_prep["options"]', 'processing_scope=load_prep["scope"]'):
         assert argument in publish

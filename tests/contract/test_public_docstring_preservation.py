@@ -16,9 +16,12 @@ def _assert_numpy_parameter_contract(function) -> None:
         assert f"\n{parameter.name} :" in doc, f"{function.__name__}.{parameter.name} is missing from its NumPy docstring"
 
 
-def test_live_observation_checks_keep_their_public_signatures() -> None:
-    """Protect the already-live standalone observation-check signatures from Stage 2 drift."""
-    assert str(inspect.signature(check_freshness)) == "(observation, *, table_id: str | None = None) -> dict"
+def test_live_observation_checks_keep_their_supported_public_signatures() -> None:
+    """Protect the explicitly extended freshness and unchanged changes signatures."""
+    assert str(inspect.signature(check_freshness)) == (
+        "(observation, *, table_id: str | None = None, enabled: bool = True, "
+        "raise_on_failure: bool = False) -> dict"
+    )
     assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
 
 
