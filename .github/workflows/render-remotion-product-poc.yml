@@ -1,0 +1,43 @@
+name: Render Remotion product POC
+
+on:
+  pull_request:
+    paths:
+      - "video/remotion/product-poc/**"
+      - ".github/workflows/render-remotion-product-poc.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: video/remotion/product-poc
+        run: npm install
+
+      - name: Type-check composition
+        working-directory: video/remotion/product-poc
+        run: npm run typecheck
+
+      - name: Render review video
+        working-directory: video/remotion/product-poc
+        run: npm run render
+
+      - name: Upload review video
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabricops-product-poc
+          path: video/remotion/product-poc/out/fabricops-product-poc.mp4
+          if-no-files-found: error
