@@ -100,6 +100,16 @@
     "avoid_usage": "using configuration-driven engineering to mean that all business transformation logic must be configurable"
   },
   {
+    "id": "etl-stages",
+    "term": "ETL stages",
+    "aliases": ["Extract → Transform → Load", "Extract, Transform, Load"],
+    "category": "FabricOps concepts",
+    "short_definition": "The user-facing stages of the canonical 02_pipeline engineering flow: Extract, Transform, and Load.",
+    "long_definition": "In FabricOps, Extract, Transform, and Load name the user-facing ETL stages in 02_pipeline. Extract prepares and reads input data, Transform contains project-owned business logic, and Load prepares and writes the governed output. Source and target remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration or API fields such as target=\"source\" or target=\"unified\"; they should not be used as competing notebook stage names.",
+    "preferred_usage": "Use Extract, Transform, and Load for 02_pipeline stage names; use source and target only for the technical dataset, lineage, processing, or configuration concepts they describe.",
+    "avoid_usage": "SOURCE or TARGET as user-facing 02_pipeline stage labels"
+  },
+  {
     "id": "full-dataset",
     "term": "full dataset",
     "aliases": [],
