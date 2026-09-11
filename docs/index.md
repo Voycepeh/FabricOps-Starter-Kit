@@ -10,7 +10,7 @@
 
 .fabricops-home-primary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.85rem;
   margin: 0.2rem 0 1.6rem;
 }
@@ -98,18 +98,6 @@
   transform: translateX(0.12rem);
 }
 
-.fabricops-home-summary {
-  margin: 1.25rem 0 1.5rem;
-  text-align: center;
-}
-
-.fabricops-home-summary img {
-  display: inline-block;
-  width: 100%;
-  max-width: 42rem;
-  height: auto;
-}
-
 .fabricops-home-quicklinks {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -150,12 +138,6 @@
   }
 }
 
-@media screen and (max-width: 768px) {
-  .fabricops-home-primary {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media screen and (max-width: 520px) {
   .fabricops-home-action {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -191,7 +173,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><path d="M8.2 7.2 10.8 15M15.8 7.2 13.2 15M8.5 6h7"></path></svg>
+      <svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"></path><path d="M14 3.5v4h4M9 12h6M9 15.5h6"></path></svg>
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
@@ -202,7 +184,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 
   <a class="fabricops-home-action" href="guided-demo/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M5 4.5h9.5a2 2 0 0 1 2 2v13H5z"></path><path d="M8 8h5M8 11.5h5M8 15h3"></path><path d="m17 8 2 2 3-3"></path></svg>
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="12" cy="11" r="2"></circle><circle cx="19" cy="5" r="2"></circle><path d="M6.5 16.7 10.5 12.5M13.5 9.7 17.5 6.3"></path></svg>
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">Step-by-step Guided Demo</span>
@@ -212,10 +194,6 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
   </a>
 </div>
 
-<figure class="fabricops-home-summary">
-  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
-</figure>
-
 ## Explore FabricOps
 
 <div class="fabricops-home-quicklinks">
@@ -223,7 +201,8 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
   <a class="fabricops-home-quicklink" href="reference/engineering-cheat-sheet/">FabricOps Engineering</a>
   <a class="fabricops-home-quicklink" href="glossary/">Glossary</a>
   <a class="fabricops-home-quicklink" href="reference/metadata/">Metadata Tables</a>
-  <a class="fabricops-home-quicklink" href="reference/">Functions</a>
+  <a class="fabricops-home-quicklink" href="reference/">Function Reference</a>
+  <a class="fabricops-home-quicklink" href="function-call-graph/">Call Flow</a>
   <a class="fabricops-home-quicklink" href="reference/dq-rules/">DQ Rules</a>
   <a class="fabricops-home-quicklink" href="releases/">Releases</a>
 </div>
