@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   render:
@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -41,3 +43,17 @@ jobs:
           name: fabricops-product-poc
           path: video/remotion/product-poc/out/fabricops-product-poc.mp4
           if-no-files-found: error
+
+      - name: Sync rendered homepage video
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          cp video/remotion/product-poc/out/fabricops-product-poc.mp4 docs/assets/FabricOps_Overview_Video_web.mp4
+          if git diff --quiet -- docs/assets/FabricOps_Overview_Video_web.mp4; then
+            echo "Homepage video is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/FabricOps_Overview_Video_web.mp4
+          git commit -m "video: update homepage overview render"
+          git push origin "HEAD:${GITHUB_HEAD_REF}"

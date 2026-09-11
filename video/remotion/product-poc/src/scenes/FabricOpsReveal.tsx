@@ -15,7 +15,7 @@ export const FabricOpsReveal = () => {
     <div style={{width: 920, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: brand, transform: `translateX(${(1 - brand) * -180}px) scale(${0.86 + brand * 0.14})`}}>
       <div style={{alignSelf: 'flex-start', marginLeft: 65, fontSize: VIDEO_CONFIG.text.title, fontWeight: 820, color: '#fff', opacity: how, transform: `translateY(${(1 - how) * -90}px)`}}>How</div>
       <Brand />
-      <div style={{alignSelf: 'flex-end', marginRight: 75, fontSize: VIDEO_CONFIG.text.title, fontWeight: 820, color: '#fff', opacity: works, transform: `translateY(${(1 - works) * 80}px)`}}>works</div>
+      <div style={{alignSelf: 'flex-end', marginRight: 75, fontSize: VIDEO_CONFIG.text.title, fontWeight: 820, color: '#fff', opacity: works, transform: `translateY(${(1 - works) * 80}px)`}}>works?</div>
     </div>
   </div>;
 };
