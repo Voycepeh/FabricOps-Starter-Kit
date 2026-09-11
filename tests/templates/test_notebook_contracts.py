@@ -305,6 +305,17 @@ def test_02_pipeline_write_is_one_complete_copyable_block():
     assert "resolve_table_id(" in config
     assert "load_strategy=WRITE_LOAD_STRATEGY" in block
     assert "load_strategy_parameters=WRITE_LOAD_STRATEGY_PARAMETERS" in block
+    assert "pipeline_prep=write_prep" in block
+    for repeated_setting in (
+        'write_prep["target"]["table_name"]',
+        'target=write_prep["target"]["target"]',
+        'schema=write_prep["target"]["schema"]',
+        'mode=write_prep["mode"]',
+        'options=write_prep["options"]',
+        'processing_scope=write_prep["scope"]',
+        'success_context=write_prep["success_context"]',
+    ):
+        assert repeated_setting not in block
     stages = [
         "write_pipeline_prep(", "check_schema(", "check_dq(", "check_sensitive_data(",
         'if not sensitive_result["can_continue"]', 'sensitive_result["dataframe"]', "write_lakehouse_table(",

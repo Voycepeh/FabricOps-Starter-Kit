@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .shared import (
@@ -15,20 +16,17 @@ from .shared import (
 
 def write_lakehouse_table(
     df,
-    table_name: str,
+    table_name: str | None = None,
     *,
-    target: str = "unified",
+    target: str | None = None,
     schema=None,
-    mode="append",
+    mode=None,
     partition_by=None,
     repartition_by=None,
     options=None,
     verbose=True,
     context=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
-    processing_scope=None,
-    success_context=None,
+    pipeline_prep: Mapping[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
@@ -57,22 +55,26 @@ def write_lakehouse_table(
         Spark DataFrame to write. When ``repartition_by`` is provided, the
         function creates a repartitioned DataFrame for the write; it does not
         mutate the original DataFrame object.
-    table_name : str
+    table_name : str, optional
         Lakehouse table name. Supply ``schema`` and ``table_name`` separately;
         do not pass a qualified name such as ``schema.table`` through
         ``table_name``.
-    target : str, default="unified"
+        Omit this argument when ``pipeline_prep`` is supplied.
+    target : str, optional
         Logical Lakehouse target from ``00_env_config``. FabricOps resolves
         the selected environment, workspace, Lakehouse item, optional schema,
         table name, and OneLake Delta path under the Lakehouse ``Tables``
         area.
     schema : str or None, default=None
         Optional schema override for schema-enabled Lakehouses.
-    mode : {"append", "overwrite", "errorifexists", "ignore"}, default="append"
+        Omit this argument when ``pipeline_prep`` is supplied. Standalone
+        writes use ``unified`` when omitted.
+    mode : {"append", "overwrite", "errorifexists", "ignore"}, optional
         Controls how the target table is written. ``append`` adds rows,
         ``overwrite`` may replace existing table data and should be selected
         explicitly, ``errorifexists`` fails when the destination exists, and
-        ``ignore`` skips the write when the destination exists.
+        ``ignore`` skips the write when the destination exists. Standalone
+        writes use ``append`` when omitted.
     partition_by : str or list[str] or tuple[str, ...], optional
         Optional column name or collection of columns used to physically
         partition the persisted Delta table. This controls the table's stored
@@ -96,16 +98,12 @@ def write_lakehouse_table(
         Whether to print the resolved output path before writing.
     context : dict[str, Any], optional
         Active Fabric context override.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Governed target-maintenance strategy returned by
-        :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be
-        ``None`` because the physical action is a Delta merge, not an append.
-    load_strategy_parameters : dict, optional
-        Governed strategy parameters returned by :func:`write_pipeline_prep`.
-    processing_scope : dict, optional
-        Prepared full-dataset or partition write scope.
-    success_context : dict, optional
-        Post-write metadata context returned by :func:`write_pipeline_prep`.
+    pipeline_prep : mapping, optional
+        Complete result returned by :func:`write_pipeline_prep`. When supplied,
+        its resolved target, governed processing definition, write scope,
+        physical options, and post-write metadata context are authoritative.
+        Do not repeat ``table_name``, ``target``, ``schema``, ``mode``, or
+        ``options``.
         Target Lineage and accepted Source Observation baselines are committed only
         after the physical Delta write succeeds.
 
@@ -291,18 +289,50 @@ def write_lakehouse_table(
 
     """
     validate_dataframe_writer(df)
-    if load_strategy is not None:
-        if processing_scope is None:
-            raise ValueError("processing_scope is required with load_strategy.")
-        strategy = str(load_strategy).strip().lower()
+    success_context = None
+    processing_scope = None
+    processing = None
+    if pipeline_prep is not None:
+        if not isinstance(pipeline_prep, Mapping):
+            raise ValueError("pipeline_prep must be the result returned by write_pipeline_prep.")
+        repeated = {
+            "table_name": table_name,
+            "target": target,
+            "schema": schema,
+            "mode": mode,
+            "options": options,
+        }
+        supplied = [name for name, value in repeated.items() if value is not None]
+        if supplied:
+            raise ValueError(
+                "pipeline_prep already owns target and write settings; remove: " + ", ".join(supplied) + "."
+            )
+        try:
+            identity = pipeline_prep["target"]
+            table_name = identity["table_name"]
+            target = identity["target"]
+            schema = identity["schema"]
+            mode = pipeline_prep["mode"]
+            options = pipeline_prep["options"]
+            processing = pipeline_prep["processing"]
+            processing_scope = pipeline_prep["scope"]
+            success_context = pipeline_prep["success_context"]
+        except (KeyError, TypeError) as exc:
+            raise ValueError(
+                "pipeline_prep is incomplete; rerun write_pipeline_prep for this target before writing."
+            ) from exc
+
+    target = target or "unified"
+    if table_name is None:
+        raise ValueError("table_name is required for a standalone write; otherwise supply pipeline_prep.")
+    if processing is not None:
+        strategy = str(processing.get("load_strategy") or "").strip().lower()
         if strategy in {"scd1", "scd2"}:
-            if mode is not None:
-                raise ValueError("mode must be None for governed SCD execution; SCD strategies use Delta merge semantics.")
             from fabricops_kit.pipeline.shared import execute_lakehouse_processing
 
             execute_lakehouse_processing(
                 df, table_name=table_name, target=target, schema=schema,
-                processing={"load_strategy": strategy, **(load_strategy_parameters or {})},
+                processing=processing,
                 scope=processing_scope, context=context,
             )
             if success_context is not None:
@@ -311,11 +341,14 @@ def write_lakehouse_table(
                 commit_pipeline_write_success(success_context)
             return
         if strategy not in {"overwrite", "append"} or mode != strategy:
-            raise ValueError("Governed overwrite/append load_strategy must match the physical writer mode.")
+            raise ValueError(
+                f"Governed Lakehouse write for table_id {identity['table_id']!r} has inconsistent "
+                "preparation state; rerun write_pipeline_prep before writing."
+            )
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         target, table_name, schema, context=context
     )
-    normalized_mode = normalize_write_mode(mode)
+    normalized_mode = normalize_write_mode(mode or "append")
     df = repartition_dataframe_for_write(df, repartition_by)
     if verbose:
         print(f"Writing Lakehouse table to {path}")

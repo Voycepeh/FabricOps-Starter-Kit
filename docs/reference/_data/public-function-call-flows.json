@@ -5035,9 +5035,9 @@
         "0.1.0",
         "0.2.0"
       ],
-      "source_end_line": 326,
+      "source_end_line": 359,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-      "source_start_line": 16,
+      "source_start_line": 17,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -16429,28 +16429,28 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``.",
+          "description": "Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``. Omit this argument when ``pipeline_prep`` is supplied.",
           "name": "table_name",
-          "required": "Yes",
-          "type": "str"
+          "required": "No",
+          "type": "str | None"
         },
         {
           "description": "Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area.",
           "name": "target",
           "required": "No",
-          "type": "str"
+          "type": "str | None"
         },
         {
-          "description": "Optional schema override for schema-enabled Lakehouses.",
+          "description": "Optional schema override for schema-enabled Lakehouses. Omit this argument when ``pipeline_prep`` is supplied. Standalone writes use ``unified`` when omitted.",
           "name": "schema",
           "required": "No",
           "type": "str or None, default=None"
         },
         {
-          "description": "Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists.",
+          "description": "Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. Standalone writes use ``append`` when omitted.",
           "name": "mode",
           "required": "No",
-          "type": "{\"append\", \"overwrite\", \"errorifexists\", \"ignore\"}, default=\"append\""
+          "type": "{\"append\", \"overwrite\", \"errorifexists\", \"ignore\"}, optional"
         },
         {
           "description": "Optional column name or collection of columns used to physically partition the persisted Delta table. This controls the table's stored layout and is separate from Spark execution repartitioning. Use columns with appropriate cardinality and stable downstream filtering value.",
@@ -16483,28 +16483,10 @@
           "type": "dict[str, Any], optional"
         },
         {
-          "description": "Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append.",
-          "name": "load_strategy",
+          "description": "Complete result returned by :func:`write_pipeline_prep`. When supplied, its resolved target, governed processing definition, write scope, physical options, and post-write metadata context are authoritative. Do not repeat ``table_name``, ``target``, ``schema``, ``mode``, or ``options``. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds.",
+          "name": "pipeline_prep",
           "required": "No",
-          "type": "{\"overwrite\", \"append\", \"scd1\", \"scd2\"}, optional"
-        },
-        {
-          "description": "Governed strategy parameters returned by :func:`write_pipeline_prep`.",
-          "name": "load_strategy_parameters",
-          "required": "No",
-          "type": "dict, optional"
-        },
-        {
-          "description": "Prepared full-dataset or partition write scope.",
-          "name": "processing_scope",
-          "required": "No",
-          "type": "dict, optional"
-        },
-        {
-          "description": "Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds.",
-          "name": "success_context",
-          "required": "No",
-          "type": "dict, optional"
+          "type": "Mapping[str, Any] | None"
         }
       ],
       "public_import_path": "fabricops_kit.write_lakehouse_table",
@@ -16546,10 +16528,10 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None, load_strategy=None, load_strategy_parameters=None, processing_scope=None, success_context=None)",
-      "source_end_line": 326,
+      "signature": "def write_lakehouse_table(df, table_name: str | None=None, *, target: str | None=None, schema=None, mode=None, partition_by=None, repartition_by=None, options=None, verbose=True, context=None, pipeline_prep: Mapping[str, Any] | None=None)",
+      "source_end_line": 359,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-      "source_start_line": 16,
+      "source_start_line": 17,
       "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table.",
       "transitive_function_count": 48,
       "usage_notes": "Parallel processing and write concurrency\n    Spark writes DataFrame partitions concurrently across available\n    executors. ``write_lakehouse_table`` can repartition the input\n    DataFrame before writing, allowing the caller to influence how many\n    Spark tasks participate in the write and how records are distributed\n    between those tasks.\n\n    This is distributed Spark execution, not Python thread-level\n    concurrency. The function does not start multiple Python writers and\n    does not submit the same table write several times.\n\n    Repartitioning can improve throughput when the existing DataFrame has\n    too few partitions, poorly distributed partitions, or severe data\n    skew. It also introduces a Spark shuffle, so increasing the partition\n    count does not automatically make every write faster.\n\nInteger repartitioning\n    Passing a positive integer to ``repartition_by`` redistributes the\n    DataFrame into that number of Spark partitions before writing by\n    calling ``df.repartition(number)``. Spark can then schedule up to that\n    many partition-writing tasks, subject to available executor capacity\n    and Spark/Delta writer behaviour.\n\nColumn-based repartitioning\n    Passing a column name, string-only list, or string-only tuple repartitions\n    the DataFrame by the selected values before writing by calling\n    ``df.repartition(*columns)``.\n    Rows with the same partitioning key are routed consistently according\n    to Spark's hash partitioning. Column-based repartitioning can help\n    distribute a large write using meaningful keys, but low-cardinality or\n    heavily skewed keys can create unbalanced partitions. This does not\n    physically partition the stored Delta table unless ``partition_by`` is\n    also supplied. A list or tuple such as ``(32, \"academic_year\",\n    \"semester\")`` calls ``df.repartition(32, \"academic_year\",\n    \"semester\")`` and controls both Spark task count and distribution keys\n    for the current write.\n\nRepartitioning versus physical Delta partitioning\n\n    | Setting | Affects | Purpose | Persisted in table layout |\n    | --- | --- | --- | --- |\n    | ``repartition_by`` | Spark DataFrame before writing | Controls task parallelism and row distribution during the write | No |\n    | ``partition_by`` | Delta table files and folders | Organizes stored data by selected columns for pruning and maintenance | Yes |\n\n    ``repartition_by`` changes the DataFrame's Spark execution partitions\n    before the write. It affects how Spark performs the current operation\n    but does not define the long-term physical partition columns of the\n    Delta table.\n\n    ``partition_by`` defines the physical Delta table partition layout. It\n    should be selected based on query patterns, cardinality, data volume,\n    and file-management considerations rather than being used as a general\n    concurrency switch.\n\n    Both options may be used together when the execution distribution and\n    persisted Delta layout intentionally serve different requirements.\n\nImplementation sequence\n    The function validates the DataFrame writer, validates the table\n    identity and write mode, resolves the lakehouse target and optional\n    schema, validates ``repartition_by``, calls ``df.repartition(number)``\n    for a positive integer, ``df.repartition(*columns)`` for a column\n    name/list/tuple, or ``df.repartition(number, *columns)`` when a list or\n    tuple begins with a positive integer, passes the resulting DataFrame to\n    the Delta writer,\n    applies ``partition_by`` only to the physical Delta write\n    configuration, executes the selected write mode, and returns ``None``.\n\nPerformance notes\n    The existing number of DataFrame partitions may already be\n    appropriate. Check the workload before forcing repartitioning. Too few\n    partitions can underuse available Spark executors and produce very\n    large individual write tasks. Too many partitions can increase shuffle\n    overhead and create excessive small files. Repartitioning by a skewed\n    column may concentrate a large proportion of records in only a few\n    tasks. Physical Delta partitioning with high-cardinality columns can\n    create excessive directories and small files. Repartitioning improves\n    the opportunity for concurrent Spark task execution but does not\n    override cluster capacity, lakehouse service limits, locking\n    behaviour, or concurrent-operation constraints.\n\nErrors and edge cases\n    ``repartition_by`` rejects zero or negative integers, missing columns\n    when DataFrame columns are available, unsupported types, empty lists or\n    tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,\n    append-versus-overwrite conflicts, insufficient permissions,\n    concurrent writes to the same target table, partial or failed Delta\n    commits, empty DataFrames, small-file risk, and Spark shuffle failures\n    are handled by Spark/Delta or the configured Fabric runtime. The\n    function does not make simultaneous independent writes to the same\n    table safe.\n\nSide effects\n    This function performs a physical Delta table write and triggers Spark\n    execution. Depending on the selected mode, it may create, append to,\n    replace, or overwrite the target table. ``repartition_by`` triggers a\n    shuffle before the write. ``partition_by`` affects the persisted Delta\n    layout.",
