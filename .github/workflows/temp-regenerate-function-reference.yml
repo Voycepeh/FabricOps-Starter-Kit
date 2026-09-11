@@ -31,31 +31,33 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen
 
-      - name: Regenerate twice and verify deterministic diff
+      - name: Regenerate, review, commit locally, then regenerate again
         shell: bash
         run: |
           set -euo pipefail
           source .venv/bin/activate
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          echo 'First generator run'
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference > /tmp/first.diff
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference > /tmp/second.diff
-          cmp /tmp/first.diff /tmp/second.diff
-          echo 'Changed generated files:'
+          echo 'Generated diff:'
+          git diff --stat -- docs/api/reference docs/reference
           git diff --name-only -- docs/api/reference docs/reference
           git diff --check
 
-      - name: Commit generated outputs
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -u docs/api/reference docs/reference
           if git diff --cached --quiet; then
             echo 'No generated changes to commit.'
             exit 0
           fi
-          git diff --cached --stat
           git commit -m 'chore: refresh generated function references'
+
+          echo 'Second generator run'
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          echo 'Diff after second generator run:'
+          git diff --stat -- docs/api/reference docs/reference
+          git diff --check
+          git diff --exit-code -- docs/api/reference docs/reference
+
           git push origin HEAD:codex/redesign-notebook-data-contract-selection-1i5elx
