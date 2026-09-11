@@ -7,46 +7,27 @@ export type FabricIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
 const icons = FabricIconLibrary as unknown as Record<string, FabricIconComponent | undefined>;
 
-const preferredArtifacts = [
-  {names: ['Notebook48Item'], label: 'Notebook'},
-  {names: ['Lakehouse48Item'], label: 'Lakehouse'},
-  {names: ['DataWarehouse48Item', 'DataWarehouse48Color'], label: 'Warehouse'},
-  {names: ['Environment48Item'], label: 'Environment'},
-  {names: ['Pipeline48Item', 'DataFactory48Color'], label: 'Data Pipeline'},
-  {names: ['DataflowGen248Item'], label: 'Dataflow Gen2'},
-  {names: ['DataEngineering48Color'], label: 'Data Engineering'},
-  {names: ['DataScience48Color'], label: 'Data Science'},
-  {names: ['Databases48Color', 'SQLDatabase48Item', 'SqlDatabase48Item'], label: 'SQL Database'},
-  {names: ['Eventstream48Item'], label: 'Eventstream'},
-  {names: ['Eventhouse48Item', 'KQLDatabase48Item'], label: 'Eventhouse'},
-  {names: ['SemanticModel48Item'], label: 'Semantic Model'},
-  {names: ['Report48Item'], label: 'Report'},
-  {names: ['Dashboard48Item'], label: 'Dashboard'},
-  {names: ['MirroredDatabase48Item'], label: 'Mirrored Database'},
-  {names: ['MLModel48Item', 'MlModel48Item'], label: 'ML Model'},
-  {names: ['OneLake48Color', 'OneLake48Item'], label: 'OneLake'},
-  {names: ['GraphIntelligence48Color'], label: 'Graph Intelligence'},
-] as const;
+const DEFAULT_ICON_SCALE = 1.34;
 
-const artifactPositions = [
-  {x: 45, y: 28},
-  {x: 363, y: 28},
-  {x: 681, y: 28},
-  {x: 999, y: 28},
-  {x: 1317, y: 28},
-  {x: 1635, y: 28},
-  {x: 45, y: 270},
-  {x: 45, y: 480},
-  {x: 45, y: 690},
-  {x: 1635, y: 270},
-  {x: 1635, y: 480},
-  {x: 1635, y: 690},
-  {x: 45, y: 868},
-  {x: 363, y: 868},
-  {x: 681, y: 868},
-  {x: 999, y: 868},
-  {x: 1317, y: 868},
-  {x: 1635, y: 868},
+const artifactDefinitions = [
+  {names: ['Notebook48Item'], label: 'Notebook', x: 45, y: 28, scale: 1.42},
+  {names: ['Lakehouse48Item'], label: 'Lakehouse', x: 363, y: 28, scale: DEFAULT_ICON_SCALE},
+  {names: ['DataWarehouse48Item', 'DataWarehouse48Color'], label: 'Warehouse', x: 681, y: 28, scale: 1.4},
+  {names: ['Environment48Item'], label: 'Environment', x: 999, y: 28, scale: 1.45},
+  {names: ['Pipeline48Item', 'DataFactory48Color'], label: 'Data Pipeline', x: 1317, y: 28, scale: 1.38},
+  {names: ['DataflowGen248Item'], label: 'Dataflow Gen2', x: 1635, y: 28, scale: 1.42},
+  {names: ['DataEngineering48Color'], label: 'Data Engineering', x: 45, y: 270, scale: 1.28},
+  {names: ['DataScience48Color'], label: 'Data Science', x: 45, y: 480, scale: 1.3},
+  {names: ['Databases48Color', 'SQLDatabase48Item', 'SqlDatabase48Item'], label: 'SQL Database', x: 45, y: 690, scale: 1.3},
+  {names: ['Eventstream48Item'], label: 'Eventstream', x: 1635, y: 270, scale: 1.44},
+  {names: ['Eventhouse48Item', 'KQLDatabase48Item'], label: 'Eventhouse', x: 1635, y: 480, scale: 1.42},
+  {names: ['SemanticModel48Item'], label: 'Semantic Model', x: 1635, y: 690, scale: 1.42},
+  {names: ['Report48Item'], label: 'Report', x: 45, y: 868, scale: 1.42},
+  {names: ['Dashboard48Item'], label: 'Dashboard', x: 363, y: 868, scale: 1.44},
+  {names: ['MirroredDatabase48Item'], label: 'Mirrored Database', x: 681, y: 868, scale: 1.42},
+  {names: ['MLModel48Item', 'MlModel48Item'], label: 'ML Model', x: 999, y: 868, scale: 1.45},
+  {names: ['OneLake48Color', 'OneLake48Item'], label: 'OneLake', x: 1317, y: 868, scale: 1.28},
+  {names: ['GraphIntelligence48Color'], label: 'Graph Intelligence', x: 1635, y: 868, scale: 1.28},
 ] as const;
 
 const humanizeIconName = (name: string) =>
@@ -66,7 +47,7 @@ const fallbackIconNames = Object.keys(icons).filter(
 
 const usedIconNames = new Set<string>();
 
-const artifactTypes = preferredArtifacts.map(({names, label}) => {
+export const OPENING_ARTIFACTS = artifactDefinitions.map(({names, label, x, y, scale}) => {
   const preferredName = names.find((name) => icons[name] && !usedIconNames.has(name));
   const resolvedName = preferredName ?? fallbackIconNames.find((name) => !usedIconNames.has(name));
 
@@ -78,15 +59,13 @@ const artifactTypes = preferredArtifacts.map(({names, label}) => {
   return {
     icon: icons[resolvedName] as FabricIconComponent,
     label: preferredName ? label : humanizeIconName(resolvedName),
+    x,
+    y,
+    scale,
   };
 });
 
-export const OPENING_ARTIFACTS = artifactPositions.map((position, index) => ({
-  ...artifactTypes[index],
-  ...position,
-}));
-
-export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label: string}) => {
+export const Artifact = ({icon: Icon, label, scale = DEFAULT_ICON_SCALE}: {icon: FabricIconComponent; label: string; scale?: number}) => {
   const {sizes, text} = VIDEO_CONFIG;
 
   return (
@@ -96,12 +75,12 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
         height: sizes.openingArtifactHeight,
         boxSizing: 'border-box',
         borderRadius: 30,
-        padding: '14px 14px 12px',
+        padding: '8px 12px 9px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 2,
         background: 'linear-gradient(180deg, #102746f2 0%, #0c1d35f2 100%)',
         border: '1px solid #3a8ee866',
         boxShadow: '0 18px 38px #0008, inset 0 1px #ffffff12, 0 0 28px #1479cf16',
@@ -130,17 +109,19 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
             maxWidth: 'none',
             maxHeight: 'none',
             flex: '0 0 auto',
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
           }}
         />
       </div>
       <div
         style={{
           width: '100%',
-          minHeight: 30,
+          minHeight: 26,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: text.artifactLabel,
+          fontSize: text.artifactLabel - 2,
           lineHeight: 1.05,
           fontWeight: 760,
           color: theme.text,
