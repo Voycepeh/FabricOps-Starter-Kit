@@ -199,6 +199,19 @@ def write_pipeline_prep(
         )
 
     mode = strategy if strategy in {"overwrite", "append"} else None
+    context["_fabricops_active_profile_registration"] = {
+        "profile_role": "target",
+        "table": dict(target_identity),
+        "load_strategy": strategy,
+        "load_strategy_parameters": {
+            name: value
+            for name, value in processing.items()
+            if name not in {
+                "load_strategy", "source", "contract_id", "contract_version",
+                "owner_notebook_id", "owner_notebook_name",
+            }
+        },
+    }
     return {
         "df": prepared_df,
         "mode": mode,

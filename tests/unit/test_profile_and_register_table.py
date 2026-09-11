@@ -226,7 +226,7 @@ def test_profile_registration_call_flow_records_shared_frequency_implementation(
     assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in direct_callees
 
 
-def test_profile_and_register_table_signature_requires_profile_role():
+def test_profile_and_register_table_signature_supports_active_prep_context():
     parameters = inspect.signature(profile_and_register_table).parameters
     assert list(parameters) == [
         "df",
@@ -243,7 +243,38 @@ def test_profile_and_register_table_signature_requires_profile_role():
         "frequency_profile_df",
         "complete_table",
     ]
-    assert parameters["profile_role"].default is inspect.Parameter.empty
+    assert parameters["profile_role"].default is None
+
+
+def test_profile_and_register_table_consumes_active_read_prep_context(
+    spark_session, monkeypatch, registered
+):
+    """Normal pipeline profiling does not repeat role or physical identity."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    identity = {
+        "table_id": build_table_id("lakehouse", "raw", None, "customers"),
+        "target": "raw",
+        "schema": None,
+        "table_name": "customers",
+        "store_kind": "lakehouse",
+    }
+    context = {
+        "config": object(),
+        "env": "dev",
+        "activityId": "activity-1",
+        "currentWorkspaceId": "workspace-1",
+        "currentWorkspaceName": "Workspace One",
+        "currentNotebookId": "notebook-1",
+        "currentNotebookName": "Notebook One",
+        "userName": "tester",
+        "_fabricops_active_profile_registration": {"profile_role": "source", "table": identity},
+    }
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (context["config"], "dev", context))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
+
+    result = profile_and_register_table(_source_df(spark_session), frequency_columns=[])
+
+    assert {row.table_id for row in result.collect()} == {identity["table_id"]}
 
 
 def test_resolved_identity_uses_active_environment_and_configured_lakehouse(monkeypatch):

@@ -86,6 +86,10 @@ def read_pipeline_prep(
     persist_lineage_participation(
         table_id=str(source_identity["table_id"]),
         pipeline_role="source",
-        context=context,
+        context=dict(context),
     )
+    context["_fabricops_active_profile_registration"] = {
+        "profile_role": "source",
+        "table": dict(source_identity),
+    }
     return {"table_id": source_identity["table_id"], "source": source_identity}

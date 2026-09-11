@@ -6107,7 +6107,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 821,
+      "source_end_line": 853,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "supports_live_contract": true,
@@ -6204,7 +6204,7 @@
       "qualified_name": "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 91,
+      "source_end_line": 95,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
       "source_start_line": 15,
       "supports_live_contract": false,
@@ -9543,7 +9543,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 232,
+      "source_end_line": 245,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 68,
       "supports_live_contract": false,
@@ -14263,7 +14263,7 @@
       "depth": 6,
       "direct_call_count": 17,
       "discontinued_in": null,
-      "examples": "Not documented yet",
+      "examples": "Profile and register a complete table immediately after Read preparation:\n\n>>> read_prep = read_pipeline_prep(\n...     source_target=\"source\",\n...     source_schema=\"dbo\",\n...     source_table=\"bookings\",\n... )\n>>> read_df = read_lakehouse_table(table_id=read_prep[\"table_id\"])\n>>> profile = profile_and_register_table(read_df)",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -14349,13 +14349,13 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Selects the profiling and Catalogue registration rules for the asset. ``source`` rejects target-owned load-strategy metadata. ``target`` requires and stores the governed target processing definition in ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage; governed pipeline preparation and successful publication own source and target Lineage respectively.",
+          "description": "Selects the profiling and Catalogue registration rules for the asset. ``source`` rejects target-owned load-strategy metadata. ``target`` requires and stores the governed target processing definition in ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage; governed pipeline preparation and successful publication own source and target Lineage respectively. Normal pipeline usage omits this value because :func:`read_pipeline_prep` and :func:`write_pipeline_prep` establish it in the active context.",
           "name": "profile_role",
-          "required": "Yes",
-          "type": "{\"source\", \"target\"}"
+          "required": "No",
+          "type": "{\"source\", \"target\"}, optional"
         },
         {
-          "description": "Canonical resolved table identity returned as ``read_pipeline_prep()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity.",
+          "description": "Canonical resolved table identity returned as ``read_pipeline_prep()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity. Normal pipeline usage omits it and consumes the active preparation identity.",
           "name": "table",
           "required": "No",
           "type": "mapping, optional"
@@ -14455,8 +14455,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def profile_and_register_table(df, *, profile_role, table=None, target=None, table_name=None, schema=None, load_strategy=None, load_strategy_parameters=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None, complete_table: bool=True)",
-      "source_end_line": 821,
+      "signature": "def profile_and_register_table(df, *, profile_role=None, table=None, target=None, table_name=None, schema=None, load_strategy=None, load_strategy_parameters=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None, complete_table: bool=True)",
+      "source_end_line": 853,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "summary": "Profile a supplied Spark DataFrame and save its metadata records.",
@@ -15190,7 +15190,7 @@
         "large_width_or_depth"
       ],
       "signature": "def read_pipeline_prep(source_table_id: str | None=None, *, source_target: str | None=None, source_schema: str | None=None, source_table: str | None=None) -> dict[str, Any]",
-      "source_end_line": 91,
+      "source_end_line": 95,
       "source_path": "src/fabricops_kit/pipeline/read_pipeline_prep.py",
       "source_start_line": 15,
       "summary": "Resolve and register one governed source before physically reading it.",
@@ -16578,7 +16578,7 @@
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str | None=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 232,
+      "source_end_line": 245,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 68,
       "summary": "Prepare governed target write inputs without physically writing the target.",
