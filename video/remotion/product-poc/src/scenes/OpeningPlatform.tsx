@@ -5,6 +5,24 @@ import {VIDEO_CONFIG} from '../videoConfig';
 const OPENING_CENTER = {x: 960, y: 540} as const;
 const PUSH_DISTANCE = 1500;
 
+const burstOffsets = [0, 6, 12, 18, 24, 30] as const;
+const entryVectors = [
+  {x: -90, y: -55},
+  {x: 70, y: -75},
+  {x: 0, y: -95},
+  {x: -95, y: 40},
+  {x: 95, y: 30},
+  {x: 25, y: 90},
+] as const;
+
+const emphasisCues = [
+  {label: 'Notebook', at: 5.05},
+  {label: 'Data Pipeline', at: 5.42},
+  {label: 'Lakehouse', at: 5.79},
+  {label: 'Warehouse', at: 6.16},
+  {label: 'Environment', at: 6.53},
+] as const;
+
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -29,11 +47,22 @@ export const OpeningPlatform = () => {
   return (
     <div style={{position: 'absolute', inset: 0}}>
       {OPENING_ARTIFACTS.map((item, index) => {
-        const delay =
-          timing.openingHeroHold +
-          index * timing.itemStagger +
-          Math.floor(index / 6) * timing.openingWavePause;
-        const enter = spring({frame: frame - delay, fps, config: {damping: 18, stiffness: 92}});
+        const burstStart = Math.round(5 * fps) + burstOffsets[index % burstOffsets.length];
+        const enter = interpolate(frame, [burstStart, burstStart + 14], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.out(Easing.back(1.35)),
+        });
+        const cue = emphasisCues.find((entry) => entry.label === item.label);
+        const cueFrame = cue ? cue.at * fps : -9999;
+        const emphasis = cue
+          ? interpolate(frame, [cueFrame - 2, cueFrame + 4, cueFrame + 10, cueFrame + 16], [0, 1, 1, 0], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+              easing: Easing.inOut(Easing.cubic),
+            })
+          : 0;
+        const vector = entryVectors[index % entryVectors.length];
         const cardCenterX = item.x + sizes.openingArtifactWidth / 2;
         const cardCenterY = item.y + sizes.openingArtifactHeight / 2;
         const deltaX = cardCenterX - OPENING_CENTER.x;
@@ -41,6 +70,9 @@ export const OpeningPlatform = () => {
         const magnitude = Math.max(1, Math.hypot(deltaX, deltaY));
         const pushX = (deltaX / magnitude) * PUSH_DISTANCE * push;
         const pushY = (deltaY / magnitude) * PUSH_DISTANCE * push;
+        const entryX = vector.x * (1 - enter);
+        const entryY = vector.y * (1 - enter);
+        const scale = (0.78 + enter * 0.22) * (1 + emphasis * 0.16);
 
         return (
           <div
@@ -50,7 +82,9 @@ export const OpeningPlatform = () => {
               left: item.x,
               top: item.y,
               opacity: enter,
-              transform: `translate(${pushX}px, ${pushY + (1 - enter) * 42}px) scale(${0.72 + enter * 0.28})`,
+              transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
+              zIndex: emphasis > 0 ? 4 : 1,
+              filter: emphasis > 0 ? `drop-shadow(0 0 ${18 + emphasis * 18}px #35bdf0aa)` : 'none',
             }}
           >
             <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
