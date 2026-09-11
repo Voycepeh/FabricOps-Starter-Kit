@@ -26,7 +26,7 @@ export const VIDEO_CONFIG = {
     itemStagger: 7,
     openingWavePause: 12,
     openingHeroHold: 42,
-    openingQuestionAt: 172,
+    openingQuestionAt: 220,
     operatingContractDelay: 115,
     operatingHandshakeDelay: 165,
     workflowStepGap: 45,
@@ -47,10 +47,10 @@ const {scenes, timing} = VIDEO_CONFIG;
 
 export const SCENE_STARTS = {
   opening: 0,
-  fabricOps: scenes.opening,
-  notebooks: scenes.opening + scenes.fabricOps + timing.sceneGap,
-  workflow: scenes.opening + scenes.fabricOps + timing.sceneGap + scenes.notebooks + timing.sceneGap,
-  cta: scenes.opening + scenes.fabricOps + timing.sceneGap + scenes.notebooks + timing.sceneGap + scenes.workflow + timing.sceneGap,
+  fabricOps: scenes.opening + timing.sceneGap,
+  notebooks: scenes.opening + timing.sceneGap + scenes.fabricOps + timing.sceneGap,
+  workflow: scenes.opening + timing.sceneGap + scenes.fabricOps + timing.sceneGap + scenes.notebooks + timing.sceneGap,
+  cta: scenes.opening + timing.sceneGap + scenes.fabricOps + timing.sceneGap + scenes.notebooks + timing.sceneGap + scenes.workflow + timing.sceneGap,
 } as const;
 
 export const VIDEO_DURATION = SCENE_STARTS.cta + scenes.cta;

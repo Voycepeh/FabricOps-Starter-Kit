@@ -5,19 +5,19 @@ import {VIDEO_CONFIG} from '../videoConfig';
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const {sizes, text, timing} = VIDEO_CONFIG;
+  const {sizes, text, timing, scenes} = VIDEO_CONFIG;
   const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
-  const heroExit = interpolate(frame, [145, timing.openingQuestionAt], [1, 0], {
+  const heroExit = interpolate(frame, [190, timing.openingQuestionAt], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const push = interpolate(frame, [224, 284], [0, 1], {
+  const push = interpolate(frame, [190, 245], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const finalExit = interpolate(push, [0.88, 1], [1, 0], {
+  const finalExit = interpolate(frame, [260, scenes.opening], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -38,11 +38,7 @@ export const OpeningPlatform = () => {
         const enter = spring({frame: frame - delay, fps, config: {damping: 18, stiffness: 92}});
         const cardCenterX = item.x + sizes.openingArtifactWidth / 2;
         const cardCenterY = item.y + sizes.openingArtifactHeight / 2;
-        const offsetX = cardCenterX - 960;
-        const offsetY = cardCenterY - 540;
-        const distance = Math.hypot(offsetX, offsetY);
-        const pushX = (offsetX / distance) * push * 720;
-        const pushY = (offsetY / distance) * push * 720;
+        const angle = Math.atan2(cardCenterY - 540, cardCenterX - 960);
 
         return (
           <div
@@ -52,10 +48,10 @@ export const OpeningPlatform = () => {
               left: item.x,
               top: item.y,
               opacity: enter * finalExit,
-              transform: `translate(${pushX}px, ${pushY + (1 - enter) * 42}px) scale(${0.72 + enter * 0.28})`,
+              transform: `translate(${Math.cos(angle) * push * 85}px, ${Math.sin(angle) * push * 70 + (1 - enter) * 42}px) scale(${0.72 + enter * 0.28 - push * 0.08})`,
             }}
           >
-            <Artifact icon={item.icon} label={item.label} scale={item.scale} />
+            <Artifact icon={item.icon} label={item.label} />
           </div>
         );
       })}
@@ -90,8 +86,8 @@ export const OpeningPlatform = () => {
           inset: 0,
           display: 'grid',
           placeItems: 'center',
-          opacity: question * interpolate(push, [0.15, 0.7], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
-          transform: `translateY(${-push * 110}px) scale(${0.9 + question * 0.1 + push * 0.04})`,
+          opacity: question * finalExit,
+          transform: `scale(${0.9 + question * 0.1})`,
         }}
       >
         <div
