@@ -8,7 +8,7 @@
 
 [![Notebook Templates](https://img.shields.io/badge/Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates/)
 
-[![Call Flow Diagram](https://img.shields.io/badge/Call_Flow-Diagram-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/function-call-graph/)
+[![Call Flow Diagram](https://img.shields.io/badge/Call_Flow-Dashboard-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/function-call-graph/)
 
 </div>
 
