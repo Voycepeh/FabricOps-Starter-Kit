@@ -77,7 +77,7 @@ def _parse_code_cell(path: Path, cell_index: int, source: str) -> ast.Module | N
         return None
     try:
         return ast.parse(portable_source, filename=f"{path}:{cell_index}")
-    except SyntaxError as exc:
+    except SyntaxError as exc:  # pragma: no cover - assertion path includes notebook context.
         raise AssertionError(f"Invalid Python syntax in {path.name} cell {cell_index}: {exc}") from exc
 
 
@@ -243,7 +243,7 @@ def test_02_pipeline_read_blocks_are_cloneable_store_dispatchers():
     """Every Read exposes the same visible Lakehouse/Warehouse/query dispatch and checks."""
     required = (
         "READ_STORE_TYPE =", "READ_TARGET =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =",
-        "read_pipeline_prep(", 'if READ_STORE_TYPE == "lakehouse":',
+        "read_pipeline_prep(", "RESOLVED_STORE_TYPE = read_prep[\"source\"][\"store_kind\"]", 'if READ_STORE_TYPE == "lakehouse":',
         'elif READ_STORE_TYPE == "warehouse":', "read_lakehouse_table(table_id=READ_TABLE_ID)",
         "read_warehouse_table(", "read_warehouse_query(READ_QUERY, target=READ_TARGET)",
         "observe_table(", "check_freshness(", "check_source_stability(",
