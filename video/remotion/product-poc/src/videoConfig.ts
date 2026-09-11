@@ -36,7 +36,7 @@ export const VIDEO_CONFIG = {
   },
   scenes: {
     opening: 300,
-    fabricOps: 210,
+    fabricOps: 300,
     notebooks: 300,
     workflow: 480,
     cta: 150,
