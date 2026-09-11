@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Store raw partition evidence collected during pipeline attempts; observation alone does not mean a target consumed it successfully.
+Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Stability baseline.
 
 ## Writer functions
 
@@ -16,24 +16,21 @@ Store raw partition evidence collected during pipeline attempts; observation alo
 
 **Default physical schema:** `engineering`
 
-**Grain:** One partition observation within one source-table observation.
+**Grain:** One observed or committed partition-state row within one logical notebook, source table, target table, and observation.
 
-**Primary key:** `observation_id` + `partition_value`
+**Primary key:** `observation_id` + `partition_value` + `observation_status`
 
 **Relationships:**
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id`
-
-`METADATA_SOURCE_CONSUMPTION` **(1 → N)**
-via `observation_id`
+via `source_table_id` + `target_table_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 19 |
+| Business columns | 11 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -41,7 +38,8 @@ via `observation_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `observation_id` | `string` | Identifier stored for `observation_id`. |
-| `table_id` | `string` | Canonical table identity shared with METADATA_DATA_CATALOGUE. |
+| `source_table_id` | `string` | Identifier stored for `source_table_id`. |
+| `target_table_id` | `string` | Identifier stored for `target_table_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `partition_value` | `string` | String representation of the observed partition value. |
 | `row_count` | `long` | Number of rows observed in the partition, or zero for a removal tombstone. |
@@ -49,6 +47,7 @@ via `observation_id`
 | `max_change_value` | `string` | Latest observed change-column value, or null for a removal tombstone. |
 | `content_fingerprint` | `string` | Metadata Source Observation field `content_fingerprint`. |
 | `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
+| `observation_status` | `string` | Metadata Source Observation field `observation_status`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

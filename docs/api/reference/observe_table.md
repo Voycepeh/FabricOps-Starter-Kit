@@ -11,7 +11,7 @@ Persist deterministic partition evidence for one physical source table.
 
 <div class="reference-docstring-intro" markdown="1">
 
-This internal helper records row count, earliest/latest change values, and
+This public helper records row count, earliest/latest change values, and
 a deterministic content fingerprint by source partition.
 
 </div>
@@ -19,9 +19,9 @@ a deterministic content fingerprint by source partition.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:156`
+`fabricops_kit/pipeline/observe_table.py:160`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L156-L285">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L160-L296">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -47,6 +47,7 @@ def observe_table(
     table_name: str,
     target: str='source',
     schema: str | None=None,
+    target_table_id: str,
 ) -> Any:
 ```
 
@@ -57,7 +58,7 @@ def observe_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-observation = observe_table("orders", target="source", schema="dbo")
+observation = observe_table("orders", target="source", schema="dbo", target_table_id=target_table_id)
 ```
 
 </div>
@@ -69,6 +70,7 @@ observation = observe_table("orders", target="source", schema="dbo")
 | `table_name` | `str` | Yes | Table name within the configured target. |
 | `target` | `str` | No | Logical Lakehouse or Warehouse target configured by ``00_env_config``. |
 | `schema` | `str \| None` | No | Optional Lakehouse schema. A schema is required for Warehouse targets. |
+| `target_table_id` | `str` | Yes | Governed target identity that owns this source observation relationship. |
 
 ## Returns
 
@@ -95,7 +97,7 @@ metadata.
 
 Evidence is appended only after collection succeeds. This function neither
 loads history nor makes guardrail decisions; ``check_source_stability`` owns
-comparison and removal tombstones. The stable ``table_id`` is built from the
+comparison and removal tombstones. The stable source ``table_id`` is built from the
 resolved physical identity with the same logical identity rules used by
 :func:`profile_and_register_table`. It is independent of Development or
 Production; ``environment_name`` keeps those operational observations

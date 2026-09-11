@@ -12,9 +12,9 @@ Check whether source timing satisfies direct or approved freshness intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_freshness.py:39`
+`fabricops_kit/pipeline/check_freshness.py:41`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L39-L174">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L41-L178">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,7 +50,9 @@ def check_freshness(
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table("orders", target="source", schema="dbo")
+>>> observation = observe_table(
+...     "orders", target="source", schema="dbo", target_table_id=target_table_id,
+... )
 >>> result = check_freshness(observation)
 
 </div>

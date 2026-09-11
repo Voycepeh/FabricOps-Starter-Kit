@@ -1,4 +1,4 @@
-"""Tests for post-write source-consumption state."""
+"""Tests for post-write Source Observation acceptance."""
 # ruff: noqa: D102, D103, D107
 
 from datetime import UTC, datetime
@@ -29,10 +29,29 @@ class Spark:
         return Frame(rows)
 
 
+def _observation(source, *, target="target-x", notebook="02_pipeline", status="observed"):
+    return {
+        "observation_id": f"{source}-observation",
+        "source_table_id": source,
+        "target_table_id": target,
+        "environment_name": "dev",
+        "partition_value": "2026-09-11",
+        "row_count": 1,
+        "min_change_value": "2026-09-11",
+        "max_change_value": "2026-09-11",
+        "content_fingerprint": f"fingerprint-{source}",
+        "is_present": True,
+        "observation_status": status,
+        "_committed_at": datetime(2026, 9, 11, 1, tzinfo=UTC),
+        "_activity_id": "run-1",
+        "_notebook_name": notebook,
+    }
+
+
 def _audit():
     return {
         "_committed_by": "engineer@example.com",
-        "_committed_at": datetime(2026, 9, 11, tzinfo=UTC),
+        "_committed_at": datetime(2026, 9, 11, 2, tzinfo=UTC),
         "_workspace_id": "workspace",
         "_workspace_name": "Development",
         "_notebook_id": "physical-id",
@@ -42,21 +61,18 @@ def _audit():
     }
 
 
-def _context(*, target="target-x", sources=("source-a", "source-b")):
+def _context(*, target="target-x", sources=("source-a", "source-b"), notebook="02_pipeline"):
     return {
         "target_table_id": target,
         "source_table_ids": list(sources),
         "activity_id": "run-1",
-        "notebook_name": "02_pipeline",
+        "notebook_name": notebook,
         "notebook_id": "physical-id",
     }
 
 
-def _configure_commit(monkeypatch):
-    observations = [
-        {"table_id": "source-a", "environment_name": "dev", "observation_id": "a1", "_activity_id": "run-1", "_committed_at": datetime(2026, 9, 11, 1, tzinfo=UTC)},
-        {"table_id": "source-b", "environment_name": "dev", "observation_id": "b1", "_activity_id": "run-1", "_committed_at": datetime(2026, 9, 11, 1, tzinfo=UTC)},
-    ]
+def _configure_commit(monkeypatch, observations=None):
+    observations = observations or [_observation("source-a"), _observation("source-b")]
     written = []
     lineage = []
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
@@ -69,11 +85,11 @@ def _configure_commit(monkeypatch):
     return written, lineage
 
 
-def test_successful_write_commits_one_baseline_per_source(monkeypatch):
+def test_successful_write_commits_one_observation_per_source(monkeypatch):
     written, lineage = _configure_commit(monkeypatch)
     records = shared.commit_pipeline_write_success(_context())
-    assert {(row["source_table_id"], row["observation_id"]) for row in records} == {
-        ("source-a", "a1"), ("source-b", "b1")
+    assert {(row["source_table_id"], row["observation_status"]) for row in records} == {
+        ("source-a", "committed"), ("source-b", "committed")
     }
     assert written == records
     assert lineage == [{
@@ -81,33 +97,29 @@ def test_successful_write_commits_one_baseline_per_source(monkeypatch):
     }]
 
 
-def test_relationship_key_keeps_targets_independent(monkeypatch):
-    written, _ = _configure_commit(monkeypatch)
-    first = shared.commit_pipeline_write_success(_context(target="target-x", sources=("source-a",)))[0]
-    second = shared.commit_pipeline_write_success(_context(target="target-y", sources=("source-a",)))[0]
-    assert first["source_consumption_id"] != second["source_consumption_id"]
-    assert {row["target_table_id"] for row in written} == {"target-x", "target-y"}
+@pytest.mark.parametrize(
+    ("context", "observations"),
+    [
+        (_context(target="target-y", sources=("source-a",)), [_observation("source-a", target="target-x")]),
+        (_context(sources=("source-a",), notebook="02_pipeline_b"), [_observation("source-a", notebook="02_pipeline")]),
+    ],
+)
+def test_unrelated_target_or_notebook_observation_is_not_committed(monkeypatch, context, observations):
+    written, lineage = _configure_commit(monkeypatch, observations)
+    with pytest.raises(ValueError, match="No source observation"):
+        shared.commit_pipeline_write_success(context)
+    assert written == []
+    assert lineage == []
 
 
-def test_relationship_key_keeps_logical_notebooks_independent(monkeypatch):
-    _configure_commit(monkeypatch)
-    first_context = _context(sources=("source-a",))
-    second_context = {**first_context, "notebook_name": "02_pipeline_b"}
-    first = shared.commit_pipeline_write_success(first_context)[0]
-    second = shared.commit_pipeline_write_success(second_context)[0]
-    assert first["source_consumption_id"] != second["source_consumption_id"]
+def test_physical_notebook_id_is_diagnostic_only(monkeypatch):
+    written, _ = _configure_commit(monkeypatch, [_observation("source-a")])
+    context = {**_context(sources=("source-a",)), "notebook_id": "production-physical-id"}
+    shared.commit_pipeline_write_success(context)
+    assert written[0]["observation_status"] == "committed"
 
 
-def test_physical_notebook_id_is_not_part_of_logical_consumption_key(monkeypatch):
-    _configure_commit(monkeypatch)
-    first_context = _context(sources=("source-a",))
-    promoted_context = {**first_context, "notebook_id": "production-physical-id"}
-    first = shared.commit_pipeline_write_success(first_context)[0]
-    promoted = shared.commit_pipeline_write_success(promoted_context)[0]
-    assert first["source_consumption_id"] == promoted["source_consumption_id"]
-
-
-def test_lakehouse_failure_does_not_commit_success_metadata(monkeypatch):
+def test_lakehouse_failure_does_not_accept_observation(monkeypatch):
     committed = []
     monkeypatch.setattr(lakehouse, "validate_dataframe_writer", lambda df: None)
     monkeypatch.setattr(lakehouse, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, "orders", None, "/orders"))
@@ -120,7 +132,7 @@ def test_lakehouse_failure_does_not_commit_success_metadata(monkeypatch):
     assert committed == []
 
 
-def test_lakehouse_success_commits_after_physical_write(monkeypatch):
+def test_lakehouse_success_accepts_observation_after_physical_write(monkeypatch):
     events = []
     monkeypatch.setattr(lakehouse, "validate_dataframe_writer", lambda df: None)
     monkeypatch.setattr(lakehouse, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, "orders", None, "/orders"))
@@ -132,7 +144,7 @@ def test_lakehouse_success_commits_after_physical_write(monkeypatch):
     assert events == ["physical", "metadata"]
 
 
-def test_warehouse_failure_does_not_commit_success_metadata(monkeypatch):
+def test_warehouse_failure_does_not_accept_observation(monkeypatch):
     committed = []
     monkeypatch.setattr(warehouse, "validate_dataframe_writer", lambda df: None)
     monkeypatch.setattr(warehouse, "repartition_dataframe_for_write", lambda df, value: df)
@@ -144,7 +156,7 @@ def test_warehouse_failure_does_not_commit_success_metadata(monkeypatch):
     assert committed == []
 
 
-def test_warehouse_success_commits_after_physical_write(monkeypatch):
+def test_warehouse_success_accepts_observation_after_physical_write(monkeypatch):
     events = []
     monkeypatch.setattr(warehouse, "validate_dataframe_writer", lambda df: None)
     monkeypatch.setattr(warehouse, "repartition_dataframe_for_write", lambda df, value: df)

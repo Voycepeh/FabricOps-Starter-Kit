@@ -146,7 +146,7 @@ and Warehouse ingestion limits.
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 | `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` also requires ``effective_column`` and may supply ``tracked_columns``. |
-| `success_context` | `dict[str, Any] \| None` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and source-consumption baselines are committed only after the physical Warehouse write succeeds. |
+| `success_context` | `dict[str, Any] \| None` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Warehouse write succeeds. |
 
 ## Returns
 

@@ -23,14 +23,18 @@ def row(
     maximum="2026-08-14",
     present=True,
     table_id="key",
+    target_table_id="target",
     environment_name="dev",
     observation_id="observation-1",
     activity_id="activity-1",
     fingerprint="fingerprint-1",
+    status="observed",
+    notebook_name="02_pipeline",
 ):
     return {
         "observation_id": observation_id,
-        "table_id": table_id,
+        "source_table_id": table_id,
+        "target_table_id": target_table_id,
         "environment_name": environment_name,
         "partition_value": partition,
         "row_count": count,
@@ -38,8 +42,10 @@ def row(
         "max_change_value": maximum,
         "content_fingerprint": fingerprint,
         "is_present": present,
+        "observation_status": status,
         "_committed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
         "_activity_id": activity_id,
+        "_notebook_name": notebook_name,
     }
 
 
@@ -126,23 +132,21 @@ def configure_stability(
     monkeypatch.setattr(stability, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(stability, "metadata_table_physical_schema", lambda *args: None)
     def read_metadata(table_name, *args, **kwargs):
-        if table_name == "METADATA_SOURCE_CONSUMPTION":
-            if not history or accepted_observation_id is None:
-                return Frame([])
-            prior = min(history, key=lambda value: value["_committed_at"])
-            return Frame([{
-                "notebook_name": consumption_notebook,
-                "source_table_id": "key",
-                "target_table_id": consumption_target,
-                "observation_id": (
-                    prior["observation_id"]
-                    if accepted_observation_id == "auto"
-                    else accepted_observation_id
-                ),
-                "environment_name": "dev",
-                "_committed_at": prior["_committed_at"] + timedelta(seconds=1),
-            }])
-        return Frame(history)
+        del table_name, args, kwargs
+        selected = None
+        if history and accepted_observation_id == "auto":
+            selected = min(history, key=lambda value: value["_committed_at"])["observation_id"]
+        elif accepted_observation_id is not None:
+            selected = accepted_observation_id
+        return Frame([
+            {
+                **value,
+                "observation_status": "committed" if value["observation_id"] == selected else "observed",
+                "target_table_id": consumption_target if value["observation_id"] == selected else value["target_table_id"],
+                "_notebook_name": consumption_notebook if value["observation_id"] == selected else value["_notebook_name"],
+            }
+            for value in history
+        ])
     monkeypatch.setattr(stability, "read_lakehouse_table_core", read_metadata)
     written = []
     monkeypatch.setattr(stability, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
@@ -359,7 +363,7 @@ def test_freshness_rejects_non_observation_input():
 
 def test_freshness_rejects_incomplete_observation_identity():
     incomplete = row()
-    del incomplete["table_id"]
+    del incomplete["source_table_id"]
     with pytest.raises(ValueError, match="canonical evidence"):
         check_freshness([incomplete])
 

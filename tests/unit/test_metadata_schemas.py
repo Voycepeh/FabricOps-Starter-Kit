@@ -32,7 +32,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_GUARDRAIL": "governance",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_SOURCE_OBSERVATION": "engineering",
-        "METADATA_SOURCE_CONSUMPTION": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -47,7 +46,6 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
 
     assert metadata_table_physical_schema(Config(), "METADATA_ENRICHMENT") == "approved"
     assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
-    assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_CONSUMPTION") == "observed"
 
 
 def test_data_contract_uses_versioned_one_table_schema():
@@ -84,10 +82,10 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "schema_name",
         "table_name",
         "column_name",
-            "data_type",
-            "load_strategy",
-            "load_strategy_parameters_json",
-            "first_profiled_at",
+        "data_type",
+        "load_strategy",
+        "load_strategy_parameters_json",
+        "first_profiled_at",
         "last_profiled_at",
         "is_active",
         *[name for name, _kind, _nullable in audit_schema_fields()],
@@ -174,7 +172,8 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
     assert fields == [
         "observation_id",
-        "table_id",
+        "source_table_id",
+        "target_table_id",
         "environment_name",
         "partition_value",
         "row_count",
@@ -182,6 +181,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "max_change_value",
         "content_fingerprint",
         "is_present",
+        "observation_status",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {
@@ -193,19 +193,9 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     }.isdisjoint(fields)
 
 
-def test_source_consumption_schema_is_pipeline_runtime_state():
-    """Accepted baselines are keyed by logical source-to-target ownership."""
-    fields = metadata_table_schema_registry()["METADATA_SOURCE_CONSUMPTION"].fieldNames()
-    assert fields[:7] == [
-        "source_consumption_id",
-        "notebook_name",
-        "source_table_id",
-        "target_table_id",
-        "observation_id",
-        "run_id",
-        "environment_name",
-    ]
-    assert "_committed_at" in fields
+def test_source_consumption_is_not_a_separate_metadata_table():
+    """Source Observation owns both observed and committed states."""
+    assert "METADATA_SOURCE_CONSUMPTION" not in metadata_table_schema_registry()
 
 
 def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision():

@@ -79,7 +79,6 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
-_SOURCE_CONSUMPTION_TABLE = "METADATA_SOURCE_CONSUMPTION"
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -583,7 +582,8 @@ def _table_keys(result_bundle: Mapping[str, Any]) -> list[str]:
 SOURCE_OBSERVATION_COLUMNS = frozenset(
     {
         "observation_id",
-        "table_id",
+        "source_table_id",
+        "target_table_id",
         "environment_name",
         "partition_value",
         "row_count",
@@ -591,7 +591,7 @@ SOURCE_OBSERVATION_COLUMNS = frozenset(
         "max_change_value",
         "content_fingerprint",
         "is_present",
-        "observed_at",
+        "observation_status",
     }
 )
 
@@ -603,7 +603,7 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
 
 
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Commit target Lineage and accepted source observations after a physical write."""
+    """Commit target Lineage and promote current source observations after a write."""
     if not isinstance(success_context, Mapping):
         raise ValueError("success_context must be returned by write_pipeline_prep().")
     target_table_id = str(success_context.get("target_table_id") or "").strip()
@@ -623,44 +623,46 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     history_rows = observation_rows(history)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
-    records = []
+    records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
         candidates = [
             row for row in history_rows
-            if str(row.get("table_id") or "") == source_table_id
+            if str(row.get("source_table_id") or "") == source_table_id
+            and str(row.get("target_table_id") or "") == target_table_id
             and str(row.get("environment_name") or "") == env
             and str(row.get("_activity_id") or "") == activity_id
+            and str(row.get("_notebook_name") or "") == notebook_name
+            and str(row.get("observation_status") or "") == "observed"
         ]
         if not candidates:
             raise ValueError(
                 f"No source observation from activity {activity_id!r} exists for {source_table_id!r}."
             )
         observation_id = str(max(candidates, key=lambda row: row["_committed_at"])["observation_id"])
-        identity = hashlib.sha256(json.dumps({
-            "environment_name": env,
-            "notebook_name": notebook_name,
-            "source_table_id": source_table_id,
-            "target_table_id": target_table_id,
-            "observation_id": observation_id,
-        }, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-        records.append(coerce_metadata_row_types(_SOURCE_CONSUMPTION_TABLE, {
-            "source_consumption_id": identity,
-            "notebook_name": notebook_name,
-            "source_table_id": source_table_id,
-            "target_table_id": target_table_id,
-            "observation_id": observation_id,
-            "run_id": activity_id,
-            "environment_name": env,
-            **audit,
-        }))
+        for row in candidates:
+            if str(row.get("observation_id") or "") != observation_id:
+                continue
+            records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
+                **{
+                    name: row.get(name)
+                    for name in (
+                        "observation_id", "source_table_id", "target_table_id",
+                        "environment_name", "partition_value", "row_count",
+                        "min_change_value", "max_change_value", "content_fingerprint",
+                        "is_present",
+                    )
+                },
+                "observation_status": "committed",
+                **audit,
+            }))
     frame = get_spark_session().createDataFrame(
-        records, schema=metadata_table_schema_registry()[_SOURCE_CONSUMPTION_TABLE]
+        records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
     )
     write_lakehouse_table_core(
         frame,
-        _SOURCE_CONSUMPTION_TABLE,
+        _SOURCE_OBSERVATION_TABLE,
         target="metadata",
-        schema=metadata_table_physical_schema(config, _SOURCE_CONSUMPTION_TABLE),
+        schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
         context=context,
         mode="append",
     )

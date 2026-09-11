@@ -244,11 +244,12 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
 
 def test_partition_retry_compares_with_last_successful_observation():
     history = [
-        {"observation_id": "successful", "table_id": "source", "environment_name": "dev", "_committed_at": 1},
-        {"observation_id": "failed-run", "table_id": "source", "environment_name": "dev", "_committed_at": 2},
+        {"observation_id": "successful", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "committed", "_notebook_name": "02_pipeline", "_committed_at": 1},
+        {"observation_id": "failed-run", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "observed", "_notebook_name": "02_pipeline", "_committed_at": 2},
     ]
     previous = import_module("fabricops_kit.pipeline.check_source_stability")._previous_observation(
-        history, table_id="source", environment_name="dev", committed_at=3,
+        history, source_table_id="source", target_table_id="target", notebook_name="02_pipeline",
+        environment_name="dev", committed_at=3,
         observation_id="successful",
     )
     assert [row["observation_id"] for row in previous] == ["successful"]

@@ -18,7 +18,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_GUARDRAIL",
     "METADATA_GUARDRAIL_RESULTS",
     "METADATA_SOURCE_OBSERVATION",
-    "METADATA_SOURCE_CONSUMPTION",
 ]
 
 GOVERNANCE_METADATA_TABLES = (
@@ -325,7 +324,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             "METADATA_SOURCE_OBSERVATION",
             [
                 ("observation_id", "string"),
-                ("table_id", "string"),
+                ("source_table_id", "string"),
+                ("target_table_id", "string"),
                 ("environment_name", "string"),
                 ("partition_value", "string"),
                 ("row_count", "long"),
@@ -333,19 +333,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("max_change_value", "string"),
                 ("content_fingerprint", "string"),
                 ("is_present", "boolean"),
-                *audit,
-            ],
-        ),
-        "METADATA_SOURCE_CONSUMPTION": build_metadata_schema(
-            "METADATA_SOURCE_CONSUMPTION",
-            [
-                ("source_consumption_id", "string", False),
-                ("notebook_name", "string", False),
-                ("source_table_id", "string", False),
-                ("target_table_id", "string", False),
-                ("observation_id", "string", False),
-                ("run_id", "string", False),
-                ("environment_name", "string", False),
+                ("observation_status", "string"),
                 *audit,
             ],
         ),

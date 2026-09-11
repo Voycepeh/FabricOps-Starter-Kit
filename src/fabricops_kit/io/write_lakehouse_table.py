@@ -106,7 +106,7 @@ def write_lakehouse_table(
         Prepared full-dataset or partition write scope.
     success_context : dict, optional
         Post-write metadata context returned by :func:`write_pipeline_prep`.
-        Target Lineage and source-consumption baselines are committed only
+        Target Lineage and accepted Source Observation baselines are committed only
         after the physical Delta write succeeds.
 
     Returns

@@ -18,10 +18,10 @@ from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
-_CONSUMPTION_TABLE = "METADATA_SOURCE_CONSUMPTION"
 _OBSERVATION_COLUMNS = {
     "observation_id",
-    "table_id",
+    "source_table_id",
+    "target_table_id",
     "environment_name",
     "partition_value",
     "row_count",
@@ -29,6 +29,7 @@ _OBSERVATION_COLUMNS = {
     "max_change_value",
     "content_fingerprint",
     "is_present",
+    "observation_status",
     "_committed_at",
     "_activity_id",
 }
@@ -42,15 +43,19 @@ def _is_source_observation(observation) -> bool:
 
 
 def _previous_observation(
-    history, *, table_id: str, environment_name: str, committed_at, observation_id: str | None = None
+    history, *, source_table_id: str, target_table_id: str, notebook_name: str,
+    environment_name: str, committed_at, observation_id: str | None = None
 ) -> list[dict[str, Any]]:
-    """Return the latest earlier observation for this table and environment."""
+    """Return the latest committed observation for one logical relationship."""
     if hasattr(history, "where") and hasattr(history, "agg"):
         from pyspark.sql import functions as F
 
         comparable = history.where(
-            (F.col("table_id") == table_id)
+            (F.col("source_table_id") == source_table_id)
+            & (F.col("target_table_id") == target_table_id)
+            & (F.col("_notebook_name") == notebook_name)
             & (F.col("environment_name") == environment_name)
+            & (F.col("observation_status") == "committed")
             & (F.col("_committed_at") < F.lit(committed_at))
         )
         if observation_id is not None:
@@ -62,7 +67,8 @@ def _previous_observation(
         return observation_rows(
             comparable.where(F.col("_committed_at") == F.lit(previous_at)).select(
                 "observation_id",
-                "table_id",
+                "source_table_id",
+                "target_table_id",
                 "environment_name",
                 "partition_value",
                 "is_present",
@@ -70,6 +76,7 @@ def _previous_observation(
                 "min_change_value",
                 "max_change_value",
                 "content_fingerprint",
+                "observation_status",
                 "_committed_at",
                 "_activity_id",
             )
@@ -78,8 +85,11 @@ def _previous_observation(
     candidates = [
         row
         for row in observation_rows(history)
-        if str(row.get("table_id") or "") == table_id
+        if str(row.get("source_table_id") or "") == source_table_id
+        and str(row.get("target_table_id") or "") == target_table_id
+        and str(row.get("_notebook_name") or "") == notebook_name
         and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("observation_status") or "") == "committed"
         and row.get("_committed_at") < committed_at
         and (observation_id is None or str(row.get("observation_id") or "") == observation_id)
     ]
@@ -91,22 +101,21 @@ def _observation_stability(
     observation,
     *,
     target_table_id: str,
-    successful_observation_id: str | None = None,
-    successful_partition_state: dict[str, dict[str, Any]] | None = None,
 ) -> dict:
     """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
 
-    observed_table_id = str(current[0].get("table_id") or "")
+    observed_table_id = str(current[0].get("source_table_id") or "")
+    observed_target_table_id = str(current[0].get("target_table_id") or "")
     environment_name = str(current[0].get("environment_name") or "")
     observation_id = str(current[0].get("observation_id") or "")
     committed_at = current[0]["_committed_at"]
     activity_id = str(current[0].get("_activity_id") or "")
-    if not observed_table_id or not observation_id or not environment_name or not activity_id:
+    if not observed_table_id or not observed_target_table_id or not observation_id or not environment_name or not activity_id:
         raise ValueError(
-            "observation dataframe must contain table_id, observation_id, environment_name, and _activity_id"
+            "observation dataframe must contain source_table_id, target_table_id, observation_id, environment_name, and _activity_id"
         )
     if any(row["_committed_at"] != committed_at for row in current):
         raise ValueError("observation dataframe must contain one shared _committed_at snapshot")
@@ -114,10 +123,14 @@ def _observation_stability(
         raise ValueError("observation dataframe must contain one shared _activity_id")
     if any(str(row.get("observation_id") or "") != observation_id for row in current):
         raise ValueError("observation dataframe must contain one shared observation_id")
-    if any(str(row.get("table_id") or "") != observed_table_id for row in current):
-        raise ValueError("observation dataframe must contain one shared table_id")
+    if any(str(row.get("source_table_id") or "") != observed_table_id for row in current):
+        raise ValueError("observation dataframe must contain one shared source_table_id")
+    if any(str(row.get("target_table_id") or "") != observed_target_table_id for row in current):
+        raise ValueError("observation dataframe must contain one shared target_table_id")
     if any(str(row.get("environment_name") or "") != environment_name for row in current):
         raise ValueError("observation dataframe must contain one shared environment_name")
+    if any(str(row.get("observation_status") or "") != "observed" for row in current):
+        raise ValueError("current observation rows must have observation_status='observed'.")
 
     config, env, context = resolve_fabric_context()
     if environment_name != env:
@@ -133,6 +146,8 @@ def _observation_stability(
     target_identity = resolve_catalogue_table_identity(
         config, env, str(target_table_id).strip(), spark_session=spark_session, context=context,
     )
+    if observed_target_table_id != str(target_identity["table_id"]):
+        raise ValueError("observation target_table_id does not match the governed target_table_id.")
     authored_processing = {
         **json.loads(target_identity.get("load_strategy_parameters_json") or "{}"),
         "load_strategy": target_identity.get("load_strategy"),
@@ -157,54 +172,14 @@ def _observation_stability(
             spark_session=getattr(observation, "sparkSession", None),
             context=context,
         )
-        accepted_observation_id = successful_observation_id
-        if accepted_observation_id is None and successful_partition_state is None:
-            try:
-                consumption = read_lakehouse_table_core(
-                    _CONSUMPTION_TABLE,
-                    target="metadata",
-                    schema=metadata_table_physical_schema(config, _CONSUMPTION_TABLE),
-                    spark_session=spark_session,
-                    context=context,
-                )
-                accepted = [
-                    row for row in observation_rows(consumption)
-                    if str(row.get("notebook_name") or "") == notebook_name
-                    and str(row.get("source_table_id") or "") == table_id
-                    and str(row.get("target_table_id") or "") == target_identity["table_id"]
-                    and str(row.get("environment_name") or "") == environment_name
-                    and row.get("_committed_at") < committed_at
-                ]
-                if accepted:
-                    accepted_observation_id = str(
-                        max(accepted, key=lambda row: row["_committed_at"])["observation_id"]
-                    )
-            except Exception as exc:
-                if not is_table_not_found_error(exc):
-                    raise
-        if successful_partition_state is None:
-            previous = [] if accepted_observation_id is None else _previous_observation(
-                history,
-                table_id=table_id,
-                environment_name=environment_name,
-                committed_at=committed_at,
-                observation_id=accepted_observation_id,
-            )
-        else:
-            history_rows = observation_rows(history)
-            previous = []
-            for bucket, state in successful_partition_state.items():
-                published_at = state.get("committed_at")
-                candidates = [
-                    row for row in history_rows
-                    if str(row.get("table_id") or "") == table_id
-                    and str(row.get("environment_name") or "") == environment_name
-                    and str(row.get("partition_value")) == bucket
-                    and row.get("_committed_at") < committed_at
-                    and (published_at is None or row.get("_committed_at") <= published_at)
-                ]
-                if candidates:
-                    previous.append(max(candidates, key=lambda row: row["_committed_at"]))
+        previous = _previous_observation(
+            history,
+            source_table_id=table_id,
+            target_table_id=str(target_identity["table_id"]),
+            notebook_name=notebook_name,
+            environment_name=environment_name,
+            committed_at=committed_at,
+        )
     except Exception as exc:
         if not is_table_not_found_error(exc):
             raise RuntimeError(f"Unable to load table observation history for {table_id!r}: {exc}") from exc
@@ -212,27 +187,11 @@ def _observation_stability(
 
     current_by = {str(row["partition_value"]): row for row in current}
     previous_by = {str(row["partition_value"]): row for row in previous}
-    latest_evidence_by: dict[str, dict[str, Any]] = {}
-    if successful_partition_state is not None:
-        for row in observation_rows(history):
-            value = str(row.get("partition_value"))
-            if (
-                str(row.get("table_id") or "") == table_id
-                and str(row.get("environment_name") or "") == environment_name
-                and row.get("_committed_at") < committed_at
-                and (
-                    value not in latest_evidence_by
-                    or row["_committed_at"] > latest_evidence_by[value]["_committed_at"]
-                )
-            ):
-                latest_evidence_by[value] = row
     new, changed, reappeared = [], [], []
     for value, row in current_by.items():
         prior = previous_by.get(value)
         if prior is None:
             new.append(row["partition_value"])
-        elif not latest_evidence_by.get(value, prior).get("is_present", True):
-            reappeared.append(row["partition_value"])
         elif not prior.get("is_present", True):
             reappeared.append(row["partition_value"])
         elif any(
@@ -241,10 +200,6 @@ def _observation_stability(
         ):
             changed.append(row["partition_value"])
     removed = [
-        state["value"]
-        for value, state in (successful_partition_state or {}).items()
-        if value not in current_by
-    ] if successful_partition_state is not None else [
         row["partition_value"] for value, row in previous_by.items()
         if row.get("is_present", True) and value not in current_by
     ]
@@ -294,7 +249,7 @@ def _observation_stability(
         raise ValueError(f"No active approved Source Stability rule exists for {table_id!r}.")
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
 
-    first_observation = not successful_partition_state if successful_partition_state is not None else not previous
+    first_observation = not previous
     has_changes = first_observation or bool(new or changed or removed or reappeared)
     result = {
         "table_id": table_id,
@@ -368,10 +323,10 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
 
     Notes
     -----
-    The comparison baseline is the observation referenced by the latest
-    ``METADATA_SOURCE_CONSUMPTION`` record for the active logical notebook
-    name, source ``table_id``, and ``target_table_id``. Raw observations from
-    failed attempts or other source-to-target relationships are not baselines.
+    The comparison baseline is the latest ``committed`` row in
+    ``METADATA_SOURCE_OBSERVATION`` for the active logical notebook name,
+    source ``table_id``, and ``target_table_id``. Raw ``observed`` rows from
+    failed attempts or other relationships are not baselines.
 
     New source data is compatible with append. Mutation, removal, or
     reappearance of previously processed data violates append stability;
@@ -381,7 +336,10 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
     
     Examples
     --------
-    >>> observation = observe_table("orders", target="source", schema="dbo")
+    >>> observation = observe_table(
+    ...     "orders", target="source", schema="dbo",
+    ...     target_table_id="lakehouse:unified:dbo:orders",
+    ... )
     >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")
     >>> result["load_strategy"]
     'append'

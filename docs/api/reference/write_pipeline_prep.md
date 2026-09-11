@@ -94,7 +94,7 @@ ValueError
 
 FabricOps resolves one run-level audit record and adds only compact target
 provenance fields. This function does not call a Lakehouse or Warehouse
-writer. It does not persist successful target Lineage or Source Consumption;
+writer. It does not persist successful target Lineage or accept Source Observations;
 the physical writer commits those records only after publication succeeds.
 Lakehouse and Warehouse targets use the same governed target strategy
 definition; each writer applies its engine-specific physical execution only

@@ -169,24 +169,12 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Store raw partition evidence collected during pipeline attempts; observation alone does not mean a target consumed it successfully.",
-        "grain": "One partition observation within one source-table observation.",
-        "primary_key": ["observation_id", "partition_value"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many source observations can belong to one logical Catalogue table identity in an environment."},
-        ],
-        "relationships": [
-            {"related_table": "METADATA_SOURCE_CONSUMPTION", "fields": ["observation_id"], "cardinality": "1:N", "statement": "A raw observation becomes an accepted baseline only when a successful target write references it through Source Consumption."},
-        ],
-    },
-    "METADATA_SOURCE_CONSUMPTION": {
-        "purpose": "Store the source observation last successfully consumed by one logical notebook when writing one governed target.",
-        "grain": "One accepted source observation for one notebook_name, source_table_id, target_table_id, and successful run.",
-        "primary_key": ["source_consumption_id"],
+        "purpose": "Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Stability baseline.",
+        "grain": "One observed or committed partition-state row within one logical notebook, source table, target table, and observation.",
+        "primary_key": ["observation_id", "partition_value", "observation_status"],
         "foreign_keys": [
             {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The source identity consumed by the successful write."},
             {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The governed target whose successful write accepted the source state."},
-            {"local_field": "observation_id", "referenced_table": "METADATA_SOURCE_OBSERVATION", "referenced_field": "observation_id", "cardinality": "N:1", "statement": "References compact source evidence without duplicating business rows."},
         ],
         "relationships": [],
     },
@@ -273,7 +261,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CATALOGUE",
     "METADATA_SOURCE_OBSERVATION",
-    "METADATA_SOURCE_CONSUMPTION",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
@@ -490,20 +477,14 @@ METADATA_COLUMN_OWNERS = {
         "result_payload_json": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "__default__": ["fabricops_kit.pipeline.observe_table.observe_table"],
+        "__default__": ["fabricops_kit.pipeline.observe_table.observe_table", "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "table_id": [
+        "source_table_id": [
             "fabricops_kit.pipeline.observe_table.observe_table",
             "fabricops_kit.config.shared.build_table_id",
         ],
-    },
-    "METADATA_SOURCE_CONSUMPTION": {
-        "__default__": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "source_consumption_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "observation_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "source_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "target_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
+        "target_table_id": ["fabricops_kit.pipeline.observe_table.observe_table"],
+        "observation_status": ["fabricops_kit.pipeline.observe_table.observe_table", "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
     },
 }
 
@@ -866,10 +847,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use after physical source identity is resolved and before Freshness or Source Stability checks.',
   'do_not_use_when': 'Do not treat a raw observation as proof of successful target consumption.',
-  'parameters': 'Physical source table name, configured target, and optional schema.',
+  'parameters': 'Physical source table name, configured source target, optional schema, and governed target_table_id.',
   'returns': 'Canonical METADATA_SOURCE_OBSERVATION rows for the current activity.',
-  'side_effects': 'Appends raw source evidence; it does not advance METADATA_SOURCE_CONSUMPTION.',
-  'preferred_example': 'observation = observe_table("orders", target="source", schema="dbo")',
+  'side_effects': 'Appends observation_status=observed evidence; only a successful physical target write appends its committed state.',
+  'preferred_example': 'observation = observe_table("orders", target="source", schema="dbo", target_table_id=target_table_id)',
   'related_functions': ['read_pipeline_prep', 'check_freshness', 'check_source_stability']},
  {'kind': 'function',
   'module': 'pipeline',
@@ -924,7 +905,7 @@ PUBLIC_SYMBOL_DOCS = [
   'do_not_use_when': 'Do not use as a replacement for write_lakehouse_table or write_warehouse_table.',
   'parameters': 'Validated business DataFrame, canonical target table_id, and the source preparation results that fed it.',
   'returns': 'Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and post-write success context.',
-  'side_effects': 'Resolves contract processing and writer ownership and transforms the DataFrame; successful target Lineage and Source Consumption remain uncommitted until the physical writer succeeds.',
+  'side_effects': 'Resolves contract processing and writer ownership and transforms the DataFrame; successful target Lineage and accepted Source Observation state remain uncommitted until the physical writer succeeds.',
   'preferred_example': 'write_prep = write_pipeline_prep(transformed_df, target_table_id=target["table_id"], source_preps=[read_prep])',
   'related_functions': ['read_pipeline_prep', 'write_lakehouse_table', 'write_warehouse_table']},
  {'kind': 'function',

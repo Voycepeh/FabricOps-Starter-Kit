@@ -176,7 +176,7 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append. |
 | `load_strategy_parameters` | `dict` | No | Governed strategy parameters returned by :func:`write_pipeline_prep`. |
 | `processing_scope` | `dict` | No | Prepared full-dataset or partition write scope. |
-| `success_context` | `dict` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and source-consumption baselines are committed only after the physical Delta write succeeds. |
+| `success_context` | `dict` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds. |
 
 ## Returns
 

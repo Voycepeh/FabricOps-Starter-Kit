@@ -12,9 +12,9 @@ Detect mutation of previously processed source data and validate compatibility w
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_stability.py:347`
+`fabricops_kit/pipeline/check_source_stability.py:302`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L347-L392">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L302-L350">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,7 +45,10 @@ def check_source_stability(observation, *, target_table_id: str) -> dict
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table("orders", target="source", schema="dbo")
+>>> observation = observe_table(
+...     "orders", target="source", schema="dbo",
+...     target_table_id="lakehouse:unified:dbo:orders",
+... )
 >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")
 >>> result["load_strategy"]
 'append'
@@ -72,10 +75,10 @@ ValueError
 
 <div class="reference-docstring-notes" markdown="1">
 
-The comparison baseline is the observation referenced by the latest
-``METADATA_SOURCE_CONSUMPTION`` record for the active logical notebook
-name, source ``table_id``, and ``target_table_id``. Raw observations from
-failed attempts or other source-to-target relationships are not baselines.
+The comparison baseline is the latest ``committed`` row in
+``METADATA_SOURCE_OBSERVATION`` for the active logical notebook name,
+source ``table_id``, and ``target_table_id``. Raw ``observed`` rows from
+failed attempts or other relationships are not baselines.
 
 New source data is compatible with append. Mutation, removal, or
 reappearance of previously processed data violates append stability;

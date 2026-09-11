@@ -41,7 +41,7 @@ Keep merge, upsert, append, partitioning, and other target-side decisions in tar
 
 Freshness asks whether the source is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. For example, today's arrival can pass Freshness while a value processed yesterday changing from `$20` to `$25` is still detected as historical mutation. New data is compatible with append; changed, removed, or reappeared historical data violates append stability, while overwrite, SCD1, and SCD2 can reconcile it. Source Stability reports the evidence and validates compatibility without selecting or executing the load strategy.
 
-Raw evidence is appended to `METADATA_SOURCE_OBSERVATION` during a pipeline attempt. It becomes the accepted baseline in `METADATA_SOURCE_CONSUMPTION` only after the physical target write succeeds. The baseline is keyed by logical notebook name, source `table_id`, and target `table_id`, so another notebook or another target cannot advance it. A failed write leaves raw observation history intact but commits neither successful target Lineage nor Source Consumption state.
+`METADATA_SOURCE_OBSERVATION` stores both states in one append-only table. Source evidence is first written with `observation_status="observed"`, scoped by logical notebook name, source `table_id`, and target `table_id`. Only a successful physical target write appends the corresponding `committed` state, making it eligible as the next baseline. A failed write leaves the raw observed rows intact but commits neither an accepted baseline nor successful target Lineage.
 
 ## Keep canonical profiles complete
 
@@ -49,7 +49,7 @@ A normal source read can refresh the canonical registered source Profile. A filt
 
 ## Review the completed run
 
-After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_SOURCE_OBSERVATION`, and `METADATA_SOURCE_CONSUMPTION` records.
+After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, and observed/committed `METADATA_SOURCE_OBSERVATION` records.
 
 Those concrete metadata records are the handoff to Governance in Step 3.
 

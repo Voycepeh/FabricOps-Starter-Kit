@@ -303,6 +303,6 @@ def test_persistent_checkpoint_tables_are_not_registered():
 
     registry = metadata_table_schema_registry()
     assert "METADATA_SOURCE_OBSERVATION" in CANONICAL_METADATA_TABLES
-    assert "METADATA_SOURCE_CONSUMPTION" in CANONICAL_METADATA_TABLES
+    assert "METADATA_SOURCE_CONSUMPTION" not in CANONICAL_METADATA_TABLES
     assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
     assert all("CHECKPOINT" not in table_name for table_name in registry)

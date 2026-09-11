@@ -58,13 +58,16 @@ _ROW_RESULT_COLUMNS = [
 
 _SOURCE_OBSERVATION_COLUMNS = [
     "observation_id",
-    "table_id",
+    "source_table_id",
+    "target_table_id",
     "environment_name",
     "partition_value",
     "row_count",
     "min_change_value",
     "max_change_value",
+    "content_fingerprint",
     "is_present",
+    "observation_status",
     *_AUDIT_COLUMNS,
 ]
 

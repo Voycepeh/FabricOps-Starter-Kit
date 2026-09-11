@@ -20,6 +20,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
+    resolve_catalogue_table_identity,
     resolve_source_stability_observation_columns,
     select_table_guardrail_rule,
 )
@@ -119,7 +120,8 @@ def _persist(
     rows: list[dict[str, Any]],
     *,
     observation_id: str,
-    table_id: str,
+    source_table_id: str,
+    target_table_id: str,
     spark_session: Any,
     config: Any,
     env: str,
@@ -132,8 +134,10 @@ def _persist(
         {
             **row,
             "observation_id": observation_id,
-            "table_id": table_id,
+            "source_table_id": source_table_id,
+            "target_table_id": target_table_id,
             "environment_name": env,
+            "observation_status": "observed",
             **audit,
         }
         for row in rows
@@ -158,10 +162,11 @@ def observe_table(
     *,
     target: str = "source",
     schema: str | None = None,
+    target_table_id: str,
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
 
-    This internal helper records row count, earliest/latest change values, and
+    This public helper records row count, earliest/latest change values, and
     a deterministic content fingerprint by source partition.
 
     Parameters
@@ -172,6 +177,8 @@ def observe_table(
         Logical Lakehouse or Warehouse target configured by ``00_env_config``.
     schema : str or None, default=None
         Optional Lakehouse schema. A schema is required for Warehouse targets.
+    target_table_id : str
+        Governed target identity that owns this source observation relationship.
 
     Returns
     -------
@@ -199,7 +206,7 @@ def observe_table(
 
     Evidence is appended only after collection succeeds. This function neither
     loads history nor makes guardrail decisions; ``check_source_stability`` owns
-    comparison and removal tombstones. The stable ``table_id`` is built from the
+    comparison and removal tombstones. The stable source ``table_id`` is built from the
     resolved physical identity with the same logical identity rules used by
     :func:`profile_and_register_table`. It is independent of Development or
     Production; ``environment_name`` keeps those operational observations
@@ -232,6 +239,9 @@ def observe_table(
 
     spark = get_spark_session()
     table_id = build_table_id(source_type, target_value, schema_value, table_value)
+    target_identity = resolve_catalogue_table_identity(
+        config, env, target_table_id, spark_session=spark, context=context,
+    )
 
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark, table_id=table_id, context=context,
@@ -276,7 +286,8 @@ def observe_table(
     return _persist(
         current,
         observation_id=str(uuid4()),
-        table_id=table_id,
+        source_table_id=table_id,
+        target_table_id=str(target_identity["table_id"]),
         spark_session=spark,
         config=config,
         env=env,
