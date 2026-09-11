@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react';
-import {AbsoluteFill, Audio, Sequence, staticFile} from 'remotion';
+import {Audio} from '@remotion/media';
+import {AbsoluteFill, Sequence, staticFile} from 'remotion';
 import {CTA} from './scenes/CTA';
 import {FabricOpsReveal} from './scenes/FabricOpsReveal';
 import {LifecycleScene} from './scenes/LifecycleScene';
@@ -16,7 +17,7 @@ const Scene = ({from, duration, children}: {from: number; duration: number; chil
 
 export const FabricOpsHero = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Audio src={staticFile('audio/FabricOps_narration_master_numbered.m4a')} />
+    <Audio src={staticFile('audio/FabricOps_narration_master_numbered.m4a')} volume={1} />
     <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}} />
     <Scene from={SCENE_STARTS.opening} duration={VIDEO_CONFIG.scenes.opening}><OpeningPlatform /></Scene>
     <Scene from={SCENE_STARTS.fabricOps} duration={VIDEO_CONFIG.scenes.fabricOps}><FabricOpsReveal /></Scene>
