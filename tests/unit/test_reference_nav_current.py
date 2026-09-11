@@ -16,10 +16,10 @@ def test_resources_reference_nav_matches_current_structure() -> None:
     assert "      - Glossary: glossary.md" in mkdocs_text
     assert "      - Metadata Tables:" in mkdocs_text
     assert "          - Overview: reference/metadata.md" in mkdocs_text
-    assert "      - Functions:" in mkdocs_text
-    assert "          - Function Reference: reference/index.md" in mkdocs_text
-    assert "          - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html" in mkdocs_text
-    assert "          - Function Call Graph: function-call-graph.md" in mkdocs_text
+    assert "      - Function Reference: reference/index.md" in mkdocs_text
+    assert "      - Call Flow: function-call-graph.md" in mkdocs_text
+    assert "      - Functions:" not in mkdocs_text
+    assert "Call Flow Dashboard: assets/public-function-call-flows-dashboard.html" not in mkdocs_text
     assert "      - DQ Rules:" in mkdocs_text
     assert "          - Overview: reference/dq-rules/index.md" in mkdocs_text
     assert "api/reference/" not in mkdocs_text

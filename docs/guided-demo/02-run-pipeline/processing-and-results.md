@@ -45,7 +45,7 @@ Freshness asks whether the source is recent enough. Source Stability asks whethe
 
 ## Keep canonical profiles complete
 
-A normal source read can refresh the canonical registered source Profile. A filtered or aggregated Warehouse query should not replace the Profile of the complete physical source; the template marks that case with `complete_table=False`.
+A normal complete-table source read can refresh the canonical registered source Profile. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_dataframe()` for diagnostic profiling instead of registering it as the canonical physical-table profile.
 
 ## Review the completed run
 
@@ -59,5 +59,5 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
 For exact APIs such as `read_pipeline_prep()` and `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 
-**Previous:** [Unit 4: Transform and load](transform-and-load.md)  
+**Previous:** [Unit 4: Transform and write](transform-and-load.md)  
 **Next:** [Step 3: Author and freeze the Data Contract](../03-enrich-guardrails.md)

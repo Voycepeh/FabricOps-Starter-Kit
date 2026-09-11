@@ -1,6 +1,6 @@
-# Unit 4: Transform and load
+# Unit 4: Transform and write
 
-**Keep business transformation logic visible, then let the template handle the standard FabricOps load boundary.**
+**Keep business transformation logic visible, then let the template handle the standard FabricOps Write boundary.**
 
 ## Add project-specific transformation
 

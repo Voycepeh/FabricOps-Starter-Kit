@@ -31,7 +31,7 @@ nav:
           - "Unit 1 - Understand the Template": guided-demo/02-run-pipeline/understand-template.md
           - "Unit 2 - Run the Baseline ETL": guided-demo/02-run-pipeline/run-baseline-etl.md
           - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
-          - "Unit 4 - Transform and Load": guided-demo/02-run-pipeline/transform-and-load.md
+          - "Unit 4 - Transform and Write": guided-demo/02-run-pipeline/transform-and-load.md
           - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md
       - Step 3 - Author and Freeze Data Contract: guided-demo/03-enrich-guardrails.md
       - Step 4 - Select and Validate Data Contract: guided-demo/04-run-pipeline-with-guardrails.md
@@ -56,10 +56,8 @@ nav:
           - Guardrail Results: reference/metadata/metadata_guardrail_results.md
           - Data Contract: reference/metadata/metadata_data_contract.md
           - Data Access: reference/metadata/metadata_data_access.md
-      - Functions:
-          - Function Reference: reference/index.md
-          - Call Flow Dashboard: assets/public-function-call-flows-dashboard.html
-          - Function Call Graph: function-call-graph.md
+      - Function Reference: reference/index.md
+      - Call Flow: function-call-graph.md
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
           - missing_values: reference/dq-rules/missing-values.md
