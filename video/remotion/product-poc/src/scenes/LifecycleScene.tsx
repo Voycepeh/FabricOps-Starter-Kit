@@ -40,15 +40,10 @@ export const LifecycleScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
-  const firstStep = 45;
-  const initialStepTimes = [0, 1, 2, 3].map((index) => firstStep + index * timing.workflowStepGap);
-  const loopStart = initialStepTimes[3] + timing.workflowStepGap;
-  const loopEnd = loopStart + timing.validationLoopDuration;
-  const stepFive = loopEnd + timing.workflowStepGap;
-  const stepTimes = [...initialStepTimes, stepFive, stepFive + timing.workflowStepGap, stepFive + timing.workflowStepGap * 2];
+  const stepTimes = [...timing.workflowStepTimes];
   const activeIndex = stepTimes.reduce((latest, reveal, index) => frame >= reveal ? index : latest, -1);
   const exit = interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const loop = interpolate(frame, [loopStart, loopEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const loop = interpolate(frame, [timing.workflowLoopStart, timing.workflowLoopEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     {workspaces.map((workspace, index) => {
       const enter = spring({frame: frame - index * 5, fps, config: {damping: 20, stiffness: 82}});
