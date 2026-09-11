@@ -8,24 +8,24 @@ export type FabricIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 const icons = FabricIconLibrary as unknown as Record<string, FabricIconComponent | undefined>;
 
 const preferredArtifacts = [
-  {names: ['Notebook48Item'], label: 'Notebook'},
-  {names: ['Lakehouse48Item'], label: 'Lakehouse'},
-  {names: ['DataWarehouse48Item', 'DataWarehouse48Color'], label: 'Warehouse'},
-  {names: ['Environment48Item'], label: 'Environment'},
-  {names: ['Pipeline48Item', 'DataFactory48Color'], label: 'Data Pipeline'},
-  {names: ['DataflowGen248Item'], label: 'Dataflow Gen2'},
-  {names: ['DataEngineering48Color'], label: 'Data Engineering'},
-  {names: ['DataScience48Color'], label: 'Data Science'},
-  {names: ['Databases48Color', 'SQLDatabase48Item', 'SqlDatabase48Item'], label: 'SQL Database'},
-  {names: ['Eventstream48Item'], label: 'Eventstream'},
-  {names: ['Eventhouse48Item', 'KQLDatabase48Item'], label: 'Eventhouse'},
-  {names: ['SemanticModel48Item'], label: 'Semantic Model'},
-  {names: ['Report48Item'], label: 'Report'},
-  {names: ['Dashboard48Item'], label: 'Dashboard'},
-  {names: ['MirroredDatabase48Item'], label: 'Mirrored Database'},
-  {names: ['MLModel48Item', 'MlModel48Item'], label: 'ML Model'},
-  {names: ['OneLake48Color', 'OneLake48Item'], label: 'OneLake'},
-  {names: ['GraphIntelligence48Color'], label: 'Graph Intelligence'},
+  {names: ['Notebook48Item'], label: 'Notebook', scale: 2.2},
+  {names: ['Lakehouse48Item'], label: 'Lakehouse', scale: 2.2},
+  {names: ['DataWarehouse48Item', 'DataWarehouse48Color'], label: 'Warehouse', scale: 2.2},
+  {names: ['Environment48Item'], label: 'Environment', scale: 2.2},
+  {names: ['Pipeline48Item', 'DataFactory48Color'], label: 'Data Pipeline', scale: 2.2},
+  {names: ['DataflowGen248Item'], label: 'Dataflow Gen2', scale: 2.2},
+  {names: ['DataEngineering48Color'], label: 'Data Engineering', scale: 2.3},
+  {names: ['DataScience48Color'], label: 'Data Science', scale: 2.3},
+  {names: ['Databases48Color', 'SQLDatabase48Item', 'SqlDatabase48Item'], label: 'SQL Database', scale: 2.2},
+  {names: ['Eventstream48Item'], label: 'Eventstream', scale: 2.2},
+  {names: ['Eventhouse48Item', 'KQLDatabase48Item'], label: 'Eventhouse', scale: 2.2},
+  {names: ['SemanticModel48Item'], label: 'Semantic Model', scale: 2.25},
+  {names: ['Report48Item'], label: 'Report', scale: 2.2},
+  {names: ['Dashboard48Item'], label: 'Dashboard', scale: 2.2},
+  {names: ['MirroredDatabase48Item'], label: 'Mirrored Database', scale: 2.2},
+  {names: ['MLModel48Item', 'MlModel48Item'], label: 'ML Model', scale: 2.2},
+  {names: ['OneLake48Color', 'OneLake48Item'], label: 'OneLake', scale: 2.25},
+  {names: ['GraphIntelligence48Color'], label: 'Graph Intelligence', scale: 2.25},
 ] as const;
 
 const artifactPositions = [
@@ -66,7 +66,7 @@ const fallbackIconNames = Object.keys(icons).filter(
 
 const usedIconNames = new Set<string>();
 
-const artifactTypes = preferredArtifacts.map(({names, label}) => {
+const artifactTypes = preferredArtifacts.map(({names, label, scale}) => {
   const preferredName = names.find((name) => icons[name] && !usedIconNames.has(name));
   const resolvedName = preferredName ?? fallbackIconNames.find((name) => !usedIconNames.has(name));
 
@@ -78,6 +78,7 @@ const artifactTypes = preferredArtifacts.map(({names, label}) => {
   return {
     icon: icons[resolvedName] as FabricIconComponent,
     label: preferredName ? label : humanizeIconName(resolvedName),
+    iconScale: scale,
   };
 });
 
@@ -86,7 +87,7 @@ export const OPENING_ARTIFACTS = artifactPositions.map((position, index) => ({
   ...position,
 }));
 
-export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label: string}) => {
+export const Artifact = ({icon: Icon, label, iconScale}: {icon: FabricIconComponent; label: string; iconScale: number}) => {
   const {sizes, text} = VIDEO_CONFIG;
 
   return (
@@ -96,12 +97,12 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
         height: sizes.openingArtifactHeight,
         boxSizing: 'border-box',
         borderRadius: 30,
-        padding: '14px 14px 12px',
+        padding: '10px 14px 12px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 4,
         background: 'linear-gradient(180deg, #102746f2 0%, #0c1d35f2 100%)',
         border: '1px solid #3a8ee866',
         boxShadow: '0 18px 38px #0008, inset 0 1px #ffffff12, 0 0 28px #1479cf16',
@@ -110,28 +111,26 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
     >
       <div
         style={{
-          width: sizes.openingArtifactIcon,
-          height: sizes.openingArtifactIcon,
-          flex: '0 0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: 112,
+          height: 112,
+          flex: '0 0 112px',
+          display: 'grid',
+          placeItems: 'center',
           overflow: 'visible',
         }}
       >
-        <Icon
-          aria-hidden="true"
+        <div
           style={{
-            display: 'block',
-            width: `${sizes.openingArtifactIcon}px`,
-            height: `${sizes.openingArtifactIcon}px`,
-            minWidth: `${sizes.openingArtifactIcon}px`,
-            minHeight: `${sizes.openingArtifactIcon}px`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            flex: '0 0 auto',
+            width: 48,
+            height: 48,
+            display: 'grid',
+            placeItems: 'center',
+            transform: `scale(${iconScale})`,
+            transformOrigin: '50% 50%',
           }}
-        />
+        >
+          <Icon aria-hidden="true" width={48} height={48} />
+        </div>
       </div>
       <div
         style={{
