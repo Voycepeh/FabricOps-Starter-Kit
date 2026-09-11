@@ -10,12 +10,12 @@ export const OpeningPlatform = () => {
   const {fps} = useVideoConfig();
   const {sizes, text, timing, scenes} = VIDEO_CONFIG;
   const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
-  const heroExit = interpolate(frame, [190, timing.openingQuestionAt], [1, 0], {
+  const heroExit = interpolate(frame, [timing.openingQuestionAt - 36, timing.openingQuestionAt], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const push = interpolate(frame, [245, scenes.opening], [0, 1], {
+  const push = interpolate(frame, [timing.openingPushAt, scenes.opening], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
