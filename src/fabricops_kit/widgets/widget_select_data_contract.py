@@ -86,6 +86,31 @@ def _set_override(context: dict[str, Any], table_id: str, contract: dict[str, An
         target_context["data_contract_overrides"] = overrides
 
 
+def _clear_overrides(context: dict[str, Any], table_id: str | None = None) -> None:
+    """Clear one or all overrides from every active runtime context."""
+    contexts = [context]
+    active = pipeline_active_context()
+    if active is not None:
+        if active.context is None:
+            active.context = {}
+        contexts.append(active.context)
+    try:
+        contexts.append(get_default_fabric_context())
+    except RuntimeError:
+        pass
+    seen: set[int] = set()
+    for target_context in contexts:
+        if id(target_context) in seen:
+            continue
+        seen.add(id(target_context))
+        overrides = dict(target_context.get("data_contract_overrides") or {})
+        if table_id is None:
+            overrides.clear()
+        else:
+            overrides.pop(table_id, None)
+        target_context["data_contract_overrides"] = overrides
+
+
 def widget_select_data_contract(*, spark_session=None, context=None):
     """Select immutable Data Contracts for every table linked to this notebook.
 
@@ -101,7 +126,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     -------
     dict
         Notebook scope, role-preserving table states, table-scoped resolved
-        contracts, controls, and a Development ``select`` callable.
+        contracts, controls, and Development ``select`` and ``deselect`` callables.
 
     Raises
     ------
@@ -148,7 +173,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     }
 
     # Initialization always starts Development unselected and Production ignores overrides.
-    selection_context["data_contract_overrides"] = {}
+    _clear_overrides(selection_context)
     if env == "prod":
         for table_id in table_ids:
             try:
@@ -212,7 +237,19 @@ def widget_select_data_contract(*, spark_session=None, context=None):
         state["message"] = f"Using Data Contract v{selected['contract_version']} for {table_id}."
         return state
 
+    def deselect(table_id: str) -> dict[str, Any]:
+        if env == "prod":
+            raise ValueError("Production Data Contracts are resolved automatically and cannot be deselected.")
+        if table_id not in state["tables"]:
+            raise ValueError("The selected table_id is not linked to the current notebook in METADATA_DATA_LINEAGE.")
+        _clear_overrides(selection_context, table_id)
+        state["tables"][table_id].update(selected=None, review=None)
+        state["resolved_contracts"].pop(table_id, None)
+        state["message"] = f"No Data Contract selected for {table_id}; Development only."
+        return state
+
     state["select"] = select
+    state["deselect"] = deselect
     try:
         widgets = require_ipywidgets()
     except ModuleNotFoundError:
@@ -251,6 +288,9 @@ def widget_select_data_contract(*, spark_session=None, context=None):
 
             def render(change: Any, *, current_table: str = table_id, current_control: Any = control, current_preview: Any = preview) -> None:
                 if not change.get("new"):
+                    deselect(current_table)
+                    current_preview.value = "<b>No Data Contract</b> · Development only"
+                    status.value = ""
                     return
                 try:
                     contract_id, version = current_control.value.split("\n", 1)

@@ -12,9 +12,9 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:89`
+`fabricops_kit/widgets/widget_select_data_contract.py:114`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L89-L288">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L114-L328">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -61,7 +61,7 @@ def widget_select_data_contract(*, spark_session=None, context=None)
 
 dict
     Notebook scope, role-preserving table states, table-scoped resolved
-    contracts, controls, and a Development ``select`` callable.
+    contracts, controls, and Development ``select`` and ``deselect`` callables.
 
 ### Return interpretation
 

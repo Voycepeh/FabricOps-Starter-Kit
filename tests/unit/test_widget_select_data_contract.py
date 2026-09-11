@@ -8,6 +8,7 @@ import json
 import pytest
 
 import fabricops_kit.widgets.widget_select_data_contract as module
+from fabricops_kit.pipeline import shared as pipeline_shared
 from fabricops_kit.widgets.widget_select_data_contract import _contract_options, _contract_review
 
 
@@ -89,6 +90,42 @@ def test_selection_isolated_and_unrelated_contracts_not_available(monkeypatch):
     with pytest.raises(ValueError, match="not available"):
         state["select"]("table-a", "contract-table-b", 2)
     assert context["data_contract_overrides"] == {}
+
+
+def test_development_deselect_clears_contract_and_restores_skip(monkeypatch):
+    """Keep the No Data Contract option and runtime enforcement state aligned."""
+    context, state = _render(monkeypatch, [_row(2), _row(1, table_id="table-b")])
+    monkeypatch.setattr(
+        pipeline_shared, "_resolve_data_contract_version",
+        lambda *_args, **_kwargs: {"contract_id": "contract-table-a", "contract_version": 2},
+    )
+
+    assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
+    state["select"]("table-a", "contract-table-a", 2)
+    assert pipeline_shared.resolve_pipeline_data_contract(
+        object(), "dev", "table-a", context=context,
+    )["contract_version"] == 2
+
+    state["deselect"]("table-a")
+    assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
+    assert state["tables"]["table-a"]["selected"] is None
+    assert state["tables"]["table-a"]["review"] is None
+    assert "table-a" not in state["resolved_contracts"]
+
+
+def test_initialization_and_deselect_clear_every_runtime_context(monkeypatch):
+    """Clear stale overrides symmetrically across explicit, active, and default contexts."""
+    explicit = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    active_context = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    default_context = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    active = type("Active", (), {"context": active_context})()
+    monkeypatch.setattr(module, "pipeline_active_context", lambda: active)
+    monkeypatch.setattr(module, "get_default_fabric_context", lambda: default_context)
+
+    module._clear_overrides(explicit)
+    assert explicit["data_contract_overrides"] == {}
+    assert active_context["data_contract_overrides"] == {}
+    assert default_context["data_contract_overrides"] == {}
 
 
 def test_missing_frozen_version_runs_unvalidated_in_development(monkeypatch):
