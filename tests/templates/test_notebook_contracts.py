@@ -259,12 +259,17 @@ def test_02_pipeline_lakehouse_read_blocks_are_cloneable():
 
 
 def test_02_pipeline_custom_query_uses_diagnostic_profile():
-    """An aggregate query cannot overwrite canonical full-table profile metadata."""
+    """An aggregate cannot masquerade as the governed physical table contract surface."""
     history = _cell_by_id("02_pipeline.ipynb", "read-3").source
     assert "read_warehouse_query(" in history
     assert "profile_dataframe(read_df)" in history
     assert "profile_and_register_table(" not in history
     assert "complete_table=False" not in history
+    assert "check_schema(" not in history
+    assert "check_dq(" not in history
+    assert "observe_table(" in history
+    assert "check_freshness(" in history
+    assert "check_source_stability(" in history
 
 
 def test_02_pipeline_omits_obsolete_and_safe_default_plumbing():
