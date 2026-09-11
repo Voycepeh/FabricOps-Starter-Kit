@@ -189,7 +189,7 @@ def test_canonical_enrichment_state_removes_non_descriptive_rows():
     assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification"]
 
 
-@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "changes", "data_quality"])
+@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "source_stability", "data_quality"])
 @pytest.mark.parametrize("action", ["Warn", "Block"])
 def test_guardrail_service_normalizes_all_supported_types_and_actions(
     monkeypatch, guardrail_type, action

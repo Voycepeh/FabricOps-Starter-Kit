@@ -24,7 +24,7 @@ from fabricops_kit.pipeline.shared import validated_processing
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
-GUARDRAIL_TYPES = frozenset({"schema", "freshness", "changes", "data_quality", "sensitive_data"})
+GUARDRAIL_TYPES = frozenset({"schema", "freshness", "source_stability", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
@@ -247,7 +247,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
         raise ValueError(
-            "guardrail_type must be Schema, Freshness, Changes, Data Quality, or Sensitive Data."
+            "guardrail_type must be Schema, Freshness, Source Stability, Data Quality, or Sensitive Data."
         )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
@@ -675,6 +675,10 @@ def assemble_contract_payload(
             **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
             "columns": column_docs,
             "processing": processing,
+            "writer": {
+                "notebook_id": str(table.get("_notebook_id") or "").strip(),
+                "notebook_name": str(table.get("_notebook_name") or "").strip(),
+            },
         },
         "enrichment": {
             "table": [row for row in enrichment_docs if not row.get("column_id")],

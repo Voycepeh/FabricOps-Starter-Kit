@@ -5,7 +5,7 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     load_table_guardrail_rules,
-    resolve_change_rule_observation_columns,
+    resolve_source_stability_observation_columns,
     resolve_catalogue_table_identity,
     select_table_guardrail_rule,
 )
@@ -17,13 +17,15 @@ from fabricops_kit.pipeline.shared import (
 
 _OBSERVATION_COLUMNS = {
     "observation_id",
-    "table_id",
+    "source_table_id",
+    "target_table_id",
     "environment_name",
     "partition_value",
     "row_count",
     "min_change_value",
     "max_change_value",
     "is_present",
+    "observation_status",
     "_committed_at",
     "_activity_id",
 }
@@ -79,7 +81,9 @@ def check_freshness(
     
     Examples
     --------
-    >>> observation = observe_table("orders", target="source", schema="dbo")
+    >>> observation = observe_table(
+    ...     "orders", target="source", schema="dbo", target_table_id=target_table_id,
+    ... )
     >>> result = check_freshness(observation)
 
     """
@@ -91,12 +95,12 @@ def check_freshness(
     if not rows:
         raise ValueError("observation must contain at least one canonical evidence row")
     first = rows[0]
-    observed_table_id = str(first.get("table_id") or "")
+    observed_table_id = str(first.get("source_table_id") or "")
     environment_name = str(first.get("environment_name") or "")
     if not observed_table_id or not environment_name:
-        raise ValueError("observation must contain table_id and environment_name")
-    if any(str(row.get("table_id") or "") != observed_table_id for row in rows):
-        raise ValueError("observation dataframe must contain one shared table_id")
+        raise ValueError("observation must contain source_table_id and environment_name")
+    if any(str(row.get("source_table_id") or "") != observed_table_id for row in rows):
+        raise ValueError("observation dataframe must contain one shared source_table_id")
     if any(str(row.get("environment_name") or "") != environment_name for row in rows):
         raise ValueError("observation dataframe must contain one shared environment_name")
 
@@ -128,16 +132,16 @@ def check_freshness(
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
     change_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="changes",
+        guardrail_type="source_stability",
         table_id=table_id,
         environment_name=env,
     )
     if change_rule is None:
         raise ValueError(
-            f"No active approved source-change rule exists for {table_id!r}; "
+            f"No active approved Source Stability rule exists for {table_id!r}; "
             "the observation change column cannot be resolved."
         )
-    _partition_column, change_column = resolve_change_rule_observation_columns(change_rule)
+    _partition_column, change_column = resolve_source_stability_observation_columns(change_rule)
     compatibility_observation = guardrail_compatibility_observation(
         observation,
         table_id=table_id,

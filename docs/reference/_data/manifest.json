@@ -38,7 +38,7 @@
     {
       "module_name": "widgets.widget_author_guardrails",
       "visibility": "public",
-      "module_summary": "Owns Schema, Freshness, and Changes guardrail authoring widget workflow.",
+      "module_summary": "Owns Schema, Freshness, and Source Stability Guardrail authoring widget workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false
     },
@@ -342,7 +342,7 @@
     {
       "module_name": "widgets.widget_author_guardrails",
       "visibility": "public",
-      "module_summary": "Owns Schema, Freshness, and Changes guardrail authoring widget workflow.",
+      "module_summary": "Owns Schema, Freshness, and Source Stability Guardrail authoring widget workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false,
       "callable_name": "widget_author_guardrails",

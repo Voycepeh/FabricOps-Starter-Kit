@@ -19,7 +19,7 @@ Confirm Step 3 froze the intended version and that `02_pipeline` is using the En
 2. Run `widget_select_data_contract()`. It resolves the current `notebook_id`, optional `workspace_id`, and environment, then discovers every Source and Target `table_id` associated with this notebook through `METADATA_DATA_LINEAGE`.
 3. For every discovered table, choose the exact frozen Data Contract version to test. Each Source or Target selection is independent and stored under that table's key in `data_contract_overrides`.
 4. Run the governed pipeline through its visible Extract, Transform, and Load path.
-5. Evaluate the saved immutable requirements with the modular runtime functions: `check_schema()`, `check_freshness()`, `check_changes()`, `check_dq()`, and `check_sensitive_data()` where applicable.
+5. Evaluate the saved immutable requirements with the modular runtime functions: `check_schema()`, `check_freshness()`, `check_source_stability()`, `check_dq()`, and `check_sensitive_data()` where applicable.
 6. Confirm Warn/Block continuation behavior and the saved processing definition behave as intended.
 7. Inspect the summary records written to `METADATA_GUARDRAIL_RESULTS`. Inspect caller-owned DQ failed-row DataFrames where relevant; FabricOps does not automatically persist those rows.
 

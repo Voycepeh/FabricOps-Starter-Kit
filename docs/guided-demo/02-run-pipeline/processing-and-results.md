@@ -1,65 +1,55 @@
-# Unit 5: Choose processing behaviour and review results
+# Unit 5: Choose target processing and review results
 
-**Configure how much source data the template should process, then review what the completed run produced.**
+**Keep source reads simple, choose the governed target strategy, then review what the completed run produced.**
 
-## Choose a source processing strategy
+## Read each source normally
 
-FabricOps separates the configured source strategy from the runtime read mode and from the target write strategy.
+`read_pipeline_prep()` resolves the source `table_id`, physical location, and source Lineage context. The visible Lakehouse or Warehouse reader then reads the source. Read preparation does not inspect a downstream target, calculate watermark or partition progress, skip the pipeline, or return a processing scope.
 
-| Source strategy | Meaning | Typical use |
-| --- | --- | --- |
-| `full_dataset` | Read the complete source each run. | Small files and reference data. |
-| `incremental_watermark` | Read rows newer than the maximum governed target `_watermark_value`. | Transactional sources with a reliable unique increasing value. |
-| `incremental_partition` | Read whole logical buckets that are new or changed. | Daily, monthly, snapshot, or history data. |
-
-The runtime can then resolve to `skip`, `full_dataset`, or `incremental_subset` depending on what the current execution needs.
-
-Read the deeper rationale and trade-offs in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
-
-## Watermark processing
-
-For a Warehouse source using `modified_datetime`, a governed target watermark of `2026-08-26 10:00` and a captured upper watermark of `2026-08-26 12:00` produces this bounded range:
+This keeps each Read block independent of its eventual Write destination:
 
 ```text
-modified_datetime > 2026-08-26 10:00
-AND modified_datetime <= 2026-08-26 12:00
+Identify source
+      ↓
+Resolve table_id and source Lineage
+      ↓
+Physically read the source
 ```
 
-The interval is `(lower_bound, upper_bound]`. Successful progress advances atomically when the target write publishes `_watermark_value`.
+Use an explicit Warehouse query when the project needs source-side filtering, projection, joins, or aggregation. That query is project-owned read logic rather than hidden incremental state in Read preparation.
 
-!!! warning "Use a safe watermark"
+## Choose target processing
 
-    The watermark must be non-null and globally unique for each source row as well as increasing. If the source cannot guarantee that, prefer partition processing.
+Target processing remains configured at the Write boundary. `write_pipeline_prep()` resolves the target's governed `load_strategy`, and the target writer applies the corresponding Lakehouse or Warehouse behaviour.
 
-## Partition processing
+In Production, the active frozen Data Contract is authoritative: the notebook supplies the governed target `table_id`, and FabricOps resolves both `load_strategy` and its required parameters. Development can still use physical target identity plus explicit authoring before a contract exists.
 
-For a snapshot source configured on `snapshot_date`:
-
-```text
-25 Aug → unchanged
-26 Aug → changed
-27 Aug → new
-```
-
-FabricOps prepares the complete 26 Aug and 27 Aug buckets. This is a strong fit for historical corrections and data that naturally arrives by date, month, snapshot, or batch.
-
-| Situation | Recommended strategy |
+| Target strategy | Typical use |
 | --- | --- |
-| Small or reference data | `full_dataset` |
-| Transactional source with a reliable unique increasing ID | `incremental_watermark` |
-| Large fact/history table with natural logical partitions | `incremental_partition` |
-| Daily, monthly, or snapshot delivery | `incremental_partition` |
-| Historical periods can be corrected | `incremental_partition` |
+| `overwrite` | Replace a target from a complete prepared result. |
+| `append` | Add prepared rows to an append-only target. |
+| `scd1` | Upsert current values by governed key columns. |
+| `scd2` | Preserve governed history using effective dates and tracked columns. |
+
+Keep merge, upsert, append, partitioning, and other target-side decisions in target configuration and the Write block. A Read block should not need to know where its DataFrame will later be written.
+
+!!! warning "One governed target, one writer"
+
+    One governed target `table_id` should have one owning pipeline/notebook writer. Independent writers can race, duplicate appends, overwrite each other's state, break SCD history, or apply inconsistent assumptions. FabricOps freezes the owner's logical notebook name with the Data Contract and rejects a contract-backed write from a conflicting notebook name. The physical notebook ID remains diagnostic metadata because it can differ after promotion to another workspace.
+
+## Keep Source Stability separate from processing
+
+Freshness asks whether the source is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. For example, today's arrival can pass Freshness while a value processed yesterday changing from `$20` to `$25` is still detected as historical mutation. New data is compatible with append; changed, removed, or reappeared historical data violates append stability, while overwrite, SCD1, and SCD2 can reconcile it. Source Stability reports the evidence and validates compatibility without selecting or executing the load strategy.
+
+`METADATA_SOURCE_OBSERVATION` stores both states in one append-only table. Source evidence is first written with `observation_status="observed"`, scoped by logical notebook name, source `table_id`, and target `table_id`. Only a successful physical target write appends the corresponding `committed` state, making it eligible as the next baseline. A failed write leaves the raw observed rows intact but commits neither an accepted baseline nor successful target Lineage.
 
 ## Keep canonical profiles complete
 
-A complete `full_dataset` DataFrame may refresh the canonical registered source profile. An `incremental_subset` can be profiled diagnostically, but it should not replace the profile of the complete physical source.
-
-This distinction is explained further under the profiling guidance in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
+A normal source read can refresh the canonical registered source Profile. A filtered or aggregated Warehouse query should not replace the Profile of the complete physical source; the template marks that case with `complete_table=False`.
 
 ## Review the completed run
 
-After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` records.
+After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, and observed/committed `METADATA_SOURCE_OBSERVATION` records.
 
 Those concrete metadata records are the handoff to Governance in Step 3.
 
@@ -67,7 +57,7 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
     Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then uses the unified editor to author `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL` for one `table_id` and freeze the Data Contract version. Step 4 selects that exact version in `02_pipeline`, writes summaries to `METADATA_GUARDRAIL_RESULTS`, and returns DQ failed values to the caller without persisting them automatically. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the pipeline against the active contract.
 
-For exact APIs such as `read_pipeline_prep()`, `check_changes()`, `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
+For exact APIs such as `read_pipeline_prep()` and `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 
 **Previous:** [Unit 4: Transform and load](transform-and-load.md)  
 **Next:** [Step 3: Author and freeze the Data Contract](../03-enrich-guardrails.md)

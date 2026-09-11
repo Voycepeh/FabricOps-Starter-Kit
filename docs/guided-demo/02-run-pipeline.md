@@ -46,7 +46,7 @@ Before starting this module:
 | [2. Run the baseline ETL](02-run-pipeline/run-baseline-etl.md) | Execute the complete development pipeline before any Guardrails exist. |
 | [3. Configure sources](02-run-pipeline/configure-sources.md) | Use Lakehouse files/tables or Warehouse tables/SQL without hardcoded Fabric routing. |
 | [4. Transform and load](02-run-pipeline/transform-and-load.md) | Add project logic and write to Lakehouse or Warehouse targets. |
-| [5. Choose processing behaviour and review results](02-run-pipeline/processing-and-results.md) | Understand full/incremental processing and inspect the concrete metadata records handed to Governance. |
+| [5. Choose target processing and review results](02-run-pipeline/processing-and-results.md) | Understand target processing and inspect the concrete metadata records handed to Governance. |
 
 ## The learning-path story
 

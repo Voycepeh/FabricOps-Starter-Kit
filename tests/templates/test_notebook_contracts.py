@@ -234,7 +234,7 @@ def test_02_pipeline_imports_required_public_apis_and_keeps_minimal_state():
 
     assert "READ_PREPS = {}" in imports
     assert "READ_DFS = {}" in imports
-    assert "PIPELINE_SHOULD_RUN = True" in imports
+    assert "PIPELINE_SHOULD_RUN" not in imports
 
     for removed_state in (
         "SOURCES = {}",
@@ -296,15 +296,15 @@ def test_02_pipeline_uses_read_transform_write_without_framework_wiring():
     assert "extract_checks" not in source
     assert "target_checks" not in source
     assert "all(result" not in source
-    assert source.count("if VALIDATE_DATA_CONTRACTS") == 1
-    assert 'read_lakehouse_table(\n        table_id=READ_TABLE_ID' in source
+    assert source.count("if VALIDATE_DATA_CONTRACTS") == 5
+    assert 'read_lakehouse_table(\n    table_id=READ_TABLE_ID' in source
     assert 'catalogue_widget["show"](table_id=READ_TABLE_ID)' in source
 
 
 def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
     """Engineers provide physical identity while prep owns deterministic table_id."""
     source = _notebook_source("02_pipeline.ipynb")
-    for cell_id in ("source-1-config", "source-2-config", "source-3-config", "target-config"):
+    for cell_id in ("source-1-config", "source-2-config", "source-3-config"):
         assert "TABLE_ID =" not in _cell_by_id("02_pipeline.ipynb", cell_id).source
     for cell_id in ("source-1-run", "source-2-run", "source-3-run"):
         runner = _cell_by_id("02_pipeline.ipynb", cell_id).source
@@ -313,8 +313,12 @@ def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
         assert 'READ_TABLE_ID = read_prep["table_id"]' in runner
     target = _cell_by_id("02_pipeline.ipynb", "target-guard").source
     assert "write_pipeline_prep(" in target
-    assert "target=WRITE_TARGET" in target
-    assert 'WRITE_TABLE_ID = write_prep["target"]["table_id"]' in target
+    assert "target_table_id=WRITE_TABLE_ID" in target
+    assert "load_strategy=" not in target
+    target_config = _cell_by_id("02_pipeline.ipynb", "target-anchor").source
+    assert "WRITE_TABLE_ID =" in target_config
+    assert "WRITE_STRATEGY" not in target_config
+    assert "WRITE_PARAMETERS" not in target_config
     assert "build_table_id" not in source
 
 
@@ -325,7 +329,7 @@ def test_02_pipeline_has_explicit_source_readers_without_dispatch_tree():
     history = _cell_by_id("02_pipeline.ipynb", "source-3-run").source
 
     assert "read_lakehouse_table(" in orders
-    assert 'processing_scope=read_prep["scope"]' in orders
+    assert 'processing_scope=' not in orders
     assert "read_lakehouse_table(" in products
     assert "read_warehouse_query(" in history
     assert "READ_QUERY" in history
@@ -344,24 +348,17 @@ def test_02_pipeline_keeps_checks_and_profiles_visible_in_order():
         assert runner.index("check_dq(") < runner.index("profile_and_register_table(")
         assert runner.index("profile_and_register_table(") < runner.index("READ_PREPS[READ]")
         assert 'catalogue_widget["show"](table_id=READ_TABLE_ID)' in runner
-    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
-    assert "check_freshness(" in orders
-    assert orders.index("check_freshness(") < orders.index("read_df = read_lakehouse_table(")
 
 
-def test_02_pipeline_preserves_incremental_orders_and_one_skip_branch():
-    """Orders owns bounded incremental work and one obvious downstream skip gate."""
+def test_02_pipeline_reads_do_not_require_incremental_or_downstream_state():
+    """Source preparation stays independent of target progress and skip orchestration."""
     source = _notebook_source("02_pipeline.ipynb")
-    orders_config = _cell_by_id("02_pipeline.ipynb", "source-1-config").source
-    orders = _cell_by_id("02_pipeline.ipynb", "source-1-run").source
-
-    assert 'READ_STRATEGY = "incremental_watermark"' in orders_config
-    assert 'READ_WATERMARK_COLUMN = "modified_datetime"' in orders_config
-    assert 'processing_scope=read_prep["scope"]' in orders
-    assert 'PIPELINE_SHOULD_RUN = read_prep["read_mode"] != "skip"' in orders
-    assert source.count('read_prep["read_mode"] != "skip"') == 1
-    for cell_id in ("source-2-run", "source-3-run", "transform", "target-config", "target-guard", "target-prepare", "target-publish", "target-evidence"):
-        assert "if PIPELINE_SHOULD_RUN:" in _cell_by_id("02_pipeline.ipynb", cell_id).source
+    for removed in (
+        "PIPELINE_SHOULD_RUN", "ORDERS_PROGRESS", "source_read_strategy=",
+        "source_watermark_column=", 'processing_scope=read_prep["scope"]',
+        "check_changes", "Changes Guardrail",
+    ):
+        assert removed not in source
 
 
 def test_02_pipeline_profile_registration_owns_canonical_vs_diagnostic_scope():
@@ -371,7 +368,7 @@ def test_02_pipeline_profile_registration_owns_canonical_vs_diagnostic_scope():
     history = _cell_by_id("02_pipeline.ipynb", "source-3-run").source
     for runner in (orders, products, history):
         assert "profile_and_register_table(" in runner
-        assert 'processing_scope=read_prep["scope"]' in runner
+        assert "processing_scope=" not in runner
     assert "complete_table=False" in history
     assert "profile_dataframe(" not in orders + products + history
 

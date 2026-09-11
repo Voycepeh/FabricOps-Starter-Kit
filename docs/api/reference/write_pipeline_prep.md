@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:158`
+`fabricops_kit/pipeline/write_pipeline_prep.py:68`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L158-L361">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L232">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,24 +69,24 @@ def write_pipeline_prep(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
+| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning logical notebook name. |
 | `target` | `str \| None` | No | Configured target key supplied instead of ``target_table_id``. |
 | `schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |
 | `load_strategy` | `str \| None` | No | Current authored load strategy when physical identity is supplied. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters belonging to the authored load strategy. |
-| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. Watermark source values must remain present through transformation so target state can be persisted on each row. |
+| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. |
 
 ## Returns
 
-Audited DataFrame, target identity, resolved target processing, writer settings, execution scope, and target Lineage.
+Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and post-write success context.
 
 ## Raises / Errors
 
 ValueError
     If preparation is incomplete or an unsafe target/strategy combination
-    is requested, or if transformed incremental-watermark output cannot
-    persist the captured upper watermark on a target row.
+    is requested, or if a contract-backed target is invoked by a notebook
+    other than its frozen owner.
 
 ## Notes
 
@@ -94,21 +94,13 @@ ValueError
 
 FabricOps resolves one run-level audit record and adds only compact target
 provenance fields. This function does not call a Lakehouse or Warehouse
-writer or commit source progress. It persists target Lineage at the governed
-preparation boundary. Lakehouse and Warehouse
-targets use the same governed strategy definition; each writer applies its
-engine-specific physical execution only after this preparation succeeds.
-Overwrite is full-table for an explicitly configured ``full_dataset`` source
-and for the first ``incremental_watermark`` population whose scope retains
-its captured upper bound. Later Lakehouse incremental watermark and
-partition reads require a matching canonical scope and use ``replaceWhere``;
-later Warehouse incremental overwrite is rejected because no equivalent
-scoped replacement is implemented. For incremental-watermark processing,
-including its first ``full_dataset`` population, this function evaluates
-the transformed DataFrame before publication and requires its maximum
-``_watermark_value`` to equal the captured source upper bound. Empty or
-truncated output fails rather than leaving target-backed progress
-permanently behind the processed window.
+writer. It does not persist successful target Lineage or accept Source Observations;
+the physical writer commits those records only after publication succeeds.
+Lakehouse and Warehouse targets use the same governed target strategy
+definition; each writer applies its engine-specific physical execution only
+after this preparation succeeds. One governed target ``table_id`` must have
+one owning pipeline/notebook writer because independent writers can race,
+duplicate writes, overwrite state, or break SCD history.
 
 </div>
 

@@ -33,11 +33,9 @@ Use the Warehouse table path when you need the complete physical table. Use the 
 
 A filtered, joined, or aggregated query result should not replace the canonical profile of one complete physical source table.
 
-## Source strategy is a separate choice
+## Read preparation stays source-focused
 
-Where the data lives and how much of it should be processed are different questions. After choosing the source, Unit 5 explains the processing strategies available to the template: Full Dataset, Incremental Watermark, and Incremental Partition.
-
-Read more about the trade-offs in [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
+After choosing the source, `read_pipeline_prep()` resolves its canonical identity and registers source Lineage. Unit 5 explains how target processing remains separate at the Write boundary.
 
 ## Function details
 

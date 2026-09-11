@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 import importlib
+import json
 import types
 
 import pytest
 
-changes = importlib.import_module("fabricops_kit.pipeline.check_changes")
+stability = importlib.import_module("fabricops_kit.pipeline.check_source_stability")
 freshness = importlib.import_module("fabricops_kit.pipeline.check_freshness")
-from fabricops_kit import check_changes, check_freshness
+from fabricops_kit import check_source_stability, check_freshness
 
 
 def row(
@@ -22,21 +23,29 @@ def row(
     maximum="2026-08-14",
     present=True,
     table_id="key",
+    target_table_id="target",
     environment_name="dev",
     observation_id="observation-1",
     activity_id="activity-1",
+    fingerprint="fingerprint-1",
+    status="observed",
+    notebook_name="02_pipeline",
 ):
     return {
         "observation_id": observation_id,
-        "table_id": table_id,
+        "source_table_id": table_id,
+        "target_table_id": target_table_id,
         "environment_name": environment_name,
         "partition_value": partition,
         "row_count": count,
         "min_change_value": minimum,
         "max_change_value": maximum,
+        "content_fingerprint": fingerprint,
         "is_present": present,
+        "observation_status": status,
         "_committed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
         "_activity_id": activity_id,
+        "_notebook_name": notebook_name,
     }
 
 
@@ -59,24 +68,23 @@ class Spark:
         frame = Frame(rows, self); self.created.append((frame, schema)); return frame
 
 
-def change_rule(*, severity="blocking", rule_type="monitor_only", behaviour=None):
-    parameters = (
-        '{"partition_column":"business_date","change_column":"modified_at"}'
-        if behaviour is None
-        else f'{{"partition_column":"business_date","change_column":"modified_at","change_behaviour":"{behaviour}"}}'
-    )
+def stability_rule(*, severity="blocking"):
+    parameters = json.dumps({
+        "partition_column": "business_date",
+        "change_column": "modified_at",
+    })
     return {
         "table_id": "key",
         "table_name": "orders",
         "environment_name": "dev",
-        "guardrail_type": "changes",
-        "rule_type": rule_type,
+        "guardrail_type": "source_stability",
+        "rule_type": "historical_mutation",
         "rule_parameters_json": parameters,
         "action": "Block" if severity == "blocking" else "Warn",
         "is_active": True,
-        "guardrail_rule_id": f"change_{rule_type}_{severity}",
+        "guardrail_rule_id": f"source_stability_{severity}",
         "guardrail_version": 1,
-        "rule_id": f"change_{rule_type}_{severity}",
+        "rule_id": f"source_stability_{severity}",
     }
 
 
@@ -111,27 +119,54 @@ def _audit(at=None, activity_id="activity-tombstone"):
     }
 
 
-def configure_changes(monkeypatch, history, rules=None):
-    monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(changes, "metadata_table_physical_schema", lambda *args: None)
-    monkeypatch.setattr(changes, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(history))
+def configure_stability(
+    monkeypatch,
+    history,
+    rules=None,
+    *,
+    load_strategy="append",
+    accepted_observation_id="auto",
+    consumption_notebook="02_pipeline",
+    consumption_target="target",
+):
+    monkeypatch.setattr(stability, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(stability, "metadata_table_physical_schema", lambda *args: None)
+    def read_metadata(table_name, *args, **kwargs):
+        del table_name, args, kwargs
+        selected = None
+        if history and accepted_observation_id == "auto":
+            selected = min(history, key=lambda value: value["_committed_at"])["observation_id"]
+        elif accepted_observation_id is not None:
+            selected = accepted_observation_id
+        return Frame([
+            {
+                **value,
+                "observation_status": "committed" if value["observation_id"] == selected else "observed",
+                "target_table_id": consumption_target if value["observation_id"] == selected else value["target_table_id"],
+                "_notebook_name": consumption_notebook if value["observation_id"] == selected else value["_notebook_name"],
+            }
+            for value in history
+        ])
+    monkeypatch.setattr(stability, "read_lakehouse_table_core", read_metadata)
     written = []
-    monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
-    monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: _audit())
-    monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
-    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [change_rule()])
-    monkeypatch.setattr(changes, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
+    monkeypatch.setattr(stability, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
+    monkeypatch.setattr(stability, "build_runtime_audit_fields", lambda **kwargs: _audit())
+    monkeypatch.setattr(stability, "write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(stability, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [stability_rule()])
+    monkeypatch.setattr(stability, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo",
         "table_name": "orders", "load_strategy": "overwrite", "load_strategy_parameters_json": "{}",
     })
-    monkeypatch.setattr(changes, "resolve_table_processing_definition", lambda *args, **kwargs: {
-        "load_strategy": "overwrite", "source": "current_authoring",
-    })
+    monkeypatch.setattr(
+        stability,
+        "resolve_table_processing_definition",
+        lambda *args, **kwargs: {"load_strategy": load_strategy, "source": "data_contract"},
+    )
     return written
 
 
 def configure_freshness(monkeypatch, rules=None):
-    configured_rules = rules or [freshness_rule(), change_rule()]
+    configured_rules = rules or [freshness_rule(), stability_rule()]
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(freshness, "get_spark_session", lambda: Spark())
     monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: configured_rules)
@@ -143,10 +178,60 @@ def configure_freshness(monkeypatch, rules=None):
 
 def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypatch):
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    configure_changes(monkeypatch, [row(at=now)])
-    result = check_changes(Frame([row(at=now)], Spark()))
+    configure_stability(monkeypatch, [row(at=now)])
+    result = check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")
     assert result["first_observation"] is True
     assert result["new_partitions"] == ["a"]
+
+
+def test_raw_observation_does_not_become_accepted_baseline(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), observation_id="unconsumed")],
+        accepted_observation_id=None,
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["first_observation"] is True
+
+
+def test_latest_failed_observation_is_ignored_for_last_consumed_baseline(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    history = [
+        row(at=now - timedelta(hours=2), count=1, observation_id="accepted"),
+        row(at=now - timedelta(hours=1), count=2, observation_id="failed"),
+    ]
+    configure_stability(monkeypatch, history, accepted_observation_id="accepted")
+    result = check_source_stability(
+        Frame([row(at=now, count=2, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["changed_partitions"] == ["a"]
+    assert result["historical_mutation"] is True
+
+
+@pytest.mark.parametrize(
+    ("consumption_notebook", "consumption_target"),
+    [("other_pipeline", "target"), ("02_pipeline", "other-target")],
+)
+def test_consumption_baselines_are_isolated_by_notebook_and_target(
+    monkeypatch, consumption_notebook, consumption_target
+):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), observation_id="other-consumer")],
+        consumption_notebook=consumption_notebook,
+        consumption_target=consumption_target,
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["first_observation"] is True
 
 
 def test_observation_checks_pass_development_contract_context_to_rule_loader(monkeypatch):
@@ -159,21 +244,21 @@ def test_observation_checks_pass_development_contract_context_to_rule_loader(mon
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", context))
     def load_freshness(*args, **kwargs):
         captured["freshness"] = kwargs
-        return [freshness_rule(), change_rule()]
+        return [freshness_rule(), stability_rule()]
 
     monkeypatch.setattr(freshness, "load_table_guardrail_rules", load_freshness)
     freshness.check_freshness(Frame([row(at=now)], Spark()))
 
-    configure_changes(monkeypatch, [row(at=now)])
-    monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", context))
-    def load_changes(*args, **kwargs):
-        captured["changes"] = kwargs
-        return [change_rule()]
+    configure_stability(monkeypatch, [row(at=now)])
+    monkeypatch.setattr(stability, "resolve_fabric_context", lambda: (object(), "dev", context))
+    def load_stability(*args, **kwargs):
+        captured["source_stability"] = kwargs
+        return [stability_rule()]
 
-    monkeypatch.setattr(changes, "load_table_guardrail_rules", load_changes)
-    check_changes(Frame([row(at=now)], Spark()))
+    monkeypatch.setattr(stability, "load_table_guardrail_rules", load_stability)
+    check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")
     assert captured["freshness"]["context"] is context
-    assert captured["changes"]["context"] is context
+    assert captured["source_stability"]["context"] is context
 
 
 def test_previous_comparable_snapshot_is_selected_by_table_and_environment(monkeypatch):
@@ -185,15 +270,16 @@ def test_previous_comparable_snapshot_is_selected_by_table_and_environment(monke
         row("unrelated", at=previous, table_id="other"),
         row("prod", at=previous, environment_name="prod"),
     ]
-    written = configure_changes(monkeypatch, history)
-    result = check_changes(
+    written = configure_stability(monkeypatch, history)
+    result = check_source_stability(
         Frame(
             [
                 row("a", at=now, count=2, observation_id="current"),
                 row("new", at=now, observation_id="current"),
             ],
             Spark(),
-        )
+        ),
+        target_table_id="target",
     )
     assert result["changed_partitions"] == ["a"]
     assert result["new_partitions"] == ["new"]
@@ -205,34 +291,69 @@ def test_previous_comparable_snapshot_is_selected_by_table_and_environment(monke
 def test_unchanged_and_reappeared_observations(monkeypatch):
     now = datetime(2026, 8, 14, tzinfo=UTC)
     previous = now - timedelta(hours=1)
-    configure_changes(monkeypatch, [row(at=previous)])
-    assert check_changes(Frame([row(at=now)], Spark()))["changed"] is False
-    configure_changes(monkeypatch, [row(at=previous, present=False)])
-    assert check_changes(Frame([row(at=now)], Spark()))["reappeared_partitions"] == ["a"]
+    configure_stability(monkeypatch, [row(at=previous)])
+    assert check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")["changed"] is False
+    configure_stability(monkeypatch, [row(at=previous, present=False)])
+    assert check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")["reappeared_partitions"] == ["a"]
+
+
+def test_append_allows_new_source_data(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    previous = now - timedelta(hours=1)
+    configure_stability(monkeypatch, [row("existing", at=previous)])
+    result = check_source_stability(
+        Frame(
+            [
+                row("existing", at=now, observation_id="current"),
+                row("new", at=now, observation_id="current"),
+            ],
+            Spark(),
+        ),
+        target_table_id="target",
+    )
+    assert result["new_partitions"] == ["new"]
+    assert result["historical_mutation"] is False
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
 
 
 @pytest.mark.parametrize(
     ("severity", "status", "can_continue"),
     [("blocking", "failed", False), ("warning", "warning", True)],
 )
-def test_approved_changes_rule_governs_continuation(monkeypatch, severity, status, can_continue):
+def test_append_rejects_historical_mutation(monkeypatch, severity, status, can_continue):
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    rules = [change_rule(severity=severity, rule_type="no_change_required")]
-    configure_changes(monkeypatch, [row(at=now - timedelta(hours=1))], rules)
+    rules = [stability_rule(severity=severity)]
+    configure_stability(monkeypatch, [row(at=now - timedelta(hours=1))], rules)
     result_writes = []
-    monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: result_writes.append(kwargs))
-    result = check_changes(Frame([row(at=now, count=2)], Spark()))
+    monkeypatch.setattr(stability, "write_guardrail_result_row", lambda **kwargs: result_writes.append(kwargs))
+    result = check_source_stability(Frame([row(at=now, count=2)], Spark()), target_table_id="target")
     assert result["status"] == status
     assert result["can_continue"] is can_continue
     assert result["severity"] == severity
     assert result["guardrail_version"] == 1
-    assert result_writes[0]["guardrail_type"] == "changes"
+    assert result_writes[0]["guardrail_type"] == "source_stability"
 
 
-def test_changes_rejects_cross_environment_observation(monkeypatch):
-    monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", {}))
+def test_content_fingerprint_detects_mutation_when_counts_and_ranges_match(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), fingerprint="before")],
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current", fingerprint="after")], Spark()),
+        target_table_id="target",
+    )
+    assert result["changed_partitions"] == ["a"]
+    assert result["historical_mutation"] is True
+    assert result["status"] == "failed"
+
+
+def test_source_stability_rejects_cross_environment_observation(monkeypatch):
+    monkeypatch.setattr(stability, "resolve_fabric_context", lambda: (object(), "dev", {}))
     with pytest.raises(ValueError, match="does not match active environment"):
-        check_changes(Frame([row(environment_name="prod")], Spark()))
+        check_source_stability(Frame([row(environment_name="prod")], Spark()), target_table_id="target")
 
 
 def test_freshness_rejects_non_observation_input():
@@ -242,12 +363,12 @@ def test_freshness_rejects_non_observation_input():
 
 def test_freshness_rejects_incomplete_observation_identity():
     incomplete = row()
-    del incomplete["table_id"]
+    del incomplete["source_table_id"]
     with pytest.raises(ValueError, match="canonical evidence"):
         check_freshness([incomplete])
 
 
-def test_freshness_uses_change_rule_only_to_resolve_observation_column(monkeypatch):
+def test_freshness_uses_stability_rule_only_to_resolve_observation_column(monkeypatch):
     observed = Frame([row(maximum="2999-08-14")], Spark())
     configure_freshness(monkeypatch)
     result = freshness.check_freshness(observed)
@@ -257,35 +378,38 @@ def test_freshness_uses_change_rule_only_to_resolve_observation_column(monkeypat
 
 def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch):
     observed = Frame([row(maximum="2999-08-14")], Spark())
-    configure_freshness(monkeypatch, [freshness_rule(freshness_column="loaded_at"), change_rule()])
+    configure_freshness(monkeypatch, [freshness_rule(freshness_column="loaded_at"), stability_rule()])
     with pytest.raises(ValueError, match="does not match change_column 'modified_at'"):
         freshness.check_freshness(observed)
 
 
-@pytest.mark.parametrize(
-    ("behaviour", "expected_pattern", "expected_status"),
-    [("Incremental append", "incremental_append", "failed"), ("Snapshot overwrite", "snapshot", "passed")],
-)
-def test_authored_change_behaviour_drives_observation_runtime_semantics(
-    monkeypatch, behaviour, expected_pattern, expected_status
-):
+@pytest.mark.parametrize("load_strategy", ["overwrite", "scd1", "scd2"])
+def test_historical_mutation_is_compatible_with_reconciling_strategies(monkeypatch, load_strategy):
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    rules = [change_rule(behaviour=behaviour)]
-    configure_changes(monkeypatch, [row(at=now - timedelta(hours=1))], rules)
-    result = check_changes(Frame([row(at=now, count=2)], Spark()))
-    assert result["source_pattern"] == expected_pattern
-    assert result["pattern_semantics"] == (
-        "append_only" if expected_pattern == "incremental_append" else "full_state"
+    rules = [stability_rule()]
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1))],
+        rules,
+        load_strategy=load_strategy,
     )
-    assert result["status"] == expected_status
+
+    result = check_source_stability(Frame([row(at=now, count=2)], Spark()), target_table_id="target")
+
+    assert result["status"] == "passed"
+    assert result["historical_mutation"] is True
+    assert result["load_strategy"] == load_strategy
+    assert "source_pattern" not in result
+    assert "change_behaviour" not in json.loads(rules[0]["rule_parameters_json"])
+    assert "expected_change" not in json.loads(rules[0]["rule_parameters_json"])
 
 
-def test_changes_requires_active_change_rule(monkeypatch):
+def test_source_stability_requires_active_rule(monkeypatch):
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    configure_changes(monkeypatch, [row(at=now - timedelta(hours=1))], rules=[])
-    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: [])
-    with pytest.raises(ValueError, match="No active approved change rule exists for 'key'"):
-        check_changes(Frame([row(at=now)], Spark()))
+    configure_stability(monkeypatch, [row(at=now - timedelta(hours=1))], rules=[])
+    monkeypatch.setattr(stability, "load_table_guardrail_rules", lambda *args, **kwargs: [])
+    with pytest.raises(ValueError, match="No active approved Source Stability rule exists for 'key'"):
+        check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")
 
 
 def test_governed_guardrail_public_signatures_are_minimal():

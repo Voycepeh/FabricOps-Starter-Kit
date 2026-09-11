@@ -56,14 +56,9 @@ As an operating practice, the version should have been tested in Development and
 
 ??? info "Preview — Prepare and validate the Production source"
 
-    Use `read_pipeline_prep()` with the source `table_id` so FabricOps resolves the registered source, its own active contract processing where change safety requires it, and the configured source-read strategy. It then prepares the runtime mode as `skip`, `full_dataset`, or `incremental_subset`.
+    Use `read_pipeline_prep()` with the source `table_id` so FabricOps resolves the registered source and registers source Lineage. Read preparation is separate from the physical source read and from target processing.
 
-    The source-read strategy itself is Full Dataset, Incremental Watermark, or Incremental Partition. The source strategy and runtime read mode are separate concepts.
-
-    Run source Schema, Freshness, and Changes Guardrails before the business-data read. Read the source using the prepared scope and run DQ on the DataFrame being processed.
-
-    Register a source Profile only when that DataFrame represents the complete physical source table. An Incremental Subset must not replace the latest complete Profile.
-
+    Read the source through its configured Lakehouse or Warehouse path, then run the source Schema and DQ Guardrails on the resulting DataFrame. Register a source Profile only when that DataFrame represents the complete physical source table; a filtered or aggregated project-owned query must not replace the complete Profile.
 ???+ success "Live — Apply the visible transformation"
 
     Apply the normal project-owned transformation logic. The Production runtime uses the same visible transformation section as Development.

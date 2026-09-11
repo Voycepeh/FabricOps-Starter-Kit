@@ -82,10 +82,10 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "schema_name",
         "table_name",
         "column_name",
-            "data_type",
-            "load_strategy",
-            "load_strategy_parameters_json",
-            "first_profiled_at",
+        "data_type",
+        "load_strategy",
+        "load_strategy_parameters_json",
+        "first_profiled_at",
         "last_profiled_at",
         "is_active",
         *[name for name, _kind, _nullable in audit_schema_fields()],
@@ -172,13 +172,16 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
     assert fields == [
         "observation_id",
-        "table_id",
+        "source_table_id",
+        "target_table_id",
         "environment_name",
         "partition_value",
         "row_count",
         "min_change_value",
         "max_change_value",
+        "content_fingerprint",
         "is_present",
+        "observation_status",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {
@@ -188,7 +191,11 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "partition_column",
         "change_column",
     }.isdisjoint(fields)
-    assert "_committed_at" in fields
+
+
+def test_source_consumption_is_not_a_separate_metadata_table():
+    """Source Observation owns both observed and committed states."""
+    assert "METADATA_SOURCE_CONSUMPTION" not in metadata_table_schema_registry()
 
 
 def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision():

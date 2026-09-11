@@ -260,7 +260,7 @@ expandEngineeringChoiceFromHash();
 
     **Environment** resolves the active Development or Production configuration. **Extract** reads one or more configured sources and prepares the source processing state. **Transform** remains project-owned business logic. **Load** writes one governed target using the applicable target processing definition.
 
-    FabricOps standardises the operational behaviour around that lifecycle, including configured I/O, profiling, Catalogue registration, lineage, governed checks, source processing preparation, and target-backed incremental state. It does not hide the project-specific transformation itself.
+    FabricOps standardises the operational behaviour around that lifecycle, including configured I/O, profiling, Catalogue registration, lineage, governed checks, source identity preparation, and governed target processing. It does not hide the project-specific transformation itself.
 
     This keeps the framework boundary easy to understand: FabricOps owns the repeatable engineering scaffolding, while the engineer owns the transformation that makes the project unique.
 
@@ -382,97 +382,25 @@ belong to a dedicated future Guardrail workflow, not Enrichment.
 
 <span id="full-vs-incremental"></span>
 
-??? info "Incremental load implementation"
+??? info "Read preparation and target processing"
 
-    FabricOps makes the processing strategy explicit rather than hiding it inside ad-hoc notebook code.
-
-    | Strategy | Use when | Main trade-off |
-    | --- | --- | --- |
-    | Full dataset | The source is small enough to reprocess safely, or there is no trustworthy incremental key | Simplest and easiest to reason about, but repeatedly processes everything |
-    | Incremental watermark | A timestamp or monotonically increasing value identifies new or changed rows | Efficient, but depends on reliable change state and ordering |
-    | Incremental partition | A date, snapshot, or other partition is the correct unit of change | Efficient and easy to reconcile by partition, but depends on meaningful source partitioning |
-
-    ### Full dataset
+    FabricOps Read has one responsibility chain: identify the source, resolve its canonical `table_id` and source Lineage, and physically read it. `read_pipeline_prep()` does not inspect target progress or decide whether the pipeline should continue.
 
     ```text
-    Read all source rows
-            ↓
-       Transform
-            ↓
-    Write governed target
+    Identify source
+          ↓
+    Resolve table_id and source Lineage
+          ↓
+    Physically read the source
     ```
 
-    Prefer full processing when simplicity is worth more than incremental complexity. It is often the safest choice for small reference tables, modest datasets, or sources without a reliable change indicator.
-
-    ### Incremental watermark
-
-    ```text
-    Maximum target `_watermark_value`
-             ↓
-    Read rows newer than state
-             ↓
-          Transform
-             ↓
-    Write governed target with `_watermark_value`
-    ```
-
-    A watermark normally uses a timestamp, sequence, or another increasing value that reliably identifies new or changed source records.
-
-    **Critical FabricOps rule:** the watermark represents **successfully published target state**. Persist it only as `_watermark_value` on governed target rows so a failed write cannot advance progress or skip data on the next run.
-
-    Consider late-arriving records when designing the watermark. Depending on the source, a small lookback or reprocessing window may be safer than assuming every record arrives strictly in order.
-
-    ### Incremental partition
-
-    ```text
-    Identify changed/new partition
-             ↓
-    Read that logical partition
-             ↓
-          Transform
-             ↓
-    Write/reconcile that partition
-      with `_partition_bucket`
-    ```
-
-    Partition-based processing works well when the source naturally exposes a meaningful processing unit such as `snapshot_date`, business date, or another stable partition identifier.
-
-    Do not confuse **logical incremental partitions** with Spark physical partition tuning. Incremental processing decides **which business/source data belongs in the run**. Spark repartitioning decides **how the DataFrame is physically distributed for compute/write**.
-
-    ### Profiling an incremental run
-
-    The DataFrame processed during an incremental run can represent only part of the physical table. FabricOps therefore treats execution scope and registered table Profile as different concerns.
-
-    A partial incremental DataFrame must not replace the registered Profile of the complete physical table. When FabricOps needs to register the table-level Profile after a write, it should profile the complete persisted target so the metadata continues to describe the physical table rather than only the latest increment.
-
-    **Microsoft Learn:** [Incrementally load data from Data Warehouse to Lakehouse](https://learn.microsoft.com/en-us/fabric/data-factory/tutorial-incremental-copy-data-warehouse-lakehouse)
+    Source filtering remains explicit project-owned read logic, such as a caller-authored Warehouse query. Target processing remains a Write concern: `write_pipeline_prep()` resolves the governed target `load_strategy`, and the writer applies overwrite, append, SCD1/upsert, SCD2, and physical partition options as appropriate.
 
 <span id="failure-safe-processing"></span>
 
 ??? info "Failure-safe processing and recovery"
 
-    FabricOps treats source progress as **successfully published target state**, not simply as data that was attempted or read.
-
-    `read_pipeline_prep()` prepares the source runtime mode and reads successful progress from the governed target. A successful target write persists watermark progress in `_watermark_value` or partition progress in `_partition_bucket`; a failed write cannot advance either state.
-
-    ```text
-    Prepare source state
-          ↓
-    Read source scope
-          ↓
-    Transform
-          ↓
-    Validate governed expectations
-          ↓
-    Write governed target with
-    `_watermark_value` or `_partition_bucket`
-    ```
-
-    If the target write fails, no secondary state is created or advanced. The next run derives successful progress from the unchanged governed target and can safely retry the source scope.
-
-    This is the core FabricOps recovery rule for watermark and partition-driven processing: **state follows successful governed processing, never the other way around.**
-
-    Source preparation can also resolve a runtime read mode such as `skip`, `full_dataset`, or an incremental scope based on the configured source strategy and recorded state. That keeps recovery behaviour inside the same repeatable `02_pipeline` lifecycle rather than relying on ad-hoc notebook variables.
+    Read preparation never advances progress or creates a pipeline-continuation decision. A failed source read therefore has no separate Read checkpoint to reconcile. Recovery and idempotency belong to the selected target write strategy and the governed target transaction.
 
 ## Practical cheat sheets
 

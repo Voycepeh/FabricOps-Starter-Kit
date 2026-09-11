@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Governed rules that FabricOps evaluates against data and pipeline behaviour.</summary>
-<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
+<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Stability, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -71,23 +71,25 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="full-dataset">
-<summary><strong>Full Dataset</strong> — The FabricOps source-read strategy that reads the complete physical source dataset for a run.</summary>
-<p>In FabricOps, Full Dataset is the explicit source_read_strategy that reads the complete physical source dataset for the run rather than resolving an incremental subset.</p>
+<summary><strong>Full Dataset</strong> — A complete physical dataset used as the input to a FabricOps pipeline run.</summary>
+<p>In FabricOps, Full Dataset means the complete physical source is read for the run, without a source-side incremental scope or skip decision.</p>
 </details>
 
-<details id="incremental-watermark">
-<summary><strong>Incremental Watermark</strong> — The FabricOps source-read strategy that processes rows after the last successfully committed watermark.</summary>
-<p>In FabricOps, Incremental Watermark resolves a bounded row-level range from the maximum governed target `_watermark_value` to the current source upper watermark. The current implementation requires the configured watermark column to be non-null and globally unique for every source row so the range can be processed deterministically without skipping tied late-arriving rows.</p>
+<details id="load-strategy">
+<summary><strong>Load Strategy</strong> — The authoritative governed behaviour used to write one target table.</summary>
+<p>A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.</p>
+<p><strong>Also known as:</strong> write strategy</p>
 </details>
 
-<details id="incremental-partition">
-<summary><strong>Incremental Partition</strong> — The FabricOps source-read strategy that processes whole logical data buckets when those buckets are new or changed.</summary>
-<p>In FabricOps, Incremental Partition observes a configured logical partition column and resolves new, changed, or reappeared bucket values into an incremental subset. Safety rules can fall back to a full-dataset read or stop execution when the target write strategy cannot safely apply the detected changes.</p>
+<details id="source-stability">
+<summary><strong>Source Stability</strong> — Whether source data previously processed by a pipeline remains unchanged.</summary>
+<p>The Source Stability Guardrail compares current source evidence with the latest committed METADATA_SOURCE_OBSERVATION rows for the same logical notebook name, source table_id, and target table_id. Observed rows become committed only after the associated physical target write succeeds. The Guardrail reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy.</p>
 </details>
 
-<details id="incremental-subset">
-<summary><strong>Incremental Subset</strong> — The FabricOps runtime read mode used when only part of the source needs to be processed for the current run.</summary>
-<p>Incremental Subset is a resolved FabricOps runtime read mode. It is produced after source-read preparation determines the exact watermark range or logical partition values required for the current run.</p>
+<details id="writer-ownership">
+<summary><strong>Writer Ownership</strong> — The rule that one governed target table_id has one owning pipeline or notebook writer.</summary>
+<p>Writer Ownership binds a governed target table_id to the logical notebook name frozen in its Data Contract. Production rejects a conflicting notebook name because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions. The physical notebook ID is retained only as diagnostic metadata because it can change across environments.</p>
+<p><strong>Also known as:</strong> single writer</p>
 </details>
 
 </details>
@@ -264,7 +266,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="physical-partitioning">
 <summary><strong>Physical Partitioning</strong> — Organizing stored data physically by one or more partition columns to improve management or data skipping.</summary>
-<p>Physical Partitioning controls how data files are organized by partition values in storage. In FabricOps this is distinct from the Incremental Partition source-read strategy, which operates on logical source buckets.</p>
+<p>Physical Partitioning controls how data files are organized by partition values in storage. It is a target storage and performance concern, distinct from project-owned source filtering.</p>
 <p><strong>Also known as:</strong> partition_by</p>
 </details>
 

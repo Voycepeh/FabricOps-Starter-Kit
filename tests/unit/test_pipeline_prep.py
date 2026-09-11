@@ -47,7 +47,6 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     monkeypatch.setattr(write_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
     monkeypatch.setattr(write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]})
     monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing)
-    monkeypatch.setattr(write_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
         "_committed_at": "2026-08-22T00:00:00Z", "_committed_by": "engineer",
         "_activity_id": "activity", "_workspace_id": "workspace",
@@ -56,30 +55,49 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     return identity
 
 
-def test_full_dataset_source_can_prepare_before_any_target_exists(monkeypatch):
+def test_read_prep_resolves_registered_source_and_registers_lineage(monkeypatch):
     identity = _patch_source_identity(monkeypatch)
     lineage = []
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
-    monkeypatch.setattr(read_module, "_observe_table_core", lambda *_args, **_kwargs: pytest.fail("observation"))
-    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: pytest.fail("checkpoint"))
 
-    result = read_module.read_pipeline_prep(
-        source_table_id=identity["table_id"],
-        source_read_strategy="full_dataset",
+    result = read_module.read_pipeline_prep(source_table_id=identity["table_id"])
+
+    assert result == {"table_id": identity["table_id"], "source": identity}
+    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
+
+
+def test_read_prep_resolves_physical_lakehouse_and_warehouse_sources(monkeypatch):
+    resolved = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: None)
+    monkeypatch.setattr(
+        read_module,
+        "resolve_physical_table_identity",
+        lambda _config, _env, **coordinates: resolved.append(coordinates)
+        or _identity(
+            f"{coordinates['target']}:{coordinates['schema']}:{coordinates['table_name']}",
+            store_type="warehouse" if coordinates["target"] == "warehouse" else "lakehouse",
+        ),
     )
 
-    assert result["source"]["table_id"] == identity["table_id"]
-    assert result["source_processing"] == {"read_strategy": "full_dataset"}
-    assert result["read_mode"] == "full_dataset"
-    assert result["scope"] == {"type": "full_dataset"}
-    assert "target" not in result
-    assert "processing" not in result
-    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
+    lakehouse = read_module.read_pipeline_prep(
+        source_target="source", source_schema="dbo", source_table="orders"
+    )
+    warehouse = read_module.read_pipeline_prep(
+        source_target="warehouse", source_schema="dbo", source_table="customers"
+    )
+
+    assert lakehouse["source"]["store_kind"] == "lakehouse"
+    assert warehouse["source"]["store_kind"] == "warehouse"
+    assert resolved == [
+        {"target": "source", "schema": "dbo", "table_name": "orders"},
+        {"target": "warehouse", "schema": "dbo", "table_name": "customers"},
+    ]
 
 
 def test_read_prep_requires_source_identity():
     with pytest.raises(ValueError, match="source_table_id or both source_target"):
-        read_module.read_pipeline_prep(source_read_strategy="full_dataset")
+        read_module.read_pipeline_prep()
 
 
 def test_read_prep_rejects_unknown_source_table_id(monkeypatch):
@@ -92,136 +110,19 @@ def test_read_prep_rejects_unknown_source_table_id(monkeypatch):
     )
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     with pytest.raises(ValueError, match="No active registered Catalogue table"):
-        read_module.read_pipeline_prep(source_table_id="wrong", source_read_strategy="full_dataset")
+        read_module.read_pipeline_prep(source_table_id="wrong")
     assert lineage == []
 
 
-def test_two_registered_sources_share_activity_lineage_context(monkeypatch):
-    lineage = []
-    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {"activity_id": "activity"}))
-    monkeypatch.setattr(
-        read_module,
-        "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **_kwargs: _identity(table_id),
-    )
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
-    for table_id in ("warehouse:source:dbo:a", "warehouse:source:dbo:b"):
-        read_module.read_pipeline_prep(source_table_id=table_id, source_read_strategy="full_dataset")
-    assert [row["table_id"] for row in lineage] == ["warehouse:source:dbo:a", "warehouse:source:dbo:b"]
-    assert {row["context"]["activity_id"] for row in lineage} == {"activity"}
+def test_read_prep_has_no_incremental_read_arguments():
+    from inspect import signature
 
-
-@pytest.mark.parametrize(("previous", "upper", "expected_mode"), [
-    (None, "2026-08-26 12:00", "full_dataset"),
-    ("2026-08-26 12:00", "2026-08-26 12:00", "skip"),
-    ("2026-08-26 10:00", "2026-08-26 12:00", "incremental_subset"),
-])
-def test_watermark_scope_is_bounded_by_target_state(monkeypatch, previous, upper, expected_mode):
-    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: previous)
-    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
-        "upper_watermark": upper, "data_type": "string", "row_count": 1,
-        "non_null_count": 1, "distinct_count": 1,
-    })
-    monkeypatch.setattr(read_module, "_coerce_watermark_boundary", lambda value, *_args, **_kwargs: value)
-    result = read_module._watermark_scope(
-        {"table_id": "warehouse:source:dbo:bookings"}, {"store_kind": "lakehouse"}, "modified_datetime",
-        config="config", env="dev", spark_session="spark", context={},
-    )
-    assert result["read_mode"] == expected_mode
-    assert "candidate_checkpoint" not in result
-    if previous is None:
-        assert result["scope"] == {
-            "type": "full_dataset",
-            "watermark_column": "modified_datetime",
-            "upper_bound": upper,
-        }
-    elif expected_mode == "incremental_subset":
-        assert result["scope"]["lower_inclusive"] is False
-        assert result["scope"]["upper_inclusive"] is True
-        assert result["scope"]["lower_bound"] == previous
-        assert result["scope"]["upper_bound"] == upper
-
-
-def test_watermark_rejects_duplicate_values_that_can_hide_late_rows(monkeypatch):
-    monkeypatch.setattr(read_module, "_target_watermark", lambda *_args, **_kwargs: "2026-08-26 10:00")
-    monkeypatch.setattr(read_module, "_source_upper_watermark", lambda *_args, **_kwargs: {
-        "upper_watermark": "2026-08-26 12:00", "data_type": "string", "row_count": 2,
-        "non_null_count": 2, "distinct_count": 1,
-    })
-    with pytest.raises(ValueError, match="globally unique"):
-        read_module._watermark_scope(
-            {"table_id": "warehouse:source:dbo:bookings"}, {"store_kind": "lakehouse"}, "modified_datetime",
-            config="config", env="dev", spark_session="spark", context={},
-        )
-
-
-def test_warehouse_target_watermark_uses_governed_target_query(monkeypatch):
-    observed = {}
-
-    class Row(dict):
-        def asDict(self, recursive=False):
-            return dict(self)
-
-    class Frame:
-        def collect(self):
-            return [Row(target_watermark=200, row_count=5)]
-
-    monkeypatch.setattr(
-        read_module,
-        "read_warehouse_query_core",
-        lambda query, **kwargs: observed.update(query=query, kwargs=kwargs) or Frame(),
-    )
-    value = read_module._target_watermark(
-        {"store_kind": "warehouse", "target": "product", "schema": "dbo", "table_name": "orders"},
-        spark_session="spark",
-        context={"activity_id": "activity"},
-    )
-    assert value == 200
-    assert "MAX([_watermark_value]) AS target_watermark" in observed["query"]
-    assert observed["kwargs"]["target"] == "product"
-
-
-def test_incremental_watermark_requires_governed_target_identity(monkeypatch):
-    identity = _patch_source_identity(monkeypatch)
-    with pytest.raises(ValueError, match="target_table_id or both target_target"):
-        read_module.read_pipeline_prep(
-            source_table_id=identity["table_id"],
-            source_read_strategy="incremental_watermark",
-            source_watermark_column="modified_datetime",
-        )
-
-
-def test_read_prep_uses_source_processing_from_change_check(monkeypatch):
-    identity = _patch_source_identity(monkeypatch)
-    observation = SimpleNamespace(sparkSession="spark")
-    changes = {
-        "table_id": identity["table_id"], "environment_name": "dev", "observation_id": "observation",
-        "changed": True, "first_observation": False, "new_partitions": ["2026-08-22"],
-        "changed_partitions": [], "removed_partitions": [], "reappeared_partitions": [],
-        "partition_column": "snapshot_date", "load_strategy": "scd1",
+    parameters = signature(read_module.read_pipeline_prep).parameters
+    removed = {
+        "source_read_strategy", "target_table_id", "target_target", "target_schema", "target_table",
+        "source_watermark_column", "source_partition_column",
     }
-    target = _identity("lakehouse:unified:dbo:students", store_type="lakehouse")
-    monkeypatch.setattr(
-        read_module, "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **_kwargs: identity if table_id == identity["table_id"] else target,
-    )
-    monkeypatch.setattr(read_module, "get_spark_session", lambda: "spark")
-    monkeypatch.setattr(read_module, "_target_partitions", lambda *args, **kwargs: {"2026-08-20": {"value": "2026-08-20", "committed_at": "then"}})
-    monkeypatch.setattr(read_module, "_observe_table_core", lambda *args, **kwargs: observation)
-    monkeypatch.setattr(read_module, "_observation_changes", lambda value, **_kwargs: changes if value is observation else pytest.fail())
-
-    result = read_module.read_pipeline_prep(
-        source_table_id=identity["table_id"],
-        source_read_strategy="incremental_partition",
-        target_table_id=target["table_id"],
-        source_partition_column="snapshot_date",
-    )
-
-    assert result["changes"] is changes
-    assert result["read_mode"] == "incremental_subset"
-    assert result["scope"]["values"] == ["2026-08-22"]
-
-
+    assert parameters.keys().isdisjoint(removed)
 
 
 @pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])
@@ -231,11 +132,7 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
         processing["key_columns"] = ["student_id"]
     identity = _patch_target_processing(monkeypatch, processing)
     frame = spark_session.createDataFrame([(1, "active")], ["student_id", "status"])
-    source_prep = {
-        "source_processing": {"read_strategy": "full_dataset"},
-        "read_mode": "full_dataset",
-        "scope": {"type": "full_dataset"},
-    }
+    source_prep = {"table_id": "warehouse:source:dbo:students", "source": {}}
 
     result = write_module.write_pipeline_prep(
         frame, target_table_id=identity["table_id"], source_preps=[source_prep]
@@ -246,6 +143,14 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
     assert result["mode"] == mode
     assert result["load_strategy"] == strategy
     assert "_committed_at" in result["df"].columns
+    assert result["success_context"] == {
+        "target_table_id": identity["table_id"],
+        "source_table_ids": [source_prep["table_id"]],
+        "activity_id": "activity",
+        "notebook_name": "02_pipeline",
+        "notebook_id": "notebook",
+    }
+    assert not hasattr(write_module, "persist_lineage_participation")
 
 
 def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session):
@@ -255,353 +160,59 @@ def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session
     result = write_module.write_pipeline_prep(
         frame,
         target_table_id=identity["table_id"],
-        source_preps=[{"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}],
+        source_preps=[{"table_id": "warehouse:source:dbo:students", "source": {}}],
     )
     assert result["mode"] is None
     assert result["target_kind"] == "warehouse"
     assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
 
 
-def test_write_prep_partition_state_requires_no_completion_layer(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
-    source_prep = {
-        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
-        "observation": SimpleNamespace(),
-        "changes": {
-            "table_id": "source",
-            "environment_name": "dev",
-            "observation_id": "observation-1",
-        },
-        "read_mode": "incremental_subset",
-        "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
-    }
-    result = write_module.write_pipeline_prep(
-        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
-    )
-    assert "completion" not in result
-    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
-
-
-def test_write_prep_supports_multiple_source_scope_for_scd(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-    source_preps = [
-        {"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
-        {"read_mode": "incremental_subset", "scope": {
-            "type": "partition", "column": "snapshot_date", "values": ["2026-08-31"],
-        }},
-    ]
-    result = write_module.write_pipeline_prep(
-        frame, target_table_id=identity["table_id"], source_preps=source_preps
-    )
-    assert result["scope"] == {
-        "read_mode": "incremental_subset",
-        "scope": {"type": "multiple_sources"},
-    }
-
-
-@pytest.mark.parametrize(
-    "source_prep",
-    [
-        {
-            "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
-            "read_mode": "incremental_subset",
-            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
-        },
-        {
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "incremental_subset",
-            "scope": {
-                "type": "watermark",
-                "column": "modified_at",
-                "lower_bound": 2,
-                "upper_bound": 3,
-                "lower_inclusive": False,
-                "upper_inclusive": True,
-            },
-        },
-    ],
-    ids=["partition", "watermark"],
-)
-def test_write_prep_rejects_partial_warehouse_overwrite(monkeypatch, spark_session, source_prep):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type="warehouse")
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-
-    with pytest.raises(ValueError, match="Incremental source processing cannot use unrestricted overwrite"):
-        write_module.write_pipeline_prep(
-            frame, target_table_id=identity["table_id"], source_preps=[source_prep]
-        )
-
-
-def test_write_prep_allows_full_dataset_warehouse_overwrite(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type="warehouse")
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{
-            "source_processing": {"read_strategy": "full_dataset"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset"},
-        }],
-    )
-
-    assert result["mode"] == "overwrite"
-    assert result["options"] == {}
-
-
-def test_write_prep_keeps_lakehouse_partition_overwrite_scoped(monkeypatch, spark_session):
-    processing = {"load_strategy": "overwrite", "partition_column": "snapshot_date"}
+def test_write_prep_preserves_target_partition_overwrite(monkeypatch, spark_session):
+    processing = {"load_strategy": "overwrite", "partition_column": "business_date"}
     identity = _patch_target_processing(monkeypatch, processing)
-    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
+    frame = spark_session.createDataFrame([(1, "2026-09-09"), (2, "2026-09-10")], ["id", "business_date"])
 
     result = write_module.write_pipeline_prep(
         frame,
         target_table_id=identity["table_id"],
-        source_preps=[{
-            "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
-            "read_mode": "incremental_subset",
-            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
-        }],
+        source_preps=[{"table_id": "warehouse:source:dbo:orders", "source": {}}],
     )
 
-    assert result["mode"] == "overwrite"
-    assert result["options"] == {"replaceWhere": "`_partition_bucket` IN ('2026-08-31')"}
-    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
-
-
-def test_write_prep_keeps_lakehouse_watermark_overwrite_scoped_and_replay_safe(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
-    frame = spark_session.createDataFrame([(1, 150), (2, 200)], ["student_id", "modified_at"])
-    source_prep = {
-        "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-        "read_mode": "incremental_subset",
-        "scope": {
-            "type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200,
-            "lower_inclusive": False, "upper_inclusive": True,
-        },
+    assert set(result["scope"]["values"]) == {"2026-09-09", "2026-09-10"}
+    assert {row["_partition_bucket"] for row in result["df"].select("_partition_bucket").collect()} == {
+        "2026-09-09", "2026-09-10",
     }
-
-    first = write_module.write_pipeline_prep(
-        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
-    )
-    replay = write_module.write_pipeline_prep(
-        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
-    )
-
-    expected = {"replaceWhere": "`_watermark_value` > 100 AND `_watermark_value` <= 200"}
-    assert first["mode"] == replay["mode"] == "overwrite"
-    assert first["options"] == replay["options"] == expected
+    assert "replaceWhere" in result["options"]
 
 
-@pytest.mark.parametrize(
-    "store_type",
-    ["lakehouse", "warehouse"],
-)
-def test_write_prep_allows_first_watermark_population_overwrite(monkeypatch, spark_session, store_type):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"}, store_type=store_type)
-    frame = spark_session.createDataFrame([(1, 180), (2, 200)], ["student_id", "modified_at"])
-
+def test_contract_target_accepts_owner_name_after_notebook_id_changes(monkeypatch, spark_session):
+    processing = {
+        "load_strategy": "append", "source": "data_contract",
+        "contract_id": "contract", "contract_version": 3,
+        "owner_notebook_id": "development-notebook-id", "owner_notebook_name": "02_pipeline",
+    }
+    identity = _patch_target_processing(monkeypatch, processing)
     result = write_module.write_pipeline_prep(
-        frame,
+        spark_session.createDataFrame([(1,)], ["id"]),
         target_table_id=identity["table_id"],
-        source_preps=[{
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
-        }],
+        source_preps=[{"table_id": "source", "source": {}}],
     )
-
-    assert result["mode"] == "overwrite"
-    assert result["options"] == {}
-    assert result["scope"]["read_mode"] == "full_dataset"
+    assert result["load_strategy"] == "append"
+    assert result["load_strategy_parameters"] == {}
 
 
-@pytest.mark.parametrize(
-    "source_prep",
-    [
-        {
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset", "watermark_column": "wrong_column", "upper_bound": 200},
-        },
-        {
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset", "watermark_column": "modified_at"},
-        },
-        {
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "incremental_subset",
-            "scope": {
-                "type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200,
-                "lower_inclusive": True, "upper_inclusive": True,
-            },
-        },
-    ],
-    ids=["invalid-first-run-column", "missing-first-run-upper", "inclusive-lower"],
-)
-def test_write_prep_rejects_watermark_overwrite_without_canonical_scope(monkeypatch, source_prep):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
-    with pytest.raises(ValueError, match="cannot use unrestricted overwrite"):
+def test_contract_target_rejects_conflicting_writer(monkeypatch, spark_session):
+    processing = {
+        "load_strategy": "append", "source": "data_contract",
+        "contract_id": "contract", "contract_version": 3,
+        "owner_notebook_id": "notebook", "owner_notebook_name": "other_pipeline",
+    }
+    identity = _patch_target_processing(monkeypatch, processing)
+    with pytest.raises(ValueError, match="[Oo]ne owning pipeline/notebook writer"):
         write_module.write_pipeline_prep(
-            SimpleNamespace(columns=["student_id", "modified_at"]),
+            spark_session.createDataFrame([(1,)], ["id"]),
             target_table_id=identity["table_id"],
-            source_preps=[source_prep],
-        )
-
-
-def test_write_prep_rejects_partition_overwrite_without_affected_values(monkeypatch):
-    identity = _patch_target_processing(
-        monkeypatch, {"load_strategy": "overwrite", "partition_column": "snapshot_date"}
-    )
-    with pytest.raises(ValueError, match="cannot use unrestricted overwrite"):
-        write_module.write_pipeline_prep(
-            SimpleNamespace(columns=["student_id", "snapshot_date"]),
-            target_table_id=identity["table_id"],
-            source_preps=[{
-                "source_processing": {
-                    "read_strategy": "incremental_partition", "partition_column": "snapshot_date",
-                },
-                "read_mode": "incremental_subset",
-                "scope": {"type": "partition", "column": "snapshot_date", "values": []},
-            }],
-        )
-
-
-def test_write_prep_keeps_lakehouse_full_dataset_overwrite(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{
-            "source_processing": {"read_strategy": "full_dataset"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset"},
-        }],
-    )
-
-    assert result["mode"] == "overwrite"
-    assert result["options"] == {}
-
-
-def test_write_prep_rejects_incremental_partition_append(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{
-            "read_mode": "incremental_subset",
-            "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
-        }],
-    )
-
-    assert result["mode"] == "append"
-
-
-def test_write_prep_rejects_unsafe_incremental_watermark_append(monkeypatch):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    frame = SimpleNamespace(columns=["student_id", "modified_at"])
-    with pytest.raises(ValueError, match="unsafe.*deterministic row identity"):
-        write_module.write_pipeline_prep(
-            frame,
-            target_table_id=identity["table_id"],
-            source_preps=[{
-                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-                "read_mode": "incremental_subset",
-                "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 1, "upper_bound": 2},
-            }],
-        )
-
-
-@pytest.mark.parametrize(
-    ("rows", "message"),
-    [
-        ([(1, 180)], "reaches 180.*captured upper watermark is 200"),
-        ([], "transformed output is empty"),
-    ],
-    ids=["maximum-below-upper", "empty-output"],
-)
-def test_write_prep_rejects_watermark_output_that_cannot_advance_target(
-    monkeypatch, spark_session, rows, message
-):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    frame = spark_session.createDataFrame(rows, "student_id long, modified_at long")
-    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: pytest.fail("audit"))
-
-    with pytest.raises(ValueError, match=message):
-        write_module.write_pipeline_prep(
-            frame,
-            target_table_id=identity["table_id"],
-            source_preps=[{
-                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-                "read_mode": "incremental_subset",
-                "scope": {"type": "watermark", "column": "modified_at", "lower_bound": 100, "upper_bound": 200},
-            }],
-        )
-
-
-@pytest.mark.parametrize(
-    ("rows", "message"),
-    [
-        ([(1, 180)], "reaches 180.*captured upper watermark is 200"),
-        ([], "transformed output is empty"),
-    ],
-    ids=["maximum-below-upper", "empty-output"],
-)
-def test_first_watermark_population_rejects_output_that_cannot_advance_target(
-    monkeypatch, spark_session, rows, message
-):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    frame = spark_session.createDataFrame(rows, "student_id long, modified_at long")
-    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: pytest.fail("audit"))
-
-    with pytest.raises(ValueError, match=message):
-        write_module.write_pipeline_prep(
-            frame,
-            target_table_id=identity["table_id"],
-            source_preps=[{
-                "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-                "read_mode": "full_dataset",
-                "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
-            }],
-        )
-
-
-def test_first_watermark_population_accepts_output_at_captured_upper(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    frame = spark_session.createDataFrame([(1, 180), (2, 200)], ["student_id", "modified_at"])
-
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{
-            "source_processing": {"read_strategy": "incremental_watermark", "watermark_column": "modified_at"},
-            "read_mode": "full_dataset",
-            "scope": {"type": "full_dataset", "watermark_column": "modified_at", "upper_bound": 200},
-        }],
-    )
-
-    assert result["scope"]["read_mode"] == "full_dataset"
-    assert result["scope"]["scope"]["upper_bound"] == 200
-    assert result["df"].agg({"_watermark_value": "max"}).collect()[0][0] == 200
-
-
-def test_write_prep_rejects_skipped_source(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    frame = spark_session.createDataFrame([(1,)], ["student_id"])
-
-    with pytest.raises(ValueError, match="non-skipped canonical read_mode"):
-        write_module.write_pipeline_prep(
-            frame,
-            target_table_id=identity["table_id"],
-            source_preps=[{"read_mode": "skip", "scope": {"type": "skip"}}],
+            source_preps=[{"table_id": "source", "source": {}}],
         )
 
 
@@ -613,14 +224,14 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
     lakehouse_writer.write_lakehouse_table(
         object(), "students", mode=None, load_strategy="scd1",
         load_strategy_parameters={"key_columns": ["student_id"]},
-        processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+        processing_scope={"type": "full_dataset"},
     )
     assert calls[0][1]["processing"] == {"load_strategy": "scd1", "key_columns": ["student_id"]}
     with pytest.raises(ValueError, match="mode must be None"):
         lakehouse_writer.write_lakehouse_table(
             object(), "students", mode="append", load_strategy="scd1",
             load_strategy_parameters={"key_columns": ["student_id"]},
-            processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+            processing_scope={"type": "full_dataset"},
         )
 
 
@@ -633,11 +244,12 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
 
 def test_partition_retry_compares_with_last_successful_observation():
     history = [
-        {"observation_id": "successful", "table_id": "source", "environment_name": "dev", "_committed_at": 1},
-        {"observation_id": "failed-run", "table_id": "source", "environment_name": "dev", "_committed_at": 2},
+        {"observation_id": "successful", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "committed", "_notebook_name": "02_pipeline", "_committed_at": 1},
+        {"observation_id": "failed-run", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "observed", "_notebook_name": "02_pipeline", "_committed_at": 2},
     ]
-    previous = import_module("fabricops_kit.pipeline.check_changes")._previous_observation(
-        history, table_id="source", environment_name="dev", committed_at=3,
+    previous = import_module("fabricops_kit.pipeline.check_source_stability")._previous_observation(
+        history, source_table_id="source", target_table_id="target", notebook_name="02_pipeline",
+        environment_name="dev", committed_at=3,
         observation_id="successful",
     )
     assert [row["observation_id"] for row in previous] == ["successful"]
@@ -645,105 +257,9 @@ def test_partition_retry_compares_with_last_successful_observation():
 
 
 
-def test_target_partitions_absent_returns_empty(monkeypatch):
-    monkeypatch.setattr(
-        read_module, "read_lakehouse_table_core",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(Exception("Table or view not found")),
-    )
-    monkeypatch.setattr(read_module, "is_table_not_found_error", lambda _exc: True)
-    assert read_module._target_partitions(
-        {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
-        spark_session="spark", context={},
-    ) == {}
-
-
-def test_target_partitions_returns_persisted_state(monkeypatch, spark_session):
-    target = spark_session.createDataFrame(
-        [("2026-08-30", "2026-08-31T00:00:00"), ("2026-08-31", "2026-09-01T00:00:00")],
-        ["_partition_bucket", "_committed_at"],
-    )
-    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
-    state = read_module._target_partitions(
-        {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
-        spark_session=spark_session, context={},
-    )
-    assert set(state) == {"2026-08-30", "2026-08-31"}
-
-
-def test_target_partitions_rejects_populated_legacy_target(monkeypatch, spark_session):
-    target = spark_session.createDataFrame([(1,)], ["student_id"])
-    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
-    with pytest.raises(ValueError, match="migrate or rebuild.*incremental_partition"):
-        read_module._target_partitions(
-            {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
-            spark_session=spark_session, context={},
-        )
-
-
-def test_lakehouse_target_partitions_rejects_null_bucket(monkeypatch, spark_session):
-    target = spark_session.createDataFrame(
-        [(None, "2026-09-01T00:00:00"), ("2026-08-31", "2026-09-01T00:00:00")],
-        ["_partition_bucket", "_committed_at"],
-    )
-    monkeypatch.setattr(read_module, "read_lakehouse_table_core", lambda *_args, **_kwargs: target)
-    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
-        read_module._target_partitions(
-            {"store_kind": "lakehouse", "target": "unified", "schema": "dbo", "table_name": "students"},
-            spark_session=spark_session, context={},
-        )
-
-
-def test_warehouse_target_partitions_rejects_null_bucket(monkeypatch):
-    class Row(dict):
-        def asDict(self, recursive=False):
-            return dict(self)
-
-    class Frame:
-        def collect(self):
-            return [Row(partition_bucket=None, committed_at="2026-09-01T00:00:00", row_count=1)]
-
-    monkeypatch.setattr(read_module, "read_warehouse_query_core", lambda *_args, **_kwargs: Frame())
-    with pytest.raises(ValueError, match="null _partition_bucket values.*migrate or rebuild"):
-        read_module._target_partitions(
-            {"store_kind": "warehouse", "target": "product", "schema": "dbo", "table_name": "students"},
-            spark_session="spark", context={},
-        )
-
-
-def test_first_partition_population_persists_bucket(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "overwrite"})
-    frame = spark_session.createDataFrame([(1, "2026-08-31")], ["student_id", "snapshot_date"])
-    source = {
-        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
-        "read_mode": "full_dataset",
-        "scope": {"type": "full_dataset", "partition_column": "snapshot_date", "values": ["2026-08-31"], "target_state_empty": True},
-    }
-    result = write_module.write_pipeline_prep(frame, target_table_id=identity["table_id"], source_preps=[source])
-    assert result["options"] == {}
-    assert result["df"].select("_partition_bucket").first()[0] == "2026-08-31"
-
-
-def test_partition_write_rejects_reserved_or_missing_bucket_source(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "scd1", "key_columns": ["student_id"]})
-    source = {
-        "source_processing": {"read_strategy": "incremental_partition", "partition_column": "snapshot_date"},
-        "read_mode": "incremental_subset",
-        "scope": {"type": "partition", "column": "snapshot_date", "values": ["2026-08-31"]},
-    }
-    with pytest.raises(ValueError, match="retained through transformation"):
-        write_module.write_pipeline_prep(
-            spark_session.createDataFrame([(1,)], ["student_id"]), target_table_id=identity["table_id"], source_preps=[source]
-        )
-    with pytest.raises(ValueError, match="reserved FabricOps technical column"):
-        write_module.write_pipeline_prep(
-            spark_session.createDataFrame([(1, "2026-08-31", "x")], ["student_id", "snapshot_date", "_partition_bucket"]),
-            target_table_id=identity["table_id"], source_preps=[source],
-        )
-
-
-def test_public_writers_have_no_completion_context():
-    """Persistent checkpoint completion is not part of either writer API."""
+def test_public_writers_accept_post_write_success_context():
+    """Writers own successful metadata commit after physical publication."""
     import inspect
 
-    assert "completion_context" not in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
-    assert "completion_context" not in inspect.signature(warehouse_writer.write_warehouse_table).parameters
+    assert "success_context" in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
+    assert "success_context" in inspect.signature(warehouse_writer.write_warehouse_table).parameters

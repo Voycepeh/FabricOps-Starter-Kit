@@ -206,8 +206,8 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 - **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
 - **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical asset identity, keep descriptive Enrichment separate from executable Guardrails, and resolve both through an exact Data Contract version.
 - **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
-- **[Incremental load implementation](reference/engineering-cheat-sheet.md#full-vs-incremental)** — use full, watermark, or partition-based processing according to source behaviour, scale, and recovery requirements.
-- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — persist successful progress atomically on governed target rows through `_watermark_value` or `_partition_bucket`.
+- **[Read preparation and target processing](reference/engineering-cheat-sheet.md#full-vs-incremental)** — keep source identity and physical reads separate from governed target-write behaviour.
+- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — keep recovery and idempotency within the governed target load strategy and transaction.
 
 The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
@@ -225,6 +225,11 @@ As parts of that Data Contract definition, Governance can add:
 - **Enrichment**, limited to descriptive table and column descriptions and information classifications
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
+- the target's owning logical notebook name, so one governed `table_id` has one writer across environments; the physical notebook ID remains diagnostic metadata
+
+Freshness asks whether the latest source data is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. The authoritative target load strategy determines whether that historical mutation is compatible; Source Stability does not define a second processing strategy.
+
+`METADATA_SOURCE_OBSERVATION` stores relationship-scoped evidence as `observed` rows. After a physical target write succeeds, FabricOps appends their `committed` state for the same logical `notebook_name` + source `table_id` + target `table_id` relationship and only then records successful target Lineage. Failed writes leave attempt evidence intact but do not advance the accepted baseline.
 
 Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
 
@@ -323,7 +328,7 @@ flowchart LR
     subgraph AUTHOR[Author]
         TABLE["table_id"] --> CONTRACT["Data Contract version"]
         CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
-        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Changes<br/>Data Quality · Sensitive Data"]
+        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Source Stability<br/>Data Quality · Sensitive Data"]
         CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
     end
     subgraph ACTIVATE[Activate]

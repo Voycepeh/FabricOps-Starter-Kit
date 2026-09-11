@@ -8,7 +8,6 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.pipeline import shared
-from fabricops_kit.pipeline.read_pipeline_prep import _partition_scope
 
 pytestmark = pytest.mark.unit
 
@@ -29,7 +28,11 @@ def contract(strategy="scd1", *, version=3):
         "contract_id": "contract",
         "contract_version": version,
         "table_id": "students",
-        "contract_payload": {"table": {"table_id": "students", "processing": processing}},
+        "contract_payload": {"table": {
+            "table_id": "students",
+            "processing": processing,
+            "writer": {"notebook_id": "notebook-1", "notebook_name": "02_pipeline"},
+        }},
     }
 
 
@@ -69,7 +72,9 @@ def test_development_current_authoring_requires_notebook_definition():
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    assert shared.resolve_table_processing_definition(object(), "prod", "students")["load_strategy"] == "scd1"
+    resolved = shared.resolve_table_processing_definition(object(), "prod", "students")
+    assert resolved["load_strategy"] == "scd1"
+    assert resolved["owner_notebook_id"] == "notebook-1"
 
 
 def test_production_missing_active_contract_fails(monkeypatch):
@@ -87,78 +92,6 @@ def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, 
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: frozen)
     with pytest.raises(ValueError):
         shared.resolve_table_processing_definition(object(), "prod", "students")
-
-
-def changes(**overrides):
-    return {
-        "changed": True,
-        "first_observation": False,
-        "new_partitions": [],
-        "changed_partitions": [],
-        "removed_partitions": [],
-        "reappeared_partitions": [],
-        "partition_column": "business_date",
-        **overrides,
-    }
-
-
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
-def test_first_observation_is_full(strategy):
-    assert _partition_scope(
-        changes(first_observation=True), {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date"
-    )["read_mode"] == "full_dataset"
-
-
-def processing_parameters(strategy):
-    if strategy == "overwrite":
-        return {"partition_column": "business_date"}
-    if strategy == "scd1":
-        return {"key_columns": ["student_id"]}
-    if strategy == "scd2":
-        return {"key_columns": ["student_id"], "effective_column": "modified_at"}
-    return {}
-
-
-def test_no_change_is_skip():
-    assert _partition_scope(changes(changed=False), {"load_strategy": "append"}, "business_date")["read_mode"] == "skip"
-
-
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
-def test_new_partition_is_incremental(strategy):
-    scope = _partition_scope(
-        changes(new_partitions=["2026-08-21"]),
-        {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
-    )
-    assert scope == {"read_mode": "incremental_subset", "scope": {"type": "partition", "column": "business_date", "values": ["2026-08-21"]}}
-
-
-@pytest.mark.parametrize("field", ["changed_partitions", "reappeared_partitions"])
-def test_append_rejects_existing_partition_changes(field):
-    with pytest.raises(ValueError, match="append is unsafe"):
-        _partition_scope(changes(**{field: ["2026-08-21"]}), {"load_strategy": "append"}, "business_date")
-
-
-@pytest.mark.parametrize("strategy", ["scd1", "scd2"])
-def test_scd_existing_partition_change_is_incremental(strategy):
-    scope = _partition_scope(
-        changes(changed_partitions=["2026-08-21"]),
-        {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
-    )
-    assert scope["read_mode"] == "incremental_subset"
-
-
-@pytest.mark.parametrize("strategy", ["append", "scd1", "scd2"])
-def test_removed_partition_rejects_implicit_delete(strategy):
-    with pytest.raises(ValueError, match="delete semantics"):
-        _partition_scope(
-            changes(removed_partitions=["2026-08-21"]),
-            {"load_strategy": strategy, **processing_parameters(strategy)}, "business_date",
-        )
-
-
-def test_partition_strategy_requires_change_rule_on_same_column():
-    with pytest.raises(ValueError, match="active change rule"):
-        _partition_scope(changes(partition_column=None), {"load_strategy": "overwrite"}, "business_date")
 
 
 def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():

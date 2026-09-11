@@ -28,6 +28,7 @@ def write_lakehouse_table(
     load_strategy=None,
     load_strategy_parameters=None,
     processing_scope=None,
+    success_context=None,
 ):
     """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
@@ -102,7 +103,11 @@ def write_lakehouse_table(
     load_strategy_parameters : dict, optional
         Governed strategy parameters returned by :func:`write_pipeline_prep`.
     processing_scope : dict, optional
-        Prepared skip, full, or incremental execution scope.
+        Prepared full-dataset or partition write scope.
+    success_context : dict, optional
+        Post-write metadata context returned by :func:`write_pipeline_prep`.
+        Target Lineage and accepted Source Observation baselines are committed only
+        after the physical Delta write succeeds.
 
     Returns
     -------
@@ -300,6 +305,10 @@ def write_lakehouse_table(
                 processing={"load_strategy": strategy, **(load_strategy_parameters or {})},
                 scope=processing_scope, context=context,
             )
+            if success_context is not None:
+                from fabricops_kit.pipeline.shared import commit_pipeline_write_success
+
+                commit_pipeline_write_success(success_context)
             return
         if strategy not in {"overwrite", "append"} or mode != strategy:
             raise ValueError("Governed overwrite/append load_strategy must match the physical writer mode.")
@@ -311,3 +320,7 @@ def write_lakehouse_table(
     if verbose:
         print(f"Writing Lakehouse table to {path}")
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
+    if success_context is not None:
+        from fabricops_kit.pipeline.shared import commit_pipeline_write_success
+
+        commit_pipeline_write_success(success_context)

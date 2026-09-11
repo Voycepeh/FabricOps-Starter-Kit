@@ -76,7 +76,7 @@ def check_dq(
 
     See Also
     --------
-    check_schema, check_freshness, check_changes
+    check_schema, check_freshness, check_source_stability
 
     """
     if not enabled:

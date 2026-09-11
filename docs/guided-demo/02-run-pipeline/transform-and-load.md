@@ -239,7 +239,7 @@ Keep these in mind when transformations become larger:
 
 These are project-level engineering choices, so FabricOps keeps them visible instead of trying to hide them behind the starter kit.
 
-For the deeper optimisation and syntax reference, use the [practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets). For the separate question of which logical source data belongs in a run, read [Full vs incremental processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
+For the deeper optimisation and syntax reference, use the [practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets). For the separation between source reads and target processing, read [Read preparation and target processing](../../reference/engineering-cheat-sheet.md#full-vs-incremental).
 
 ## Choose the target
 
@@ -296,4 +296,4 @@ These physical write choices are separate from FabricOps incremental processing 
 Use the [Function Reference](../../reference/index.md) for exact parameters for `write_lakehouse_table()`, `write_warehouse_table()`, `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()`.
 
 **Previous:** [Unit 3: Configure sources](configure-sources.md)  
-**Next:** [Unit 5: Choose processing behaviour and review results](processing-and-results.md)
+**Next:** [Unit 5: Choose target processing and review results](processing-and-results.md)

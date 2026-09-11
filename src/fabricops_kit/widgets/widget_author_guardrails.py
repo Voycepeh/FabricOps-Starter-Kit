@@ -1,4 +1,4 @@
-"""Standalone Schema, Freshness, and Changes Guardrail authoring widget."""
+"""Standalone Schema, Freshness, and Source Stability Guardrail authoring widget."""
 
 from __future__ import annotations
 
@@ -9,15 +9,10 @@ from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract.shared import save_guardrails
-from fabricops_kit.pipeline.shared import (
-    GUARDRAIL_CHANGE_BEHAVIOURS,
-    resolve_guardrail_change_behaviour,
-)
 from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets import enrichment_shared as enrichment_ai
 
-CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
 _FAILURE_ACTIONS = (("Block", "Block"), ("Warn", "Warn"))
 _FAILURE_SEVERITIES = {value for _, value in _FAILURE_ACTIONS}
@@ -35,17 +30,16 @@ def _guardrail_records_from_selection(
     freshness_column: str,
     maximum_age: int | float,
     maximum_age_unit: str,
-    change_behaviour: str,
     schema_action: str = "Block",
     freshness_action: str = "Block",
-    change_action: str = "Block",
+    source_stability_action: str = "Block",
     partition_column: str = "",
     change_column: str = "",
     guardrail_version: int | None = None,
     config: Any = None,
     sensitive_rules: Iterable[Mapping[str, Any]] = (),
 ) -> list[dict[str, Any]]:
-    """Translate Schema, Freshness, and Changes controls into Stage 4A rows."""
+    """Translate Schema, Freshness, and Source Stability controls into Stage 4A rows."""
     del config
     columns = [str(value) for value in state.get("columns", [])]
     available = set(columns)
@@ -67,15 +61,14 @@ def _guardrail_records_from_selection(
         age = 0.0
     for label, value in (
         ("Partition column", partition_column),
-        ("Change / watermark column", change_column),
+        ("Observation column", change_column),
     ):
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
-    expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
     actions = {
         "schema": str(schema_action),
         "freshness": str(freshness_action),
-        "change": str(change_action),
+        "source_stability": str(source_stability_action),
     }
     if any(value not in _FAILURE_SEVERITIES for value in actions.values()):
         raise ValueError("Failure action must be Block pipeline or Warn only.")
@@ -115,17 +108,14 @@ def _guardrail_records_from_selection(
         ),
         authoring.build_rule_record(
             state,
-            guardrail_type="changes",
-            rule_id="changes",
-            rule_type=expected_change,
+            guardrail_type="source_stability",
+            rule_id="source_stability",
+            rule_type="historical_mutation",
             parameters={
-                "change_behaviour": change_behaviour,
-                "expected_change": expected_change,
-                "source_pattern": source_pattern,
                 "partition_column": partition_column,
                 "change_column": change_column,
             },
-            action=actions["change"],
+            action=actions["source_stability"],
             guardrail_version=version,
         ),
     ]
@@ -500,7 +490,7 @@ def _render_guardrail_authoring(
     version_state = {"persisted": _guardrail_version(existing)}
     schema_rule = authoring.latest_rule(existing, "schema")
     freshness_rule = authoring.latest_rule(existing, "freshness")
-    change_rule = authoring.latest_rule(existing, "changes")
+    change_rule = authoring.latest_rule(existing, "source_stability")
     schema_params = authoring.rule_parameters(schema_rule)
     freshness_params = authoring.rule_parameters(freshness_rule)
     change_params = authoring.rule_parameters(change_rule)
@@ -586,12 +576,6 @@ def _render_guardrail_authoring(
         value=str(freshness_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
-    behaviour = str(change_params.get("change_behaviour") or "Incremental append")
-    change_behaviour = widgets.Dropdown(
-        options=CHANGE_BEHAVIOURS,
-        value=behaviour if behaviour in CHANGE_BEHAVIOURS else "Incremental append",
-        **shared.widget_common(widgets, "Change behaviour"),
-    )
     partition_value = str(change_params.get("partition_column") or "")
     partition_column = widgets.Dropdown(
         options=["", *columns],
@@ -602,9 +586,9 @@ def _render_guardrail_authoring(
     change_column = widgets.Dropdown(
         options=["", *columns],
         value=change_value if change_value in columns else "",
-        **shared.widget_common(widgets, "Change / watermark column"),
+        **shared.widget_common(widgets, "Observation column"),
     )
-    change_failure_action = widgets.Dropdown(
+    source_stability_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
         value=str(change_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
@@ -633,10 +617,9 @@ def _render_guardrail_authoring(
             freshness_column=freshness_column.value,
             maximum_age=maximum_age.value,
             maximum_age_unit=maximum_age_unit.value,
-            change_behaviour=change_behaviour.value,
             schema_action=schema_failure_action.value,
             freshness_action=freshness_failure_action.value,
-            change_action=change_failure_action.value,
+            source_stability_action=source_stability_failure_action.value,
             partition_column=partition_column.value,
             change_column=change_column.value,
             guardrail_version=version_state["persisted"] + 1,
@@ -688,10 +671,9 @@ def _render_guardrail_authoring(
         maximum_age,
         maximum_age_unit,
         freshness_failure_action,
-        change_behaviour,
         partition_column,
         change_column,
-        change_failure_action,
+        source_stability_failure_action,
     ):
         control.observe(refresh_preview, names="value")
     save_button.on_click(save)
@@ -747,15 +729,14 @@ def _render_guardrail_authoring(
             ),
             shared.form_section(
                 widgets,
-                title="Changes",
+                title="Source Stability",
                 children=[
                     shared.form_grid(
                         widgets,
                         [
-                            change_behaviour,
                             partition_column,
                             change_column,
-                            change_failure_action,
+                            source_stability_failure_action,
                         ],
                     )
                 ],
@@ -764,7 +745,7 @@ def _render_guardrail_authoring(
             shared.action_row(widgets, [save_button]),
             message,
         ],
-        titles=("Target context", "Schema selection", "Freshness, changes, and preview"),
+        titles=("Target context", "Schema selection", "Freshness, Source Stability, and preview"),
     )
     result = {
         "version": version_state["persisted"] + 1,
@@ -779,10 +760,9 @@ def _render_guardrail_authoring(
             "maximum_age": maximum_age,
             "maximum_age_unit": maximum_age_unit,
             "freshness_failure_action": freshness_failure_action,
-            "change_behaviour": change_behaviour,
             "partition_column": partition_column,
             "change_column": change_column,
-            "change_failure_action": change_failure_action,
+            "source_stability_failure_action": source_stability_failure_action,
             "sensitive_data": sensitive_editor,
             "preview": preview,
         },

@@ -37,7 +37,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L277">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L16-L286">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,6 +69,7 @@ def write_warehouse_table(
     context: dict[str, Any] | None=None,
     load_strategy: str | None=None,
     load_strategy_parameters: dict[str, Any] | None=None,
+    success_context: dict[str, Any] | None=None,
 ):
 ```
 
@@ -145,6 +146,7 @@ and Warehouse ingestion limits.
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 | `load_strategy` | `str \| None` | No | Governed strategy returned by :func:`write_pipeline_prep`. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Governed strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` also requires ``effective_column`` and may supply ``tracked_columns``. |
+| `success_context` | `dict[str, Any] \| None` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Warehouse write succeeds. |
 
 ## Returns
 
@@ -290,7 +292,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 26 |
+| Live-critical dependencies | 56 |
 
 ### Release history
 
@@ -302,29 +304,59 @@ Side effects
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
 <li><code>fabricops_kit.io.shared._quoted_warehouse_identifier</code></li>
 <li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._warehouse_column_list</code></li>
 <li><code>fabricops_kit.io.shared._warehouse_null_safe_difference</code></li>
 <li><code>fabricops_kit.io.shared.execute_warehouse_processing</code></li>
 <li><code>fabricops_kit.io.shared.execute_warehouse_sql</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
+<li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
+<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>

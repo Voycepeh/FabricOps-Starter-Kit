@@ -20,7 +20,8 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
-    resolve_change_rule_observation_columns,
+    resolve_catalogue_table_identity,
+    resolve_source_stability_observation_columns,
     select_table_guardrail_rule,
 )
 
@@ -41,8 +42,15 @@ def _warehouse_observation_query(schema: str, table_name: str, partition_column:
         f"  [{partition_column}] AS partition_value,\n"
         "  COUNT_BIG(*) AS row_count,\n"
         f"  MIN([{change_column}]) AS min_change_value,\n"
-        f"  MAX([{change_column}]) AS max_change_value\n"
-        f"FROM [{schema}].[{table_name}]\n"
+        f"  MAX([{change_column}]) AS max_change_value,\n"
+        "  CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "STRING_AGG(CONVERT(varchar(max), row_fingerprint), '') "
+        "WITHIN GROUP (ORDER BY row_fingerprint)), 2) AS content_fingerprint\n"
+        "FROM (\n"
+        "  SELECT source_row.*, CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "(SELECT source_row.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)), 2) AS row_fingerprint\n"
+        f"  FROM [{schema}].[{table_name}] AS source_row\n"
+        ") AS fingerprinted\n"
         f"GROUP BY [{partition_column}]"
     )
 
@@ -60,6 +68,7 @@ def _compact_rows(frame: Any) -> list[dict[str, Any]]:
                 "row_count": int(value.get("row_count") or 0),
                 "min_change_value": None if minimum is None else str(minimum),
                 "max_change_value": None if maximum is None else str(maximum),
+                "content_fingerprint": str(value.get("content_fingerprint") or ""),
             }
         )
     return compact
@@ -83,16 +92,26 @@ def _observe_lakehouse(
         schema=schema,
         spark_session=spark_session,
         context=context,
-    ).select(partition_column, change_column)
-    observed = frame.groupBy(partition_column).agg(
+    )
+    row_columns = sorted(frame.columns)
+    with_fingerprint = frame.withColumn(
+        "_fabricops_content_hash",
+        F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
+    )
+    observed = with_fingerprint.groupBy(partition_column).agg(
         F.count(F.lit(1)).alias("row_count"),
         F.min(F.col(change_column)).alias("min_change_value"),
         F.max(F.col(change_column)).alias("max_change_value"),
+        F.sha2(
+            F.concat_ws("", F.sort_array(F.collect_list("_fabricops_content_hash"))),
+            256,
+        ).alias("content_fingerprint"),
     ).select(
         F.col(partition_column).alias("partition_value"),
         "row_count",
         "min_change_value",
         "max_change_value",
+        "content_fingerprint",
     )
     return _compact_rows(observed)
 
@@ -101,7 +120,8 @@ def _persist(
     rows: list[dict[str, Any]],
     *,
     observation_id: str,
-    table_id: str,
+    source_table_id: str,
+    target_table_id: str,
     spark_session: Any,
     config: Any,
     env: str,
@@ -114,8 +134,10 @@ def _persist(
         {
             **row,
             "observation_id": observation_id,
-            "table_id": table_id,
+            "source_table_id": source_table_id,
+            "target_table_id": target_table_id,
             "environment_name": env,
+            "observation_status": "observed",
             **audit,
         }
         for row in rows
@@ -135,17 +157,17 @@ def _persist(
     return frame
 
 
-def _observe_table_core(
+def observe_table(
     table_name: str,
     *,
     target: str = "source",
     schema: str | None = None,
+    target_table_id: str,
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
 
-    This internal helper cheaply records row count plus earliest and latest
-    change values by source partition so ``read_pipeline_prep()`` can determine
-    the governed source-read scope without first reading the full business table.
+    This public helper records row count, earliest/latest change values, and
+    a deterministic content fingerprint by source partition.
 
     Parameters
     ----------
@@ -155,6 +177,8 @@ def _observe_table_core(
         Logical Lakehouse or Warehouse target configured by ``00_env_config``.
     schema : str or None, default=None
         Optional Lakehouse schema. A schema is required for Warehouse targets.
+    target_table_id : str
+        Governed target identity that owns this source observation relationship.
 
     Returns
     -------
@@ -166,7 +190,7 @@ def _observe_table_core(
     Raises
     ------
     ValueError
-        If table identity, target type, or a required active source-change rule
+        If table identity, target type, or a required active Source Stability rule
         is invalid.
     RuntimeError
         If ``00_env_config`` has not initialized FabricOps or observation
@@ -174,18 +198,15 @@ def _observe_table_core(
 
     Notes
     -----
-    The stored evidence is the stable ``observation_id`` and ``table_id``, active
-    ``environment_name``, partition value, row count, and earliest and latest
-    change values. This is a lightweight change signal, not proof that every
-    cell is unchanged: a middle value can change while all three signals remain
-    identical. Sources without a reliable change column require deeper change
-    detection elsewhere. Warehouse aggregation is pushed into SQL; Lakehouse
-    aggregation is distributed and projects only the two required source
-    columns.
+    The stored evidence includes a stable ``observation_id``, partition values,
+    counts, observed change-value range, and a deterministic fingerprint over
+    business content. Warehouse aggregation is pushed into SQL and Lakehouse
+    aggregation remains distributed; full business rows are not persisted in
+    metadata.
 
     Evidence is appended only after collection succeeds. This function neither
-    loads history nor makes guardrail decisions; ``check_changes`` owns
-    comparison and removal tombstones. The stable ``table_id`` is built from the
+    loads history nor makes guardrail decisions; ``check_source_stability`` owns
+    comparison and removal tombstones. The stable source ``table_id`` is built from the
     resolved physical identity with the same logical identity rules used by
     :func:`profile_and_register_table`. It is independent of Development or
     Production; ``environment_name`` keeps those operational observations
@@ -218,22 +239,25 @@ def _observe_table_core(
 
     spark = get_spark_session()
     table_id = build_table_id(source_type, target_value, schema_value, table_value)
+    target_identity = resolve_catalogue_table_identity(
+        config, env, target_table_id, spark_session=spark, context=context,
+    )
 
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark, table_id=table_id, context=context,
     )
     rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="changes",
+        guardrail_type="source_stability",
         table_id=table_id,
         environment_name=env,
     )
     if rule is None:
         raise ValueError(
-            f"No active approved source-change rule exists for {table_id!r}; "
-            "Governance must author and activate one before read_pipeline_prep() can run."
+            f"No active approved Source Stability rule exists for {table_id!r}; "
+            "Governance must author and activate one before source observation can run."
         )
-    partition_value, change_value = resolve_change_rule_observation_columns(rule)
+    partition_value, change_value = resolve_source_stability_observation_columns(rule)
     metadata_schema = metadata_table_physical_schema(config, OBSERVATION_TABLE)
 
     if source_type == "warehouse":
@@ -262,7 +286,8 @@ def _observe_table_core(
     return _persist(
         current,
         observation_id=str(uuid4()),
-        table_id=table_id,
+        source_table_id=table_id,
+        target_table_id=str(target_identity["table_id"]),
         spark_session=spark,
         config=config,
         env=env,
