@@ -155,6 +155,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'profile_dataframe',
         'profile_frequency_distribution',
         'read_pipeline_prep',
+        'resolve_table_id',
         'write_pipeline_prep',
         'widget_author_data_contract',
         'widget_render_data_steward',

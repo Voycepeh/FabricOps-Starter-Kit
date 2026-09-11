@@ -477,18 +477,15 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
 def profile_and_register_table(
     df,
     *,
-    profile_role,
+    profile_role=None,
     table=None,
     target=None,
     table_name=None,
     schema=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
     frequency_profile_df=None,
-    complete_table: bool = True,
 ):
     """Profile a supplied Spark DataFrame and save its metadata records.
     
@@ -507,17 +504,20 @@ def profile_and_register_table(
     df : pyspark.sql.DataFrame
         Spark DataFrame to profile exactly as supplied by the caller. The
         helper does not sample, re-read, or mutate this DataFrame.
-    profile_role : {"source", "target"}
+    profile_role : {"source", "target"}, optional
         Selects the profiling and Catalogue registration rules for the asset.
         ``source`` rejects target-owned load-strategy metadata. ``target``
         requires and stores the governed target processing definition in
         ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage;
         governed pipeline preparation and successful publication own source
-        and target Lineage respectively.
+        and target Lineage respectively. Normal pipeline usage omits this
+        value because :func:`read_pipeline_prep` and
+        :func:`write_pipeline_prep` establish it in the active context.
     table : mapping, optional
         Canonical resolved table identity returned as ``read_pipeline_prep()``
         ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
-        and ``table_name`` to reuse the already resolved identity.
+        and ``table_name`` to reuse the already resolved identity. Normal
+        pipeline usage omits it and consumes the active preparation identity.
     target : str, optional
         Configured FabricStore target key. Its normalized key becomes the
         physical identity's layer and its store kind determines whether the
@@ -530,13 +530,6 @@ def profile_and_register_table(
     schema : str, optional
         Physical schema name, or ``None`` to use the configured store default.
         Classic or schema-disabled Lakehouses preserve ``None``.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Current target load strategy. Valid only when ``profile_role="target"``.
-    load_strategy_parameters : dict, optional
-        Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2``
-        requires ``key_columns`` and ``effective_column`` and optionally accepts
-        ``tracked_columns``; ``overwrite`` optionally accepts
-        ``partition_column``; ``append`` accepts no parameters.
     frequency_columns : sequence of str, optional
         Selected columns whose flattened frequency rows should be persisted.
         ``None`` profiles eligible non-technical scalar columns. An empty
@@ -563,10 +556,7 @@ def profile_and_register_table(
         preparing, persisting, refreshing, and governing this DataFrame; this
         function does not verify whether it is random, representative, sampled,
         persisted, or otherwise suitable for the caller's purpose.
-    complete_table : bool, default=True
-        Whether the DataFrame represents the complete physical registered
-        table. Set ``False`` for custom query results.
-    
+
     Returns
     -------
     pyspark.sql.DataFrame
@@ -584,6 +574,22 @@ def profile_and_register_table(
     RuntimeError
         If required Delta replacement or Catalogue merge support is
         unavailable.
+
+    Examples
+    --------
+    Profile and register a complete table immediately after Read preparation:
+
+    >>> read_prep = read_pipeline_prep(
+    ...     source_target="source",
+    ...     source_schema="dbo",
+    ...     source_table="bookings",
+    ... )
+    >>> read_df = read_lakehouse_table(table_id=read_prep["table_id"])
+    >>> profile = profile_and_register_table(read_df)
+
+    See Also
+    --------
+    read_pipeline_prep, write_pipeline_prep, profile_dataframe
     
     Notes
     -----
@@ -723,8 +729,25 @@ def profile_and_register_table(
     publication. Guardrail execution is a separate workflow.
     
     """
-    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     config, env, context = resolve_fabric_context()
+    uses_active_registration = profile_role is None or (table is None and target is None and table_name is None)
+    active_registration = context.get("_fabricops_active_profile_registration") or {}
+    if profile_role is None:
+        profile_role = active_registration.get("profile_role")
+    if table is None and target is None and table_name is None:
+        table = active_registration.get("table")
+    if profile_role is None or (table is None and (target is None or table_name is None)):
+        raise ValueError(
+            "Run read_pipeline_prep or write_pipeline_prep first, or provide profile_role and table identity."
+        )
+    dataframe_table_id = str(getattr(df, "_fabricops_table_id", "") or "").strip()
+    active_table_id = str((active_registration.get("table") or {}).get("table_id") or "").strip()
+    if dataframe_table_id and active_table_id and dataframe_table_id != active_table_id:
+        raise ValueError(
+            f"Active prep is for table_id {active_table_id!r}, but the DataFrame was read "
+            f"from table_id {dataframe_table_id!r}. Profile immediately after its matching prep."
+        )
+    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     if table is not None:
         if target is not None or schema is not None or table_name is not None:
             raise ValueError("table cannot be combined with target, schema, or table_name.")
@@ -737,12 +760,16 @@ def profile_and_register_table(
     normalized_table = identity["table_name"]
     normalized_schema = identity["schema"]
     normalized_store_type = identity["store_kind"]
+    if normalized_profile_role == "target" and active_registration.get("profile_role") != "target":
+        raise ValueError("Run write_pipeline_prep before registering a target profile.")
     normalized_load_strategy, write_parameters_json = _processing_definition(
-        normalized_profile_role, load_strategy, load_strategy_parameters
+        normalized_profile_role,
+        active_registration.get("load_strategy") if normalized_profile_role == "target" else None,
+        active_registration.get("load_strategy_parameters") if normalized_profile_role == "target" else None,
     )
+    if uses_active_registration:
+        context.pop("_fabricops_active_profile_registration", None)
     _validate_processing_columns(df, write_parameters_json)
-    if not complete_table:
-        return build_profile_dataframe(df)
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)

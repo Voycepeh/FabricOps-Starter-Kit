@@ -63,6 +63,7 @@ EXPECTED_V1_CALLABLES = [
     'profile_dataframe',
     'profile_frequency_distribution',
     'read_pipeline_prep',
+    'resolve_table_id',
     'write_pipeline_prep',
     'widget_author_data_contract',
     'widget_render_data_steward',

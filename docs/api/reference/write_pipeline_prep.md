@@ -14,7 +14,7 @@ Prepare governed target write inputs and technical fields without physically wri
 
 `fabricops_kit/pipeline/write_pipeline_prep.py:68`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L232">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L256">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -56,7 +56,10 @@ def write_pipeline_prep(
 
 >>> write_prep = write_pipeline_prep(
 ...     transformed_df,
-...     target_table_id="lakehouse:unified:dbo:students",
+...     target="unified",
+...     schema="dbo",
+...     table_name="students",
+...     load_strategy="append",
 ...     source_preps=[read_prep],
 ... )
 >>> write_prep["mode"]
@@ -73,13 +76,13 @@ def write_pipeline_prep(
 | `target` | `str \| None` | No | Configured target key supplied instead of ``target_table_id``. |
 | `schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |
-| `load_strategy` | `str \| None` | No | Current authored load strategy when physical identity is supplied. |
-| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Parameters belonging to the authored load strategy. |
+| `load_strategy` | `str \| None` | No | Engineering-authored target strategy. A selected Development contract or active Production contract must match this proposal exactly. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Engineering-authored strategy parameters such as key, effective, tracked, or partition columns. |
 | `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. |
 
 ## Returns
 
-Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and post-write success context.
+Audited DataFrame, target identity, authored and governed processing context, resolved mode, writer settings, write scope, and post-write success context.
 
 ## Raises / Errors
 

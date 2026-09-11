@@ -9,6 +9,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
+    resolve_pipeline_data_contract,
     resolve_catalogue_table_identity,
     write_guardrail_result_row,
 )
@@ -213,6 +214,18 @@ def check_sensitive_data(
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_sensitive_data requires a Spark DataFrame in the active Microsoft Fabric runtime.")
     config, env, context = resolve_fabric_context()
+    contract = resolve_pipeline_data_contract(
+        config, env, table_id, spark_session=spark_session, context=context
+    )
+    if contract is None:
+        return {
+            "status": "skipped",
+            "can_continue": True,
+            "dataframe": dataframe,
+            "support_mapping": None,
+            "checks": [],
+            "reason": "No Data Contract selected; Development only.",
+        }
     identity = resolve_catalogue_table_identity(
         config, env, table_id, spark_session=spark_session, context=context
     )

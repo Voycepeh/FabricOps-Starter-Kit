@@ -1565,8 +1565,9 @@ def resolve_table_processing_definition(
     context: Mapping[str, Any] | None = None,
     authored_processing: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Resolve authored or frozen table processing through the contract-source model."""
+    """Resolve authored processing and validate it against the applicable contract."""
     runtime_context = context or {}
+    authored = validated_processing(dict(authored_processing)) if authored_processing is not None else None
     contract = None
     if env == "prod":
         contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
@@ -1589,13 +1590,26 @@ def resolve_table_processing_definition(
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
         table_definition = payload.get("table") or {}
-        definition = validated_processing(table_definition.get("processing"))
+        governed = validated_processing(table_definition.get("processing"))
+        if authored is None:
+            raise ValueError("Engineering processing must be supplied for governed validation.")
+        if authored != governed:
+            raise ValueError(
+                "Processing mismatch detected. "
+                f"Engineering proposes {authored!r}. "
+                f"The applicable Data Contract requires {governed!r}. "
+                "Author and freeze a new Data Contract version for the proposed processing change "
+                "before governed validation."
+            )
         writer = table_definition.get("writer") or {}
         if not isinstance(writer, Mapping):
             raise ValueError("Data Contract table.writer must be an object.")
         return {
-            **definition,
+            **governed,
             "source": "data_contract",
+            "processing_mode": "production_enforcement" if env == "prod" else "development_validation",
+            "authored_processing": authored,
+            "governed_processing": governed,
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
             "owner_notebook_id": str(writer.get("notebook_id") or "").strip(),
@@ -1603,8 +1617,13 @@ def resolve_table_processing_definition(
         }
     if authored_processing is None:
         raise ValueError("Development current authoring requires an authored processing definition.")
-    definition = validated_processing(dict(authored_processing))
-    return {**definition, "source": "current_authoring"}
+    return {
+        **authored,
+        "source": "current_authoring",
+        "processing_mode": "development_authoring",
+        "authored_processing": authored,
+        "governed_processing": None,
+    }
 
 
 def _sql_literal(value: Any) -> str:

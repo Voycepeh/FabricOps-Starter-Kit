@@ -88,6 +88,7 @@ def read_lakehouse_table(
     DataFrame.
 
     """
+    resolved_table_id = table_id
     if table_id is not None:
         if table_name is not None or target != "source" or schema is not None:
             raise ValueError("table_id cannot be combined with table_name, target, or schema.")
@@ -109,4 +110,7 @@ def read_lakehouse_table(
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         target, table_name, schema, context=context
     )
-    return read_delta_path(get_spark_session(spark_session), path, options=options)
+    dataframe = read_delta_path(get_spark_session(spark_session), path, options=options)
+    if resolved_table_id is not None:
+        dataframe._fabricops_table_id = str(resolved_table_id)
+    return dataframe

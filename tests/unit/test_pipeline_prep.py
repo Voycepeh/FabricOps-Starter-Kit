@@ -153,6 +153,37 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
     assert not hasattr(write_module, "persist_lineage_participation")
 
 
+def test_first_development_write_resolves_physical_target_without_catalogue(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
+    identity["store_kind"] = identity["store_type"]
+    monkeypatch.setattr(write_module, "resolve_physical_table_identity", lambda *_args, **_kwargs: identity)
+    monkeypatch.setattr(
+        write_module,
+        "resolve_catalogue_table_identity",
+        lambda *_args, **_kwargs: pytest.fail("first write must not require Catalogue registration"),
+    )
+
+    result = write_module.write_pipeline_prep(
+        spark_session.createDataFrame([(1,)], ["id"]),
+        target="unified",
+        schema="dbo",
+        table_name="students",
+        load_strategy="append",
+        source_preps=[{"table_id": "source", "source": {}}],
+    )
+
+    assert result["target"]["table_id"] == identity["table_id"]
+    assert result["load_strategy"] == "append"
+
+
+def test_write_prep_accepts_engineering_authored_processing():
+    from inspect import signature
+
+    parameters = signature(write_module.write_pipeline_prep).parameters
+    assert "load_strategy" in parameters
+    assert "load_strategy_parameters" in parameters
+
+
 def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session):
     processing = {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"}
     identity = _patch_target_processing(monkeypatch, processing, store_type="warehouse")
