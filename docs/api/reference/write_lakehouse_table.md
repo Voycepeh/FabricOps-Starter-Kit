@@ -36,9 +36,9 @@ make one write faster.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/write_lakehouse_table.py:16`
+`fabricops_kit/io/write_lakehouse_table.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L326">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L17-L359">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,19 +63,16 @@ Parallel processing is Spark distributed execution over DataFrame partitions, no
 ```python
 def write_lakehouse_table(
     df,
-    table_name: str,
-    target: str='unified',
+    table_name: str | None=None,
+    target: str | None=None,
     schema=None,
-    mode='append',
+    mode=None,
     partition_by=None,
     repartition_by=None,
     options=None,
     verbose=True,
     context=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
-    processing_scope=None,
-    success_context=None,
+    pipeline_prep: Mapping[str, Any] | None=None,
 ):
 ```
 
@@ -164,19 +161,16 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. When ``repartition_by`` is provided, the function creates a repartitioned DataFrame for the write; it does not mutate the original DataFrame object. |
-| `table_name` | `str` | Yes | Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``. |
-| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area. |
-| `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. |
-| `mode` | `{"append", "overwrite", "errorifexists", "ignore"}, default="append"` | No | Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. |
+| `table_name` | `str \| None` | No | Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``. Omit this argument when ``pipeline_prep`` is supplied. |
+| `target` | `str \| None` | No | Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area. |
+| `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. Omit this argument when ``pipeline_prep`` is supplied. Standalone writes use ``unified`` when omitted. |
+| `mode` | `{"append", "overwrite", "errorifexists", "ignore"}` | No | Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. Standalone writes use ``append`` when omitted. |
 | `partition_by` | `str or list[str] or tuple[str, ...]` | No | Optional column name or collection of columns used to physically partition the persisted Delta table. This controls the table's stored layout and is separate from Spark execution repartitioning. Use columns with appropriate cardinality and stable downstream filtering value. |
 | `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning instruction applied immediately before the write. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes rows by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. Repartitioning triggers a shuffle and should be used deliberately for large, under-partitioned, or skewed datasets. |
 | `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
-| `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append. |
-| `load_strategy_parameters` | `dict` | No | Governed strategy parameters returned by :func:`write_pipeline_prep`. |
-| `processing_scope` | `dict` | No | Prepared full-dataset or partition write scope. |
-| `success_context` | `dict` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds. |
+| `pipeline_prep` | `Mapping[str, Any] \| None` | No | Complete result returned by :func:`write_pipeline_prep`. When supplied, its resolved target, governed processing definition, write scope, physical options, and post-write metadata context are authoritative. Do not repeat ``table_name``, ``target``, ``schema``, ``mode``, or ``options``. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds. |
 
 ## Returns
 

@@ -127,8 +127,13 @@ def test_lakehouse_failure_does_not_accept_observation(monkeypatch):
     monkeypatch.setattr(lakehouse, "repartition_dataframe_for_write", lambda df, value: df)
     monkeypatch.setattr(lakehouse, "write_delta_path", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: committed.append(context))
+    prep = {
+        "target": {"table_id": "target", "table_name": "orders", "target": "unified", "schema": None},
+        "mode": "append", "options": {}, "processing": {"load_strategy": "append"},
+        "scope": {"type": "full_dataset"}, "success_context": _context(),
+    }
     with pytest.raises(RuntimeError, match="write failed"):
-        lakehouse.write_lakehouse_table(object(), "orders", mode="append", verbose=False, success_context=_context())
+        lakehouse.write_lakehouse_table(object(), verbose=False, pipeline_prep=prep)
     assert committed == []
 
 
@@ -140,7 +145,12 @@ def test_lakehouse_success_accepts_observation_after_physical_write(monkeypatch)
     monkeypatch.setattr(lakehouse, "repartition_dataframe_for_write", lambda df, value: df)
     monkeypatch.setattr(lakehouse, "write_delta_path", lambda *args, **kwargs: events.append("physical"))
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: events.append("metadata"))
-    lakehouse.write_lakehouse_table(object(), "orders", mode="append", verbose=False, success_context=_context())
+    prep = {
+        "target": {"table_id": "target", "table_name": "orders", "target": "unified", "schema": None},
+        "mode": "append", "options": {}, "processing": {"load_strategy": "append"},
+        "scope": {"type": "full_dataset"}, "success_context": _context(),
+    }
+    lakehouse.write_lakehouse_table(object(), verbose=False, pipeline_prep=prep)
     assert events == ["physical", "metadata"]
 
 

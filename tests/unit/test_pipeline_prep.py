@@ -247,22 +247,26 @@ def test_contract_target_rejects_conflicting_writer(monkeypatch, spark_session):
         )
 
 
-def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypatch):
+def test_lakehouse_writer_consumes_one_authoritative_pipeline_prep(monkeypatch):
     calls = []
     monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
     shared = import_module("fabricops_kit.pipeline.shared")
     monkeypatch.setattr(shared, "execute_lakehouse_processing", lambda *args, **kwargs: calls.append((args, kwargs)))
-    lakehouse_writer.write_lakehouse_table(
-        object(), "students", mode=None, load_strategy="scd1",
-        load_strategy_parameters={"key_columns": ["student_id"]},
-        processing_scope={"type": "full_dataset"},
-    )
+    monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda _context: None)
+    prep = {
+        "target": {"table_id": "lakehouse:unified:dbo:students", "table_name": "students", "target": "unified", "schema": "dbo"},
+        "mode": None,
+        "options": {},
+        "processing": {"load_strategy": "scd1", "key_columns": ["student_id"]},
+        "scope": {"type": "full_dataset"},
+        "success_context": {"target_table_id": "lakehouse:unified:dbo:students"},
+    }
+    lakehouse_writer.write_lakehouse_table(object(), pipeline_prep=prep)
     assert calls[0][1]["processing"] == {"load_strategy": "scd1", "key_columns": ["student_id"]}
-    with pytest.raises(ValueError, match="mode must be None"):
+    assert calls[0][1]["table_name"] == "students"
+    with pytest.raises(ValueError, match="already owns target and write settings"):
         lakehouse_writer.write_lakehouse_table(
-            object(), "students", mode="append", load_strategy="scd1",
-            load_strategy_parameters={"key_columns": ["student_id"]},
-            processing_scope={"type": "full_dataset"},
+            object(), "students", pipeline_prep=prep,
         )
 
 
@@ -288,9 +292,11 @@ def test_partition_retry_compares_with_last_successful_observation():
 
 
 
-def test_public_writers_accept_post_write_success_context():
+def test_public_writers_accept_governed_write_context():
     """Writers own successful metadata commit after physical publication."""
     import inspect
 
-    assert "success_context" in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
+    parameters = inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
+    assert "pipeline_prep" in parameters
+    assert {"load_strategy", "load_strategy_parameters", "processing_scope", "success_context"}.isdisjoint(parameters)
     assert "success_context" in inspect.signature(warehouse_writer.write_warehouse_table).parameters
