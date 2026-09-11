@@ -1,6 +1,6 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {theme} from '../theme';
-import {VIDEO_CONFIG} from '../videoConfig';
+import {SCENE_STARTS, VIDEO_CONFIG} from '../videoConfig';
 
 const Brand = () => (
   <div
@@ -16,6 +16,13 @@ const Brand = () => (
     <span style={{color: '#fff'}}>Ops</span>
   </div>
 );
+
+const floatingWords = [
+  {text: 'Python', at: 31.5, left: 210, top: 660, rotate: -5},
+  {text: 'Notebook', at: 32.5, left: 1320, top: 245, rotate: 4},
+  {text: 'PySpark', at: 33.5, left: 245, top: 255, rotate: 5},
+  {text: 'Lakehouse', at: 35, left: 1285, top: 690, rotate: -4},
+] as const;
 
 export const FabricOpsReveal = () => {
   const frame = useCurrentFrame();
@@ -52,6 +59,41 @@ export const FabricOpsReveal = () => {
         opacity: exit,
       }}
     >
+      {floatingWords.map((word) => {
+        const start = Math.round(word.at * fps - SCENE_STARTS.fabricOps);
+        const opacity = interpolate(frame, [start, start + 5, start + 24, start + 30], [0, 1, 1, 0], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.inOut(Easing.cubic),
+        });
+        const scale = interpolate(frame, [start, start + 7, start + 30], [0.82, 1.08, 0.96], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.out(Easing.cubic),
+        });
+
+        return (
+          <div
+            key={word.text}
+            style={{
+              position: 'absolute',
+              left: word.left,
+              top: word.top,
+              fontSize: 52,
+              lineHeight: 1,
+              fontWeight: 760,
+              letterSpacing: -1.2,
+              color: '#dcecff',
+              opacity,
+              transform: `rotate(${word.rotate}deg) scale(${scale})`,
+              textShadow: '0 10px 34px #000b, 0 0 28px #279ee055',
+            }}
+          >
+            {word.text}
+          </div>
+        );
+      })}
+
       <div
         style={{
           position: 'relative',
