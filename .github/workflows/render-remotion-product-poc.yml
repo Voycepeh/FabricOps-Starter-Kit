@@ -25,6 +25,11 @@ jobs:
         with:
           node-version: 20
 
+      - name: Stage narration asset for Remotion
+        run: |
+          mkdir -p video/remotion/product-poc/public/audio
+          cp video/remotion/product-poc/FabricOps_narration_master_numbered.m4a video/remotion/product-poc/public/audio/FabricOps_narration_master_numbered.m4a
+
       - name: Install dependencies
         working-directory: video/remotion/product-poc
         run: npm install
@@ -36,6 +41,19 @@ jobs:
       - name: Render review video
         working-directory: video/remotion/product-poc
         run: npm run render
+
+      - name: Verify narration is audible
+        run: |
+          ffmpeg -i video/remotion/product-poc/out/fabricops-product-poc.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
+          cat /tmp/volumedetect.log
+          mean_volume=$(sed -n 's/.*mean_volume: \([-0-9.]*\) dB.*/\1/p' /tmp/volumedetect.log | tail -1)
+          python - "$mean_volume" <<'PY'
+          import sys
+          mean_volume = float(sys.argv[1])
+          if mean_volume < -45:
+              raise SystemExit(f"Narration is effectively silent: mean volume {mean_volume} dB")
+          print(f"Narration verified at mean volume {mean_volume} dB")
+          PY
 
       - name: Upload review video
         uses: actions/upload-artifact@v4
