@@ -83,7 +83,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="writer-ownership">
 <summary><strong>Writer Ownership</strong> — The rule that one governed target table_id has one owning pipeline or notebook writer.</summary>
-<p>Writer Ownership binds a governed target table_id to the notebook identity frozen in its Data Contract. Production rejects a conflicting writer because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions.</p>
+<p>Writer Ownership binds a governed target table_id to the logical notebook name frozen in its Data Contract. Production rejects a conflicting notebook name because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions. The physical notebook ID is retained only as diagnostic metadata because it can change across environments.</p>
 <p><strong>Also known as:</strong> single writer</p>
 </details>
 

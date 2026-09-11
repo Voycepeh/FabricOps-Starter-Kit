@@ -160,7 +160,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The rule that one governed target table_id has one owning pipeline or notebook writer.",
-    "long_definition": "Writer Ownership binds a governed target table_id to the notebook identity frozen in its Data Contract. Production rejects a conflicting writer because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions.",
+    "long_definition": "Writer Ownership binds a governed target table_id to the logical notebook name frozen in its Data Contract. Production rejects a conflicting notebook name because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions. The physical notebook ID is retained only as diagnostic metadata because it can change across environments.",
     "preferred_usage": "State that one governed target table_id should have one owning pipeline/notebook writer.",
     "avoid_usage": "a scheduling or distributed locking guarantee"
   },

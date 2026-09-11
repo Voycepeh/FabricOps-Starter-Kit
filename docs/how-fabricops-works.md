@@ -225,7 +225,7 @@ As parts of that Data Contract definition, Governance can add:
 - **Enrichment**, limited to descriptive table and column descriptions and information classifications
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
-- the target's owning notebook identity, so one governed `table_id` has one writer
+- the target's owning logical notebook name, so one governed `table_id` has one writer across environments; the physical notebook ID remains diagnostic metadata
 
 The load strategy is the authoritative vocabulary for target write behaviour. A Changes Guardrail validates observed source behaviour; it does not define a second processing strategy.
 

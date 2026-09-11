@@ -35,7 +35,7 @@ Keep merge, upsert, append, partitioning, and other target-side decisions in tar
 
 !!! warning "One governed target, one writer"
 
-    One governed target `table_id` should have one owning pipeline/notebook writer. Independent writers can race, duplicate appends, overwrite each other's state, break SCD history, or apply inconsistent assumptions. FabricOps freezes the owner notebook identity with the Data Contract and rejects a contract-backed write from a conflicting notebook.
+    One governed target `table_id` should have one owning pipeline/notebook writer. Independent writers can race, duplicate appends, overwrite each other's state, break SCD history, or apply inconsistent assumptions. FabricOps freezes the owner's logical notebook name with the Data Contract and rejects a contract-backed write from a conflicting notebook name. The physical notebook ID remains diagnostic metadata because it can differ after promotion to another workspace.
 
 ## Keep Changes separate from processing
 

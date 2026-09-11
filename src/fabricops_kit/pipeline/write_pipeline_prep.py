@@ -49,19 +49,20 @@ def _validate_target_writer_ownership(
     """Require the current notebook to match the writer frozen in the contract."""
     if processing.get("source") != "data_contract":
         return
-    owner_id = str(processing.get("owner_notebook_id") or "").strip()
     owner_name = str(processing.get("owner_notebook_name") or "").strip()
-    if not owner_id:
+    if not owner_name:
         raise ValueError(
-            f"Data Contract for target table_id {table_id!r} has no owning notebook_id; "
+            f"Data Contract for target table_id {table_id!r} has no owning notebook_name; "
             "freeze the contract from the target's owning pipeline before writing."
         )
+    owner_id = str(processing.get("owner_notebook_id") or "").strip()
+    current_name = str(audit.get("_notebook_name") or "").strip()
     current_id = str(audit.get("_notebook_id") or "").strip()
-    if current_id != owner_id:
-        current_name = str(audit.get("_notebook_name") or "").strip()
+    if current_name != owner_name:
         raise ValueError(
-            f"Target table_id {table_id!r} is owned by notebook {owner_name or owner_id!r} "
-            f"({owner_id!r}); current writer is {current_name or current_id!r} ({current_id!r}). "
+            f"Target table_id {table_id!r} is owned by notebook {owner_name!r} "
+            f"(contract notebook_id {owner_id!r}); current writer is {current_name or current_id!r} "
+            f"(runtime notebook_id {current_id!r}). "
             "One governed target table_id must have one owning pipeline/notebook writer."
         )
 
@@ -85,7 +86,7 @@ def write_pipeline_prep(
     target_table_id : str, optional
         Canonical registered target identity used to resolve physical target
         metadata. A selected or active frozen Data Contract is authoritative
-        for its load strategy, parameters, and owning notebook.
+        for its load strategy, parameters, and owning logical notebook name.
     target : str, optional
         Configured target key supplied instead of ``target_table_id``.
     schema : str, optional

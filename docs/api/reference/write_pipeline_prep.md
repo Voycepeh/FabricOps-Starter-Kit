@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:68`
+`fabricops_kit/pipeline/write_pipeline_prep.py:69`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L230">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L69-L231">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ def write_pipeline_prep(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning notebook. |
+| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning logical notebook name. |
 | `target` | `str \| None` | No | Configured target key supplied instead of ``target_table_id``. |
 | `schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |

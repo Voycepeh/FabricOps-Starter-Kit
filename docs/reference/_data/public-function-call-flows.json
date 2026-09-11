@@ -9355,7 +9355,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep._validate_target_writer_ownership",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 66,
+      "source_end_line": 67,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 46,
       "supports_live_contract": false,
@@ -9409,9 +9409,9 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 230,
+      "source_end_line": 231,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 68,
+      "source_start_line": 69,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -16242,7 +16242,7 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning notebook.",
+          "description": "Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning logical notebook name.",
           "name": "target_table_id",
           "required": "No",
           "type": "str | None"
@@ -16312,9 +16312,9 @@
         "large_width_or_depth"
       ],
       "signature": "def write_pipeline_prep(df, *, target_table_id: str | None=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 230,
+      "source_end_line": 231,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
-      "source_start_line": 68,
+      "source_start_line": 69,
       "summary": "Prepare governed target write inputs without physically writing the target.",
       "transitive_function_count": 54,
       "usage_notes": "FabricOps resolves one run-level audit record and adds only compact target\nprovenance fields. This function does not call a Lakehouse or Warehouse\nwriter. It persists target Lineage at the governed preparation boundary.\nLakehouse and Warehouse targets use the same governed target strategy\ndefinition; each writer applies its engine-specific physical execution only\nafter this preparation succeeds. One governed target ``table_id`` must have\none owning pipeline/notebook writer because independent writers can race,\nduplicate writes, overwrite state, or break SCD history.",

@@ -178,11 +178,11 @@ def test_write_prep_preserves_target_partition_overwrite(monkeypatch, spark_sess
     assert "replaceWhere" in result["options"]
 
 
-def test_contract_target_accepts_its_owning_writer(monkeypatch, spark_session):
+def test_contract_target_accepts_owner_name_after_notebook_id_changes(monkeypatch, spark_session):
     processing = {
         "load_strategy": "append", "source": "data_contract",
         "contract_id": "contract", "contract_version": 3,
-        "owner_notebook_id": "notebook", "owner_notebook_name": "02_pipeline",
+        "owner_notebook_id": "development-notebook-id", "owner_notebook_name": "02_pipeline",
     }
     identity = _patch_target_processing(monkeypatch, processing)
     result = write_module.write_pipeline_prep(
@@ -198,7 +198,7 @@ def test_contract_target_rejects_conflicting_writer(monkeypatch, spark_session):
     processing = {
         "load_strategy": "append", "source": "data_contract",
         "contract_id": "contract", "contract_version": 3,
-        "owner_notebook_id": "different-notebook", "owner_notebook_name": "other_pipeline",
+        "owner_notebook_id": "notebook", "owner_notebook_name": "other_pipeline",
     }
     identity = _patch_target_processing(monkeypatch, processing)
     with pytest.raises(ValueError, match="[Oo]ne owning pipeline/notebook writer"):
