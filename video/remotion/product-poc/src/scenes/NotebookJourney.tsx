@@ -85,8 +85,8 @@ export const NotebookJourney = () => {
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     <div style={{position: 'absolute', left: 120, right: 120, top: 72, textAlign: 'center', opacity: heading, transform: `translateY(${(1 - heading) * 14}px)`}}>
-      <div style={{fontSize: 60, lineHeight: 1.08, fontWeight: 850, letterSpacing: -1.8, color: theme.text, whiteSpace: 'nowrap'}}>Code-first, notebook-first workflow</div>
-      <div style={{marginTop: 15, fontSize: 27, lineHeight: 1.25, fontWeight: 500, color: theme.muted, whiteSpace: 'nowrap'}}>Shared configuration powers governance and ETL through reusable notebooks</div>
+      <div style={{fontSize: 60, lineHeight: 1.08, fontWeight: 850, letterSpacing: -1.8, color: theme.text, whiteSpace: 'nowrap'}}>Governance as Code, built into Engineering</div>
+      <div style={{marginTop: 15, fontSize: 27, lineHeight: 1.25, fontWeight: 500, color: theme.muted, whiteSpace: 'nowrap'}}>Data Contracts connect governance expectations to pipeline validation</div>
     </div>
 
     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
