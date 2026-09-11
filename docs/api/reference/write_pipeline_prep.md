@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:69`
+`fabricops_kit/pipeline/write_pipeline_prep.py:68`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L69-L231">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L232">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -79,7 +79,7 @@ def write_pipeline_prep(
 
 ## Returns
 
-Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and target Lineage.
+Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and post-write success context.
 
 ## Raises / Errors
 
@@ -94,7 +94,8 @@ ValueError
 
 FabricOps resolves one run-level audit record and adds only compact target
 provenance fields. This function does not call a Lakehouse or Warehouse
-writer. It persists target Lineage at the governed preparation boundary.
+writer. It does not persist successful target Lineage or Source Consumption;
+the physical writer commits those records only after publication succeeds.
 Lakehouse and Warehouse targets use the same governed target strategy
 definition; each writer applies its engine-specific physical execution only
 after this preparation succeeds. One governed target ``table_id`` must have

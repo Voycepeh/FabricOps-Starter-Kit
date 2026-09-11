@@ -128,6 +128,8 @@ One governed target `table_id` should have one owning pipeline/notebook writer. 
 
 The Source Stability Guardrail detects whether previously processed source data mutated or disappeared. It uses the target's governed load strategy to validate compatibility: append expects historical source data to remain stable, while overwrite, SCD1, and SCD2 can reconcile detected changes. It never defines processing behaviour itself.
 
+Raw `METADATA_SOURCE_OBSERVATION` rows are attempt evidence, not an accepted baseline. `METADATA_SOURCE_CONSUMPTION` advances only after the physical target write succeeds and scopes the accepted observation by logical notebook name, source `table_id`, and target `table_id`.
+
 **FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
 
 ## Product components

@@ -8,7 +8,6 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
-    persist_lineage_participation,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -106,7 +105,7 @@ def write_pipeline_prep(
     -------
     dict
         Audited target DataFrame, physical writer mode/options, the unchanged
-        resolved processing definition, its prepared scope, and target Lineage preparation.
+        resolved processing definition, prepared scope, and post-write success context.
 
     Raises
     ------
@@ -119,7 +118,8 @@ def write_pipeline_prep(
     -----
     FabricOps resolves one run-level audit record and adds only compact target
     provenance fields. This function does not call a Lakehouse or Warehouse
-    writer. It persists target Lineage at the governed preparation boundary.
+    writer. It does not persist successful target Lineage or Source Consumption;
+    the physical writer commits those records only after publication succeeds.
     Lakehouse and Warehouse targets use the same governed target strategy
     definition; each writer applies its engine-specific physical execution only
     after this preparation succeeds. One governed target ``table_id`` must have
@@ -187,12 +187,6 @@ def write_pipeline_prep(
         table_id=str(target_identity["table_id"]), processing=processing, audit=audit
     )
     prepared_df = add_target_audit_fields(df, audit)
-    persist_lineage_participation(
-        table_id=target_identity["table_id"],
-        pipeline_role="target",
-        activity_id=audit["_activity_id"],
-        context=context,
-    )
     if strategy == "scd2":
         from pyspark.sql import functions as F
 
@@ -222,6 +216,13 @@ def write_pipeline_prep(
         "scope": prepared_scope,
         "target": target_identity,
         "target_kind": store_kind,
+        "success_context": {
+            "target_table_id": target_identity["table_id"],
+            "source_table_ids": [str(prep["table_id"]) for prep in source_preps],
+            "activity_id": audit["_activity_id"],
+            "notebook_name": audit["_notebook_name"],
+            "notebook_id": audit["_notebook_id"],
+        },
         "lineage": {
             "table_id": target_identity["table_id"],
             "pipeline_role": "target",

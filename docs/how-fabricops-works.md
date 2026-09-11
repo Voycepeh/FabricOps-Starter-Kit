@@ -229,6 +229,8 @@ As parts of that Data Contract definition, Governance can add:
 
 Freshness asks whether the latest source data is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. The authoritative target load strategy determines whether that historical mutation is compatible; Source Stability does not define a second processing strategy.
 
+`METADATA_SOURCE_OBSERVATION` stores raw evidence from pipeline attempts. After a physical target write succeeds, FabricOps records the accepted observation in `METADATA_SOURCE_CONSUMPTION` for the logical `notebook_name` + source `table_id` + target `table_id` relationship and only then records successful target Lineage. Failed writes do not advance either success record.
+
 Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
 
 The Data Agreement is not linked at this authoring stage. Governance makes that explicit linkage after the frozen version has been tested, as part of Step 5.

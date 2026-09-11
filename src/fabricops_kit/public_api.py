@@ -27,6 +27,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_source_stability",
+    "fabricops_kit.pipeline.observe_table.observe_table",
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.read_pipeline_prep.read_pipeline_prep",

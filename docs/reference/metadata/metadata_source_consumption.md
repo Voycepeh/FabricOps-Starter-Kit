@@ -1,14 +1,14 @@
-# METADATA_SOURCE_OBSERVATION
+# METADATA_SOURCE_CONSUMPTION
 
-Store raw partition evidence collected during pipeline attempts; observation alone does not mean a target consumed it successfully.
+Store the source observation last successfully consumed by one logical notebook when writing one governed target.
 
 ## Writer functions
 
-* [`observe_table`](../../api/reference/observe_table.md)
+No public writer function is traced in the current implementation.
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 
@@ -16,39 +16,37 @@ Store raw partition evidence collected during pipeline attempts; observation alo
 
 **Default physical schema:** `engineering`
 
-**Grain:** One partition observation within one source-table observation.
+**Grain:** One accepted source observation for one notebook_name, source_table_id, target_table_id, and successful run.
 
-**Primary key:** `observation_id` + `partition_value`
+**Primary key:** `source_consumption_id`
 
 **Relationships:**
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id`
+via `source_table_id` + `target_table_id`
 
-`METADATA_SOURCE_CONSUMPTION` **(1 → N)**
+`METADATA_SOURCE_OBSERVATION` **(N → 1)**
 via `observation_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 15 |
+| Business columns | 7 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Description |
 | --- | --- | --- |
+| `source_consumption_id` | `string` | Identifier stored for `source_consumption_id`. |
+| `notebook_name` | `string` | Fabric notebook name captured for the lineage row. |
+| `source_table_id` | `string` | Identifier stored for `source_table_id`. |
+| `target_table_id` | `string` | Identifier stored for `target_table_id`. |
 | `observation_id` | `string` | Identifier stored for `observation_id`. |
-| `table_id` | `string` | Canonical table identity shared with METADATA_DATA_CATALOGUE. |
+| `run_id` | `string` | Identifier stored for `run_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `partition_value` | `string` | String representation of the observed partition value. |
-| `row_count` | `long` | Number of rows observed in the partition, or zero for a removal tombstone. |
-| `min_change_value` | `string` | Earliest observed change-column value, or null for a removal tombstone. |
-| `max_change_value` | `string` | Latest observed change-column value, or null for a removal tombstone. |
-| `content_fingerprint` | `string` | Metadata Source Observation field `content_fingerprint`. |
-| `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

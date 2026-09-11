@@ -41,8 +41,15 @@ def _warehouse_observation_query(schema: str, table_name: str, partition_column:
         f"  [{partition_column}] AS partition_value,\n"
         "  COUNT_BIG(*) AS row_count,\n"
         f"  MIN([{change_column}]) AS min_change_value,\n"
-        f"  MAX([{change_column}]) AS max_change_value\n"
-        f"FROM [{schema}].[{table_name}]\n"
+        f"  MAX([{change_column}]) AS max_change_value,\n"
+        "  CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "STRING_AGG(CONVERT(varchar(max), row_fingerprint), '') "
+        "WITHIN GROUP (ORDER BY row_fingerprint)), 2) AS content_fingerprint\n"
+        "FROM (\n"
+        "  SELECT source_row.*, CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "(SELECT source_row.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)), 2) AS row_fingerprint\n"
+        f"  FROM [{schema}].[{table_name}] AS source_row\n"
+        ") AS fingerprinted\n"
         f"GROUP BY [{partition_column}]"
     )
 
@@ -60,6 +67,7 @@ def _compact_rows(frame: Any) -> list[dict[str, Any]]:
                 "row_count": int(value.get("row_count") or 0),
                 "min_change_value": None if minimum is None else str(minimum),
                 "max_change_value": None if maximum is None else str(maximum),
+                "content_fingerprint": str(value.get("content_fingerprint") or ""),
             }
         )
     return compact
@@ -83,16 +91,26 @@ def _observe_lakehouse(
         schema=schema,
         spark_session=spark_session,
         context=context,
-    ).select(partition_column, change_column)
-    observed = frame.groupBy(partition_column).agg(
+    )
+    row_columns = sorted(frame.columns)
+    with_fingerprint = frame.withColumn(
+        "_fabricops_content_hash",
+        F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
+    )
+    observed = with_fingerprint.groupBy(partition_column).agg(
         F.count(F.lit(1)).alias("row_count"),
         F.min(F.col(change_column)).alias("min_change_value"),
         F.max(F.col(change_column)).alias("max_change_value"),
+        F.sha2(
+            F.concat_ws("", F.sort_array(F.collect_list("_fabricops_content_hash"))),
+            256,
+        ).alias("content_fingerprint"),
     ).select(
         F.col(partition_column).alias("partition_value"),
         "row_count",
         "min_change_value",
         "max_change_value",
+        "content_fingerprint",
     )
     return _compact_rows(observed)
 
@@ -135,7 +153,7 @@ def _persist(
     return frame
 
 
-def _observe_table_core(
+def observe_table(
     table_name: str,
     *,
     target: str = "source",
@@ -143,8 +161,8 @@ def _observe_table_core(
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
 
-    This internal helper records row count plus earliest and latest change
-    values by source partition for the explicit source-observation workflow.
+    This internal helper records row count, earliest/latest change values, and
+    a deterministic content fingerprint by source partition.
 
     Parameters
     ----------
@@ -173,14 +191,11 @@ def _observe_table_core(
 
     Notes
     -----
-    The stored evidence is the stable ``observation_id`` and ``table_id``, active
-    ``environment_name``, partition value, row count, and earliest and latest
-    change values. This is a lightweight change signal, not proof that every
-    cell is unchanged: a middle value can change while all three signals remain
-    identical. Sources without a reliable change column require deeper change
-    detection elsewhere. Warehouse aggregation is pushed into SQL; Lakehouse
-    aggregation is distributed and projects only the two required source
-    columns.
+    The stored evidence includes a stable ``observation_id``, partition values,
+    counts, observed change-value range, and a deterministic fingerprint over
+    business content. Warehouse aggregation is pushed into SQL and Lakehouse
+    aggregation remains distributed; full business rows are not persisted in
+    metadata.
 
     Evidence is appended only after collection succeeds. This function neither
     loads history nor makes guardrail decisions; ``check_source_stability`` owns

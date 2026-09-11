@@ -18,7 +18,11 @@ from ..io.shared import (
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_table_id, get_store
-from ..config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema
+from ..config.metadata_schemas import (
+    coerce_metadata_row_types,
+    metadata_table_physical_schema,
+    metadata_table_schema_registry,
+)
 
 
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
@@ -74,6 +78,8 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
+_SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_SOURCE_CONSUMPTION_TABLE = "METADATA_SOURCE_CONSUMPTION"
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -583,6 +589,7 @@ SOURCE_OBSERVATION_COLUMNS = frozenset(
         "row_count",
         "min_change_value",
         "max_change_value",
+        "content_fingerprint",
         "is_present",
         "observed_at",
     }
@@ -593,6 +600,77 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     """Return canonical observation rows as dictionaries."""
     values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in values or []]
+
+
+def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Commit target Lineage and accepted source observations after a physical write."""
+    if not isinstance(success_context, Mapping):
+        raise ValueError("success_context must be returned by write_pipeline_prep().")
+    target_table_id = str(success_context.get("target_table_id") or "").strip()
+    source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
+    activity_id = str(success_context.get("activity_id") or "").strip()
+    notebook_name = str(success_context.get("notebook_name") or "").strip()
+    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+
+    config, env, context = resolve_fabric_context(context=success_context.get("context"))
+    history = read_lakehouse_table_core(
+        _SOURCE_OBSERVATION_TABLE,
+        target="metadata",
+        schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+        context=context,
+    )
+    history_rows = observation_rows(history)
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit["_activity_id"] = activity_id
+    records = []
+    for source_table_id in source_table_ids:
+        candidates = [
+            row for row in history_rows
+            if str(row.get("table_id") or "") == source_table_id
+            and str(row.get("environment_name") or "") == env
+            and str(row.get("_activity_id") or "") == activity_id
+        ]
+        if not candidates:
+            raise ValueError(
+                f"No source observation from activity {activity_id!r} exists for {source_table_id!r}."
+            )
+        observation_id = str(max(candidates, key=lambda row: row["_committed_at"])["observation_id"])
+        identity = hashlib.sha256(json.dumps({
+            "environment_name": env,
+            "notebook_name": notebook_name,
+            "source_table_id": source_table_id,
+            "target_table_id": target_table_id,
+            "observation_id": observation_id,
+        }, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        records.append(coerce_metadata_row_types(_SOURCE_CONSUMPTION_TABLE, {
+            "source_consumption_id": identity,
+            "notebook_name": notebook_name,
+            "source_table_id": source_table_id,
+            "target_table_id": target_table_id,
+            "observation_id": observation_id,
+            "run_id": activity_id,
+            "environment_name": env,
+            **audit,
+        }))
+    frame = get_spark_session().createDataFrame(
+        records, schema=metadata_table_schema_registry()[_SOURCE_CONSUMPTION_TABLE]
+    )
+    write_lakehouse_table_core(
+        frame,
+        _SOURCE_CONSUMPTION_TABLE,
+        target="metadata",
+        schema=metadata_table_physical_schema(config, _SOURCE_CONSUMPTION_TABLE),
+        context=context,
+        mode="append",
+    )
+    persist_lineage_participation(
+        table_id=target_table_id,
+        pipeline_role="target",
+        activity_id=activity_id,
+        context=context,
+    )
+    return records
 
 
 def guardrail_compatibility_observation(

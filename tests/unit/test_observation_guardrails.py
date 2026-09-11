@@ -26,6 +26,7 @@ def row(
     environment_name="dev",
     observation_id="observation-1",
     activity_id="activity-1",
+    fingerprint="fingerprint-1",
 ):
     return {
         "observation_id": observation_id,
@@ -35,6 +36,7 @@ def row(
         "row_count": count,
         "min_change_value": minimum,
         "max_change_value": maximum,
+        "content_fingerprint": fingerprint,
         "is_present": present,
         "_committed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
         "_activity_id": activity_id,
@@ -111,10 +113,37 @@ def _audit(at=None, activity_id="activity-tombstone"):
     }
 
 
-def configure_stability(monkeypatch, history, rules=None, *, load_strategy="append"):
+def configure_stability(
+    monkeypatch,
+    history,
+    rules=None,
+    *,
+    load_strategy="append",
+    accepted_observation_id="auto",
+    consumption_notebook="02_pipeline",
+    consumption_target="target",
+):
     monkeypatch.setattr(stability, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(stability, "metadata_table_physical_schema", lambda *args: None)
-    monkeypatch.setattr(stability, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(history))
+    def read_metadata(table_name, *args, **kwargs):
+        if table_name == "METADATA_SOURCE_CONSUMPTION":
+            if not history or accepted_observation_id is None:
+                return Frame([])
+            prior = min(history, key=lambda value: value["_committed_at"])
+            return Frame([{
+                "notebook_name": consumption_notebook,
+                "source_table_id": "key",
+                "target_table_id": consumption_target,
+                "observation_id": (
+                    prior["observation_id"]
+                    if accepted_observation_id == "auto"
+                    else accepted_observation_id
+                ),
+                "environment_name": "dev",
+                "_committed_at": prior["_committed_at"] + timedelta(seconds=1),
+            }])
+        return Frame(history)
+    monkeypatch.setattr(stability, "read_lakehouse_table_core", read_metadata)
     written = []
     monkeypatch.setattr(stability, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(stability, "build_runtime_audit_fields", lambda **kwargs: _audit())
@@ -149,6 +178,56 @@ def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypa
     result = check_source_stability(Frame([row(at=now)], Spark()), target_table_id="target")
     assert result["first_observation"] is True
     assert result["new_partitions"] == ["a"]
+
+
+def test_raw_observation_does_not_become_accepted_baseline(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), observation_id="unconsumed")],
+        accepted_observation_id=None,
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["first_observation"] is True
+
+
+def test_latest_failed_observation_is_ignored_for_last_consumed_baseline(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    history = [
+        row(at=now - timedelta(hours=2), count=1, observation_id="accepted"),
+        row(at=now - timedelta(hours=1), count=2, observation_id="failed"),
+    ]
+    configure_stability(monkeypatch, history, accepted_observation_id="accepted")
+    result = check_source_stability(
+        Frame([row(at=now, count=2, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["changed_partitions"] == ["a"]
+    assert result["historical_mutation"] is True
+
+
+@pytest.mark.parametrize(
+    ("consumption_notebook", "consumption_target"),
+    [("other_pipeline", "target"), ("02_pipeline", "other-target")],
+)
+def test_consumption_baselines_are_isolated_by_notebook_and_target(
+    monkeypatch, consumption_notebook, consumption_target
+):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), observation_id="other-consumer")],
+        consumption_notebook=consumption_notebook,
+        consumption_target=consumption_target,
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current")], Spark()),
+        target_table_id="target",
+    )
+    assert result["first_observation"] is True
 
 
 def test_observation_checks_pass_development_contract_context_to_rule_loader(monkeypatch):
@@ -250,6 +329,21 @@ def test_append_rejects_historical_mutation(monkeypatch, severity, status, can_c
     assert result["severity"] == severity
     assert result["guardrail_version"] == 1
     assert result_writes[0]["guardrail_type"] == "source_stability"
+
+
+def test_content_fingerprint_detects_mutation_when_counts_and_ranges_match(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure_stability(
+        monkeypatch,
+        [row(at=now - timedelta(hours=1), fingerprint="before")],
+    )
+    result = check_source_stability(
+        Frame([row(at=now, observation_id="current", fingerprint="after")], Spark()),
+        target_table_id="target",
+    )
+    assert result["changed_partitions"] == ["a"]
+    assert result["historical_mutation"] is True
+    assert result["status"] == "failed"
 
 
 def test_source_stability_rejects_cross_environment_observation(monkeypatch):

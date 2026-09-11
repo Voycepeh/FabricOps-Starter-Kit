@@ -174,6 +174,12 @@ The cards below show the current implemented metadata tables and relationships.
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
+        <code>METADATA_SOURCE_CONSUMPTION</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_PROFILED</code>
       </span>
     </span>
@@ -211,7 +217,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See what FabricOps previously observed about the source data.</span>
+  <span class="metadata-table-card__purpose">Store raw partition evidence collected during pipeline attempts; observation alone does not mean a target consumed it successfully.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One partition observation within one source-table observation.</span>
@@ -226,6 +232,45 @@ The cards below show the current implemented metadata tables and relationships.
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_SOURCE_CONSUMPTION</code>
+      </span>
+    </span>
+  </span>
+</a>
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_source_consumption/" aria-label="Open METADATA_SOURCE_CONSUMPTION schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_SOURCE_CONSUMPTION</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Store the source observation last successfully consumed by one logical notebook when writing one governed target.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One accepted source observation for one notebook_name, source_table_id, target_table_id, and successful run.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>source_consumption_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_SOURCE_OBSERVATION</code>
       </span>
     </span>
   </span>

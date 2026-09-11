@@ -47,7 +47,6 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     monkeypatch.setattr(write_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
     monkeypatch.setattr(write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]})
     monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing)
-    monkeypatch.setattr(write_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
         "_committed_at": "2026-08-22T00:00:00Z", "_committed_by": "engineer",
         "_activity_id": "activity", "_workspace_id": "workspace",
@@ -144,6 +143,14 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
     assert result["mode"] == mode
     assert result["load_strategy"] == strategy
     assert "_committed_at" in result["df"].columns
+    assert result["success_context"] == {
+        "target_table_id": identity["table_id"],
+        "source_table_ids": [source_prep["table_id"]],
+        "activity_id": "activity",
+        "notebook_name": "02_pipeline",
+        "notebook_id": "notebook",
+    }
+    assert not hasattr(write_module, "persist_lineage_participation")
 
 
 def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session):
@@ -249,9 +256,9 @@ def test_partition_retry_compares_with_last_successful_observation():
 
 
 
-def test_public_writers_have_no_completion_context():
-    """Persistent checkpoint completion is not part of either writer API."""
+def test_public_writers_accept_post_write_success_context():
+    """Writers own successful metadata commit after physical publication."""
     import inspect
 
-    assert "completion_context" not in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
-    assert "completion_context" not in inspect.signature(warehouse_writer.write_warehouse_table).parameters
+    assert "success_context" in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
+    assert "success_context" in inspect.signature(warehouse_writer.write_warehouse_table).parameters

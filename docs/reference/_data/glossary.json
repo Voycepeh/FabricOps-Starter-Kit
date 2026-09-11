@@ -158,9 +158,19 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Whether source data previously processed by a pipeline remains unchanged.",
-    "long_definition": "The Source Stability Guardrail compares current source evidence with the prior successful processing baseline. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy. New data is compatible with append, but changed or removed previously processed data is not; overwrite, SCD1, and SCD2 can reconcile detected mutation.",
+    "long_definition": "The Source Stability Guardrail compares current source evidence with the observation referenced by the latest METADATA_SOURCE_CONSUMPTION record for the same logical notebook name, source table_id, and target table_id. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy.",
     "preferred_usage": "Distinguish Source Stability from Freshness: Freshness asks whether data is current; Source Stability asks whether previously processed data changed unexpectedly.",
     "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
+  },
+  {
+    "id": "source-consumption",
+    "term": "source consumption",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The source observation accepted only after one pipeline successfully writes one target.",
+    "long_definition": "METADATA_SOURCE_CONSUMPTION records the observation last successfully consumed for a logical notebook_name, source_table_id, and target_table_id relationship. Raw METADATA_SOURCE_OBSERVATION evidence does not advance this baseline; the physical target write must succeed first.",
+    "preferred_usage": "Use Source Consumption for the accepted Source Stability baseline, scoped to one logical pipeline source-to-target relationship.",
+    "avoid_usage": "latest raw observation or physical notebook ID as the baseline key"
   },
   {
     "id": "writer-ownership",

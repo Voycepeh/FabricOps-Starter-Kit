@@ -83,7 +83,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="source-stability">
 <summary><strong>Source Stability</strong> — Whether source data previously processed by a pipeline remains unchanged.</summary>
-<p>The Source Stability Guardrail compares current source evidence with the prior successful processing baseline. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy. New data is compatible with append, but changed or removed previously processed data is not; overwrite, SCD1, and SCD2 can reconcile detected mutation.</p>
+<p>The Source Stability Guardrail compares current source evidence with the observation referenced by the latest METADATA_SOURCE_CONSUMPTION record for the same logical notebook name, source table_id, and target table_id. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy.</p>
+</details>
+
+<details id="source-consumption">
+<summary><strong>Source Consumption</strong> — The source observation accepted only after one pipeline successfully writes one target.</summary>
+<p>METADATA_SOURCE_CONSUMPTION records the observation last successfully consumed for a logical notebook_name, source_table_id, and target_table_id relationship. Raw METADATA_SOURCE_OBSERVATION evidence does not advance this baseline; the physical target write must succeed first.</p>
 </details>
 
 <details id="writer-ownership">

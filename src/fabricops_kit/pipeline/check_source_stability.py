@@ -18,6 +18,7 @@ from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_CONSUMPTION_TABLE = "METADATA_SOURCE_CONSUMPTION"
 _OBSERVATION_COLUMNS = {
     "observation_id",
     "table_id",
@@ -26,6 +27,7 @@ _OBSERVATION_COLUMNS = {
     "row_count",
     "min_change_value",
     "max_change_value",
+    "content_fingerprint",
     "is_present",
     "_committed_at",
     "_activity_id",
@@ -67,6 +69,7 @@ def _previous_observation(
                 "row_count",
                 "min_change_value",
                 "max_change_value",
+                "content_fingerprint",
                 "_committed_at",
                 "_activity_id",
             )
@@ -142,6 +145,8 @@ def _observation_stability(
         context=context,
         authored_processing=authored_processing,
     )
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    notebook_name = str(audit.get("_notebook_name") or "").strip()
     metadata_schema = metadata_table_physical_schema(config, _OBSERVATION_TABLE)
     history = []
     try:
@@ -152,13 +157,38 @@ def _observation_stability(
             spark_session=getattr(observation, "sparkSession", None),
             context=context,
         )
+        accepted_observation_id = successful_observation_id
+        if accepted_observation_id is None and successful_partition_state is None:
+            try:
+                consumption = read_lakehouse_table_core(
+                    _CONSUMPTION_TABLE,
+                    target="metadata",
+                    schema=metadata_table_physical_schema(config, _CONSUMPTION_TABLE),
+                    spark_session=spark_session,
+                    context=context,
+                )
+                accepted = [
+                    row for row in observation_rows(consumption)
+                    if str(row.get("notebook_name") or "") == notebook_name
+                    and str(row.get("source_table_id") or "") == table_id
+                    and str(row.get("target_table_id") or "") == target_identity["table_id"]
+                    and str(row.get("environment_name") or "") == environment_name
+                    and row.get("_committed_at") < committed_at
+                ]
+                if accepted:
+                    accepted_observation_id = str(
+                        max(accepted, key=lambda row: row["_committed_at"])["observation_id"]
+                    )
+            except Exception as exc:
+                if not is_table_not_found_error(exc):
+                    raise
         if successful_partition_state is None:
-            previous = _previous_observation(
+            previous = [] if accepted_observation_id is None else _previous_observation(
                 history,
                 table_id=table_id,
                 environment_name=environment_name,
                 committed_at=committed_at,
-                observation_id=successful_observation_id,
+                observation_id=accepted_observation_id,
             )
         else:
             history_rows = observation_rows(history)
@@ -207,7 +237,7 @@ def _observation_stability(
             reappeared.append(row["partition_value"])
         elif any(
             prior.get(field) != row.get(field)
-            for field in ("row_count", "min_change_value", "max_change_value")
+            for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
         ):
             changed.append(row["partition_value"])
     removed = [
@@ -220,7 +250,6 @@ def _observation_stability(
     ]
 
     if removed:
-        audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
         template = current[0]
         tombstones = [
             {
@@ -229,6 +258,7 @@ def _observation_stability(
                 "row_count": 0,
                 "min_change_value": None,
                 "max_change_value": None,
+                "content_fingerprint": None,
                 "is_present": False,
                 **audit,
             }
@@ -338,6 +368,11 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
 
     Notes
     -----
+    The comparison baseline is the observation referenced by the latest
+    ``METADATA_SOURCE_CONSUMPTION`` record for the active logical notebook
+    name, source ``table_id``, and ``target_table_id``. Raw observations from
+    failed attempts or other source-to-target relationships are not baselines.
+
     New source data is compatible with append. Mutation, removal, or
     reappearance of previously processed data violates append stability;
     overwrite, SCD1, and SCD2 report that evidence as compatible because their

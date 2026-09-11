@@ -32,6 +32,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_GUARDRAIL": "governance",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_SOURCE_OBSERVATION": "engineering",
+        "METADATA_SOURCE_CONSUMPTION": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -46,6 +47,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
 
     assert metadata_table_physical_schema(Config(), "METADATA_ENRICHMENT") == "approved"
     assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
+    assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_CONSUMPTION") == "observed"
 
 
 def test_data_contract_uses_versioned_one_table_schema():
@@ -178,6 +180,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "row_count",
         "min_change_value",
         "max_change_value",
+        "content_fingerprint",
         "is_present",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
@@ -188,6 +191,20 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "partition_column",
         "change_column",
     }.isdisjoint(fields)
+
+
+def test_source_consumption_schema_is_pipeline_runtime_state():
+    """Accepted baselines are keyed by logical source-to-target ownership."""
+    fields = metadata_table_schema_registry()["METADATA_SOURCE_CONSUMPTION"].fieldNames()
+    assert fields[:7] == [
+        "source_consumption_id",
+        "notebook_name",
+        "source_table_id",
+        "target_table_id",
+        "observation_id",
+        "run_id",
+        "environment_name",
+    ]
     assert "_committed_at" in fields
 
 

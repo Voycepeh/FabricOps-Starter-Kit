@@ -30,6 +30,7 @@ from .io import (
 )
 from .pipeline import (
     check_source_stability,
+    observe_table,
     check_dq,
     check_freshness,
     check_schema,
@@ -73,6 +74,7 @@ PIPELINE_EXPORTS = (
     "check_schema",
     "check_freshness",
     "check_source_stability",
+    "observe_table",
     "check_dq",
     "check_sensitive_data",
     "profile_and_register_table",

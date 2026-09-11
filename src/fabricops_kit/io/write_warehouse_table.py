@@ -25,6 +25,7 @@ def write_warehouse_table(
     context: dict[str, Any] | None = None,
     load_strategy: str | None = None,
     load_strategy_parameters: dict[str, Any] | None = None,
+    success_context: dict[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric Warehouse table.
 
@@ -90,6 +91,10 @@ def write_warehouse_table(
         Governed strategy parameters. ``scd1`` requires ``key_columns``;
         ``scd2`` also requires ``effective_column`` and may supply
         ``tracked_columns``.
+    success_context : dict, optional
+        Post-write metadata context returned by :func:`write_pipeline_prep`.
+        Target Lineage and source-consumption baselines are committed only
+        after the physical Warehouse write succeeds.
 
     Returns
     -------
@@ -275,3 +280,7 @@ def write_warehouse_table(
             target, schema, table_name, context=context
         )
         write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
+    if success_context is not None:
+        from fabricops_kit.pipeline.shared import commit_pipeline_write_success
+
+        commit_pipeline_write_success(success_context)

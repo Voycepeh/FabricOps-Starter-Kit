@@ -296,7 +296,7 @@ def test_02_pipeline_uses_read_transform_write_without_framework_wiring():
     assert "extract_checks" not in source
     assert "target_checks" not in source
     assert "all(result" not in source
-    assert source.count("if VALIDATE_DATA_CONTRACTS") == 1
+    assert source.count("if VALIDATE_DATA_CONTRACTS") == 5
     assert 'read_lakehouse_table(\n    table_id=READ_TABLE_ID' in source
     assert 'catalogue_widget["show"](table_id=READ_TABLE_ID)' in source
 
@@ -315,7 +315,7 @@ def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
     assert "write_pipeline_prep(" in target
     assert "target_table_id=WRITE_TABLE_ID" in target
     assert "load_strategy=" not in target
-    target_config = _cell_by_id("02_pipeline.ipynb", "target-config").source
+    target_config = _cell_by_id("02_pipeline.ipynb", "target-anchor").source
     assert "WRITE_TABLE_ID =" in target_config
     assert "WRITE_STRATEGY" not in target_config
     assert "WRITE_PARAMETERS" not in target_config

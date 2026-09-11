@@ -148,6 +148,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'check_schema',
         'check_freshness',
             'check_source_stability',
+            'observe_table',
             'check_dq',
             'check_sensitive_data',
         'profile_and_register_table',
@@ -302,5 +303,6 @@ def test_persistent_checkpoint_tables_are_not_registered():
 
     registry = metadata_table_schema_registry()
     assert "METADATA_SOURCE_OBSERVATION" in CANONICAL_METADATA_TABLES
+    assert "METADATA_SOURCE_CONSUMPTION" in CANONICAL_METADATA_TABLES
     assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
     assert all("CHECKPOINT" not in table_name for table_name in registry)
