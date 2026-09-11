@@ -12,9 +12,9 @@ Check whether source timing satisfies direct or approved freshness intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_freshness.py:41`
+`fabricops_kit/pipeline/check_freshness.py:42`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L41-L178">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L42-L189">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,7 +63,7 @@ def check_freshness(
 | --- | --- | --- | --- |
 | `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
 | `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, it must match the identity carried by the observation. |
-| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
+| `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking freshness result cannot continue. |
 
 ## Returns
@@ -82,8 +82,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Production resolves freshness and observation-column expectations from the
-active frozen Data Contract. Development uses mutable authoring metadata.
+Production resolves expectations from the active Data Contract. Development
+uses an explicitly selected immutable version, or safely skips when none is
+selected.
 
 </div>
 

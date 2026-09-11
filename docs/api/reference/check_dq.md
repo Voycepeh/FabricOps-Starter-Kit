@@ -12,9 +12,9 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_dq.py:7`
+`fabricops_kit/pipeline/check_dq.py:11`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L7-L97">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L11-L110">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ True
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
 | `run_id` | `str` | No | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
-| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
+| `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking DQ result cannot continue. |
 
 ## Returns
@@ -89,9 +89,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Production resolves the physical table through the Catalogue and evaluates
-frozen DQ rules from its active Data Contract. Development evaluates current
-active approved authoring rules in ``METADATA_GUARDRAIL``.
+Production evaluates frozen DQ rules from the active Data Contract.
+Development uses an explicitly selected immutable version, or safely skips
+when no contract is selected.
 Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
 Failed values are returned to the caller and are never persisted automatically.
 Block failures prevent continuation while Warn failures do not.

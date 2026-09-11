@@ -1,7 +1,11 @@
 """Public governed data-quality runtime check."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.pipeline.shared import check_dq_runtime, resolve_catalogue_table_identity
+from fabricops_kit.pipeline.shared import (
+    check_dq_runtime,
+    resolve_catalogue_table_identity,
+    resolve_pipeline_data_contract,
+)
 
 
 def check_dq(
@@ -32,8 +36,8 @@ def check_dq(
         row UUID/ID is preferred and a deterministic content hash is the
         fallback.
     enabled : bool, default=True
-        Whether Data Contract validation is enabled for this notebook run.
-        ``False`` returns a continuation-safe skipped result without metadata IO.
+        Explicitly disable this check when ``False``. Normally omit this value;
+        FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking DQ result cannot continue.
 
@@ -60,9 +64,9 @@ def check_dq(
 
     Notes
     -----
-    Production resolves the physical table through the Catalogue and evaluates
-    frozen DQ rules from its active Data Contract. Development evaluates current
-    active approved authoring rules in ``METADATA_GUARDRAIL``.
+    Production evaluates frozen DQ rules from the active Data Contract.
+    Development uses an explicitly selected immutable version, or safely skips
+    when no contract is selected.
     Every evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.
     Failed values are returned to the caller and are never persisted automatically.
     Block failures prevent continuation while Warn failures do not.
@@ -83,6 +87,15 @@ def check_dq(
         return {"status": "skipped", "can_continue": True, "checks": []}
     config, env, context = resolve_fabric_context()
     spark_session = getattr(dataframe, "sparkSession", None)
+    contract = resolve_pipeline_data_contract(
+        config, env, table_id, spark_session=spark_session, context=context,
+    )
+    if contract is None:
+        return {
+            "status": "skipped", "can_continue": True, "checks": [],
+            "reason": "No Data Contract selected; Development only.",
+            "table_id": table_id, "environment_name": env,
+        }
     identity = resolve_catalogue_table_identity(
         config, env, table_id, spark_session=spark_session, context=context,
     )

@@ -12,9 +12,9 @@ Check observed table schema against direct or approved schema intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_schema.py:20`
+`fabricops_kit/pipeline/check_schema.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L134">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L21-L144">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -62,7 +62,7 @@ True
 | --- | --- | --- | --- |
 | `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataframe` | `DataFrame` | No | Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked. |
-| `enabled` | `bool` | No | Whether Data Contract validation is enabled for this notebook run. ``False`` returns a continuation-safe skipped result without metadata IO. |
+| `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking schema result cannot continue. |
 
 ## Returns
@@ -82,8 +82,8 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Production resolves the physical table through the Catalogue and uses its
-active frozen Data Contract. Development uses mutable authoring metadata.
+Production uses the active Data Contract. Development uses an explicitly
+selected immutable version, or safely skips when no contract is selected.
 
 </div>
 

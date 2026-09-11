@@ -8,6 +8,7 @@ import json
 import pytest
 
 import fabricops_kit.widgets.widget_select_data_contract as module
+from fabricops_kit.pipeline import shared as pipeline_shared
 from fabricops_kit.widgets.widget_select_data_contract import _contract_options, _contract_review
 
 
@@ -40,7 +41,7 @@ def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
     monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: (
-        pairs or [("Source", "table-a"), ("Target", "table-b")],
+        [("Source", "table-a"), ("Target", "table-b")] if pairs is None else pairs,
         {"notebook_id": "notebook-1", "workspace_id": "workspace-1", "environment_name": env},
     ))
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame(rows))
@@ -91,10 +92,49 @@ def test_selection_isolated_and_unrelated_contracts_not_available(monkeypatch):
     assert context["data_contract_overrides"] == {}
 
 
-def test_missing_frozen_version_fails_actionably(monkeypatch):
-    """Require a frozen version for every discovered Development table."""
-    with pytest.raises(ValueError, match="Freeze a version in 01_governance"):
-        _render(monkeypatch, [_row(1, status="draft"), _row(2, table_id="table-b")])
+def test_development_deselect_clears_contract_and_restores_skip(monkeypatch):
+    """Keep the No Data Contract option and runtime enforcement state aligned."""
+    context, state = _render(monkeypatch, [_row(2), _row(1, table_id="table-b")])
+    monkeypatch.setattr(
+        pipeline_shared, "_resolve_data_contract_version",
+        lambda *_args, **_kwargs: {"contract_id": "contract-table-a", "contract_version": 2},
+    )
+
+    assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
+    state["select"]("table-a", "contract-table-a", 2)
+    assert pipeline_shared.resolve_pipeline_data_contract(
+        object(), "dev", "table-a", context=context,
+    )["contract_version"] == 2
+
+    state["deselect"]("table-a")
+    assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
+    assert state["tables"]["table-a"]["selected"] is None
+    assert state["tables"]["table-a"]["review"] is None
+    assert "table-a" not in state["resolved_contracts"]
+
+
+def test_initialization_and_deselect_clear_every_runtime_context(monkeypatch):
+    """Clear stale overrides symmetrically across explicit, active, and default contexts."""
+    explicit = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    active_context = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    default_context = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}
+    active = type("Active", (), {"context": active_context})()
+    monkeypatch.setattr(module, "pipeline_active_context", lambda: active)
+    monkeypatch.setattr(module, "get_default_fabric_context", lambda: default_context)
+
+    module._clear_overrides(explicit)
+    assert explicit["data_contract_overrides"] == {}
+    assert active_context["data_contract_overrides"] == {}
+    assert default_context["data_contract_overrides"] == {}
+
+
+def test_missing_frozen_version_runs_unvalidated_in_development(monkeypatch):
+    """Allow Development lineage tables to remain without a selected contract."""
+    context, state = _render(monkeypatch, [_row(1, status="draft"), _row(2, table_id="table-b")])
+    assert state["tables"]["table-a"]["versions"] == []
+    assert state["resolved_contracts"] == {}
+    assert context["data_contract_overrides"] == {}
+    assert "running unvalidated" in state["message"]
 
 
 def test_production_resolves_each_active_contract_and_ignores_overrides(monkeypatch):
@@ -127,3 +167,27 @@ def test_selector_no_longer_accepts_manual_table_id():
     assert "table_id" not in parameters
     assert set(parameters) == {"spark_session", "context"}
     assert "Current authoring" not in inspect.getsource(module.widget_select_data_contract)
+
+
+def test_development_with_no_lineage_initializes_empty_context(monkeypatch):
+    """Allow the first Development baseline run before Lineage exists."""
+    context, state = _render(monkeypatch, [], pairs=[])
+    assert state["lineage_tables"] == []
+    assert state["resolved_contracts"] == {}
+    assert context["data_contract_overrides"] == {}
+
+
+def test_production_multiple_active_contracts_fail_with_context(monkeypatch):
+    """Keep multiple-active integrity failures closed in Production."""
+    monkeypatch.setattr(
+        module, "resolve_active_data_contract",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("multiple active versions")),
+    )
+    context = {"config": object(), "env": "prod", "notebook_id": "02-pipeline", "data_contract_overrides": {}}
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], "prod", context_obj))
+    context_obj = context
+    monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: ([('Target', 'table-a')], {"notebook_name": "02_pipeline"}))
+    with pytest.raises(RuntimeError, match="multiple active"):
+        module.widget_select_data_contract(context=context)

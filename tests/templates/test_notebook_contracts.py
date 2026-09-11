@@ -261,7 +261,8 @@ def test_02_pipeline_renders_notebook_scoped_controls_once():
 
     assert source.count("widget_view_catalogue(") == 1
     assert source.count("widget_select_data_contract(") == 1
-    assert "VALIDATE_DATA_CONTRACTS = False" in controls
+    assert "CONTRACTS = widget_select_data_contract()" in controls
+    assert "VALIDATE_DATA_CONTRACTS" not in source
     assert 'widget_view_catalogue(mode="explore"' in controls
     assert 'catalogue_widget["get_selection"]()' not in source
     assert "notebook name" in source
@@ -296,7 +297,8 @@ def test_02_pipeline_uses_read_transform_write_without_framework_wiring():
     assert "extract_checks" not in source
     assert "target_checks" not in source
     assert "all(result" not in source
-    assert source.count("if VALIDATE_DATA_CONTRACTS") == 5
+    assert source.count('if CONTRACTS["resolved_contracts"].get(READ_TABLE_ID)') == 3
+    assert "enabled=" not in source
     assert 'read_lakehouse_table(\n    table_id=READ_TABLE_ID' in source
     assert 'catalogue_widget["show"](table_id=READ_TABLE_ID)' in source
 

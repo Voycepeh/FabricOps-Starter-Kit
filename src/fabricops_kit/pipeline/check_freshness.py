@@ -7,6 +7,7 @@ from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     resolve_source_stability_observation_columns,
     resolve_catalogue_table_identity,
+    resolve_pipeline_data_contract,
     select_table_guardrail_rule,
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
@@ -55,8 +56,8 @@ def check_freshness(
         Canonical registered table identity. When supplied, it must match the
         identity carried by the observation.
     enabled : bool, default=True
-        Whether Data Contract validation is enabled for this notebook run.
-        ``False`` returns a continuation-safe skipped result without metadata IO.
+        Explicitly disable this check when ``False``. Normally omit this value;
+        FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking freshness result cannot continue.
     
@@ -76,8 +77,9 @@ def check_freshness(
 
     Notes
     -----
-    Production resolves freshness and observation-column expectations from the
-    active frozen Data Contract. Development uses mutable authoring metadata.
+    Production resolves expectations from the active Data Contract. Development
+    uses an explicitly selected immutable version, or safely skips when none is
+    selected.
     
     Examples
     --------
@@ -115,6 +117,15 @@ def check_freshness(
         raise ValueError(
             f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."
         )
+    contract = resolve_pipeline_data_contract(
+        config, env, requested_table_id, spark_session=spark_session, context=context,
+    )
+    if contract is None:
+        return {
+            "status": "skipped", "can_continue": True, "checks": [],
+            "reason": "No Data Contract selected; Development only.",
+            "table_id": requested_table_id, "environment_name": env,
+        }
     identity = resolve_catalogue_table_identity(
         config, env, requested_table_id, spark_session=spark_session, context=context,
     )
