@@ -20,19 +20,20 @@ const Brand = () => (
 export const FabricOpsReveal = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const {timing} = VIDEO_CONFIG;
 
   const brand = spring({frame, fps, config: {damping: 18, stiffness: 72}});
-  const whyEnter = spring({frame: frame - 36, fps, config: {damping: 18, stiffness: 88}});
-  const whyExit = interpolate(frame, [112, 158], [0, 1], {
+  const whyEnter = spring({frame: frame - timing.fabricOpsWhyAt, fps, config: {damping: 18, stiffness: 88}});
+  const whyExit = interpolate(frame, [timing.fabricOpsWhyExitAt - 20, timing.fabricOpsWhyExitAt], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const howEnter = spring({frame: frame - 166, fps, config: {damping: 18, stiffness: 88}});
-  const worksEnter = spring({frame: frame - 192, fps, config: {damping: 14, stiffness: 105}});
+  const howEnter = spring({frame: frame - timing.fabricOpsHowAt, fps, config: {damping: 18, stiffness: 88}});
+  const worksEnter = spring({frame: frame - timing.fabricOpsWorksAt, fps, config: {damping: 14, stiffness: 105}});
   const exit = interpolate(
     frame,
-    [VIDEO_CONFIG.scenes.fabricOps - 35, VIDEO_CONFIG.scenes.fabricOps],
+    [VIDEO_CONFIG.scenes.fabricOps - timing.sceneExit, VIDEO_CONFIG.scenes.fabricOps],
     [1, 0],
     {
       extrapolateLeft: 'clamp',
