@@ -1308,6 +1308,40 @@ def _resolve_data_contract_version(
     return row
 
 
+def resolve_pipeline_data_contract(
+    config,
+    env: str,
+    table_id: str,
+    *,
+    spark_session=None,
+    context: Mapping[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """Resolve the pipeline-selected contract, or no contract in Development."""
+    if env == "prod":
+        return resolve_active_data_contract(
+            config, env, table_id, spark_session=spark_session, required=True,
+        )
+    runtime_context = context or {}
+    overrides = runtime_context.get("data_contract_overrides") or {}
+    if not isinstance(overrides, Mapping):
+        raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
+    selected = overrides.get(table_id) or {}
+    if not isinstance(selected, Mapping):
+        raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
+    contract_id = str(selected.get("contract_id") or "").strip()
+    version = selected.get("contract_version")
+    if bool(contract_id) != bool(str(version or "").strip()):
+        raise ValueError(
+            f"Development Data Contract override for table_id {table_id!r} requires both contract_id and contract_version."
+        )
+    if not contract_id:
+        return None
+    return _resolve_data_contract_version(
+        config, env, table_id, contract_id, version,
+        spark_session=spark_session, context=context,
+    )
+
+
 def resolve_catalogue_table_id(
     config,
     env: str,
@@ -1737,49 +1771,14 @@ def load_table_guardrail_rules(
     table_id: str = "",
     context: Mapping[str, Any] | None = None,
 ):
-    """Resolve the environment's single Guardrail rule source."""
-    if env == "prod":
-        if not table_id:
-            raise ValueError("Production Guardrail resolution requires a canonical Catalogue table_id.")
-        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
-        rows = contract_guardrail_rows(
-            contract,
-            environment_name=env,
-            table_id=table_id,
-        )
-        return spark_session.createDataFrame(rows) if rows else []
-    runtime_context = context or {}
-    overrides = runtime_context.get("data_contract_overrides") or {}
-    if not isinstance(overrides, Mapping):
-        raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
-    selected_override = overrides.get(table_id) or {}
-    if not isinstance(selected_override, Mapping):
-        raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
-    contract_id = str(selected_override.get("contract_id") or "").strip()
-    raw_version = selected_override.get("contract_version")
-    contract_version = str(raw_version or "").strip()
-    if bool(contract_id) != bool(contract_version):
-        raise ValueError(
-            "Development Data Contract override requires both contract_id and contract_version."
-        )
-    if contract_id:
-        if not table_id:
-            raise ValueError("Development Data Contract override requires a canonical Catalogue table_id.")
-        contract = _resolve_data_contract_version(
-            config, env, table_id, contract_id, contract_version,
-            spark_session=spark_session, context=context,
-        )
-        rows = contract_guardrail_rows(
-            contract,
-            environment_name=env,
-            table_id=table_id,
-        )
-        return spark_session.createDataFrame(rows) if rows else []
+    """Resolve Guardrails from the pipeline-selected Data Contract."""
     if not table_id:
         raise ValueError("Guardrail resolution requires a canonical Catalogue table_id.")
-    contract = resolve_active_data_contract(
-        config, env, table_id, spark_session=spark_session, required=True
+    contract = resolve_pipeline_data_contract(
+        config, env, table_id, spark_session=spark_session, context=context,
     )
+    if contract is None:
+        return []
     rows = contract_guardrail_rows(contract, environment_name=env, table_id=table_id)
     return spark_session.createDataFrame(rows) if rows else []
 

@@ -10,6 +10,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
+    resolve_pipeline_data_contract,
     resolve_catalogue_table_identity,
     schema_check_core,
     select_table_guardrail_rule,
@@ -34,8 +35,8 @@ def check_schema(
         Incoming DataFrame whose schema should be checked. When omitted, the
         schema of the configured physical table is checked.
     enabled : bool, default=True
-        Whether Data Contract validation is enabled for this notebook run.
-        ``False`` returns a continuation-safe skipped result without metadata IO.
+        Explicitly disable this check when ``False``. Normally omit this value;
+        FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking schema result cannot continue.
 
@@ -57,8 +58,8 @@ def check_schema(
 
     Notes
     -----
-    Production resolves the physical table through the Catalogue and uses its
-    active frozen Data Contract. Development uses mutable authoring metadata.
+    Production uses the active Data Contract. Development uses an explicitly
+    selected immutable version, or safely skips when no contract is selected.
 
     Examples
     --------
@@ -71,6 +72,15 @@ def check_schema(
         return {"status": "skipped", "can_continue": True, "checks": []}
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
+    contract = resolve_pipeline_data_contract(
+        config, env, table_id, spark_session=spark, context=context,
+    )
+    if contract is None:
+        return {
+            "status": "skipped", "can_continue": True, "checks": [],
+            "reason": "No Data Contract selected; Development only.",
+            "table_id": table_id, "environment_name": env,
+        }
     identity = resolve_catalogue_table_identity(
         config, env, table_id, spark_session=spark, context=context,
     )

@@ -6,7 +6,11 @@ import html
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import get_default_fabric_context, resolve_fabric_context
+from fabricops_kit.config.shared import (
+    get_default_fabric_context,
+    is_table_not_found_error,
+    resolve_fabric_context,
+)
 from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
 from fabricops_kit.pipeline.shared import resolve_active_data_contract
 from fabricops_kit.widgets.shared import (
@@ -52,6 +56,7 @@ def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "contract_version": int(row["contract_version"]),
         "status": str(row.get("status") or ""),
+        "contract_date": row.get("_committed_at"),
         "table": {key: table.get(key) for key in ("table_id", "schema_name", "table_name")},
         "schema_columns": len(table.get("columns") or []),
         "guardrails": counts,
@@ -101,16 +106,17 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     Raises
     ------
     ValueError
-        If notebook identity or Lineage is missing, a table has no eligible
-        immutable version, or a requested version is unavailable.
+        If notebook identity is missing, a requested version is unavailable,
+        or Production has no active contract for a Lineage-linked table.
     RuntimeError
         If Production has multiple active versions for a lineage-linked table.
 
     Notes
     -----
-    Development independently selects a frozen, active, or superseded immutable
-    version for each Lineage-linked ``table_id`` and stores it in
+    Development may independently select a frozen, active, or superseded
+    immutable version for each Lineage-linked ``table_id`` and stores it in
     ``data_contract_overrides``. Draft and rejected versions are excluded.
+    An unselected Development table runs without contract-backed enforcement.
     Production ignores overrides, exposes no picker, and resolves exactly one
     active version per linked table. This widget never activates metadata.
 
@@ -131,18 +137,19 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     pairs, notebook_scope = resolve_notebook_lineage_tables(
         environment_name=env, target="metadata", schema=lineage_schema,
         spark_session=spark, context=runtime_context, runtime_context=runtime_context,
+        required=env == "prod",
     )
     table_ids = list(dict.fromkeys(table_id for _role, table_id in pairs))
     selection_context = context if isinstance(context, dict) else (resolved or runtime_context)
     state: dict[str, Any] = {
         "notebook": notebook_scope,
         "lineage_tables": [{"pipeline_role": role, "table_id": table_id} for role, table_id in pairs],
-        "tables": {}, "resolved_contracts": {}, "message": "", "_controls": {},
+        "environment": env, "tables": {}, "resolved_contracts": {}, "message": "", "_controls": {},
     }
 
+    # Initialization always starts Development unselected and Production ignores overrides.
+    selection_context["data_contract_overrides"] = {}
     if env == "prod":
-        # Production deliberately ignores any Development overrides.
-        selection_context["data_contract_overrides"] = {}
         for table_id in table_ids:
             try:
                 contract = resolve_active_data_contract(
@@ -150,7 +157,13 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                 )
             except ValueError as exc:
                 raise ValueError(
-                    f"Production requires exactly one active Data Contract for lineage-linked table_id {table_id!r}."
+                    f"Production environment {env!r} requires exactly one active Data Contract for "
+                    f"lineage-linked table {table_id!r} (table_id={table_id!r})."
+                ) from exc
+            except RuntimeError as exc:
+                raise RuntimeError(
+                    f"Production environment {env!r} cannot resolve Data Contract for lineage-linked "
+                    f"table {table_id!r} (table_id={table_id!r}): {exc}"
                 ) from exc
             state["tables"][table_id] = {"versions": [], "selected": contract, "review": _contract_review(contract)}
             state["resolved_contracts"][table_id] = {
@@ -159,19 +172,22 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             }
         state["message"] = f"Resolved {len(table_ids)} active Production Data Contract(s)."
     else:
-        contracts = [_row_dict(row) for row in read_lakehouse_table_core(
-            CONTRACT_TABLE, target="metadata",
-            schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
-            spark_session=spark, context=runtime_context,
-        ).collect()]
+        try:
+            contracts = [_row_dict(row) for row in read_lakehouse_table_core(
+                CONTRACT_TABLE, target="metadata",
+                schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
+                spark_session=spark, context=runtime_context,
+            ).collect()]
+        except Exception as exc:
+            if not is_table_not_found_error(exc):
+                raise
+            contracts = []
         for table_id in table_ids:
             versions = _contract_options(contracts, table_id)
-            if not versions:
-                raise ValueError(
-                    f"No frozen Data Contract version is available for lineage-linked table_id {table_id!r}. "
-                    "Freeze a version in 01_governance before Development validation."
-                )
             state["tables"][table_id] = {"versions": versions, "selected": None, "review": None}
+        state["message"] = (
+            "Development only · running unvalidated until immutable Data Contract versions are explicitly selected."
+        )
 
     def select(table_id: str, contract_id: str, contract_version: int) -> dict[str, Any]:
         if env == "prod":
@@ -206,8 +222,12 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     if env == "prod":
         for role, table_id in pairs:
             resolved_contract = state["resolved_contracts"][table_id]
+            review = state["tables"][table_id]["review"]
+            table_name = review["table"].get("table_name") or table_id
             sections.append(widgets.HTML(value=html.escape(
-                f"{role}: {table_id} → Data Contract v{resolved_contract['contract_version']}"
+                f"{'Read' if role.lower() == 'source' else 'Write'}  {table_name} · table_id {table_id} · "
+                f"Data Contract v{resolved_contract['contract_version']} · Active · "
+                f"{review['contract_date'] or 'date unavailable'}"
             )))
         page = form_page(
             widgets, title="Production Data Contracts",
@@ -222,7 +242,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                 continue
             versions = state["tables"][table_id]["versions"]
             control = widgets.Dropdown(
-                options=[("Select a frozen version", ""), *[
+                options=[("No Data Contract · Development only", ""), *[
                     (f"Data Contract v{row['contract_version']} · {row.get('status')}",
                      f"{row['contract_id']}\n{row['contract_version']}") for row in versions
                 ]], **widget_common(widgets, f"{role} · {table_id}"),
@@ -237,7 +257,9 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                     select(current_table, contract_id, int(version))
                     review = state["tables"][current_table]["review"]
                     current_preview.value = (
-                        f"<b>v{review['contract_version']}</b> · {review['schema_columns']} columns · "
+                        f"<b>v{review['contract_version']}</b> · {html.escape(review['status'].title())} · "
+                        f"{html.escape(str(review['contract_date'] or 'date unavailable'))} · "
+                        f"{review['schema_columns']} columns · "
                         f"{html.escape(str(review['processing'] or 'Missing processing'))}"
                     )
                     status.value = ""
@@ -246,10 +268,18 @@ def widget_select_data_contract(*, spark_session=None, context=None):
 
             control.observe(render, names="value")
             controls[table_id] = control
-            sections.extend([control, preview])
+            role_label = "Read" if role.lower() == "source" else "Write"
+            table_name = table_id
+            if versions:
+                table_name = str(parse_data_contract_payload(versions[0])["table"].get("table_name") or table_id)
+            sections.extend([
+                widgets.HTML(value=html.escape(f"{role_label}  {table_name} · table_id {table_id}")),
+                control, preview,
+            ])
         page = form_page(
             widgets, title="Development Data Contracts",
-            description="Choose one immutable version independently for every current-notebook Lineage table.",
+            description=(f"Environment: {env} · Notebook: {notebook_scope.get('notebook_name') or notebook_scope.get('notebook_id')} · "
+                         "Unselected tables run unvalidated in Development only."),
             children=[form_section(widgets, title="Lineage-linked tables", children=sections), status],
         )
         state["_controls"] = {"selections": controls, "status": status, "page": page}

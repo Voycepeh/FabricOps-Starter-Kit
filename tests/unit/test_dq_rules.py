@@ -22,6 +22,7 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
     context = {"data_contract_overrides": {"orders": {"contract_id": "contract-a", "contract_version": 2}}}
     captured = {}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", context))
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract-a"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "orders", "store_type": "lakehouse", "target": "source", "schema": "sales", "table_name": "orders",
     })
@@ -40,6 +41,7 @@ def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
         "status": "skipped", "can_continue": True, "checks": [],
     }
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract-a"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
         "table_id": "orders", "store_type": "lakehouse", "target": "source",
         "schema": "sales", "table_name": "orders",
@@ -47,6 +49,21 @@ def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
     monkeypatch.setattr(module, "check_dq_runtime", lambda *_args, **_kwargs: {"can_continue": False})
     with pytest.raises(RuntimeError, match="blocking DQ Guardrail"):
         module.check_dq(object(), table_id="orders", raise_on_failure=True)
+
+
+def test_check_dq_skips_when_development_has_no_selected_contract(monkeypatch):
+    """Return a continuation-safe result without running contract-backed DQ."""
+    module = importlib.import_module("fabricops_kit.pipeline.check_dq")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        module, "check_dq_runtime",
+        lambda *args, **kwargs: pytest.fail("DQ must not run without a selected Development contract"),
+    )
+    result = module.check_dq(object(), table_id="orders", raise_on_failure=True)
+    assert result["status"] == "skipped"
+    assert result["can_continue"] is True
+    assert result["environment_name"] == "dev"
 
 
 def _rule(rule_type: str, **kwargs):

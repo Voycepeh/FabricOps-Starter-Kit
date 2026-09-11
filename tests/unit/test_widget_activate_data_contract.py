@@ -278,8 +278,8 @@ class _Spark:
         return _Frame(rows)
 
 
-def test_development_uses_active_contract_guardrails(monkeypatch):
-    """Resolve Development Guardrails through the active Data Contract by default."""
+def test_development_without_selection_has_no_contract_guardrails(monkeypatch):
+    """Do not select an active Data Contract implicitly in Development."""
     frozen = _contract(1, status="active", active=True, rule="contract-rule")
     monkeypatch.setattr(
         pipeline_shared, "read_lakehouse_table_core", lambda name, **kwargs: _Frame([frozen]),
@@ -287,7 +287,7 @@ def test_development_uses_active_contract_guardrails(monkeypatch):
     resolved = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
     )
-    assert resolved.collect()[0]["guardrail_rule_id"] == "contract-rule"
+    assert resolved == []
 
 
 def test_production_resolves_physical_table_through_catalogue_to_active_contract(monkeypatch):
@@ -413,7 +413,7 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     dev_default = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders", context={},
     )
-    assert dev_default.collect()[0]["guardrail_rule_id"] == "rule-a"
+    assert dev_default == []
     dev_selected = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
         context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
@@ -421,11 +421,10 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     assert dev_selected[0]["guardrail_rule_id"] == "rule-a"
 
     # The table-keyed selection must not leak into another table workflow.
-    with pytest.raises(ValueError, match="No active Data Contract"):
-        pipeline_shared.load_table_guardrail_rules(
-            {}, "dev", spark_session=_Spark(), table_id="customers",
-            context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
-        )
+    assert pipeline_shared.load_table_guardrail_rules(
+        {}, "dev", spark_session=_Spark(), table_id="customers",
+        context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 1}}},
+    ) == []
 
     authoring._rows[0]["guardrail_rule_id"] = "rule-c"
     assert pipeline_shared.load_table_guardrail_rules(

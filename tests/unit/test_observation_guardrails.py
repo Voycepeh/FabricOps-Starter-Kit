@@ -167,6 +167,7 @@ def configure_stability(
 
 def configure_freshness(monkeypatch, rules=None):
     configured_rules = rules or [freshness_rule(), stability_rule()]
+    monkeypatch.setattr(freshness, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(freshness, "get_spark_session", lambda: Spark())
     monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: configured_rules)
@@ -445,6 +446,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "dev", {"active": True}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: store)
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
     })
@@ -490,6 +492,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "prod", {}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: store)
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(schema_module, "resolve_warehouse_table_location", lambda *args: ("sales", "orders", "path"))
     monkeypatch.setattr(
         schema_module,
@@ -536,6 +539,7 @@ def test_schema_can_raise_on_blocking_result(monkeypatch):
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (object(), "prod", {}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "product", "schema": "dbo", "table_name": "orders",

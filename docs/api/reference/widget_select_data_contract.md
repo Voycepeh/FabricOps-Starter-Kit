@@ -12,9 +12,9 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:84`
+`fabricops_kit/widgets/widget_select_data_contract.py:89`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L84-L258">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L89-L288">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,8 +70,8 @@ Development selections are stored independently under each discovered table_id i
 ## Raises / Errors
 
 ValueError
-    If notebook identity or Lineage is missing, a table has no eligible
-    immutable version, or a requested version is unavailable.
+    If notebook identity is missing, a requested version is unavailable,
+    or Production has no active contract for a Lineage-linked table.
 RuntimeError
     If Production has multiple active versions for a lineage-linked table.
 
@@ -86,9 +86,10 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Development independently selects a frozen, active, or superseded immutable
-version for each Lineage-linked ``table_id`` and stores it in
+Development may independently select a frozen, active, or superseded
+immutable version for each Lineage-linked ``table_id`` and stores it in
 ``data_contract_overrides``. Draft and rejected versions are excluded.
+An unselected Development table runs without contract-backed enforcement.
 Production ignores overrides, exposes no picker, and resolves exactly one
 active version per linked table. This widget never activates metadata.
 

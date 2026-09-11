@@ -41,7 +41,7 @@ DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 def resolve_notebook_lineage_tables(
     *, environment_name: str, target: str, schema: str | None,
-    spark_session: Any, context: Any, runtime_context: dict[str, Any],
+    spark_session: Any, context: Any, runtime_context: dict[str, Any], required: bool = True,
 ) -> tuple[list[tuple[str, str]], dict[str, Any]]:
     """Resolve current-notebook pipeline roles and table IDs from Data Lineage."""
     runtime = config_shared.resolve_runtime_context(context=context)
@@ -54,10 +54,18 @@ def resolve_notebook_lineage_tables(
         )
     from pyspark.sql import functions as F
 
-    lineage = read_lakehouse_table_core(
-        "METADATA_DATA_LINEAGE", target=target, schema=schema,
-        spark_session=spark_session, context=runtime_context,
-    )
+    try:
+        lineage = read_lakehouse_table_core(
+            "METADATA_DATA_LINEAGE", target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+    except Exception as exc:
+        if required or not is_table_not_found_error(exc):
+            raise
+        return [], {
+            "notebook_id": notebook_id, "notebook_name": notebook_name,
+            "workspace_id": workspace_id or None, "environment_name": environment_name,
+        }
     predicate = (
         (F.col("_notebook_id") == notebook_id)
         & (F.col("environment_name") == environment_name)
@@ -69,7 +77,7 @@ def resolve_notebook_lineage_tables(
         for row in lineage.filter(predicate).select("pipeline_role", "table_id").distinct().collect()
         if row["table_id"] and row["pipeline_role"]
     })
-    if not pairs:
+    if not pairs and required:
         scope = f" in workspace {workspace_id!r}" if workspace_id else ""
         raise ValueError(
             f"No METADATA_DATA_LINEAGE tables are registered for notebook_id {notebook_id!r}{scope} "
