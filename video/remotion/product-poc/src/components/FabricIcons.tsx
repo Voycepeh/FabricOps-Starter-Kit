@@ -96,12 +96,12 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
         height: sizes.openingArtifactHeight,
         boxSizing: 'border-box',
         borderRadius: 30,
-        padding: '12px 14px 14px',
+        padding: '14px 14px 12px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: 6,
         background: 'linear-gradient(180deg, #102746f2 0%, #0c1d35f2 100%)',
         border: '1px solid #3a8ee866',
         boxShadow: '0 18px 38px #0008, inset 0 1px #ffffff12, 0 0 28px #1479cf16',
@@ -110,18 +110,27 @@ export const Artifact = ({icon: Icon, label}: {icon: FabricIconComponent; label:
     >
       <div
         style={{
-          width: '100%',
+          width: sizes.openingArtifactIcon,
           height: sizes.openingArtifactIcon,
           flex: '0 0 auto',
-          display: 'grid',
-          placeItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'visible',
         }}
       >
         <Icon
-          width={sizes.openingArtifactIcon}
-          height={sizes.openingArtifactIcon}
           aria-hidden="true"
-          style={{display: 'block', maxWidth: '100%', maxHeight: '100%'}}
+          style={{
+            display: 'block',
+            width: `${sizes.openingArtifactIcon}px`,
+            height: `${sizes.openingArtifactIcon}px`,
+            minWidth: `${sizes.openingArtifactIcon}px`,
+            minHeight: `${sizes.openingArtifactIcon}px`,
+            maxWidth: 'none',
+            maxHeight: 'none',
+            flex: '0 0 auto',
+          }}
         />
       </div>
       <div
