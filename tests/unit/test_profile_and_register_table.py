@@ -316,6 +316,27 @@ def test_profile_and_register_table_consumes_governed_target_processing(
     assert "_fabricops_active_profile_registration" not in context
 
 
+def test_profile_and_register_table_rejects_dataframe_from_unrelated_later_prep(
+    spark_session, monkeypatch, registered
+):
+    """A later prep cannot silently register a tagged DataFrame as the wrong table."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    active_identity = {
+        "table_id": build_table_id("lakehouse", "raw", None, "products"),
+        "target": "raw", "schema": None, "table_name": "products", "store_kind": "lakehouse",
+    }
+    context = {
+        "config": object(), "env": "dev",
+        "_fabricops_active_profile_registration": {"profile_role": "source", "table": active_identity},
+    }
+    dataframe = _source_df(spark_session)
+    dataframe._fabricops_table_id = build_table_id("lakehouse", "raw", None, "orders")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (context["config"], "dev", context))
+
+    with pytest.raises(ValueError, match="DataFrame was read from table_id.*matching prep"):
+        profile_and_register_table(dataframe)
+
+
 def test_resolved_identity_uses_active_environment_and_configured_lakehouse(monkeypatch):
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     store = FabricStore("dev", "workspace", "item", "Unified", "lakehouse", True, "dbo")

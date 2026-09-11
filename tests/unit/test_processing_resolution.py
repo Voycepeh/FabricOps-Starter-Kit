@@ -49,7 +49,13 @@ def test_development_uses_current_notebook_authoring_without_catalogue(monkeypat
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students", authored_processing={"load_strategy": "overwrite"}
     )
-    assert resolved == {"load_strategy": "overwrite", "source": "current_authoring"}
+    assert resolved == {
+        "load_strategy": "overwrite",
+        "source": "current_authoring",
+        "processing_mode": "development_authoring",
+        "authored_processing": {"load_strategy": "overwrite"},
+        "governed_processing": None,
+    }
 
 
 def test_development_override_uses_frozen_contract(monkeypatch):
@@ -57,11 +63,30 @@ def test_development_override_uses_frozen_contract(monkeypatch):
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students",
         context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
-        authored_processing={"load_strategy": "append"},
+        authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
     )
     assert resolved["load_strategy"] == "scd1"
     assert resolved["source"] == "data_contract"
     assert resolved["contract_version"] == 3
+    assert resolved["processing_mode"] == "development_validation"
+    assert resolved["authored_processing"] == resolved["governed_processing"]
+
+
+@pytest.mark.parametrize(
+    "authored",
+    [
+        {"load_strategy": "overwrite"},
+        {"load_strategy": "scd1", "key_columns": ["other_id"]},
+    ],
+)
+def test_development_override_rejects_engineering_processing_drift(monkeypatch, authored):
+    monkeypatch.setattr(shared, "_resolve_data_contract_version", lambda *args, **kwargs: contract())
+    with pytest.raises(ValueError, match="Processing mismatch detected.*Engineering proposes"):
+        shared.resolve_table_processing_definition(
+            object(), "dev", "students",
+            context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
+            authored_processing=authored,
+        )
 
 
 def test_development_current_authoring_requires_notebook_definition():
@@ -72,9 +97,13 @@ def test_development_current_authoring_requires_notebook_definition():
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    resolved = shared.resolve_table_processing_definition(object(), "prod", "students")
+    resolved = shared.resolve_table_processing_definition(
+        object(), "prod", "students",
+        authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
+    )
     assert resolved["load_strategy"] == "scd1"
     assert resolved["owner_notebook_id"] == "notebook-1"
+    assert resolved["processing_mode"] == "production_enforcement"
 
 
 def test_production_missing_active_contract_fails(monkeypatch):
@@ -82,7 +111,9 @@ def test_production_missing_active_contract_fails(monkeypatch):
         raise ValueError("No active Data Contract")
     monkeypatch.setattr(shared, "resolve_active_data_contract", fail)
     with pytest.raises(ValueError, match="No active"):
-        shared.resolve_table_processing_definition(object(), "prod", "students")
+        shared.resolve_table_processing_definition(
+            object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}
+        )
 
 
 @pytest.mark.parametrize("processing", [None, {}, {"load_strategy": "merge"}, {"load_strategy": "scd2", "key_columns": ["id"]}])
@@ -91,7 +122,9 @@ def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, 
     frozen["contract_payload"]["table"]["processing"] = processing
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: frozen)
     with pytest.raises(ValueError):
-        shared.resolve_table_processing_definition(object(), "prod", "students")
+        shared.resolve_table_processing_definition(
+            object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}
+        )
 
 
 def test_scd2_default_tracking_excludes_ingestion_and_audit_columns():

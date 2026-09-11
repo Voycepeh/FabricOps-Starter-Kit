@@ -23,12 +23,31 @@ def _rule(*, treatment="tokenize", action="Block", column_name="email", version=
 
 def _runtime(monkeypatch, rules, writes):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *_a, **_k: {"contract_id": "contract"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_a, **_k: {
         "table_id": "table-id", "table_name": "customers", "store_type": "lakehouse",
         "target": "unified", "schema": "dbo",
     })
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *_a, **_k: rules)
     monkeypatch.setattr(module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs["result"]))
+
+
+def test_development_without_selected_contract_skips_without_catalogue(monkeypatch, spark_session):
+    """Authoring mode preserves the input without requiring governed metadata."""
+    frame = spark_session.createDataFrame([(1, "raw")], ["id", "email"])
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        module,
+        "resolve_catalogue_table_identity",
+        lambda *_a, **_k: pytest.fail("authoring mode must not require Catalogue registration"),
+    )
+
+    result = module.check_sensitive_data(frame, table_id="table-id")
+
+    assert result["status"] == "skipped"
+    assert result["dataframe"] is frame
+    assert result["can_continue"] is True
 
 def test_tokenize_is_opaque_null_preserving_and_caller_owned(monkeypatch, spark_session):
     """Tokenization replaces raw values and only returns its one-to-one mapping."""

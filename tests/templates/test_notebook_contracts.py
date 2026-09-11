@@ -273,7 +273,7 @@ def test_02_pipeline_omits_obsolete_and_safe_default_plumbing():
     for removed in (
         "PIPELINE_SHOULD_RUN", "source_read_strategy=", "source_watermark_column=",
         "progress_target", "processing_scope=read_prep", "enabled=", "spark_session=",
-        "profile_role=", "table=read_prep", "WRITE_LOAD_STRATEGY",
+        "profile_role=", "table=read_prep",
     ):
         assert removed not in source
     assert source.count("read_lakehouse_table(table_id=READ_TABLE_ID)") == 2
@@ -290,14 +290,20 @@ def test_02_pipeline_transform_is_explicit_project_pyspark():
 
 def test_02_pipeline_write_is_one_complete_copyable_block():
     """Write identity, preparation, checks, publication, and registration stay together."""
+    config = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
     block = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    for setting in ("WRITE", "WRITE_TABLE_ID"):
-        assert f"{setting} =" in block
-    assert "target_table_id=WRITE_TABLE_ID" in block
-    assert "WRITE_LOAD_STRATEGY" not in block
+    for setting in (
+        "WRITE_TARGET", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY",
+        "WRITE_LOAD_STRATEGY_PARAMETERS",
+    ):
+        assert f"{setting} =" in config
+    assert "resolve_table_id(" in config
+    assert "load_strategy=WRITE_LOAD_STRATEGY" in block
+    assert "load_strategy_parameters=WRITE_LOAD_STRATEGY_PARAMETERS" in block
     stages = [
-        "write_pipeline_prep(", "check_schema(", "check_dq(", "write_lakehouse_table(",
-        "read_lakehouse_table(table_id=WRITE_TABLE_ID)", "profile_and_register_table(published_df)",
+        "write_pipeline_prep(", "check_schema(", "check_dq(", "check_sensitive_data(",
+        'if not sensitive_result["can_continue"]', 'sensitive_result["dataframe"]', "write_lakehouse_table(",
+        "published_df = read_lakehouse_table(", "profile_and_register_table(published_df)",
         'catalogue_widget["show"](table_id=WRITE_TABLE_ID)',
     ]
     assert all(stage in block for stage in stages)

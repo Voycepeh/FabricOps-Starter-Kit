@@ -740,6 +740,13 @@ def profile_and_register_table(
         raise ValueError(
             "Run read_pipeline_prep or write_pipeline_prep first, or provide profile_role and table identity."
         )
+    dataframe_table_id = str(getattr(df, "_fabricops_table_id", "") or "").strip()
+    active_table_id = str((active_registration.get("table") or {}).get("table_id") or "").strip()
+    if dataframe_table_id and active_table_id and dataframe_table_id != active_table_id:
+        raise ValueError(
+            f"Active prep is for table_id {active_table_id!r}, but the DataFrame was read "
+            f"from table_id {dataframe_table_id!r}. Profile immediately after its matching prep."
+        )
     normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     if table is not None:
         if target is not None or schema is not None or table_name is not None:
