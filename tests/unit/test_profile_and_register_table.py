@@ -235,13 +235,10 @@ def test_profile_and_register_table_signature_supports_active_prep_context():
         "target",
         "table_name",
         "schema",
-        "load_strategy",
-        "load_strategy_parameters",
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
         "frequency_profile_df",
-        "complete_table",
     ]
     assert parameters["profile_role"].default is None
 
@@ -275,6 +272,48 @@ def test_profile_and_register_table_consumes_active_read_prep_context(
     result = profile_and_register_table(_source_df(spark_session), frequency_columns=[])
 
     assert {row.table_id for row in result.collect()} == {identity["table_id"]}
+    assert "_fabricops_active_profile_registration" not in context
+    with pytest.raises(ValueError, match="Run read_pipeline_prep or write_pipeline_prep first"):
+        profile_and_register_table(_source_df(spark_session), frequency_columns=[])
+
+
+def test_profile_and_register_table_consumes_governed_target_processing(
+    spark_session, monkeypatch, registered
+):
+    """Target registration receives processing metadata only from Write prep context."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    identity = {
+        "table_id": build_table_id("lakehouse", "raw", None, "customers"),
+        "target": "raw",
+        "schema": None,
+        "table_name": "customers",
+        "store_kind": "lakehouse",
+    }
+    context = {
+        "config": object(),
+        "env": "dev",
+        "activityId": "activity-1",
+        "currentWorkspaceId": "workspace-1",
+        "currentWorkspaceName": "Workspace One",
+        "currentNotebookId": "notebook-1",
+        "currentNotebookName": "Notebook One",
+        "userName": "tester",
+        "_fabricops_active_profile_registration": {
+            "profile_role": "target",
+            "table": identity,
+            "load_strategy": "append",
+            "load_strategy_parameters": {},
+        },
+    }
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (context["config"], "dev", context))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
+
+    profile_and_register_table(_source_df(spark_session), frequency_columns=[])
+
+    catalogue = next(write["df"] for write in registered if write["table_name"] == CATALOGUE_TABLE)
+    table_row = next(row for row in catalogue.collect() if row.metadata_level == "table")
+    assert table_row.load_strategy == "append"
+    assert "_fabricops_active_profile_registration" not in context
 
 
 def test_resolved_identity_uses_active_environment_and_configured_lakehouse(monkeypatch):
@@ -318,8 +357,8 @@ def test_resolved_identity_rejects_invalid_configured_store(monkeypatch, store, 
         resolve_physical_table_identity(object(), "dev", target="source", schema=None, table_name="orders")
 
 
-@pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
-def test_profile_and_register_table_accepts_source_and_target_roles(spark_session, monkeypatch, registered, role):
+@pytest.mark.parametrize("role", ["source", " Source "])
+def test_profile_and_register_table_accepts_explicit_source_role(spark_session, monkeypatch, registered, role):
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_table(
@@ -337,7 +376,7 @@ def test_profile_and_register_table_derives_physical_identity_into_catalogue(
     monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_table(
         _source_df(spark_session),
-        profile_role="target",
+        profile_role="source",
         target=target,
         schema=schema,
         table_name="customers_clean",

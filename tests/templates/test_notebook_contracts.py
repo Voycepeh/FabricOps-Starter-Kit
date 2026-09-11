@@ -236,6 +236,7 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert "Select the Data Contracts to test with this pipeline." in contracts
     assert "Production automatically uses activated Data Contracts." in contracts
     assert source.count("widget_select_data_contract()") == 1
+    assert "CONTRACTS = widget_select_data_contract()" in source
     assert "VALIDATE_DATA_CONTRACTS" not in source
 
 
@@ -248,6 +249,7 @@ def test_02_pipeline_lakehouse_read_blocks_are_cloneable():
             assert f"{setting} =" in block
         for stage in (
             "read_pipeline_prep(", "read_lakehouse_table(", "check_schema(", "check_dq(",
+            "observe_table(", "check_freshness(", "check_source_stability(",
             "profile_and_register_table(read_df)", "READ_PREPS[READ]", "READ_DFS[READ]",
             'catalogue_widget["show"](table_id=READ_TABLE_ID)',
         ):
@@ -271,7 +273,7 @@ def test_02_pipeline_omits_obsolete_and_safe_default_plumbing():
     for removed in (
         "PIPELINE_SHOULD_RUN", "source_read_strategy=", "source_watermark_column=",
         "progress_target", "processing_scope=read_prep", "enabled=", "spark_session=",
-        "profile_role=", "table=read_prep", "CONTRACTS =",
+        "profile_role=", "table=read_prep", "WRITE_LOAD_STRATEGY",
     ):
         assert removed not in source
     assert source.count("read_lakehouse_table(table_id=READ_TABLE_ID)") == 2
@@ -289,8 +291,10 @@ def test_02_pipeline_transform_is_explicit_project_pyspark():
 def test_02_pipeline_write_is_one_complete_copyable_block():
     """Write identity, preparation, checks, publication, and registration stay together."""
     block = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    for setting in ("WRITE", "WRITE_TARGET", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
+    for setting in ("WRITE", "WRITE_TABLE_ID"):
         assert f"{setting} =" in block
+    assert "target_table_id=WRITE_TABLE_ID" in block
+    assert "WRITE_LOAD_STRATEGY" not in block
     stages = [
         "write_pipeline_prep(", "check_schema(", "check_dq(", "write_lakehouse_table(",
         "read_lakehouse_table(table_id=WRITE_TABLE_ID)", "profile_and_register_table(published_df)",
@@ -305,6 +309,7 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     required = {
         "contracts",
+        "pipeline-target",
         "read-1",
         "read-2",
         "read-3",

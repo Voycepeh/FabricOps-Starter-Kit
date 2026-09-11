@@ -482,13 +482,10 @@ def profile_and_register_table(
     target=None,
     table_name=None,
     schema=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
     frequency_profile_df=None,
-    complete_table: bool = True,
 ):
     """Profile a supplied Spark DataFrame and save its metadata records.
     
@@ -533,13 +530,6 @@ def profile_and_register_table(
     schema : str, optional
         Physical schema name, or ``None`` to use the configured store default.
         Classic or schema-disabled Lakehouses preserve ``None``.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Current target load strategy. Valid only when ``profile_role="target"``.
-    load_strategy_parameters : dict, optional
-        Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2``
-        requires ``key_columns`` and ``effective_column`` and optionally accepts
-        ``tracked_columns``; ``overwrite`` optionally accepts
-        ``partition_column``; ``append`` accepts no parameters.
     frequency_columns : sequence of str, optional
         Selected columns whose flattened frequency rows should be persisted.
         ``None`` profiles eligible non-technical scalar columns. An empty
@@ -566,10 +556,7 @@ def profile_and_register_table(
         preparing, persisting, refreshing, and governing this DataFrame; this
         function does not verify whether it is random, representative, sampled,
         persisted, or otherwise suitable for the caller's purpose.
-    complete_table : bool, default=True
-        Whether the DataFrame represents the complete physical registered
-        table. Set ``False`` for custom query results.
-    
+
     Returns
     -------
     pyspark.sql.DataFrame
@@ -743,15 +730,12 @@ def profile_and_register_table(
     
     """
     config, env, context = resolve_fabric_context()
+    uses_active_registration = profile_role is None or (table is None and target is None and table_name is None)
     active_registration = context.get("_fabricops_active_profile_registration") or {}
     if profile_role is None:
         profile_role = active_registration.get("profile_role")
     if table is None and target is None and table_name is None:
         table = active_registration.get("table")
-    if load_strategy is None and profile_role == "target":
-        load_strategy = active_registration.get("load_strategy")
-    if load_strategy_parameters is None and profile_role == "target":
-        load_strategy_parameters = active_registration.get("load_strategy_parameters")
     if profile_role is None or (table is None and (target is None or table_name is None)):
         raise ValueError(
             "Run read_pipeline_prep or write_pipeline_prep first, or provide profile_role and table identity."
@@ -769,12 +753,16 @@ def profile_and_register_table(
     normalized_table = identity["table_name"]
     normalized_schema = identity["schema"]
     normalized_store_type = identity["store_kind"]
+    if normalized_profile_role == "target" and active_registration.get("profile_role") != "target":
+        raise ValueError("Run write_pipeline_prep before registering a target profile.")
     normalized_load_strategy, write_parameters_json = _processing_definition(
-        normalized_profile_role, load_strategy, load_strategy_parameters
+        normalized_profile_role,
+        active_registration.get("load_strategy") if normalized_profile_role == "target" else None,
+        active_registration.get("load_strategy_parameters") if normalized_profile_role == "target" else None,
     )
+    if uses_active_registration:
+        context.pop("_fabricops_active_profile_registration", None)
     _validate_processing_columns(df, write_parameters_json)
-    if not complete_table:
-        return build_profile_dataframe(df)
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)

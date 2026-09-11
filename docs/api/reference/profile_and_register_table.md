@@ -29,7 +29,7 @@ configured in ``00_env_config`` for the active environment.
 
 `fabricops_kit/pipeline/profile_and_register_table.py:477`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L477-L853">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L477-L841">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -58,13 +58,10 @@ def profile_and_register_table(
     target=None,
     table_name=None,
     schema=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
     frequency_profile_df=None,
-    complete_table: bool=True,
 ):
 ```
 
@@ -96,13 +93,10 @@ Profile and register a complete table immediately after Read preparation:
 | `target` | `str` | No | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. Required when ``table`` is not supplied. |
 | `table_name` | `str` | No | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. Required when ``table`` is not supplied. |
 | `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
-| `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Current target load strategy. Valid only when ``profile_role="target"``. |
-| `load_strategy_parameters` | `dict` | No | Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` requires ``key_columns`` and ``effective_column`` and optionally accepts ``tracked_columns``; ``overwrite`` optionally accepts ``partition_column``; ``append`` accepts no parameters. |
 | `frequency_columns` | `sequence of str` | No | Selected columns whose flattened frequency rows should be persisted. ``None`` profiles eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and writes no child rows. Requested columns should also be eligible for the main statistical profile. |
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold are skipped and produce no child frequency rows. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns remain skipped. Explicit ``frequency_columns`` selections override this threshold. |
 | `frequency_profile_df` | `pyspark.sql.DataFrame` | No | Optional caller-provided Spark DataFrame to use only for frequency distribution calculation. ``None`` preserves full-source frequency profiling. When supplied, it must contain every selected frequency column, may contain extra columns, and must use a compatible Spark session when this can be determined. The caller is responsible for preparing, persisting, refreshing, and governing this DataFrame; this function does not verify whether it is random, representative, sampled, persisted, or otherwise suitable for the caller's purpose. |
-| `complete_table` | `bool` | No | Whether the DataFrame represents the complete physical registered table. Set ``False`` for custom query results. |
 
 ## Returns
 

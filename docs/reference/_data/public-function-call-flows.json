@@ -6107,7 +6107,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 853,
+      "source_end_line": 841,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "supports_live_contract": true,
@@ -9543,7 +9543,7 @@
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 245,
+      "source_end_line": 241,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 68,
       "supports_live_contract": false,
@@ -14379,18 +14379,6 @@
           "type": "str, optional"
         },
         {
-          "description": "Current target load strategy. Valid only when ``profile_role=\"target\"``.",
-          "name": "load_strategy",
-          "required": "No",
-          "type": "{\"overwrite\", \"append\", \"scd1\", \"scd2\"}, optional"
-        },
-        {
-          "description": "Strategy parameters. ``scd1`` requires ``key_columns``; ``scd2`` requires ``key_columns`` and ``effective_column`` and optionally accepts ``tracked_columns``; ``overwrite`` optionally accepts ``partition_column``; ``append`` accepts no parameters.",
-          "name": "load_strategy_parameters",
-          "required": "No",
-          "type": "dict, optional"
-        },
-        {
           "description": "Selected columns whose flattened frequency rows should be persisted. ``None`` profiles eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and writes no child rows. Requested columns should also be eligible for the main statistical profile.",
           "name": "frequency_columns",
           "required": "No",
@@ -14413,12 +14401,6 @@
           "name": "frequency_profile_df",
           "required": "No",
           "type": "pyspark.sql.DataFrame, optional"
-        },
-        {
-          "description": "Whether the DataFrame represents the complete physical registered table. Set ``False`` for custom query results.",
-          "name": "complete_table",
-          "required": "No",
-          "type": "bool"
         }
       ],
       "public_import_path": "fabricops_kit.profile_and_register_table",
@@ -14455,8 +14437,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def profile_and_register_table(df, *, profile_role=None, table=None, target=None, table_name=None, schema=None, load_strategy=None, load_strategy_parameters=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None, complete_table: bool=True)",
-      "source_end_line": 853,
+      "signature": "def profile_and_register_table(df, *, profile_role=None, table=None, target=None, table_name=None, schema=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None)",
+      "source_end_line": 841,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_table.py",
       "source_start_line": 477,
       "summary": "Profile a supplied Spark DataFrame and save its metadata records.",
@@ -16532,18 +16514,6 @@
           "type": "str | None"
         },
         {
-          "description": "Current authored load strategy when physical identity is supplied.",
-          "name": "load_strategy",
-          "required": "No",
-          "type": "str | None"
-        },
-        {
-          "description": "Parameters belonging to the authored load strategy.",
-          "name": "load_strategy_parameters",
-          "required": "No",
-          "type": "dict[str, Any] | None"
-        },
-        {
           "description": "Results returned by :func:`read_pipeline_prep` for the sources that fed this target.",
           "name": "source_preps",
           "required": "Yes",
@@ -16577,8 +16547,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def write_pipeline_prep(df, *, target_table_id: str | None=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
-      "source_end_line": 245,
+      "signature": "def write_pipeline_prep(df, *, target_table_id: str | None=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, source_preps: list[dict[str, Any]]) -> dict[str, Any]",
+      "source_end_line": 241,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_prep.py",
       "source_start_line": 68,
       "summary": "Prepare governed target write inputs without physically writing the target.",

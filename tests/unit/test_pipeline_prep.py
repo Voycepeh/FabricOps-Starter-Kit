@@ -153,6 +153,36 @@ def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strat
     assert not hasattr(write_module, "persist_lineage_participation")
 
 
+def test_write_prep_resolves_physical_target_through_governed_catalogue(monkeypatch, spark_session):
+    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
+    monkeypatch.setattr(write_module, "resolve_physical_table_identity", lambda *_args, **_kwargs: identity)
+    resolved_ids = []
+    monkeypatch.setattr(
+        write_module,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **_kwargs: resolved_ids.append(table_id) or identity,
+    )
+
+    result = write_module.write_pipeline_prep(
+        spark_session.createDataFrame([(1,)], ["id"]),
+        target="unified",
+        schema="dbo",
+        table_name="students",
+        source_preps=[{"table_id": "source", "source": {}}],
+    )
+
+    assert resolved_ids == [identity["table_id"]]
+    assert result["load_strategy"] == "append"
+
+
+def test_write_prep_does_not_accept_notebook_authored_processing():
+    from inspect import signature
+
+    parameters = signature(write_module.write_pipeline_prep).parameters
+    assert "load_strategy" not in parameters
+    assert "load_strategy_parameters" not in parameters
+
+
 def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session):
     processing = {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"}
     identity = _patch_target_processing(monkeypatch, processing, store_type="warehouse")

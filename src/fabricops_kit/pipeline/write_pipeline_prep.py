@@ -72,8 +72,6 @@ def write_pipeline_prep(
     target: str | None = None,
     schema: str | None = None,
     table_name: str | None = None,
-    load_strategy: str | None = None,
-    load_strategy_parameters: dict[str, Any] | None = None,
     source_preps: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Prepare governed target write inputs without physically writing the target.
@@ -93,10 +91,6 @@ def write_pipeline_prep(
     table_name : str, optional
         Physical target table name. Required with ``target`` when
         ``target_table_id`` is omitted.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Current authored load strategy when physical identity is supplied.
-    load_strategy_parameters : dict, optional
-        Parameters belonging to the authored load strategy.
     source_preps : list of dict
         Results returned by :func:`read_pipeline_prep` for the sources that fed
         this target.
@@ -149,11 +143,13 @@ def write_pipeline_prep(
         target_identity = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
         authored_processing = catalogue_authored_processing(target_identity)
     else:
-        target_identity = resolve_physical_table_identity(
+        physical_identity = resolve_physical_table_identity(
             config, env, target=target, schema=schema, table_name=table_name
         )
-        target_identity["store_type"] = target_identity["store_kind"]
-        authored_processing = {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
+        target_identity = resolve_catalogue_table_identity(
+            config, env, physical_identity["table_id"], context=context
+        )
+        authored_processing = catalogue_authored_processing(target_identity)
     processing = resolve_table_processing_definition(
         config,
         env,
