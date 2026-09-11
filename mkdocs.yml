@@ -31,7 +31,7 @@ nav:
           - "Unit 1 - Understand the Template": guided-demo/02-run-pipeline/understand-template.md
           - "Unit 2 - Run the Baseline ETL": guided-demo/02-run-pipeline/run-baseline-etl.md
           - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
-          - "Unit 4 - Transform and Load": guided-demo/02-run-pipeline/transform-and-load.md
+          - "Unit 4 - Transform and Write": guided-demo/02-run-pipeline/transform-and-load.md
           - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md
       - Step 3 - Author and Freeze Data Contract: guided-demo/03-enrich-guardrails.md
       - Step 4 - Select and Validate Data Contract: guided-demo/04-run-pipeline-with-guardrails.md
