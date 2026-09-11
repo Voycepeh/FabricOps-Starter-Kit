@@ -2,6 +2,9 @@ import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remo
 import {Artifact, OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {VIDEO_CONFIG} from '../videoConfig';
 
+const OPENING_CENTER = {x: 960, y: 540} as const;
+const PUSH_DISTANCE = 1500;
+
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -12,12 +15,7 @@ export const OpeningPlatform = () => {
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const push = interpolate(frame, [190, 245], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.inOut(Easing.cubic),
-  });
-  const finalExit = interpolate(frame, [260, scenes.opening], [1, 0], {
+  const push = interpolate(frame, [245, scenes.opening], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -38,7 +36,11 @@ export const OpeningPlatform = () => {
         const enter = spring({frame: frame - delay, fps, config: {damping: 18, stiffness: 92}});
         const cardCenterX = item.x + sizes.openingArtifactWidth / 2;
         const cardCenterY = item.y + sizes.openingArtifactHeight / 2;
-        const angle = Math.atan2(cardCenterY - 540, cardCenterX - 960);
+        const deltaX = cardCenterX - OPENING_CENTER.x;
+        const deltaY = cardCenterY - OPENING_CENTER.y;
+        const magnitude = Math.max(1, Math.hypot(deltaX, deltaY));
+        const pushX = (deltaX / magnitude) * PUSH_DISTANCE * push;
+        const pushY = (deltaY / magnitude) * PUSH_DISTANCE * push;
 
         return (
           <div
@@ -47,11 +49,11 @@ export const OpeningPlatform = () => {
               position: 'absolute',
               left: item.x,
               top: item.y,
-              opacity: enter * finalExit,
-              transform: `translate(${Math.cos(angle) * push * 85}px, ${Math.sin(angle) * push * 70 + (1 - enter) * 42}px) scale(${0.72 + enter * 0.28 - push * 0.08})`,
+              opacity: enter,
+              transform: `translate(${pushX}px, ${pushY + (1 - enter) * 42}px) scale(${0.72 + enter * 0.28})`,
             }}
           >
-            <Artifact icon={item.icon} label={item.label} />
+            <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
           </div>
         );
       })}
@@ -86,8 +88,8 @@ export const OpeningPlatform = () => {
           inset: 0,
           display: 'grid',
           placeItems: 'center',
-          opacity: question * finalExit,
-          transform: `scale(${0.9 + question * 0.1})`,
+          opacity: question,
+          transform: `translateY(${-760 * push}px) scale(${0.9 + question * 0.1})`,
         }}
       >
         <div
