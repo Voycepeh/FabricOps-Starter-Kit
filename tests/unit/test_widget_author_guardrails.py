@@ -15,7 +15,6 @@ from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets.widget_author_guardrails import widget_author_guardrails
 guardrail_widget_module = __import__("importlib").import_module("fabricops_kit.widgets.widget_author_guardrails")
 from fabricops_kit.widgets.widget_author_guardrails import (
-    CHANGE_BEHAVIOURS,
     _guardrail_records_from_selection,
     _render_guardrail_authoring,
     _render_sensitive_data_editor,
@@ -115,7 +114,7 @@ def _state(existing=()):
 def _records(**overrides):
     values = dict(
         required_columns=["id"], freshness_column="updated_at", maximum_age=1,
-        maximum_age_unit="Hours", change_behaviour="Incremental append",
+        maximum_age_unit="Hours", expected_change="monitor_only",
         partition_column="snapshot_date", change_column="updated_at",
     )
     values.update(overrides)
@@ -331,23 +330,18 @@ def test_freshness_can_be_disabled_without_removing_logical_rule():
     assert json.loads(freshness["rule_parameters_json"])["freshness_column"] == ""
 
 
-def test_change_behaviours_preserve_existing_runtime_contract():
-    """Verify that Changes behaviour labels preserve the existing runtime contract."""
-    expected = {
-        "No changes expected": ("no_change_required", "snapshot"),
-        "Incremental append": ("monitor_only", "incremental_append"),
-        "Snapshot overwrite": ("monitor_only", "snapshot"),
-    }
-    assert tuple(CHANGE_BEHAVIOURS) == tuple(expected)
-    for label, (expected_change, source_pattern) in expected.items():
-        change = _records(change_behaviour=label)[2]
+def test_changes_expectations_do_not_define_a_parallel_processing_strategy():
+    """Changes authoring stores only validation intent and observation columns."""
+    for expectation in ("monitor_only", "change_required", "no_change_required"):
+        change = _records(expected_change=expectation)[2]
         params = json.loads(change["rule_parameters_json"])
         assert change["rule_id"] == "changes"
-        assert change["rule_type"] == expected_change
-        assert params["expected_change"] == expected_change
-        assert params["source_pattern"] == source_pattern
-        assert params["partition_column"] == "snapshot_date"
-        assert params["change_column"] == "updated_at"
+        assert change["rule_type"] == expectation
+        assert params == {
+            "expected_change": expectation,
+            "partition_column": "snapshot_date",
+            "change_column": "updated_at",
+        }
 
 
 def test_invalid_columns_age_and_failure_action_fail_clearly():

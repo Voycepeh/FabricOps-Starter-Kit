@@ -75,6 +75,18 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p>In FabricOps, Full Dataset means the complete physical source is read for the run, without a source-side incremental scope or skip decision.</p>
 </details>
 
+<details id="load-strategy">
+<summary><strong>Load Strategy</strong> — The authoritative governed behaviour used to write one target table.</summary>
+<p>A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.</p>
+<p><strong>Also known as:</strong> write strategy</p>
+</details>
+
+<details id="writer-ownership">
+<summary><strong>Writer Ownership</strong> — The rule that one governed target table_id has one owning pipeline or notebook writer.</summary>
+<p>Writer Ownership binds a governed target table_id to the notebook identity frozen in its Data Contract. Production rejects a conflicting writer because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions.</p>
+<p><strong>Also known as:</strong> single writer</p>
+</details>
+
 </details>
 
 <details>

@@ -207,7 +207,7 @@ FabricOps makes several engineering choices so projects do not need to redefine 
 - **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical asset identity, keep descriptive Enrichment separate from executable Guardrails, and resolve both through an exact Data Contract version.
 - **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
 - **[Read preparation and target processing](reference/engineering-cheat-sheet.md#full-vs-incremental)** — keep source identity and physical reads separate from governed target-write behaviour.
-- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — persist successful progress atomically on governed target rows through `_watermark_value` or `_partition_bucket`.
+- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — keep recovery and idempotency within the governed target load strategy and transaction.
 
 The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
 
@@ -225,6 +225,9 @@ As parts of that Data Contract definition, Governance can add:
 - **Enrichment**, limited to descriptive table and column descriptions and information classifications
 - **Guardrails**, such as schema, freshness, and Data Quality expectations
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
+- the target's owning notebook identity, so one governed `table_id` has one writer
+
+The load strategy is the authoritative vocabulary for target write behaviour. A Changes Guardrail validates observed source behaviour; it does not define a second processing strategy.
 
 Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
 

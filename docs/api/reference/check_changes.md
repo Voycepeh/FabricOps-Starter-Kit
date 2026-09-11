@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Describe deterministic partition and logical-row source changes.
+Validate deterministic source-observation changes against one approved expectation.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:334`
+`fabricops_kit/pipeline/check_changes.py:303`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L334-L374">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L303-L343">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -61,21 +61,21 @@ True
 
 ## Returns
 
-Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.
+First-observation, changed or unchanged, and new, changed, removed, or reappeared partition evidence.
 
 ## Raises / Errors
 
 ValueError
-    If configuration is invalid or logical keys are null, missing, or
-    duplicated.
+    If the observation identity or approved Changes expectation is invalid.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
 Production resolves source-change expectations from the active frozen Data
-Contract. Development uses mutable authoring metadata, and change detection
-itself is unchanged.
+Contract. Development uses mutable authoring metadata. The Guardrail states
+whether change is required, forbidden, or monitored; it does not define a
+target load strategy.
 
 </div>
 

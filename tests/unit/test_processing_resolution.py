@@ -28,7 +28,11 @@ def contract(strategy="scd1", *, version=3):
         "contract_id": "contract",
         "contract_version": version,
         "table_id": "students",
-        "contract_payload": {"table": {"table_id": "students", "processing": processing}},
+        "contract_payload": {"table": {
+            "table_id": "students",
+            "processing": processing,
+            "writer": {"notebook_id": "notebook-1", "notebook_name": "02_pipeline"},
+        }},
     }
 
 
@@ -68,7 +72,9 @@ def test_development_current_authoring_requires_notebook_definition():
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    assert shared.resolve_table_processing_definition(object(), "prod", "students")["load_strategy"] == "scd1"
+    resolved = shared.resolve_table_processing_definition(object(), "prod", "students")
+    assert resolved["load_strategy"] == "scd1"
+    assert resolved["owner_notebook_id"] == "notebook-1"
 
 
 def test_production_missing_active_contract_fails(monkeypatch):

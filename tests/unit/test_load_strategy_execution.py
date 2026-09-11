@@ -35,7 +35,7 @@ def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
         object(), table_name="students", target="unified", schema="dbo",
-        processing={"load_strategy": "overwrite"}, scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+        processing={"load_strategy": "overwrite"}, scope={"type": "full_dataset"},
     )
     assert calls[0][1]["mode"] == "overwrite"
     assert "options" not in calls[0][1]
@@ -46,9 +46,7 @@ def test_incremental_overwrite_uses_replace_where(monkeypatch):
     shared.execute_lakehouse_processing(
         type("Frame", (), {"columns": ["_partition_bucket"]})(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "overwrite", "partition_column": "business_date"},
-        scope={"read_mode": "incremental_subset", "scope": {
-            "type": "partition", "column": "business_date", "values": ["2026-08-21"],
-        }},
+        scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
     )
     assert calls[0][1]["mode"] == "overwrite"
     assert calls[0][1]["options"] == {"replaceWhere": "`_partition_bucket` IN ('2026-08-21')"}
@@ -56,13 +54,11 @@ def test_incremental_overwrite_uses_replace_where(monkeypatch):
 
 def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    with pytest.raises(ValueError, match="persisted _partition_bucket target state"):
+    with pytest.raises(ValueError, match="must match the target processing partition_column"):
         shared.execute_lakehouse_processing(
             object(), table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "overwrite", "partition_column": "other_date"},
-            scope={"read_mode": "incremental_subset", "scope": {
-                "type": "partition", "column": "business_date", "values": ["2026-08-21"],
-            }},
+            scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
         )
     assert calls == []
 
@@ -72,18 +68,18 @@ def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     shared.execute_lakehouse_processing(
         object(), table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "append"},
-        scope={"read_mode": "incremental_subset", "scope": {"type": "partition", "column": "business_date", "values": ["2026-08-21"]}},
+        scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
     )
     assert calls[0][1]["mode"] == "append"
 
 
-def test_incremental_execution_never_accepts_an_empty_scope(monkeypatch):
+def test_partition_scoped_write_never_accepts_an_empty_scope(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    with pytest.raises(ValueError, match="at least one affected"):
+    with pytest.raises(ValueError, match="at least one partition value"):
         shared.execute_lakehouse_processing(
             object(), table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "append"},
-            scope={"read_mode": "incremental_subset", "scope": {"type": "partition", "column": "business_date", "values": []}},
+            scope={"type": "partition", "column": "business_date", "values": []},
         )
     assert calls == []
 
@@ -101,7 +97,7 @@ def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spar
     shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": strategy},
-        scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+        scope={"type": "full_dataset"},
         context={"activity_id": "activity-1"},
     )
     rows = calls[0][0][0].collect()
@@ -150,7 +146,7 @@ def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, 
     shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
-        scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}, context={},
+        scope={"type": "full_dataset"}, context={},
     )
     row = calls[0][0][0].collect()[0].asDict()
     assert row["_effective_from"] == "2026-08-22"
@@ -171,7 +167,7 @@ def test_scd_duplicate_incoming_business_keys_are_rejected(monkeypatch, spark_se
         shared.execute_lakehouse_processing(
             incoming, table_name="students", target="unified", schema="dbo",
             processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
-            scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}, context={},
+            scope={"type": "full_dataset"}, context={},
         )
 
 
@@ -218,7 +214,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
     shared.execute_lakehouse_processing(
         incoming, table_name="students", target="unified", schema="dbo",
         processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
-        scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}}, context={},
+        scope={"type": "full_dataset"}, context={},
     )
     assert recorded == {
         "keys": "target.`student_id` <=> source.`student_id`",
@@ -304,9 +300,7 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
         target="unified",
         schema="dbo",
         processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
-        scope={"read_mode": "incremental_subset", "scope": {
-            "type": "watermark", "column": "effective_at", "lower_bound": 100, "upper_bound": 200,
-        }},
+        scope={"type": "full_dataset"},
         context={},
     )
 
@@ -383,9 +377,7 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
         "target": "unified",
         "schema": "dbo",
         "processing": {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
-        "scope": {"read_mode": "incremental_subset", "scope": {
-            "type": "watermark", "column": "effective_at", "lower_bound": 100, "upper_bound": 200,
-        }},
+        "scope": {"type": "full_dataset"},
         "context": {},
     }
 

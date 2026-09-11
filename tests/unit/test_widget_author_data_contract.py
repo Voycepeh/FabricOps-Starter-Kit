@@ -171,7 +171,7 @@ def test_each_guardrail_subtype_is_lazy_and_uses_normalized_service(widget, kind
     elif kind == "Data Quality":
         fields[1].value = ("column_0",)
     elif kind == "Changes":
-        fields[0].value = "Incremental append"
+        fields[0].value = "change_required"
     subtype["save"].click()
     assert calls["guardrails"]
     expected = {"Schema": "schema", "Freshness": "freshness", "Changes": "changes", "Data Quality": "data_quality", "Sensitive Data": "sensitive_data"}[kind]

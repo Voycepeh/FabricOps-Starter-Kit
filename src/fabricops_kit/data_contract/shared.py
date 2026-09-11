@@ -675,6 +675,10 @@ def assemble_contract_payload(
             **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
             "columns": column_docs,
             "processing": processing,
+            "writer": {
+                "notebook_id": str(table.get("_notebook_id") or "").strip(),
+                "notebook_name": str(table.get("_notebook_name") or "").strip(),
+            },
         },
         "enrichment": {
             "table": [row for row in enrichment_docs if not row.get("column_id")],

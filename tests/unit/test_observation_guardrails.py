@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 import importlib
+import json
 import types
 
 import pytest
@@ -59,12 +60,12 @@ class Spark:
         frame = Frame(rows, self); self.created.append((frame, schema)); return frame
 
 
-def change_rule(*, severity="blocking", rule_type="monitor_only", behaviour=None):
-    parameters = (
-        '{"partition_column":"business_date","change_column":"modified_at"}'
-        if behaviour is None
-        else f'{{"partition_column":"business_date","change_column":"modified_at","change_behaviour":"{behaviour}"}}'
-    )
+def change_rule(*, severity="blocking", rule_type="monitor_only"):
+    parameters = json.dumps({
+        "partition_column": "business_date",
+        "change_column": "modified_at",
+        "expected_change": rule_type,
+    })
     return {
         "table_id": "key",
         "table_name": "orders",
@@ -123,9 +124,6 @@ def configure_changes(monkeypatch, history, rules=None):
     monkeypatch.setattr(changes, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo",
         "table_name": "orders", "load_strategy": "overwrite", "load_strategy_parameters_json": "{}",
-    })
-    monkeypatch.setattr(changes, "resolve_table_processing_definition", lambda *args, **kwargs: {
-        "load_strategy": "overwrite", "source": "current_authoring",
     })
     return written
 
@@ -262,22 +260,16 @@ def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch
         freshness.check_freshness(observed)
 
 
-@pytest.mark.parametrize(
-    ("behaviour", "expected_pattern", "expected_status"),
-    [("Incremental append", "incremental_append", "failed"), ("Snapshot overwrite", "snapshot", "passed")],
-)
-def test_authored_change_behaviour_drives_observation_runtime_semantics(
-    monkeypatch, behaviour, expected_pattern, expected_status
-):
+def test_changes_rule_contains_expectation_without_parallel_strategy_vocabulary(monkeypatch):
     now = datetime(2026, 8, 14, tzinfo=UTC)
-    rules = [change_rule(behaviour=behaviour)]
+    rules = [change_rule(rule_type="monitor_only")]
     configure_changes(monkeypatch, [row(at=now - timedelta(hours=1))], rules)
+
     result = check_changes(Frame([row(at=now, count=2)], Spark()))
-    assert result["source_pattern"] == expected_pattern
-    assert result["pattern_semantics"] == (
-        "append_only" if expected_pattern == "incremental_append" else "full_state"
-    )
-    assert result["status"] == expected_status
+
+    assert result["status"] == "passed"
+    assert "source_pattern" not in result
+    assert "change_behaviour" not in json.loads(rules[0]["rule_parameters_json"])
 
 
 def test_changes_requires_active_change_rule(monkeypatch):

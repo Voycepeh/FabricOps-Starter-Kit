@@ -171,11 +171,42 @@ def test_write_prep_preserves_target_partition_overwrite(monkeypatch, spark_sess
         source_preps=[{"table_id": "warehouse:source:dbo:orders", "source": {}}],
     )
 
-    assert set(result["scope"]["scope"]["values"]) == {"2026-09-09", "2026-09-10"}
+    assert set(result["scope"]["values"]) == {"2026-09-09", "2026-09-10"}
     assert {row["_partition_bucket"] for row in result["df"].select("_partition_bucket").collect()} == {
         "2026-09-09", "2026-09-10",
     }
     assert "replaceWhere" in result["options"]
+
+
+def test_contract_target_accepts_its_owning_writer(monkeypatch, spark_session):
+    processing = {
+        "load_strategy": "append", "source": "data_contract",
+        "contract_id": "contract", "contract_version": 3,
+        "owner_notebook_id": "notebook", "owner_notebook_name": "02_pipeline",
+    }
+    identity = _patch_target_processing(monkeypatch, processing)
+    result = write_module.write_pipeline_prep(
+        spark_session.createDataFrame([(1,)], ["id"]),
+        target_table_id=identity["table_id"],
+        source_preps=[{"table_id": "source", "source": {}}],
+    )
+    assert result["load_strategy"] == "append"
+    assert result["load_strategy_parameters"] == {}
+
+
+def test_contract_target_rejects_conflicting_writer(monkeypatch, spark_session):
+    processing = {
+        "load_strategy": "append", "source": "data_contract",
+        "contract_id": "contract", "contract_version": 3,
+        "owner_notebook_id": "different-notebook", "owner_notebook_name": "other_pipeline",
+    }
+    identity = _patch_target_processing(monkeypatch, processing)
+    with pytest.raises(ValueError, match="[Oo]ne owning pipeline/notebook writer"):
+        write_module.write_pipeline_prep(
+            spark_session.createDataFrame([(1,)], ["id"]),
+            target_table_id=identity["table_id"],
+            source_preps=[{"table_id": "source", "source": {}}],
+        )
 
 
 def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypatch):
@@ -186,14 +217,14 @@ def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypa
     lakehouse_writer.write_lakehouse_table(
         object(), "students", mode=None, load_strategy="scd1",
         load_strategy_parameters={"key_columns": ["student_id"]},
-        processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+        processing_scope={"type": "full_dataset"},
     )
     assert calls[0][1]["processing"] == {"load_strategy": "scd1", "key_columns": ["student_id"]}
     with pytest.raises(ValueError, match="mode must be None"):
         lakehouse_writer.write_lakehouse_table(
             object(), "students", mode="append", load_strategy="scd1",
             load_strategy_parameters={"key_columns": ["student_id"]},
-            processing_scope={"read_mode": "full_dataset", "scope": {"type": "full_dataset"}},
+            processing_scope={"type": "full_dataset"},
         )
 
 

@@ -737,13 +737,7 @@ def build_token_map_frame(
     )
     return add_target_audit_fields(mapping, resolve_target_audit_fields(context))
 
-GUARDRAIL_CHANGE_BEHAVIOURS = ("No changes expected", "Incremental append", "Snapshot overwrite")
-
-_GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING = {
-    "No changes expected": ("no_change_required", "snapshot"),
-    "Incremental append": ("monitor_only", "incremental_append"),
-    "Snapshot overwrite": ("monitor_only", "snapshot"),
-}
+GUARDRAIL_CHANGE_EXPECTATIONS = ("monitor_only", "change_required", "no_change_required")
 
 DQ_RULE_TYPES = [
     "missing_values",
@@ -760,8 +754,6 @@ DQ_RULE_TYPES = [
 ]
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
-
-_SOURCE_PATTERNS = {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
 
 _COMPARISON_SCOPES = {"complete", "partitions", "partial"}
 
@@ -793,11 +785,8 @@ def _source_hash(payload) -> str:
     encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
-def _validate_changes_configuration(source_pattern, comparison_scope, refresh_days, version_column):
-    pattern = str(source_pattern).strip().lower()
+def _validate_changes_configuration(comparison_scope, refresh_days):
     scope = str(comparison_scope).strip().lower()
-    if pattern not in _SOURCE_PATTERNS:
-        raise ValueError("source_pattern must be one of: snapshot, incremental_append, mutable_incremental, versioned")
     if scope not in _COMPARISON_SCOPES:
         raise ValueError("comparison_scope must be one of: complete, partitions, partial")
     if isinstance(refresh_days, bool):
@@ -808,27 +797,10 @@ def _validate_changes_configuration(source_pattern, comparison_scope, refresh_da
         raise ValueError("refresh_days must be a non-negative integer") from exc
     if window_days < 0:
         raise ValueError("refresh_days must be a non-negative integer")
-    if pattern == "versioned" and not str(version_column or "").strip():
-        raise ValueError("version_column is required when source_pattern='versioned'")
-    return pattern, scope, window_days
+    return scope, window_days
 
 def _partition_identity(row, partitions):
     return tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
-
-def _local_latest_versions(rows, keys, version_column):
-    latest = {}
-    for row in rows:
-        identity = tuple(row.get(column) for column in keys)
-        if any(value is None for value in identity):
-            raise ValueError("logical key columns must not contain null values")
-        version = row.get(version_column)
-        if version is None:
-            raise ValueError("version_column must not contain null values")
-        if identity not in latest or version > latest[identity].get(version_column):
-            latest[identity] = row
-        elif version == latest[identity].get(version_column):
-            raise ValueError("version_column must uniquely order versions for each logical key")
-    return list(latest.values())
 
 def _validate_local_logical_keys(rows, keys):
     seen = set()
@@ -872,7 +844,7 @@ def _classify_change_date(value, recent_start):
     return "recent" if observed is not None and observed >= recent_start else "historical"
 
 def _local_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          partitions, keys, content_columns, range_column, scope, pattern, recent_start):
+                          partitions, keys, content_columns, range_column, scope, recent_start):
     current = [row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions]
     previous = [row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions]
 
@@ -892,7 +864,7 @@ def _local_row_comparison(current, previous, *, relevant_current_partitions, rel
     inserted = sorted(set(current_by_key) - set(previous_by_key))
     shared = set(current_by_key) & set(previous_by_key)
     updated = sorted(key for key in shared if current_by_key[key][1] != previous_by_key[key][1])
-    deletion_allowed = scope in {"complete", "partitions"} and pattern != "incremental_append"
+    deletion_allowed = scope in {"complete", "partitions"}
     deleted = sorted(set(previous_by_key) - set(current_by_key)) if deletion_allowed else []
     changes = {"inserted": inserted, "updated": updated, "deleted": deleted}
     recent, historical = [], []
@@ -913,17 +885,6 @@ def _spark_canonical_hash(columns):
     from pyspark.sql import functions as F
     struct = F.struct(*[_spark_column(column).alias(str(column)) for column in columns])
     return F.sha2(F.to_json(struct, {"ignoreNullFields": "false"}), 256)
-
-def _spark_resolve_versions(dataframe, keys, version_column):
-    from pyspark.sql import functions as F
-    from pyspark.sql.window import Window
-    if dataframe.filter(_spark_column(version_column).isNull()).limit(1).count():
-        raise ValueError("version_column must not contain null values")
-    window = Window.partitionBy(*[_spark_column(column) for column in keys]).orderBy(_spark_column(version_column).desc())
-    ranked = dataframe.withColumn("__fabricops_version_rank", F.dense_rank().over(window))
-    if ranked.filter(F.col("__fabricops_version_rank") == 1).groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
-        raise ValueError("version_column must uniquely order versions for each logical key")
-    return ranked.filter(F.col("__fabricops_version_rank") == 1).drop("__fabricops_version_rank")
 
 def _validate_spark_logical_keys(dataframe, keys):
     from functools import reduce
@@ -968,7 +929,7 @@ def _collect_spark_observations(grouped, partitions):
     } for row in rows]
 
 def _spark_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          keys, content_columns, range_column, scope, pattern, recent_start, include_row_changes):
+                          keys, content_columns, range_column, scope, recent_start, include_row_changes):
     from pyspark.sql import functions as F
     current = current.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_current_partitions)))
     previous = previous.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_previous_partitions)))
@@ -980,7 +941,7 @@ def _spark_row_comparison(current, previous, *, relevant_current_partitions, rel
     current_rows = current.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
     previous_rows = previous.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
     joined = current_rows.alias("c").join(previous_rows.alias("p"), "key_hash", "full_outer")
-    deletion_allowed = scope in {"complete", "partitions"} and pattern != "incremental_append"
+    deletion_allowed = scope in {"complete", "partitions"}
     classified = joined.withColumn("change_type", F.when(F.col("p.non_key_hash").isNull(), "inserted").when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted").when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"))
     classified = classified.filter(F.col("change_type").isNotNull())
     change_date = F.coalesce(F.col("c.range_value"), F.col("p.range_value")).cast("date")
@@ -998,14 +959,14 @@ def _spark_row_comparison(current, previous, *, relevant_current_partitions, rel
 def _strip_internal_observation_fields(observations):
     return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
 
-def _changes_content_columns(columns, keys, non_key_columns, pattern, version_column):
-    """Resolve content columns without treating version metadata as business data."""
+def _changes_content_columns(columns, keys, non_key_columns):
+    """Resolve the business content columns used for comparison."""
     if non_key_columns is not None:
         return tuple(non_key_columns)
     return tuple(
         column
         for column in columns
-        if column not in keys and not (pattern == "versioned" and column == version_column)
+        if column not in keys
     )
 
 def changes_check_core(
@@ -1016,15 +977,13 @@ def changes_check_core(
     key_columns: list[str] | tuple[str, ...] | None = None,
     non_key_columns: list[str] | tuple[str, ...] | None = None,
     range_column: str | None = None,
-    source_pattern: str = "snapshot",
     comparison_scope: str = "complete",
     refresh_days: int = 0,
-    version_column: str | None = None,
     reference_date: date | datetime | str | None = None,
     include_row_changes: bool = False,
 ) -> dict:
     """Compare current and previous observations using tiered deterministic checks."""
-    pattern, scope, refresh_days = _validate_changes_configuration(source_pattern, comparison_scope, refresh_days, version_column)
+    scope, refresh_days = _validate_changes_configuration(comparison_scope, refresh_days)
     keys = tuple(key_columns or ())
     if not keys:
         raise ValueError("key_columns must contain at least one logical key column")
@@ -1041,13 +1000,11 @@ def changes_check_core(
         current = dataframe
         previous = previous_dataframe if previous_dataframe is not None else dataframe.sparkSession.createDataFrame([], dataframe.schema)
         columns = sorted(set(current.columns) | set(previous.columns))
-        required = (*partitions, *keys, *((version_column,) if version_column else ()))
+        required = (*partitions, *keys)
         missing = [column for column in required if column not in columns]
         if missing:
             raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
-        if pattern == "versioned":
-            current, previous = _spark_resolve_versions(current, keys, version_column), _spark_resolve_versions(previous, keys, version_column)
+        content_columns = _changes_content_columns(columns, keys, non_key_columns)
         _validate_spark_logical_keys(current, keys)
         _validate_spark_logical_keys(previous, keys)
         current_prepared, current_grouped = _spark_partition_frame(current, partitions, range_column, columns)
@@ -1057,13 +1014,11 @@ def changes_check_core(
     else:
         current, previous = _local_source_rows(dataframe), _local_source_rows(previous_dataframe)
         columns = sorted({str(column) for row in current + previous for column in row})
-        required = (*partitions, *keys, *((version_column,) if version_column else ()))
+        required = (*partitions, *keys)
         missing = [column for column in required if column not in columns]
         if missing:
             raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
-        if pattern == "versioned":
-            current, previous = _local_latest_versions(current, keys, version_column), _local_latest_versions(previous, keys, version_column)
+        content_columns = _changes_content_columns(columns, keys, non_key_columns)
         _validate_local_logical_keys(current, keys)
         _validate_local_logical_keys(previous, keys)
         current_observations = _local_partition_observations(current, partitions, range_column, columns)
@@ -1082,7 +1037,7 @@ def changes_check_core(
             counts, ages, row_changes = _spark_row_comparison(
                 current_prepared, previous_prepared, relevant_current_partitions=current_ids,
                 relevant_previous_partitions=previous_ids, keys=keys, content_columns=content_columns,
-                range_column=range_column, scope=scope, pattern=pattern, recent_start=recent_start,
+                range_column=range_column, scope=scope, recent_start=recent_start,
                 include_row_changes=include_row_changes,
             )
         else:
@@ -1090,7 +1045,7 @@ def changes_check_core(
                 current, previous, relevant_current_partitions=current_ids,
                 relevant_previous_partitions=previous_ids, partitions=partitions, keys=keys,
                 content_columns=content_columns, range_column=range_column, scope=scope,
-                pattern=pattern, recent_start=recent_start,
+                recent_start=recent_start,
             )
             counts = {name: len(values) for name, values in changes.items()}
             ages = {"recent": len(recent), "historical": len(historical)}
@@ -1105,8 +1060,7 @@ def changes_check_core(
     result = {
         "status": "changed" if changed else "unchanged", "can_continue": True,
         "check_type": "changes", "guardrail_type": "changes", "changed": changed,
-        "source_pattern": pattern, "comparison_scope": scope,
-        "pattern_semantics": {"snapshot": "full_state", "incremental_append": "append_only", "mutable_incremental": "mutable_window", "versioned": "latest_version_per_key"}[pattern],
+        "comparison_scope": scope,
         "partition_observations": _strip_internal_observation_fields(current_observations),
         "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
         "new_partitions": [current_by_id[key]["partition"] for key in sorted(new_ids)],
@@ -1114,8 +1068,6 @@ def changes_check_core(
         "inserted_count": counts.get("inserted", 0), "updated_count": counts.get("updated", 0),
         "deleted_count": counts.get("deleted", 0),
         "deletions_provable": scope == "complete" or (scope == "partitions" and bool(partitions)),
-        "append_violation_count": counts.get("updated", 0) if pattern == "incremental_append" else 0,
-        "historical_mutation_detected": pattern == "mutable_incremental" and ages.get("historical", 0) > 0,
         "current_observed_range": {"min": min(current_values) if current_values else None, "max": max(current_values) if current_values else None},
         "previous_observed_range": {"min": min(previous_values) if previous_values else None, "max": previous_max},
         "recent_mutable_range": {"start": recent_start.isoformat(), "end": today.isoformat(), "refresh_days": refresh_days},
@@ -1524,12 +1476,18 @@ def resolve_table_processing_definition(
             )
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
-        definition = validated_processing((payload.get("table") or {}).get("processing"))
+        table_definition = payload.get("table") or {}
+        definition = validated_processing(table_definition.get("processing"))
+        writer = table_definition.get("writer") or {}
+        if not isinstance(writer, Mapping):
+            raise ValueError("Data Contract table.writer must be an object.")
         return {
             **definition,
             "source": "data_contract",
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
+            "owner_notebook_id": str(writer.get("notebook_id") or "").strip(),
+            "owner_notebook_name": str(writer.get("notebook_name") or "").strip(),
         }
     if authored_processing is None:
         raise ValueError("Development current authoring requires an authored processing definition.")
@@ -1614,15 +1572,12 @@ def execute_lakehouse_processing(
 ) -> None:
     """Apply one already-resolved governed load definition to a Lakehouse target."""
     strategy = validated_processing(dict(processing))["load_strategy"]
-    read_mode = scope.get("read_mode")
-    runtime_scope = scope.get("scope")
-    if read_mode == "skip":
-        return
-    if read_mode not in {"full_dataset", "incremental_subset"} or not isinstance(runtime_scope, Mapping):
-        raise ValueError("Processing scope must use skip, full_dataset, or incremental_subset.")
-    values = list(runtime_scope.get("values") or [])
-    if read_mode == "incremental_subset" and runtime_scope.get("type") == "partition" and not values:
-        raise ValueError("Incremental partition processing requires at least one affected partition value.")
+    scope_type = str(scope.get("type") or "").strip()
+    if scope_type not in {"full_dataset", "partition"}:
+        raise ValueError("Write processing scope must use full_dataset or partition.")
+    values = list(scope.get("values") or [])
+    if scope_type == "partition" and not values:
+        raise ValueError("Partition-scoped target processing requires at least one partition value.")
 
     columns = set(getattr(df, "columns", ()))
     persisted_df = df
@@ -1633,11 +1588,13 @@ def execute_lakehouse_processing(
         write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
-        if read_mode == "full_dataset":
+        if scope_type == "full_dataset":
             write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
             return
+        if scope.get("column") != processing.get("partition_column"):
+            raise ValueError("Write partition scope must match the target processing partition_column.")
         if "_partition_bucket" not in columns:
-            raise ValueError("Incremental overwrite requires persisted _partition_bucket target state.")
+            raise ValueError("Partition-scoped overwrite requires persisted _partition_bucket target state.")
         predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table_core(
             persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
@@ -1789,18 +1746,14 @@ def evaluate_changes_guardrail(
             "Governance must author and activate one first."
         )
     params = _parse_rule_parameters(rule)
-    behaviour = _string_value(params.get("change_behaviour"))
-    if behaviour:
-        rule_type, source_pattern = resolve_guardrail_change_behaviour(behaviour)
-    else:
-        rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
-        source_pattern = _string_value(params.get("source_pattern") or result.get("source_pattern") or "snapshot").lower()
+    rule_type = _string_value(
+        params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only"
+    ).lower()
     severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     result.update({
         "rule_type": rule_type,
-        "source_pattern": source_pattern,
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
         "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
@@ -1825,8 +1778,9 @@ def evaluate_changes_guardrail(
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    append_violation = source_pattern == "incremental_append" and int(result.get("append_violation_count") or 0) > 0
-    passed = not append_violation and (rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed))
+    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (
+        rule_type == "no_change_required" and not changed
+    )
     if passed:
         result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
     else:
@@ -1834,13 +1788,6 @@ def evaluate_changes_guardrail(
         result.update(status="failed" if blocking else "warning", can_continue=not blocking, reason=f"Source change expectation {rule_type!r} was not satisfied.")
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
-
-def resolve_guardrail_change_behaviour(change_behaviour: str) -> tuple[str, str]:
-    """Translate one widget change behaviour into canonical runtime concepts."""
-    try:
-        return _GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING[str(change_behaviour)]
-    except KeyError as exc:
-        raise ValueError(f"change_behaviour must be one of: {', '.join(GUARDRAIL_CHANGE_BEHAVIOURS)}") from exc
 
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":

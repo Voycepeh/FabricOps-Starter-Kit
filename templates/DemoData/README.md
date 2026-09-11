@@ -1,40 +1,19 @@
 # FabricOps Guided Demo data
 
-These fixtures support one Orders-domain story across ingestion, incremental processing, profiling, and later Guardrail validation.
+These fixtures support one Orders-domain story across ingestion, target processing, profiling, and later Guardrail validation.
 
 ## Core data
 
 | File | Purpose |
 | --- | --- |
 | `orders.csv` | Canonical valid Orders baseline used by the main Guided Demo. |
-| `orders_incremental.csv` | Later Orders batch for watermark incremental testing. |
+| `orders_incremental.csv` | Later Orders batch for an explicit project-owned filtered query and append target write. |
 | `products.csv` | Product reference data used to seed the Lakehouse lookup table. |
 | `order_history.csv` | Historical transactions used to seed the Warehouse and demonstrate `read_warehouse_query()`. |
 
-## Incremental-processing scenarios
+## Target-processing scenarios
 
-### Watermark
-
-Use `modified_datetime` as the watermark.
-
-1. Load `orders.csv` into the source: first run should resolve to `full_dataset`.
-2. Run again without changing the source: it should resolve to `skip`.
-3. Append `orders_incremental.csv`: the next run should resolve to `incremental_subset` containing only the later watermark range.
-
-Negative fixtures:
-
-- `orders_watermark_duplicate.csv` contains a duplicate watermark and should be rejected by watermark preparation.
-- `orders_watermark_null.csv` contains a null watermark and should be rejected by watermark preparation.
-
-### Partition
-
-Use `order_date` as the partition column.
-
-1. `orders_partition_baseline.csv` contains three complete source partitions.
-2. `orders_partition_new.csv` represents a new partition.
-3. `orders_partition_changed.csv` represents the complete replacement content for an existing partition with deterministic changes.
-
-These files are intentionally separate from the main Orders baseline so watermark and partition acceptance tests can be reset independently.
+`orders_incremental.csv` can be selected by explicit project query logic before an `append` target write. The partition fixtures can exercise a governed target `overwrite` whose `partition_column` is `order_date`. These inputs do not configure a separate source-read strategy; the target Data Contract remains authoritative for `overwrite`, `append`, `scd1`, or `scd2`.
 
 ## Guardrail scenario
 

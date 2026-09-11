@@ -9,15 +9,16 @@ from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract.shared import save_guardrails
-from fabricops_kit.pipeline.shared import (
-    GUARDRAIL_CHANGE_BEHAVIOURS,
-    resolve_guardrail_change_behaviour,
-)
+from fabricops_kit.pipeline.shared import GUARDRAIL_CHANGE_EXPECTATIONS
 from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets import enrichment_shared as enrichment_ai
 
-CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
+CHANGE_EXPECTATIONS = (
+    ("Monitor only", "monitor_only"),
+    ("Change required", "change_required"),
+    ("No change required", "no_change_required"),
+)
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
 _FAILURE_ACTIONS = (("Block", "Block"), ("Warn", "Warn"))
 _FAILURE_SEVERITIES = {value for _, value in _FAILURE_ACTIONS}
@@ -35,7 +36,7 @@ def _guardrail_records_from_selection(
     freshness_column: str,
     maximum_age: int | float,
     maximum_age_unit: str,
-    change_behaviour: str,
+    expected_change: str,
     schema_action: str = "Block",
     freshness_action: str = "Block",
     change_action: str = "Block",
@@ -71,7 +72,9 @@ def _guardrail_records_from_selection(
     ):
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
-    expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
+    expected_change = str(expected_change or "").strip().lower()
+    if expected_change not in GUARDRAIL_CHANGE_EXPECTATIONS:
+        raise ValueError("Changes expectation must be monitor_only, change_required, or no_change_required.")
     actions = {
         "schema": str(schema_action),
         "freshness": str(freshness_action),
@@ -119,9 +122,7 @@ def _guardrail_records_from_selection(
             rule_id="changes",
             rule_type=expected_change,
             parameters={
-                "change_behaviour": change_behaviour,
                 "expected_change": expected_change,
-                "source_pattern": source_pattern,
                 "partition_column": partition_column,
                 "change_column": change_column,
             },
@@ -586,11 +587,11 @@ def _render_guardrail_authoring(
         value=str(freshness_rule.get("action") or "Block"),
         **shared.widget_common(widgets, "On failure"),
     )
-    behaviour = str(change_params.get("change_behaviour") or "Incremental append")
-    change_behaviour = widgets.Dropdown(
-        options=CHANGE_BEHAVIOURS,
-        value=behaviour if behaviour in CHANGE_BEHAVIOURS else "Incremental append",
-        **shared.widget_common(widgets, "Change behaviour"),
+    expected_value = str(change_params.get("expected_change") or change_rule.get("rule_type") or "monitor_only")
+    expected_change = widgets.Dropdown(
+        options=CHANGE_EXPECTATIONS,
+        value=expected_value if expected_value in GUARDRAIL_CHANGE_EXPECTATIONS else "monitor_only",
+        **shared.widget_common(widgets, "Expected source change"),
     )
     partition_value = str(change_params.get("partition_column") or "")
     partition_column = widgets.Dropdown(
@@ -633,7 +634,7 @@ def _render_guardrail_authoring(
             freshness_column=freshness_column.value,
             maximum_age=maximum_age.value,
             maximum_age_unit=maximum_age_unit.value,
-            change_behaviour=change_behaviour.value,
+            expected_change=expected_change.value,
             schema_action=schema_failure_action.value,
             freshness_action=freshness_failure_action.value,
             change_action=change_failure_action.value,
@@ -688,7 +689,7 @@ def _render_guardrail_authoring(
         maximum_age,
         maximum_age_unit,
         freshness_failure_action,
-        change_behaviour,
+        expected_change,
         partition_column,
         change_column,
         change_failure_action,
@@ -752,7 +753,7 @@ def _render_guardrail_authoring(
                     shared.form_grid(
                         widgets,
                         [
-                            change_behaviour,
+                            expected_change,
                             partition_column,
                             change_column,
                             change_failure_action,
@@ -779,7 +780,7 @@ def _render_guardrail_authoring(
             "maximum_age": maximum_age,
             "maximum_age_unit": maximum_age_unit,
             "freshness_failure_action": freshness_failure_action,
-            "change_behaviour": change_behaviour,
+            "expected_change": expected_change,
             "partition_column": partition_column,
             "change_column": change_column,
             "change_failure_action": change_failure_action,

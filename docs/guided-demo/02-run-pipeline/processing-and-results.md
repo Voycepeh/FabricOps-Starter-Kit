@@ -22,6 +22,8 @@ Use an explicit Warehouse query when the project needs source-side filtering, pr
 
 Target processing remains configured at the Write boundary. `write_pipeline_prep()` resolves the target's governed `load_strategy`, and the target writer applies the corresponding Lakehouse or Warehouse behaviour.
 
+In Production, the active frozen Data Contract is authoritative: the notebook supplies the governed target `table_id`, and FabricOps resolves both `load_strategy` and its required parameters. Development can still use physical target identity plus explicit authoring before a contract exists.
+
 | Target strategy | Typical use |
 | --- | --- |
 | `overwrite` | Replace a target from a complete prepared result. |
@@ -30,6 +32,14 @@ Target processing remains configured at the Write boundary. `write_pipeline_prep
 | `scd2` | Preserve governed history using effective dates and tracked columns. |
 
 Keep merge, upsert, append, partitioning, and other target-side decisions in target configuration and the Write block. A Read block should not need to know where its DataFrame will later be written.
+
+!!! warning "One governed target, one writer"
+
+    One governed target `table_id` should have one owning pipeline/notebook writer. Independent writers can race, duplicate appends, overwrite each other's state, break SCD history, or apply inconsistent assumptions. FabricOps freezes the owner notebook identity with the Data Contract and rejects a contract-backed write from a conflicting notebook.
+
+## Keep Changes separate from processing
+
+The Changes Guardrail observes and compares source state, then evaluates a simple expectation: monitor changes, require change, or require no change. It can still report first observation, changed or unchanged state, and new, changed, removed, or reappeared partitions. It does not select or repeat the target load strategy.
 
 ## Keep canonical profiles complete
 

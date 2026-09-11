@@ -141,6 +141,30 @@
     "avoid_usage": "incremental read configuration"
   },
   {
+    "id": "load-strategy",
+    "term": "load strategy",
+    "aliases": [
+      "write strategy"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The authoritative governed behaviour used to write one target table.",
+    "long_definition": "A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.",
+    "preferred_usage": "Use load strategy for governed target write behaviour.",
+    "avoid_usage": "source pattern or Changes behaviour as a second strategy"
+  },
+  {
+    "id": "writer-ownership",
+    "term": "writer ownership",
+    "aliases": [
+      "single writer"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The rule that one governed target table_id has one owning pipeline or notebook writer.",
+    "long_definition": "Writer Ownership binds a governed target table_id to the notebook identity frozen in its Data Contract. Production rejects a conflicting writer because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions.",
+    "preferred_usage": "State that one governed target table_id should have one owning pipeline/notebook writer.",
+    "avoid_usage": "a scheduling or distributed locking guarantee"
+  },
+  {
     "id": "microsoft-fabric",
     "term": "Microsoft Fabric",
     "aliases": [],
@@ -386,7 +410,7 @@
     "short_definition": "A value that represents how far an incremental process has successfully published source data to a governed target.",
     "long_definition": "A Watermark is a saved progress marker used by an incremental process to determine what data should be considered after a previously successful point. The exact uniqueness, ordering, and tie-handling requirements depend on the incremental design.",
     "preferred_usage": "Use watermark for the incremental boundary persisted on governed target rows.",
-    "avoid_usage": "FabricOps incremental watermark when the implementation-specific strategy is meant"
+    "avoid_usage": "a second processing strategy outside the target load_strategy"
   },
   {
     "id": "parallel-processing",

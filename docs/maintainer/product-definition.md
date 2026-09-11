@@ -80,22 +80,22 @@ FabricOps standardizes the governed boundaries around ETL without taking ownersh
 - **Development** supports current authoring and testing, including testing a selected Data Contract.
 - **Production** uses the approved active Data Contract as the governed runtime definition.
 
-### E. Extract
+### R. Read
 
-Extract establishes the governed source inputs before transformation.
+Read establishes the governed source inputs before transformation.
 
 For one or more source table IDs, the pipeline:
 
-- defines the source tables in play and whether each read is full or incremental
+- defines the source tables in play
 - resolves the applicable source Guardrails from the selected or active Data Contract, or from current Guardrail metadata during Development authoring
 - checks source schema, freshness, and change state before the business-data read
-- reads each source table into a DataFrame using the prepared read scope
+- reads each source table into a DataFrame
 - runs data-quality checks on the DataFrame being processed
 - profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage metadata
 
 The governed preparation and check functions are table-scoped. Engineers compose multiple governed source and target flows by repeating the same pattern for each relevant table relationship, so one `02_pipeline` can contain multiple reads, transformations, and writes without requiring a single multi-table orchestration call.
 
-A partial or incremental source DataFrame is processing scope, not a complete table profile. It must not replace the latest valid full-table source profile.
+A filtered or aggregated source DataFrame must not replace the latest valid complete-table source profile.
 
 ### T. Transform
 
@@ -103,11 +103,11 @@ Transform is intentionally user-defined.
 
 The engineer applies the business logic required to turn validated source DataFrames into one or more target DataFrames. FabricOps governs the inputs and outputs around this step without prescribing the transformation itself.
 
-When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, read scope, load strategy, and persistence behaviour.
+When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, load strategy, and persistence behaviour.
 
-### L. Load
+### W. Write
 
-Load establishes the governed target outputs and persists them.
+Write establishes the governed target outputs and persists them.
 
 For one or more target table IDs, the pipeline:
 
@@ -124,7 +124,11 @@ Each governed target is prepared and written using its resolved load strategy an
 
 The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
 
-**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, read-strategy resolution, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
+One governed target `table_id` should have one owning pipeline/notebook writer. The frozen Data Contract records that owner together with the authoritative load strategy. Multiple independent writers are unsafe because they can race, duplicate writes, overwrite state, break SCD history, or use conflicting target assumptions.
+
+The Changes Guardrail validates observed source behaviour against `monitor_only`, `change_required`, or `no_change_required`. It does not repeat or replace the target's load strategy.
+
+**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
 
 ## Product components
 
@@ -154,8 +158,8 @@ Potential future AI-augmented workflows include:
 
 - **Enrichment suggestions:** propose business names, descriptions and information classifications from schema, profile, and governed context for steward review.
 - **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
-- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, read strategy, load strategy, or load-strategy parameters, and identify items requiring explicit review before activation.
-- **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, resolved read strategy, applicable Guardrails, and governed load strategy to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.
+- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, load strategy, load-strategy parameters, or writer ownership, and identify items requiring explicit review before activation.
+- **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, applicable Guardrails, governed load strategy, and writer ownership to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.
 - **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
 - **Change-impact analysis:** use contracts, lineage, profile history, source observations, read strategies, and load strategies to explain likely downstream impact before a source, target, or governed execution definition changes.
 - **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.

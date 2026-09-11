@@ -9,17 +9,11 @@ from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import (
     evaluate_changes_guardrail,
-    catalogue_authored_processing,
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
-    resolve_table_processing_definition,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.shared import (
-    changes_check_core,
-    resolve_guardrail_change_behaviour,
-    write_guardrail_result_row,
-)
+from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
@@ -136,14 +130,6 @@ def _observation_changes(
         config, env, requested_table_id, spark_session=spark_session, context=context,
     )
     table_id = identity["table_id"]
-    processing = resolve_table_processing_definition(
-        config,
-        env,
-        table_id,
-        spark_session=spark_session,
-        context=context,
-        authored_processing=catalogue_authored_processing(identity),
-    )
     metadata_schema = metadata_table_physical_schema(config, _OBSERVATION_TABLE)
     history = []
     try:
@@ -265,19 +251,7 @@ def _observation_changes(
     if selected_rule is None:
         raise ValueError(f"No active approved change rule exists for {table_id!r}.")
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
-    if parameters.get("change_behaviour"):
-        _, source_pattern = resolve_guardrail_change_behaviour(parameters["change_behaviour"])
-    else:
-        source_pattern = str(parameters.get("source_pattern") or "snapshot")
 
-    pattern_result = changes_check_core(
-        current,
-        previous or None,
-        key_columns=["partition_value"],
-        non_key_columns=["row_count", "min_change_value", "max_change_value", "is_present"],
-        source_pattern=source_pattern,
-        comparison_scope="partial" if source_pattern == "incremental_append" else "complete",
-    )
     first_observation = not successful_partition_state if successful_partition_state is not None else not previous
     has_changes = first_observation or bool(new or changed or removed or reappeared)
     result = {
@@ -296,11 +270,6 @@ def _observation_changes(
         "reappeared_partitions": reappeared,
         "affected_partitions": [*new, *changed, *removed, *reappeared],
         "partition_column": parameters.get("partition_column"),
-        "load_strategy": processing["load_strategy"],
-        "processing_source": processing["source"],
-        "source_pattern": source_pattern,
-        "pattern_semantics": pattern_result["pattern_semantics"],
-        "append_violation_count": pattern_result["append_violation_count"],
         "reason": (
             "First observation baseline created."
             if first_observation
@@ -352,14 +321,14 @@ def check_changes(observation, *, table_id: str | None = None) -> dict:
     Raises
     ------
     ValueError
-        If configuration is invalid or logical keys are null, missing, or
-        duplicated.
+        If the observation identity or approved Changes expectation is invalid.
 
     Notes
     -----
     Production resolves source-change expectations from the active frozen Data
-    Contract. Development uses mutable authoring metadata, and change detection
-    itself is unchanged.
+    Contract. Development uses mutable authoring metadata. The Guardrail states
+    whether change is required, forbidden, or monitored; it does not define a
+    target load strategy.
     
     Examples
     --------

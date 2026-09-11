@@ -12,9 +12,9 @@ Prepare governed target write inputs and technical fields without physically wri
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/write_pipeline_prep.py:45`
+`fabricops_kit/pipeline/write_pipeline_prep.py:68`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L45-L200">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_prep.py#L68-L230">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ def write_pipeline_prep(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Business target DataFrame after target schema and DQ checks pass. |
-| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata and target-owned processing. |
+| `target_table_id` | `str \| None` | No | Canonical registered target identity used to resolve physical target metadata. A selected or active frozen Data Contract is authoritative for its load strategy, parameters, and owning notebook. |
 | `target` | `str \| None` | No | Configured target key supplied instead of ``target_table_id``. |
 | `schema` | `str \| None` | No | Physical target schema, when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |
@@ -79,13 +79,14 @@ def write_pipeline_prep(
 
 ## Returns
 
-Audited DataFrame, target identity, resolved target processing, writer settings, execution scope, and target Lineage.
+Audited DataFrame, target identity, authoritative load strategy, writer settings, write scope, and target Lineage.
 
 ## Raises / Errors
 
 ValueError
     If preparation is incomplete or an unsafe target/strategy combination
-    is requested.
+    is requested, or if a contract-backed target is invoked by a notebook
+    other than its frozen owner.
 
 ## Notes
 
@@ -96,7 +97,9 @@ provenance fields. This function does not call a Lakehouse or Warehouse
 writer. It persists target Lineage at the governed preparation boundary.
 Lakehouse and Warehouse targets use the same governed target strategy
 definition; each writer applies its engine-specific physical execution only
-after this preparation succeeds.
+after this preparation succeeds. One governed target ``table_id`` must have
+one owning pipeline/notebook writer because independent writers can race,
+duplicate writes, overwrite state, or break SCD history.
 
 </div>
 

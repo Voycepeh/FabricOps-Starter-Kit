@@ -30,6 +30,8 @@ GLOSSARY_GROUPS = [
             "configuration-driven-engineering",
             "read-transform-write",
             "full-dataset",
+            "load-strategy",
+            "writer-ownership",
         ],
     ),
     (
@@ -102,6 +104,8 @@ DISPLAY_NAMES = {
     "configuration-driven-engineering": "Configuration-driven Engineering",
     "read-transform-write": "Read / Transform / Write",
     "full-dataset": "Full Dataset",
+    "load-strategy": "Load Strategy",
+    "writer-ownership": "Writer Ownership",
     "microsoft-fabric": "Microsoft Fabric",
     "workspace": "Workspace",
     "lakehouse": "Lakehouse",

@@ -37,7 +37,12 @@ def _assemble_payload(*, contract_id, contract_version, agreement, table_id, usa
 
 
 def _sources():
-    audit = {"_committed_at": "2026-01-01T00:00:00", "_activity_id": "a"}
+    audit = {
+        "_committed_at": "2026-01-01T00:00:00",
+        "_activity_id": "a",
+        "_notebook_id": "notebook-orders",
+        "_notebook_name": "02_pipeline",
+    }
     contract_id = _contract_id("dev", "orders")
     return {
         "METADATA_DATA_STEWARD": [
@@ -85,6 +90,9 @@ def test_payload_is_complete_deterministic_and_excludes_runtime_results():
     assert json.dumps(first, sort_keys=True, separators=(",", ":")) == json.dumps(second, sort_keys=True, separators=(",", ":"))
     assert first["table"]["table_id"] == "orders"
     assert first["table"]["processing"] == {"load_strategy": "scd1", "key_columns": ["order_id"]}
+    assert first["table"]["writer"] == {
+        "notebook_id": "notebook-orders", "notebook_name": "02_pipeline",
+    }
     assert first["table"]["columns"] == [{"column_id": "order_id", "column_name": "order_id", "data_type": "long"}]
     assert first["enrichment"]["table"][0]["value"] == "Orders"
     assert [row["guardrail_rule_id"] for row in first["guardrails"]] == ["g1"]

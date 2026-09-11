@@ -304,7 +304,7 @@ def test_02_pipeline_uses_read_transform_write_without_framework_wiring():
 def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
     """Engineers provide physical identity while prep owns deterministic table_id."""
     source = _notebook_source("02_pipeline.ipynb")
-    for cell_id in ("source-1-config", "source-2-config", "source-3-config", "target-config"):
+    for cell_id in ("source-1-config", "source-2-config", "source-3-config"):
         assert "TABLE_ID =" not in _cell_by_id("02_pipeline.ipynb", cell_id).source
     for cell_id in ("source-1-run", "source-2-run", "source-3-run"):
         runner = _cell_by_id("02_pipeline.ipynb", cell_id).source
@@ -313,8 +313,12 @@ def test_02_pipeline_prep_resolves_ids_from_small_physical_configs():
         assert 'READ_TABLE_ID = read_prep["table_id"]' in runner
     target = _cell_by_id("02_pipeline.ipynb", "target-guard").source
     assert "write_pipeline_prep(" in target
-    assert "target=WRITE_TARGET" in target
-    assert 'WRITE_TABLE_ID = write_prep["target"]["table_id"]' in target
+    assert "target_table_id=WRITE_TABLE_ID" in target
+    assert "load_strategy=" not in target
+    target_config = _cell_by_id("02_pipeline.ipynb", "target-config").source
+    assert "WRITE_TABLE_ID =" in target_config
+    assert "WRITE_STRATEGY" not in target_config
+    assert "WRITE_PARAMETERS" not in target_config
     assert "build_table_id" not in source
 
 
