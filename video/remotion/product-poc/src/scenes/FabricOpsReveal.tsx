@@ -18,11 +18,24 @@ const Brand = () => (
 );
 
 const floatingWords = [
+  {text: 'Operations', at: 20, left: 250, top: 250, rotate: -4},
+  {text: 'Plug and play', at: 24, left: 1280, top: 275, rotate: 4},
+  {text: 'Self-contained', at: 28, left: 250, top: 705, rotate: 3},
   {text: 'Python', at: 31.5, left: 210, top: 660, rotate: -5},
   {text: 'Notebook', at: 32.5, left: 1320, top: 245, rotate: 4},
   {text: 'PySpark', at: 33.5, left: 245, top: 255, rotate: 5},
   {text: 'Lakehouse', at: 35, left: 1285, top: 690, rotate: -4},
 ] as const;
+
+const relationshipTiming = {
+  governanceAsCode: {start: 43, end: 45},
+  governance: 46,
+  engineering: 47,
+  orbit: 48,
+  end: 50,
+} as const;
+
+const globalToLocalFrame = (seconds: number, fps: number) => Math.round(seconds * fps - SCENE_STARTS.fabricOps);
 
 export const FabricOpsReveal = () => {
   const frame = useCurrentFrame();
@@ -60,7 +73,7 @@ export const FabricOpsReveal = () => {
       }}
     >
       {floatingWords.map((word) => {
-        const start = Math.round(word.at * fps - SCENE_STARTS.fabricOps);
+        const start = globalToLocalFrame(word.at, fps);
         const opacity = interpolate(frame, [start, start + 5, start + 24, start + 30], [0, 1, 1, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
@@ -93,6 +106,53 @@ export const FabricOpsReveal = () => {
           </div>
         );
       })}
+
+      {(() => {
+        const start = globalToLocalFrame(relationshipTiming.governanceAsCode.start, fps);
+        const end = globalToLocalFrame(relationshipTiming.governanceAsCode.end, fps);
+        const opacity = interpolate(frame, [start, start + 7, end - 8, end], [0, 1, 1, 0], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        });
+        const scale = interpolate(frame, [start, start + 9], [0.86, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.out(Easing.back(1.2)),
+        });
+        return (
+          <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 54, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
+            Governance as Code
+          </div>
+        );
+      })()}
+
+      {(() => {
+        const governanceStart = globalToLocalFrame(relationshipTiming.governance, fps);
+        const engineeringStart = globalToLocalFrame(relationshipTiming.engineering, fps);
+        const orbitStart = globalToLocalFrame(relationshipTiming.orbit, fps);
+        const end = globalToLocalFrame(relationshipTiming.end, fps);
+        const fadeOut = interpolate(frame, [end - 8, end], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        const conceptStyle = (start: number) => {
+          const enter = spring({frame: frame - start, fps, config: {damping: 16, stiffness: 100}});
+          return {opacity: enter * fadeOut, transform: `scale(${0.82 + enter * 0.18})`};
+        };
+        const orbitProgress = interpolate(frame, [orbitStart, orbitStart + 24], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.inOut(Easing.cubic),
+        });
+        return (
+          <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+            <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
+              <ellipse cx="960" cy="540" rx="760" ry="245" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="3300" strokeDashoffset={3300 * (1 - orbitProgress)} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
+              <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
+              <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
+            </svg>
+            <div style={{position: 'absolute', left: 105, top: 505, width: 310, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(governanceStart)}}>Governance</div>
+            <div style={{position: 'absolute', right: 85, top: 505, width: 340, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(engineeringStart)}}>Engineering</div>
+          </div>
+        );
+      })()}
 
       <div
         style={{

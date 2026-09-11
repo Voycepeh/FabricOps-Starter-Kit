@@ -5,22 +5,25 @@ import {VIDEO_CONFIG} from '../videoConfig';
 const OPENING_CENTER = {x: 960, y: 540} as const;
 const PUSH_DISTANCE = 1500;
 
-const burstOffsets = [0, 6, 12, 18, 24, 30] as const;
+const ICON_POPULATION_START_SECONDS = 4;
+const ICON_ENTRY_FRAMES = 14;
+// Deliberately grouped rather than sequential: all 18 cards land by eight seconds.
+const burstOffsets = [0, 0, 3, 3, 18, 18, 37, 37, 40, 61, 61, 64, 82, 82, 85, 101, 101, 105] as const;
 const entryVectors = [
-  {x: -90, y: -55},
-  {x: 70, y: -75},
-  {x: 0, y: -95},
-  {x: -95, y: 40},
-  {x: 95, y: 30},
-  {x: 25, y: 90},
+  {x: -145, y: -65},
+  {x: 105, y: -125},
+  {x: 15, y: -150},
+  {x: -155, y: 55},
+  {x: 150, y: 45},
+  {x: 35, y: 145},
 ] as const;
 
 const emphasisCues = [
-  {label: 'Notebook', at: 5.05},
-  {label: 'Data Pipeline', at: 5.42},
-  {label: 'Lakehouse', at: 5.79},
-  {label: 'Warehouse', at: 6.16},
-  {label: 'Environment', at: 6.53},
+  {label: 'Notebook', at: 8.7},
+  {label: 'Data Pipeline', at: 9.55},
+  {label: 'Lakehouse', at: 10.45},
+  {label: 'Warehouse', at: 11.2},
+  {label: 'Environment', at: 12.15},
 ] as const;
 
 export const OpeningPlatform = () => {
@@ -47,8 +50,8 @@ export const OpeningPlatform = () => {
   return (
     <div style={{position: 'absolute', inset: 0}}>
       {OPENING_ARTIFACTS.map((item, index) => {
-        const burstStart = Math.round(5 * fps) + burstOffsets[index % burstOffsets.length];
-        const enter = interpolate(frame, [burstStart, burstStart + 14], [0, 1], {
+        const burstStart = Math.round(ICON_POPULATION_START_SECONDS * fps) + burstOffsets[index];
+        const enter = interpolate(frame, [burstStart, burstStart + ICON_ENTRY_FRAMES], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.back(1.35)),
