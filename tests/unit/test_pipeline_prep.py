@@ -240,7 +240,7 @@ def test_partition_retry_compares_with_last_successful_observation():
         {"observation_id": "successful", "table_id": "source", "environment_name": "dev", "_committed_at": 1},
         {"observation_id": "failed-run", "table_id": "source", "environment_name": "dev", "_committed_at": 2},
     ]
-    previous = import_module("fabricops_kit.pipeline.check_changes")._previous_observation(
+    previous = import_module("fabricops_kit.pipeline.check_source_stability")._previous_observation(
         history, table_id="source", environment_name="dev", committed_at=3,
         observation_id="successful",
     )

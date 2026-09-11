@@ -14,7 +14,7 @@ CURRENT = [
 
 def check(current=CURRENT, previous=None, **kwargs):
     """Run a source check with stable test defaults."""
-    return guardrails_shared.changes_check_core(
+    return guardrails_shared.source_stability_check_core(
         current,
         CURRENT if previous is None else previous,
         key_columns=["id"],

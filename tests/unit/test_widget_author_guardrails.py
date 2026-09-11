@@ -114,7 +114,7 @@ def _state(existing=()):
 def _records(**overrides):
     values = dict(
         required_columns=["id"], freshness_column="updated_at", maximum_age=1,
-        maximum_age_unit="Hours", expected_change="monitor_only",
+        maximum_age_unit="Hours",
         partition_column="snapshot_date", change_column="updated_at",
     )
     values.update(overrides)
@@ -330,18 +330,17 @@ def test_freshness_can_be_disabled_without_removing_logical_rule():
     assert json.loads(freshness["rule_parameters_json"])["freshness_column"] == ""
 
 
-def test_changes_expectations_do_not_define_a_parallel_processing_strategy():
-    """Changes authoring stores only validation intent and observation columns."""
-    for expectation in ("monitor_only", "change_required", "no_change_required"):
-        change = _records(expected_change=expectation)[2]
-        params = json.loads(change["rule_parameters_json"])
-        assert change["rule_id"] == "changes"
-        assert change["rule_type"] == expectation
-        assert params == {
-            "expected_change": expectation,
-            "partition_column": "snapshot_date",
-            "change_column": "updated_at",
-        }
+def test_source_stability_authors_only_observation_inputs():
+    """Source Stability authoring stores no parallel processing vocabulary."""
+    rule = _records()[2]
+    params = json.loads(rule["rule_parameters_json"])
+    assert rule["guardrail_type"] == "source_stability"
+    assert rule["rule_id"] == "source_stability"
+    assert rule["rule_type"] == "historical_mutation"
+    assert params == {
+        "partition_column": "snapshot_date",
+        "change_column": "updated_at",
+    }
 
 
 def test_invalid_columns_age_and_failure_action_fail_clearly():

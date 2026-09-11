@@ -5,7 +5,7 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     load_table_guardrail_rules,
-    resolve_change_rule_observation_columns,
+    resolve_source_stability_observation_columns,
     resolve_catalogue_table_identity,
     select_table_guardrail_rule,
 )
@@ -128,16 +128,16 @@ def check_freshness(
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
     change_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="changes",
+        guardrail_type="source_stability",
         table_id=table_id,
         environment_name=env,
     )
     if change_rule is None:
         raise ValueError(
-            f"No active approved source-change rule exists for {table_id!r}; "
+            f"No active approved Source Stability rule exists for {table_id!r}; "
             "the observation change column cannot be resolved."
         )
-    _partition_column, change_column = resolve_change_rule_observation_columns(change_rule)
+    _partition_column, change_column = resolve_source_stability_observation_columns(change_rule)
     compatibility_observation = guardrail_compatibility_observation(
         observation,
         table_id=table_id,

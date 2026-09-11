@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import inspect
+import fabricops_kit
 
-from fabricops_kit import check_changes, check_freshness, profile_and_register_table
+from fabricops_kit import check_source_stability, check_freshness, profile_and_register_table
 
 
 def _assert_numpy_parameter_contract(function) -> None:
@@ -17,15 +18,16 @@ def _assert_numpy_parameter_contract(function) -> None:
 
 
 def test_live_observation_checks_keep_their_supported_public_signatures() -> None:
-    """Protect the explicitly extended freshness and unchanged changes signatures."""
+    """Protect the explicitly governed observation-check signatures."""
     assert str(inspect.signature(check_freshness)) == (
         "(observation, *, table_id: str | None = None, enabled: bool = True, "
         "raise_on_failure: bool = False) -> dict"
     )
-    assert str(inspect.signature(check_changes)) == "(observation, *, table_id: str | None = None) -> dict"
+    assert str(inspect.signature(check_source_stability)) == "(observation, *, target_table_id: str) -> dict"
+    assert not hasattr(fabricops_kit, "check_changes")
 
 
 def test_stage2_touched_public_functions_keep_complete_numpy_parameter_docs() -> None:
     """Prevent metadata refactors from collapsing established public API documentation."""
-    for function in (check_changes, check_freshness, profile_and_register_table):
+    for function in (check_source_stability, check_freshness, profile_and_register_table):
         _assert_numpy_parameter_contract(function)

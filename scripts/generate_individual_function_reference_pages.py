@@ -226,7 +226,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_author_data_contract"],
     "METADATA_GUARDRAIL_RESULTS": [
-        "check_schema", "check_freshness", "check_changes", "check_dq",
+        "check_schema", "check_freshness", "check_source_stability", "check_dq",
     ],
     "METADATA_SOURCE_OBSERVATION": ["read_pipeline_prep"],
     "METADATA_GUARDRAIL": ["widget_author_data_contract"],

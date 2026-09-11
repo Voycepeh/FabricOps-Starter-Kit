@@ -1,4 +1,4 @@
-"""Public deterministic changes check."""
+"""Public Source Stability Guardrail check."""
 
 import json
 from typing import Any
@@ -8,9 +8,10 @@ from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, met
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import (
-    evaluate_changes_guardrail,
+    evaluate_source_stability_guardrail,
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
+    resolve_table_processing_definition,
     select_table_guardrail_rule,
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
@@ -83,10 +84,10 @@ def _previous_observation(
     return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
-def _observation_changes(
+def _observation_stability(
     observation,
     *,
-    table_id: str | None = None,
+    target_table_id: str,
     successful_observation_id: str | None = None,
     successful_partition_state: dict[str, dict[str, Any]] | None = None,
 ) -> dict:
@@ -120,16 +121,27 @@ def _observation_changes(
         raise ValueError(
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
-    requested_table_id = str(table_id or observed_table_id).strip()
-    if requested_table_id != observed_table_id:
-        raise ValueError(
-            f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."
-        )
+    source_table_id = observed_table_id
     spark_session = getattr(observation, "sparkSession", None)
     identity = resolve_catalogue_table_identity(
-        config, env, requested_table_id, spark_session=spark_session, context=context,
+        config, env, source_table_id, spark_session=spark_session, context=context,
     )
     table_id = identity["table_id"]
+    target_identity = resolve_catalogue_table_identity(
+        config, env, str(target_table_id).strip(), spark_session=spark_session, context=context,
+    )
+    authored_processing = {
+        **json.loads(target_identity.get("load_strategy_parameters_json") or "{}"),
+        "load_strategy": target_identity.get("load_strategy"),
+    }
+    processing = resolve_table_processing_definition(
+        config,
+        env,
+        target_identity["table_id"],
+        spark_session=spark_session,
+        context=context,
+        authored_processing=authored_processing,
+    )
     metadata_schema = metadata_table_physical_schema(config, _OBSERVATION_TABLE)
     history = []
     try:
@@ -244,24 +256,25 @@ def _observation_changes(
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="changes",
+        guardrail_type="source_stability",
         table_id=table_id,
         environment_name=env,
     )
     if selected_rule is None:
-        raise ValueError(f"No active approved change rule exists for {table_id!r}.")
+        raise ValueError(f"No active approved Source Stability rule exists for {table_id!r}.")
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
 
     first_observation = not successful_partition_state if successful_partition_state is not None else not previous
     has_changes = first_observation or bool(new or changed or removed or reappeared)
     result = {
         "table_id": table_id,
+        "target_table_id": target_identity["table_id"],
         "environment_name": environment_name,
         "observation_id": observation_id,
         "status": "changed" if has_changes else "unchanged",
         "can_continue": True,
-        "check_type": "changes",
-        "guardrail_type": "changes",
+        "check_type": "source_stability",
+        "guardrail_type": "source_stability",
         "changed": has_changes,
         "first_observation": first_observation,
         "new_partitions": new,
@@ -276,11 +289,12 @@ def _observation_changes(
             else ("Source observation changed." if has_changes else "Source observation is unchanged.")
         ),
     }
-    result = evaluate_changes_guardrail(
+    result = evaluate_source_stability_guardrail(
         result,
         rules_df=rules_df,
         environment_name=env,
         table_id=table_id,
+        load_strategy=processing["load_strategy"],
     )
     if result.get("guardrail_rule_id"):
         write_guardrail_result_row(
@@ -293,51 +307,51 @@ def _observation_changes(
             store_type="",
             layer="",
             schema_name=None,
-            guardrail_type="changes",
-            rule_type=str(result.get("rule_type") or "monitor_only"),
+            guardrail_type="source_stability",
+            rule_type="historical_mutation",
             result=result,
         )
     return result
 
 
-def check_changes(observation, *, table_id: str | None = None) -> dict:
-    """Describe deterministic row and partition changes since an observation.
+def check_source_stability(observation, *, target_table_id: str) -> dict:
+    """Validate previously processed source data against the target load strategy.
     
     Parameters
     ----------
     observation : pyspark.sql.DataFrame
         Canonical evidence returned by :func:`observe_table`.
-    table_id : str, optional
-        Canonical registered table identity. When supplied, it must match the
-        identity carried by the observation.
+    target_table_id : str
+        Governed target identity whose frozen Data Contract supplies the
+        authoritative load strategy.
     
     Returns
     -------
     dict
-        Structured changes summary, partition observations, counts, and
-        observed ranges. This function does not merge or write target data;
-        approved observation rules may write guardrail-result metadata.
+        Source Stability evidence and its compatibility with the governed
+        target load strategy. The function never writes target data.
     
     Raises
     ------
     ValueError
-        If the observation identity or approved Changes expectation is invalid.
+        If the observation, Source Stability rule, or target processing is invalid.
 
     Notes
     -----
-    Production resolves source-change expectations from the active frozen Data
-    Contract. Development uses mutable authoring metadata. The Guardrail states
-    whether change is required, forbidden, or monitored; it does not define a
-    target load strategy.
+    New source data is compatible with append. Mutation, removal, or
+    reappearance of previously processed data violates append stability;
+    overwrite, SCD1, and SCD2 report that evidence as compatible because their
+    governed write semantics can reconcile it. This Guardrail detects and
+    validates evidence; it does not execute the load strategy.
     
     Examples
     --------
     >>> observation = observe_table("orders", target="source", schema="dbo")
-    >>> result = check_changes(observation)
-    >>> result["changed"]
-    True
+    >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")
+    >>> result["load_strategy"]
+    'append'
 
     """
     if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
-    return _observation_changes(observation, table_id=table_id)
+    return _observation_stability(observation, target_table_id=target_table_id)

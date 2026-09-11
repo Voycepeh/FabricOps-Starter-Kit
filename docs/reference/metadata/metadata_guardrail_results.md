@@ -4,10 +4,10 @@ Store runtime Guardrail summaries and continuation decisions; caller-owned faile
 
 ## Writer functions
 
-* [`check_changes`](../../api/reference/check_changes.md)
 * [`check_dq`](../../api/reference/check_dq.md)
 * [`check_freshness`](../../api/reference/check_freshness.md)
 * [`check_schema`](../../api/reference/check_schema.md)
+* [`check_source_stability`](../../api/reference/check_source_stability.md)
 
 ## Used in Workflow Template
 

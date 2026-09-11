@@ -737,8 +737,6 @@ def build_token_map_frame(
     )
     return add_target_audit_fields(mapping, resolve_target_audit_fields(context))
 
-GUARDRAIL_CHANGE_EXPECTATIONS = ("monitor_only", "change_required", "no_change_required")
-
 DQ_RULE_TYPES = [
     "missing_values",
     "blank_text",
@@ -969,7 +967,7 @@ def _changes_content_columns(columns, keys, non_key_columns):
         if column not in keys
     )
 
-def changes_check_core(
+def source_stability_check_core(
     dataframe,
     previous_dataframe=None,
     *,
@@ -1059,7 +1057,7 @@ def changes_check_core(
     current_by_id = {item["_partition_id"]: item for item in current_observations}
     result = {
         "status": "changed" if changed else "unchanged", "can_continue": True,
-        "check_type": "changes", "guardrail_type": "changes", "changed": changed,
+        "check_type": "source_stability", "guardrail_type": "source_stability", "changed": changed,
         "comparison_scope": scope,
         "partition_observations": _strip_internal_observation_fields(current_observations),
         "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
@@ -1712,20 +1710,20 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
         environment_name=environment_name, table_id=table_id,
     )
 
-def resolve_change_rule_observation_columns(rule: dict) -> tuple[str, str]:
-    """Return validated observation columns from an active source-change rule."""
+def resolve_source_stability_observation_columns(rule: dict) -> tuple[str, str]:
+    """Return validated observation columns from an active Source Stability rule."""
     parameters = _parse_rule_parameters(rule)
     resolved = []
     for name in ("partition_column", "change_column"):
         value = str(parameters.get(name) or "").strip()
         if not value:
-            raise ValueError(f"Active source-change rule is invalid: {name} is missing.")
+            raise ValueError(f"Active Source Stability rule is invalid: {name} is missing.")
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-            raise ValueError(f"Active source-change rule is invalid: {name} must be a simple identifier.")
+            raise ValueError(f"Active Source Stability rule is invalid: {name} must be a simple identifier.")
         resolved.append(value)
     return resolved[0], resolved[1]
 
-def evaluate_changes_guardrail(
+def evaluate_source_stability_guardrail(
     result: dict,
     *,
     rules_df,
@@ -1733,37 +1731,44 @@ def evaluate_changes_guardrail(
     table_name: str = "",
     environment_name: str = "",
     table_id: str = "",
+    load_strategy: str,
 ) -> dict:
-    """Apply approved change intent to an observation comparison result."""
+    """Validate detected historical mutation against a governed load strategy."""
     rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="changes", dataset_name=dataset_name,
+        rules_df, guardrail_type="source_stability", dataset_name=dataset_name,
         table_name=table_name, environment_name=environment_name,
         table_id=table_id,
     )
     if not rule:
         raise ValueError(
-            f"No active approved source-change rule exists for {table_id!r}; "
+            f"No active approved Source Stability rule exists for {table_id!r}; "
             "Governance must author and activate one first."
         )
-    params = _parse_rule_parameters(rule)
-    rule_type = _string_value(
-        params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only"
-    ).lower()
+    strategy = _string_value(load_strategy).lower()
+    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+        raise ValueError("load_strategy must be one of: overwrite, append, scd1, scd2")
     severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     result.update({
-        "rule_type": rule_type,
+        "rule_type": "historical_mutation",
+        "load_strategy": strategy,
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
         "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
         "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
         "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
     })
-    if rule_type not in {"change_required", "no_change_required", "monitor_only"}:
-        raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
     changed = bool(result.get("changed"))
-    result["expected"] = {"expected_change": rule_type}
+    historical_mutation = bool(
+        result.get("changed_partitions")
+        or result.get("removed_partitions")
+        or result.get("reappeared_partitions")
+        or result.get("updated_count")
+        or result.get("deleted_count")
+    )
+    result["historical_mutation"] = historical_mutation
+    result["expected"] = {"load_strategy": strategy}
     result["actual"] = {
         "changed": changed,
         **{name: result.get(name, []) for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")},
@@ -1773,19 +1778,25 @@ def evaluate_changes_guardrail(
             status="baseline_created",
             can_continue=True,
             changed=False,
-            reason="First observation baseline created; change intent was not evaluated.",
+            reason="First Source Stability baseline created.",
         )
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (
-        rule_type == "no_change_required" and not changed
-    )
-    if passed:
-        result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
+    compatible = strategy != "append" or not historical_mutation
+    if compatible:
+        result.update(
+            status="passed",
+            can_continue=True,
+            reason=f"Observed source stability is compatible with governed {strategy!r} processing.",
+        )
     else:
         blocking = severity == "blocking"
-        result.update(status="failed" if blocking else "warning", can_continue=not blocking, reason=f"Source change expectation {rule_type!r} was not satisfied.")
+        result.update(
+            status="failed" if blocking else "warning",
+            can_continue=not blocking,
+            reason="Previously processed source data changed; governed 'append' processing cannot reconcile historical mutation.",
+        )
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
 

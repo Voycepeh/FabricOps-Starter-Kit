@@ -8,11 +8,10 @@ from typing import Any, Mapping
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract import shared as contract_authoring
-from fabricops_kit.pipeline.shared import GUARDRAIL_CHANGE_EXPECTATIONS
 from fabricops_kit.widgets import shared
 
 _SECTIONS = ("Overview", "Enrichment", "Guardrails", "Review")
-_GUARDRAIL_TYPES = ("Schema", "Freshness", "Changes", "Data Quality", "Sensitive Data")
+_GUARDRAIL_TYPES = ("Schema", "Freshness", "Source Stability", "Data Quality", "Sensitive Data")
 _ACTIONS = ("Warn", "Block")
 
 
@@ -241,19 +240,12 @@ def widget_author_data_contract(
                 fields = [column, age, unit]
                 def build() -> dict[str, Any]:
                     return shared.build_rule_record(rule_state, guardrail_type="freshness", rule_id="freshness", rule_type="max_age", parameters={"freshness_column": column.value, "maximum_age": age.value, "maximum_age_unit": str(unit.value).lower()}, action=action.value)
-            elif kind.value == "Changes":
-                expectation = widgets.Dropdown(
-                    options=(("Monitor only", "monitor_only"), ("Change required", "change_required"), ("No change required", "no_change_required")),
-                    description="Expected change",
-                )
+            elif kind.value == "Source Stability":
                 partition = widgets.Dropdown(options=[("None", ""), *[(name, name) for name in names]], description="Partition column")
                 watermark = widgets.Dropdown(options=[("None", ""), *[(name, name) for name in names]], description="Change column")
-                fields = [expectation, partition, watermark]
+                fields = [partition, watermark]
                 def build() -> dict[str, Any]:
-                    expected = str(expectation.value)
-                    if expected not in GUARDRAIL_CHANGE_EXPECTATIONS:
-                        raise ValueError("Unsupported Changes expectation.")
-                    return shared.build_rule_record(rule_state, guardrail_type="changes", rule_id="changes", rule_type=expected, parameters={"expected_change": expected, "partition_column": partition.value, "change_column": watermark.value}, action=action.value)
+                    return shared.build_rule_record(rule_state, guardrail_type="source_stability", rule_id="source_stability", rule_type="historical_mutation", parameters={"partition_column": partition.value, "change_column": watermark.value}, action=action.value)
             elif kind.value == "Data Quality":
                 rule = widgets.Dropdown(options=("missing_values", "unique_values", "accepted_values", "value_range", "regex_match"), description="Rule")
                 columns = widgets.SelectMultiple(options=names, description="Columns")

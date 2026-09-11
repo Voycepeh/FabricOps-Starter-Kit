@@ -55,7 +55,7 @@ EXPECTED_V1_CALLABLES = [
     'write_warehouse_table',
     'check_schema',
     'check_freshness',
-    'check_changes',
+    'check_source_stability',
     'check_dq',
     'check_sensitive_data',
     'profile_and_register_table',

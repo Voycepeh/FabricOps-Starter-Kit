@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL
 
-Define enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements with Warn or Block actions.
+Define enforced Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements with Warn or Block actions.
 
 ## Writer functions
 

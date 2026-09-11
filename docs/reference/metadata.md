@@ -385,7 +385,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements with Warn or Block actions.</span>
+  <span class="metadata-table-card__purpose">Define enforced Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements with Warn or Block actions.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>

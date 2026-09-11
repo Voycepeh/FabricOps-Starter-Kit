@@ -54,7 +54,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Governed rules that FabricOps evaluates against data and pipeline behaviour.",
-    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
+    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Stability, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },
@@ -150,7 +150,17 @@
     "short_definition": "The authoritative governed behaviour used to write one target table.",
     "long_definition": "A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.",
     "preferred_usage": "Use load strategy for governed target write behaviour.",
-    "avoid_usage": "source pattern or Changes behaviour as a second strategy"
+    "avoid_usage": "source pattern or Source Stability behaviour as a second strategy"
+  },
+  {
+    "id": "source-stability",
+    "term": "source stability",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Whether source data previously processed by a pipeline remains unchanged.",
+    "long_definition": "The Source Stability Guardrail compares current source evidence with the prior successful processing baseline. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy. New data is compatible with append, but changed or removed previously processed data is not; overwrite, SCD1, and SCD2 can reconcile detected mutation.",
+    "preferred_usage": "Distinguish Source Stability from Freshness: Freshness asks whether data is current; Source Stability asks whether previously processed data changed unexpectedly.",
+    "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
   },
   {
     "id": "writer-ownership",

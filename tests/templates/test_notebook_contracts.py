@@ -356,6 +356,7 @@ def test_02_pipeline_reads_do_not_require_incremental_or_downstream_state():
     for removed in (
         "PIPELINE_SHOULD_RUN", "ORDERS_PROGRESS", "source_read_strategy=",
         "source_watermark_column=", 'processing_scope=read_prep["scope"]',
+        "check_changes", "Changes Guardrail",
     ):
         assert removed not in source
 

@@ -126,7 +126,7 @@ The governed load strategy controls how the target is maintained. It does not de
 
 One governed target `table_id` should have one owning pipeline/notebook writer. The frozen Data Contract records that owner together with the authoritative load strategy. Multiple independent writers are unsafe because they can race, duplicate writes, overwrite state, break SCD history, or use conflicting target assumptions.
 
-The Changes Guardrail validates observed source behaviour against `monitor_only`, `change_required`, or `no_change_required`. It does not repeat or replace the target's load strategy.
+The Source Stability Guardrail detects whether previously processed source data mutated or disappeared. It uses the target's governed load strategy to validate compatibility: append expects historical source data to remain stable, while overwrite, SCD1, and SCD2 can reconcile detected changes. It never defines processing behaviour itself.
 
 **FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
 

@@ -20,7 +20,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
-    resolve_change_rule_observation_columns,
+    resolve_source_stability_observation_columns,
     select_table_guardrail_rule,
 )
 
@@ -165,7 +165,7 @@ def _observe_table_core(
     Raises
     ------
     ValueError
-        If table identity, target type, or a required active source-change rule
+        If table identity, target type, or a required active Source Stability rule
         is invalid.
     RuntimeError
         If ``00_env_config`` has not initialized FabricOps or observation
@@ -183,7 +183,7 @@ def _observe_table_core(
     columns.
 
     Evidence is appended only after collection succeeds. This function neither
-    loads history nor makes guardrail decisions; ``check_changes`` owns
+    loads history nor makes guardrail decisions; ``check_source_stability`` owns
     comparison and removal tombstones. The stable ``table_id`` is built from the
     resolved physical identity with the same logical identity rules used by
     :func:`profile_and_register_table`. It is independent of Development or
@@ -223,16 +223,16 @@ def _observe_table_core(
     )
     rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="changes",
+        guardrail_type="source_stability",
         table_id=table_id,
         environment_name=env,
     )
     if rule is None:
         raise ValueError(
-            f"No active approved source-change rule exists for {table_id!r}; "
+            f"No active approved Source Stability rule exists for {table_id!r}; "
             "Governance must author and activate one before source observation can run."
         )
-    partition_value, change_value = resolve_change_rule_observation_columns(rule)
+    partition_value, change_value = resolve_source_stability_observation_columns(rule)
     metadata_schema = metadata_table_physical_schema(config, OBSERVATION_TABLE)
 
     if source_type == "warehouse":

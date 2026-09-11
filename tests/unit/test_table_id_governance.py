@@ -79,7 +79,7 @@ def test_governed_check_modules_have_no_legacy_table_identity_name():
         "shared.py",
         "check_schema.py",
         "check_freshness.py",
-        "check_changes.py",
+        "check_source_stability.py",
         "check_dq.py",
     )
     for name in directly_affected:

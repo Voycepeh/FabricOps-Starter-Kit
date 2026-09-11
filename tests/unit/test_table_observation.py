@@ -127,7 +127,7 @@ def test_invalid_active_change_rule_has_actionable_error(monkeypatch):
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
     monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": "not-json"})
-    with pytest.raises(ValueError, match="Active source-change rule is invalid: partition_column is missing"):
+    with pytest.raises(ValueError, match="Active Source Stability rule is invalid: partition_column is missing"):
         module._observe_table_core(table_name="orders")
 
 

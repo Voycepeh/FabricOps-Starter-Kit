@@ -37,9 +37,9 @@ Keep merge, upsert, append, partitioning, and other target-side decisions in tar
 
     One governed target `table_id` should have one owning pipeline/notebook writer. Independent writers can race, duplicate appends, overwrite each other's state, break SCD history, or apply inconsistent assumptions. FabricOps freezes the owner's logical notebook name with the Data Contract and rejects a contract-backed write from a conflicting notebook name. The physical notebook ID remains diagnostic metadata because it can differ after promotion to another workspace.
 
-## Keep Changes separate from processing
+## Keep Source Stability separate from processing
 
-The Changes Guardrail observes and compares source state, then evaluates a simple expectation: monitor changes, require change, or require no change. It can still report first observation, changed or unchanged state, and new, changed, removed, or reappeared partitions. It does not select or repeat the target load strategy.
+Freshness asks whether the source is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. For example, today's arrival can pass Freshness while a value processed yesterday changing from `$20` to `$25` is still detected as historical mutation. New data is compatible with append; changed, removed, or reappeared historical data violates append stability, while overwrite, SCD1, and SCD2 can reconcile it. Source Stability reports the evidence and validates compatibility without selecting or executing the load strategy.
 
 ## Keep canonical profiles complete
 

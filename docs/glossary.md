@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Governed rules that FabricOps evaluates against data and pipeline behaviour.</summary>
-<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Changes, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
+<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Stability, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -79,6 +79,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>Load Strategy</strong> — The authoritative governed behaviour used to write one target table.</summary>
 <p>A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.</p>
 <p><strong>Also known as:</strong> write strategy</p>
+</details>
+
+<details id="source-stability">
+<summary><strong>Source Stability</strong> — Whether source data previously processed by a pipeline remains unchanged.</summary>
+<p>The Source Stability Guardrail compares current source evidence with the prior successful processing baseline. It reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy. New data is compatible with append, but changed or removed previously processed data is not; overwrite, SCD1, and SCD2 can reconcile detected mutation.</p>
 </details>
 
 <details id="writer-ownership">

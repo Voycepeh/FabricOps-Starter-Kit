@@ -31,7 +31,7 @@ Complete Step 2 so `02_pipeline` has registered the target in `METADATA_DATA_CAT
 2. Review the Catalogue and Profiled records produced by Engineering, then select the target's canonical `table_id`.
 3. Run `widget_author_data_contract(table_id=TABLE_ID, spark_session=spark)`. The unified editor creates or reopens the agreement-free draft for that table and environment.
 4. In **Enrichment**, author descriptive table and column context and classifications. Enrichment is descriptive metadata only; it does not enforce runtime behavior.
-5. In **Guardrails**, author the enforced Schema, Freshness, Changes, Data Quality, and Sensitive Data requirements that apply to the table.
+5. In **Guardrails**, author the enforced Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements that apply to the table.
 6. Open **Review** and confirm the table identity, schema, Enrichment, Guardrails, and processing definition.
 7. Freeze the version. The saved definition is immutable; later revisions require a new version.
 

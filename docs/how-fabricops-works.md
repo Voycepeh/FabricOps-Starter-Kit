@@ -227,7 +227,7 @@ As parts of that Data Contract definition, Governance can add:
 - the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
 - the target's owning logical notebook name, so one governed `table_id` has one writer across environments; the physical notebook ID remains diagnostic metadata
 
-The load strategy is the authoritative vocabulary for target write behaviour. A Changes Guardrail validates observed source behaviour; it does not define a second processing strategy.
+Freshness asks whether the latest source data is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. The authoritative target load strategy determines whether that historical mutation is compatible; Source Stability does not define a second processing strategy.
 
 Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
 
@@ -326,7 +326,7 @@ flowchart LR
     subgraph AUTHOR[Author]
         TABLE["table_id"] --> CONTRACT["Data Contract version"]
         CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
-        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Changes<br/>Data Quality · Sensitive Data"]
+        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Source Stability<br/>Data Quality · Sensitive Data"]
         CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
     end
     subgraph ACTIVATE[Activate]
