@@ -75,18 +75,18 @@ export const NotebookJourney = () => {
   const {scenes, timing} = VIDEO_CONFIG;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
   const heading = enter(0);
-  const environment = enter(22);
-  const foundationFlow = interpolate(frame, [68, 112], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const lowerNotebooks = enter(104);
-  const contract = enter(132);
-  const relationshipFlow = interpolate(frame, [154, 198], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const pulse = 0.42 + Math.sin(Math.max(0, frame - 198) / 10) * 0.18;
+  const environment = enter(timing.notebookEnvironmentAt);
+  const foundationFlow = interpolate(frame, [timing.notebookFoundationAt, timing.notebookFoundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const lowerNotebooks = enter(timing.notebookLowerAt);
+  const contract = enter(timing.notebookContractAt);
+  const relationshipFlow = interpolate(frame, [timing.notebookRelationshipAt, timing.notebookRelationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const pulse = 0.42 + Math.sin(Math.max(0, frame - timing.notebookRelationshipAt) / 10) * 0.18;
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     <div style={{position: 'absolute', left: 120, right: 120, top: 72, textAlign: 'center', opacity: heading, transform: `translateY(${(1 - heading) * 14}px)`}}>
-      <div style={{fontSize: 60, lineHeight: 1.08, fontWeight: 850, letterSpacing: -1.8, color: theme.text, whiteSpace: 'nowrap'}}>Code-first, notebook-first workflow</div>
-      <div style={{marginTop: 15, fontSize: 27, lineHeight: 1.25, fontWeight: 500, color: theme.muted, whiteSpace: 'nowrap'}}>Shared configuration powers governance and ETL through reusable notebooks</div>
+      <div style={{fontSize: 60, lineHeight: 1.08, fontWeight: 850, letterSpacing: -1.8, color: theme.text, whiteSpace: 'nowrap'}}>Governance as Code, built into Engineering</div>
+      <div style={{marginTop: 15, fontSize: 27, lineHeight: 1.25, fontWeight: 500, color: theme.muted, whiteSpace: 'nowrap'}}>Data Contracts connect governance expectations to pipeline validation</div>
     </div>
 
     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
