@@ -1,0 +1,61 @@
+name: Temporary regenerate function reference
+
+on:
+  push:
+    branches:
+      - codex/redesign-notebook-data-contract-selection-1i5elx
+    paths:
+      - .github/workflows/temp-regenerate-function-reference.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: codex/redesign-notebook-data-contract-selection-1i5elx
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install locked dependencies
+        run: uv sync --frozen
+
+      - name: Regenerate twice and verify deterministic diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference > /tmp/second.diff
+          cmp /tmp/first.diff /tmp/second.diff
+          echo 'Changed generated files:'
+          git diff --name-only -- docs/api/reference docs/reference
+          git diff --check
+
+      - name: Commit generated outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u docs/api/reference docs/reference
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git diff --cached --stat
+          git commit -m 'chore: refresh generated function references'
+          git push origin HEAD:codex/redesign-notebook-data-contract-selection-1i5elx
