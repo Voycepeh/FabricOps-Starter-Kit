@@ -10,7 +10,6 @@ the authoritative integration test for runtime behaviour.
 from __future__ import annotations
 
 import ast
-import re
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -240,34 +239,37 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert "VALIDATE_DATA_CONTRACTS" not in source
 
 
-def test_02_pipeline_lakehouse_read_blocks_are_cloneable():
-    """Lakehouse Reads are complete, structurally identical copy/paste units."""
-    reads = [_cell_by_id("02_pipeline.ipynb", f"read-{index}").source for index in (1, 2)]
-    normalized = []
-    for index, block in enumerate(reads, start=1):
-        for setting in ("READ", "READ_TARGET", "READ_SCHEMA", "READ_TABLE"):
-            assert f"{setting} =" in block
-        for stage in (
-            "read_pipeline_prep(", "read_lakehouse_table(", "check_schema(", "check_dq(",
-            "observe_table(", "check_freshness(", "check_source_stability(",
-            "profile_and_register_table(read_df)", "READ_PREPS[READ]", "READ_DFS[READ]",
-            'catalogue_widget["show"](table_id=READ_TABLE_ID)',
-        ):
-            assert stage in block
-        normalized.append(re.sub(r'READ = [12]|READ_TABLE = "(?:orders|products)"', "CONFIG", block))
-    assert normalized[0] == normalized[1]
+def test_02_pipeline_read_blocks_are_cloneable_store_dispatchers():
+    """Every Read exposes the same visible Lakehouse/Warehouse/query dispatch and checks."""
+    required = (
+        "READ_STORE_TYPE =", "READ_TARGET =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =",
+        "read_pipeline_prep(", "RESOLVED_STORE_TYPE = read_prep[\"source\"][\"store_kind\"]", 'if READ_STORE_TYPE == "lakehouse":',
+        'elif READ_STORE_TYPE == "warehouse":', "read_lakehouse_table(table_id=READ_TABLE_ID)",
+        "read_warehouse_table(", "read_warehouse_query(READ_QUERY, target=READ_TARGET)",
+        "observe_table(", "check_freshness(", "check_source_stability(",
+        'if READ_STORE_TYPE == "warehouse" and READ_QUERY:', "profile_dataframe(read_df)",
+        "check_schema(", "check_dq(", "profile_and_register_table(read_df)",
+        "READ_PREPS[READ]", "READ_DFS[READ]", 'catalogue_widget["show"](table_id=READ_TABLE_ID)',
+    )
+    for index in (1, 2, 3):
+        block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
+        for fragment in required:
+            assert fragment in block
+        assert "READ_MODE" not in block
+        assert "SOURCE_READER" not in block
 
 
 def test_02_pipeline_custom_query_uses_diagnostic_profile():
-    """An aggregate cannot masquerade as the governed physical table contract surface."""
+    """Custom Warehouse SQL keeps physical-source guards but treats its result as derived data."""
     history = _cell_by_id("02_pipeline.ipynb", "read-3").source
+    query_branch = history.index('if READ_STORE_TYPE == "warehouse" and READ_QUERY:')
+    diagnostic = history.index("profile_dataframe(read_df)", query_branch)
+    canonical_else = history.index("else:", query_branch)
+    schema_check = history.index("check_schema(", canonical_else)
     assert "read_warehouse_query(" in history
-    assert "profile_dataframe(read_df)" in history
-    assert "profile_and_register_table(" not in history
     assert "complete_table=False" not in history
-    assert "check_schema(" not in history
-    assert "check_dq(" not in history
-    assert "observe_table(" in history
+    assert diagnostic < canonical_else < schema_check
+    assert history.index("observe_table(") < query_branch
     assert "check_freshness(" in history
     assert "check_source_stability(" in history
 
@@ -281,7 +283,7 @@ def test_02_pipeline_omits_obsolete_and_safe_default_plumbing():
         "profile_role=", "table=read_prep",
     ):
         assert removed not in source
-    assert source.count("read_lakehouse_table(table_id=READ_TABLE_ID)") == 2
+    assert source.count("read_lakehouse_table(table_id=READ_TABLE_ID)") == 3
 
 
 def test_02_pipeline_transform_is_explicit_project_pyspark():
