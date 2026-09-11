@@ -31,7 +31,7 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen
 
-      - name: Regenerate, review, commit locally, then regenerate again
+      - name: Regenerate, review, commit locally, then verify second run
         shell: bash
         run: |
           set -euo pipefail
@@ -53,8 +53,8 @@ jobs:
           fi
           git commit -m 'chore: refresh generated function references'
 
-          echo 'Second generator run'
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          echo 'Second generator run with timestamp preservation'
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
           echo 'Diff after second generator run:'
           git diff --stat -- docs/api/reference docs/reference
           git diff --check
