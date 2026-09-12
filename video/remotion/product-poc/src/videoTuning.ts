@@ -14,11 +14,6 @@ export const VIDEO_TUNING = {
       0.45, 0.55, 0.65, 0.8, 0.95, 1.1,
       1.25, 1.4, 1.55, 1.7, 1.85, 2.05,
     ],
-    featuredGleam: {
-      start: 8.2,
-      end: 12.5,
-      perIconDurationFrames: 16,
-    },
     heroCenterY: 360,
     positions: {
       Notebook: {left: 135, top: 510},
@@ -48,7 +43,7 @@ export const VIDEO_TUNING = {
       selfContained: {start: 28, duration: 2.5, left: 250, top: 705, rotate: 3},
       python: {start: 31.5, duration: 1, left: 210, top: 660, rotate: -5},
       notebook: {start: 33, duration: 1, left: 1320, top: 245, rotate: 4},
-      pyspark: {start: 35, duration: 1, left: 245, top: 255, rotate: 5},
+      pyspark: {start: 34, duration: 1, left: 245, top: 255, rotate: 5},
       lakehouse: {start: 35, duration: 1, left: 1285, top: 690, rotate: -4},
     },
     relationship: {
