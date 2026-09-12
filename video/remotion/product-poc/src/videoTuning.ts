@@ -65,7 +65,7 @@ export const VIDEO_TUNING = {
     timingSeconds: {
       packageEnter: 55.0,
       packageImports: [55.77, 56.77, 57.77],
-      packageExit: 62.0,
+      packageExit: 66.0,
       environment: 68.0,
       foundation: 78.0,
       lowerNotebooks: 78.0,
