@@ -9,6 +9,7 @@ from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_wa
 from fabricops_kit.pipeline.shared import (
     persist_lineage_participation,
     resolve_catalogue_table_identity,
+    resolve_pipeline_data_contract,
     resolve_physical_table_identity,
 )
 
@@ -45,8 +46,10 @@ def pipeline_read(
     -------
     dict
         A small result containing ``dataframe``, canonical ``table_id``, and
-        ``is_query``. ``is_query`` distinguishes a derived Warehouse query
-        result from a complete physical-table read.
+        ``is_query`` and ``has_contract``. ``is_query`` distinguishes a
+        derived Warehouse query result from a complete physical-table read;
+        ``has_contract`` reports whether the environment-selected immutable
+        Data Contract applies without exposing its internal record.
 
     Raises
     ------
@@ -93,11 +96,20 @@ def pipeline_read(
     identity["store_type"] = store_kind
     identity["store_kind"] = store_kind
 
+    if store_kind not in {"lakehouse", "warehouse"}:
+        raise ValueError(
+            f"Configured source has unsupported store kind {store_kind or '<blank>'!r}; "
+            "supported kinds are: lakehouse, warehouse."
+        )
+    if store_kind == "lakehouse" and query is not None:
+        raise ValueError("query is supported only for a configured Warehouse source, not a Lakehouse source.")
+
+    has_contract = resolve_pipeline_data_contract(
+        config, env, str(identity["table_id"]), context=context
+    ) is not None
     if store_kind == "lakehouse":
-        if query is not None:
-            raise ValueError("query is supported only for a configured Warehouse source, not a Lakehouse source.")
         dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
-    elif store_kind == "warehouse":
+    else:
         if query is not None:
             dataframe = read_warehouse_query(query, target=str(identity["target"]), context=context)
         else:
@@ -107,12 +119,6 @@ def pipeline_read(
                 target=str(identity["target"]),
                 context=context,
             )
-    else:
-        raise ValueError(
-            f"Configured source has unsupported store kind {store_kind or '<blank>'!r}; "
-            "supported kinds are: lakehouse, warehouse."
-        )
-
     persist_lineage_participation(
         table_id=str(identity["table_id"]), pipeline_role="source", context=dict(context)
     )
@@ -124,4 +130,5 @@ def pipeline_read(
         "dataframe": dataframe,
         "table_id": str(identity["table_id"]),
         "is_query": query is not None,
+        "has_contract": has_contract,
     }

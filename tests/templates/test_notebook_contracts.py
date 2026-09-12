@@ -244,7 +244,7 @@ def test_02_pipeline_read_blocks_are_cloneable_orchestrated_reads():
     required = (
         "READ_TARGET =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =",
         "read_result = pipeline_read(", 'read_df = read_result["dataframe"]',
-        'READ_TABLE_ID = read_result["table_id"]',
+        'READ_TABLE_ID = read_result["table_id"]', 'if read_result["has_contract"]:',
         "observe_table(", "check_freshness(", "check_source_stability(",
         'if read_result["is_query"]:', "profile_dataframe(read_df)",
         "check_schema(", "check_dq(", "profile_and_register_table(read_df)",
@@ -261,6 +261,7 @@ def test_02_pipeline_read_blocks_are_cloneable_orchestrated_reads():
         assert "read_lakehouse_table(" not in block
         assert "read_warehouse_table(" not in block
         assert "read_warehouse_query(" not in block
+        assert 'CONTRACTS["resolved_contracts"]' not in block
 
 
 def test_02_pipeline_custom_query_uses_diagnostic_profile():
@@ -290,6 +291,9 @@ def test_02_pipeline_omits_obsolete_and_safe_default_plumbing():
     assert source.count("pipeline_read(") == 3
     assert "READ_STORE_TYPE" not in source
     assert "RESOLVED_STORE_TYPE" not in source
+    assert source.count("read_lakehouse_table") == 2  # One import and the persisted-target readback.
+    assert "read_warehouse_table" not in source
+    assert "read_warehouse_query" not in source
 
 
 def test_02_pipeline_transform_is_explicit_project_pyspark():

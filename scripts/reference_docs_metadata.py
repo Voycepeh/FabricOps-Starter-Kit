@@ -874,7 +874,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use to resolve, register, and physically read one governed pipeline source.',
   'do_not_use_when': 'Do not use it to run observation, Guardrail, schema, DQ, or profiling checks.',
   'parameters': 'Canonical table_id or configured target, schema, and table_name, plus optional Warehouse query.',
-  'returns': 'DataFrame, canonical source table_id, and a minimal custom-query signal.',
+  'returns': 'DataFrame, canonical source table_id, custom-query signal, and whether an environment-selected Data Contract applies.',
   'side_effects': 'Persists source Lineage and establishes source profile-registration context; it does not run checks, profile rows, or write a target.',
   'preferred_example': 'read_result = pipeline_read(target="source", schema="dbo", table_name="orders")',
   'related_functions': ['write_pipeline_prep', 'read_lakehouse_table', 'read_warehouse_table', 'read_warehouse_query']},

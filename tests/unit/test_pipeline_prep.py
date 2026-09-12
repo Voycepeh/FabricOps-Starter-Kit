@@ -39,6 +39,7 @@ def _patch_source_identity(monkeypatch, identity=None):
         lambda _config, _env, table_id, **_kwargs: resolved if table_id == resolved["table_id"] else pytest.fail(table_id),
     )
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
     return resolved, context
 
 
@@ -73,7 +74,10 @@ def test_pipeline_read_dispatches_and_preserves_governed_context(monkeypatch, st
 
     result = read_module.pipeline_read(table_id=identity["table_id"], query=query)
 
-    assert result == {"dataframe": "frame", "table_id": identity["table_id"], "is_query": query is not None}
+    assert result == {
+        "dataframe": "frame", "table_id": identity["table_id"],
+        "is_query": query is not None, "has_contract": False,
+    }
     assert [call[0] for call in calls] == [reader_name]
     assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
     assert context["_fabricops_active_profile_registration"] == {"profile_role": "source", "table": identity}
@@ -87,6 +91,7 @@ def test_pipeline_read_resolves_physical_identity_and_infers_store(monkeypatch):
     monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *args, **kwargs: resolved.append(kwargs) or identity)
     monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: None)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
 
     result = read_module.pipeline_read(target="source", schema="dbo", table_name="student_source")
 
@@ -103,6 +108,23 @@ def test_pipeline_read_rejects_query_for_lakehouse_before_side_effects(monkeypat
         read_module.pipeline_read(table_id="warehouse:source:dbo:student_source", query="SELECT 1")
     assert lineage == []
     assert context == {}
+
+
+@pytest.mark.parametrize(("contract", "expected"), [(None, False), ({"contract_id": "selected"}, True)])
+def test_pipeline_read_reports_environment_selected_contract_without_exposing_it(monkeypatch, contract, expected):
+    identity, context = _patch_source_identity(monkeypatch)
+    resolutions = []
+    monkeypatch.setattr(
+        read_module, "resolve_pipeline_data_contract",
+        lambda *args, **kwargs: resolutions.append((args, kwargs)) or contract,
+    )
+    monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
+
+    result = read_module.pipeline_read(table_id=identity["table_id"])
+
+    assert result["has_contract"] is expected
+    assert contract not in result.values()
+    assert resolutions == [(('config', 'dev', identity["table_id"]), {"context": context})]
 
 
 def test_pipeline_read_rejects_incomplete_or_conflicting_identity():

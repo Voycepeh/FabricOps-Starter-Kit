@@ -12,9 +12,9 @@ Read one governed pipeline source through its configured Fabric store.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:16`
+`fabricops_kit/pipeline/pipeline_read.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L16-L127">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L134">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,7 +70,7 @@ def pipeline_read(
 
 ## Returns
 
-DataFrame, canonical source table_id, and a minimal custom-query signal.
+DataFrame, canonical source table_id, custom-query signal, and whether an environment-selected Data Contract applies.
 
 ## Raises / Errors
 

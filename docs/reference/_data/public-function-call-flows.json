@@ -5600,9 +5600,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 127,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
-      "source_start_line": 16,
+      "source_start_line": 17,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -8810,6 +8810,7 @@
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read",
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules"
       ],
       "inbound_source_references": [
@@ -8821,6 +8822,8 @@
         "fabricops_kit.pipeline.check_schema::<module>",
         "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
         "fabricops_kit.pipeline.check_sensitive_data::<module>",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+        "fabricops_kit.pipeline.pipeline_read::<module>",
         "fabricops_kit.pipeline.shared.load_table_guardrail_rules"
       ],
       "lifecycle_status": "internal",
@@ -13469,8 +13472,8 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 6,
-      "direct_call_count": 7,
+      "depth": 7,
+      "direct_call_count": 8,
       "discontinued_in": null,
       "examples": ">>> result = pipeline_read(target=\"source\", schema=\"sales\", table_name=\"orders\")\n>>> orders_df = result[\"dataframe\"]\n>>> result[\"table_id\"]\n'lakehouse:source:sales:orders'",
       "files_touched": [
@@ -13491,7 +13494,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 6,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Configured source target key. Supply it with ``table_name`` instead of ``table_id``.",
@@ -13534,8 +13537,8 @@
         {
           "evidence": [
             {
-              "depth": 6,
-              "width": 7
+              "depth": 7,
+              "width": 8
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -13546,19 +13549,19 @@
       "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
-      "returns_documentation": "dict\n    A small result containing ``dataframe``, canonical ``table_id``, and\n    ``is_query``. ``is_query`` distinguishes a derived Warehouse query\n    result from a complete physical-table read.",
-      "scope": 44,
+      "returns_documentation": "dict\n    A small result containing ``dataframe``, canonical ``table_id``, and\n    ``is_query`` and ``has_contract``. ``is_query`` distinguishes a\n    derived Warehouse query result from a complete physical-table read;\n    ``has_contract`` reports whether the environment-selected immutable\n    Data Contract applies without exposing its internal record.",
+      "scope": 49,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def pipeline_read(*, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None) -> dict[str, Any]",
-      "source_end_line": 127,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
-      "source_start_line": 16,
+      "source_start_line": 17,
       "summary": "Read one governed pipeline source through its configured Fabric store.",
-      "transitive_function_count": 44,
+      "transitive_function_count": 49,
       "usage_notes": "This orchestration resolves canonical and physical source identity,\nregisters source participation in ``METADATA_DATA_LINEAGE`` exactly once,\nestablishes source profile-registration context, and delegates the\nphysical read to the foundational Fabric I/O API. It does not run source\nobservation, freshness, stability, schema, DQ, or profiling checks.",
-      "width": 7
+      "width": 8
     },
     {
       "architecture_classification": "domain_public_api",
@@ -18563,6 +18566,14 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_pipeline_data_contract",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns",
       "violation_details": [],
@@ -22294,7 +22305,7 @@
     "detached_function_count": 44,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 30,
-    "relationship_count": 770,
+    "relationship_count": 771,
     "source_referenced_function_count": 42,
     "used_function_count": 310
   },
