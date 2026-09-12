@@ -56,7 +56,7 @@ As an operating practice, the version should have been tested in Development and
 
 ??? info "Preview — Prepare and validate the Production source"
 
-    Use `read_pipeline_prep()` with the source `table_id` so FabricOps resolves the registered source and registers source Lineage. Read preparation is separate from the physical source read and from target processing.
+    Use `pipeline_read()` with the source `table_id` so FabricOps resolves the registered source, delegates the physical source read, and registers source Lineage. Target processing remains separate.
 
     Read the source through its configured Lakehouse or Warehouse path, then run the source Schema and DQ Guardrails on the resulting DataFrame. Register a source Profile only when that DataFrame represents the complete physical source table; a filtered or aggregated project-owned query must not replace the complete Profile.
 ???+ success "Live — Apply the visible transformation"
@@ -82,4 +82,4 @@ You should understand the Production path as **promote the validated `02_pipelin
 **Previous:** [Step 5: Link the Data Agreement and activate](05-create-data-contract.md)
 **Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
-See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`read_pipeline_prep()`](../api/reference/read_pipeline_prep.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
+See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`pipeline_read()`](../api/reference/pipeline_read.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).

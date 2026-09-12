@@ -384,7 +384,7 @@ belong to a dedicated future Guardrail workflow, not Enrichment.
 
 ??? info "Read preparation and target processing"
 
-    FabricOps Read has one responsibility chain: identify the source, resolve its canonical `table_id` and source Lineage, and physically read it. `read_pipeline_prep()` does not inspect target progress or decide whether the pipeline should continue.
+    FabricOps Read has one responsibility chain: identify the source, resolve its canonical `table_id` and source Lineage, and physically read it. `pipeline_read()` does not inspect target progress or decide whether the pipeline should continue.
 
     ```text
     Identify source

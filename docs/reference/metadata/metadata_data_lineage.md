@@ -4,11 +4,11 @@ See which registered tables participated as sources and targets in pipeline acti
 
 ## Writer functions
 
-* [`read_pipeline_prep`](../../api/reference/read_pipeline_prep.md)
+* [`pipeline_read`](../../api/reference/pipeline_read.md)
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](../../notebook-templates.md) — Source preparation
+* [`02_pipeline`](../../notebook-templates.md) — Source read orchestration
 
 ## Model
 

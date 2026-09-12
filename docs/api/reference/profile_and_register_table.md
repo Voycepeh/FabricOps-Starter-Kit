@@ -73,12 +73,12 @@ def profile_and_register_table(
 
 Profile and register a complete table immediately after Read preparation:
 
->>> read_prep = read_pipeline_prep(
-...     source_target="source",
-...     source_schema="dbo",
-...     source_table="bookings",
+>>> read_result = pipeline_read(
+...     target="source",
+...     schema="dbo",
+...     table_name="bookings",
 ... )
->>> read_df = read_lakehouse_table(table_id=read_prep["table_id"])
+>>> read_df = read_result["dataframe"]
 >>> profile = profile_and_register_table(read_df)
 
 </div>
@@ -88,8 +88,8 @@ Profile and register a complete table immediately after Read preparation:
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. The helper does not sample, re-read, or mutate this DataFrame. |
-| `profile_role` | `{"source", "target"}` | No | Selects the profiling and Catalogue registration rules for the asset. ``source`` rejects target-owned load-strategy metadata. ``target`` requires and stores the governed target processing definition in ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage; governed pipeline preparation and successful publication own source and target Lineage respectively. Normal pipeline usage omits this value because :func:`read_pipeline_prep` and :func:`write_pipeline_prep` establish it in the active context. |
-| `table` | `mapping` | No | Canonical resolved table identity returned as ``read_pipeline_prep()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity. Normal pipeline usage omits it and consumes the active preparation identity. |
+| `profile_role` | `{"source", "target"}` | No | Selects the profiling and Catalogue registration rules for the asset. ``source`` rejects target-owned load-strategy metadata. ``target`` requires and stores the governed target processing definition in ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage; governed pipeline preparation and successful publication own source and target Lineage respectively. Normal pipeline usage omits this value because :func:`pipeline_read` and :func:`write_pipeline_prep` establish it in the active context. |
+| `table` | `mapping` | No | Canonical resolved table identity returned as ``pipeline_read()`` ``source`` or ``target``. Supply this instead of ``target``, ``schema``, and ``table_name`` to reuse the already resolved identity. Normal pipeline usage omits it and consumes the active preparation identity. |
 | `target` | `str` | No | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. Required when ``table`` is not supplied. |
 | `table_name` | `str` | No | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. Required when ``table`` is not supplied. |
 | `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
@@ -253,7 +253,7 @@ after a successful complete-table read, and profile a target only after
 its write has succeeded and the persisted target has been confirmed.
 
 This function does not create or update ``METADATA_DATA_LINEAGE``.
-Registered source participation is recorded by ``read_pipeline_prep()``,
+Registered source participation is recorded by ``pipeline_read()``,
 while target participation is recorded only after a successful governed
 publication. Guardrail execution is a separate workflow.
 

@@ -1,4 +1,4 @@
-# `read_pipeline_prep`
+# `pipeline_read`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Resolve governed source identity and register source Lineage before reading business data.
+Read one governed pipeline source through its configured Fabric store.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/read_pipeline_prep.py:15`
+`fabricops_kit/pipeline/pipeline_read.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/read_pipeline_prep.py#L15-L95">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L16-L127">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,11 +36,12 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def read_pipeline_prep(
-    source_table_id: str | None=None,
-    source_target: str | None=None,
-    source_schema: str | None=None,
-    source_table: str | None=None,
+def pipeline_read(
+    target: str | None=None,
+    schema: str | None=None,
+    table_name: str | None=None,
+    table_id: str | None=None,
+    query: str | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -50,13 +51,10 @@ def read_pipeline_prep(
 
 <div class="reference-example-usage" markdown="1">
 
->>> prep = read_pipeline_prep(
-...     source_target="source",
-...     source_schema="dbo",
-...     source_table="bookings",
-... )
->>> prep["table_id"]
-'warehouse:source:dbo:bookings'
+>>> result = pipeline_read(target="source", schema="sales", table_name="orders")
+>>> orders_df = result["dataframe"]
+>>> result["table_id"]
+'lakehouse:source:sales:orders'
 
 </div>
 
@@ -64,28 +62,32 @@ def read_pipeline_prep(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `source_table_id` | `str \| None` | No | Canonical identity of one registered source table. Omit it and supply ``source_target``, ``source_schema``, and ``source_table`` to resolve the same identity deterministically from configured physical identity. |
-| `source_target` | `str \| None` | No | Configured source target key. Mutually exclusive with ``source_table_id``. |
-| `source_schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
-| `source_table` | `str \| None` | No | Physical source table name. Required with ``source_target`` when ``source_table_id`` is omitted. |
+| `target` | `str \| None` | No | Configured source target key. Supply it with ``table_name`` instead of ``table_id``. |
+| `schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
+| `table_name` | `str \| None` | No | Physical source table name. Required with ``target`` when ``table_id`` is omitted. |
+| `table_id` | `str \| None` | No | Canonical registered source identity. Mutually exclusive with ``target``, ``schema``, and ``table_name``. |
+| `query` | `str \| None` | No | Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed Lineage participant; FabricOps does not infer table identity by parsing SQL. |
 
 ## Returns
 
-Canonical source table_id and resolved physical source identity.
+DataFrame, canonical source table_id, and a minimal custom-query signal.
 
 ## Raises / Errors
 
 ValueError
-    If the source identity is incomplete, conflicting, or is not registered.
+    If identity inputs conflict or are incomplete, the source is not
+    registered, its configured store kind is unsupported, or a query is
+    supplied for a Lakehouse source.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-This preparation boundary identifies the source and registers its Lineage;
-it does not read business rows or make incremental-processing decisions.
-Use the resolved ``table_id`` with :func:`read_lakehouse_table`, or use the
-resolved source coordinates when reading a Warehouse query.
+This orchestration resolves canonical and physical source identity,
+registers source participation in ``METADATA_DATA_LINEAGE`` exactly once,
+establishes source profile-registration context, and delegates the
+physical read to the foundational Fabric I/O API. It does not run source
+observation, freshness, stability, schema, DQ, or profiling checks.
 
 </div>
 
