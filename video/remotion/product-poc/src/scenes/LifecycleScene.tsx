@@ -44,10 +44,13 @@ export const LifecycleScene = () => {
   const {timingSeconds, loop} = VIDEO_TUNING.lifecycle;
   const stepTimes = timingSeconds.steps.map((seconds) => lifecycleFrame(seconds, fps));
   const loopStart = lifecycleFrame(timingSeconds.loopStart, fps);
+  const loopEnd = lifecycleFrame(timingSeconds.loopEnd, fps);
+  const productionArrowStart = lifecycleFrame(timingSeconds.productionArrowStart, fps);
+  const productionArrowEnd = lifecycleFrame(timingSeconds.productionArrowEnd, fps);
   const activeIndex = stepTimes.reduce((latest, reveal, index) => frame >= reveal ? index : latest, -1);
   const exit = interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const loopEnter = interpolate(frame, [loopStart, loopStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const loopExit = interpolate(frame, [stepTimes[4] - 18, stepTimes[4]], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const loopExit = interpolate(frame, [loopEnd - 18, loopEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const loopOpacity = loopEnter * loopExit;
   const tracerOffset = -((Math.max(0, frame - loopStart) * 11) % 1000);
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
@@ -58,9 +61,11 @@ export const LifecycleScene = () => {
     <svg width="1920" height="1080" style={{position: 'absolute', inset: 0}}>
       <defs><marker id="lifecycle-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#9db0c8" /></marker></defs>
       {connectors.map((connector) => {
-        const reveal = stepTimes[connector.destination];
+        const isProductionArrow = connector.destination === 5;
+        const reveal = isProductionArrow ? productionArrowStart : stepTimes[connector.destination];
+        const complete = isProductionArrow ? productionArrowEnd : reveal + timing.workflowStepEnter;
         if (frame < reveal) return null;
-        const draw = interpolate(frame, [reveal, reveal + timing.workflowStepEnter], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        const draw = interpolate(frame, [reveal, complete], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: isProductionArrow ? Easing.inOut(Easing.cubic) : Easing.linear});
         return <path key={connector.d} d={connector.d} fill="none" stroke="#8198b5" strokeWidth="6" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - draw} markerEnd={draw > 0.96 ? 'url(#lifecycle-arrow)' : undefined} />;
       })}
       <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={`${theme.production}58`} strokeWidth="6" opacity={loopOpacity} />
