@@ -28,11 +28,11 @@ The result is a standardized path from development to governed Production data r
 
 ## Execution engines
 
-FabricOps is designed for both **PySpark** and **Python** execution.
+FabricOps runs engineering workflows through **PySpark notebooks**.
 
-The current implementation prioritises the PySpark path first so the shared workflow, public APIs, notebook structure, metadata behaviour, and governance model can stabilise before equivalent Python support is completed.
+Within that notebook experience, operations should execute close to the underlying data where practical. Lakehouse workloads use PySpark, while Warehouse workloads can use SQL pushdown for operations such as filtering, profiling, and validation instead of materialising unnecessarily large Warehouse datasets in Spark.
 
-The target is engine parity: users should follow the same FabricOps operating pattern regardless of whether a workload runs with PySpark or Python.
+PySpark remains the shared orchestration and transformation layer when data needs to move between systems or undergo more complex engineering work. Python is used for lightweight configuration, orchestration, and supporting logic rather than as a separate equivalent execution engine.
 
 ## Start here
 
