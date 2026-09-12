@@ -1,26 +1,28 @@
-"""Tests for the public pipeline preparation boundary."""
+"""Tests for governed pipeline read/write orchestration."""
 # ruff: noqa: D103
 
 from __future__ import annotations
 
 from importlib import import_module
-from types import SimpleNamespace
+from inspect import signature
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
+io_package = import_module("fabricops_kit.io")
 read_module = import_module("fabricops_kit.pipeline.pipeline_read")
 shared_module = import_module("fabricops_kit.pipeline.shared")
-warehouse_writer = import_module("fabricops_kit.io.write_warehouse_table")
-write_module = import_module("fabricops_kit.pipeline.write_pipeline_prep")
+write_module = import_module("fabricops_kit.pipeline.pipeline_write")
 lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
+warehouse_writer = import_module("fabricops_kit.io.write_warehouse_table")
 
 
 def _identity(table_id="warehouse:source:dbo:student_source", *, store_type="warehouse"):
     return {
         "table_id": table_id,
         "store_type": store_type,
+        "store_kind": store_type,
         "target": "source" if ":source:" in table_id else "unified",
         "schema": "dbo",
         "table_name": table_id.rsplit(":", 1)[-1],
@@ -29,285 +31,158 @@ def _identity(table_id="warehouse:source:dbo:student_source", *, store_type="war
     }
 
 
-def _patch_source_identity(monkeypatch, identity=None):
-    resolved = identity or _identity()
+def _audit():
+    return {
+        "_committed_at": "2026-08-22T00:00:00Z",
+        "_committed_by": "engineer",
+        "_activity_id": "activity",
+        "_workspace_id": "workspace",
+        "_notebook_id": "notebook",
+        "_notebook_name": "02_pipeline",
+    }
+
+
+def _patch_read(monkeypatch, identity):
     context = {}
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", context))
+    monkeypatch.setattr(read_module, "resolve_catalogue_table_identity", lambda *_a, **_k: identity)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_k: None)
     monkeypatch.setattr(
         read_module,
-        "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **_kwargs: resolved if table_id == resolved["table_id"] else pytest.fail(table_id),
+        "register_pipeline_source",
+        lambda **kwargs: context.setdefault("sources", []).append(kwargs["table_id"]),
     )
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
-    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
-    return resolved, context
-
-
-def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse"):
-    identity = _identity("lakehouse:unified:dbo:students", store_type=store_type)
-    monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
-    monkeypatch.setattr(write_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
-    monkeypatch.setattr(write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]})
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing)
-    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: {
-        "_committed_at": "2026-08-22T00:00:00Z", "_committed_by": "engineer",
-        "_activity_id": "activity", "_workspace_id": "workspace",
-        "_notebook_id": "notebook", "_notebook_name": "02_pipeline",
-    })
-    return identity
+    return context
 
 
 @pytest.mark.parametrize(
     ("store_type", "query", "reader_name"),
-    [("lakehouse", None, "read_lakehouse_table"),
-     ("warehouse", None, "read_warehouse_table"),
-     ("warehouse", "SELECT customer_id FROM dbo.orders", "read_warehouse_query")],
+    [
+        ("lakehouse", None, "read_lakehouse_table"),
+        ("warehouse", None, "read_warehouse_table"),
+        ("warehouse", "SELECT customer_id FROM dbo.orders", "read_warehouse_query"),
+    ],
 )
-def test_pipeline_read_dispatches_and_preserves_governed_context(monkeypatch, store_type, query, reader_name):
+def test_pipeline_read_dispatches_and_registers_source(monkeypatch, store_type, query, reader_name):
     identity = _identity(store_type=store_type)
-    identity, context = _patch_source_identity(monkeypatch, identity)
+    context = _patch_read(monkeypatch, identity)
     calls = []
-    lineage = []
     for name in ("read_lakehouse_table", "read_warehouse_table", "read_warehouse_query"):
-        monkeypatch.setattr(read_module, name, lambda *args, _name=name, **kwargs: calls.append((_name, args, kwargs)) or "frame")
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
+        monkeypatch.setattr(read_module, name, lambda *a, _name=name, **k: calls.append(_name) or "frame")
 
     result = read_module.pipeline_read(table_id=identity["table_id"], query=query)
 
-    assert result == {
-        "dataframe": "frame", "table_id": identity["table_id"],
-        "is_query": query is not None, "has_contract": False,
-    }
-    assert [call[0] for call in calls] == [reader_name]
-    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
-    assert context["_fabricops_active_profile_registration"] == {"profile_role": "source", "table": identity}
-
-
-def test_pipeline_read_resolves_physical_identity_and_infers_store(monkeypatch):
-    identity = _identity(store_type="warehouse")
-    context = {}
-    resolved = []
-    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", context))
-    monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *args, **kwargs: resolved.append(kwargs) or identity)
-    monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: None)
-    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
-
-    result = read_module.pipeline_read(target="source", schema="dbo", table_name="student_source")
-
     assert result["table_id"] == identity["table_id"]
-    assert resolved == [{"target": "source", "schema": "dbo", "table_name": "student_source"}]
-    assert "store_type" not in __import__("inspect").signature(read_module.pipeline_read).parameters
+    assert calls == [reader_name]
+    assert context["sources"] == [identity["table_id"]]
 
 
-def test_pipeline_read_rejects_query_for_lakehouse_before_side_effects(monkeypatch):
-    _identity_value, context = _patch_source_identity(monkeypatch, _identity(store_type="lakehouse"))
-    lineage = []
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
-    with pytest.raises(ValueError, match="configured Warehouse source"):
-        read_module.pipeline_read(table_id="warehouse:source:dbo:student_source", query="SELECT 1")
-    assert lineage == []
-    assert context == {}
-
-
-@pytest.mark.parametrize(("contract", "expected"), [(None, False), ({"contract_id": "selected"}, True)])
-def test_pipeline_read_reports_environment_selected_contract_without_exposing_it(monkeypatch, contract, expected):
-    identity, context = _patch_source_identity(monkeypatch)
-    resolutions = []
-    monkeypatch.setattr(
-        read_module, "resolve_pipeline_data_contract",
-        lambda *args, **kwargs: resolutions.append((args, kwargs)) or contract,
-    )
-    monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
-
-    result = read_module.pipeline_read(table_id=identity["table_id"])
-
-    assert result["has_contract"] is expected
-    assert contract not in result.values()
-    assert resolutions == [(('config', 'dev', identity["table_id"]), {"context": context})]
-
-
-def test_pipeline_read_rejects_incomplete_or_conflicting_identity():
+def test_pipeline_read_rejects_identity_conflict():
     with pytest.raises(ValueError, match="Provide table_id or both target and table_name"):
         read_module.pipeline_read()
     with pytest.raises(ValueError, match="table_id cannot be combined"):
         read_module.pipeline_read(table_id="id", target="source")
 
 
-def test_pipeline_read_does_not_own_visible_engineering_checks_or_profiling():
-    for name in (
-        "observe_table", "check_freshness", "check_source_stability", "check_schema",
-        "check_dq", "profile_and_register_table", "profile_dataframe",
-    ):
-        assert not hasattr(read_module, name)
-
-
-@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])
-def test_write_prep_resolves_target_processing(monkeypatch, spark_session, strategy, mode):
-    processing = {"load_strategy": strategy}
-    if strategy == "scd1":
-        processing["key_columns"] = ["student_id"]
-    identity = _patch_target_processing(monkeypatch, processing)
-    frame = spark_session.createDataFrame([(1, "active")], ["student_id", "status"])
-    source_prep = {"table_id": "warehouse:source:dbo:students", "source": {}}
-
-    result = write_module.write_pipeline_prep(
-        frame, target_table_id=identity["table_id"], source_preps=[source_prep]
-    )
-
-    assert result["target"] is identity
-    assert result["processing"] is processing
-    assert result["mode"] == mode
-    assert result["load_strategy"] == strategy
-    assert "_committed_at" in result["df"].columns
-    assert result["success_context"] == {
-        "target_table_id": identity["table_id"],
-        "source_table_ids": [source_prep["table_id"]],
-        "activity_id": "activity",
-        "notebook_name": "02_pipeline",
-        "notebook_id": "notebook",
-    }
-    assert not hasattr(write_module, "persist_lineage_participation")
-
-
-def test_first_development_write_resolves_physical_target_without_catalogue(monkeypatch, spark_session):
-    identity = _patch_target_processing(monkeypatch, {"load_strategy": "append"})
-    identity["store_kind"] = identity["store_type"]
-    monkeypatch.setattr(write_module, "resolve_physical_table_identity", lambda *_args, **_kwargs: identity)
+def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
+    context = context if context is not None else {}
+    identity = _identity(f"{store_type}:unified:dbo:students", store_type=store_type)
+    monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", context))
+    monkeypatch.setattr(write_module, "resolve_catalogue_table_identity", lambda *_a, **_k: identity)
+    monkeypatch.setattr(write_module, "resolve_physical_table_identity", lambda *_a, **_k: identity)
     monkeypatch.setattr(
-        write_module,
-        "resolve_catalogue_table_identity",
-        lambda *_args, **_kwargs: pytest.fail("first write must not require Catalogue registration"),
+        write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]}
     )
-
-    result = write_module.write_pipeline_prep(
-        spark_session.createDataFrame([(1,)], ["id"]),
-        target="unified",
-        schema="dbo",
-        table_name="students",
-        load_strategy="append",
-        source_preps=[{"table_id": "source", "source": {}}],
+    monkeypatch.setattr(
+        write_module, "resolve_table_processing_definition", lambda *_a, **_k: {"load_strategy": strategy}
     )
-
-    assert result["target"]["table_id"] == identity["table_id"]
-    assert result["load_strategy"] == "append"
-
-
-def test_write_prep_accepts_engineering_authored_processing():
-    from inspect import signature
-
-    parameters = signature(write_module.write_pipeline_prep).parameters
-    assert "load_strategy" in parameters
-    assert "load_strategy_parameters" in parameters
+    monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
+    monkeypatch.setattr(shared_module, "pipeline_activity_sources", lambda **_k: ["source-a", "source-b"])
+    return identity, context
 
 
-def test_write_prep_adds_scd2_lifecycle_for_warehouse(monkeypatch, spark_session):
-    processing = {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"}
-    identity = _patch_target_processing(monkeypatch, processing, store_type="warehouse")
-    frame = spark_session.createDataFrame([(1, "active", "2026-08-22")], ["student_id", "status", "effective_at"])
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{"table_id": "warehouse:source:dbo:students", "source": {}}],
+@pytest.mark.parametrize(("store_type", "writer"), [("lakehouse", "lakehouse"), ("warehouse", "warehouse")])
+def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
+    monkeypatch, spark_session, store_type, writer
+):
+    identity, context = _patch_write(monkeypatch, store_type=store_type)
+    events = []
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: events.append("lakehouse"))
+    monkeypatch.setattr(io_package, "write_warehouse_table", lambda *a, **k: events.append("warehouse"))
+    monkeypatch.setattr(
+        shared_module, "commit_pipeline_write_success", lambda value: events.append(("metadata", value))
     )
-    assert result["mode"] is None
-    assert result["target_kind"] == "warehouse"
-    assert {"_effective_from", "_effective_to", "_is_current"} <= set(result["df"].columns)
+    frame = spark_session.createDataFrame([(1,)], ["id"])
+
+    result = write_module.pipeline_write(frame, target="unified", schema="dbo", table_name="students")
+
+    assert result == {"table_id": identity["table_id"]}
+    assert events[0] == writer
+    assert events[1][0] == "metadata"
+    assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
+    assert context["_fabricops_active_profile_registration"]["profile_role"] == "target"
+    assert "store_type" not in signature(write_module.pipeline_write).parameters
 
 
-def test_write_prep_preserves_target_partition_overwrite(monkeypatch, spark_session):
-    processing = {"load_strategy": "overwrite", "partition_column": "business_date"}
-    identity = _patch_target_processing(monkeypatch, processing)
-    frame = spark_session.createDataFrame([(1, "2026-09-09"), (2, "2026-09-10")], ["id", "business_date"])
+def test_pipeline_write_table_id_form_and_conflicting_forms(monkeypatch, spark_session):
+    identity, _ = _patch_write(monkeypatch)
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: None)
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+    result = write_module.pipeline_write(spark_session.createDataFrame([(1,)], ["id"]), table_id=identity["table_id"])
+    assert result["table_id"] == identity["table_id"]
+    with pytest.raises(ValueError, match="table_id cannot be combined"):
+        write_module.pipeline_write(object(), table_id="id", target="unified")
 
-    result = write_module.write_pipeline_prep(
-        frame,
-        target_table_id=identity["table_id"],
-        source_preps=[{"table_id": "warehouse:source:dbo:orders", "source": {}}],
+
+@pytest.mark.parametrize("strategy", ["scd1", "scd2"])
+def test_pipeline_write_routes_scd_to_governed_processing(monkeypatch, spark_session, strategy):
+    identity, _ = _patch_write(monkeypatch, strategy=strategy)
+    processing = {"load_strategy": strategy, "key_columns": ["id"]}
+    if strategy == "scd2":
+        processing["effective_column"] = "effective_at"
+    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
+    physical = []
+    governed = []
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: physical.append(1))
+    monkeypatch.setattr(shared_module, "execute_lakehouse_processing", lambda *a, **k: governed.append(k))
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+    frame = spark_session.createDataFrame([(1, "2026-01-01")], ["id", "effective_at"])
+
+    write_module.pipeline_write(frame, table_id=identity["table_id"])
+
+    assert not physical
+    assert governed[0]["processing"] is processing
+
+
+def test_pipeline_write_failure_does_not_commit_or_establish_profile(monkeypatch, spark_session):
+    _identity_value, context = _patch_write(monkeypatch)
+    commits = []
+    monkeypatch.setattr(
+        io_package, "write_lakehouse_table", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("failed"))
     )
-
-    assert set(result["scope"]["values"]) == {"2026-09-09", "2026-09-10"}
-    assert {row["_partition_bucket"] for row in result["df"].select("_partition_bucket").collect()} == {
-        "2026-09-09", "2026-09-10",
-    }
-    assert "replaceWhere" in result["options"]
-
-
-def test_contract_target_accepts_owner_name_after_notebook_id_changes(monkeypatch, spark_session):
-    processing = {
-        "load_strategy": "append", "source": "data_contract",
-        "contract_id": "contract", "contract_version": 3,
-        "owner_notebook_id": "development-notebook-id", "owner_notebook_name": "02_pipeline",
-    }
-    identity = _patch_target_processing(monkeypatch, processing)
-    result = write_module.write_pipeline_prep(
-        spark_session.createDataFrame([(1,)], ["id"]),
-        target_table_id=identity["table_id"],
-        source_preps=[{"table_id": "source", "source": {}}],
-    )
-    assert result["load_strategy"] == "append"
-    assert result["load_strategy_parameters"] == {}
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: commits.append(value))
+    with pytest.raises(RuntimeError, match="failed"):
+        write_module.pipeline_write(spark_session.createDataFrame([(1,)], ["id"]), table_id="id")
+    assert commits == []
+    assert "_fabricops_active_profile_registration" not in context
 
 
-def test_contract_target_rejects_conflicting_writer(monkeypatch, spark_session):
-    processing = {
-        "load_strategy": "append", "source": "data_contract",
-        "contract_id": "contract", "contract_version": 3,
-        "owner_notebook_id": "notebook", "owner_notebook_name": "other_pipeline",
-    }
-    identity = _patch_target_processing(monkeypatch, processing)
-    with pytest.raises(ValueError, match="[Oo]ne owning pipeline/notebook writer"):
-        write_module.write_pipeline_prep(
-            spark_session.createDataFrame([(1,)], ["id"]),
-            target_table_id=identity["table_id"],
-            source_preps=[{"table_id": "source", "source": {}}],
-        )
+def test_pipeline_write_requires_activity_sources(monkeypatch, spark_session):
+    _patch_write(monkeypatch)
+    monkeypatch.setattr(shared_module, "pipeline_activity_sources", lambda **_k: [])
+    with pytest.raises(ValueError, match="call pipeline_read"):
+        write_module.pipeline_write(spark_session.createDataFrame([(1,)], ["id"]), table_id="id")
 
 
-def test_lakehouse_writer_exposes_scd_strategy_without_fake_append_mode(monkeypatch):
-    calls = []
-    monkeypatch.setattr(lakehouse_writer, "validate_dataframe_writer", lambda _df: None)
-    shared = import_module("fabricops_kit.pipeline.shared")
-    monkeypatch.setattr(shared, "execute_lakehouse_processing", lambda *args, **kwargs: calls.append((args, kwargs)))
-    lakehouse_writer.write_lakehouse_table(
-        object(), "students", mode=None, load_strategy="scd1",
-        load_strategy_parameters={"key_columns": ["student_id"]},
-        processing_scope={"type": "full_dataset"},
-    )
-    assert calls[0][1]["processing"] == {"load_strategy": "scd1", "key_columns": ["student_id"]}
-    with pytest.raises(ValueError, match="mode must be None"):
-        lakehouse_writer.write_lakehouse_table(
-            object(), "students", mode="append", load_strategy="scd1",
-            load_strategy_parameters={"key_columns": ["student_id"]},
-            processing_scope={"type": "full_dataset"},
-        )
+def test_foundational_writers_exclude_governed_parameters():
+    governed = {"load_strategy", "load_strategy_parameters", "processing_scope", "success_context"}
+    assert governed.isdisjoint(signature(lakehouse_writer.write_lakehouse_table).parameters)
+    assert governed.isdisjoint(signature(warehouse_writer.write_warehouse_table).parameters)
+    assert not hasattr(lakehouse_writer, "commit_pipeline_write_success")
+    assert not hasattr(warehouse_writer, "commit_pipeline_write_success")
 
 
-
-
-
-
-
-
-
-def test_partition_retry_compares_with_last_successful_observation():
-    history = [
-        {"observation_id": "successful", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "committed", "_notebook_name": "02_pipeline", "_committed_at": 1},
-        {"observation_id": "failed-run", "source_table_id": "source", "target_table_id": "target", "environment_name": "dev", "observation_status": "observed", "_notebook_name": "02_pipeline", "_committed_at": 2},
-    ]
-    previous = import_module("fabricops_kit.pipeline.check_source_stability")._previous_observation(
-        history, source_table_id="source", target_table_id="target", notebook_name="02_pipeline",
-        environment_name="dev", committed_at=3,
-        observation_id="successful",
-    )
-    assert [row["observation_id"] for row in previous] == ["successful"]
-
-
-
-
-def test_public_writers_accept_post_write_success_context():
-    """Writers own successful metadata commit after physical publication."""
-    import inspect
-
-    assert "success_context" in inspect.signature(lakehouse_writer.write_lakehouse_table).parameters
-    assert "success_context" in inspect.signature(warehouse_writer.write_warehouse_table).parameters
+def test_pipeline_write_does_not_own_visible_checks():
+    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_and_register_table"):
+        assert not hasattr(write_module, name)

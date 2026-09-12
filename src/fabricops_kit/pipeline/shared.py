@@ -79,6 +79,25 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_ACTIVITY_SOURCES_CONTEXT_KEY = "_fabricops_pipeline_sources"
+
+
+def register_pipeline_source(*, table_id: str, context: dict[str, Any]) -> None:
+    """Retain one source identity for the current activity in runtime context."""
+    audit = resolve_target_audit_fields(context)
+    activity_id = str(audit["_activity_id"])
+    registry = context.setdefault(_ACTIVITY_SOURCES_CONTEXT_KEY, {})
+    sources = registry.setdefault(activity_id, [])
+    canonical_id = str(table_id).strip()
+    if canonical_id not in sources:
+        sources.append(canonical_id)
+
+
+def pipeline_activity_sources(*, context: Mapping[str, Any]) -> list[str]:
+    """Return source identities registered for the current activity."""
+    activity_id = str(resolve_target_audit_fields(context)["_activity_id"])
+    registry = context.get(_ACTIVITY_SOURCES_CONTEXT_KEY) or {}
+    return [str(value) for value in registry.get(activity_id, ())]
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -92,9 +111,7 @@ def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
         raise ValueError("activity_id and table_id must be non-empty strings.")
     if values["pipeline_role"] not in {"source", "target"}:
         raise ValueError("pipeline_role must be source or target.")
-    return hashlib.sha256(
-        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def persist_lineage_participation(
@@ -125,6 +142,7 @@ def persist_lineage_participation(
         },
     )
     from ..config.metadata_schemas import metadata_table_schema_registry
+
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
@@ -173,9 +191,7 @@ def resolve_physical_table_identity(
                 f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
                 "pass schema or configure a default schema."
             )
-        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(
-            store, table_name, schema
-        )
+        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(store, table_name, schema)
         if getattr(store, "schema_enabled", False) and normalized_schema is None:
             raise ValueError(
                 f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
@@ -213,7 +229,8 @@ def resolve_profiled_columns(df, exclude_columns: list[str] | set[str] | None = 
     return [
         name
         for name, _dtype in df.dtypes
-        if name not in excluded and not any(str(name).startswith(prefix) for prefix in _DEFAULT_PROFILE_EXCLUDE_PREFIXES)
+        if name not in excluded
+        and not any(str(name).startswith(prefix) for prefix in _DEFAULT_PROFILE_EXCLUDE_PREFIXES)
     ]
 
 
@@ -341,7 +358,9 @@ def _profile_percent_expr(numerator, denominator):
     """Return a rounded percentage expression protected against zero rows."""
     from pyspark.sql import functions as F
 
-    return F.when(denominator == 0, F.lit(0.0)).otherwise(F.round((numerator.cast("double") / denominator.cast("double")) * F.lit(100.0), 3))
+    return F.when(denominator == 0, F.lit(0.0)).otherwise(
+        F.round((numerator.cast("double") / denominator.cast("double")) * F.lit(100.0), 3)
+    )
 
 
 def build_profile_dataframe(df, *, exclude_columns=None):
@@ -360,24 +379,30 @@ def build_profile_dataframe(df, *, exclude_columns=None):
         col = _profile_column_expr(column_name)
         data_type = fields[column_name].dataType
         prefix = f"__{column_name}__"
-        agg_exprs.extend([
-            F.count(col).cast("long").alias(f"{prefix}NON_NULL_COUNT"),
-            F.sum(col.isNull().cast("long")).cast("long").alias(f"{prefix}NULL_COUNT"),
-            F.count_distinct(col).cast("long").alias(f"{prefix}DISTINCT_COUNT"),
-        ])
+        agg_exprs.extend(
+            [
+                F.count(col).cast("long").alias(f"{prefix}NON_NULL_COUNT"),
+                F.sum(col.isNull().cast("long")).cast("long").alias(f"{prefix}NULL_COUNT"),
+                F.count_distinct(col).cast("long").alias(f"{prefix}DISTINCT_COUNT"),
+            ]
+        )
         if isinstance(data_type, NumericType):
-            agg_exprs.extend([
-                F.avg(col).cast("double").alias(f"{prefix}MEAN"),
-                F.stddev_samp(col).cast("double").alias(f"{prefix}STDDEV"),
-                F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
-                F.percentile_approx(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
-                F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
-            ])
+            agg_exprs.extend(
+                [
+                    F.avg(col).cast("double").alias(f"{prefix}MEAN"),
+                    F.stddev_samp(col).cast("double").alias(f"{prefix}STDDEV"),
+                    F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
+                    F.percentile_approx(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
+                    F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
+                ]
+            )
         elif isinstance(data_type, DateType | TimestampType | StringType):
-            agg_exprs.extend([
-                F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
-                F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
-            ])
+            agg_exprs.extend(
+                [
+                    F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
+                    F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
+                ]
+            )
 
     agg_df = df.agg(*agg_exprs)
     row_count = F.col("__ROW_COUNT")
@@ -390,28 +415,41 @@ def build_profile_dataframe(df, *, exclude_columns=None):
         distinct_count = F.coalesce(F.col(f"{prefix}DISTINCT_COUNT"), F.lit(0)).cast("long")
         percentile = F.col(f"{prefix}PERCENTILES") if isinstance(data_type, NumericType) else None
         supports_min_max = isinstance(data_type, NumericType | DateType | TimestampType | StringType)
-        rows.append(agg_df.select(
-            F.lit(column_name).alias("COLUMN_NAME"),
-            F.lit(data_type.simpleString()).alias("DATA_TYPE"),
-            row_count.cast("long").alias("ROW_COUNT"),
-            non_null_count.alias("NON_NULL_COUNT"),
-            null_count.alias("NULL_COUNT"),
-            _profile_percent_expr(null_count, row_count).alias("NULL_PERCENT"),
-            distinct_count.alias("DISTINCT_COUNT"),
-            _profile_percent_expr(distinct_count, row_count).alias("DISTINCT_PERCENT"),
-            (F.col(f"{prefix}MEAN") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("MEAN"),
-            (F.col(f"{prefix}STDDEV") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("STDDEV"),
-            (F.col(f"{prefix}MIN_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MIN_VALUE"),
-            (percentile.getItem(0).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_25"),
-            (percentile.getItem(1).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("MEDIAN"),
-            (percentile.getItem(2).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_75"),
-            (F.col(f"{prefix}MAX_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MAX_VALUE"),
-        ))
+        rows.append(
+            agg_df.select(
+                F.lit(column_name).alias("COLUMN_NAME"),
+                F.lit(data_type.simpleString()).alias("DATA_TYPE"),
+                row_count.cast("long").alias("ROW_COUNT"),
+                non_null_count.alias("NON_NULL_COUNT"),
+                null_count.alias("NULL_COUNT"),
+                _profile_percent_expr(null_count, row_count).alias("NULL_PERCENT"),
+                distinct_count.alias("DISTINCT_COUNT"),
+                _profile_percent_expr(distinct_count, row_count).alias("DISTINCT_PERCENT"),
+                (F.col(f"{prefix}MEAN") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias(
+                    "MEAN"
+                ),
+                (F.col(f"{prefix}STDDEV") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias(
+                    "STDDEV"
+                ),
+                (F.col(f"{prefix}MIN_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MIN_VALUE"),
+                (percentile.getItem(0).cast("double") if percentile is not None else F.lit(None).cast("double")).alias(
+                    "PERCENTILE_25"
+                ),
+                (percentile.getItem(1).cast("double") if percentile is not None else F.lit(None).cast("double")).alias(
+                    "MEDIAN"
+                ),
+                (percentile.getItem(2).cast("double") if percentile is not None else F.lit(None).cast("double")).alias(
+                    "PERCENTILE_75"
+                ),
+                (F.col(f"{prefix}MAX_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MAX_VALUE"),
+            )
+        )
 
     out = rows[0]
     for row in rows[1:]:
         out = out.unionByName(row)
     return out.select(*PROFILE_DATAFRAME_COLUMNS)
+
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -420,17 +458,9 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
-
-
 # ---------------------------------------------------------------------------
 # Public API layer
 # ---------------------------------------------------------------------------
-
-
-
-
-
-
 
 
 def _result_status(result: Mapping[str, Any] | None) -> str:
@@ -441,7 +471,6 @@ def _result_status(result: Mapping[str, Any] | None) -> str:
         or (result or {}).get("stability_status")
         or "not_run"
     ).lower()
-
 
 
 def _result_reason(result: Mapping[str, Any] | None) -> str:
@@ -455,7 +484,6 @@ def _result_reason(result: Mapping[str, Any] | None) -> str:
         or result.get("stability_message")
         or ""
     )
-
 
 
 def _schema_reason(result: Mapping[str, Any]) -> str:
@@ -527,8 +555,6 @@ def _dq_reason(result: Mapping[str, Any]) -> str:
     return _result_reason(result) or "DQ guardrail passed."
 
 
-
-
 SOURCE_OBSERVATION_COLUMNS = frozenset(
     {
         "observation_id",
@@ -555,7 +581,7 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Commit target Lineage and promote current source observations after a write."""
     if not isinstance(success_context, Mapping):
-        raise ValueError("success_context must be returned by write_pipeline_prep().")
+        raise ValueError("success_context must be returned by pipeline_write().")
     target_table_id = str(success_context.get("target_table_id") or "").strip()
     source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
     activity_id = str(success_context.get("activity_id") or "").strip()
@@ -576,7 +602,8 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
         candidates = [
-            row for row in history_rows
+            row
+            for row in history_rows
             if str(row.get("source_table_id") or "") == source_table_id
             and str(row.get("target_table_id") or "") == target_table_id
             and str(row.get("environment_name") or "") == env
@@ -585,26 +612,35 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
             and str(row.get("observation_status") or "") == "observed"
         ]
         if not candidates:
-            raise ValueError(
-                f"No source observation from activity {activity_id!r} exists for {source_table_id!r}."
-            )
+            raise ValueError(f"No source observation from activity {activity_id!r} exists for {source_table_id!r}.")
         observation_id = str(max(candidates, key=lambda row: row["_committed_at"])["observation_id"])
         for row in candidates:
             if str(row.get("observation_id") or "") != observation_id:
                 continue
-            records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
-                **{
-                    name: row.get(name)
-                    for name in (
-                        "observation_id", "source_table_id", "target_table_id",
-                        "environment_name", "partition_value", "row_count",
-                        "min_change_value", "max_change_value", "content_fingerprint",
-                        "is_present",
-                    )
-                },
-                "observation_status": "committed",
-                **audit,
-            }))
+            records.append(
+                coerce_metadata_row_types(
+                    _SOURCE_OBSERVATION_TABLE,
+                    {
+                        **{
+                            name: row.get(name)
+                            for name in (
+                                "observation_id",
+                                "source_table_id",
+                                "target_table_id",
+                                "environment_name",
+                                "partition_value",
+                                "row_count",
+                                "min_change_value",
+                                "max_change_value",
+                                "content_fingerprint",
+                                "is_present",
+                            )
+                        },
+                        "observation_status": "committed",
+                        **audit,
+                    },
+                )
+            )
     frame = get_spark_session().createDataFrame(
         records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
     )
@@ -625,20 +661,13 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     return records
 
 
-def guardrail_compatibility_observation(
-    observation: Any, *, table_id: str, change_column: str
-) -> Any:
+def guardrail_compatibility_observation(observation: Any, *, table_id: str, change_column: str) -> Any:
     """Add the resolved observation change column for freshness evaluation."""
     if hasattr(observation, "withColumn"):
         from pyspark.sql import functions as F
 
-        return observation.withColumn("table_id", F.lit(table_id)).withColumn(
-            "change_column", F.lit(change_column)
-        )
-    return [
-        {**row, "table_id": table_id, "change_column": change_column}
-        for row in observation_rows(observation)
-    ]
+        return observation.withColumn("table_id", F.lit(table_id)).withColumn("change_column", F.lit(change_column))
+    return [{**row, "table_id": table_id, "change_column": change_column} for row in observation_rows(observation)]
 
 
 # ---------------------------------------------------------------------------
@@ -655,6 +684,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from fabricops_kit.config.shared import is_table_not_found_error
+
 
 def write_guardrail_result_row(
     *,
@@ -686,11 +716,7 @@ def write_guardrail_result_row(
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     audit = build_runtime_audit_fields(config=config, env=env)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
-    payload = {
-        key: value
-        for key, value in result.items()
-        if key not in {"dataframe", "support_mapping"}
-    }
+    payload = {key: value for key, value in result.items() if key not in {"dataframe", "support_mapping"}}
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
@@ -712,6 +738,7 @@ def write_guardrail_result_row(
         context={"config": config, "env": env},
         mode="append",
     )
+
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
     "_fabricops_run_id",
@@ -756,16 +783,30 @@ def build_token_map_frame(
     ).dropDuplicates(["original_value", "token_value"])
     if pairs.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
         raise ValueError("PII token-map original and token values must be non-null.")
-    if pairs.groupBy("original_value").agg(F.countDistinct("token_value").alias("n")).where(F.col("n") > 1).limit(1).count():
+    if (
+        pairs.groupBy("original_value")
+        .agg(F.countDistinct("token_value").alias("n"))
+        .where(F.col("n") > 1)
+        .limit(1)
+        .count()
+    ):
         raise ValueError("One original value cannot map to multiple token values in the same token-map write.")
-    if pairs.groupBy("token_value").agg(F.countDistinct("original_value").alias("n")).where(F.col("n") > 1).limit(1).count():
+    if (
+        pairs.groupBy("token_value")
+        .agg(F.countDistinct("original_value").alias("n"))
+        .where(F.col("n") > 1)
+        .limit(1)
+        .count()
+    ):
         raise ValueError("One token value cannot map to multiple original values in the same token-map write.")
-    mapping = pairs.withColumn("table_id", F.lit(table_id)).withColumn(
-        "column_id", F.lit(column_id)
-    ).withColumn("original_data_type", F.lit(original_field.dataType.simpleString())).select(
-        "table_id", "column_id", "original_value", "token_value", "original_data_type"
+    mapping = (
+        pairs.withColumn("table_id", F.lit(table_id))
+        .withColumn("column_id", F.lit(column_id))
+        .withColumn("original_data_type", F.lit(original_field.dataType.simpleString()))
+        .select("table_id", "column_id", "original_value", "token_value", "original_data_type")
     )
     return add_target_audit_fields(mapping, resolve_target_audit_fields(context))
+
 
 DQ_RULE_TYPES = [
     "missing_values",
@@ -785,9 +826,11 @@ DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
 
 _COMPARISON_SCOPES = {"complete", "partitions", "partial"}
 
+
 def _is_spark_dataframe(dataframe) -> bool:
     """Return whether a value exposes the Spark DataFrame contract used here."""
     return dataframe is not None and hasattr(dataframe, "sparkSession") and hasattr(dataframe, "schema")
+
 
 def _local_source_rows(dataframe) -> list[dict]:
     """Return local row mappings without accepting Spark DataFrames."""
@@ -797,6 +840,7 @@ def _local_source_rows(dataframe) -> list[dict]:
         return []
     rows = [dataframe] if isinstance(dataframe, dict) else dataframe
     return [_row_to_dict(row) for row in rows]
+
 
 def _stable_source_value(value):
     if isinstance(value, datetime | date):
@@ -809,9 +853,11 @@ def _stable_source_value(value):
         return [_stable_source_value(item) for item in value]
     return value
 
+
 def _source_hash(payload) -> str:
     encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
 
 def _validate_changes_configuration(comparison_scope, refresh_days):
     scope = str(comparison_scope).strip().lower()
@@ -827,8 +873,10 @@ def _validate_changes_configuration(comparison_scope, refresh_days):
         raise ValueError("refresh_days must be a non-negative integer")
     return scope, window_days
 
+
 def _partition_identity(row, partitions):
     return tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
+
 
 def _validate_local_logical_keys(rows, keys):
     seen = set()
@@ -841,6 +889,7 @@ def _validate_local_logical_keys(rows, keys):
             raise ValueError("logical key columns must uniquely identify rows")
         seen.add(key_hash)
 
+
 def _local_partition_observations(rows, partitions, range_column, all_columns):
     grouped = {}
     for row in rows:
@@ -849,32 +898,54 @@ def _local_partition_observations(rows, partitions, range_column, all_columns):
     for partition, members in sorted(grouped.items(), key=lambda item: str(item[0])):
         values = [row.get(range_column) for row in members if range_column and row.get(range_column) is not None]
         row_hashes = sorted(_source_hash([(column, row.get(column)) for column in all_columns]) for row in members)
-        observations.append({
-            "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
-            "row_count": len(members),
-            "min_value": _stable_source_value(min(values)) if values else None,
-            "max_value": _stable_source_value(max(values)) if values else None,
-            "fingerprint": _source_hash(row_hashes),
-            "_partition_id": _source_hash(partition),
-        })
+        observations.append(
+            {
+                "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
+                "row_count": len(members),
+                "min_value": _stable_source_value(min(values)) if values else None,
+                "max_value": _stable_source_value(max(values)) if values else None,
+                "fingerprint": _source_hash(row_hashes),
+                "_partition_id": _source_hash(partition),
+            }
+        )
     return observations
+
 
 def _changed_partition_sets(current_observations, previous_observations, scope):
     current = {item["_partition_id"]: item for item in current_observations}
     previous = {item["_partition_id"]: item for item in previous_observations}
-    changed = {key for key in current.keys() & previous.keys() if current[key]["fingerprint"] != previous[key]["fingerprint"]}
+    changed = {
+        key for key in current.keys() & previous.keys() if current[key]["fingerprint"] != previous[key]["fingerprint"]
+    }
     new = current.keys() - previous.keys()
     missing = previous.keys() - current.keys() if scope == "complete" else set()
     return changed, set(new), set(missing)
+
 
 def _classify_change_date(value, recent_start):
     observed = _coerce_date(value)
     return "recent" if observed is not None and observed >= recent_start else "historical"
 
-def _local_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          partitions, keys, content_columns, range_column, scope, recent_start):
-    current = [row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions]
-    previous = [row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions]
+
+def _local_row_comparison(
+    current,
+    previous,
+    *,
+    relevant_current_partitions,
+    relevant_previous_partitions,
+    partitions,
+    keys,
+    content_columns,
+    range_column,
+    scope,
+    recent_start,
+):
+    current = [
+        row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions
+    ]
+    previous = [
+        row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions
+    ]
 
     def keyed(rows):
         output = {}
@@ -901,33 +972,47 @@ def _local_row_comparison(current, previous, *, relevant_current_partitions, rel
         for key_hash in hashes:
             classified = {"key_hash": key_hash, "change_type": change_type}
             if range_column:
-                target = recent if _classify_change_date(source[key_hash][0].get(range_column), recent_start) == "recent" else historical
+                target = (
+                    recent
+                    if _classify_change_date(source[key_hash][0].get(range_column), recent_start) == "recent"
+                    else historical
+                )
                 target.append(classified)
     return changes, recent, historical
 
+
 def _spark_column(name):
     from pyspark.sql import functions as F
+
     return F.col(f"`{str(name).replace('`', '``')}`")
+
 
 def _spark_canonical_hash(columns):
     from pyspark.sql import functions as F
+
     struct = F.struct(*[_spark_column(column).alias(str(column)) for column in columns])
     return F.sha2(F.to_json(struct, {"ignoreNullFields": "false"}), 256)
+
 
 def _validate_spark_logical_keys(dataframe, keys):
     from functools import reduce
     from pyspark.sql import functions as F
+
     null_key = reduce(lambda left, right: left | right, [_spark_column(column).isNull() for column in keys])
     if dataframe.filter(null_key).limit(1).count():
         raise ValueError("logical key columns must not contain null values")
     if dataframe.groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
         raise ValueError("logical key columns must uniquely identify rows")
 
+
 def _spark_partition_frame(dataframe, partitions, range_column, all_columns):
     from pyspark.sql import functions as F
+
     partition_id = _spark_canonical_hash(partitions) if partitions else F.lit(_source_hash(("__FULL_SOURCE__",)))
     row_hash = _spark_canonical_hash(all_columns)
-    prepared = dataframe.withColumn("__fabricops_partition_id", partition_id).withColumn("__fabricops_row_hash", row_hash)
+    prepared = dataframe.withColumn("__fabricops_partition_id", partition_id).withColumn(
+        "__fabricops_row_hash", row_hash
+    )
     grouping = ["__fabricops_partition_id", *partitions]
     aggregates = [
         F.count(F.lit(1)).alias("row_count"),
@@ -936,46 +1021,103 @@ def _spark_partition_frame(dataframe, partitions, range_column, all_columns):
         F.sum(F.xxhash64("__fabricops_row_hash").cast("decimal(38,0)")).alias("__hash_sum"),
     ]
     if range_column:
-        aggregates.extend([F.min(_spark_column(range_column)).alias("min_value"), F.max(_spark_column(range_column)).alias("max_value")])
+        aggregates.extend(
+            [
+                F.min(_spark_column(range_column)).alias("min_value"),
+                F.max(_spark_column(range_column)).alias("max_value"),
+            ]
+        )
     grouped = prepared.groupBy(*grouping).agg(*aggregates)
     grouped = grouped.withColumn(
         "fingerprint",
-        F.sha2(F.concat_ws("|", F.col("row_count"), F.col("__min_hash"), F.col("__max_hash"), F.col("__hash_sum")), 256),
+        F.sha2(
+            F.concat_ws("|", F.col("row_count"), F.col("__min_hash"), F.col("__max_hash"), F.col("__hash_sum")), 256
+        ),
     )
     return prepared.drop("__fabricops_row_hash"), grouped
 
+
 def _collect_spark_observations(grouped, partitions):
     from pyspark.sql import functions as F
-    rows = grouped.select("__fabricops_partition_id", *partitions, "row_count", "min_value" if "min_value" in grouped.columns else F.lit(None).alias("min_value"), "max_value" if "max_value" in grouped.columns else F.lit(None).alias("max_value"), "fingerprint").collect()
-    return [{
-        "partition": {column: _stable_source_value(row[column]) for column in partitions},
-        "row_count": row["row_count"],
-        "min_value": _stable_source_value(row["min_value"]),
-        "max_value": _stable_source_value(row["max_value"]),
-        "fingerprint": row["fingerprint"],
-        "_partition_id": row["__fabricops_partition_id"],
-    } for row in rows]
 
-def _spark_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          keys, content_columns, range_column, scope, recent_start, include_row_changes):
+    rows = grouped.select(
+        "__fabricops_partition_id",
+        *partitions,
+        "row_count",
+        "min_value" if "min_value" in grouped.columns else F.lit(None).alias("min_value"),
+        "max_value" if "max_value" in grouped.columns else F.lit(None).alias("max_value"),
+        "fingerprint",
+    ).collect()
+    return [
+        {
+            "partition": {column: _stable_source_value(row[column]) for column in partitions},
+            "row_count": row["row_count"],
+            "min_value": _stable_source_value(row["min_value"]),
+            "max_value": _stable_source_value(row["max_value"]),
+            "fingerprint": row["fingerprint"],
+            "_partition_id": row["__fabricops_partition_id"],
+        }
+        for row in rows
+    ]
+
+
+def _spark_row_comparison(
+    current,
+    previous,
+    *,
+    relevant_current_partitions,
+    relevant_previous_partitions,
+    keys,
+    content_columns,
+    range_column,
+    scope,
+    recent_start,
+    include_row_changes,
+):
     from pyspark.sql import functions as F
+
     current = current.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_current_partitions)))
     previous = previous.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_previous_partitions)))
-    current = current.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
-    previous = previous.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
+    current = current.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn(
+        "non_key_hash", _spark_canonical_hash(content_columns)
+    )
+    previous = previous.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn(
+        "non_key_hash", _spark_canonical_hash(content_columns)
+    )
     for dataframe in (current, previous):
         if dataframe.groupBy("key_hash").count().filter(F.col("count") > 1).limit(1).count():
             raise ValueError("logical key columns must uniquely identify rows")
-    current_rows = current.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
-    previous_rows = previous.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
+    current_rows = current.select(
+        "key_hash",
+        "non_key_hash",
+        *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]),
+    )
+    previous_rows = previous.select(
+        "key_hash",
+        "non_key_hash",
+        *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]),
+    )
     joined = current_rows.alias("c").join(previous_rows.alias("p"), "key_hash", "full_outer")
     deletion_allowed = scope in {"complete", "partitions"}
-    classified = joined.withColumn("change_type", F.when(F.col("p.non_key_hash").isNull(), "inserted").when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted").when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"))
+    classified = joined.withColumn(
+        "change_type",
+        F.when(F.col("p.non_key_hash").isNull(), "inserted")
+        .when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted")
+        .when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"),
+    )
     classified = classified.filter(F.col("change_type").isNotNull())
     change_date = F.coalesce(F.col("c.range_value"), F.col("p.range_value")).cast("date")
-    classified = classified.withColumn("age_class", F.when(change_date >= F.lit(recent_start), "recent").otherwise("historical") if range_column else F.lit(None).cast("string"))
+    classified = classified.withColumn(
+        "age_class",
+        F.when(change_date >= F.lit(recent_start), "recent").otherwise("historical")
+        if range_column
+        else F.lit(None).cast("string"),
+    )
     counts = {row["change_type"]: row["count"] for row in classified.groupBy("change_type").count().collect()}
-    ages = {row["age_class"]: row["count"] for row in classified.filter(F.col("age_class").isNotNull()).groupBy("age_class").count().collect()}
+    ages = {
+        row["age_class"]: row["count"]
+        for row in classified.filter(F.col("age_class").isNotNull()).groupBy("age_class").count().collect()
+    }
     row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
     if include_row_changes:
         for row in classified.select("key_hash", "change_type", "age_class").collect():
@@ -984,18 +1126,17 @@ def _spark_row_comparison(current, previous, *, relevant_current_partitions, rel
                 row_changes[row["age_class"]].append({"key_hash": row["key_hash"], "change_type": row["change_type"]})
     return counts, ages, row_changes
 
+
 def _strip_internal_observation_fields(observations):
     return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
+
 
 def _changes_content_columns(columns, keys, non_key_columns):
     """Resolve the business content columns used for comparison."""
     if non_key_columns is not None:
         return tuple(non_key_columns)
-    return tuple(
-        column
-        for column in columns
-        if column not in keys
-    )
+    return tuple(column for column in columns if column not in keys)
+
 
 def source_stability_check_core(
     dataframe,
@@ -1026,7 +1167,11 @@ def source_stability_check_core(
 
     if spark_mode:
         current = dataframe
-        previous = previous_dataframe if previous_dataframe is not None else dataframe.sparkSession.createDataFrame([], dataframe.schema)
+        previous = (
+            previous_dataframe
+            if previous_dataframe is not None
+            else dataframe.sparkSession.createDataFrame([], dataframe.schema)
+        )
         columns = sorted(set(current.columns) | set(previous.columns))
         required = (*partitions, *keys)
         missing = [column for column in required if column not in columns]
@@ -1063,51 +1208,84 @@ def source_stability_check_core(
     if current_ids or previous_ids:
         if spark_mode:
             counts, ages, row_changes = _spark_row_comparison(
-                current_prepared, previous_prepared, relevant_current_partitions=current_ids,
-                relevant_previous_partitions=previous_ids, keys=keys, content_columns=content_columns,
-                range_column=range_column, scope=scope, recent_start=recent_start,
+                current_prepared,
+                previous_prepared,
+                relevant_current_partitions=current_ids,
+                relevant_previous_partitions=previous_ids,
+                keys=keys,
+                content_columns=content_columns,
+                range_column=range_column,
+                scope=scope,
+                recent_start=recent_start,
                 include_row_changes=include_row_changes,
             )
         else:
             changes, recent, historical = _local_row_comparison(
-                current, previous, relevant_current_partitions=current_ids,
-                relevant_previous_partitions=previous_ids, partitions=partitions, keys=keys,
-                content_columns=content_columns, range_column=range_column, scope=scope,
+                current,
+                previous,
+                relevant_current_partitions=current_ids,
+                relevant_previous_partitions=previous_ids,
+                partitions=partitions,
+                keys=keys,
+                content_columns=content_columns,
+                range_column=range_column,
+                scope=scope,
                 recent_start=recent_start,
             )
             counts = {name: len(values) for name, values in changes.items()}
             ages = {"recent": len(recent), "historical": len(historical)}
             row_changes = {**changes, "recent": recent, "historical": historical}
 
-    current_values = [item["min_value"] for item in current_observations if item["min_value"] is not None] + [item["max_value"] for item in current_observations if item["max_value"] is not None]
-    previous_values = [item["min_value"] for item in previous_observations if item["min_value"] is not None] + [item["max_value"] for item in previous_observations if item["max_value"] is not None]
+    current_values = [item["min_value"] for item in current_observations if item["min_value"] is not None] + [
+        item["max_value"] for item in current_observations if item["max_value"] is not None
+    ]
+    previous_values = [item["min_value"] for item in previous_observations if item["min_value"] is not None] + [
+        item["max_value"] for item in previous_observations if item["max_value"] is not None
+    ]
     previous_max = max(previous_values) if previous_values else None
     unseen_values = [value for value in current_values if previous_max is None or value > previous_max]
     changed = bool(changed_ids or new_ids or missing_ids)
     current_by_id = {item["_partition_id"]: item for item in current_observations}
     result = {
-        "status": "changed" if changed else "unchanged", "can_continue": True,
-        "check_type": "source_stability", "guardrail_type": "source_stability", "changed": changed,
+        "status": "changed" if changed else "unchanged",
+        "can_continue": True,
+        "check_type": "source_stability",
+        "guardrail_type": "source_stability",
+        "changed": changed,
         "comparison_scope": scope,
         "partition_observations": _strip_internal_observation_fields(current_observations),
         "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
         "new_partitions": [current_by_id[key]["partition"] for key in sorted(new_ids)],
-        "recent_changes": ages.get("recent", 0), "historical_changes": ages.get("historical", 0),
-        "inserted_count": counts.get("inserted", 0), "updated_count": counts.get("updated", 0),
+        "recent_changes": ages.get("recent", 0),
+        "historical_changes": ages.get("historical", 0),
+        "inserted_count": counts.get("inserted", 0),
+        "updated_count": counts.get("updated", 0),
         "deleted_count": counts.get("deleted", 0),
         "deletions_provable": scope == "complete" or (scope == "partitions" and bool(partitions)),
-        "current_observed_range": {"min": min(current_values) if current_values else None, "max": max(current_values) if current_values else None},
+        "current_observed_range": {
+            "min": min(current_values) if current_values else None,
+            "max": max(current_values) if current_values else None,
+        },
         "previous_observed_range": {"min": min(previous_values) if previous_values else None, "max": previous_max},
-        "recent_mutable_range": {"start": recent_start.isoformat(), "end": today.isoformat(), "refresh_days": refresh_days},
-        "new_unseen_range": {"min": min(unseen_values) if unseen_values else None, "max": max(unseen_values) if unseen_values else None},
+        "recent_mutable_range": {
+            "start": recent_start.isoformat(),
+            "end": today.isoformat(),
+            "refresh_days": refresh_days,
+        },
+        "new_unseen_range": {
+            "min": min(unseen_values) if unseen_values else None,
+            "max": max(unseen_values) if unseen_values else None,
+        },
         "message": "Source changes detected." if changed else "Source is unchanged.",
     }
     if include_row_changes:
         result["row_changes"] = row_changes
     return result
 
+
 def _rule_review_status(row: dict) -> str:
     return _string_value(_catalogue_value(row, "review_state", "review_status")).lower()
+
 
 def _is_active_guardrail_rule(row: dict) -> bool:
     activation_state = _string_value(_catalogue_value(row, "activation_state")).lower()
@@ -1119,6 +1297,7 @@ def _is_active_guardrail_rule(row: dict) -> bool:
     review_status = _rule_review_status(row)
     return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES
 
+
 def _parse_rule_parameters(row: dict) -> dict:
     raw = _catalogue_value(row, "rule_parameters_json") or "{}"
     try:
@@ -1126,10 +1305,15 @@ def _parse_rule_parameters(row: dict) -> dict:
     except Exception:
         return {}
 
-def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", table_id: str = "") -> dict | None:
+
+def _select_table_guardrail_rule(
+    rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", table_id: str = ""
+) -> dict | None:
     if rules_df is None:
         return None
-    rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
+    rows = (
+        rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
+    )
     candidates = []
     for raw in rows or []:
         row = _row_to_dict(raw)
@@ -1150,8 +1334,15 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         candidates.append(row)
     if not candidates:
         return None
-    candidates.sort(key=lambda row: (int(_catalogue_value(row, "configuration_version") or 0), _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at"))), reverse=True)
+    candidates.sort(
+        key=lambda row: (
+            int(_catalogue_value(row, "configuration_version") or 0),
+            _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at")),
+        ),
+        reverse=True,
+    )
     return candidates[0]
+
 
 def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     """Return and minimally validate one frozen Data Contract payload."""
@@ -1172,13 +1363,17 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def resolve_active_data_contract(config, env: str, table_id: str, *, spark_session=None, required: bool = True) -> dict[str, Any] | None:
+def resolve_active_data_contract(
+    config, env: str, table_id: str, *, spark_session=None, required: bool = True
+) -> dict[str, Any] | None:
     """Resolve the unambiguous active frozen contract for one logical table."""
     try:
         frame = read_lakehouse_table_core(
-            DATA_CONTRACT_TABLE, target="metadata",
+            DATA_CONTRACT_TABLE,
+            target="metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            spark_session=spark_session, context={"config": config, "env": env},
+            spark_session=spark_session,
+            context={"config": config, "env": env},
         )
     except Exception as exc:
         if is_table_not_found_error(exc) and not required:
@@ -1197,7 +1392,9 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
         return None
     row = dict(active[0])
     if str(row.get("status") or "").lower() != "active":
-        raise RuntimeError(f"Data Contract integrity error: active version for {table_id!r} does not have status='active'.")
+        raise RuntimeError(
+            f"Data Contract integrity error: active version for {table_id!r} does not have status='active'."
+        )
     if not str(row.get("agreement_id") or "").strip() or not str(row.get("agreement_version") or "").strip():
         raise RuntimeError(
             f"Data Contract integrity error: active version for {table_id!r} has no exact Data Agreement linkage."
@@ -1231,13 +1428,12 @@ def _resolve_data_contract_version(
         )
     except Exception as exc:
         if is_table_not_found_error(exc):
-            raise ValueError(
-                f"Data Contract {contract_id!r} version {requested_version} does not exist."
-            ) from exc
+            raise ValueError(f"Data Contract {contract_id!r} version {requested_version} does not exist.") from exc
         raise
     rows = [_row_to_dict(row) for row in frame.collect()]
     matches = [
-        row for row in rows
+        row
+        for row in rows
         if str(row.get("contract_id") or "") == contract_id
         and int(row.get("contract_version") or 0) == requested_version
     ]
@@ -1253,7 +1449,9 @@ def _resolve_data_contract_version(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
     if str(row.get("status") or "").strip().lower() not in {"frozen", "active", "superseded"}:
-        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before Development testing.")
+        raise ValueError(
+            f"Data Contract {contract_id!r} version {requested_version} must be frozen before Development testing."
+        )
     row["contract_payload"] = _contract_payload(row)
     return row
 
@@ -1269,7 +1467,11 @@ def resolve_pipeline_data_contract(
     """Resolve the pipeline-selected contract, or no contract in Development."""
     if env == "prod":
         return resolve_active_data_contract(
-            config, env, table_id, spark_session=spark_session, required=True,
+            config,
+            env,
+            table_id,
+            spark_session=spark_session,
+            required=True,
         )
     runtime_context = context or {}
     overrides = runtime_context.get("data_contract_overrides") or {}
@@ -1287,8 +1489,13 @@ def resolve_pipeline_data_contract(
     if not contract_id:
         return None
     return _resolve_data_contract_version(
-        config, env, table_id, contract_id, version,
-        spark_session=spark_session, context=context,
+        config,
+        env,
+        table_id,
+        contract_id,
+        version,
+        spark_session=spark_session,
+        context=context,
     )
 
 
@@ -1304,15 +1511,19 @@ def resolve_catalogue_table_id(
 ) -> str:
     """Resolve one physical runtime table to its canonical Catalogue identity."""
     frame = read_lakehouse_table_core(
-        CATALOGUE_TABLE, target="metadata",
+        CATALOGUE_TABLE,
+        target="metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        spark_session=spark_session, context={"config": config, "env": env},
+        spark_session=spark_session,
+        context={"config": config, "env": env},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
     matches = []
     for raw in frame.collect():
         row = _row_to_dict(raw)
-        actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
+        actual = tuple(
+            str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name")
+        )
         if (
             str(row.get("environment_name") or "") == env
             and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
@@ -1327,7 +1538,9 @@ def resolve_catalogue_table_id(
             "profile and register the table before enforcing its Data Contract."
         )
     if len(identities) > 1:
-        raise RuntimeError(f"Catalogue integrity error: Production runtime table {table_name!r} resolves to multiple table_id values.")
+        raise RuntimeError(
+            f"Catalogue integrity error: Production runtime table {table_name!r} resolves to multiple table_id values."
+        )
     return identities[0]
 
 
@@ -1363,27 +1576,22 @@ def resolve_catalogue_table_identity(
             matches.append(row)
     if not matches:
         raise ValueError(
-            f"No active registered Catalogue table exists for table_id {canonical_id!r} "
-            f"in environment {env!r}."
+            f"No active registered Catalogue table exists for table_id {canonical_id!r} in environment {env!r}."
         )
     if len(matches) != 1:
         raise RuntimeError(
-            f"Catalogue integrity error: table_id {canonical_id!r} resolves to "
-            f"{len(matches)} active table identities."
+            f"Catalogue integrity error: table_id {canonical_id!r} resolves to {len(matches)} active table identities."
         )
     row = dict(matches[0])
     required = ("store_type", "layer", "table_name")
     missing = [name for name in required if not str(row.get(name) or "").strip()]
     if missing:
         raise ValueError(
-            f"Catalogue table_id {canonical_id!r} is not a registered table identity; "
-            f"missing {', '.join(missing)}."
+            f"Catalogue table_id {canonical_id!r} is not a registered table identity; missing {', '.join(missing)}."
         )
     store_type = str(row["store_type"]).strip().lower()
     if store_type not in {"lakehouse", "warehouse"}:
-        raise ValueError(
-            f"Catalogue table_id {canonical_id!r} has unsupported store_type {store_type!r}."
-        )
+        raise ValueError(f"Catalogue table_id {canonical_id!r} has unsupported store_type {store_type!r}.")
     return {
         **row,
         "table_id": canonical_id,
@@ -1445,23 +1653,26 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
         if str(raw.get("guardrail_type") or "").strip().lower() == "schema":
             params = {
                 **{
-                    name: value for name, value in params.items()
+                    name: value
+                    for name, value in params.items()
                     if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
                 },
                 "columns": list(expected_schema),
                 "data_types": expected_schema,
             }
-        adapted.append({
-            **{name: value for name, value in raw.items() if name != "rule_parameters"},
-            "table_id": table_id,
-            "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
-            "environment_name": environment_name,
-            "rule_parameters_json": json.dumps(params, sort_keys=True),
-            "is_active": True,
-            "activation_state": "active",
-            "review_status": "governance_approved",
-            "configuration_version": int(raw.get("guardrail_version") or 1),
-        })
+        adapted.append(
+            {
+                **{name: value for name, value in raw.items() if name != "rule_parameters"},
+                "table_id": table_id,
+                "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
+                "environment_name": environment_name,
+                "rule_parameters_json": json.dumps(params, sort_keys=True),
+                "is_active": True,
+                "activation_state": "active",
+                "review_status": "governance_approved",
+                "configuration_version": int(raw.get("guardrail_version") or 1),
+            }
+        )
     return adapted
 
 
@@ -1478,8 +1689,13 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         "append": {"load_strategy", "source", "contract_id", "contract_version"},
         "scd1": {"load_strategy", "key_columns", "source", "contract_id", "contract_version"},
         "scd2": {
-            "load_strategy", "key_columns", "effective_column", "tracked_columns",
-            "source", "contract_id", "contract_version",
+            "load_strategy",
+            "key_columns",
+            "effective_column",
+            "tracked_columns",
+            "source",
+            "contract_id",
+            "contract_version",
         },
     }[strategy]
     unexpected = sorted(set(definition) - allowed)
@@ -1489,8 +1705,10 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         if name not in definition:
             continue
         values = definition[name]
-        if not isinstance(values, list | tuple) or not values or any(
-            not isinstance(value, str) or not value.strip() for value in values
+        if (
+            not isinstance(values, list | tuple)
+            or not values
+            or any(not isinstance(value, str) or not value.strip() for value in values)
         ):
             raise ValueError(f"Processing definition {name} must be a non-empty sequence of column names.")
         definition[name] = [value.strip() for value in values]
@@ -1534,8 +1752,13 @@ def resolve_table_processing_definition(
             raise ValueError("Development Data Contract override requires both contract_id and contract_version.")
         if contract_id:
             contract = _resolve_data_contract_version(
-                config, env, table_id, contract_id, version,
-                spark_session=spark_session, context=context,
+                config,
+                env,
+                table_id,
+                contract_id,
+                version,
+                spark_session=spark_session,
+                context=context,
             )
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
@@ -1592,7 +1815,8 @@ def resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, An
     explicit = processing.get("tracked_columns")
     if explicit:
         invalid = sorted(
-            name for name in explicit
+            name
+            for name in explicit
             if name not in columns
             or name in {*processing["key_columns"], processing["effective_column"], *_TARGET_TECHNICAL_COLUMNS}
             or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
@@ -1605,16 +1829,14 @@ def resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, An
         processing["effective_column"],
         *_TARGET_TECHNICAL_COLUMNS,
     }
-    return [
-        name for name in columns
-        if name not in excluded and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
-    ]
+    return [name for name in columns if name not in excluded and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)]
 
 
 def resolve_scd1_business_columns(columns: list[str], key_columns: list[str]) -> list[str]:
     """Return non-key business columns eligible for SCD change detection."""
     return [
-        name for name in columns
+        name
+        for name in columns
         if name not in {*key_columns, *_TARGET_TECHNICAL_COLUMNS}
         and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
     ]
@@ -1666,11 +1888,15 @@ def execute_lakehouse_processing(
         persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
     if strategy == "append":
-        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table_core(
+            persisted_df, table_name, target=target, schema=schema, mode="append", context=context
+        )
         return
     if strategy == "overwrite":
         if scope_type == "full_dataset":
-            write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            write_lakehouse_table_core(
+                persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context
+            )
             return
         if scope.get("column") != processing.get("partition_column"):
             raise ValueError("Write partition scope must match the target processing partition_column.")
@@ -1678,7 +1904,12 @@ def execute_lakehouse_processing(
             raise ValueError("Partition-scoped overwrite requires persisted _partition_bucket target state.")
         predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table_core(
-            persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
+            persisted_df,
+            table_name,
+            target=target,
+            schema=schema,
+            mode="overwrite",
+            context=context,
             options={"replaceWhere": predicate},
         )
         return
@@ -1692,7 +1923,9 @@ def execute_lakehouse_processing(
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        write_lakehouse_table_core(
+            persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context
+        )
         return
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
@@ -1702,7 +1935,9 @@ def execute_lakehouse_processing(
         technical_updates = {
             name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS
         }
-        merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
+        merge = (
+            delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
+        )
         if technical_updates:
             merge = merge.whenMatchedUpdate(set=technical_updates)
         merge.whenNotMatchedInsertAll().execute()
@@ -1716,11 +1951,13 @@ def execute_lakehouse_processing(
         raise RuntimeError("SCD2 target contains multiple current records for one or more business keys.")
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     technical_updates = {
-        name: f"source.`{name}`" for name in persisted_df.columns
+        name: f"source.`{name}`"
+        for name in persisted_df.columns
         if name in _TARGET_TECHNICAL_COLUMNS and name not in _SCD2_LIFECYCLE_COLUMNS
     }
     merge = (
-        delta.alias("target").merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
+        delta.alias("target")
+        .merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
         .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
     )
     if technical_updates:
@@ -1744,19 +1981,31 @@ def load_table_guardrail_rules(
     if not table_id:
         raise ValueError("Guardrail resolution requires a canonical Catalogue table_id.")
     contract = resolve_pipeline_data_contract(
-        config, env, table_id, spark_session=spark_session, context=context,
+        config,
+        env,
+        table_id,
+        spark_session=spark_session,
+        context=context,
     )
     if contract is None:
         return []
     rows = contract_guardrail_rows(contract, environment_name=env, table_id=table_id)
     return spark_session.createDataFrame(rows) if rows else []
 
-def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str, environment_name: str = "") -> dict | None:
+
+def select_table_guardrail_rule(
+    rules_df, *, guardrail_type: str, table_id: str, environment_name: str = ""
+) -> dict | None:
     """Select the latest active approved table rule by canonical identity."""
     return _select_table_guardrail_rule(
-        rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",
-        environment_name=environment_name, table_id=table_id,
+        rules_df,
+        guardrail_type=guardrail_type,
+        dataset_name="",
+        table_name="",
+        environment_name=environment_name,
+        table_id=table_id,
     )
+
 
 def resolve_source_stability_observation_columns(rule: dict) -> tuple[str, str]:
     """Return validated observation columns from an active Source Stability rule."""
@@ -1771,6 +2020,7 @@ def resolve_source_stability_observation_columns(rule: dict) -> tuple[str, str]:
         resolved.append(value)
     return resolved[0], resolved[1]
 
+
 def evaluate_source_stability_guardrail(
     result: dict,
     *,
@@ -1783,8 +2033,11 @@ def evaluate_source_stability_guardrail(
 ) -> dict:
     """Validate detected historical mutation against a governed load strategy."""
     rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="source_stability", dataset_name=dataset_name,
-        table_name=table_name, environment_name=environment_name,
+        rules_df,
+        guardrail_type="source_stability",
+        dataset_name=dataset_name,
+        table_name=table_name,
+        environment_name=environment_name,
         table_id=table_id,
     )
     if not rule:
@@ -1795,18 +2048,22 @@ def evaluate_source_stability_guardrail(
     strategy = _string_value(load_strategy).lower()
     if strategy not in {"overwrite", "append", "scd1", "scd2"}:
         raise ValueError("load_strategy must be one of: overwrite, append, scd1, scd2")
-    severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
+    severity = _string_value(
+        ("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")
+    ).lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
-    result.update({
-        "rule_type": "historical_mutation",
-        "load_strategy": strategy,
-        "severity": severity,
-        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
-        "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
-        "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
-        "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
-    })
+    result.update(
+        {
+            "rule_type": "historical_mutation",
+            "load_strategy": strategy,
+            "severity": severity,
+            "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+            "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
+            "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
+            "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
+        }
+    )
     changed = bool(result.get("changed"))
     historical_mutation = bool(
         result.get("changed_partitions")
@@ -1819,7 +2076,10 @@ def evaluate_source_stability_guardrail(
     result["expected"] = {"load_strategy": strategy}
     result["actual"] = {
         "changed": changed,
-        **{name: result.get(name, []) for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")},
+        **{
+            name: result.get(name, [])
+            for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")
+        },
     }
     if result.get("first_observation"):
         result.update(
@@ -1848,6 +2108,7 @@ def evaluate_source_stability_guardrail(
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
 
+
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":
         reason = str(result.get("reason") or result.get("message") or "")
@@ -1856,6 +2117,7 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
         result["message"] = message
         result["bypass_warning"] = _BYPASS_POST_REVIEW_WARNING
     return result
+
 
 class SchemaDriftError(Exception):
     """Raised when a guardrail check is configured to stop execution.
@@ -1866,6 +2128,7 @@ class SchemaDriftError(Exception):
     have one failure type to catch when they choose fail-fast behavior.
 
     """
+
 
 def _normalize_datatype(data_type) -> str:
     raw = str(data_type).strip().lower()
@@ -1915,6 +2178,7 @@ def _normalize_datatype(data_type) -> str:
     }
     return aliases.get(raw, raw)
 
+
 def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
     schema = getattr(df, "schema", None)
     if schema is not None and hasattr(schema, "fields"):
@@ -1933,12 +2197,8 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
     return columns, {}
 
 
-
-
-
-
-
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
+
 
 def _guardrail_schema_check_base(
     dataframe,
@@ -2003,7 +2263,14 @@ def _guardrail_schema_check_base(
     if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
         rules_df, expected_schema = expected_schema, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
+        rule = _select_table_guardrail_rule(
+            rules_df,
+            guardrail_type="schema",
+            dataset_name=dataset_name,
+            table_name=table_name,
+            environment_name=environment_name,
+            table_id=table_id,
+        )
         if not rule:
             expected_schema, preset = {}, "monitor_only"
         else:
@@ -2012,8 +2279,15 @@ def _guardrail_schema_check_base(
             selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
-            preset = {"strict": "strict", "minimum_required": "allow_new_columns", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-            severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
+            preset = {
+                "strict": "strict",
+                "minimum_required": "allow_new_columns",
+                "relaxed": "allow_new_columns",
+                "skip": "monitor_only",
+            }.get(rule_type, "allow_new_columns")
+            severity = _string_value(
+                ("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")
+            ).lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
 
@@ -2045,7 +2319,14 @@ def _guardrail_schema_check_base(
         checks.append({"check": "datatype_mismatch", **mismatch, "status": "failed", "passed": False})
     actual_unexpected = [column for column in actual_columns if str(column) not in expected_set]
     for column in actual_unexpected:
-        checks.append({"check": "unexpected_column", "column": column, "status": "warning" if normalized_preset == "allow_new_columns" else "failed", "passed": normalized_preset == "allow_new_columns"})
+        checks.append(
+            {
+                "check": "unexpected_column",
+                "column": column,
+                "status": "warning" if normalized_preset == "allow_new_columns" else "failed",
+                "passed": normalized_preset == "allow_new_columns",
+            }
+        )
 
     blocking = bool(missing_columns or datatype_mismatches)
     if normalized_preset == "strict":
@@ -2083,9 +2364,16 @@ def _guardrail_schema_check_base(
         "severity": severity,
     }
     if rule is not None:
-        result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+        result.update(
+            {
+                "guardrail_type": "schema",
+                "rule_type": rule_type,
+                "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+            }
+        )
         return _apply_bypass_post_review_warning(result, rule)
     return result
+
 
 def _row_to_dict(row) -> dict:
     if row is None:
@@ -2095,7 +2383,6 @@ def _row_to_dict(row) -> dict:
     if hasattr(row, "asDict"):
         return row.asDict(recursive=True)
     return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
-
 
 
 def _max_column_value(dataframe, column_name: str):
@@ -2130,6 +2417,7 @@ def _max_column_value(dataframe, column_name: str):
     values = [value for value in values if value not in (None, "")]
     return max(values) if values else None
 
+
 def _coerce_date(value) -> date | None:
     if value in (None, ""):
         return None
@@ -2149,6 +2437,7 @@ def _coerce_date(value) -> date | None:
     except ValueError:
         return None
 
+
 def _coerce_datetime(value) -> datetime | None:
     """Return a timezone-naive comparison datetime for freshness values."""
     if value in (None, ""):
@@ -2163,9 +2452,11 @@ def _coerce_datetime(value) -> datetime | None:
     except ValueError:
         return None
 
+
 def _iso_date_value(value) -> str:
     parsed = _coerce_date(value)
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
+
 
 def freshness_check_core(
     dataframe,
@@ -2220,12 +2511,21 @@ def freshness_check_core(
     if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
         rules_df, freshness_column = freshness_column, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
+        rule = _select_table_guardrail_rule(
+            rules_df,
+            guardrail_type="freshness",
+            dataset_name=dataset_name,
+            table_name=table_name,
+            environment_name=environment_name,
+            table_id=table_id,
+        )
         if rule:
             params = _parse_rule_parameters(rule)
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
             if rule_type != "skip":
-                freshness_column = params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name")
+                freshness_column = (
+                    params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name")
+                )
                 if params.get("maximum_age") not in (None, ""):
                     unit = str(params.get("maximum_age_unit") or "days").lower()
                     factors = {"minutes": 60, "hours": 3600, "days": 86400}
@@ -2235,12 +2535,20 @@ def freshness_check_core(
                 else:
                     max_lag_days = params.get("max_lag_days")
                     max_age_seconds = None
-                severity = ("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")
+                severity = (
+                    "blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning"
+                )
 
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    observation_evidence = {"table_id", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns
+    observation_evidence = {
+        "table_id",
+        "partition_value",
+        "change_column",
+        "max_change_value",
+        "_committed_at",
+    } <= dataframe_columns
     if observation_evidence and rule_type != "skip":
         rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
         change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
@@ -2275,14 +2583,16 @@ def freshness_check_core(
         "message": "Freshness check skipped because no freshness column is configured.",
     }
     if rule is not None:
-        base_result.update({
-            "guardrail_type": "freshness",
-            "rule_type": rule_type,
-            "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
-            "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
-            "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
-            "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
-        })
+        base_result.update(
+            {
+                "guardrail_type": "freshness",
+                "rule_type": rule_type,
+                "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+                "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
+                "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
+                "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
+            }
+        )
     if not column:
         return _apply_bypass_post_review_warning(base_result, rule)
     if max_age_seconds is None and (max_lag_days is None or str(max_lag_days).strip() == ""):
@@ -2295,10 +2605,18 @@ def freshness_check_core(
     reference = _coerce_datetime(reference_date) if reference_date is not None else datetime.now()
     if reference is None:
         raise ValueError("reference_date must be a date, datetime, or ISO date string")
-    required_min = reference - timedelta(seconds=max_age_seconds) if max_age_seconds is not None else reference - timedelta(days=lag_days)
+    required_min = (
+        reference - timedelta(seconds=max_age_seconds)
+        if max_age_seconds is not None
+        else reference - timedelta(days=lag_days)
+    )
     latest_raw = _max_column_value(dataframe, column)
     latest_date = _coerce_datetime(latest_raw)
-    latest_display = _coerce_datetime(latest_raw).isoformat() if max_age_seconds is not None and _coerce_datetime(latest_raw) else _iso_date_value(latest_raw)
+    latest_display = (
+        _coerce_datetime(latest_raw).isoformat()
+        if max_age_seconds is not None and _coerce_datetime(latest_raw)
+        else _iso_date_value(latest_raw)
+    )
     required_display = required_min.isoformat() if max_age_seconds is not None else required_min.date().isoformat()
     base_result.update(latest_value=latest_display, required_min_value=required_display)
 
@@ -2341,9 +2659,9 @@ def _catalogue_value(row: dict, *names: str):
                 return value
     return None
 
+
 def _string_value(value) -> str:
     return "" if value is None else str(value)
-
 
 
 def stop_if_failed(result) -> None:
@@ -2368,6 +2686,7 @@ def stop_if_failed(result) -> None:
     detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 
+
 def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
     if rows_or_df is None:
         return []
@@ -2375,13 +2694,16 @@ def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
         rows_or_df = rows_or_df.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
 
+
 def _canonical_dq_rule_type(rule_type: Any) -> str:
     return str(rule_type or "").strip()
+
 
 def _normalize_dq_severity(severity: Any) -> str:
     """Normalize guardrail/DQ severity labels for DQ validation."""
     value = str(severity or "warning").strip().lower()
     return "error" if value in {"block", "blocking", "error"} else "warning"
+
 
 def _spark_sql_helpers():
     """Return Spark SQL helper modules lazily for DQ runtime helpers."""
@@ -2391,6 +2713,7 @@ def _spark_sql_helpers():
     except Exception as exc:  # pragma: no cover - Fabric/runtime dependency guard
         raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
     return SparkSession, F, Window
+
 
 def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Validate canonical DQ rules before loading or enforcement."""
@@ -2430,7 +2753,13 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if rtype in {"blank_text", "required_when"}:
             require_columns(rule, minimum=1)
         elif rtype in {
-            "missing_values", "unique_values", "allowed_values", "blocked_values", "value_range", "text_pattern", "conditional_value",
+            "missing_values",
+            "unique_values",
+            "allowed_values",
+            "blocked_values",
+            "value_range",
+            "text_pattern",
+            "conditional_value",
         }:
             require_columns(rule, count=1)
         elif rtype == "unique_combination":
@@ -2473,7 +2802,10 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported operator.")
     return rules
 
-def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+
+def _load_active_dq_rules(
+    metadata_df, table_id: str, env: str | None = None, dataset_name: str | None = None
+) -> list[dict[str, Any]]:
     """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
@@ -2516,7 +2848,11 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
         review_expr = F.col("review_status")
     else:
         return []
-    latest = latest.filter(F.lower(F.coalesce(review_expr, F.lit(""))).isin("self_approved", "governance_approved", "active_pending_governance_review"))
+    latest = latest.filter(
+        F.lower(F.coalesce(review_expr, F.lit(""))).isin(
+            "self_approved", "governance_approved", "active_pending_governance_review"
+        )
+    )
 
     rules: list[dict[str, Any]] = []
     for row in _coerce_rows(latest.collect()):
@@ -2547,6 +2883,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
         )
     return _validate_dq_rules(rules)
 
+
 def check_dq_runtime(
     dataframe,
     config,
@@ -2574,7 +2911,11 @@ def check_dq_runtime(
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
     metadata_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=table_id, context=context,
+        config,
+        env,
+        spark_session=spark_session,
+        table_id=table_id,
+        context=context,
     )
     rules = (
         []
@@ -2615,38 +2956,65 @@ def check_dq_runtime(
     summary_rows = []
     for rule in rules:
         check = check_by_id[rule["rule_id"]]
-        summary_rows.append({
-            "guardrail_result_id": result_ids[rule["rule_id"]],
-            "guardrail_rule_id": rule["guardrail_rule_id"],
-            "guardrail_version": rule["guardrail_version"],
-            "result_id": str(uuid4()),
-            "run_id": resolved_run_id,
-            "rule_key": rule["rule_key"],
-            "table_id": table_id,
-            "environment_name": env,
-            "dataset_name": dataset_name,
-            "table_name": table_name,
-            "column_name": ",".join(rule["columns"]),
-            "guardrail_type": "data_quality",
-            "rule_type": rule["rule_type"],
-            "status": check["status"],
-            "can_continue": check["status"] != "failed",
-            "severity": rule["severity"],
-            "reason": "Rule passed." if check["passed"] else f"{check['failed_count']} row(s) failed {rule['rule_type']}.",
-            "expected_value_json": json.dumps({key: value for key, value in rule.items() if key not in {"description", "guardrail_rule_id", "rule_id", "rule_key", "severity"}}, default=str, sort_keys=True),
-            "actual_value_json": json.dumps({"failed_count": check["failed_count"], "failed_percent": check["failed_percent"], "total_count": check["total_count"]}, sort_keys=True),
-            "result_payload_json": json.dumps(check, default=str, sort_keys=True),
-            **audit,
-        })
+        summary_rows.append(
+            {
+                "guardrail_result_id": result_ids[rule["rule_id"]],
+                "guardrail_rule_id": rule["guardrail_rule_id"],
+                "guardrail_version": rule["guardrail_version"],
+                "result_id": str(uuid4()),
+                "run_id": resolved_run_id,
+                "rule_key": rule["rule_key"],
+                "table_id": table_id,
+                "environment_name": env,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "column_name": ",".join(rule["columns"]),
+                "guardrail_type": "data_quality",
+                "rule_type": rule["rule_type"],
+                "status": check["status"],
+                "can_continue": check["status"] != "failed",
+                "severity": rule["severity"],
+                "reason": "Rule passed."
+                if check["passed"]
+                else f"{check['failed_count']} row(s) failed {rule['rule_type']}.",
+                "expected_value_json": json.dumps(
+                    {
+                        key: value
+                        for key, value in rule.items()
+                        if key not in {"description", "guardrail_rule_id", "rule_id", "rule_key", "severity"}
+                    },
+                    default=str,
+                    sort_keys=True,
+                ),
+                "actual_value_json": json.dumps(
+                    {
+                        "failed_count": check["failed_count"],
+                        "failed_percent": check["failed_percent"],
+                        "total_count": check["total_count"],
+                    },
+                    sort_keys=True,
+                ),
+                "result_payload_json": json.dumps(check, default=str, sort_keys=True),
+                **audit,
+            }
+        )
     context = {"config": config, "env": env}
     write_lakehouse_table_core(
-        spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
-        "METADATA_GUARDRAIL_RESULTS", target="metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
+        spark_session.createDataFrame(
+            [coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]
+        ),
+        "METADATA_GUARDRAIL_RESULTS",
+        target="metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
+        context=context,
+        mode="append",
     )
 
     result["failed_values"] = _dq_failed_values_dataframe(
-        dataframe, rules, run_id=resolved_run_id, row_identity_columns=identities,
+        dataframe,
+        rules,
+        run_id=resolved_run_id,
+        row_identity_columns=identities,
     )
     return result
 
@@ -2656,14 +3024,25 @@ def _dq_failed_value_schema():
     from pyspark.sql.types import StringType, StructField, StructType
 
     nullable = {"raw_value"}
-    return StructType([
-        StructField(name, StringType(), name in nullable)
-        for name in (
-            "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
-            "rule_id", "rule_type", "action", "column_name", "column_role",
-            "raw_value", "raw_value_type", "failure_reason",
-        )
-    ])
+    return StructType(
+        [
+            StructField(name, StringType(), name in nullable)
+            for name in (
+                "failure_event_id",
+                "run_id",
+                "row_identity",
+                "guardrail_rule_id",
+                "rule_id",
+                "rule_type",
+                "action",
+                "column_name",
+                "column_role",
+                "raw_value",
+                "raw_value_type",
+                "failure_reason",
+            )
+        ]
+    )
 
 
 def _empty_dq_failed_values(spark_session):
@@ -2704,42 +3083,56 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
     source = dataframe.withColumn("_fabricops_failure_source_id", F.monotonically_increasing_id())
     frames = []
     for rule in rules:
-        details = F.array(*[
-            F.struct(
-                F.lit(column_name).alias("column_name"),
-                F.lit(column_role).alias("column_role"),
-                (
-                    F.col(column_name).cast("string")
-                    if column_name in source_types
-                    else F.lit(None).cast("string")
-                ).alias("raw_value"),
-                F.lit(source_types.get(column_name, "missing")).alias("raw_value_type"),
-            )
-            for column_name, column_role in _dq_involved_column_roles(rule)
-        ])
-        event_id = F.sha2(F.concat_ws(
-            "|", F.lit(run_id), F.lit(rule["guardrail_rule_id"]),
-            F.col("_fabricops_failure_source_id").cast("string"),
-        ), 256)
+        details = F.array(
+            *[
+                F.struct(
+                    F.lit(column_name).alias("column_name"),
+                    F.lit(column_role).alias("column_role"),
+                    (
+                        F.col(column_name).cast("string") if column_name in source_types else F.lit(None).cast("string")
+                    ).alias("raw_value"),
+                    F.lit(source_types.get(column_name, "missing")).alias("raw_value_type"),
+                )
+                for column_name, column_role in _dq_involved_column_roles(rule)
+            ]
+        )
+        event_id = F.sha2(
+            F.concat_ws(
+                "|",
+                F.lit(run_id),
+                F.lit(rule["guardrail_rule_id"]),
+                F.col("_fabricops_failure_source_id").cast("string"),
+            ),
+            256,
+        )
         reason = f"Row failed {rule['rule_type']} rule {rule['rule_id']}."
         action = "Block" if rule["severity"] == "error" else "Warn"
-        evaluated = source.withColumn(
-            "_fabricops_dq_failed", _dq_failed_expression(source, rule)
-        )
+        evaluated = source.withColumn("_fabricops_dq_failed", _dq_failed_expression(source, rule))
         frames.append(
             evaluated.filter(F.col("_fabricops_dq_failed"))
             .select(
-                event_id.alias("failure_event_id"), F.lit(run_id).alias("run_id"),
+                event_id.alias("failure_event_id"),
+                F.lit(run_id).alias("run_id"),
                 row_identity.alias("row_identity"),
                 F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
                 F.lit(rule["rule_id"]).alias("rule_id"),
-                F.lit(rule["rule_type"]).alias("rule_type"), F.lit(action).alias("action"),
-                F.explode(details).alias("detail"), F.lit(reason).alias("failure_reason"),
+                F.lit(rule["rule_type"]).alias("rule_type"),
+                F.lit(action).alias("action"),
+                F.explode(details).alias("detail"),
+                F.lit(reason).alias("failure_reason"),
             )
             .select(
-                "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
-                "rule_id", "rule_type", "action", "detail.column_name",
-                "detail.column_role", "detail.raw_value", "detail.raw_value_type",
+                "failure_event_id",
+                "run_id",
+                "row_identity",
+                "guardrail_rule_id",
+                "rule_id",
+                "rule_type",
+                "action",
+                "detail.column_name",
+                "detail.column_role",
+                "detail.raw_value",
+                "detail.raw_value_type",
                 "failure_reason",
             )
         )
@@ -2748,9 +3141,8 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
     failed_values = frames[0]
     for frame in frames[1:]:
         failed_values = failed_values.unionByName(frame)
-    return dataframe.sparkSession.createDataFrame(
-        failed_values.rdd, _dq_failed_value_schema()
-    )
+    return dataframe.sparkSession.createDataFrame(failed_values.rdd, _dq_failed_value_schema())
+
 
 def _dq_failed_expression(df, rule: dict[str, Any]):
     """Build a Spark boolean expression identifying rows that fail one DQ rule."""
@@ -2786,7 +3178,11 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
     if rtype == "missing_values":
         total = int(df.count())
         null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
-        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["maximum_null_percent"]) else F.lit(False)
+        failed = (
+            F.col(col_name).isNull()
+            if total and ((null_count / total) * 100) > float(rule["maximum_null_percent"])
+            else F.lit(False)
+        )
     elif rtype == "blank_text":
         failed = empty_string(cols[0])
         for c in cols[1:]:
@@ -2829,6 +3225,7 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))
 
+
 def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Run DQ rules and return notebook guardrail check dictionaries."""
     _, F, _ = _spark_sql_helpers()
@@ -2837,12 +3234,8 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
     checks: list[dict[str, Any]] = []
     dataframe_columns = set(getattr(df, "columns", []))
     for rule in rules:
-        failed_rows = df.select(
-            F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)).alias("failed")
-        )
-        failed_count = int(
-            failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
-        )
+        failed_rows = df.select(F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
+        failed_count = int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
         severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
         check_status = "passed" if failed_count <= 0 else ("failed" if severity == "error" else "warning")
@@ -2866,13 +3259,13 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
         checks.append(check)
     return checks
 
+
 def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     """Return the full DataFrame tagged with failed DQ rule IDs and row status."""
     _, F, _ = _spark_sql_helpers()
     sorted_rules = sorted(rules or [], key=lambda rule: str(rule.get("rule_id") or ""))
     failed_rule_columns = [
-        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
-        for rule in sorted_rules
+        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or ""))) for rule in sorted_rules
     ]
     failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
     error_failures = [
@@ -2891,15 +3284,13 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     warning_count = warning_failures[0] if warning_failures else F.lit(0)
     for failure in warning_failures[1:]:
         warning_count = warning_count + failure
-    return (
-        df.withColumn("_dq_failed_rules", failed_rules)
-        .withColumn(
-            "_dq_check_status",
-            F.when(error_count > F.lit(0), F.lit("failed"))
-            .when(warning_count > F.lit(0), F.lit("warning"))
-            .otherwise(F.lit("passed")),
-        )
+    return df.withColumn("_dq_failed_rules", failed_rules).withColumn(
+        "_dq_check_status",
+        F.when(error_count > F.lit(0), F.lit("failed"))
+        .when(warning_count > F.lit(0), F.lit("warning"))
+        .otherwise(F.lit("passed")),
     )
+
 
 def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
     if any(check.get("status") == "failed" for check in checks):
@@ -2920,9 +3311,11 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
         message = f"DQ guardrail passed {len(checks)} active guardrail rule(s)."
     return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
 
+
 # ---------------------------------------------------------------------------
 # Canonical Guardrail rule/runtime adapters
 # ---------------------------------------------------------------------------
+
 
 def _parse_parameters(row: Mapping[str, Any]) -> dict[str, Any]:
     raw = row.get("rule_parameters_json") or "{}"
@@ -2930,6 +3323,7 @@ def _parse_parameters(row: Mapping[str, Any]) -> dict[str, Any]:
         return json.loads(raw) if isinstance(raw, str) else dict(raw or {})
     except (TypeError, json.JSONDecodeError):
         return {}
+
 
 def _select_rule(
     rules_df: Any,
@@ -2941,9 +3335,7 @@ def _select_rule(
     if rules_df is None:
         return None
     rows = (
-        rules_df.collect()
-        if hasattr(rules_df, "collect")
-        else ([rules_df] if isinstance(rules_df, dict) else rules_df)
+        rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
     )
     candidates: list[dict[str, Any]] = []
     for raw in rows or []:
@@ -2968,6 +3360,7 @@ def _select_rule(
         reverse=True,
     )
     return candidates[0]
+
 
 def schema_check_core(
     dataframe: Any,
@@ -2995,9 +3388,7 @@ def schema_check_core(
     params = _parse_parameters(rule)
     expected = params.get("data_types") or {}
     selected_columns = params.get("columns") or list(expected)
-    expected_schema = {
-        str(column): str(expected.get(column, "")) for column in selected_columns
-    }
+    expected_schema = {str(column): str(expected.get(column, "")) for column in selected_columns}
     rule_type = str(rule.get("rule_type") or "relaxed").lower()
     resolved_preset = {
         "strict": "strict",

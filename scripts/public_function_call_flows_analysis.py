@@ -46,7 +46,7 @@ FOUNDATIONAL_IO_FUNCTION_NAMES = frozenset({
     "write_lakehouse_table",
     "write_warehouse_table",
 })
-PIPELINE_ORCHESTRATION_FUNCTION_NAMES = frozenset({"pipeline_read"})
+PIPELINE_ORCHESTRATION_FUNCTION_NAMES = frozenset({"pipeline_read", "pipeline_write"})
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.

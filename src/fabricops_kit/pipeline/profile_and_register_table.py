@@ -512,7 +512,7 @@ def profile_and_register_table(
         governed pipeline preparation and successful publication own source
         and target Lineage respectively. Normal pipeline usage omits this
         value because :func:`pipeline_read` and
-        :func:`write_pipeline_prep` establish it in the active context.
+        :func:`pipeline_write` establish it in the active context.
     table : mapping, optional
         Canonical resolved table identity returned as ``pipeline_read()``
         ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
@@ -589,7 +589,7 @@ def profile_and_register_table(
 
     See Also
     --------
-    pipeline_read, write_pipeline_prep, profile_dataframe
+    pipeline_read, pipeline_write, profile_dataframe
     
     Notes
     -----
@@ -738,7 +738,7 @@ def profile_and_register_table(
         table = active_registration.get("table")
     if profile_role is None or (table is None and (target is None or table_name is None)):
         raise ValueError(
-            "Run pipeline_read or write_pipeline_prep first, or provide profile_role and table identity."
+            "Run pipeline_read or pipeline_write first, or provide profile_role and table identity."
         )
     dataframe_table_id = str(getattr(df, "_fabricops_table_id", "") or "").strip()
     active_table_id = str((active_registration.get("table") or {}).get("table_id") or "").strip()
@@ -761,7 +761,7 @@ def profile_and_register_table(
     normalized_schema = identity["schema"]
     normalized_store_type = identity["store_kind"]
     if normalized_profile_role == "target" and active_registration.get("profile_role") != "target":
-        raise ValueError("Run write_pipeline_prep before registering a target profile.")
+        raise ValueError("Run pipeline_write before registering a target profile.")
     normalized_load_strategy, write_parameters_json = _processing_definition(
         normalized_profile_role,
         active_registration.get("load_strategy") if normalized_profile_role == "target" else None,

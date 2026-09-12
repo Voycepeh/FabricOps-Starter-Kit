@@ -207,15 +207,11 @@ def test_cleanup_failure_preserves_original_mutation_error(monkeypatch, spark_se
 
 
 
-def test_writer_contract_and_contradictory_scd_mode(monkeypatch):
-    """The public required signature stays fixed and SCD rejects write modes."""
+def test_writer_contract_excludes_governed_scd_parameters():
+    """The foundational writer exposes physical I/O parameters only."""
     required = [name for name, parameter in signature(writer.write_warehouse_table).parameters.items()
                 if parameter.default is parameter.empty]
     assert required == ["df", "schema", "table_name"]
-    monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _df: None)
-    monkeypatch.setattr(writer, "repartition_dataframe_for_write", lambda df, _value: df)
-    with pytest.raises(ValueError, match="mode must be None"):
-        writer.write_warehouse_table(
-            object(), "dbo", "customers", mode="append", load_strategy="scd1",
-            load_strategy_parameters={"key_columns": ["customer_id"]},
-        )
+    parameters = signature(writer.write_warehouse_table).parameters
+    assert "load_strategy" not in parameters
+    assert "load_strategy_parameters" not in parameters

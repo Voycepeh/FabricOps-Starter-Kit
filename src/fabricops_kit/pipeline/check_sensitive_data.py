@@ -203,11 +203,11 @@ def check_sensitive_data(
     --------
     >>> result = check_sensitive_data(transformed_df, table_id=TARGET_TABLE_ID)
     >>> stop_if_failed(result)
-    >>> write_prep = write_pipeline_prep(result["dataframe"], target_table_id=TARGET_TABLE_ID, source_preps=sources)
+    >>> write_result = pipeline_write(result["dataframe"], table_id=TARGET_TABLE_ID)
 
     See Also
     --------
-    write_pipeline_prep, write_pii_token_map, stop_if_failed
+    pipeline_write, write_pii_token_map, stop_if_failed
 
     """
     spark_session = getattr(dataframe, "sparkSession", None)

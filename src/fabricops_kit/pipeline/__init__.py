@@ -11,7 +11,7 @@ from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
-from fabricops_kit.pipeline.write_pipeline_prep import write_pipeline_prep
+from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.pipeline.write_pii_token_map import write_pii_token_map
 from fabricops_kit.pipeline.shared import stop_if_failed
 
@@ -24,7 +24,7 @@ __all__ = [
     "check_sensitive_data",
     "pipeline_read",
     "resolve_table_id",
-    "write_pipeline_prep",
+    "pipeline_write",
     "write_pii_token_map",
     "stop_if_failed",
     "profile_and_register_table",

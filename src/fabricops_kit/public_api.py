@@ -32,7 +32,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
     "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-    "fabricops_kit.pipeline.write_pipeline_prep.write_pipeline_prep",
+    "fabricops_kit.pipeline.pipeline_write.pipeline_write",
     "fabricops_kit.pipeline.write_pii_token_map.write_pii_token_map",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",

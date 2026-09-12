@@ -67,7 +67,7 @@ As an operating practice, the version should have been tested in Development and
 
     Run target Schema and DQ checks before changing the Production target.
 
-    Use `write_pipeline_prep()` with the target `table_id` and continue with the Production write only when the Guardrail continuation decisions allow it. Target preparation independently resolves the target's one active Data Contract and its saved immutable processing definition.
+    After the explicit target Guardrails allow continuation, use `pipeline_write()` with the target `table_id`. It resolves the active Data Contract and its saved immutable processing definition, publishes through the configured store, and records success metadata only after publication succeeds.
 
 ??? info "Preview — Read back and register the complete target"
 
@@ -82,4 +82,4 @@ You should understand the Production path as **promote the validated `02_pipelin
 **Previous:** [Step 5: Link the Data Agreement and activate](05-create-data-contract.md)
 **Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
-See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`pipeline_read()`](../api/reference/pipeline_read.md), [`write_pipeline_prep()`](../api/reference/write_pipeline_prep.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
+See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`pipeline_read()`](../api/reference/pipeline_read.md), [`pipeline_write()`](../api/reference/pipeline_write.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
