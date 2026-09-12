@@ -57,8 +57,8 @@ export const VIDEO_TUNING = {
     prompts: {
       why: 39.5,
       whyExit: 42.03,
-      how: 50.57,
-      works: 51.27,
+      how: 51.5,
+      works: 51.5,
     },
   },
   notebook: {
