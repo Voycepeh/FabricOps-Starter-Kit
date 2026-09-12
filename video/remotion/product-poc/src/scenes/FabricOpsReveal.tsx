@@ -1,6 +1,7 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {theme} from '../theme';
 import {SCENE_STARTS, VIDEO_CONFIG} from '../videoConfig';
+import {VIDEO_TUNING} from '../videoTuning';
 
 const Brand = () => (
   <div
@@ -17,15 +18,15 @@ const Brand = () => (
   </div>
 );
 
-const floatingWords = [
-  {text: 'Operations', at: 20, left: 250, top: 250, rotate: -4},
-  {text: 'Plug and play', at: 24, left: 1280, top: 275, rotate: 4},
-  {text: 'Self-contained', at: 28, left: 250, top: 705, rotate: 3},
-  {text: 'Python', at: 31.5, left: 210, top: 660, rotate: -5},
-  {text: 'Notebook', at: 32.5, left: 1320, top: 245, rotate: 4},
-  {text: 'PySpark', at: 33.5, left: 245, top: 255, rotate: 5},
-  {text: 'Lakehouse', at: 35, left: 1285, top: 690, rotate: -4},
-] as const;
+const floatingWordLabels = {
+  operations: 'Operations',
+  plugAndPlay: 'Plug and play',
+  selfContained: 'Self-contained',
+  python: 'Python',
+  notebook: 'Notebook',
+  pyspark: 'PySpark',
+  lakehouse: 'Lakehouse',
+} as const;
 
 const relationshipTiming = {
   governanceAsCode: {start: 43, end: 45},
@@ -41,6 +42,7 @@ export const FabricOpsReveal = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {timing} = VIDEO_CONFIG;
+  const {floatingWords} = VIDEO_TUNING.fabricOps;
 
   const brand = spring({frame, fps, config: {damping: 18, stiffness: 72}});
   const whyEnter = spring({frame: frame - timing.fabricOpsWhyAt, fps, config: {damping: 18, stiffness: 88}});
@@ -72,14 +74,16 @@ export const FabricOpsReveal = () => {
         opacity: exit,
       }}
     >
-      {floatingWords.map((word) => {
-        const start = globalToLocalFrame(word.at, fps);
-        const opacity = interpolate(frame, [start, start + 5, start + 24, start + 30], [0, 1, 1, 0], {
+      {Object.entries(floatingWords).map(([key, word]) => {
+        const start = globalToLocalFrame(word.start, fps);
+        const fadeOutStart = start + Math.round(word.duration * fps);
+        const end = fadeOutStart + 6;
+        const opacity = interpolate(frame, [start, start + 5, fadeOutStart, end], [0, 1, 1, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
           easing: Easing.inOut(Easing.cubic),
         });
-        const scale = interpolate(frame, [start, start + 7, start + 30], [0.82, 1.08, 0.96], {
+        const scale = interpolate(frame, [start, start + 7, end], [0.82, 1.08, 0.96], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.cubic),
@@ -87,7 +91,7 @@ export const FabricOpsReveal = () => {
 
         return (
           <div
-            key={word.text}
+            key={key}
             style={{
               position: 'absolute',
               left: word.left,
@@ -102,7 +106,7 @@ export const FabricOpsReveal = () => {
               textShadow: '0 10px 34px #000b, 0 0 28px #279ee055',
             }}
           >
-            {word.text}
+            {floatingWordLabels[key as keyof typeof floatingWordLabels]}
           </div>
         );
       })}

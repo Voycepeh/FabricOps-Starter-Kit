@@ -1,6 +1,7 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Artifact, OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {VIDEO_CONFIG} from '../videoConfig';
+import {VIDEO_TUNING} from '../videoTuning';
 
 const OPENING_CENTER = {x: 960, y: 540} as const;
 const PUSH_DISTANCE = 1500;
@@ -18,18 +19,13 @@ const entryVectors = [
   {x: 35, y: 145},
 ] as const;
 
-const emphasisCues = [
-  {label: 'Notebook', at: 8.7},
-  {label: 'Data Pipeline', at: 9.55},
-  {label: 'Lakehouse', at: 10.45},
-  {label: 'Warehouse', at: 11.2},
-  {label: 'Environment', at: 12.15},
-] as const;
+const FEATURED_ICON_LABELS = ['Notebook', 'Lakehouse', 'Warehouse', 'Environment', 'Data Pipeline', 'Eventstream'] as const;
 
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {sizes, text, timing, scenes} = VIDEO_CONFIG;
+  const {featuredGleam} = VIDEO_TUNING.opening;
   const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
   const heroExit = interpolate(frame, [timing.openingQuestionAt - 36, timing.openingQuestionAt], [1, 0], {
     extrapolateLeft: 'clamp',
@@ -56,15 +52,19 @@ export const OpeningPlatform = () => {
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.back(1.35)),
         });
-        const cue = emphasisCues.find((entry) => entry.label === item.label);
-        const cueFrame = cue ? cue.at * fps : -9999;
-        const emphasis = cue
-          ? interpolate(frame, [cueFrame - 2, cueFrame + 4, cueFrame + 10, cueFrame + 16], [0, 1, 1, 0], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-              easing: Easing.inOut(Easing.cubic),
-            })
-          : 0;
+        const featuredIndex = FEATURED_ICON_LABELS.findIndex((label) => label === item.label);
+        const gleamWindowFrames = (featuredGleam.end - featuredGleam.start) * fps;
+        const gleamStagger =
+          (gleamWindowFrames - featuredGleam.perIconDurationFrames) / (FEATURED_ICON_LABELS.length - 1);
+        const gleamStart = featuredGleam.start * fps + Math.max(featuredIndex, 0) * gleamStagger;
+        const gleamProgress =
+          featuredIndex >= 0
+            ? interpolate(frame, [gleamStart, gleamStart + featuredGleam.perIconDurationFrames], [0, 1], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+                easing: Easing.inOut(Easing.cubic),
+              })
+            : 0;
         const vector = entryVectors[index % entryVectors.length];
         const cardCenterX = item.x + sizes.openingArtifactWidth / 2;
         const cardCenterY = item.y + sizes.openingArtifactHeight / 2;
@@ -75,7 +75,7 @@ export const OpeningPlatform = () => {
         const pushY = (deltaY / magnitude) * PUSH_DISTANCE * push;
         const entryX = vector.x * (1 - enter);
         const entryY = vector.y * (1 - enter);
-        const scale = (0.78 + enter * 0.22) * (1 + emphasis * 0.16);
+        const scale = 0.78 + enter * 0.22;
 
         return (
           <div
@@ -86,11 +86,35 @@ export const OpeningPlatform = () => {
               top: item.y,
               opacity: enter,
               transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
-              zIndex: emphasis > 0 ? 4 : 1,
-              filter: emphasis > 0 ? `drop-shadow(0 0 ${18 + emphasis * 18}px #35bdf0aa)` : 'none',
+              zIndex: 1,
             }}
           >
             <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
+            {featuredIndex >= 0 ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 30,
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -55,
+                    bottom: -55,
+                    left: -95,
+                    width: 62,
+                    opacity: 0.34,
+                    background: 'linear-gradient(90deg, transparent, #ffffffcc, transparent)',
+                    filter: 'blur(5px)',
+                    transform: `skewX(-18deg) translateX(${gleamProgress * 440}px)`,
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         );
       })}
