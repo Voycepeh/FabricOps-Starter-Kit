@@ -29,7 +29,7 @@ nav:
       - "Module 2 - Engineer and Run a Pipeline":
           - Overview: guided-demo/02-run-pipeline.md
           - "Unit 1 - Understand the Template": guided-demo/02-run-pipeline/understand-template.md
-          - "Unit 2 - Run the Baseline ETL": guided-demo/02-run-pipeline/run-baseline-etl.md
+          - "Unit 2 - Run the Baseline Pipeline": guided-demo/02-run-pipeline/run-baseline-etl.md
           - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
           - "Unit 4 - Transform and Write": guided-demo/02-run-pipeline/transform-and-load.md
           - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md

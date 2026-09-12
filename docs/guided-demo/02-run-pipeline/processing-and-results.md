@@ -22,7 +22,7 @@ Use an explicit Warehouse query when the project needs source-side filtering, pr
 
 Target processing remains configured at the Write boundary. `write_pipeline_prep()` resolves the target's governed `load_strategy`, and the target writer applies the corresponding Lakehouse or Warehouse behaviour.
 
-In Production, the active frozen Data Contract is authoritative: the notebook supplies the governed target `table_id`, and FabricOps resolves both `load_strategy` and its required parameters. Development can still use physical target identity plus explicit authoring before a contract exists.
+In the contract-free Step 2 run, Development identifies the physical target and proposes its processing settings directly in the template. After Governance freezes a Data Contract, Step 4 validates that proposal against the selected version; in Production, the active frozen version is authoritative.
 
 | Target strategy | Typical use |
 | --- | --- |
@@ -49,7 +49,7 @@ A normal complete-table source read can refresh the canonical registered source 
 
 ## Review the completed run
 
-After the baseline pipeline succeeds, confirm that the target exists and that the expected metadata was written. Depending on the path exercised, this includes `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, and observed/committed `METADATA_SOURCE_OBSERVATION` records.
+After the baseline pipeline succeeds, confirm that the target exists and that `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records were written.
 
 Those concrete metadata records are the handoff to Governance in Step 3.
 

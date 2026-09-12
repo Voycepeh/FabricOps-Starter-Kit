@@ -77,7 +77,7 @@ As an operating practice, the version should have been tested in Development and
 
 ## Expected result
 
-You should understand the Production path as **promote the validated `02_pipeline` → resolve the active saved Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's saved immutable Guardrails and processing definition around the same canonical ETL lifecycle.
+You should understand the Production path as **promote the validated `02_pipeline` → resolve the active saved Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's saved immutable Guardrails and processing definition around the same Read → Transform → Write lifecycle.
 
 **Previous:** [Step 5: Link the Data Agreement and activate](05-create-data-contract.md)
 **Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)

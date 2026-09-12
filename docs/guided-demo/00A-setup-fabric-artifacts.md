@@ -81,7 +81,7 @@ Workspaces → Stores → Fabric Environment → Notebook templates → Raw demo
     | --- | --- |
     | `00_env_config` | Configures workspaces, Lakehouses, Warehouse, metadata routing, audit settings, and runtime settings. |
     | `01_governance` | Manages Data Steward, Data Agreement, Data Contract, Enrichment, Guardrail, and review workflows. |
-    | `02_pipeline` | Runs the canonical Environment → Data Contracts → Read → Transform → Write workflow, including IO, profiling, Guardrails, and recorded metadata. |
+    | `02_pipeline` | Runs the canonical Read → Transform → Write workflow, including configured IO, profiling, Lineage, and—after Governance freezes a version—Data Contract selection and Guardrail validation. |
     | `99_explore` | Uses governed Production data for project exploration, AI, or BI work. |
 
     FabricOps uses notebooks as the visible engineering unit while relying on native Fabric Pipelines for orchestration when needed. Read more in [Notebook first — vs Pipeline vs Dataflow Gen2](../reference/engineering-cheat-sheet.md#notebook-first).

@@ -8,7 +8,7 @@ Use the **User defined transformation** section in `02_pipeline` for joins, filt
 
 ![Transform DataFrame](../../assets/02/Transform_DF.png)
 
-FabricOps standardises the governed boundary around ETL. It does not replace the transformation logic that belongs to the project.
+FabricOps standardises the governed Read → Transform → Write boundary. It does not replace the transformation logic that belongs to the project.
 
 The `02_pipeline` template deliberately stays lightweight. It shows where project transformation belongs without carrying a full PySpark tutorial into every new pipeline. This Guided Demo teaches the common patterns; read [PySpark first — and where T-SQL fits](../../reference/engineering-cheat-sheet.md#pyspark-first) for the deeper engineering rationale and use the [practical cheat sheets](../../reference/engineering-cheat-sheet.md#practical-cheat-sheets) when you need a syntax reminder.
 

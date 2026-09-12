@@ -1,4 +1,4 @@
-# Unit 2: Run the baseline ETL
+# Unit 2: Run the baseline pipeline
 
 **Run the complete `02_pipeline` template once before adding Guardrails.**
 
@@ -10,27 +10,42 @@ Complete [Step 0B: Set up the operating environment](../00B-run-environment-setu
 
 Confirm that `00_env_config` defines the source, unified, product, and metadata stores required by your demo environment.
 
-Upload the demo source files to the Source Lakehouse under `Files/DemoData/`, open `02_pipeline` in Engineering Development, attach the Fabric Environment used by `00_env_config`, and run the setup cells.
+Confirm that Step 0B landed the raw demo files as these managed Fabric sources:
+
+```text
+Source Lakehouse:  demo.orders + demo.products
+Product Warehouse: demo.order_history
+```
+
+Then open `02_pipeline` in Engineering Development, attach the Fabric Environment used by `00_env_config`, and run the Environment setup cells.
 
 ![Config](../../assets/02/Config.png)
 
-## Run the ETL
+## Run Read → Transform → Write
 
 The template executes the same visible workflow used throughout FabricOps:
 
 ```text
-Environment → Data Contracts → Read → Transform → Write
+Environment → target identity → Read → Transform → Write
 ```
 
-At this stage, no Data Contract exists yet for the demo table. The Data Contracts section is still part of the template, but the baseline run continues without selected Guardrails so Engineering can first produce the Catalogue, Profiled, and Lineage metadata Governance needs.
+At this stage, no Data Contract exists yet for the demo table. This is expected. **Do not run or interact with the Data Contract selection section in Step 2.** That reusable capability is first used by Engineering in Step 4, after Governance creates and freezes a version in Step 3.
 
-Run the notebook end to end rather than manually reconstructing the framework lifecycle.
+Use the pre-wired blocks rather than reconstructing the framework lifecycle function by function. First identify the one governed target, then run the existing Read blocks, your project-specific Transform block, and the Write block.
+
+??? info "Why identify the target before Read?"
+
+    The governed target identity is needed by the pipeline's metadata and Source Observation context. Define it first; do not restructure the notebook.
 
 ### Read
 
-Use the source configuration already wired into the template. The demo can read Lakehouse files or tables and Warehouse tables or SQL results.
+Use the three source blocks already wired into the template:
 
-![Read CSV for Lakehouse](../../assets/02/Read_CSV_LH_DEMO.png)
+1. a Lakehouse table Read for `demo.orders`,
+2. a Lakehouse table Read for `demo.products`,
+3. a Warehouse query over `demo.order_history`.
+
+These are the managed sources created in Step 0B. Raw CSV, JSON, Parquet, and Excel reading belongs to that setup step, not this governed baseline run.
 
 ### Transform
 
@@ -56,7 +71,7 @@ Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` to add `META
 
 !!! info "No Guardrails yet is expected"
 
-    The pipeline is complete even though Guardrails have not been authored. Step 3 adds those governed expectations, and Step 4 reruns this same pipeline so the selected frozen Data Contract becomes the Development validation context.
+    The pipeline is complete even though Guardrails and a Data Contract have not been authored. Step 3 creates and freezes the first Data Contract version, and Step 4 reruns this same pipeline so the selected frozen version becomes the Development validation context.
 
 ## Expected result
 

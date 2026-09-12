@@ -234,7 +234,7 @@ Ready for 02_pipeline
     display(order_history_table_df)
     ```
 
-    This optional verification demonstrates the full-table Lakehouse and Warehouse readers without turning the setup notebook into the governed ETL itself.
+    This optional verification demonstrates the full-table Lakehouse and Warehouse readers without turning the setup notebook into the governed pipeline itself.
 
 ???+ success "Live — Confirm reusable context"
 
@@ -246,7 +246,7 @@ Ready for 02_pipeline
 
 `00_env_config` is ready when the Fabric Environment is attached, package imports work, paths and runtime settings are configured, metadata tables exist, and `FABRIC_CONTEXT["env"]` plus `FABRIC_CONTEXT["config"]` are available.
 
-The canonical raw files have also been landed into the managed sources used by the later ETL:
+The canonical raw files have also been landed into the managed sources used by the later pipeline:
 
 ```text
 Source Lakehouse
