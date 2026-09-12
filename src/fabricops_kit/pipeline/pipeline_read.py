@@ -93,6 +93,9 @@ def pipeline_read(
     Higher-level governed pipeline code normally uses ``pipeline_read``.
     Foundational readers remain available for direct lower-level or
     general-purpose Fabric reads that do not need pipeline orchestration.
+    ``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse
+    Files do not have a canonical ``table_id`` and should continue to use the
+    foundational CSV, Excel, JSON, or Parquet readers directly.
 
     This function does not execute source observation, Freshness, Source
     Stability, Schema, DQ, or Sensitive Data checks. It also does not profile

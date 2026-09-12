@@ -5600,7 +5600,7 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 193,
+      "source_end_line": 196,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 17,
       "supports_live_contract": false,
@@ -13555,12 +13555,12 @@
         "large_width_or_depth"
       ],
       "signature": "def pipeline_read(*, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None) -> dict[str, Any]",
-      "source_end_line": 193,
+      "source_end_line": 196,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 17,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
       "transitive_function_count": 49,
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.\n5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.\n6. Establish the source profile-registration context consumed by a later,\n   explicit ``profile_and_register_table`` call.\n7. Return the DataFrame and small source metadata required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n\nThis function does not execute source observation, Freshness, Source\nStability, Schema, DQ, or Sensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline``.",
+      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.\n5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.\n6. Establish the source profile-registration context consumed by a later,\n   explicit ``profile_and_register_table`` call.\n7. Return the DataFrame and small source metadata required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse\nFiles do not have a canonical ``table_id`` and should continue to use the\nfoundational CSV, Excel, JSON, or Parquet readers directly.\n\nThis function does not execute source observation, Freshness, Source\nStability, Schema, DQ, or Sensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline``.",
       "width": 8
     },
     {
