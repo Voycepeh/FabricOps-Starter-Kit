@@ -36,6 +36,31 @@ export const VIDEO_TUNING = {
       'Graph Intelligence': {left: 1380, top: 850},
     },
   },
+  fabricOps: {
+    floatingWords: {
+      operations: 21,
+      plugAndPlay: 22.5,
+      selfContained: 28,
+      python: 31.5,
+      notebook: 33,
+      pyspark: 33.5,
+      lakehouse: 35,
+    },
+    relationship: {
+      governanceAsCodeStart: 43,
+      governanceAsCodeEnd: 45,
+      governance: 46,
+      engineering: 47,
+      orbitStart: 48,
+      end: 50,
+    },
+    prompts: {
+      why: 39.5,
+      whyExit: 42.03,
+      how: 50.57,
+      works: 51.27,
+    },
+  },
   notebook: {
     timingSeconds: {
       packageEnter: 55.0,
@@ -71,6 +96,9 @@ export const VIDEO_TUNING = {
     },
   },
 } as const;
+
+export const fabricOpsFrame = (seconds: number, fps: number) =>
+  globalSecondsToLocalFrame(seconds, SCENE_STARTS.fabricOps, fps);
 
 export const notebookFrame = (seconds: number, fps: number) =>
   globalSecondsToLocalFrame(seconds, SCENE_STARTS.notebooks, fps);
