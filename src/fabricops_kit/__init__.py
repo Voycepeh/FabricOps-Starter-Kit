@@ -40,7 +40,7 @@ from .pipeline import (
     profile_and_register_table,
     profile_dataframe,
     profile_frequency_distribution,
-    write_pipeline_prep,
+    pipeline_write,
 )
 
 ACCESS_EXPORTS = (
@@ -83,7 +83,7 @@ PIPELINE_EXPORTS = (
     "profile_frequency_distribution",
     "pipeline_read",
     "resolve_table_id",
-    "write_pipeline_prep",
+    "pipeline_write",
 )
 
 WIDGET_EXPORTS = (

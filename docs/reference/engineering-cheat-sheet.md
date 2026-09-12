@@ -394,7 +394,7 @@ belong to a dedicated future Guardrail workflow, not Enrichment.
     Physically read the source
     ```
 
-    Source filtering remains explicit project-owned read logic, such as a caller-authored Warehouse query. Target processing remains a Write concern: `write_pipeline_prep()` resolves the governed target `load_strategy`, and the writer applies overwrite, append, SCD1/upsert, SCD2, and physical partition options as appropriate.
+    Source filtering remains explicit project-owned read logic, such as a caller-authored Warehouse query. Target processing remains a Write concern: `pipeline_write()` resolves and executes the governed target `load_strategy`, selects the configured Lakehouse or Warehouse publication path, and commits successful target metadata only after publication succeeds.
 
 <span id="failure-safe-processing"></span>
 

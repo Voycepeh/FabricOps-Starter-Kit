@@ -20,7 +20,7 @@ Use an explicit Warehouse query when the project needs source-side filtering, pr
 
 ## Choose target processing
 
-Target processing remains configured at the Write boundary. `write_pipeline_prep()` resolves the target's governed `load_strategy`, and the target writer applies the corresponding Lakehouse or Warehouse behaviour.
+Target processing remains configured at the Write boundary. `pipeline_write()` resolves the target's governed `load_strategy` and applies the corresponding Lakehouse or Warehouse publication behaviour. The foundational writers perform physical I/O only.
 
 In the contract-free Step 2 run, Development identifies the physical target and proposes its processing settings directly in the template. After Governance freezes a Data Contract, Step 4 validates that proposal against the selected version; in Production, the active frozen version is authoritative.
 
@@ -57,7 +57,7 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
     Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then uses the unified editor to author `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL` for one `table_id` and freeze the Data Contract version. Step 4 selects that exact version in `02_pipeline`, writes summaries to `METADATA_GUARDRAIL_RESULTS`, and returns DQ failed values to the caller without persisting them automatically. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the pipeline against the active contract.
 
-For exact APIs such as `pipeline_read()` and `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
+For exact APIs such as `pipeline_read()` and `pipeline_write()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 
 **Previous:** [Unit 4: Transform and write](transform-and-load.md)  
 **Next:** [Step 3: Author and freeze the Data Contract](../03-enrich-guardrails.md)

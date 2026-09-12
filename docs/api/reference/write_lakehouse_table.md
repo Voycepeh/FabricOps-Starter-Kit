@@ -38,7 +38,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L326">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L287">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -72,10 +72,6 @@ def write_lakehouse_table(
     options=None,
     verbose=True,
     context=None,
-    load_strategy=None,
-    load_strategy_parameters=None,
-    processing_scope=None,
-    success_context=None,
 ):
 ```
 
@@ -173,10 +169,6 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
-| `load_strategy` | `{"overwrite", "append", "scd1", "scd2"}` | No | Governed target-maintenance strategy returned by :func:`write_pipeline_prep`. For SCD strategies, ``mode`` must be ``None`` because the physical action is a Delta merge, not an append. |
-| `load_strategy_parameters` | `dict` | No | Governed strategy parameters returned by :func:`write_pipeline_prep`. |
-| `processing_scope` | `dict` | No | Prepared full-dataset or partition write scope. |
-| `success_context` | `dict` | No | Post-write metadata context returned by :func:`write_pipeline_prep`. Target Lineage and accepted Source Observation baselines are committed only after the physical Delta write succeeds. |
 
 ## Returns
 
@@ -267,6 +259,8 @@ Implementation sequence
     the Delta writer,
     applies ``partition_by`` only to the physical Delta write
     configuration, executes the selected write mode, and returns ``None``.
+    It does not resolve Data Contracts or processing strategies and does
+    not commit pipeline metadata.
 
 Performance notes
     The existing number of DataFrame partitions may already be
@@ -318,7 +312,7 @@ Side effects
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 48 |
+| Live-critical dependencies | 20 |
 
 ### Release history
 
@@ -330,25 +324,12 @@ Side effects
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.config.audit._context_get</code></li>
-<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
-<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
-<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
-<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
@@ -356,28 +337,13 @@ Side effects
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
-<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
-<li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
-<li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
-<li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
-<li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
-<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
-<li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 </ul>
 
 
