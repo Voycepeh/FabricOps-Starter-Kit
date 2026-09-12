@@ -47,11 +47,11 @@ flowchart LR
     P1 -.-> N["Why one target?<br/>Independent writes can partially succeed.<br/>No notebook-level rollback."]
 ```
 
-## Why Guardrails are not required yet
+## Why Data Contracts and Guardrails are not used yet
 
 At this point in the learning path, no Guardrails or Data Contract have been created for the demo table.
 
-That is intentional. The same `02_pipeline` template can complete the pipeline without those enforcement layers. In later modules you will add governance around this same pipeline rather than build a different pipeline.
+That is intentional. Do not interact with the template's reusable Data Contract selection section during Step 2. The same `02_pipeline` template can complete Read → Transform → Write without those enforcement layers. In later modules you will add governance around this same pipeline rather than build a different pipeline.
 
 ```text
 Step 2: run the pipeline and write Catalogue / Profiled / Lineage metadata
@@ -72,4 +72,4 @@ FabricOps does not hide business transformations. Joins, filters, derivations, a
 This separation lets the framework standardise the pipeline boundary while keeping business logic explicit and reviewable.
 
 **Previous:** [Module 2 overview](../02-run-pipeline.md)  
-**Next:** [Unit 2: Run the baseline ETL](run-baseline-etl.md)
+**Next:** [Unit 2: Run the baseline pipeline](run-baseline-etl.md)
