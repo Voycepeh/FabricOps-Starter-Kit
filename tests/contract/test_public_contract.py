@@ -410,29 +410,12 @@ def test_package_root_expected_public_names_are_present() -> None:
     assert expected_names <= set(fabricops_kit.__all__)
 
 
-def test_legacy_contract_authoring_widgets_are_not_public_exports() -> None:
-    """Verify fragmented Preview authoring widgets remain implementation-only."""
-    demoted = {
-        "widget_author_dq_rules",
-        "widget_author_guardrails",
-        "widget_enrich_table_metadata",
-        "widget_register_data_contract",
-    }
-
-    assert demoted.isdisjoint(fabricops_kit.__all__)
-    assert demoted.isdisjoint(widgets.__all__)
-    assert all(not hasattr(fabricops_kit, name) for name in demoted)
-
-
 def test_package_root_widget_exports_are_lazy() -> None:
     """Verify package-root import does not eagerly import widget modules."""
     code = """
 import sys
 import fabricops_kit
 widget_modules = [
-    "fabricops_kit.widgets.widget_author_dq_rules",
-    "fabricops_kit.widgets.widget_author_guardrails",
-    "fabricops_kit.widgets.widget_enrich_table_metadata",
     "fabricops_kit.widgets.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward",
     "fabricops_kit.widgets.widget_review_guardrail_governance",
@@ -442,7 +425,6 @@ value = fabricops_kit.widget_render_data_agreement
 assert callable(value)
 assert fabricops_kit.__dict__["widget_render_data_agreement"] is value
 assert "fabricops_kit.widgets.widget_render_data_agreement" in sys.modules
-assert "fabricops_kit.widgets.widget_author_dq_rules" not in sys.modules
 """
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "src")

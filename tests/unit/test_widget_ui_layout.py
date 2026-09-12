@@ -5,10 +5,35 @@ from __future__ import annotations
 import ast
 import inspect
 import re
+import types
 
 from fabricops_kit import widgets as widget_package
 from fabricops_kit.widgets import shared
-from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+
+
+def _install_fake_notebook_widgets(monkeypatch):
+    """Install minimal widget fakes for shared layout contracts."""
+
+    class Widget:
+        def __init__(self, value="", options=(), layout=None, **kwargs):
+            self.value = value
+            self.options = options
+            self.layout = layout or types.SimpleNamespace(display="")
+
+    class Box(Widget):
+        def __init__(self, children=None, **kwargs):
+            super().__init__(**kwargs)
+            self.children = children or []
+
+    widgets = types.SimpleNamespace(
+        HTML=Widget,
+        Textarea=Widget,
+        VBox=Box,
+        HBox=Box,
+        GridBox=Box,
+        Layout=lambda **kwargs: types.SimpleNamespace(**kwargs),
+    )
+    return widgets
 
 
 LIVE_WIDGETS = {
@@ -103,17 +128,3 @@ def test_status_and_preview_regions_reserve_bounded_space(monkeypatch):
     assert preview.layout.height == "180px"
     assert preview.layout.overflow == "auto"
     assert preview.layout.min_width == "0"
-
-
-def test_dq_dynamic_content_is_updated_inside_one_workspace():
-    """Verify DQ rule switching mutates dynamic regions, not the outer page."""
-    module = __import__(
-        "fabricops_kit.widgets.widget_author_dq_rules", fromlist=["widget_author_dq_rules"]
-    )
-    source = inspect.getsource(module.widget_author_dq_rules)
-
-    assert source.count("shared.authoring_workspace(") == 1
-    assert "parameter_box.children =" in source
-    assert "column_box.children =" in source
-    assert "ui.children =" not in source
-    assert "workspace.children =" not in source

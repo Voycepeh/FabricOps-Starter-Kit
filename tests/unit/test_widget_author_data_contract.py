@@ -189,12 +189,8 @@ def test_review_validates_and_freezes_through_authoritative_services(widget):
     assert '"agreement"' not in source
     assert '"stewards"' not in source
     assert '"approved_usages"' not in source
-    registration = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
-    registration_source = inspect.getsource(registration.widget_register_data_contract)
     assert "freeze_contract(" in source
-    assert "freeze_contract(" in registration_source
     assert "assemble_contract_payload(" not in source
-    assert "assemble_contract_payload(" not in registration_source
 
 
 def test_html_escaping_and_large_schema_widget_model_regression(monkeypatch):

@@ -634,10 +634,6 @@ def pipeline_active_context() -> PipelineRunContext | None:
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
 
 
-def _get_selected_agreement_state() -> dict[str, Any] | None:
-    """Return the selected agreement row for private widget workflows."""
-    return dict(_SELECTED_AGREEMENT) if _SELECTED_AGREEMENT else None
-
 
 def serialize_custom_fields(values: dict[str, Any] | None) -> str:
     """Serialize organization-specific intake values to deterministic JSON.
@@ -891,9 +887,6 @@ def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
         rows_or_df = rows_or_df.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
 
-def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
-    return row.get(name, row.get(name.upper(), default))
-
 
 def _is_table_not_found_error(exc: Exception) -> bool:
     """Return whether a Spark/read exception clearly means the table is absent."""
@@ -929,22 +922,6 @@ def enrichment_control_options(config: Any) -> tuple[list[str], list[dict[str, A
     return sensitivity, context_fields, classification_fields
 
 
-def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
-    """Read a metadata table and return row dictionaries."""
-    try:
-        frame = read_lakehouse_table_core(
-            table_name,
-            target="metadata",
-            schema=metadata_table_physical_schema(config, table_name),
-            context={"config": config, "env": env},
-            spark_session=spark_session,
-        )
-    except Exception as exc:
-        if _is_table_not_found_error(exc):
-            return []
-        raise
-    return _coerce_rows(frame)
-
 
 # Governance readiness and policy helpers migrated from the retired mixed governance module.
 
@@ -967,30 +944,6 @@ def dataset_label(row: dict[str, Any], role: str | None = None) -> str:
     ) or str(row.get("table_id") or "")
     return f"[{role}] {location}" if role else location
 
-
-def schema_version_options(rows: list[dict[str, Any]], table_id: str) -> list[tuple[str, str]]:
-    """Return deterministic newest-first schema choices for one dataset."""
-    versions: dict[str, Any] = {}
-    for row in rows:
-        if str(row.get("table_id") or "") != table_id:
-            continue
-        fingerprint = str(row.get("schema_fingerprint") or "").strip()
-        committed = row.get("_committed_at")
-        if fingerprint and str(committed or "") >= str(versions.get(fingerprint) or ""):
-            versions[fingerprint] = committed
-    ordered = sorted(
-        versions.items(),
-        key=lambda item: (isinstance(item[1], datetime), str(item[1] or ""), item[0]),
-        reverse=True,
-    )
-    counts = Counter(str(timestamp or "") for _fingerprint, timestamp in ordered)
-    result = []
-    for index, (fingerprint, timestamp) in enumerate(ordered):
-        name = "Latest" if index == 0 else "Previous"
-        detail = timestamp.isoformat(sep=" ", timespec="minutes") if isinstance(timestamp, datetime) else "Timestamp unavailable"
-        suffix = f" — {fingerprint[:8]}" if counts[str(timestamp or "")] > 1 or timestamp is None else ""
-        result.append((f"{name} — {detail}{suffix}", fingerprint))
-    return result
 
 
 
@@ -1213,18 +1166,6 @@ def sensitive_data_record_from_selection(
     )
 
 
-def canonicalize_records(
-    records: list[dict[str, Any]],
-    *,
-    config: Any,
-    env: str,
-) -> list[dict[str, Any]]:
-    """Normalize authored Guardrail rows before the widget-owned shared write call."""
-    return [
-        canonical_guardrail_rule_record(record, config=config, env=env)
-        for record in records
-    ]
-
 def _guardrail_coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
     if rows_or_df is None:
         return []
@@ -1256,27 +1197,6 @@ def read_metadata_table_or_empty(
             return []
         raise
     return _guardrail_coerce_rows(frame)
-
-def write_rule_records(
-    records: list[dict[str, Any]],
-    *,
-    config: Any,
-    env: str,
-    spark_session: Any,
-) -> None:
-    """Append canonical rule records to ``METADATA_GUARDRAIL``."""
-    if not records:
-        return
-    write_lakehouse_table_core(
-        spark_session.createDataFrame(
-            [coerce_metadata_row_types(GUARDRAIL_TABLE, record) for record in records]
-        ),
-        GUARDRAIL_TABLE,
-        target="metadata",
-        schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
-        context={"config": config, "env": env},
-        mode="append",
-    )
 
 def load_guardrail_authoring_targets(
     config: Any,

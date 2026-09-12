@@ -432,10 +432,6 @@ DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
 
-def _yes_no(value: Any) -> str:
-    """Return notebook-friendly yes/no text."""
-    return "yes" if bool(value) else "no"
-
 
 def _result_status(result: Mapping[str, Any] | None) -> str:
     """Return a normalized guardrail result status."""
@@ -446,14 +442,6 @@ def _result_status(result: Mapping[str, Any] | None) -> str:
         or "not_run"
     ).lower()
 
-
-def _result_can_continue(result: Mapping[str, Any] | None) -> bool:
-    """Return whether a guardrail result can continue."""
-    if not result:
-        return True
-    return bool(
-        result.get("can_continue", result.get("freshness_can_continue", result.get("stability_can_continue", True)))
-    )
 
 
 def _result_reason(result: Mapping[str, Any] | None) -> str:
@@ -468,19 +456,6 @@ def _result_reason(result: Mapping[str, Any] | None) -> str:
         or ""
     )
 
-
-def _next_action(guardrail: str, status: str) -> str:
-    """Return concise user action guidance for a guardrail result."""
-    if status in {"passed", "baseline_created", "skipped", "warning"}:
-        return "Continue." if status != "warning" else "Review detailed mode when convenient."
-    actions = {
-        "schema": "Fix source data or update expected_schema.",
-        "freshness": "Refresh source data or adjust freshness rule.",
-        "profile_behavior": "Review source change or approve reset in governance.",
-        "dq": "Review failed DQ rules and source data.",
-        "catalogue": "Check metadata lakehouse write configuration and permissions.",
-    }
-    return actions.get(guardrail, "Review detailed mode.")
 
 
 def _schema_reason(result: Mapping[str, Any]) -> str:
@@ -552,31 +527,6 @@ def _dq_reason(result: Mapping[str, Any]) -> str:
     return _result_reason(result) or "DQ guardrail passed."
 
 
-def _guardrail_reason(guardrail: str, result: Mapping[str, Any]) -> str:
-    """Return plain-language reason text for one guardrail."""
-    if guardrail == "schema":
-        return (
-            _schema_reason(result)
-            if _result_status(result) == "failed"
-            else (_result_reason(result) or "Schema validation passed.")
-        )
-    if guardrail == "freshness":
-        return _freshness_reason(result)
-    if guardrail == "profile_behavior":
-        return _profile_behavior_reason(result)
-    if guardrail == "dq":
-        return _dq_reason(result)
-    return _result_reason(result)
-
-
-def _table_keys(result_bundle: Mapping[str, Any]) -> list[str]:
-    """Return stable table keys present in a guardrail result bundle."""
-    keys: set[str] = set()
-    for name in ("schema_results", "freshness_results", "stability_results", "dq_results", "catalogue_status"):
-        value = result_bundle.get(name) or {}
-        if isinstance(value, Mapping):
-            keys.update(str(key) for key in value)
-    return sorted(keys)
 
 
 SOURCE_OBSERVATION_COLUMNS = frozenset(
@@ -2970,21 +2920,9 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
         message = f"DQ guardrail passed {len(checks)} active guardrail rule(s)."
     return {"status": status, "can_continue": can_continue, "checks": checks, "message": message}
 
-def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
-    """Read current DQ guardrail rules from the configured metadata target."""
-    schema = metadata_table_physical_schema(config, GUARDRAIL_TABLE)
-    frame = read_lakehouse_table_core(GUARDRAIL_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
-    if "guardrail_type" in set(getattr(frame, "columns", [])):
-        _, F, _ = _spark_sql_helpers()
-        return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "data_quality")
-    return frame
-
 # ---------------------------------------------------------------------------
 # Canonical Guardrail rule/runtime adapters
 # ---------------------------------------------------------------------------
-
-def _stable_json(value: Any) -> str:
-    return json.dumps(value, default=str, sort_keys=True, separators=(",", ":"))
 
 def _parse_parameters(row: Mapping[str, Any]) -> dict[str, Any]:
     raw = row.get("rule_parameters_json") or "{}"
