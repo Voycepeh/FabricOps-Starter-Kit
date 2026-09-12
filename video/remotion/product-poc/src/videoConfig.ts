@@ -18,7 +18,7 @@ export const VIDEO_CONFIG = {
     subtitle: 46,
     notebook: 38,
     notebookEnvironment: 28,
-    workflow: 27,
+    workflow: 24,
     cta: 30,
   },
   timing: {
