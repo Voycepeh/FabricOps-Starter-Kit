@@ -71,7 +71,7 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
 
     assert result["table_id"] == identity["table_id"]
     assert calls == [reader_name]
-    assert context["_fabricops_active_profile_registration"]["profile_role"] == "source"
+    assert "_fabricops_active_profile_registration" not in context
     assert capsys.readouterr().out.strip() == f"FabricOps Read → {message}"
 
 
@@ -110,6 +110,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
+    monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     return identity, context
 
 
@@ -141,11 +142,103 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     assert events[0] == writer
     assert events[1][0] == "metadata"
     assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
-    assert context["_fabricops_active_profile_registration"]["profile_role"] == "target"
+    assert "_fabricops_active_profile_registration" not in context
     assert "store_type" not in signature(write_module.pipeline_write).parameters
     assert capsys.readouterr().out.strip() == (
         f"FabricOps Write → {store_type.title()} table 'unified.dbo.students' → {strategy} → write_{store_type}_table"
     )
+
+
+def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):
+    """Persist the resolved processing definition after the physical target succeeds."""
+    identity, _context = _patch_write(monkeypatch, strategy="scd1")
+    processing = {"load_strategy": "scd1", "key_columns": ["id"]}
+    persisted = []
+    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: None)
+    monkeypatch.setattr(shared_module, "execute_lakehouse_processing", lambda *a, **k: None)
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+    monkeypatch.setattr(write_module, "_persist_target_processing", lambda **kwargs: persisted.append(kwargs))
+    dataframe = spark_session.createDataFrame([(1,)], ["id"])
+
+    write_module.pipeline_write(
+        dataframe,
+        table_id=identity["table_id"],
+        source_table_ids=["source-a"],
+    )
+
+    assert persisted[0]["identity"] == identity
+    assert persisted[0]["processing"] is processing
+    assert persisted[0]["dataframe"] is dataframe
+
+
+def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch):
+    """Write only governed processing fields into the target's table-level Catalogue row."""
+    import json
+    import sys
+    import types
+
+    rows = []
+
+    class Source:
+        def alias(self, _name):
+            return self
+
+    class Spark:
+        def createDataFrame(self, values, *, schema):
+            rows.extend(values)
+            assert schema == "catalogue-schema"
+            return Source()
+
+    class DataFrame:
+        sparkSession = Spark()
+
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, *_args):
+            return self
+
+        def whenMatchedUpdate(self, **_kwargs):
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def execute(self):
+            return None
+
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    monkeypatch.setattr(write_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"})
+    monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: None)
+    monkeypatch.setattr(write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue"))
+
+    write_module._persist_target_processing(
+        identity=_identity("lakehouse:unified:dbo:students", store_type="lakehouse"),
+        processing={
+            "load_strategy": "scd2",
+            "key_columns": ["id"],
+            "effective_column": "effective_at",
+            "source": "data_contract",
+            "contract_id": "contract-id",
+        },
+        audit=_audit(),
+        config={},
+        env="dev",
+        dataframe=DataFrame(),
+    )
+
+    assert rows[0]["metadata_level"] == "table"
+    assert rows[0]["load_strategy"] == "scd2"
+    assert json.loads(rows[0]["load_strategy_parameters_json"]) == {
+        "effective_column": "effective_at",
+        "key_columns": ["id"],
+    }
 
 
 @pytest.mark.parametrize(
@@ -265,5 +358,5 @@ def test_foundational_writers_exclude_governed_parameters():
 
 
 def test_pipeline_write_does_not_own_visible_checks():
-    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_and_register_table"):
+    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_table"):
         assert not hasattr(write_module, name)

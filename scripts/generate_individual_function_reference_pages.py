@@ -220,8 +220,8 @@ SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_author_data_contract", "widget_activate_data_contract"],
-    "METADATA_DATA_CATALOGUE": ["profile_and_register_table", "widget_author_data_contract"],
-    "METADATA_DATA_PROFILED": ["profile_and_register_table"],
+    "METADATA_DATA_CATALOGUE": ["profile_table", "widget_author_data_contract"],
+    "METADATA_DATA_PROFILED": ["profile_table"],
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_author_data_contract"],
@@ -248,7 +248,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.shared": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
-    "pipeline.profile_dataframe": "pipeline",
+    "pipeline.profile_table": "pipeline",
     "io": "io",
     "pipeline.guardrails_shared": "pipeline",
     "pipeline": "pipeline",
@@ -2850,7 +2850,7 @@ ROLE_TAGS_BY_NAME = {
     "_build_warehouse_object_name": ["utility_function", "warehouse_name_formatter"],
 
     # Profiling public entrypoint and role-organized internals.
-    "profile_dataframe": ["public_api_entrypoint", "profiling_entrypoint", "public_stable"],
+    "profile_table": ["public_api_entrypoint", "profiling_entrypoint", "public_stable"],
     "profile_dataframe_core": ["internal_workflow", "profiling_workflow"],
     "resolve_profiled_columns": ["internal_resolver", "profiling_column_resolver"],
     "_numeric_bin_edges": ["internal_adapter", "spark_profiling_adapter"],

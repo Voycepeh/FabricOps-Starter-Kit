@@ -44,7 +44,7 @@ Engineering Production
 
 ???+ success "Live — Inspect and profile the returned DataFrame"
 
-    Display and inspect the returned Spark DataFrame. Run `profile_dataframe()` when a column-level profile is useful for the project.
+    Display and inspect the returned Spark DataFrame. Run `profile_table(dataframe=df)` when a column-level profile is useful for the project.
 
     FabricOps IO exists so a consumer notebook can resolve configured Production items without switching its default attachment or hardcoding cross-workspace paths throughout the notebook.
 

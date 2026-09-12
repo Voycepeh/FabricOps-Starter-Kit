@@ -1,8 +1,6 @@
 """Pipeline evidence and orchestration helpers."""
 
-from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
-from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
-from fabricops_kit.pipeline.profile_and_register_table import profile_and_register_table
+from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_source_stability import check_source_stability
@@ -27,7 +25,5 @@ __all__ = [
     "pipeline_write",
     "write_pii_token_map",
     "stop_if_failed",
-    "profile_and_register_table",
-    "profile_dataframe",
-    "profile_frequency_distribution",
+    "profile_table",
 ]

@@ -337,7 +337,7 @@ def test_release_manifest_lifecycle_counts_match_v020_release():
     """Verify maintainer-owned lifecycle classifications match the v0.2.0 release."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 13
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 11
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"

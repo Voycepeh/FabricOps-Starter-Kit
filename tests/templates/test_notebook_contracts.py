@@ -246,8 +246,8 @@ def test_02_pipeline_read_blocks_are_cloneable_orchestrated_reads():
         "read_result = pipeline_read(", 'read_df = read_result["dataframe"]',
         'READ_TABLE_ID = read_result["table_id"]', 'if read_result["has_contract"]:',
         "observe_table(", "check_freshness(", "check_source_stability(",
-        'if read_result["is_query"]:', "profile_dataframe(read_df)",
-        "check_schema(", "check_dq(", "profile_and_register_table(read_df)",
+        'if read_result["is_query"]:', "profile_table(dataframe=read_df)",
+        "check_schema(", "check_dq(", "profile_table(dataframe=read_df)",
         "READ_TABLE_IDS[READ]", "READ_DFS[READ]", 'catalogue_widget["show"](table_id=READ_TABLE_ID)',
     )
     for index in (1, 2, 3):
@@ -268,7 +268,7 @@ def test_02_pipeline_custom_query_uses_diagnostic_profile():
     """Custom Warehouse SQL keeps physical-source guards but treats its result as derived data."""
     history = _cell_by_id("02_pipeline.ipynb", "read-3").source
     query_branch = history.index('if read_result["is_query"]:')
-    diagnostic = history.index("profile_dataframe(read_df)", query_branch)
+    diagnostic = history.index("profile_table(dataframe=read_df)", query_branch)
     canonical_else = history.index("else:", query_branch)
     schema_check = history.index("check_schema(", canonical_else)
     assert "pipeline_read(" in history
@@ -321,7 +321,7 @@ def test_02_pipeline_write_is_one_complete_copyable_block():
     stages = [
         "check_schema(", "check_dq(", "check_sensitive_data(",
         'if not sensitive_result["can_continue"]', 'sensitive_result["dataframe"]', "pipeline_write(",
-        "published_df = read_lakehouse_table(", "profile_and_register_table(published_df)",
+        "published_df = read_lakehouse_table(", "profile_table(dataframe=published_df, table_id=WRITE_TABLE_ID)",
         'catalogue_widget["show"](table_id=WRITE_TABLE_ID)',
     ]
     assert all(stage in block for stage in stages)

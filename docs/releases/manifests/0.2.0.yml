@@ -22,29 +22,13 @@ functions:
     discontinued_in: 0.2.0
     rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
-  - name: profile_and_register_table
-    qualified_name: fabricops_kit.pipeline.profile_and_register_table
-    source_path: src/fabricops_kit/pipeline/profile_and_register_table.py
-    documentation_path: docs/api/reference/profile_and_register_table.md
+  - name: profile_table
+    qualified_name: fabricops_kit.pipeline.profile_table.profile_table
+    source_path: src/fabricops_kit/pipeline/profile_table.py
+    documentation_path: docs/api/reference/profile_table.md
     status: live
     live_since: 0.2.0
-    rationale: Stable v0.2.0 metadata setup and profiling public API.
-    introduced_in: 0.2.0
-  - name: profile_dataframe
-    qualified_name: fabricops_kit.pipeline.profile_dataframe
-    source_path: src/fabricops_kit/pipeline/profile_dataframe.py
-    documentation_path: docs/api/reference/profile_dataframe.md
-    status: live
-    live_since: 0.2.0
-    rationale: Stable v0.2.0 metadata setup and profiling public API.
-    introduced_in: 0.1.0
-  - name: profile_frequency_distribution
-    qualified_name: fabricops_kit.pipeline.profile_frequency_distribution
-    source_path: src/fabricops_kit/pipeline/profile_frequency_distribution.py
-    documentation_path: docs/api/reference/profile_frequency_distribution.md
-    status: live
-    live_since: 0.2.0
-    rationale: Stable v0.2.0 metadata setup and profiling public API.
+    rationale: Consolidated PySpark profiling API for ad hoc and governed table workflows.
     introduced_in: 0.2.0
   - name: read_lakehouse_csv
     qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv

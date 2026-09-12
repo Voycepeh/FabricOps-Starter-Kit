@@ -293,7 +293,7 @@ These physical write choices are separate from FabricOps incremental processing 
 
 ## Function details
 
-Use the [Function Reference](../../reference/index.md) for exact parameters for `write_lakehouse_table()`, `write_warehouse_table()`, `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()`.
+Use the [Function Reference](../../reference/index.md) for exact parameters for `write_lakehouse_table()`, `write_warehouse_table()`, `profile_table(dataframe=df)`, `profile_table()`, and `profile_table()`.
 
 **Previous:** [Unit 3: Configure sources](configure-sources.md)  
 **Next:** [Unit 5: Choose target processing and review results](processing-and-results.md)
