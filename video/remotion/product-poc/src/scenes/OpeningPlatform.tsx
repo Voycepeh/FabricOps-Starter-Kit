@@ -27,14 +27,14 @@ const OPENING_POSITION_KEYS = [
   'Graph Intelligence',
 ] as const;
 
-const FEATURED_POSITION_KEYS = new Set([
+const FEATURED_POSITION_KEYS = new Set<string>([
   'Notebook',
   'Data Pipeline',
   'Lakehouse',
   'Warehouse',
   'Environment',
   'Eventstream',
-] as const);
+]);
 
 const entryVectors = [
   {x: -145, y: -65},
