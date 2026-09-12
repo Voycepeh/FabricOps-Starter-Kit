@@ -374,8 +374,10 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     assert "Parallel processing and write concurrency" in warehouse_page
     assert "Spark distributed processing" in warehouse_page
     assert "does not create physical Warehouse table partitions" in normalized_warehouse_page
-    assert "unique run-scoped Warehouse staging table" in normalized_warehouse_page
-    assert "transactional T-SQL target mutation" in normalized_warehouse_page
+    assert "passes the repartitioned DataFrame into the Warehouse write connector" in normalized_warehouse_page
+    assert "executes the requested connector write mode" in normalized_warehouse_page
+    assert "unique run-scoped Warehouse staging table" not in normalized_warehouse_page
+    assert "transactional T-SQL target mutation" not in normalized_warehouse_page
     notes = _section_text(warehouse_page, "Notes")
     assert "No ``partition_by`` for Warehouse" in notes
     assert "## Parameters" in warehouse_page
