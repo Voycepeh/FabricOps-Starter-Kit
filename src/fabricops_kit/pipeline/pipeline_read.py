@@ -22,34 +22,52 @@ def pipeline_read(
     table_id: str | None = None,
     query: str | None = None,
 ) -> dict[str, Any]:
-    """Read one governed pipeline source through its configured Fabric store.
+    """Read one governed pipeline source through the appropriate Fabric store.
+
+    ``pipeline_read`` is the governed pipeline-orchestration equivalent of the
+    foundational :func:`read_lakehouse_table`, :func:`read_warehouse_table`,
+    and :func:`read_warehouse_query` readers. Describe the governed source
+    once; FabricOps resolves its identity and configured store, selects the
+    physical reader, and returns the data needed by the notebook. Callers do
+    not supply a store type, resolve a canonical table identity first, or
+    choose between Lakehouse and Warehouse table readers.
 
     Parameters
     ----------
     target : str, optional
-        Configured source target key. Supply it with ``table_name`` instead of
+        Configured source target key, such as ``"source"`` or ``"product"``.
+        Supply it with ``table_name`` and optional ``schema`` instead of
         ``table_id``.
     schema : str, optional
         Physical source schema, when the configured store uses schemas.
     table_name : str, optional
         Physical source table name. Required with ``target`` when ``table_id``
-        is omitted.
+        is omitted. ``target``, optional ``schema``, and ``table_name`` form
+        one identity form.
     table_id : str, optional
-        Canonical registered source identity. Mutually exclusive with
-        ``target``, ``schema``, and ``table_name``.
+        Canonical registered source identity. This is the alternative identity
+        form and is mutually exclusive with ``target``, ``schema``, and
+        ``table_name``.
     query : str, optional
         Read-only SQL for a configured Warehouse source. The supplied source
-        identity remains the governed Lineage participant; FabricOps does not
-        infer table identity by parsing SQL.
+        identity remains the governed source participant even when the result
+        is a projection, filter, join, or aggregation. FabricOps does not infer
+        arbitrary source identity by parsing SQL. A query may accompany either
+        physical coordinates or ``table_id`` when the resolved store is a
+        Warehouse.
 
     Returns
     -------
     dict
-        A small result containing ``dataframe``, canonical ``table_id``, and
-        ``is_query`` and ``has_contract``. ``is_query`` distinguishes a
-        derived Warehouse query result from a complete physical-table read;
-        ``has_contract`` reports whether the environment-selected immutable
-        Data Contract applies without exposing its internal record.
+        A deliberately small result with these fields:
+
+        - ``dataframe``: the Spark DataFrame returned by the selected
+          foundational Fabric I/O reader.
+        - ``table_id``: the canonical identity of the governed physical source.
+        - ``is_query``: whether ``dataframe`` is a custom Warehouse query
+          result rather than the complete physical table.
+        - ``has_contract``: whether an environment-selected immutable Data
+          Contract applies. The contract record itself is not exposed.
 
     Raises
     ------
@@ -60,18 +78,59 @@ def pipeline_read(
 
     Notes
     -----
-    This orchestration resolves canonical and physical source identity,
-    registers source participation in ``METADATA_DATA_LINEAGE`` exactly once,
-    establishes source profile-registration context, and delegates the
-    physical read to the foundational Fabric I/O API. It does not run source
-    observation, freshness, stability, schema, DQ, or profiling checks.
+    The governed orchestration performs these mechanical steps:
+
+    1. Resolve the canonical source ``table_id``.
+    2. Resolve the configured physical source identity.
+    3. Infer whether that configured source is a Lakehouse or Warehouse.
+    4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
+       ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
+    5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
+    6. Establish the source profile-registration context consumed by a later,
+       explicit ``profile_and_register_table`` call.
+    7. Return the DataFrame and small source metadata required by the notebook.
+
+    Higher-level governed pipeline code normally uses ``pipeline_read``.
+    Foundational readers remain available for direct lower-level or
+    general-purpose Fabric reads that do not need pipeline orchestration.
+
+    This function does not execute source observation, Freshness, Source
+    Stability, Schema, DQ, or Sensitive Data checks. It also does not profile
+    data, transform rows, or write a pipeline target. Those meaningful
+    engineering decisions remain explicit in ``02_pipeline``.
 
     Examples
     --------
-    >>> result = pipeline_read(target="source", schema="sales", table_name="orders")
+    Read a governed table without knowing whether ``source`` resolves to a
+    Lakehouse or Warehouse:
+
+    >>> result = pipeline_read(
+    ...     target="source",
+    ...     schema="demo",
+    ...     table_name="orders",
+    ... )
     >>> orders_df = result["dataframe"]
-    >>> result["table_id"]
-    'lakehouse:source:sales:orders'
+    >>> orders_table_id = result["table_id"]
+
+    Read a governed Warehouse source through project-owned SQL:
+
+    >>> result = pipeline_read(
+    ...     target="product",
+    ...     schema="demo",
+    ...     table_name="order_history",
+    ...     query='''
+    ...         SELECT customer_id, COUNT(*) AS order_count
+    ...         FROM demo.order_history
+    ...         GROUP BY customer_id
+    ...     ''',
+    ... )
+    >>> history_df = result["dataframe"]
+    >>> result["is_query"]
+    True
+
+    The query result is marked as derived so later notebook logic can use
+    ``profile_dataframe`` without registering it as the complete physical
+    ``demo.order_history`` source table.
 
     See Also
     --------
