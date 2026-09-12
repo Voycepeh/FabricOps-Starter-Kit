@@ -117,7 +117,7 @@ export const FabricOpsReveal = () => {
         });
         return (
           <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 54, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
-            Governance as Code
+            Governance into Code
           </div>
         );
       })()}
