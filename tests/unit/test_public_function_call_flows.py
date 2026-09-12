@@ -438,6 +438,36 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
     assert json_reader["release_history"] == []
 
 
+def test_pipeline_read_has_explicit_orchestration_classification() -> None:
+    """Classify only the explicit orchestration API in the orchestration layer."""
+    pipeline_read = info("pipeline_read", "src/fabricops_kit/pipeline/pipeline_read.py")
+
+    assert flows.architecture_classification(
+        pipeline_read, {pipeline_read.qualified_name}
+    ) == "pipeline_orchestration"
+
+
+def test_pipeline_read_flow_stops_at_foundational_io_boundaries() -> None:
+    """Keep foundational readers visible without charging their internals to orchestration."""
+    modules = flows.discover_modules()
+    functions = flows.discover_functions(modules)
+    public_names = set(flows.read_public_export_names())
+    public_qns = {qn for qn, info in functions.items() if info.function_name in public_names}
+    root_qn = "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+
+    flow, _used = flows.build_flow(root_qn, modules, functions, public_qns)
+    foundational_qns = {
+        row["qualified_name"]
+        for row in flow
+        if row["architecture_classification"] == "foundation_io"
+    }
+
+    assert {row["function_name"] for row in flow if row["qualified_name"] in foundational_qns} == {
+        "read_lakehouse_table", "read_warehouse_query", "read_warehouse_table",
+    }
+    assert not any(row["parent_qualified_name"] in foundational_qns for row in flow)
+
+
 def test_pipeline_package_location_does_not_imply_orchestration() -> None:
     """Keep domain capabilities in the domain layer regardless of package location."""
     check_schema = info("check_schema", "src/fabricops_kit/pipeline/check_schema.py")

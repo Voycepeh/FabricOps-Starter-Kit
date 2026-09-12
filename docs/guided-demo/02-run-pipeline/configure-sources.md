@@ -10,7 +10,7 @@
 | Products | Source Lakehouse `demo.products` | Lakehouse table |
 | Order History | Product Warehouse `demo.order_history` | Warehouse query |
 
-Edit or copy the intended Read blocks when adapting the template, but do not rebuild them function by function. The visible dispatch keeps the Lakehouse table and Warehouse query choices explicit while `00_env_config` supplies environment-specific Fabric routing.
+Edit or copy the intended Read blocks when adapting the template, but do not rebuild them function by function. Each block describes the source and calls `pipeline_read()`; FabricOps selects the configured foundational reader while `00_env_config` supplies environment-specific Fabric routing.
 
 Step 0B already used the raw `orders.csv`/`.json`/`.parquet`/`.xlsx`, `products.csv`, and `order_history.csv` files to create these tables. Do not substitute raw file readers into the normal Step 2 walkthrough.
 
@@ -26,11 +26,11 @@ For those supported patterns, see [Lakehouse Files vs Tables](../../reference/en
 
 ## Read preparation stays source-focused
 
-For each managed source, `read_pipeline_prep()` resolves its canonical identity and registers source Lineage. Unit 5 explains how target processing remains separate at the Write boundary.
+For each managed source, `pipeline_read()` resolves its canonical identity and registers source Lineage. Unit 5 explains how target processing remains separate at the Write boundary.
 
 ## Function details
 
-The Guided Demo teaches the concrete template behaviour rather than every function signature. Use the [Function Reference](../../reference/index.md) when you need exact parameters for `read_lakehouse_table()` or `read_warehouse_query()`.
+The Guided Demo teaches the concrete template behaviour rather than every function signature. Use the [`pipeline_read()` Function Reference](../../api/reference/pipeline_read.md) when you need the exact orchestration contract.
 
 **Previous:** [Unit 2: Run the baseline pipeline](run-baseline-etl.md)<br>
 **Next:** [Unit 4: Transform and write](transform-and-load.md)

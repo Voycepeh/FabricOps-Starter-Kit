@@ -78,7 +78,7 @@ def write_pipeline_prep(
 | `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``target_table_id`` is omitted. |
 | `load_strategy` | `str \| None` | No | Engineering-authored target strategy. A selected Development contract or active Production contract must match this proposal exactly. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Engineering-authored strategy parameters such as key, effective, tracked, or partition columns. |
-| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`read_pipeline_prep` for the sources that fed this target. |
+| `source_preps` | `list[dict[str, Any]]` | Yes | Results returned by :func:`pipeline_read` for the sources that fed this target. |
 
 ## Returns
 

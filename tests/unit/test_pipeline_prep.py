@@ -10,7 +10,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-read_module = import_module("fabricops_kit.pipeline.read_pipeline_prep")
+read_module = import_module("fabricops_kit.pipeline.pipeline_read")
 shared_module = import_module("fabricops_kit.pipeline.shared")
 warehouse_writer = import_module("fabricops_kit.io.write_warehouse_table")
 write_module = import_module("fabricops_kit.pipeline.write_pipeline_prep")
@@ -31,14 +31,16 @@ def _identity(table_id="warehouse:source:dbo:student_source", *, store_type="war
 
 def _patch_source_identity(monkeypatch, identity=None):
     resolved = identity or _identity()
-    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    context = {}
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", context))
     monkeypatch.setattr(
         read_module,
         "resolve_catalogue_table_identity",
         lambda _config, _env, table_id, **_kwargs: resolved if table_id == resolved["table_id"] else pytest.fail(table_id),
     )
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: "lineage-id")
-    return resolved
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
+    return resolved, context
 
 
 def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse"):
@@ -55,74 +57,89 @@ def _patch_target_processing(monkeypatch, processing, *, store_type="lakehouse")
     return identity
 
 
-def test_read_prep_resolves_registered_source_and_registers_lineage(monkeypatch):
-    identity = _patch_source_identity(monkeypatch)
+@pytest.mark.parametrize(
+    ("store_type", "query", "reader_name"),
+    [("lakehouse", None, "read_lakehouse_table"),
+     ("warehouse", None, "read_warehouse_table"),
+     ("warehouse", "SELECT customer_id FROM dbo.orders", "read_warehouse_query")],
+)
+def test_pipeline_read_dispatches_and_preserves_governed_context(monkeypatch, store_type, query, reader_name):
+    identity = _identity(store_type=store_type)
+    identity, context = _patch_source_identity(monkeypatch, identity)
+    calls = []
     lineage = []
+    for name in ("read_lakehouse_table", "read_warehouse_table", "read_warehouse_query"):
+        monkeypatch.setattr(read_module, name, lambda *args, _name=name, **kwargs: calls.append((_name, args, kwargs)) or "frame")
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
 
-    result = read_module.read_pipeline_prep(source_table_id=identity["table_id"])
+    result = read_module.pipeline_read(table_id=identity["table_id"], query=query)
 
-    assert result == {"table_id": identity["table_id"], "source": identity}
-    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
-
-
-def test_read_prep_resolves_physical_lakehouse_and_warehouse_sources(monkeypatch):
-    resolved = []
-    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_kwargs: None)
-    monkeypatch.setattr(
-        read_module,
-        "resolve_physical_table_identity",
-        lambda _config, _env, **coordinates: resolved.append(coordinates)
-        or _identity(
-            f"{coordinates['target']}:{coordinates['schema']}:{coordinates['table_name']}",
-            store_type="warehouse" if coordinates["target"] == "warehouse" else "lakehouse",
-        ),
-    )
-
-    lakehouse = read_module.read_pipeline_prep(
-        source_target="source", source_schema="dbo", source_table="orders"
-    )
-    warehouse = read_module.read_pipeline_prep(
-        source_target="warehouse", source_schema="dbo", source_table="customers"
-    )
-
-    assert lakehouse["source"]["store_kind"] == "lakehouse"
-    assert warehouse["source"]["store_kind"] == "warehouse"
-    assert resolved == [
-        {"target": "source", "schema": "dbo", "table_name": "orders"},
-        {"target": "warehouse", "schema": "dbo", "table_name": "customers"},
-    ]
-
-
-def test_read_prep_requires_source_identity():
-    with pytest.raises(ValueError, match="source_table_id or both source_target"):
-        read_module.read_pipeline_prep()
-
-
-def test_read_prep_rejects_unknown_source_table_id(monkeypatch):
-    lineage = []
-    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
-    monkeypatch.setattr(
-        read_module,
-        "resolve_catalogue_table_identity",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("No active registered Catalogue table")),
-    )
-    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
-    with pytest.raises(ValueError, match="No active registered Catalogue table"):
-        read_module.read_pipeline_prep(source_table_id="wrong")
-    assert lineage == []
-
-
-def test_read_prep_has_no_incremental_read_arguments():
-    from inspect import signature
-
-    parameters = signature(read_module.read_pipeline_prep).parameters
-    removed = {
-        "source_read_strategy", "target_table_id", "target_target", "target_schema", "target_table",
-        "source_watermark_column", "source_partition_column",
+    assert result == {
+        "dataframe": "frame", "table_id": identity["table_id"],
+        "is_query": query is not None, "has_contract": False,
     }
-    assert parameters.keys().isdisjoint(removed)
+    assert [call[0] for call in calls] == [reader_name]
+    assert lineage == [{"table_id": identity["table_id"], "pipeline_role": "source", "context": {}}]
+    assert context["_fabricops_active_profile_registration"] == {"profile_role": "source", "table": identity}
+
+
+def test_pipeline_read_resolves_physical_identity_and_infers_store(monkeypatch):
+    identity = _identity(store_type="warehouse")
+    context = {}
+    resolved = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", context))
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *args, **kwargs: resolved.append(kwargs) or identity)
+    monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: None)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
+
+    result = read_module.pipeline_read(target="source", schema="dbo", table_name="student_source")
+
+    assert result["table_id"] == identity["table_id"]
+    assert resolved == [{"target": "source", "schema": "dbo", "table_name": "student_source"}]
+    assert "store_type" not in __import__("inspect").signature(read_module.pipeline_read).parameters
+
+
+def test_pipeline_read_rejects_query_for_lakehouse_before_side_effects(monkeypatch):
+    _identity_value, context = _patch_source_identity(monkeypatch, _identity(store_type="lakehouse"))
+    lineage = []
+    monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
+    with pytest.raises(ValueError, match="configured Warehouse source"):
+        read_module.pipeline_read(table_id="warehouse:source:dbo:student_source", query="SELECT 1")
+    assert lineage == []
+    assert context == {}
+
+
+@pytest.mark.parametrize(("contract", "expected"), [(None, False), ({"contract_id": "selected"}, True)])
+def test_pipeline_read_reports_environment_selected_contract_without_exposing_it(monkeypatch, contract, expected):
+    identity, context = _patch_source_identity(monkeypatch)
+    resolutions = []
+    monkeypatch.setattr(
+        read_module, "resolve_pipeline_data_contract",
+        lambda *args, **kwargs: resolutions.append((args, kwargs)) or contract,
+    )
+    monkeypatch.setattr(read_module, "read_warehouse_table", lambda *args, **kwargs: "frame")
+
+    result = read_module.pipeline_read(table_id=identity["table_id"])
+
+    assert result["has_contract"] is expected
+    assert contract not in result.values()
+    assert resolutions == [(('config', 'dev', identity["table_id"]), {"context": context})]
+
+
+def test_pipeline_read_rejects_incomplete_or_conflicting_identity():
+    with pytest.raises(ValueError, match="Provide table_id or both target and table_name"):
+        read_module.pipeline_read()
+    with pytest.raises(ValueError, match="table_id cannot be combined"):
+        read_module.pipeline_read(table_id="id", target="source")
+
+
+def test_pipeline_read_does_not_own_visible_engineering_checks_or_profiling():
+    for name in (
+        "observe_table", "check_freshness", "check_source_stability", "check_schema",
+        "check_dq", "profile_and_register_table", "profile_dataframe",
+    ):
+        assert not hasattr(read_module, name)
 
 
 @pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append"), ("scd1", None)])

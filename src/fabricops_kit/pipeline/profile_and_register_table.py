@@ -511,10 +511,10 @@ def profile_and_register_table(
         ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage;
         governed pipeline preparation and successful publication own source
         and target Lineage respectively. Normal pipeline usage omits this
-        value because :func:`read_pipeline_prep` and
+        value because :func:`pipeline_read` and
         :func:`write_pipeline_prep` establish it in the active context.
     table : mapping, optional
-        Canonical resolved table identity returned as ``read_pipeline_prep()``
+        Canonical resolved table identity returned as ``pipeline_read()``
         ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
         and ``table_name`` to reuse the already resolved identity. Normal
         pipeline usage omits it and consumes the active preparation identity.
@@ -579,17 +579,17 @@ def profile_and_register_table(
     --------
     Profile and register a complete table immediately after Read preparation:
 
-    >>> read_prep = read_pipeline_prep(
-    ...     source_target="source",
-    ...     source_schema="dbo",
-    ...     source_table="bookings",
+    >>> read_result = pipeline_read(
+    ...     target="source",
+    ...     schema="dbo",
+    ...     table_name="bookings",
     ... )
-    >>> read_df = read_lakehouse_table(table_id=read_prep["table_id"])
+    >>> read_df = read_result["dataframe"]
     >>> profile = profile_and_register_table(read_df)
 
     See Also
     --------
-    read_pipeline_prep, write_pipeline_prep, profile_dataframe
+    pipeline_read, write_pipeline_prep, profile_dataframe
     
     Notes
     -----
@@ -724,7 +724,7 @@ def profile_and_register_table(
     its write has succeeded and the persisted target has been confirmed.
     
     This function does not create or update ``METADATA_DATA_LINEAGE``.
-    Registered source participation is recorded by ``read_pipeline_prep()``,
+    Registered source participation is recorded by ``pipeline_read()``,
     while target participation is recorded only after a successful governed
     publication. Guardrail execution is a separate workflow.
     
@@ -738,7 +738,7 @@ def profile_and_register_table(
         table = active_registration.get("table")
     if profile_role is None or (table is None and (target is None or table_name is None)):
         raise ValueError(
-            "Run read_pipeline_prep or write_pipeline_prep first, or provide profile_role and table identity."
+            "Run pipeline_read or write_pipeline_prep first, or provide profile_role and table identity."
         )
     dataframe_table_id = str(getattr(df, "_fabricops_table_id", "") or "").strip()
     active_table_id = str((active_registration.get("table") or {}).get("table_id") or "").strip()

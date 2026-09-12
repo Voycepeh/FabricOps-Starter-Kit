@@ -4,7 +4,7 @@
 
 ## Read each source normally
 
-`read_pipeline_prep()` resolves the source `table_id`, physical location, and source Lineage context. The visible Lakehouse or Warehouse reader then reads the source. Read preparation does not inspect a downstream target, calculate watermark or partition progress, skip the pipeline, or return a processing scope.
+`pipeline_read()` resolves the source `table_id`, physical location, and source Lineage context. FabricOps then delegates to the configured foundational Lakehouse or Warehouse reader. Read preparation does not inspect a downstream target, calculate watermark or partition progress, skip the pipeline, or return a processing scope.
 
 This keeps each Read block independent of its eventual Write destination:
 
@@ -57,7 +57,7 @@ Those concrete metadata records are the handoff to Governance in Step 3.
 
     Do not add Guardrail checks manually to this module. Step 3 reads `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`, then uses the unified editor to author `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL` for one `table_id` and freeze the Data Contract version. Step 4 selects that exact version in `02_pipeline`, writes summaries to `METADATA_GUARDRAIL_RESULTS`, and returns DQ failed values to the caller without persisting them automatically. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the pipeline against the active contract.
 
-For exact APIs such as `read_pipeline_prep()` and `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
+For exact APIs such as `pipeline_read()` and `write_pipeline_prep()`, use the [Function Reference](../../reference/index.md). The template is the normal learning-path entry point.
 
 **Previous:** [Unit 4: Transform and write](transform-and-load.md)  
 **Next:** [Step 3: Author and freeze the Data Contract](../03-enrich-guardrails.md)

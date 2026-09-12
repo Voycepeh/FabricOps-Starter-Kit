@@ -35,10 +35,10 @@ def _replace_where(partition_column: str, values: list[Any]) -> str:
 def _write_scope(source_preps: list[dict[str, Any]]) -> dict[str, Any]:
     """Validate source participation and return the default complete write scope."""
     if not source_preps:
-        raise ValueError("source_preps must contain at least one read_pipeline_prep result.")
+        raise ValueError("source_preps must contain at least one pipeline_read result.")
     for prep in source_preps:
-        if not isinstance(prep, dict) or not prep.get("table_id") or not isinstance(prep.get("source"), dict):
-            raise ValueError("source_preps must contain read_pipeline_prep result dictionaries.")
+        if not isinstance(prep, dict) or not prep.get("table_id"):
+            raise ValueError("source_preps must contain pipeline_read result dictionaries.")
     return {"type": "full_dataset"}
 
 
@@ -100,7 +100,7 @@ def write_pipeline_prep(
         Engineering-authored strategy parameters such as key, effective,
         tracked, or partition columns.
     source_preps : list of dict
-        Results returned by :func:`read_pipeline_prep` for the sources that fed
+        Results returned by :func:`pipeline_read` for the sources that fed
         this target.
 
     Returns
@@ -143,7 +143,7 @@ def write_pipeline_prep(
 
     See Also
     --------
-    read_pipeline_prep, write_lakehouse_table, write_warehouse_table
+    pipeline_read, write_lakehouse_table, write_warehouse_table
 
     """
     config, env, context = resolve_fabric_context()
