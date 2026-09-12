@@ -14,6 +14,11 @@ export const VIDEO_TUNING = {
       0.45, 0.55, 0.65, 0.8, 0.95, 1.1,
       1.25, 1.4, 1.55, 1.7, 1.85, 2.05,
     ],
+    featuredGleam: {
+      start: 8.2,
+      end: 12.5,
+      perIconDurationFrames: 16,
+    },
     heroCenterY: 360,
     positions: {
       Notebook: {left: 135, top: 510},
@@ -38,13 +43,13 @@ export const VIDEO_TUNING = {
   },
   fabricOps: {
     floatingWords: {
-      operations: 21,
-      plugAndPlay: 24,
-      selfContained: 28,
-      python: 31.5,
-      notebook: 33,
-      pyspark: 35,
-      lakehouse: 35,
+      operations: {start: 20, duration: 2.5, left: 1180, top: 640, rotate: 0},
+      plugAndPlay: {start: 23, duration: 2.5, left: 1280, top: 275, rotate: 4},
+      selfContained: {start: 28, duration: 2.5, left: 250, top: 705, rotate: 3},
+      python: {start: 31.5, duration: 1, left: 210, top: 660, rotate: -5},
+      notebook: {start: 33, duration: 1, left: 1320, top: 245, rotate: 4},
+      pyspark: {start: 35, duration: 1, left: 245, top: 255, rotate: 5},
+      lakehouse: {start: 35, duration: 1, left: 1285, top: 690, rotate: -4},
     },
     relationship: {
       governanceAsCodeStart: 43,
