@@ -26,6 +26,11 @@ export const OpeningPlatform = () => {
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
+  const iconExit = interpolate(frame, [timing.openingQuestionAt - 18, timing.openingQuestionAt], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
   const push = interpolate(frame, [timing.openingPushAt, scenes.opening], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -69,7 +74,7 @@ export const OpeningPlatform = () => {
               position: 'absolute',
               left: tunedPosition.left,
               top: tunedPosition.top,
-              opacity: enter,
+              opacity: enter * iconExit,
               transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
               zIndex: 1,
             }}
@@ -125,7 +130,7 @@ export const OpeningPlatform = () => {
             textShadow: '0 20px 60px #000',
           }}
         >
-          <span style={{color: '#fff'}}>Where do I </span>
+          <span style={{color: '#fff'}}>Where do we </span>
           <span
             style={{
               background: 'linear-gradient(90deg, #ffffff 0%, #55c8ff 45%, #20b8ff 100%)',
