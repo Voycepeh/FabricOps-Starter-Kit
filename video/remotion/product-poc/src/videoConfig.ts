@@ -33,8 +33,8 @@ export const VIDEO_CONFIG = {
     fabricOpsHowAt: 961,
     fabricOpsWorksAt: 982,
     workflowStepEnter: 18,
-    ctaHowAt: 170,
-    ctaDemoAt: 304,
+    ctaHowAt: 110,
+    ctaDemoAt: 244,
     sceneExit: 24,
   },
   scenes: {
