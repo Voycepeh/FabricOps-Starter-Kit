@@ -8,7 +8,6 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table
 from fabricops_kit.pipeline.shared import (
     persist_lineage_participation,
-    register_pipeline_source,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
     resolve_physical_table_identity,
@@ -152,7 +151,9 @@ def pipeline_read(
     if table_id:
         identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
     else:
-        identity = resolve_physical_table_identity(config, env, target=target, schema=schema, table_name=table_name)
+        identity = resolve_physical_table_identity(
+            config, env, target=target, schema=schema, table_name=table_name
+        )
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     identity["store_type"] = store_kind
     identity["store_kind"] = store_kind
@@ -165,7 +166,9 @@ def pipeline_read(
     if store_kind == "lakehouse" and query is not None:
         raise ValueError("query is supported only for a configured Warehouse source, not a Lakehouse source.")
 
-    has_contract = resolve_pipeline_data_contract(config, env, str(identity["table_id"]), context=context) is not None
+    has_contract = resolve_pipeline_data_contract(
+        config, env, str(identity["table_id"]), context=context
+    ) is not None
     if store_kind == "lakehouse":
         dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
     else:
@@ -178,8 +181,9 @@ def pipeline_read(
                 target=str(identity["target"]),
                 context=context,
             )
-    persist_lineage_participation(table_id=str(identity["table_id"]), pipeline_role="source", context=dict(context))
-    register_pipeline_source(table_id=str(identity["table_id"]), context=context)
+    persist_lineage_participation(
+        table_id=str(identity["table_id"]), pipeline_role="source", context=dict(context)
+    )
     context["_fabricops_active_profile_registration"] = {
         "profile_role": "source",
         "table": dict(identity),

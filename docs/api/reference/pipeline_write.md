@@ -23,9 +23,9 @@ commits pipeline-success metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:62`
+`fabricops_kit/pipeline/pipeline_write.py:79`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L62-L331">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L79-L350">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -55,6 +55,7 @@ def pipeline_write(
     table_id: str | None=None,
     load_strategy: str | None=None,
     load_strategy_parameters: dict[str, Any] | None=None,
+    source_table_ids: list[str] | tuple[str, ...] | None=None,
     repartition_by=None,
     options: dict[str, Any] | None=None,
 ) -> dict[str, str]:
@@ -71,6 +72,7 @@ Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 >>> result = pipeline_write(
 ...     prepared_df, target="unified", schema="demo",
 ...     table_name="curated_orders",
+...     source_table_ids=[orders_result["table_id"]],
 ... )
 >>> result["table_id"]
 'lakehouse:unified:demo:curated_orders'
@@ -80,6 +82,7 @@ Development may propose processing, without bypassing contract authority:
 >>> pipeline_write(
 ...     prepared_df, target="unified", schema="demo",
 ...     table_name="curated_orders", load_strategy="overwrite",
+...     source_table_ids=[orders_result["table_id"]],
 ... )
 
 </div>
@@ -95,6 +98,7 @@ Development may propose processing, without bypassing contract authority:
 | `table_id` | `str \| None` | No | Canonical registered target identity. This identity form is mutually exclusive with ``target``, ``schema``, and ``table_name``. |
 | `load_strategy` | `str \| None` | No | Development-authored processing proposal. Selected or frozen contract validation applies in Development, and the active approved Data Contract remains authoritative in Production. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Development-authored strategy parameters, such as key, effective, tracked, or partition columns, subject to contract validation. |
+| `source_table_ids` | `list[str] \| tuple[str, ...] \| None` | No | Canonical identities of the exact governed sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame. |
 | `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning passed to simple physical writes. |
 | `options` | `dict[str, Any] \| None` | No | Additional physical writer options for append or overwrite publication. |
 
@@ -105,9 +109,9 @@ A small result containing the canonical target table_id.
 ## Raises / Errors
 
 ValueError
-    If identity inputs conflict or are incomplete, no source was registered
-    by ``pipeline_read`` for the current activity, governed processing is
-    invalid, ownership does not match, or the target store is unsupported.
+    If identity inputs conflict or are incomplete, ``source_table_ids`` is
+    missing or invalid, governed processing is invalid, ownership does not
+    match, or the target store is unsupported.
 
 ## Notes
 
@@ -131,9 +135,10 @@ The governed orchestration performs these mechanical steps:
 
 Callers do not provide a store type, manually resolve ``table_id``, choose
 a Lakehouse versus Warehouse writer, construct processing scope or success
-context, or manually commit Lineage or Source Observation metadata. Source
-identities are recovered from successful ``pipeline_read`` calls registered
-for the current activity. Multiple source reads can feed one target.
+context, or manually commit Lineage or Source Observation metadata. Callers
+provide only the canonical identities of the sources that actually feed
+this target, rather than internal read or preparation dictionaries. This
+keeps multiple target writes in one activity exact and independent.
 
 This function does not perform transformations, schema checks, DQ checks,
 Sensitive Data Guardrails, or profiling. Those remain explicit notebook

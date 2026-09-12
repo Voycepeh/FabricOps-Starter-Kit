@@ -222,7 +222,7 @@ def test_02_pipeline_is_a_minimal_read_transform_write_template():
         assert heading in source
     for legacy in ("Extract", "EXTRACT_", "Load", "LOAD_NAME", "LOAD_TABLE_ID", "READ_NAME", "WRITE_NAME"):
         assert legacy not in source
-    assert "READ_RESULTS = {}" in source
+    assert "READ_TABLE_IDS = {}" in source
     assert "READ_DFS = {}" in source
     assert "WRITE_PREPS" not in source and "WRITE_DFS" not in source
     assert "How to read the blocks" not in source
@@ -248,7 +248,7 @@ def test_02_pipeline_read_blocks_are_cloneable_orchestrated_reads():
         "observe_table(", "check_freshness(", "check_source_stability(",
         'if read_result["is_query"]:', "profile_dataframe(read_df)",
         "check_schema(", "check_dq(", "profile_and_register_table(read_df)",
-        "READ_RESULTS[READ]", "READ_DFS[READ]", 'catalogue_widget["show"](table_id=READ_TABLE_ID)',
+        "READ_TABLE_IDS[READ]", "READ_DFS[READ]", 'catalogue_widget["show"](table_id=READ_TABLE_ID)',
     )
     for index in (1, 2, 3):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
@@ -317,6 +317,7 @@ def test_02_pipeline_write_is_one_complete_copyable_block():
     assert "resolve_table_id(" in config
     assert "load_strategy=WRITE_LOAD_STRATEGY" in block
     assert "load_strategy_parameters=WRITE_LOAD_STRATEGY_PARAMETERS" in block
+    assert "source_table_ids=[READ_TABLE_IDS[1], READ_TABLE_IDS[2], READ_TABLE_IDS[3]]" in block
     stages = [
         "check_schema(", "check_dq(", "check_sensitive_data(",
         'if not sensitive_result["can_continue"]', 'sensitive_result["dataframe"]', "pipeline_write(",

@@ -37,6 +37,23 @@ def _write_scope() -> dict[str, Any]:
     return {"type": "full_dataset"}
 
 
+def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
+    """Return unique canonical source identities explicitly owned by this target."""
+    if not isinstance(values, list | tuple) or not values:
+        raise ValueError(
+            "source_table_ids must identify the governed sources that feed this target. "
+            "FabricOps does not infer source ownership from activity-wide reads or Spark plans."
+        )
+    source_ids: list[str] = []
+    for value in values:
+        source_id = str(value).strip() if isinstance(value, str) else ""
+        if not source_id:
+            raise ValueError("source_table_ids must contain only non-empty canonical table_id strings.")
+        if source_id not in source_ids:
+            source_ids.append(source_id)
+    return source_ids
+
+
 def _validate_target_writer_ownership(*, table_id: str, processing: dict[str, Any], audit: dict[str, Any]) -> None:
     """Require the current notebook to match the writer frozen in the contract."""
     if processing.get("source") != "data_contract":
@@ -68,6 +85,7 @@ def pipeline_write(
     table_id: str | None = None,
     load_strategy: str | None = None,
     load_strategy_parameters: dict[str, Any] | None = None,
+    source_table_ids: list[str] | tuple[str, ...] | None = None,
     repartition_by=None,
     options: dict[str, Any] | None = None,
 ) -> dict[str, str]:
@@ -102,6 +120,12 @@ def pipeline_write(
     load_strategy_parameters : dict, optional
         Development-authored strategy parameters, such as key, effective,
         tracked, or partition columns, subject to contract validation.
+    source_table_ids : list[str] or tuple[str, ...], optional
+        Canonical identities of the exact governed sources that feed this
+        target publication. Supply identities returned by ``pipeline_read``.
+        FabricOps requires this explicit association because activity-wide
+        reads and Spark transformation plans cannot reliably identify which
+        source subset produced a particular target DataFrame.
     repartition_by : int or str or list[str] or tuple[str, ...], optional
         Optional Spark repartitioning passed to simple physical writes.
     options : dict, optional
@@ -117,9 +141,9 @@ def pipeline_write(
     Raises
     ------
     ValueError
-        If identity inputs conflict or are incomplete, no source was registered
-        by ``pipeline_read`` for the current activity, governed processing is
-        invalid, ownership does not match, or the target store is unsupported.
+        If identity inputs conflict or are incomplete, ``source_table_ids`` is
+        missing or invalid, governed processing is invalid, ownership does not
+        match, or the target store is unsupported.
 
     Notes
     -----
@@ -141,9 +165,10 @@ def pipeline_write(
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
-    context, or manually commit Lineage or Source Observation metadata. Source
-    identities are recovered from successful ``pipeline_read`` calls registered
-    for the current activity. Multiple source reads can feed one target.
+    context, or manually commit Lineage or Source Observation metadata. Callers
+    provide only the canonical identities of the sources that actually feed
+    this target, rather than internal read or preparation dictionaries. This
+    keeps multiple target writes in one activity exact and independent.
 
     This function does not perform transformations, schema checks, DQ checks,
     Sensitive Data Guardrails, or profiling. Those remain explicit notebook
@@ -159,6 +184,7 @@ def pipeline_write(
     >>> result = pipeline_write(
     ...     prepared_df, target="unified", schema="demo",
     ...     table_name="curated_orders",
+    ...     source_table_ids=[orders_result["table_id"]],
     ... )
     >>> result["table_id"]
     'lakehouse:unified:demo:curated_orders'
@@ -168,6 +194,7 @@ def pipeline_write(
     >>> pipeline_write(
     ...     prepared_df, target="unified", schema="demo",
     ...     table_name="curated_orders", load_strategy="overwrite",
+    ...     source_table_ids=[orders_result["table_id"]],
     ... )
 
     See Also
@@ -178,11 +205,7 @@ def pipeline_write(
     """
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
     from fabricops_kit.io.shared import execute_warehouse_processing
-    from fabricops_kit.pipeline.shared import (
-        commit_pipeline_write_success,
-        execute_lakehouse_processing,
-        pipeline_activity_sources,
-    )
+    from fabricops_kit.pipeline.shared import commit_pipeline_write_success, execute_lakehouse_processing
 
     config, env, context = resolve_fabric_context()
     coordinates = (target, schema, table_name)
@@ -206,11 +229,7 @@ def pipeline_write(
     processing = resolve_table_processing_definition(
         config, env, str(identity["table_id"]), context=context, authored_processing=authored
     )
-    source_table_ids = pipeline_activity_sources(context=context)
-    if not source_table_ids:
-        raise ValueError(
-            "No governed sources are registered for the current activity; call pipeline_read before pipeline_write."
-        )
+    publication_source_ids = _source_table_ids(source_table_ids)
     scope = _write_scope()
     strategy = str(processing.get("load_strategy") or "")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
@@ -300,7 +319,7 @@ def pipeline_write(
     commit_pipeline_write_success(
         {
             "target_table_id": str(identity["table_id"]),
-            "source_table_ids": source_table_ids,
+            "source_table_ids": publication_source_ids,
             "activity_id": audit["_activity_id"],
             "notebook_name": audit["_notebook_name"],
             "notebook_id": audit["_notebook_id"],
