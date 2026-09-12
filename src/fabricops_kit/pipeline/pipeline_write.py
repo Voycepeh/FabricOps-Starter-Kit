@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
+from fabricops_kit.config.metadata_schemas import (
+    coerce_metadata_row_types,
+    metadata_table_physical_schema,
+    metadata_table_schema_registry,
+)
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
@@ -13,6 +20,99 @@ from fabricops_kit.pipeline.shared import (
     resolve_table_processing_definition,
     resolve_target_audit_fields,
 )
+
+CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+
+
+def _persist_target_processing(
+    *,
+    identity: dict[str, Any],
+    processing: dict[str, Any],
+    audit: dict[str, Any],
+    config: Any,
+    env: str,
+    dataframe: Any,
+) -> None:
+    """Persist the resolved target processing definition on its Catalogue table row."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(
+            "Delta Lake merge support is required to persist target processing metadata."
+        ) from exc
+
+    parameter_names = {
+        "partition_column",
+        "key_columns",
+        "effective_column",
+        "tracked_columns",
+    }
+    parameters = {name: processing[name] for name in parameter_names if name in processing}
+    row = coerce_metadata_row_types(
+        CATALOGUE_TABLE,
+        {
+            "metadata_level": "table",
+            "table_id": str(identity["table_id"]),
+            "column_id": None,
+            "environment_name": env,
+            "store_type": str(identity.get("store_type") or identity.get("store_kind") or "").lower(),
+            "layer": str(identity["target"]),
+            "schema_name": identity.get("schema"),
+            "table_name": str(identity["table_name"]),
+            "column_name": None,
+            "data_type": None,
+            "load_strategy": str(processing["load_strategy"]),
+            "load_strategy_parameters_json": json.dumps(
+                parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ),
+            "first_profiled_at": None,
+            "last_profiled_at": None,
+            "is_active": True,
+            **audit,
+        },
+    )
+    spark_session = dataframe.sparkSession
+    source = spark_session.createDataFrame(
+        [row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE]
+    )
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "metadata",
+        CATALOGUE_TABLE,
+        metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(
+            source.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.metadata_level = 'table' "
+            "AND target.table_id = source.table_id "
+            "AND target.column_id IS NULL",
+        )
+        .whenMatchedUpdate(
+            set={
+                "store_type": "source.store_type",
+                "layer": "source.layer",
+                "schema_name": "source.schema_name",
+                "table_name": "source.table_name",
+                "load_strategy": "source.load_strategy",
+                "load_strategy_parameters_json": "source.load_strategy_parameters_json",
+                "is_active": "true",
+                "_committed_by": "source._committed_by",
+                "_committed_at": "source._committed_at",
+                "_workspace_id": "source._workspace_id",
+                "_workspace_name": "source._workspace_name",
+                "_notebook_id": "source._notebook_id",
+                "_notebook_name": "source._notebook_name",
+                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
+                "_activity_id": "source._activity_id",
+            }
+        )
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
 
 
 def _delta_literal(value: Any) -> str:
@@ -164,10 +264,11 @@ def pipeline_write(
     7. Validate target notebook ownership.
     8. Select the physical Lakehouse or Warehouse publication implementation.
     9. Perform append/overwrite or dedicated SCD processing.
-    10. Only after physical success, commit target Lineage and accepted Source
-        Observation/write-success metadata.
-    11. Establish target profile-registration context.
-    12. Return a small publication result.
+    10. Persist the resolved target load strategy and parameters on the
+        table-level ``METADATA_DATA_CATALOGUE`` row.
+    11. Only after physical and Catalogue success, commit target Lineage and
+        accepted Source Observation/write-success metadata.
+    12. Return a small publication result with no hidden profiling state.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
@@ -338,6 +439,14 @@ def pipeline_write(
     else:
         raise ValueError(f"Configured target has unsupported store kind {store_kind or '<blank>'!r}.")
 
+    _persist_target_processing(
+        identity=identity,
+        processing=processing,
+        audit=audit,
+        config=config,
+        env=env,
+        dataframe=df,
+    )
     commit_pipeline_write_success(
         {
             "target_table_id": str(identity["table_id"]),

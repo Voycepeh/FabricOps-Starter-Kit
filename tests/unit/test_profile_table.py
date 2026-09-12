@@ -90,3 +90,59 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
 
     assert result["profile"].count() == 1
     assert "profiling supplied DataFrame against governed table" in capsys.readouterr().out
+
+
+def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
+    """Keep table processing fields when structural profiling supplies null values."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    updates = []
+
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, *_args):
+            return self
+
+        def whenMatchedUpdate(self, *, set):
+            updates.append(set)
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def whenNotMatchedBySourceUpdate(self, **_kwargs):
+            return self
+
+        def execute(self):
+            return None
+
+    class Catalogue:
+        def select(self, *_columns):
+            return self
+
+        def first(self):
+            return {"environment_name": "dev", "table_id": "target-id"}
+
+        def alias(self, _name):
+            return self
+
+    import sys
+    import types
+
+    delta_module = types.ModuleType("delta")
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue"))
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
+
+    module._upsert_catalogue_identities(
+        catalogue_df=Catalogue(), config={}, env="dev", spark_session=object()
+    )
+
+    assert updates[0]["load_strategy"] == "coalesce(source.load_strategy, target.load_strategy)"
+    assert updates[0]["load_strategy_parameters_json"] == (
+        "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
+    )

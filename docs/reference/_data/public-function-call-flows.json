@@ -940,6 +940,7 @@
         "fabricops_kit.data_contract.shared.save_guardrails",
         "fabricops_kit.pipeline.check_source_stability._observation_stability",
         "fabricops_kit.pipeline.observe_table._persist",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
@@ -957,6 +958,8 @@
         "fabricops_kit.pipeline.check_source_stability::<module>",
         "fabricops_kit.pipeline.observe_table._persist",
         "fabricops_kit.pipeline.observe_table::<module>",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.pipeline_write::<module>",
         "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
         "fabricops_kit.pipeline.profile_table::<module>",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
@@ -1107,6 +1110,7 @@
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.pipeline.check_source_stability._observation_stability",
         "fabricops_kit.pipeline.observe_table.observe_table",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.profile_table.profile_table",
@@ -1141,6 +1145,8 @@
         "fabricops_kit.pipeline.check_source_stability::<module>",
         "fabricops_kit.pipeline.observe_table.observe_table",
         "fabricops_kit.pipeline.observe_table::<module>",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.pipeline_write::<module>",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.profile_table.profile_table",
@@ -1202,6 +1208,7 @@
         "fabricops_kit.data_contract.shared.save_enrichment",
         "fabricops_kit.pipeline.check_source_stability._observation_stability",
         "fabricops_kit.pipeline.observe_table._persist",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
         "fabricops_kit.pipeline.shared.persist_lineage_participation",
@@ -1221,6 +1228,8 @@
         "fabricops_kit.pipeline.check_source_stability::<module>",
         "fabricops_kit.pipeline.observe_table._persist",
         "fabricops_kit.pipeline.observe_table::<module>",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.pipeline_write::<module>",
         "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
         "fabricops_kit.pipeline.profile_table::<module>",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
@@ -4394,6 +4403,7 @@
         "fabricops_kit.io.shared.read_lakehouse_table_core",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
@@ -4409,6 +4419,8 @@
         "fabricops_kit.io.shared.write_lakehouse_table_core",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table::<module>",
+        "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.pipeline_write::<module>",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.profile_table::<module>",
@@ -5625,9 +5637,38 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._delta_literal",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 26,
+      "source_end_line": 126,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 18,
+      "source_start_line": 118,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_persist_target_processing",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.pipeline_write.pipeline_write"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.pipeline_write.pipeline_write"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 115,
+      "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
+      "source_start_line": 27,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5654,9 +5695,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._replace_where",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 32,
+      "source_end_line": 132,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 29,
+      "source_start_line": 129,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5683,9 +5724,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._source_table_ids",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 54,
+      "source_end_line": 154,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 40,
+      "source_start_line": 140,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5712,9 +5753,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 76,
+      "source_end_line": 176,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 57,
+      "source_start_line": 157,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5741,9 +5782,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._write_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 37,
+      "source_end_line": 137,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 35,
+      "source_start_line": 135,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5768,9 +5809,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 351,
+      "source_end_line": 460,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 79,
+      "source_start_line": 179,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -13462,7 +13503,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 16,
+      "direct_call_count": 17,
       "discontinued_in": null,
       "examples": "Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:\n\n>>> result = pipeline_write(\n...     prepared_df, target=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )\n>>> result[\"table_id\"]\n'lakehouse:unified:demo:curated_orders'\n\nDevelopment may propose processing, without bypassing contract authority:\n\n>>> pipeline_write(\n...     prepared_df, target=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\", load_strategy=\"overwrite\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )",
       "files_touched": [
@@ -13562,7 +13603,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 16
+              "width": 17
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -13574,18 +13615,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    A deliberately small result containing only the canonical ``table_id``.\n    Profile the persisted target through an explicit read-back rather than\n    treating the input DataFrame as persisted state.",
-      "scope": 78,
+      "scope": 79,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def pipeline_write(df, *, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, verbose: bool=True) -> dict[str, str]",
-      "source_end_line": 351,
+      "source_end_line": 460,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 79,
+      "source_start_line": 179,
       "summary": "Publish one governed pipeline table target through its configured Fabric store.",
-      "transitive_function_count": 78,
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Select the physical Lakehouse or Warehouse publication implementation.\n9. Perform append/overwrite or dedicated SCD processing.\n10. Only after physical success, commit target Lineage and accepted Source\n    Observation/write-success metadata.\n11. Establish target profile-registration context.\n12. Return a small publication result.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, or profiling. Those remain explicit notebook\nengineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
-      "width": 16
+      "transitive_function_count": 79,
+      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Select the physical Lakehouse or Warehouse publication implementation.\n9. Perform append/overwrite or dedicated SCD processing.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, commit target Lineage and\n    accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, or profiling. Those remain explicit notebook\nengineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
+      "width": 17
     },
     {
       "architecture_classification": "domain_public_api",
@@ -18151,6 +18192,38 @@
     {
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.coerce_metadata_row_types",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.pipeline_write._delta_literal",
       "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write._replace_where",
       "violation_details": [],
@@ -18184,6 +18257,14 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
       "caller_qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
       "violation_details": [],
       "violation_types": []
@@ -21896,13 +21977,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 30,
-    "defined_function_count": 379,
+    "defined_function_count": 380,
     "detached_function_count": 46,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 769,
+    "relationship_count": 774,
     "source_referenced_function_count": 44,
-    "used_function_count": 303
+    "used_function_count": 304
   },
   "used_functions": [
     "fabricops_kit.access.scan_workspace_access._access_rows",
@@ -22043,6 +22124,7 @@
     "fabricops_kit.pipeline.observe_table.observe_table",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
     "fabricops_kit.pipeline.pipeline_write._delta_literal",
+    "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
     "fabricops_kit.pipeline.pipeline_write._replace_where",
     "fabricops_kit.pipeline.pipeline_write._source_table_ids",
     "fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership",
