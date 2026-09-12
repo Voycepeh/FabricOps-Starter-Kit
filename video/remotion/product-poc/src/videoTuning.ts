@@ -14,6 +14,15 @@ export const VIDEO_TUNING = {
       0.45, 0.55, 0.65, 0.8, 0.95, 1.1,
       1.25, 1.4, 1.55, 1.7, 1.85, 2.05,
     ],
+    questionRepositionLeadSeconds: 0.55,
+    questionPositions: {
+      Notebook: {left: 430, top: 235},
+      'Data Pipeline': {left: 840, top: 235},
+      Lakehouse: {left: 1250, top: 235},
+      Warehouse: {left: 430, top: 675},
+      Environment: {left: 840, top: 675},
+      Eventstream: {left: 1250, top: 675},
+    },
     heroCenterY: 360,
     positions: {
       Notebook: {left: 135, top: 510},
