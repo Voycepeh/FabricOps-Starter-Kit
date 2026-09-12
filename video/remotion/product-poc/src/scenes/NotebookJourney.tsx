@@ -19,6 +19,18 @@ const LAYOUT = {
   pipeline: {left: 1290, top: 650},
 } as const;
 
+const CODE_PACKAGE_TIMING = {
+  enter: 25,
+  imports: [48, 78, 108],
+  exit: 235,
+} as const;
+
+const IMPORT_GROUPS = [
+  ['read_lakehouse_csv,', 'read_lakehouse_parquet,'],
+  ['read_warehouse_query,', 'write_lakehouse_table,'],
+  ['write_warehouse_table,', 'profile_and_register_table,'],
+] as const;
+
 const NotebookGlyph = ({color}: {color: string}) => (
   <div style={{position: 'relative', width: NOTEBOOK.glyphSize, height: NOTEBOOK.glyphSize, flex: '0 0 auto'}}>
     <div style={{position: 'absolute', inset: 0, border: `2px solid ${color}`, borderRadius: 8, background: `${color}12`}} />
@@ -69,39 +81,64 @@ const ContractDocument = ({progress}: {progress: number}) => {
   );
 };
 
+const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
+  const enter = spring({frame: frame - CODE_PACKAGE_TIMING.enter, fps, config: {damping: 18, stiffness: 82}});
+  const exit = interpolate(frame, [CODE_PACKAGE_TIMING.exit - 18, CODE_PACKAGE_TIMING.exit], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+
+  return <div style={{position: 'absolute', left: 420, top: 215, width: 1080, height: 610, boxSizing: 'border-box', borderRadius: 26, overflow: 'hidden', background: 'linear-gradient(145deg, #101c2e, #08111f 78%)', border: `2px solid ${theme.production}88`, boxShadow: `0 30px 85px #000a, 0 0 48px ${theme.production}20`, opacity: enter * exit, transform: `translateY(${(1 - enter) * 24}px) scale(${0.94 + enter * 0.06 - (1 - exit) * 0.05})`}}>
+    <div style={{height: 70, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12, borderBottom: '1px solid #ffffff18', background: '#ffffff08'}}>
+      {['#ff6b6b', '#ffd166', '#38d991'].map((color) => <span key={color} style={{width: 15, height: 15, borderRadius: 20, background: color}} />)}
+      <div style={{marginLeft: 18, fontFamily: 'monospace', fontSize: 23, color: '#aebed2'}}>fabricops_package.py</div>
+      <div style={{marginLeft: 'auto', padding: '8px 16px', borderRadius: 99, background: `${theme.production}20`, border: `1px solid ${theme.production}88`, color: theme.production, fontSize: 20, fontWeight: 760}}>.py package</div>
+    </div>
+    <div style={{padding: '40px 58px', fontFamily: 'monospace', fontSize: 29, lineHeight: 1.5, color: '#dce7f5'}}>
+      <div style={{opacity: enter, color: '#8ed8ff'}}><span style={{color: '#c792ea'}}>from</span> fabricops_kit <span style={{color: '#c792ea'}}>import</span> (</div>
+      {IMPORT_GROUPS.map((group, index) => {
+        const progress = spring({frame: frame - CODE_PACKAGE_TIMING.imports[index], fps, config: {damping: 17, stiffness: 105}});
+        return <div key={group[0]} style={{marginLeft: 46, opacity: progress, transform: `translateX(${(1 - progress) * 24}px)`}}>
+          {group.map((functionName) => <div key={functionName} style={{color: index === 2 ? theme.production : '#f3f7fc', textShadow: index === 2 ? `0 0 18px ${theme.production}55` : 'none'}}>{functionName}</div>)}
+        </div>;
+      })}
+      <div style={{color: '#8ed8ff'}}>)</div>
+    </div>
+  </div>;
+};
+
 export const NotebookJourney = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
-  const heading = enter(0);
   const environment = enter(timing.notebookEnvironmentAt);
   const foundationFlow = interpolate(frame, [timing.notebookFoundationAt, timing.notebookFoundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const lowerNotebooks = enter(timing.notebookLowerAt);
   const contract = enter(timing.notebookContractAt);
   const relationshipFlow = interpolate(frame, [timing.notebookRelationshipAt, timing.notebookRelationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const pulse = 0.42 + Math.sin(Math.max(0, frame - timing.notebookRelationshipAt) / 10) * 0.18;
+  const connectorSettle = spring({frame: frame - timing.notebookRelationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
-    <div style={{position: 'absolute', left: 120, right: 120, top: 72, textAlign: 'center', opacity: heading, transform: `translateY(${(1 - heading) * 14}px)`}}>
-      <div style={{fontSize: 60, lineHeight: 1.08, fontWeight: 850, letterSpacing: -1.8, color: theme.text, whiteSpace: 'nowrap'}}>Governance as Code, built into Engineering</div>
-      <div style={{marginTop: 15, fontSize: 27, lineHeight: 1.25, fontWeight: 500, color: theme.muted, whiteSpace: 'nowrap'}}>Data Contracts connect governance expectations to pipeline validation</div>
-    </div>
+    <CodePackage frame={frame} fps={fps} />
 
     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
       <defs>
-        <linearGradient id="governance-contract"><stop stopColor={theme.governance} /><stop offset="1" stopColor="#949eac" /></linearGradient>
-        <linearGradient id="contract-pipeline"><stop stopColor="#949eac" /><stop offset="1" stopColor={theme.engineering} /></linearGradient>
         <marker id="notebook-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill={theme.neutral} /></marker>
       </defs>
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M855 455 C855 535 425 535 425 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
         <path d="M1065 455 C1065 535 1495 535 1495 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
-        <path d="M630 720 C688 690 727 690 785 720" stroke="url(#governance-contract)" strokeWidth="6" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow * 0.86} />
-        <path d="M1135 720 C1193 690 1232 690 1290 720" stroke="url(#contract-pipeline)" strokeWidth="6" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow * 0.86} />
-        <path d="M785 778 C727 808 688 808 630 778" stroke="url(#governance-contract)" strokeWidth="3" strokeDasharray="9 13" opacity={relationshipFlow * pulse} />
-        <path d="M1290 778 C1232 808 1193 808 1135 778" stroke="url(#contract-pipeline)" strokeWidth="3" strokeDasharray="9 13" opacity={relationshipFlow * pulse} />
+        <path d="M630 755 H760" stroke={theme.governance} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
+        <path d="M1160 755 H1290" stroke={theme.engineering} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
+      </g>
+      <g opacity={relationshipFlow}>
+        <rect x={752 - connectorSettle * 10} y="728" width="34" height="54" rx="8" fill={theme.governance} />
+        <rect x={1134 + connectorSettle * 10} y="728" width="34" height="54" rx="8" fill={theme.engineering} />
+        <rect x="778" y="735" width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="778" y="761" width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="1128" y="735" width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="1128" y="761" width="14" height="14" rx="4" fill="#dce7f5" />
+        <circle cx="785" cy="755" r={23 + connectorSettle * 5} fill="none" stroke={theme.governance} strokeWidth="4" />
+        <circle cx="1135" cy="755" r={23 + connectorSettle * 5} fill="none" stroke={theme.engineering} strokeWidth="4" />
       </g>
     </svg>
 
