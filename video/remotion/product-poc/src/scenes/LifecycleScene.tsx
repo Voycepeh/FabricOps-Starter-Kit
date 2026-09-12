@@ -43,7 +43,10 @@ export const LifecycleScene = () => {
   const stepTimes = [...timing.workflowStepTimes];
   const activeIndex = stepTimes.reduce((latest, reveal, index) => frame >= reveal ? index : latest, -1);
   const exit = interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const loop = interpolate(frame, [timing.workflowLoopStart, timing.workflowLoopEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const loopEnter = interpolate(frame, [timing.workflowLoopStart, timing.workflowLoopStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const loopExit = interpolate(frame, [stepTimes[4] - 18, stepTimes[4]], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const loopOpacity = loopEnter * loopExit;
+  const tracerOffset = -((Math.max(0, frame - timing.workflowLoopStart) * 11) % 1000);
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     {workspaces.map((workspace, index) => {
       const enter = spring({frame: frame - index * 5, fps, config: {damping: 20, stiffness: 82}});
@@ -57,14 +60,14 @@ export const LifecycleScene = () => {
         const draw = interpolate(frame, [reveal, reveal + timing.workflowStepEnter], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
         return <path key={connector.d} d={connector.d} fill="none" stroke="#8198b5" strokeWidth="6" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - draw} markerEnd={draw > 0.96 ? 'url(#lifecycle-arrow)' : undefined} />;
       })}
-      <path d="M535 610 C500 685 455 685 420 610" fill="none" stroke={theme.governance} strokeWidth="7" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - loop} markerEnd={loop > 0.96 ? 'url(#lifecycle-arrow)' : undefined} />
-      <path d="M420 510 C455 435 500 435 535 510" fill="none" stroke={theme.engineering} strokeWidth="7" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - loop} markerEnd={loop > 0.96 ? 'url(#lifecycle-arrow)' : undefined} />
+      <ellipse cx="477" cy="560" rx="430" ry="126" fill="none" stroke={`${theme.production}58`} strokeWidth="6" opacity={loopOpacity} />
+      <ellipse cx="477" cy="560" rx="430" ry="126" fill="none" stroke={theme.production} strokeWidth="10" strokeLinecap="round" pathLength="1000" strokeDasharray="125 875" strokeDashoffset={tracerOffset} opacity={loopOpacity} style={{filter: `drop-shadow(0 0 12px ${theme.production})`}} />
     </svg>
     {steps.map((step, index) => {
       if (frame < stepTimes[index]) return null;
       const enter = spring({frame: frame - stepTimes[index], fps, durationInFrames: timing.workflowStepEnter, config: {damping: 19, stiffness: 92}});
       return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} enter={enter} active={activeIndex === index} /></div>;
     })}
-    <div style={{position: 'absolute', left: 357, top: 674, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loop}}>Iterate until validations pass</div>
+    <div style={{position: 'absolute', left: 327, top: 700, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loopOpacity}}>Iterate until validations pass</div>
   </div>;
 };
