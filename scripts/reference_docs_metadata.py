@@ -517,27 +517,11 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
 
- {'module_name': 'widgets.widget_author_guardrails',
-  'visibility': 'internal',
-  'module_summary': 'Owns versioned Schema, Freshness, and Source Stability Guardrail authoring.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_author_data_contract',
   'visibility': 'public',
   'module_summary': 'Owns the unified Data Contract authoring experience.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_author_dq_rules',
-  'visibility': 'internal',
-  'module_summary': 'Owns DQ rule authoring widget workflow.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
- {'module_name': 'widgets.widget_enrich_table_metadata',
-  'visibility': 'internal',
-  'module_summary': 'Owns table metadata enrichment widget workflow.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
-
  {'module_name': 'access',
   'visibility': 'public',
   'module_summary': 'Owns observed SQL permission inventory and Catalogue table linkage.',
@@ -2177,43 +2161,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'No active freshness rule matches the table.',
                                                       'Metadata evidence cannot be read.']},
 
- 'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
-                                                                      'controls for authoring '
-                                                                      'versioned table-level Schema, '
-                                                                      'Freshness, and Source Stability Guardrail intent.',
-                                                  'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
-                                                  'do_not_use_when': 'Do not use to write '
-                                                                     'evidence or '
-                                                                     'runtime outcomes; it writes '
-                                                                     'rule intent only to '
-                                                                     'METADATA_GUARDRAIL '
-                                                                     'when saving.',
-                                                  'glossary_terms': ['guardrails',
-                                                                     'metadata lakehouse',
-                                                                     'notebook template'],
-                                                  'return_interpretation': 'The widget state '
-                                                                           'exposes controls, '
-                                                                           'preview records, and '
-                                                                           'save actions that '
-                                                                           'produce append-only '
-                                                                           'guardrail rule rows '
-                                                                           'under the table '
-                                                                           'policy.',
-                                                  'common_failure_causes': ['The selected table state is missing columns or its canonical key.',
-                                                                            'Freshness maximum age is invalid.',
-                                                                            'The metadata target '
-                                                                            'cannot be written.']},
- 'widget_author_dq_rules': {'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
-                            'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
-                            'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
-                            'glossary_terms': ['guardrails',
-                                               'evidence',
-                                               'metadata lakehouse',
-                                               'notebook template'],
-                            'return_interpretation': 'The widget returns mutable preview records; explicit saves write guardrail rule intent to METADATA_GUARDRAIL.',
-                            'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
-                                                      'No applicable column is selected.',
-                                                      'The metadata target cannot be written.']},
  }
 
 RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',

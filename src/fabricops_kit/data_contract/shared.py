@@ -278,31 +278,6 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     }
 
 
-def select_contract_authoring_context(
-    contract_rows: Any,
-    *,
-    environment_name: str,
-    table_id: str,
-) -> dict[str, Any]:
-    """Select the latest exact draft contract for a table in one environment."""
-    env = str(environment_name or "").strip()
-    table = str(table_id or "").strip()
-    if not env or not table:
-        raise ValueError("environment_name and table_id are required for contract authoring.")
-    drafts = [
-        row for row in row_dicts(contract_rows)
-        if str(row.get("table_id") or "") == table
-        and str(row.get("status") or "").lower() == "draft"
-        and str(row.get("environment_name") or env) == env
-    ]
-    if not drafts:
-        raise ValueError(f"No draft Data Contract exists for table_id={table!r} in environment {env!r}.")
-    selected = max(drafts, key=lambda row: int(row.get("contract_version") or 0))
-    contract_id, contract_version = validate_contract_identity(
-        selected.get("contract_id"), selected.get("contract_version")
-    )
-    return {**selected, "contract_id": contract_id, "contract_version": contract_version, "environment_name": env}
-
 
 def contract_version_records(
     rows: Any,
@@ -384,26 +359,6 @@ def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
     return canonical
 
 
-def read_enrichment(
-    *, config: Any, env: str, spark_session: Any, contract_id: str, contract_version: int
-) -> list[dict[str, Any]]:
-    """Read Enrichment owned by one exact Data Contract version."""
-    return canonical_enrichment_state(
-        read_contract_records(
-            ENRICHMENT_TABLE, config=config, env=env, spark_session=spark_session,
-            contract_id=contract_id, contract_version=contract_version,
-        )
-    )
-
-
-def read_guardrails(
-    *, config: Any, env: str, spark_session: Any, contract_id: str, contract_version: int
-) -> list[dict[str, Any]]:
-    """Read Guardrails owned by one exact Data Contract version."""
-    return read_contract_records(
-        GUARDRAIL_TABLE, config=config, env=env, spark_session=spark_session,
-        contract_id=contract_id, contract_version=contract_version,
-    )
 
 
 def get_contract_authoring_state(
@@ -505,10 +460,6 @@ def save_enrichment(records: list[dict[str, Any]], *, config: Any, env: str, spa
     return canonical
 
 
-def delete_enrichment(*_args: Any, **_kwargs: Any) -> None:
-    """Reject deletion because Enrichment currently has no tombstone semantics."""
-    raise NotImplementedError("METADATA_ENRICHMENT deletion is not part of the current append-only contract.")
-
 
 def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> list[dict[str, Any]]:
     """Validate and append exact-version Guardrail records."""
@@ -526,14 +477,6 @@ def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spa
         )
     return canonical
 
-
-def delete_guardrail(record: Mapping[str, Any], *, config: Any, env: str, spark_session: Any) -> dict[str, Any]:
-    """Append an inactive next version for one existing logical Guardrail."""
-    prior = dict(record)
-    validate_contract_identity(prior.get("contract_id"), prior.get("contract_version"))
-    prior["guardrail_version"] = int(prior.get("guardrail_version") or 0) + 1
-    prior["is_active"] = False
-    return save_guardrails([prior], config=config, env=env, spark_session=spark_session)[0]
 
 
 def validate_contract_draft(
