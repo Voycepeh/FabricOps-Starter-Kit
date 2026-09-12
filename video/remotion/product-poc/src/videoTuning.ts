@@ -83,8 +83,11 @@ export const VIDEO_TUNING = {
   },
   lifecycle: {
     timingSeconds: {
-      steps: [119.2, 123.47, 128.93, 137.93, 153.5, 168.57, 178.7],
-      loopStart: 141.7,
+      steps: [120, 123.47, 128.93, 137.93, 153.5, 168, 178.7],
+      loopStart: 145,
+      loopEnd: 153.5,
+      productionArrowStart: 161,
+      productionArrowEnd: 168,
     },
     loop: {
       cx: 477,
