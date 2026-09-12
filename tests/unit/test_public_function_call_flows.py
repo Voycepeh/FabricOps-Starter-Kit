@@ -438,6 +438,13 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
     assert json_reader["release_history"] == []
 
 
+def test_pipeline_package_location_does_not_imply_orchestration() -> None:
+    """Keep domain capabilities in the domain layer regardless of package location."""
+    check_schema = info("check_schema", "src/fabricops_kit/pipeline/check_schema.py")
+
+    assert flows.architecture_classification(check_schema, {check_schema.qualified_name}) == "domain_public_api"
+
+
 def test_nested_foundational_io_is_a_visible_terminal_but_its_root_expands(tmp_path: Path) -> None:
     """Stop caller-owned traversal and metrics at the foundational public I/O node."""
     pkg = tmp_path / "src" / "fabricops_kit"

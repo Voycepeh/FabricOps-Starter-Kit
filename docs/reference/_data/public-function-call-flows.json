@@ -4999,7 +4999,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5055,7 +5055,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5082,7 +5082,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5254,7 +5254,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5368,7 +5368,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5542,7 +5542,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -6040,7 +6040,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -6074,7 +6074,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -6113,7 +6113,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -6147,7 +6147,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -6174,7 +6174,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -9431,7 +9431,7 @@
       "transitive_live_dependents": []
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -12917,7 +12917,7 @@
   },
   "public_functions": [
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13023,7 +13023,7 @@
       "width": 4
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13111,7 +13111,7 @@
       "width": 12
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13199,7 +13199,7 @@
       "width": 13
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13288,7 +13288,7 @@
       "width": 11
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13364,7 +13364,7 @@
       "width": 2
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13452,7 +13452,7 @@
       "width": 17
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -13644,7 +13644,7 @@
       "width": 17
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -13717,7 +13717,7 @@
       "width": 1
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -14298,7 +14298,7 @@
       "width": 5
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14583,7 +14583,7 @@
       "width": 3
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -15739,7 +15739,7 @@
       "width": 7
     },
     {
-      "architecture_classification": "pipeline_orchestration",
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",

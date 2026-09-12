@@ -471,8 +471,6 @@ def architecture_classification(info: FunctionInfo, public_qns: set[str]) -> str
         return "internal"
     if info.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
         return "foundation_io"
-    if "pipeline" in PurePosixPath(info.source_path).parts:
-        return "pipeline_orchestration"
     return "domain_public_api"
 
 
