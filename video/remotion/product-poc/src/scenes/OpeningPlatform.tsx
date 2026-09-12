@@ -6,6 +6,27 @@ import {VIDEO_TUNING, secondsToFrames} from '../videoTuning';
 const OPENING_CENTER = {x: 960, y: 540} as const;
 const PUSH_DISTANCE = 1500;
 
+const OPENING_POSITION_KEYS = [
+  'Notebook',
+  'Lakehouse',
+  'Warehouse',
+  'Environment',
+  'Data Pipeline',
+  'Dataflow Gen2',
+  'Data Engineering',
+  'Data Science',
+  'SQL Database',
+  'Eventstream',
+  'Eventhouse',
+  'Semantic Model',
+  'Report',
+  'Dashboard',
+  'Mirrored Database',
+  'ML Model',
+  'OneLake',
+  'Graph Intelligence',
+] as const;
+
 const entryVectors = [
   {x: -145, y: -65},
   {x: 105, y: -125},
@@ -45,7 +66,8 @@ export const OpeningPlatform = () => {
   return (
     <div style={{position: 'absolute', inset: 0}}>
       {OPENING_ARTIFACTS.map((item, index) => {
-        const tunedPosition = opening.positions[item.label as keyof typeof opening.positions] ?? {left: item.x, top: item.y};
+        const positionKey = OPENING_POSITION_KEYS[index];
+        const tunedPosition = positionKey ? opening.positions[positionKey] : {left: item.x, top: item.y};
         const burstStart = secondsToFrames(
           opening.iconPopulationStartSeconds + opening.iconBurstOffsetsSeconds[index],
           fps,
