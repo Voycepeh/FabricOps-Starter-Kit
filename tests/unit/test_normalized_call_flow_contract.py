@@ -103,3 +103,4 @@ def test_dashboard_hydrates_expanded_flows_from_normalized_relationships():
     assert "Public Function Call Flows V3" in html
     assert "children.get(qn)" in html
     assert "const next=new Set(stack)" in html
+    assert "qn!==rootQn&&fn.architecture_classification==='foundation_io'" in html

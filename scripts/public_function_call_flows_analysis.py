@@ -27,7 +27,7 @@ SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/m
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
 ARCHITECTURE_VIOLATION_RULES = {
-    "Type 1": "Public function calls another public function directly.",
+    "Type 1": "Public function calls another public function directly, unless the callee is foundational I/O.",
     "Type 2": "Shared function calls a public function directly.",
     "Type 3": "Private function calls a public function directly.",
     "Type 4": "Shared function calls a private function from another file.",
@@ -35,6 +35,17 @@ ARCHITECTURE_VIOLATION_RULES = {
 }
 PUBLIC_LIFECYCLE_STATUSES = {"live", "preview", "discontinued"}
 PUBLIC_CALLABLE_TYPES = {"public_function", "widget_function"}
+FOUNDATIONAL_IO_FUNCTION_NAMES = frozenset({
+    "read_lakehouse_csv",
+    "read_lakehouse_excel",
+    "read_lakehouse_json",
+    "read_lakehouse_parquet",
+    "read_lakehouse_table",
+    "read_warehouse_query",
+    "read_warehouse_table",
+    "write_lakehouse_table",
+    "write_warehouse_table",
+})
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -454,6 +465,15 @@ def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None 
     return "shared_function"
 
 
+def architecture_classification(info: FunctionInfo, public_qns: set[str]) -> str:
+    """Return the deterministic architectural layer for a callable."""
+    if info.qualified_name not in public_qns:
+        return "internal"
+    if info.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+        return "foundation_io"
+    return "domain_public_api"
+
+
 def classify_architecture_violation(
     caller: FunctionInfo | None,
     callee: FunctionInfo,
@@ -472,6 +492,8 @@ def classify_architecture_violation(
         callee_public = callee_type in PUBLIC_CALLABLE_TYPES or callee_type == "public_dependency"
     different_file = caller.source_path != callee.source_path
     if caller_type == "widget_function" and callee_public:
+        return None
+    if caller_public and callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
         return None
     if caller_public and callee_public:
         return {"type": "Type 1", "detail": ARCHITECTURE_VIOLATION_RULES["Type 1"]}
@@ -513,6 +535,7 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
             "source_start_line": info.source_start_line,
             "source_end_line": info.source_end_line,
             "function_type": current_type,
+            "architecture_classification": architecture_classification(info, public_qns),
             "parent_qualified_name": parent,
             "edge_type": "root" if parent is None else "direct",
             "architecture_violations": [violation] if violation else [],
@@ -522,6 +545,8 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
             "recursive": qn in stack,
         })
         if qn in stack:
+            return
+        if qn != root_qn and info.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES and qn in public_qns:
             return
         next_stack = {*stack, qn}
         for child in sorted(called_function_qns(info, modules, functions, name_index)):
@@ -813,6 +838,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_path": root_info.source_path,
             "source_start_line": root_info.source_start_line,
             "source_end_line": root_info.source_end_line,
+            "architecture_classification": architecture_classification(root_info, public_qns),
             **_documentation_fields(root_info),
             **lifecycle_fields(lifecycle),
             "contract_classification": public_contract_classification(lifecycle.lifecycle_status),
@@ -871,6 +897,8 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_json_url": SOURCE_JSON_URL,
             "source": "src/fabricops_kit",
             "public_function_source": "src/fabricops_kit/__init__.py::__all__",
+            "foundational_io_functions": sorted(FOUNDATIONAL_IO_FUNCTION_NAMES),
+            "foundational_io_boundary": "A foundational I/O public dependency is retained as a terminal node when traversed from another public root; it expands normally when selected as the root.",
             "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
             "unused_function_definition": "Not reachable from a public function flow, has no inbound package source references, and is not an implicit Python runtime hook.",
@@ -964,6 +992,7 @@ def function_record(
         "source_start_line": info.source_start_line,
         "source_end_line": info.source_end_line,
         "function_type": function_type(info, public_qns, info.qualified_name if info.qualified_name in public_qns else None),
+        "architecture_classification": architecture_classification(info, public_qns),
     }
     impact = impact_by_qn.get(info.qualified_name, {})
     record.update({
