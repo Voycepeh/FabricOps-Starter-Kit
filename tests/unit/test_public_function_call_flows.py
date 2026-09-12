@@ -152,7 +152,9 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
 
     public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
     assert public_b_row["violation_types"] == ["Type 1"]
-    assert public_b_row["violation_details"] == ["Public function calls another public function directly."]
+    assert public_b_row["violation_details"] == [
+        "Public function calls another public function directly, unless the callee is foundational I/O."
+    ]
     assert public_b_row["inline_candidate"] is True
     assert public_b_row["promote_to_shared_candidate"] is False
     assert public_b_row["distinct_caller_count"] == 1
@@ -178,6 +180,8 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     }
     assert "Type 6" not in payload["metadata"]["architecture_violation_rules"]
     assert payload["metadata"]["architecture_violation_signal"] == "Any Type 1 to Type 5 edge appears in the public function flow."
+    assert payload["metadata"]["foundational_io_functions"] == sorted(flows.FOUNDATIONAL_IO_FUNCTION_NAMES)
+    assert "terminal node" in payload["metadata"]["foundational_io_boundary"]
 
 
 def test_import_call_resolution_patterns_and_re_exports(tmp_path: Path) -> None:
@@ -408,6 +412,72 @@ def test_architecture_violation_type_classification() -> None:
     assert flows.classify_architecture_violation(public, widget, "public_function", "widget_function", callee_is_public=True)["type"] == "Type 1"
 
 
+def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_is_not() -> None:
+    """Allow the explicit downward I/O boundary without weakening Type 1 generally."""
+    public = info("check_schema", "src/fabricops_kit/check_schema.py")
+    foundation = info("read_lakehouse_table", "src/fabricops_kit/io/read_lakehouse_table.py")
+    sideways = info("profile_dataframe", "src/fabricops_kit/profile_dataframe.py")
+
+    assert flows.classify_architecture_violation(public, foundation, "public_function", "public_dependency") is None
+    assert flows.classify_architecture_violation(public, sideways, "public_function", "public_dependency")["type"] == "Type 1"
+
+
+def test_foundational_io_classification_and_lifecycle_history() -> None:
+    """Classify every boundary member without changing release-manifest history."""
+    payload = flows.build_payload()
+    public_by_name = {row["function_name"]: row for row in payload["public_functions"]}
+
+    assert set(flows.FOUNDATIONAL_IO_FUNCTION_NAMES) <= set(public_by_name)
+    assert {
+        public_by_name[name]["architecture_classification"]
+        for name in flows.FOUNDATIONAL_IO_FUNCTION_NAMES
+    } == {"foundation_io"}
+    json_reader = public_by_name["read_lakehouse_json"]
+    assert json_reader["lifecycle_status"] == "preview"
+    assert json_reader["live_since"] is None
+    assert json_reader["release_history"] == []
+
+
+def test_nested_foundational_io_is_a_visible_terminal_but_its_root_expands(tmp_path: Path) -> None:
+    """Stop caller-owned traversal and metrics at the foundational public I/O node."""
+    pkg = tmp_path / "src" / "fabricops_kit"
+    io_pkg = pkg / "io"
+    io_pkg.mkdir(parents=True)
+    init_path = pkg / "__init__.py"
+    init_path.write_text(
+        "from .check_schema import check_schema\n"
+        "from .io.read_lakehouse_table import read_lakehouse_table\n"
+        "__all__ = ['check_schema', 'read_lakehouse_table']\n",
+        encoding="utf-8",
+    )
+    (pkg / "check_schema.py").write_text(
+        "from .io.read_lakehouse_table import read_lakehouse_table\n\n"
+        "def check_schema():\n    return read_lakehouse_table()\n",
+        encoding="utf-8",
+    )
+    (io_pkg / "read_lakehouse_table.py").write_text(
+        "def read_lakehouse_table():\n    return io_helper()\n\n"
+        "def io_helper():\n    return deeper_helper()\n\n"
+        "def deeper_helper():\n    return None\n",
+        encoding="utf-8",
+    )
+
+    payload = flows.build_payload(root=tmp_path, pkg_dir=pkg, init_path=init_path)
+    by_name = {row["function_name"]: row for row in payload["public_functions"]}
+    caller = by_name["check_schema"]
+    io_root = by_name["read_lakehouse_table"]
+
+    assert [row["function_name"] for row in caller["flow"]] == ["check_schema", "read_lakehouse_table"]
+    assert caller["architecture_violation_count"] == 0
+    assert caller["width"] == 1
+    assert caller["depth"] == 1
+    assert caller["scope"] == caller["transitive_function_count"] == 1
+    assert [row["function_name"] for row in io_root["flow"]] == [
+        "read_lakehouse_table", "io_helper", "deeper_helper",
+    ]
+    assert io_root["depth"] == 2
+
+
 def test_widget_function_classification_requires_widget_folder_prefix_and_public_export() -> None:
     """Validate widget classification requires package, naming convention, and public export."""
     public_widget = info("widget_review", "src/fabricops_kit/widgets/review.py")
@@ -505,7 +575,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
         assert violation_type in html
     assert "Type 6" not in html
-    assert "Public function calls another public function directly." in html
+    assert "Public function calls another public function directly, unless the callee is foundational I/O." in html
     assert "Shared function calls a public function directly." in html
     assert "Private function calls a public function directly." in html
     assert "Shared function calls a private function from another file." in html

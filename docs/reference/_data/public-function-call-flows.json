@@ -263,6 +263,7 @@
   ],
   "defined_functions": [
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -287,6 +288,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -313,6 +315,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -341,6 +344,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -369,6 +373,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -397,6 +402,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -425,6 +431,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -453,6 +460,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -481,6 +489,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -509,6 +518,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -533,6 +543,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -560,6 +571,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -594,6 +606,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -626,6 +639,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -652,6 +666,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -686,6 +701,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -755,6 +771,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -781,6 +798,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -813,6 +831,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -846,6 +865,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -879,6 +899,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -939,6 +960,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -972,6 +994,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1003,6 +1026,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1037,6 +1061,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -1136,6 +1161,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1200,6 +1226,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -1224,6 +1251,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1254,6 +1282,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1284,6 +1313,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1314,6 +1344,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1344,6 +1375,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1374,6 +1406,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -1410,6 +1443,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1440,6 +1474,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -1476,6 +1511,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1516,6 +1552,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -1542,6 +1579,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1579,6 +1617,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1614,6 +1653,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1651,6 +1691,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1685,6 +1726,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1730,6 +1772,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -1776,6 +1819,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -1843,6 +1887,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -1890,6 +1935,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -1996,6 +2042,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -2033,6 +2080,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -2065,6 +2113,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -2100,6 +2149,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2128,6 +2178,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2156,6 +2207,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2186,6 +2238,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2214,6 +2267,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2242,6 +2296,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2270,6 +2325,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2302,6 +2358,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2331,6 +2388,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2359,6 +2417,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2389,6 +2448,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2417,6 +2477,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2445,6 +2506,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2473,6 +2535,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2501,6 +2564,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2535,6 +2599,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -2559,6 +2624,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -2583,6 +2649,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -2607,6 +2674,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2649,6 +2717,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2677,6 +2746,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2705,6 +2775,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -2729,6 +2800,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2761,6 +2833,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2805,6 +2878,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -2842,6 +2916,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -2878,6 +2953,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -2914,6 +2990,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -2938,6 +3015,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -2974,6 +3052,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -3010,6 +3089,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -3046,6 +3126,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -3082,6 +3163,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3116,6 +3198,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3146,6 +3229,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3185,6 +3269,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3215,6 +3300,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3254,6 +3340,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3295,6 +3382,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3331,6 +3419,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3365,6 +3454,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3399,6 +3489,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3433,6 +3524,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3472,6 +3564,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3506,6 +3599,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3545,6 +3639,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3575,6 +3670,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3605,6 +3701,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -3636,6 +3733,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3667,6 +3765,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3698,6 +3797,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -3730,6 +3830,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 6,
@@ -3817,6 +3918,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3854,6 +3956,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3885,6 +3988,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3922,6 +4026,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -3953,6 +4058,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -3982,6 +4088,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4073,6 +4180,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -4102,6 +4210,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -4134,6 +4243,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4177,6 +4287,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4217,6 +4328,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 3,
@@ -4259,6 +4371,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4320,6 +4433,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4353,6 +4467,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4390,6 +4505,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -4422,6 +4538,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4458,6 +4575,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -4501,6 +4619,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -4546,6 +4665,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -4587,6 +4707,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4627,6 +4748,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4662,6 +4784,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4702,6 +4825,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -4767,6 +4891,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -4800,6 +4925,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -4836,6 +4962,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "direct_live_dependent_count": 0,
@@ -4872,6 +4999,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -4898,6 +5026,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -4926,6 +5055,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -4952,6 +5082,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -4978,6 +5109,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5006,6 +5138,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5034,6 +5167,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5062,6 +5196,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5090,6 +5225,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5118,6 +5254,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5144,6 +5281,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5172,6 +5310,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5200,6 +5339,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5228,6 +5368,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5254,6 +5395,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5284,6 +5426,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5312,6 +5455,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5340,6 +5484,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5368,6 +5513,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -5396,6 +5542,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -5422,6 +5569,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -5454,6 +5602,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -5484,6 +5633,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5514,6 +5664,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5544,6 +5695,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5574,6 +5726,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5606,6 +5759,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5636,6 +5790,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5666,6 +5821,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -5698,6 +5854,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -5728,6 +5885,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5758,6 +5916,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5788,6 +5947,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5818,6 +5978,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5848,6 +6009,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -5878,6 +6040,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -5911,6 +6074,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -5949,6 +6113,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "direct_live_dependent_count": 0,
@@ -5982,6 +6147,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -6008,6 +6174,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -6034,6 +6201,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6062,6 +6230,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6094,6 +6263,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6124,6 +6294,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6164,6 +6335,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6192,6 +6364,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6220,6 +6393,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6248,6 +6422,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6280,6 +6455,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6308,6 +6484,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6336,6 +6513,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6364,6 +6542,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6398,6 +6577,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6432,6 +6612,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6462,6 +6643,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6490,6 +6672,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6518,6 +6701,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6542,6 +6726,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6570,6 +6755,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6600,6 +6786,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6624,6 +6811,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6652,6 +6840,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6680,6 +6869,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6710,6 +6900,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6738,6 +6929,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6766,6 +6958,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6794,6 +6987,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6822,6 +7016,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -6850,6 +7045,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6878,6 +7074,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6908,6 +7105,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6942,6 +7140,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -6970,6 +7169,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7002,6 +7202,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7032,6 +7233,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7056,6 +7258,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -7087,6 +7290,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -7118,6 +7322,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7148,6 +7353,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7180,6 +7386,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7210,6 +7417,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -7254,6 +7462,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7284,6 +7493,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7312,6 +7522,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7336,6 +7547,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7364,6 +7576,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7398,6 +7611,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7432,6 +7646,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7462,6 +7677,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7496,6 +7712,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7524,6 +7741,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7552,6 +7770,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7590,6 +7809,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -7620,6 +7840,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7652,6 +7873,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7690,6 +7912,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7718,6 +7941,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7746,6 +7970,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7774,6 +7999,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -7806,6 +8032,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7834,6 +8061,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7862,6 +8090,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -7897,6 +8126,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -7932,6 +8162,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -7967,6 +8198,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -7996,6 +8228,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8025,6 +8258,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8054,6 +8288,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 2,
@@ -8087,6 +8322,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8115,6 +8351,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8144,6 +8381,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -8174,6 +8412,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8203,6 +8442,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8232,6 +8472,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8263,6 +8504,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8306,6 +8548,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8347,6 +8590,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8381,6 +8625,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8414,6 +8659,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -8438,6 +8684,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -8495,6 +8742,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 1,
@@ -8537,6 +8785,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8577,6 +8826,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8611,6 +8861,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8644,6 +8895,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8677,6 +8929,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8709,6 +8962,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8741,6 +8995,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8776,6 +9031,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8805,6 +9061,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8843,6 +9100,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -8867,6 +9125,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -8893,6 +9152,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
@@ -8931,6 +9191,7 @@
       ]
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -8969,6 +9230,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -8997,6 +9259,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9025,6 +9288,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9051,6 +9315,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9079,6 +9344,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9107,6 +9373,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9135,6 +9402,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9163,6 +9431,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -9189,6 +9458,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9213,6 +9483,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9241,6 +9512,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9268,6 +9540,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9302,6 +9575,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9334,6 +9608,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9358,6 +9633,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9382,6 +9658,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9406,6 +9683,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9430,6 +9708,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9454,6 +9733,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9478,6 +9758,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9502,6 +9783,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9530,6 +9812,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9558,6 +9841,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9590,6 +9874,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9614,6 +9899,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9646,6 +9932,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9674,6 +9961,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9702,6 +9990,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9732,6 +10021,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9768,6 +10058,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9792,6 +10083,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9820,6 +10112,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9848,6 +10141,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9876,6 +10170,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9911,6 +10206,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9940,6 +10236,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -9971,6 +10268,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -9999,6 +10297,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10023,6 +10322,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10051,6 +10351,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10083,6 +10384,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10112,6 +10414,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10144,6 +10447,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10188,6 +10492,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10216,6 +10521,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10250,6 +10556,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10278,6 +10585,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10302,6 +10610,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10336,6 +10645,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10378,6 +10688,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10418,6 +10729,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10450,6 +10762,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10478,6 +10791,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10502,6 +10816,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10533,6 +10848,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10562,6 +10878,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10596,6 +10913,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10620,6 +10938,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10656,6 +10975,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10685,6 +11005,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10716,6 +11037,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10740,6 +11062,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10768,6 +11091,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10800,6 +11124,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10832,6 +11157,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10878,6 +11204,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10906,6 +11233,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10937,6 +11265,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -10961,6 +11290,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -10989,6 +11319,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11023,6 +11354,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11055,6 +11387,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11095,6 +11428,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11131,6 +11465,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11163,6 +11498,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11205,6 +11541,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11237,6 +11574,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11265,6 +11603,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11295,6 +11634,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11323,6 +11663,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11351,6 +11692,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -11375,6 +11717,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11403,6 +11746,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11433,6 +11777,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11463,6 +11808,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11491,6 +11837,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11519,6 +11866,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -11543,6 +11891,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11571,6 +11920,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -11597,6 +11947,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11625,6 +11976,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11653,6 +12005,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11681,6 +12034,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11711,6 +12065,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11739,6 +12094,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11769,6 +12125,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11799,6 +12156,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11829,6 +12187,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11861,6 +12220,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -11887,6 +12247,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -11923,6 +12284,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11951,6 +12313,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -11979,6 +12342,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "internal_function",
       "contract_display": "Internal",
       "direct_live_dependent_count": 0,
@@ -12005,6 +12369,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -12041,6 +12406,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12069,6 +12435,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12097,6 +12464,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12125,6 +12493,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12153,6 +12522,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12181,6 +12551,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -12205,6 +12576,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12233,6 +12605,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12261,6 +12634,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12289,6 +12663,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12317,6 +12692,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12345,6 +12721,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12373,6 +12750,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12401,6 +12779,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
       "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
@@ -12429,6 +12808,7 @@
       "transitive_live_dependents": []
     },
     {
+      "architecture_classification": "domain_public_api",
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -12505,7 +12885,7 @@
   ],
   "metadata": {
     "architecture_violation_rules": {
-      "Type 1": "Public function calls another public function directly.",
+      "Type 1": "Public function calls another public function directly, unless the callee is foundational I/O.",
       "Type 2": "Shared function calls a public function directly.",
       "Type 3": "Private function calls a public function directly.",
       "Type 4": "Shared function calls a private function from another file.",
@@ -12513,6 +12893,18 @@
     },
     "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
     "detached_function_definition": "Not reachable from a public function flow but referenced elsewhere in package source or callable implicitly by Python.",
+    "foundational_io_boundary": "A foundational I/O public dependency is retained as a terminal node when traversed from another public root; it expands normally when selected as the root.",
+    "foundational_io_functions": [
+      "read_lakehouse_csv",
+      "read_lakehouse_excel",
+      "read_lakehouse_json",
+      "read_lakehouse_parquet",
+      "read_lakehouse_table",
+      "read_warehouse_query",
+      "read_warehouse_table",
+      "write_lakehouse_table",
+      "write_warehouse_table"
+    ],
     "graph_storage": "normalized_functions_and_direct_relationships",
     "inbound_call_definition": "A resolved production function call whose caller and callee are package functions.",
     "public_function_source": "src/fabricops_kit/__init__.py::__all__",
@@ -12525,6 +12917,7 @@
   },
   "public_functions": [
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -12630,6 +13023,7 @@
       "width": 4
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -12717,6 +13111,7 @@
       "width": 12
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -12804,6 +13199,7 @@
       "width": 13
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -12892,6 +13288,7 @@
       "width": 11
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -12967,6 +13364,7 @@
       "width": 2
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13054,6 +13452,7 @@
       "width": 17
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -13245,6 +13644,7 @@
       "width": 17
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -13317,6 +13717,7 @@
       "width": 1
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -13388,6 +13789,7 @@
       "width": 1
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -13489,6 +13891,7 @@
       "width": 3
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -13591,6 +13994,7 @@
       "width": 3
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13659,6 +14063,7 @@
       "width": 3
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -13760,6 +14165,7 @@
       "width": 4
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -13892,6 +14298,7 @@
       "width": 5
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -13979,6 +14386,7 @@
       "width": 4
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -14072,6 +14480,7 @@
       "width": 4
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -14174,6 +14583,7 @@
       "width": 3
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14237,6 +14647,7 @@
       "width": 2
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14319,6 +14730,7 @@
       "width": 9
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
@@ -14466,6 +14878,7 @@
       "width": 12
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -14565,6 +14978,7 @@
       "width": 4
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14681,6 +15095,7 @@
       "width": 15
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14764,6 +15179,7 @@
       "width": 18
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14851,6 +15267,7 @@
       "width": 23
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -14938,6 +15355,7 @@
       "width": 17
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -15013,6 +15431,7 @@
       "width": 18
     },
     {
+      "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -15111,6 +15530,7 @@
       "width": 7
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
@@ -15319,6 +15739,7 @@
       "width": 7
     },
     {
+      "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
@@ -15430,6 +15851,7 @@
       "width": 10
     },
     {
+      "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
