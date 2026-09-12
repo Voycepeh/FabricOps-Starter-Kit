@@ -132,6 +132,7 @@ export const FabricOpsReveal = () => {
         const orbitStart = globalToLocalFrame(relationshipTiming.orbit, fps);
         const end = globalToLocalFrame(relationshipTiming.end, fps);
         const fadeOut = interpolate(frame, [end - 8, end], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        const orbitVisible = frame >= orbitStart && frame < end;
         const conceptStyle = (start: number) => {
           const enter = spring({frame: frame - start, fps, config: {damping: 16, stiffness: 100}});
           return {opacity: enter * fadeOut, transform: `scale(${0.82 + enter * 0.18})`};
@@ -143,11 +144,13 @@ export const FabricOpsReveal = () => {
         });
         return (
           <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
-            <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
-              <ellipse cx="960" cy="540" rx="760" ry="245" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="3300" strokeDashoffset={3300 * (1 - orbitProgress)} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
-              <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
-              <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
-            </svg>
+            {orbitVisible ? (
+              <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
+                <ellipse cx="960" cy="540" rx="760" ry="245" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="3300" strokeDashoffset={3300 * (1 - orbitProgress)} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
+                <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
+                <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
+              </svg>
+            ) : null}
             <div style={{position: 'absolute', left: 105, top: 505, width: 310, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(governanceStart)}}>Governance</div>
             <div style={{position: 'absolute', right: 85, top: 505, width: 340, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(engineeringStart)}}>Engineering</div>
           </div>
