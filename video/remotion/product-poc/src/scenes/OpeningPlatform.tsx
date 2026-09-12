@@ -27,6 +27,15 @@ const OPENING_POSITION_KEYS = [
   'Graph Intelligence',
 ] as const;
 
+const FEATURED_POSITION_KEYS = new Set<string>([
+  'Notebook',
+  'Data Pipeline',
+  'Lakehouse',
+  'Warehouse',
+  'Environment',
+  'Eventstream',
+]);
+
 const entryVectors = [
   {x: -145, y: -65},
   {x: 105, y: -125},
@@ -57,12 +66,29 @@ export const OpeningPlatform = () => {
     fps,
     config: {damping: 19, stiffness: 78},
   });
+  const repositionStart =
+    timing.openingQuestionAt - secondsToFrames(opening.questionRepositionLeadSeconds, fps);
+  const repositionProgress = interpolate(frame, [repositionStart, timing.openingQuestionAt], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
 
   return (
     <div style={{position: 'absolute', inset: 0}}>
       {OPENING_ARTIFACTS.map((item, index) => {
         const positionKey = OPENING_POSITION_KEYS[index];
-        const tunedPosition = positionKey ? opening.positions[positionKey] : {left: item.x, top: item.y};
+        const basePosition = positionKey ? opening.positions[positionKey] : {left: item.x, top: item.y};
+        const questionPosition =
+          positionKey && FEATURED_POSITION_KEYS.has(positionKey)
+            ? opening.questionPositions[positionKey as keyof typeof opening.questionPositions]
+            : undefined;
+        const currentLeft = questionPosition
+          ? interpolate(repositionProgress, [0, 1], [basePosition.left, questionPosition.left])
+          : basePosition.left;
+        const currentTop = questionPosition
+          ? interpolate(repositionProgress, [0, 1], [basePosition.top, questionPosition.top])
+          : basePosition.top;
         const burstStart = secondsToFrames(
           opening.iconPopulationStartSeconds + opening.iconBurstOffsetsSeconds[index],
           fps,
@@ -73,8 +99,8 @@ export const OpeningPlatform = () => {
           easing: Easing.out(Easing.back(1.15)),
         });
         const vector = entryVectors[index % entryVectors.length];
-        const cardCenterX = tunedPosition.left + sizes.openingArtifactWidth / 2;
-        const cardCenterY = tunedPosition.top + sizes.openingArtifactHeight / 2;
+        const cardCenterX = currentLeft + sizes.openingArtifactWidth / 2;
+        const cardCenterY = currentTop + sizes.openingArtifactHeight / 2;
         const deltaX = cardCenterX - OPENING_CENTER.x;
         const deltaY = cardCenterY - OPENING_CENTER.y;
         const magnitude = Math.max(1, Math.hypot(deltaX, deltaY));
@@ -89,8 +115,8 @@ export const OpeningPlatform = () => {
             key={`${item.label}-${index}`}
             style={{
               position: 'absolute',
-              left: tunedPosition.left,
-              top: tunedPosition.top,
+              left: currentLeft,
+              top: currentTop,
               opacity: enter,
               transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
               zIndex: 1,
@@ -136,6 +162,7 @@ export const OpeningPlatform = () => {
           placeItems: 'center',
           opacity: question,
           transform: `translateY(${-760 * push}px) scale(${0.9 + question * 0.1})`,
+          zIndex: 2,
         }}
       >
         <div
