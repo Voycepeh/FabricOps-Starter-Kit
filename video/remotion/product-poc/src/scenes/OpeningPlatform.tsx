@@ -27,6 +27,15 @@ const OPENING_POSITION_KEYS = [
   'Graph Intelligence',
 ] as const;
 
+const FEATURED_POSITION_KEYS = new Set([
+  'Notebook',
+  'Data Pipeline',
+  'Lakehouse',
+  'Warehouse',
+  'Environment',
+  'Eventstream',
+] as const);
+
 const entryVectors = [
   {x: -145, y: -65},
   {x: 105, y: -125},
@@ -89,6 +98,21 @@ export const OpeningPlatform = () => {
         const entryY = vector.y * (1 - enter);
         const scale = 0.78 + enter * 0.22;
 
+        const featuredKeys = OPENING_POSITION_KEYS.filter((key) => FEATURED_POSITION_KEYS.has(key));
+        const featuredIndex = positionKey ? featuredKeys.indexOf(positionKey) : -1;
+        const gleamWindowFrames = (opening.featuredGleam.end - opening.featuredGleam.start) * fps;
+        const gleamStagger =
+          (gleamWindowFrames - opening.featuredGleam.perIconDurationFrames) / Math.max(1, featuredKeys.length - 1);
+        const gleamStart = opening.featuredGleam.start * fps + Math.max(featuredIndex, 0) * gleamStagger;
+        const gleamProgress =
+          featuredIndex >= 0
+            ? interpolate(frame, [gleamStart, gleamStart + opening.featuredGleam.perIconDurationFrames], [0, 1], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+                easing: Easing.inOut(Easing.cubic),
+              })
+            : 0;
+
         return (
           <div
             key={`${item.label}-${index}`}
@@ -102,6 +126,31 @@ export const OpeningPlatform = () => {
             }}
           >
             <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
+            {featuredIndex >= 0 ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 30,
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -55,
+                    bottom: -55,
+                    left: -95,
+                    width: 62,
+                    opacity: 0.34,
+                    background: 'linear-gradient(90deg, transparent, #ffffffcc, transparent)',
+                    filter: 'blur(5px)',
+                    transform: `skewX(-18deg) translateX(${gleamProgress * 440}px)`,
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         );
       })}
