@@ -39,11 +39,11 @@ export const VIDEO_TUNING = {
   fabricOps: {
     floatingWords: {
       operations: 21,
-      plugAndPlay: 22.5,
+      plugAndPlay: 24,
       selfContained: 28,
       python: 31.5,
       notebook: 33,
-      pyspark: 33.5,
+      pyspark: 35,
       lakehouse: 35,
     },
     relationship: {
