@@ -273,7 +273,7 @@ def test_profile_and_register_table_consumes_active_read_prep_context(
 
     assert {row.table_id for row in result.collect()} == {identity["table_id"]}
     assert "_fabricops_active_profile_registration" not in context
-    with pytest.raises(ValueError, match="Run pipeline_read or write_pipeline_prep first"):
+    with pytest.raises(ValueError, match="Run pipeline_read or pipeline_write first"):
         profile_and_register_table(_source_df(spark_session), frequency_columns=[])
 
 

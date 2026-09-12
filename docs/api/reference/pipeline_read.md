@@ -26,7 +26,7 @@ choose between Lakehouse and Warehouse table readers.
 
 `fabricops_kit/pipeline/pipeline_read.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L196">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L214">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -54,6 +54,7 @@ def pipeline_read(
     table_name: str | None=None,
     table_id: str | None=None,
     query: str | None=None,
+    verbose: bool=True,
 ) -> dict[str, Any]:
 ```
 
@@ -105,6 +106,7 @@ The query result is marked as derived so later notebook logic can use
 | `table_name` | `str \| None` | No | Physical source table name. Required with ``target`` when ``table_id`` is omitted. ``target``, optional ``schema``, and ``table_name`` form one identity form. |
 | `table_id` | `str \| None` | No | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``target``, ``schema``, and ``table_name``. |
 | `query` | `str \| None` | No | Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
+| `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
 
 ## Returns
 
@@ -144,6 +146,9 @@ This function does not execute source observation, Freshness, Source
 Stability, Schema, DQ, or Sensitive Data checks. It also does not profile
 data, transform rows, or write a pipeline target. Those meaningful
 engineering decisions remain explicit in ``02_pipeline``.
+
+With ``verbose=True``, a Warehouse table read reports a line such as
+``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.
 
 </div>
 

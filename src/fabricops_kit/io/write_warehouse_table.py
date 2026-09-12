@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from .shared import (
-    execute_warehouse_processing,
     repartition_dataframe_for_write,
     resolve_configured_warehouse_table,
     validate_dataframe_writer,
@@ -23,9 +22,6 @@ def write_warehouse_table(
     repartition_by=None,
     options: dict[str, Any] | None = None,
     context: dict[str, Any] | None = None,
-    load_strategy: str | None = None,
-    load_strategy_parameters: dict[str, Any] | None = None,
-    success_context: dict[str, Any] | None = None,
 ):
     """Write a Spark DataFrame to a configured Fabric Warehouse table.
 
@@ -85,16 +81,6 @@ def write_warehouse_table(
         identity settings.
     context : dict[str, Any], optional
         Active Fabric context override.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Governed strategy returned by :func:`write_pipeline_prep`.
-    load_strategy_parameters : dict, optional
-        Governed strategy parameters. ``scd1`` requires ``key_columns``;
-        ``scd2`` also requires ``effective_column`` and may supply
-        ``tracked_columns``.
-    success_context : dict, optional
-        Post-write metadata context returned by :func:`write_pipeline_prep`.
-        Target Lineage and accepted Source Observation baselines are committed only
-        after the physical Warehouse write succeeds.
 
     Returns
     -------
@@ -153,12 +139,8 @@ def write_warehouse_table(
         positive integer, resolves the Warehouse connection and table
         identity, passes the repartitioned DataFrame into the Warehouse write
         connector, executes the requested connector write mode, and returns
-        ``None``. Governed SCD strategies use a unique run-scoped Warehouse
-        staging table and transactional T-SQL target mutation; append and
-        overwrite continue to use the direct ``synapsesql`` write path. The
-        transaction drops its staging table, and failures also trigger a
-        best-effort Python-side cleanup attempt without masking the original
-        publication error.
+        ``None``. It does not resolve Data Contracts or processing strategies
+        and does not commit pipeline metadata.
 
     Performance notes
         Repartitioning can improve write throughput when the existing
@@ -191,14 +173,6 @@ def write_warehouse_table(
         accidental use of the original DataFrame after repartitioning are
         handled by Spark, the Fabric connector, or Warehouse runtime errors.
 
-    Warehouse SCD processing
-        ``scd1`` performs a key-based upsert without deleting missing target
-        rows. ``scd2`` compares non-key business columns, closes changed current
-        rows, and inserts one new current version in the same transaction.
-        Duplicate incoming keys, backwards effective times, incompatible
-        schemas, and multiple target current rows fail before target commit.
-        Replaying unchanged input does not add rows. Independent jobs can still
-        encounter Warehouse transaction or locking conflicts.
 
     Side effects
         This function performs a physical Warehouse write and triggers Spark
@@ -263,24 +237,7 @@ def write_warehouse_table(
     """
     validate_dataframe_writer(df)
     df = repartition_dataframe_for_write(df, repartition_by)
-    if load_strategy in {"scd1", "scd2"}:
-        if mode is not None:
-            raise ValueError(f"mode must be None when load_strategy is {load_strategy}.")
-        execute_warehouse_processing(
-            df,
-            schema=schema,
-            table_name=table_name,
-            target=target,
-            processing={"load_strategy": load_strategy, **(load_strategy_parameters or {})},
-            context=context,
-            options=options,
-        )
-    else:
-        store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
-            target, schema, table_name, context=context
-        )
-        write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
-    if success_context is not None:
-        from fabricops_kit.pipeline.shared import commit_pipeline_write_success
-
-        commit_pipeline_write_success(success_context)
+    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
+        target, schema, table_name, context=context
+    )
+    write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)

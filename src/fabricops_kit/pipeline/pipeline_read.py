@@ -21,6 +21,7 @@ def pipeline_read(
     table_name: str | None = None,
     table_id: str | None = None,
     query: str | None = None,
+    verbose: bool = True,
 ) -> dict[str, Any]:
     """Read one governed pipeline source through the appropriate Fabric store.
 
@@ -55,6 +56,11 @@ def pipeline_read(
         arbitrary source identity by parsing SQL. A query may accompany either
         physical coordinates or ``table_id`` when the resolved store is a
         Warehouse.
+    verbose : bool, default=True
+        Whether to print one concise orchestration message showing the resolved
+        Fabric store type, physical table identity, and selected foundational
+        reader. This makes the hidden routing understandable without exposing
+        workspace IDs, SQL text, contract payloads, or runtime plumbing.
 
     Returns
     -------
@@ -101,6 +107,9 @@ def pipeline_read(
     Stability, Schema, DQ, or Sensitive Data checks. It also does not profile
     data, transform rows, or write a pipeline target. Those meaningful
     engineering decisions remain explicit in ``02_pipeline``.
+
+    With ``verbose=True``, a Warehouse table read reports a line such as
+    ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.
 
     Examples
     --------
@@ -169,12 +178,21 @@ def pipeline_read(
     has_contract = resolve_pipeline_data_contract(
         config, env, str(identity["table_id"]), context=context
     ) is not None
+    physical_identity = ".".join(
+        str(value) for value in (identity.get("target"), identity.get("schema"), identity.get("table_name")) if value
+    )
     if store_kind == "lakehouse":
+        if verbose:
+            print(f"FabricOps Read → Lakehouse table '{physical_identity}' → read_lakehouse_table")
         dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
     else:
         if query is not None:
+            if verbose:
+                print(f"FabricOps Read → Warehouse query on '{physical_identity}' → read_warehouse_query")
             dataframe = read_warehouse_query(query, target=str(identity["target"]), context=context)
         else:
+            if verbose:
+                print(f"FabricOps Read → Warehouse table '{physical_identity}' → read_warehouse_table")
             dataframe = read_warehouse_table(
                 str(identity["schema"]),
                 str(identity["table_name"]),

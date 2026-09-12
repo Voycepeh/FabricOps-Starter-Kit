@@ -2,14 +2,11 @@
 # ruff: noqa: D102, D103, D107
 
 from datetime import UTC, datetime
-import importlib
 
 import pytest
 
 from fabricops_kit.pipeline import shared
 
-lakehouse = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
-warehouse = importlib.import_module("fabricops_kit.io.write_warehouse_table")
 
 
 class Frame:
@@ -117,51 +114,3 @@ def test_physical_notebook_id_is_diagnostic_only(monkeypatch):
     context = {**_context(sources=("source-a",)), "notebook_id": "production-physical-id"}
     shared.commit_pipeline_write_success(context)
     assert written[0]["observation_status"] == "committed"
-
-
-def test_lakehouse_failure_does_not_accept_observation(monkeypatch):
-    committed = []
-    monkeypatch.setattr(lakehouse, "validate_dataframe_writer", lambda df: None)
-    monkeypatch.setattr(lakehouse, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, "orders", None, "/orders"))
-    monkeypatch.setattr(lakehouse, "normalize_write_mode", lambda mode: mode)
-    monkeypatch.setattr(lakehouse, "repartition_dataframe_for_write", lambda df, value: df)
-    monkeypatch.setattr(lakehouse, "write_delta_path", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
-    monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: committed.append(context))
-    with pytest.raises(RuntimeError, match="write failed"):
-        lakehouse.write_lakehouse_table(object(), "orders", mode="append", verbose=False, success_context=_context())
-    assert committed == []
-
-
-def test_lakehouse_success_accepts_observation_after_physical_write(monkeypatch):
-    events = []
-    monkeypatch.setattr(lakehouse, "validate_dataframe_writer", lambda df: None)
-    monkeypatch.setattr(lakehouse, "resolve_configured_lakehouse_table", lambda *args, **kwargs: (None, "orders", None, "/orders"))
-    monkeypatch.setattr(lakehouse, "normalize_write_mode", lambda mode: mode)
-    monkeypatch.setattr(lakehouse, "repartition_dataframe_for_write", lambda df, value: df)
-    monkeypatch.setattr(lakehouse, "write_delta_path", lambda *args, **kwargs: events.append("physical"))
-    monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: events.append("metadata"))
-    lakehouse.write_lakehouse_table(object(), "orders", mode="append", verbose=False, success_context=_context())
-    assert events == ["physical", "metadata"]
-
-
-def test_warehouse_failure_does_not_accept_observation(monkeypatch):
-    committed = []
-    monkeypatch.setattr(warehouse, "validate_dataframe_writer", lambda df: None)
-    monkeypatch.setattr(warehouse, "repartition_dataframe_for_write", lambda df, value: df)
-    monkeypatch.setattr(warehouse, "resolve_configured_warehouse_table", lambda *args, **kwargs: (object(), "dbo", "orders", "dbo.orders"))
-    monkeypatch.setattr(warehouse, "write_warehouse_synapsesql", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("write failed")))
-    monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: committed.append(context))
-    with pytest.raises(RuntimeError, match="write failed"):
-        warehouse.write_warehouse_table(object(), "dbo", "orders", success_context=_context())
-    assert committed == []
-
-
-def test_warehouse_success_accepts_observation_after_physical_write(monkeypatch):
-    events = []
-    monkeypatch.setattr(warehouse, "validate_dataframe_writer", lambda df: None)
-    monkeypatch.setattr(warehouse, "repartition_dataframe_for_write", lambda df, value: df)
-    monkeypatch.setattr(warehouse, "resolve_configured_warehouse_table", lambda *args, **kwargs: (object(), "dbo", "orders", "dbo.orders"))
-    monkeypatch.setattr(warehouse, "write_warehouse_synapsesql", lambda *args, **kwargs: events.append("physical"))
-    monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: events.append("metadata"))
-    warehouse.write_warehouse_table(object(), "dbo", "orders", success_context=_context())
-    assert events == ["physical", "metadata"]
