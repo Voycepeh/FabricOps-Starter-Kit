@@ -14,9 +14,9 @@ const NOTEBOOK = {
 } as const;
 
 const IMPORT_GROUPS = [
-  ['read_lakehouse_csv,', 'read_lakehouse_parquet,'],
-  ['read_warehouse_query,', 'write_lakehouse_table,'],
-  ['write_warehouse_table,', 'profile_and_register_table,'],
+  ['read_lakehouse_csv,', 'write_lakehouse_table,'],
+  ['widget_author_data_contract,', 'widget_select_data_contract,'],
+  ['check_schema,', 'check_dq,'],
 ] as const;
 
 const NotebookGlyph = ({color}: {color: string}) => (
