@@ -49,8 +49,8 @@ export const VIDEO_TUNING = {
     relationship: {
       governanceAsCodeStart: 43,
       governanceAsCodeEnd: 45,
-      governance: 46,
-      engineering: 47,
+      governance: 45.5,
+      engineering: 46,
       orbitStart: 48,
       end: 50,
     },
