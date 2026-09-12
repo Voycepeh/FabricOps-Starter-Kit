@@ -1,6 +1,7 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
+import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
 
 const NOTEBOOK = {
   width: 410,
@@ -12,23 +13,10 @@ const NOTEBOOK = {
   subtitleSize: 21,
 } as const;
 
-const LAYOUT = {
-  environment: {left: 755, top: 235},
-  governance: {left: 220, top: 650},
-  contract: {left: 785, top: 555, width: 350, height: 400},
-  pipeline: {left: 1290, top: 650},
-} as const;
-
-const CODE_PACKAGE_TIMING = {
-  enter: 25,
-  imports: [48, 78, 108],
-  exit: 235,
-} as const;
-
 const IMPORT_GROUPS = [
-  ['read_lakehouse_csv,', 'read_lakehouse_parquet,'],
-  ['read_warehouse_query,', 'write_lakehouse_table,'],
-  ['write_warehouse_table,', 'profile_and_register_table,'],
+  ['read_lakehouse_csv,', 'write_lakehouse_table,'],
+  ['widget_author_data_contract,', 'widget_select_data_contract,'],
+  ['check_schema,', 'check_dq,'],
 ] as const;
 
 const NotebookGlyph = ({color}: {color: string}) => (
@@ -60,8 +48,9 @@ const NotebookCard = ({title, subtitle, color, progress, position}: {
 
 const ContractDocument = ({progress}: {progress: number}) => {
   const guardrails = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Stability'];
+  const {contract} = VIDEO_TUNING.notebook.layout;
   return (
-    <div style={{position: 'absolute', ...LAYOUT.contract, boxSizing: 'border-box', padding: '34px 38px 24px', background: 'linear-gradient(150deg, #303a49, #1b2432 78%)', border: '2px solid #7f8b9b', borderRadius: '16px 16px 20px 20px', boxShadow: '0 28px 65px #0009, inset 0 1px 0 #ffffff1a', opacity: progress, transform: `translateY(${(1 - progress) * 18}px) scale(${0.95 + progress * 0.05})`, overflow: 'hidden'}}>
+    <div style={{position: 'absolute', ...contract, boxSizing: 'border-box', padding: '34px 38px 24px', background: 'linear-gradient(150deg, #303a49, #1b2432 78%)', border: '2px solid #7f8b9b', borderRadius: '16px 16px 20px 20px', boxShadow: '0 28px 65px #0009, inset 0 1px 0 #ffffff1a', opacity: progress, transform: `translateY(${(1 - progress) * 18}px) scale(${0.95 + progress * 0.05})`, overflow: 'hidden'}}>
       <div style={{position: 'absolute', top: -2, right: -2, width: 66, height: 66, background: '#111a27', clipPath: 'polygon(100% 0, 0 0, 100% 100%)'}} />
       <div style={{position: 'absolute', top: 0, right: 0, width: 66, height: 66, background: '#697586', clipPath: 'polygon(0 0, 0 100%, 100% 100%)', opacity: 0.72}} />
       <div style={{width: 42, height: 48, boxSizing: 'border-box', border: '2px solid #aab3bf', borderRadius: 6, position: 'relative', marginBottom: 16}}>
@@ -82,10 +71,14 @@ const ContractDocument = ({progress}: {progress: number}) => {
 };
 
 const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
-  const enter = spring({frame: frame - CODE_PACKAGE_TIMING.enter, fps, config: {damping: 18, stiffness: 82}});
-  const exit = interpolate(frame, [CODE_PACKAGE_TIMING.exit - 18, CODE_PACKAGE_TIMING.exit], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const {timingSeconds, layout} = VIDEO_TUNING.notebook;
+  const packageEnter = notebookFrame(timingSeconds.packageEnter, fps);
+  const packageExit = notebookFrame(timingSeconds.packageExit, fps);
+  const importFrames = timingSeconds.packageImports.map((seconds) => notebookFrame(seconds, fps));
+  const enter = spring({frame: frame - packageEnter, fps, config: {damping: 18, stiffness: 82}});
+  const exit = interpolate(frame, [packageExit - 18, packageExit], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
 
-  return <div style={{position: 'absolute', left: 420, top: 215, width: 1080, height: 610, boxSizing: 'border-box', borderRadius: 26, overflow: 'hidden', background: 'linear-gradient(145deg, #101c2e, #08111f 78%)', border: `2px solid ${theme.production}88`, boxShadow: `0 30px 85px #000a, 0 0 48px ${theme.production}20`, opacity: enter * exit, transform: `translateY(${(1 - enter) * 24}px) scale(${0.94 + enter * 0.06 - (1 - exit) * 0.05})`}}>
+  return <div style={{position: 'absolute', ...layout.package, boxSizing: 'border-box', borderRadius: 26, overflow: 'hidden', background: 'linear-gradient(145deg, #101c2e, #08111f 78%)', border: `2px solid ${theme.production}88`, boxShadow: `0 30px 85px #000a, 0 0 48px ${theme.production}20`, opacity: enter * exit, transform: `translateY(${(1 - enter) * 24}px) scale(${0.94 + enter * 0.06 - (1 - exit) * 0.05})`}}>
     <div style={{height: 70, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12, borderBottom: '1px solid #ffffff18', background: '#ffffff08'}}>
       {['#ff6b6b', '#ffd166', '#38d991'].map((color) => <span key={color} style={{width: 15, height: 15, borderRadius: 20, background: color}} />)}
       <div style={{marginLeft: 18, fontFamily: 'monospace', fontSize: 23, color: '#aebed2'}}>fabricops_package.py</div>
@@ -94,7 +87,7 @@ const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
     <div style={{padding: '40px 58px', fontFamily: 'monospace', fontSize: 29, lineHeight: 1.5, color: '#dce7f5'}}>
       <div style={{opacity: enter, color: '#8ed8ff'}}><span style={{color: '#c792ea'}}>from</span> fabricops_kit <span style={{color: '#c792ea'}}>import</span> (</div>
       {IMPORT_GROUPS.map((group, index) => {
-        const progress = spring({frame: frame - CODE_PACKAGE_TIMING.imports[index], fps, config: {damping: 17, stiffness: 105}});
+        const progress = spring({frame: frame - importFrames[index], fps, config: {damping: 17, stiffness: 105}});
         return <div key={group[0]} style={{marginLeft: 46, opacity: progress, transform: `translateX(${(1 - progress) * 24}px)`}}>
           {group.map((functionName) => <div key={functionName} style={{color: index === 2 ? theme.production : '#f3f7fc', textShadow: index === 2 ? `0 0 18px ${theme.production}55` : 'none'}}>{functionName}</div>)}
         </div>;
@@ -108,14 +101,21 @@ export const NotebookJourney = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
+  const {timingSeconds, layout} = VIDEO_TUNING.notebook;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
-  const environment = enter(timing.notebookEnvironmentAt);
-  const foundationFlow = interpolate(frame, [timing.notebookFoundationAt, timing.notebookFoundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const lowerNotebooks = enter(timing.notebookLowerAt);
-  const contract = enter(timing.notebookContractAt);
-  const relationshipFlow = interpolate(frame, [timing.notebookRelationshipAt, timing.notebookRelationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const connectorSettle = spring({frame: frame - timing.notebookRelationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
+  const environmentAt = notebookFrame(timingSeconds.environment, fps);
+  const foundationAt = notebookFrame(timingSeconds.foundation, fps);
+  const lowerNotebooksAt = notebookFrame(timingSeconds.lowerNotebooks, fps);
+  const contractAt = notebookFrame(timingSeconds.contract, fps);
+  const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
+  const environment = enter(environmentAt);
+  const foundationFlow = interpolate(frame, [foundationAt, foundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const lowerNotebooks = enter(lowerNotebooksAt);
+  const contract = enter(contractAt);
+  const relationshipFlow = interpolate(frame, [relationshipAt, relationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const connectorSettle = spring({frame: frame - relationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const connectorY = layout.connectorY;
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     <CodePackage frame={frame} fps={fps} />
@@ -127,24 +127,24 @@ export const NotebookJourney = () => {
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         <path d="M855 455 C855 535 425 535 425 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
         <path d="M1065 455 C1065 535 1495 535 1495 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
-        <path d="M630 755 H760" stroke={theme.governance} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
-        <path d="M1160 755 H1290" stroke={theme.engineering} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
+        <path d={`M630 ${connectorY} H760`} stroke={theme.governance} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
+        <path d={`M1160 ${connectorY} H1290`} stroke={theme.engineering} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
       </g>
       <g opacity={relationshipFlow}>
-        <rect x={752 - connectorSettle * 10} y="728" width="34" height="54" rx="8" fill={theme.governance} />
-        <rect x={1134 + connectorSettle * 10} y="728" width="34" height="54" rx="8" fill={theme.engineering} />
-        <rect x="778" y="735" width="14" height="14" rx="4" fill="#dce7f5" />
-        <rect x="778" y="761" width="14" height="14" rx="4" fill="#dce7f5" />
-        <rect x="1128" y="735" width="14" height="14" rx="4" fill="#dce7f5" />
-        <rect x="1128" y="761" width="14" height="14" rx="4" fill="#dce7f5" />
-        <circle cx="785" cy="755" r={23 + connectorSettle * 5} fill="none" stroke={theme.governance} strokeWidth="4" />
-        <circle cx="1135" cy="755" r={23 + connectorSettle * 5} fill="none" stroke={theme.engineering} strokeWidth="4" />
+        <rect x={752 - connectorSettle * 10} y={connectorY - 27} width="34" height="54" rx="8" fill={theme.governance} />
+        <rect x={1134 + connectorSettle * 10} y={connectorY - 27} width="34" height="54" rx="8" fill={theme.engineering} />
+        <rect x="778" y={connectorY - 20} width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="778" y={connectorY + 6} width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="1128" y={connectorY - 20} width="14" height="14" rx="4" fill="#dce7f5" />
+        <rect x="1128" y={connectorY + 6} width="14" height="14" rx="4" fill="#dce7f5" />
+        <circle cx="785" cy={connectorY} r={23 + connectorSettle * 5} fill="none" stroke={theme.governance} strokeWidth="4" />
+        <circle cx="1135" cy={connectorY} r={23 + connectorSettle * 5} fill="none" stroke={theme.engineering} strokeWidth="4" />
       </g>
     </svg>
 
-    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={LAYOUT.environment} />
-    <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={LAYOUT.governance} />
+    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={layout.environment} />
+    <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={layout.governance} />
     <ContractDocument progress={contract} />
-    <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={LAYOUT.pipeline} />
+    <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={layout.pipeline} />
   </div>;
 };

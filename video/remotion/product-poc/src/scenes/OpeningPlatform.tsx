@@ -1,14 +1,41 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Artifact, OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {VIDEO_CONFIG} from '../videoConfig';
+import {VIDEO_TUNING, secondsToFrames} from '../videoTuning';
 
 const OPENING_CENTER = {x: 960, y: 540} as const;
 const PUSH_DISTANCE = 1500;
 
-const ICON_POPULATION_START_SECONDS = 4;
-const ICON_ENTRY_FRAMES = 14;
-// Deliberately grouped rather than sequential: all 18 cards land by eight seconds.
-const burstOffsets = [0, 0, 3, 3, 18, 18, 37, 37, 40, 61, 61, 64, 82, 82, 85, 101, 101, 105] as const;
+const OPENING_POSITION_KEYS = [
+  'Notebook',
+  'Lakehouse',
+  'Warehouse',
+  'Environment',
+  'Data Pipeline',
+  'Dataflow Gen2',
+  'Data Engineering',
+  'Data Science',
+  'SQL Database',
+  'Eventstream',
+  'Eventhouse',
+  'Semantic Model',
+  'Report',
+  'Dashboard',
+  'Mirrored Database',
+  'ML Model',
+  'OneLake',
+  'Graph Intelligence',
+] as const;
+
+const FEATURED_POSITION_KEYS = new Set<string>([
+  'Notebook',
+  'Data Pipeline',
+  'Lakehouse',
+  'Warehouse',
+  'Environment',
+  'Eventstream',
+]);
+
 const entryVectors = [
   {x: -145, y: -65},
   {x: 105, y: -125},
@@ -18,18 +45,11 @@ const entryVectors = [
   {x: 35, y: 145},
 ] as const;
 
-const emphasisCues = [
-  {label: 'Notebook', at: 8.7},
-  {label: 'Data Pipeline', at: 9.55},
-  {label: 'Lakehouse', at: 10.45},
-  {label: 'Warehouse', at: 11.2},
-  {label: 'Environment', at: 12.15},
-] as const;
-
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {sizes, text, timing, scenes} = VIDEO_CONFIG;
+  const {opening} = VIDEO_TUNING;
   const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
   const heroExit = interpolate(frame, [timing.openingQuestionAt - 36, timing.openingQuestionAt], [1, 0], {
     extrapolateLeft: 'clamp',
@@ -46,28 +66,41 @@ export const OpeningPlatform = () => {
     fps,
     config: {damping: 19, stiffness: 78},
   });
+  const repositionStart =
+    timing.openingQuestionAt - secondsToFrames(opening.questionRepositionLeadSeconds, fps);
+  const repositionProgress = interpolate(frame, [repositionStart, timing.openingQuestionAt], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
 
   return (
     <div style={{position: 'absolute', inset: 0}}>
       {OPENING_ARTIFACTS.map((item, index) => {
-        const burstStart = Math.round(ICON_POPULATION_START_SECONDS * fps) + burstOffsets[index];
-        const enter = interpolate(frame, [burstStart, burstStart + ICON_ENTRY_FRAMES], [0, 1], {
+        const positionKey = OPENING_POSITION_KEYS[index];
+        const basePosition = positionKey ? opening.positions[positionKey] : {left: item.x, top: item.y};
+        const questionPosition =
+          positionKey && FEATURED_POSITION_KEYS.has(positionKey)
+            ? opening.questionPositions[positionKey as keyof typeof opening.questionPositions]
+            : undefined;
+        const currentLeft = questionPosition
+          ? interpolate(repositionProgress, [0, 1], [basePosition.left, questionPosition.left])
+          : basePosition.left;
+        const currentTop = questionPosition
+          ? interpolate(repositionProgress, [0, 1], [basePosition.top, questionPosition.top])
+          : basePosition.top;
+        const burstStart = secondsToFrames(
+          opening.iconPopulationStartSeconds + opening.iconBurstOffsetsSeconds[index],
+          fps,
+        );
+        const enter = interpolate(frame, [burstStart, burstStart + opening.iconEntryFrames], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
-          easing: Easing.out(Easing.back(1.35)),
+          easing: Easing.out(Easing.back(1.15)),
         });
-        const cue = emphasisCues.find((entry) => entry.label === item.label);
-        const cueFrame = cue ? cue.at * fps : -9999;
-        const emphasis = cue
-          ? interpolate(frame, [cueFrame - 2, cueFrame + 4, cueFrame + 10, cueFrame + 16], [0, 1, 1, 0], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-              easing: Easing.inOut(Easing.cubic),
-            })
-          : 0;
         const vector = entryVectors[index % entryVectors.length];
-        const cardCenterX = item.x + sizes.openingArtifactWidth / 2;
-        const cardCenterY = item.y + sizes.openingArtifactHeight / 2;
+        const cardCenterX = currentLeft + sizes.openingArtifactWidth / 2;
+        const cardCenterY = currentTop + sizes.openingArtifactHeight / 2;
         const deltaX = cardCenterX - OPENING_CENTER.x;
         const deltaY = cardCenterY - OPENING_CENTER.y;
         const magnitude = Math.max(1, Math.hypot(deltaX, deltaY));
@@ -75,19 +108,18 @@ export const OpeningPlatform = () => {
         const pushY = (deltaY / magnitude) * PUSH_DISTANCE * push;
         const entryX = vector.x * (1 - enter);
         const entryY = vector.y * (1 - enter);
-        const scale = (0.78 + enter * 0.22) * (1 + emphasis * 0.16);
+        const scale = 0.78 + enter * 0.22;
 
         return (
           <div
             key={`${item.label}-${index}`}
             style={{
               position: 'absolute',
-              left: item.x,
-              top: item.y,
+              left: currentLeft,
+              top: currentTop,
               opacity: enter,
               transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
-              zIndex: emphasis > 0 ? 4 : 1,
-              filter: emphasis > 0 ? `drop-shadow(0 0 ${18 + emphasis * 18}px #35bdf0aa)` : 'none',
+              zIndex: 1,
             }}
           >
             <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
@@ -98,11 +130,14 @@ export const OpeningPlatform = () => {
       <div
         style={{
           position: 'absolute',
-          inset: 0,
-          display: 'grid',
-          placeItems: 'center',
+          left: 0,
+          right: 0,
+          top: opening.heroCenterY,
+          display: 'flex',
+          justifyContent: 'center',
           opacity: hero * heroExit,
-          transform: `scale(${0.9 + hero * 0.1 - (1 - heroExit) * 0.08})`,
+          transform: `translateY(-50%) scale(${0.9 + hero * 0.1 - (1 - heroExit) * 0.08})`,
+          zIndex: 3,
         }}
       >
         <div
@@ -127,6 +162,7 @@ export const OpeningPlatform = () => {
           placeItems: 'center',
           opacity: question,
           transform: `translateY(${-760 * push}px) scale(${0.9 + question * 0.1})`,
+          zIndex: 2,
         }}
       >
         <div
@@ -138,7 +174,7 @@ export const OpeningPlatform = () => {
             textShadow: '0 20px 60px #000',
           }}
         >
-          <span style={{color: '#fff'}}>Where do I </span>
+          <span style={{color: '#fff'}}>Where do we </span>
           <span
             style={{
               background: 'linear-gradient(90deg, #ffffff 0%, #55c8ff 45%, #20b8ff 100%)',
