@@ -45,7 +45,7 @@ Freshness asks whether the source is recent enough. Source Stability asks whethe
 
 ## Keep canonical profiles complete
 
-A normal complete-table source read can refresh the canonical registered source Profile. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_dataframe()` for diagnostic profiling instead of registering it as the canonical physical-table profile.
+A normal complete-table source read can refresh the canonical registered source Profile. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_table(dataframe=df)` for diagnostic profiling instead of registering it as the canonical physical-table profile.
 
 ## Review the completed run
 

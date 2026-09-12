@@ -47,9 +47,7 @@ LIVE_V010_CALLABLES = {
 }
 EXPECTED_LIVE_V020_CALLABLES = LIVE_V010_CALLABLES | {
     "setup_metadata_tables",
-    "profile_and_register_table",
-    "profile_dataframe",
-    "profile_frequency_distribution",
+    "profile_table",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -141,8 +139,8 @@ def test_supported_public_api_contract_has_release_count_and_stable_names():
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 13, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 13
+    assert len(SUPPORTED_PUBLIC_API) == 11, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 11
     assert APPROVED_V1_CALLABLES == EXPECTED_LIVE_V020_CALLABLES
 
 
@@ -402,7 +400,7 @@ def test_package_root_expected_public_names_are_present() -> None:
         "read_lakehouse_table",
         "read_lakehouse_excel",
         "write_lakehouse_table",
-        "profile_dataframe",
+        "profile_table",
         "widget_render_data_steward",
         "widget_render_data_agreement",
     }

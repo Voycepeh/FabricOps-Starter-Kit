@@ -13,9 +13,7 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
-    "fabricops_kit.pipeline.profile_dataframe",
-    "fabricops_kit.pipeline.profile_frequency_distribution",
-    "fabricops_kit.pipeline.profile_and_register_table",
+    "fabricops_kit.pipeline.profile_table.profile_table",
 )
 
 # Preview public functions remain importable for evaluation, but are not part of

@@ -208,7 +208,7 @@ def observe_table(
     loads history nor makes guardrail decisions; ``check_source_stability`` owns
     comparison and removal tombstones. The stable source ``table_id`` is built from the
     resolved physical identity with the same logical identity rules used by
-    :func:`profile_and_register_table`. It is independent of Development or
+    :func:`profile_table`. It is independent of Development or
     Production; ``environment_name`` keeps those operational observations
     separate without requiring a pre-existing catalogue row.
 

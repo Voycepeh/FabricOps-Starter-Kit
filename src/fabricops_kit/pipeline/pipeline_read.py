@@ -92,9 +92,8 @@ def pipeline_read(
     4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
        ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
     5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
-    6. Establish the source profile-registration context consumed by a later,
-       explicit ``profile_and_register_table`` call.
-    7. Return the DataFrame and small source metadata required by the notebook.
+    6. Return the DataFrame, explicit ``table_id``, and small source metadata
+       required by the notebook.
 
     Higher-level governed pipeline code normally uses ``pipeline_read``.
     Foundational readers remain available for direct lower-level or
@@ -141,13 +140,13 @@ def pipeline_read(
     True
 
     The query result is marked as derived so later notebook logic can use
-    ``profile_dataframe`` without registering it as the complete physical
-    ``demo.order_history`` source table.
+    ``profile_table(dataframe=history_df)`` without registering it as the
+    complete physical ``demo.order_history`` source table.
 
     See Also
     --------
     read_lakehouse_table, read_warehouse_table, read_warehouse_query,
-    profile_and_register_table
+    profile_table
 
     """
     coordinates = (target, schema, table_name)
@@ -202,10 +201,6 @@ def pipeline_read(
     persist_lineage_participation(
         table_id=str(identity["table_id"]), pipeline_role="source", context=dict(context)
     )
-    context["_fabricops_active_profile_registration"] = {
-        "profile_role": "source",
-        "table": dict(identity),
-    }
     return {
         "dataframe": dataframe,
         "table_id": str(identity["table_id"]),

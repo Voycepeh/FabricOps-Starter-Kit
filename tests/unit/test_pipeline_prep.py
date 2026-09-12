@@ -71,7 +71,7 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
 
     assert result["table_id"] == identity["table_id"]
     assert calls == [reader_name]
-    assert context["_fabricops_active_profile_registration"]["profile_role"] == "source"
+    assert "_fabricops_active_profile_registration" not in context
     assert capsys.readouterr().out.strip() == f"FabricOps Read → {message}"
 
 
@@ -141,7 +141,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     assert events[0] == writer
     assert events[1][0] == "metadata"
     assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
-    assert context["_fabricops_active_profile_registration"]["profile_role"] == "target"
+    assert "_fabricops_active_profile_registration" not in context
     assert "store_type" not in signature(write_module.pipeline_write).parameters
     assert capsys.readouterr().out.strip() == (
         f"FabricOps Write → {store_type.title()} table 'unified.dbo.students' → {strategy} → write_{store_type}_table"
@@ -265,5 +265,5 @@ def test_foundational_writers_exclude_governed_parameters():
 
 
 def test_pipeline_write_does_not_own_visible_checks():
-    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_and_register_table"):
+    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_table"):
         assert not hasattr(write_module, name)

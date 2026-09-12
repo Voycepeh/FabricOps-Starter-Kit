@@ -32,7 +32,7 @@ CORE_CALLABLES = {
     "setup_metadata_tables",
     "read_lakehouse_table",
     "write_lakehouse_table",
-    "profile_dataframe",
+    "profile_table",
 }
 CORE_PAGE_SECTIONS = (
     "Signature",
@@ -366,7 +366,7 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     generator.main()
 
     warehouse_page = (tmp_path / "api" / "reference" / "write_warehouse_table.md").read_text(encoding="utf-8")
-    profile_page = (tmp_path / "api" / "reference" / "profile_dataframe.md").read_text(encoding="utf-8")
+    profile_page = (tmp_path / "api" / "reference" / "profile_table.md").read_text(encoding="utf-8")
 
     normalized_warehouse_page = _normalize_whitespace(warehouse_page)
     assert "writes a Spark DataFrame to a Fabric Warehouse" in normalized_warehouse_page
@@ -385,7 +385,7 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     assert "## Raises / Errors" in warehouse_page
     assert "## Usage notes" in warehouse_page
     assert "View on GitHub" in warehouse_page
-    assert "## Notes" not in profile_page
+    assert "## Notes" in profile_page
 
 
 def test_standalone_internal_pages_are_not_generated_by_default() -> None:
@@ -628,9 +628,9 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
 
 def test_public_callable_description_renders_before_source_and_usage() -> None:
     """Verify public callable content retains its established order."""
-    text = (API_REFERENCE_DIR / "profile_and_register_table.md").read_text(encoding="utf-8")
-    title_index = text.index("# `profile_and_register_table`")
-    description_index = text.index("Profile a Spark DataFrame, save a profiling snapshot")
+    text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
+    title_index = text.index("# `profile_table`")
+    description_index = text.index("Profile a Spark DataFrame or complete governed table")
     source_index = text.index('<div class="reference-source-card" markdown="1">')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
@@ -667,10 +667,9 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "internal helpers" not in text
     assert "Calls 1 public function" not in text
     assert "nested helper functions" not in text
-    assert "Downstream callables:" in text
     assert "Dependency data is generated from the callable architecture inventory." in text
-    assert 'href="../api/reference/profile_dataframe/"' in text
-    assert "<code>profile_dataframe</code>" in text
+    assert 'href="../api/reference/profile_table/"' in text
+    assert "<code>profile_table</code>" in text
 
 
 def test_module_pages_are_removed_from_public_docs_output() -> None:
@@ -705,7 +704,7 @@ def test_public_callable_usage_notes_are_family_standardized() -> None:
     """Verify generated Usage notes come from path-first family defaults and overrides."""
     io_text = (API_REFERENCE_DIR / "read_lakehouse_table.md").read_text(encoding="utf-8")
     widget_text = (API_REFERENCE_DIR / "widget_author_data_contract.md").read_text(encoding="utf-8")
-    pipeline_text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
+    pipeline_text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
     setup_text = (API_REFERENCE_DIR / "setup_metadata_tables.md").read_text(encoding="utf-8")
 
     for text in (io_text, widget_text, pipeline_text, setup_text):
@@ -827,12 +826,12 @@ def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str
 
 def test_template_called_callable_parameters_render_as_api_table() -> None:
     """Verify template-called callable parameters render as api table."""
-    text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
+    text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
     parameters = _section_text(text, "Parameters")
 
     assert "| Parameter | Type | Required | Description |" in parameters
-    assert "| `df` |" in parameters
-    assert "| `exclude_columns` |" in parameters
+    assert "| `dataframe` |" in parameters
+    assert "| `frequency_columns` |" in parameters
     removed_parameter = "approximate_" + "distinct"
     assert f"| `{removed_parameter}` |" not in parameters
 
@@ -1751,8 +1750,8 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
 
     public_qn = "fabricops_kit.pipeline.shared.run_table_guardrails"
     workflow_qn = "fabricops_kit.pipeline.shared.orchestrate_table_guardrails"
-    core_qn = "fabricops_kit.profiling.profile_dataframe_core"
-    private_core_qn = "fabricops_kit.profiling._profile_dataframe_core"
+    core_qn = "fabricops_kit.profiling.profile_table_core"
+    private_core_qn = "fabricops_kit.profiling._profile_table_core"
     distribution_qn = "fabricops_kit.profiling.build_distribution_summaries"
     categorical_qn = "fabricops_kit.profiling.build_categorical_distribution"
     other_public_qn = "fabricops_kit.other.other_public"
@@ -1760,8 +1759,8 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
         public_qn: {"callable_name": "run_table_guardrails", "module_name": "pipeline", "callable_kind": "function"},
         other_public_qn: {"callable_name": "other_public", "module_name": "other", "callable_kind": "function"},
         workflow_qn: {"callable_name": "orchestrate_table_guardrails", "module_name": "pipeline", "callable_kind": "function"},
-        core_qn: {"callable_name": "profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
-        private_core_qn: {"callable_name": "_profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
+        core_qn: {"callable_name": "profile_table_core", "module_name": "profiling", "callable_kind": "function"},
+        private_core_qn: {"callable_name": "_profile_table_core", "module_name": "profiling", "callable_kind": "function"},
         distribution_qn: {"callable_name": "build_distribution_summaries", "module_name": "profiling", "callable_kind": "function"},
         categorical_qn: {"callable_name": "build_categorical_distribution", "module_name": "profiling", "callable_kind": "function"},
     }
@@ -1778,8 +1777,8 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
         _flow_test_inventory_row(public_qn, "run_table_guardrails", "pipeline", "public"),
         _flow_test_inventory_row(other_public_qn, "other_public", "other", "public"),
         _flow_test_inventory_row(workflow_qn, "orchestrate_table_guardrails", "pipeline", "private_helper", owner=public_qn),
-        _flow_test_inventory_row(core_qn, "profile_dataframe_core", "profiling", "internal", used_by_count=2),
-        _flow_test_inventory_row(private_core_qn, "_profile_dataframe_core", "profiling", "private_helper", owner=core_qn),
+        _flow_test_inventory_row(core_qn, "profile_table_core", "profiling", "internal", used_by_count=2),
+        _flow_test_inventory_row(private_core_qn, "_profile_table_core", "profiling", "private_helper", owner=core_qn),
         _flow_test_inventory_row(distribution_qn, "build_distribution_summaries", "profiling", "private_helper", owner=core_qn),
         _flow_test_inventory_row(categorical_qn, "build_categorical_distribution", "profiling", "internal", used_by_count=1),
     ]
@@ -1925,18 +1924,17 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         for path in generator.source_module_paths()
     }
     expected_paths = {
-        "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
-        "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
+        "profile_table": "src/fabricops_kit/pipeline/profile_table.py",
     }
 
     for function_name, expected_path in expected_paths.items():
-        qn = f"fabricops_kit.pipeline.{function_name}"
+        qn = f"fabricops_kit.pipeline.{function_name}.{function_name}"
         assert generator._callable_flow_source_path(qn, module_data) == expected_path
 
-    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_dataframe.py"
+    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_table.py"
     for function_name, expected_path in expected_paths.items():
-        if function_name != "profile_dataframe":
-            qn = f"fabricops_kit.pipeline.{function_name}"
+        if function_name != "profile_table":
+            qn = f"fabricops_kit.pipeline.{function_name}.{function_name}"
             assert generator._callable_flow_source_path(qn, module_data) != wrong_profile_owner
 
 
@@ -1952,8 +1950,7 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         if row.get("module", "").startswith("pipeline") and row.get("layer") == "public"
     }
     expected_paths = {
-        "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
-        "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
+        "profile_table": "src/fabricops_kit/pipeline/profile_table.py",
         "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
@@ -1962,11 +1959,11 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         assert row["source_path"] == expected_path
         assert row["owner_file"] == expected_path
 
-    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_dataframe.py"
+    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_table.py"
     wrongly_owned = [
         name
         for name, row in rows_by_name.items()
-        if name != "profile_dataframe" and row["source_path"] == wrong_profile_owner
+        if name != "profile_table" and row["source_path"] == wrong_profile_owner
     ]
     assert wrongly_owned == []
 
@@ -1981,9 +1978,9 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     inventory_by_qn = {row["qualified_name"]: row for row in flow_data["function_inventory"]}
     split_names = {
         "display_guardrail_results",
-        "profile_dataframe",
+        "profile_table",
         "run_table_guardrails",
-        "profile_and_register_table",
+        "profile_table",
         "write_pipeline_run_summary",
     }
 
@@ -1997,8 +1994,8 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
         assert all(inventory_by_qn[qn]["source_path"] for qn in asset_qns if qn in inventory_by_qn)
 
     profile_assets = {
-        flows_by_name["profile_dataframe"]["qualified_name"],
-        *(callee["qualified_name"] for callee in flows_by_name["profile_dataframe"]["transitive_callees"]),
+        flows_by_name["profile_table"]["qualified_name"],
+        *(callee["qualified_name"] for callee in flows_by_name["profile_table"]["transitive_callees"]),
     }
     assert flows_by_name["display_guardrail_results"]["qualified_name"] not in profile_assets
     assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
@@ -2013,7 +2010,7 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
     flows_by_qn = {flow["qualified_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
     expected_counts = {
         "fabricops_kit.pipeline.display_guardrail_results": 15,
-        "fabricops_kit.pipeline.profile_dataframe": 11,
+        "fabricops_kit.pipeline.profile_table.profile_table": 11,
         "fabricops_kit.pipeline.run_table_guardrails": 120,
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query": 13,
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": 17,
@@ -2026,15 +2023,15 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
 
     forbidden = {
         "fabricops_kit.pipeline.display_guardrail_results": {
-            "fabricops_kit.pipeline.profile_dataframe",
+            "fabricops_kit.pipeline.profile_table",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_and_register_table",
+            "fabricops_kit.pipeline.profile_table",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
-        "fabricops_kit.pipeline.profile_dataframe": {
+        "fabricops_kit.pipeline.profile_table.profile_table": {
             "fabricops_kit.pipeline.display_guardrail_results",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_and_register_table",
+            "fabricops_kit.pipeline.profile_table",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
     }

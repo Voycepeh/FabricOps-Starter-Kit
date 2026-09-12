@@ -4,11 +4,11 @@ See the column-level profile metrics captured for a dataset snapshot.
 
 ## Writer functions
 
-* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+* [`profile_table`](../../api/reference/profile_table.md)
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](../../notebook-templates.md) — Profiling
+* [`02_pipeline / optional 99_explore`](../../notebook-templates.md) — Profiling
 
 ## Model
 

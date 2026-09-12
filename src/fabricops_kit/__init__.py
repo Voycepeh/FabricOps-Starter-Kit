@@ -37,9 +37,7 @@ from .pipeline import (
     check_sensitive_data,
     pipeline_read,
     resolve_table_id,
-    profile_and_register_table,
-    profile_dataframe,
-    profile_frequency_distribution,
+    profile_table,
     pipeline_write,
 )
 
@@ -78,9 +76,7 @@ PIPELINE_EXPORTS = (
     "observe_table",
     "check_dq",
     "check_sensitive_data",
-    "profile_and_register_table",
-    "profile_dataframe",
-    "profile_frequency_distribution",
+    "profile_table",
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",

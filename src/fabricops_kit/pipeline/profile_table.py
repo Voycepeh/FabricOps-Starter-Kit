@@ -1,4 +1,4 @@
-"""Public notebook-facing DataFrame profile registration callable."""
+"""Public owner for notebook-facing statistical and frequency profiling."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_table
 from fabricops_kit.io.shared import (
     resolve_configured_lakehouse_table,
     write_lakehouse_table_core,
@@ -18,6 +19,7 @@ from fabricops_kit.io.shared import (
 from fabricops_kit.pipeline.shared import (
     build_frequency_distribution_dataframe,
     build_profile_dataframe,
+    resolve_catalogue_table_identity,
     resolve_physical_table_identity,
 )
 
@@ -474,346 +476,194 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
     )
 
 
-def profile_and_register_table(
-    df,
+def profile_table(
     *,
-    profile_role=None,
-    table=None,
-    target=None,
-    table_name=None,
-    schema=None,
+    dataframe=None,
+    target: str | None = None,
+    schema: str | None = None,
+    table_name: str | None = None,
+    table_id: str | None = None,
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
-    frequency_profile_df=None,
 ):
-    """Profile a supplied Spark DataFrame and save its metadata records.
-    
-    The notebook supplies a Spark DataFrame and the table identity that the
-    DataFrame represents. FabricOps calculates one profiling result row for
-    each eligible column, saves a new profiling snapshot, creates stable table
-    and column IDs, updates or adds catalogue records, and returns the
-    profiling result to the notebook.
-    
-    The original business DataFrame is not written, sampled, re-read, or
-    changed by this function. All metadata writes go to the metadata lakehouse
-    configured in ``00_env_config`` for the active environment.
-    
+    """Profile a Spark DataFrame or a complete governed physical table.
+
+    FabricOps calculates the canonical statistical profile and applicable
+    frequency distribution with PySpark. An identity may be supplied as a
+    canonical ``table_id`` or as ``target``, optional ``schema``, and
+    ``table_name``. When an identity is present, FabricOps associates the
+    result with that governed table and persists Catalogue, profile, and
+    frequency metadata. Without an identity, the exact supplied DataFrame is
+    profiled without creating an identity or writing metadata.
+
     Parameters
     ----------
-    df : pyspark.sql.DataFrame
-        Spark DataFrame to profile exactly as supplied by the caller. The
-        helper does not sample, re-read, or mutate this DataFrame.
-    profile_role : {"source", "target"}, optional
-        Selects the profiling and Catalogue registration rules for the asset.
-        ``source`` rejects target-owned load-strategy metadata. ``target``
-        requires and stores the governed target processing definition in
-        ``METADATA_DATA_CATALOGUE``. Profiling does not persist Lineage;
-        governed pipeline preparation and successful publication own source
-        and target Lineage respectively. Normal pipeline usage omits this
-        value because :func:`pipeline_read` and
-        :func:`pipeline_write` establish it in the active context.
-    table : mapping, optional
-        Canonical resolved table identity returned as ``pipeline_read()``
-        ``source`` or ``target``. Supply this instead of ``target``, ``schema``,
-        and ``table_name`` to reuse the already resolved identity. Normal
-        pipeline usage omits it and consumes the active preparation identity.
+    dataframe : pyspark.sql.DataFrame, optional
+        Exact Spark DataFrame to profile. If a governed identity is also
+        supplied, FabricOps does not re-read the physical table.
     target : str, optional
-        Configured FabricStore target key. Its normalized key becomes the
-        physical identity's layer and its store kind determines whether the
-        asset is a Lakehouse or Warehouse table. Required when ``table`` is
-        not supplied.
-    table_name : str, optional
-        Physical table name of the business asset being profiled. This
-        identifies the asset and does not redirect metadata writes. Required
-        when ``table`` is not supplied.
+        Configured physical target key. Supply with ``table_name`` and optional
+        ``schema`` instead of ``table_id``.
     schema : str, optional
-        Physical schema name, or ``None`` to use the configured store default.
-        Classic or schema-disabled Lakehouses preserve ``None``.
+        Physical schema when the configured store uses schemas.
+    table_name : str, optional
+        Physical table name. Required with ``target`` when ``table_id`` is
+        omitted.
+    table_id : str, optional
+        Canonical governed table identity, mutually exclusive with physical
+        coordinates.
     frequency_columns : sequence of str, optional
-        Selected columns whose flattened frequency rows should be persisted.
-        ``None`` profiles eligible non-technical scalar columns. An empty
-        sequence skips frequency profiling entirely and writes no child rows.
-        Requested columns should also be eligible for the main statistical
-        profile.
+        Columns to frequency profile. ``None`` automatically selects eligible
+        scalar columns; an empty sequence skips frequency profiling.
     frequency_top_n : int or None, optional
-        Optional number of ranked values to retain per selected frequency
-        column. ``None`` retains every distinct value.
+        Ranked values to retain per frequency column. ``None`` retains all.
     frequency_max_distinct_percent : float or None, default=80.0
-        Automatic frequency-profiling safeguard used only when
-        ``frequency_columns=None``. Columns whose distinct-per-non-null
-        percentage is greater than this threshold are skipped and produce no
-        child frequency rows. Values must be between ``0.0`` and ``100.0``
-        when supplied. ``None`` disables the high-cardinality threshold;
-        all-null automatic columns remain skipped. Explicit
-        ``frequency_columns`` selections override this threshold.
-    frequency_profile_df : pyspark.sql.DataFrame, optional
-        Optional caller-provided Spark DataFrame to use only for frequency
-        distribution calculation. ``None`` preserves full-source frequency
-        profiling. When supplied, it must contain every selected frequency
-        column, may contain extra columns, and must use a compatible Spark
-        session when this can be determined. The caller is responsible for
-        preparing, persisting, refreshing, and governing this DataFrame; this
-        function does not verify whether it is random, representative, sampled,
-        persisted, or otherwise suitable for the caller's purpose.
+        Maximum distinct-per-non-null percentage for automatically selected
+        columns. ``None`` disables the cardinality filter.
 
     Returns
     -------
-    pyspark.sql.DataFrame
-        A Spark DataFrame containing one canonical profiling record for each
-        eligible column in the supplied DataFrame. This is the same DataFrame
-        appended to ``METADATA_DATA_PROFILED`` and includes stable table and column identity, profiling snapshot identity,
-        compact statistical metrics, environment identity, and runtime audit
-        fields. Flattened child frequency rows and generated Catalogue rows
-        are not returned.
-    
+    dict
+        ``profile`` contains the canonical statistical Spark DataFrame and
+        ``frequency_profile`` contains the applicable canonical frequency
+        Spark DataFrame, or ``None`` when no columns were selected. Governed
+        ``profile`` rows additionally contain persisted snapshot identities
+        and audit fields.
+
     Raises
     ------
     ValueError
-        If the role, target, configured store, schema, or table identity is invalid.
+        If identity inputs conflict or are incomplete, neither a DataFrame nor
+        identity is supplied, frequency settings are invalid, or the resolved
+        store is unsupported.
     RuntimeError
-        If required Delta replacement or Catalogue merge support is
-        unavailable.
+        If a governed metadata write requires unavailable Delta support.
+
+    Notes
+    -----
+    The orchestration performs these mechanical steps:
+
+    1. Validate and resolve the optional canonical governed identity.
+    2. Use the supplied DataFrame exactly, or read the complete physical table
+       through the resolved Lakehouse or Warehouse reader.
+    3. Calculate canonical statistical metrics with PySpark.
+    4. Select eligible frequency columns and calculate exact grouped counts,
+       including null as a frequency value.
+    5. When governed, create stable table and column identities, append
+       ``METADATA_DATA_PROFILED``, replace the current snapshot rows in
+       ``METADATA_DATA_PROFILED_FREQUENCY``, and update
+       ``METADATA_DATA_CATALOGUE``.
+    6. Return both profiling outputs. DataFrame-only mode performs no metadata
+       writes and never invents a ``table_id``.
 
     Examples
     --------
-    Profile and register a complete table immediately after Read preparation:
+    Profile an arbitrary DataFrame without persistence:
 
-    >>> read_result = pipeline_read(
-    ...     target="source",
-    ...     schema="dbo",
-    ...     table_name="bookings",
-    ... )
-    >>> read_df = read_result["dataframe"]
-    >>> profile = profile_and_register_table(read_df)
+    >>> result = profile_table(dataframe=raw_df)
+    >>> statistical_profile = result["profile"]
+    >>> frequencies = result["frequency_profile"]
+
+    Profile a governed complete physical table without knowing its store kind:
+
+    >>> result = profile_table(target="source", schema="dbo", table_name="orders")
+
+    Profile a transformed DataFrame against an explicit governed identity:
+
+    >>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)
 
     See Also
     --------
-    pipeline_read, pipeline_write, profile_dataframe
-    
-    Notes
-    -----
-    Processing flow:
-    
-    1. Build a statistical profile against the complete supplied DataFrame to
-       produce one statistical profile row per eligible input column.
-    2. Use that statistical profile to choose automatic frequency columns
-       when ``frequency_columns=None``: eligible scalar columns at or below
-       ``frequency_max_distinct_percent`` are profiled, high-cardinality
-       columns and all-null columns produce no child frequency rows. Explicit non-empty
-       ``frequency_columns`` bypass this threshold, while
-       ``frequency_columns=[]`` skips frequency profiling entirely.
-    3. Produce flattened frequency rows for the selected columns using the
-       same calculation exposed by ``profile_frequency_distribution``.
-    4. Resolve each frequency row to its parent ``profile_id`` and shared
-       ``profile_snapshot_id``.
-    5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
-    6. Replace rows for the exact ``profile_snapshot_id`` child snapshot and
-    write the normalized rows to
-       ``METADATA_DATA_PROFILED_FREQUENCY``.
-    7. Create stable table and column IDs, then update matching catalogue
-       records or add new records in ``METADATA_DATA_CATALOGUE``.
-    8. Record whether the table was used as an input or produced as an output
-       in ``METADATA_DATA_LINEAGE``.
-    9. Return only the compact parent Spark DataFrame written to
-       ``METADATA_DATA_PROFILED``.
-    
-    User-facing workflow:
-    
-    Supplied DataFrame
-        ↓
-    Calculate column statistics and value frequencies
-        ↓
-    Save compact summary and flattened frequency snapshots
-    ``METADATA_DATA_PROFILED`` + ``METADATA_DATA_PROFILED_FREQUENCY``
-        ↓
-    Create stable table and column IDs
-        ↓
-    Update existing catalogue records or add new ones
-    ``METADATA_DATA_CATALOGUE``
-        ↓
-    Record whether the table was used as an input or output
-        ↓
-    ``METADATA_DATA_LINEAGE``
-        ↓
-    Return the profiling result to the notebook
-    
-    Frequency snapshot behavior:
-    
-    * Every eligible statistical profile row remains in the compact parent
-      result whether or not that column produces child frequency rows.
-    * ``frequency_columns=None`` automatically profiles eligible non-technical
-      scalar columns whose distinct-per-non-null percentage is less than or
-      equal to ``frequency_max_distinct_percent``. The default threshold is
-      ``80.0`` percent.
-    * Automatically selected columns above the threshold and all-null automatic
-      columns produce no child frequency rows. No fake skipped values are stored.
-    * ``frequency_max_distinct_percent=None`` disables the high-cardinality
-      threshold for automatic columns.
-    * Only columns listed in a non-empty ``frequency_columns`` sequence receive
-      generated frequency evidence; explicit selections override the automatic
-      threshold. Other profiled columns produce no child rows.
-    * ``frequency_columns=[]`` skips frequency profiling entirely and writes no
-      child rows for the current snapshot.
-    * ``frequency_profile_df=None`` profiles frequencies against the complete
-      supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
-      frequency counts, percentages, ranks, profiled row counts, and profiled
-      non-null counts describe that caller-provided DataFrame. The compact
-      parent statistics still describe the complete source DataFrame.
-    * ``frequency_top_n`` restricts persisted child rows only when supplied. It
-      limits output rows after grouped counts are calculated and does not
-      reduce grouping cost.
-    * Frequency values are ordered deterministically by rank.
-    * Historical parent and child rows join through ``profile_id``. Replacement
-      is scoped to the current ``profile_snapshot_id``, so earlier snapshots remain intact.
-    
-    ``METADATA_DATA_PROFILED`` receives one appended row per eligible input
-    DataFrame column. Repeated executions create additional profiling
-    snapshots, and the returned DataFrame is the same compact DataFrame
-    appended to this table. Its logical field groups are:
-    
-    * Identity fields: ``profile_id``, ``profile_snapshot_id``, ``table_id``,
-      ``column_id``, ``environment_name``, ``data_type``.
-    * Statistical fields: ``row_count``, ``non_null_count``, ``null_count``,
-      ``null_percent``, ``distinct_count``, ``distinct_percent``,
-      ``mean_value``, ``stddev_value``, ``min_value``,
-      ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
-      ``max_value``.
-    * Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
-      ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
-      ``_metadata_lakehouse_name``, ``_activity_id``.
-    
-    ``METADATA_DATA_PROFILED`` saves a new compact profiling snapshot. One row
-    is saved for each eligible DataFrame column. ``METADATA_DATA_PROFILED_FREQUENCY``
-    saves one flattened row per returned distinct value. Earlier parent and child snapshots are retained. Frequency rows link to
-    their parent through ``profile_id`` and share the same ``profile_snapshot_id``.
-    
-    ``METADATA_DATA_CATALOGUE`` stores table and column records, not profiling
-    measurements. FabricOps creates a stable ID for the table and each column,
-    then checks whether the same logical asset already exists in the active
-    environment. If a matching record exists, it is updated. Otherwise, a new
-    record is added. Matching uses ``environment_name + metadata_level + table_id
-    + column_id``. ``table_id`` and ``column_id`` are stable logical identities
-    shared across environments, while ``environment_name`` keeps Development and
-    Production observations separate. Column rows store the current source schema
-    ``data_type``. A type change updates that value without changing the column
-    identity or deactivating the column. Column catalogue rows that disappear from a
-    new profile are retained but marked inactive rather than silently deleted.
-    
-    What the notebook receives: a Spark DataFrame containing one profiling
-    result row for each eligible column.
-    
-    What FabricOps saves:
-    
-    * ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
-    * ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
-      ``profile_id`` and grouped by ``profile_snapshot_id``.
-    * ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
-      records.
-    
-    Statistical profiling records describe the complete DataFrame supplied
-    during the notebook activity. If ``frequency_profile_df`` is supplied,
-    only generated frequency evidence uses that DataFrame. The function does not claim or
-    verify that the caller-provided DataFrame is sampled, random,
-    representative, persisted, or governed; those responsibilities stay with
-    the upstream ingestion or notebook workflow.
-    
-    The physical identity is the caller-selected configured table identity;
-    an arbitrary DataFrame does not prove that table exists. Profile a source
-    after a successful complete-table read, and profile a target only after
-    its write has succeeded and the persisted target has been confirmed.
-    
-    This function does not create or update ``METADATA_DATA_LINEAGE``.
-    Registered source participation is recorded by ``pipeline_read()``,
-    while target participation is recorded only after a successful governed
-    publication. Guardrail execution is a separate workflow.
-    
+    pipeline_read, pipeline_write, read_lakehouse_csv, read_lakehouse_excel,
+    read_lakehouse_json, read_lakehouse_parquet
+
     """
-    config, env, context = resolve_fabric_context()
-    uses_active_registration = profile_role is None or (table is None and target is None and table_name is None)
-    active_registration = context.get("_fabricops_active_profile_registration") or {}
-    if profile_role is None:
-        profile_role = active_registration.get("profile_role")
-    if table is None and target is None and table_name is None:
-        table = active_registration.get("table")
-    if profile_role is None or (table is None and (target is None or table_name is None)):
-        raise ValueError(
-            "Run pipeline_read or pipeline_write first, or provide profile_role and table identity."
-        )
-    dataframe_table_id = str(getattr(df, "_fabricops_table_id", "") or "").strip()
-    active_table_id = str((active_registration.get("table") or {}).get("table_id") or "").strip()
-    if dataframe_table_id and active_table_id and dataframe_table_id != active_table_id:
-        raise ValueError(
-            f"Active prep is for table_id {active_table_id!r}, but the DataFrame was read "
-            f"from table_id {dataframe_table_id!r}. Profile immediately after its matching prep."
-        )
-    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
-    if table is not None:
-        if target is not None or schema is not None or table_name is not None:
-            raise ValueError("table cannot be combined with target, schema, or table_name.")
-        identity = _validate_resolved_identity(table, config=config, env=env)
-    else:
-        identity = resolve_physical_table_identity(
-            config, env, target=target, schema=schema, table_name=table_name
-        )
-    normalized_target = identity["target"]
-    normalized_table = identity["table_name"]
-    normalized_schema = identity["schema"]
-    normalized_store_type = identity["store_kind"]
-    if normalized_profile_role == "target" and active_registration.get("profile_role") != "target":
-        raise ValueError("Run pipeline_write before registering a target profile.")
-    normalized_load_strategy, write_parameters_json = _processing_definition(
-        normalized_profile_role,
-        active_registration.get("load_strategy") if normalized_profile_role == "target" else None,
-        active_registration.get("load_strategy_parameters") if normalized_profile_role == "target" else None,
-    )
-    if uses_active_registration:
-        context.pop("_fabricops_active_profile_registration", None)
-    _validate_processing_columns(df, write_parameters_json)
-    selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
+    coordinates = (target, schema, table_name)
+    has_coordinates = any(value is not None for value in coordinates)
+    if table_id is not None and has_coordinates:
+        raise ValueError("table_id cannot be combined with target, schema, or table_name.")
+    if has_coordinates and (target is None or table_name is None):
+        raise ValueError("Provide both target and table_name when using physical identity.")
+    if dataframe is None and table_id is None and not has_coordinates:
+        raise ValueError("Provide dataframe, table_id, or both target and table_name.")
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)
         or not 0.0 <= frequency_max_distinct_percent <= 100.0
     ):
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
-    profile_df = build_profile_dataframe(df)
-    table_id = identity["table_id"]
+    selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
+    identity = None
+    config = env = context = None
+    if table_id is not None or has_coordinates:
+        config, env, context = resolve_fabric_context()
+        if table_id is not None:
+            identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+        else:
+            identity = resolve_physical_table_identity(
+                config, env, target=target, schema=schema, table_name=table_name
+            )
+        store_kind = str(identity.get("store_kind") or identity.get("store_type") or "").lower()
+        if store_kind not in {"lakehouse", "warehouse"}:
+            raise ValueError(f"Configured table has unsupported store kind {store_kind or '<blank>'!r}.")
+        identity["store_kind"] = store_kind
+        if dataframe is None:
+            if store_kind == "lakehouse":
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+            else:
+                dataframe = read_warehouse_table(
+                    str(identity["schema"]), str(identity["table_name"]),
+                    target=str(identity["target"]), context=context,
+                )
+            print(
+                f"FabricOps: profiling governed table '{identity['table_id']}'. "
+                "Profile and catalogue metadata will be persisted."
+            )
+        else:
+            print(
+                f"FabricOps: profiling supplied DataFrame against governed table '{identity['table_id']}'. "
+                "Profile and catalogue metadata will be persisted."
+            )
+    else:
+        print(
+            "FabricOps: profiling supplied DataFrame only. No Data Catalogue or profiling metadata "
+            "will be persisted because no table identity was provided."
+        )
+
+    statistical_profile = build_profile_dataframe(dataframe)
+    selected_columns = _selected_frequency_columns(
+        dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
+    )
+    frequency_profile = None
+    if selected_columns:
+        frequency_profile = build_frequency_distribution_dataframe(
+            dataframe, columns=selected_columns, top_n=frequency_top_n
+        )
+    if identity is None:
+        return {"profile": statistical_profile, "frequency_profile": frequency_profile}
+
     profile_snapshot_id = str(uuid4())
     profiled_df = _canonical_profiled_dataframe(
-        profile_df,
+        statistical_profile,
         config=config,
         env=env,
         runtime_context=context,
         environment_name=env,
-        table_id=table_id,
+        table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,
-    )
-    # Spark uuid() is non-deterministic across re-evaluation. Materialize the
-    # parent once so Frequency receives the exact persisted profile_id values.
-    profiled_df = profiled_df.cache()
+    ).cache()
     profiled_df.count()
-
-    selected_columns = _selected_frequency_columns(
-        df, profile_df, selected_frequency_columns, frequency_max_distinct_percent
-    )
     frequency_metadata_df = None
-    if selected_columns:
-        frequency_source_df, _frequency_scope = _validate_frequency_profile_dataframe(
-            df, frequency_profile_df, selected_columns
-        )
-        frequency_df = build_frequency_distribution_dataframe(
-            frequency_source_df, columns=selected_columns, top_n=frequency_top_n
-        )
+    if frequency_profile is not None:
         frequency_metadata_df = _frequency_metadata_dataframe(
-            frequency_df,
+            frequency_profile,
             profiled_df=profiled_df,
-            table_id=table_id,
+            table_id=identity["table_id"],
             config=config,
             env=env,
             runtime_context=context,
         )
-
     write_lakehouse_table_core(
         profiled_df,
         PROFILED_TABLE,
@@ -827,22 +677,22 @@ def profile_and_register_table(
         profiled_df=profiled_df,
         config=config,
         env=env,
-        spark_session=df.sparkSession,
+        spark_session=dataframe.sparkSession,
     )
     catalogue_df = _catalogue_dataframe_from_profiled(
         profiled_df,
-        source_df=df,
-        store_type=normalized_store_type,
-        layer=normalized_target,
-        schema_name=normalized_schema,
-        table_name=normalized_table,
-        load_strategy=normalized_load_strategy,
-        load_strategy_parameters_json=write_parameters_json,
+        source_df=dataframe,
+        store_type=identity["store_kind"],
+        layer=identity["target"],
+        schema_name=identity["schema"],
+        table_name=identity["table_name"],
+        load_strategy=None,
+        load_strategy_parameters_json=None,
     )
     _upsert_catalogue_identities(
         catalogue_df=catalogue_df,
         config=config,
         env=env,
-        spark_session=df.sparkSession,
+        spark_session=dataframe.sparkSession,
     )
-    return profiled_df
+    return {"profile": profiled_df, "frequency_profile": frequency_profile}

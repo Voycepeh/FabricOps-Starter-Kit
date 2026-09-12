@@ -209,7 +209,7 @@ def pipeline_write(
     See Also
     --------
     pipeline_read, write_lakehouse_table, write_warehouse_table,
-    profile_and_register_table
+    profile_table
 
     """
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
@@ -348,25 +348,4 @@ def pipeline_write(
             "context": context,
         }
     )
-    context["_fabricops_active_profile_registration"] = {
-        "profile_role": "target",
-        "table": dict(identity),
-        "load_strategy": strategy,
-        "load_strategy_parameters": {
-            name: value
-            for name, value in processing.items()
-            if name
-            not in {
-                "load_strategy",
-                "source",
-                "contract_id",
-                "contract_version",
-                "owner_notebook_id",
-                "owner_notebook_name",
-                "processing_mode",
-                "authored_processing",
-                "governed_processing",
-            }
-        },
-    }
     return {"table_id": str(identity["table_id"])}

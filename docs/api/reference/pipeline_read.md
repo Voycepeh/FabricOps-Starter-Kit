@@ -26,7 +26,7 @@ choose between Lakehouse and Warehouse table readers.
 
 `fabricops_kit/pipeline/pipeline_read.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L214">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L209">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -92,8 +92,8 @@ Read a governed Warehouse source through project-owned SQL:
 True
 
 The query result is marked as derived so later notebook logic can use
-``profile_dataframe`` without registering it as the complete physical
-``demo.order_history`` source table.
+``profile_table(dataframe=history_df)`` without registering it as the
+complete physical ``demo.order_history`` source table.
 
 </div>
 
@@ -131,9 +131,8 @@ The governed orchestration performs these mechanical steps:
 4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
    ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
 5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
-6. Establish the source profile-registration context consumed by a later,
-   explicit ``profile_and_register_table`` call.
-7. Return the DataFrame and small source metadata required by the notebook.
+6. Return the DataFrame, explicit ``table_id``, and small source metadata
+   required by the notebook.
 
 Higher-level governed pipeline code normally uses ``pipeline_read``.
 Foundational readers remain available for direct lower-level or
