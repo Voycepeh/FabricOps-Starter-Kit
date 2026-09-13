@@ -285,13 +285,18 @@ def test_02_pipeline_target_and_write_guardrails_are_explicit():
     write = _cell_by_id("02_pipeline.ipynb", "write-1").source
     profile = _cell_by_id("02_pipeline.ipynb", "write-profile").source
     assert "target_table_id = resolve_table_id(" in target
-    stages = ("check_schema(", "check_sensitive_data(", "check_source_stability(", "check_dq(")
+    stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(")
     assert [checks.index(stage) for stage in stages] == sorted(checks.index(stage) for stage in stages)
     assert 'prepared_df = sensitive_result["dataframe"]' in checks
     assert "check_dq(\n    prepared_df," in checks
     assert "pipeline_write(\n    prepared_df," in write
     assert 'source_table_ids=[source["table_id"] for source in sources.values()]' in write
     assert 'profile_table(table_id=write_result["table_id"])' in profile
+    assert checks.count("check_source_drift(") == 1
+    for index in (1, 2, 3):
+        assert "check_source_drift(" not in _cell_by_id(
+            "02_pipeline.ipynb", f"read-{index}"
+        ).source
 
 
 def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():

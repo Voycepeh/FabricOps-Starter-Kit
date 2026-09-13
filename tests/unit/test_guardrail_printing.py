@@ -45,7 +45,7 @@ def test_guardrail_formatter_preserves_public_statuses(capsys, result, expected)
 def test_guardrail_formatter_verbose_false_suppresses_output(capsys) -> None:
     """Quiet checks do not emit partial headings or status lines."""
     print_guardrail_result(
-        "Source Stability",
+        "Source Drift",
         {"status": "failed", "can_continue": False},
         verbose=False,
         source_table_id="source.demo.orders",

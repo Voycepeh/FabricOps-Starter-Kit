@@ -103,7 +103,7 @@ def pipeline_read(
     Files do not have a canonical ``table_id`` and should continue to use the
     foundational CSV, Excel, JSON, or Parquet readers directly.
 
-    This function does not execute Freshness, Source Stability, Schema, DQ, or
+    This function does not execute Freshness, Source Drift, Schema, DQ, or
     Sensitive Data checks. It also does not profile
     data, transform rows, or write a pipeline target. Those meaningful
     engineering decisions remain explicit in ``02_pipeline``.

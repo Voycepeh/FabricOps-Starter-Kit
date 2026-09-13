@@ -5,7 +5,7 @@ from __future__ import annotations
 import inspect
 import fabricops_kit
 
-from fabricops_kit import check_source_stability, check_freshness, profile_table
+from fabricops_kit import check_source_drift, check_freshness, profile_table
 
 
 def _assert_numpy_parameter_contract(function) -> None:
@@ -24,14 +24,15 @@ def test_live_observation_checks_keep_their_supported_public_signatures() -> Non
     assert str(inspect.signature(check_freshness)) == (
         "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
     )
-    assert str(inspect.signature(check_source_stability)) == (
+    assert str(inspect.signature(check_source_drift)) == (
         "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
     )
     assert not hasattr(fabricops_kit, "observe_table")
     assert not hasattr(fabricops_kit, "check_changes")
+    assert not hasattr(fabricops_kit, "check_source_stability")
 
 
 def test_stage2_touched_public_functions_keep_complete_numpy_parameter_docs() -> None:
     """Prevent metadata refactors from collapsing established public API documentation."""
-    for function in (check_source_stability, check_freshness, profile_table):
+    for function in (check_source_drift, check_freshness, profile_table):
         _assert_numpy_parameter_contract(function)

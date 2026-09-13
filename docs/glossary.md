@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Governed rules that FabricOps evaluates against data and pipeline behaviour.</summary>
-<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Stability, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
+<p>In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Drift, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -81,9 +81,9 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> write strategy</p>
 </details>
 
-<details id="source-stability">
-<summary><strong>Source Stability</strong> — Whether source data previously processed by a pipeline remains unchanged.</summary>
-<p>The Source Stability Guardrail compares current source evidence with the latest committed METADATA_SOURCE_OBSERVATION rows for the same logical notebook name, source table_id, and target table_id. Observed rows become committed only after the associated physical target write succeeds. The Guardrail reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy.</p>
+<details id="source-drift">
+<summary><strong>Source Drift</strong> — Whether source data previously consumed by a downstream target changed unexpectedly.</summary>
+<p>The Source Drift Guardrail compares the current source observation with the latest committed METADATA_SOURCE_OBSERVATION rows for the same source table_id, target table_id, and environment. The source table's governed processing and load strategy determine allowed source changes. The target identity selects that target's last-successful consumption baseline; the target's write strategy does not determine drift compatibility. Observed rows become committed only after the associated physical target write succeeds.</p>
 </details>
 
 <details id="writer-ownership">

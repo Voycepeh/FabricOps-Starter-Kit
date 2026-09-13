@@ -277,7 +277,7 @@ def pipeline_write(
     ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
 
     This function does not perform transformations, schema checks, DQ checks,
-    Sensitive Data Guardrails, Source Stability, or profiling. These remain
+    Sensitive Data Guardrails, Source Drift, or profiling. These remain
     explicit notebook engineering and governance steps. ``pipeline_write`` publishes governed
     table targets only. Raw Lakehouse Files do not have a canonical FabricOps
     ``table_id``; direct file-output concerns, if supported in future, belong

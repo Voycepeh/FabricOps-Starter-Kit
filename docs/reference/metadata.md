@@ -211,7 +211,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Stability baseline.</span>
+  <span class="metadata-table-card__purpose">Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One observed or committed partition-state row within one logical notebook, source table, target table, and observation.</span>
@@ -385,7 +385,7 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define enforced Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements with Warn or Block actions.</span>
+  <span class="metadata-table-card__purpose">Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>

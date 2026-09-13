@@ -178,15 +178,16 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     )
 
 
-def test_pipeline_write_does_not_run_source_stability(monkeypatch):
-    """Source Stability remains an explicit notebook check."""
+def test_pipeline_write_does_not_run_source_drift(monkeypatch):
+    """Source Drift remains an explicit notebook check."""
     _patch_write(monkeypatch)
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
 
     write_module.pipeline_write(object(), table_id="target", source_table_ids=["source"])
 
-    assert not hasattr(write_module, "check_source_stability_for_target")
+    assert not hasattr(write_module, "check_source_drift_for_target")
+    assert not hasattr(write_module, "check_source_drift")
 
 
 def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):
@@ -404,7 +405,7 @@ def test_pipeline_write_does_not_own_visible_checks():
         "check_schema",
         "check_dq",
         "check_sensitive_data",
-        "check_source_stability_for_target",
+        "check_source_drift_for_target",
         "profile_table",
     ):
         assert not hasattr(write_module, name)

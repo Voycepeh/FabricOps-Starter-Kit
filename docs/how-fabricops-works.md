@@ -132,7 +132,7 @@ The surrounding Write block keeps the important target decisions explicit and in
 
 - enforce target Schema with [`check_schema()`](api/reference/check_schema.md)
 - enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md), then carry its returned DataFrame into every later step; when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
-- enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
+- enforce Source Drift with [`check_source_drift()`](api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
 - enforce target Data Quality on the Sensitive Data output with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
@@ -185,7 +185,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 Governance authors it through [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
 
 - **Enrichment** for descriptive table and column metadata and information classification
-- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements
+- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements
 - the governed target processing definition, including its load strategy and parameters
 - the logical notebook ownership that identifies which pipeline owns the governed write
 
@@ -195,7 +195,7 @@ The selected or active Data Contract is then **enforced in Engineering through t
 
 - [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
 - [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
-- [`check_source_stability()`](api/reference/check_source_stability.md) explicitly enforces Source Stability for each source-to-target relationship before publication
+- [`check_source_drift()`](api/reference/check_source_drift.md) explicitly enforces Source Drift for each source-to-target relationship before publication
 - [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
 - [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
 
@@ -206,7 +206,7 @@ flowchart LR
     CONTRACT --> SELECT["widget_select_data_contract()"]
     SELECT --> SCHEMA["check_schema()"]
     SELECT --> FRESH["check_freshness()"]
-    SELECT --> STABILITY["check_source_stability()"]
+    SELECT --> STABILITY["check_source_drift()"]
     SELECT --> DQ["check_dq()"]
     SELECT --> SENSITIVE["check_sensitive_data()"]
 ```
@@ -226,7 +226,7 @@ That is the core **Governance as Code** idea in FabricOps: Governance authors th
 
     **Enrichment** is descriptive. It helps people and downstream systems understand what the table and columns mean and how the information is classified.
 
-    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
+    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Drift, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
 
     Activation links the approved Data Contract version to the relevant Data Agreement version so Production has one explicit governed definition to resolve.
 
@@ -277,7 +277,7 @@ The main public functions line up with the metadata model like this:
 | Commit source observation state after successful publication | successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
 | Author the governed definition | [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
 | Activate the Production definition | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
-| Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_stability()`](api/reference/check_source_stability.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
+| Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_drift()`](api/reference/check_source_drift.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
 | Optional access observation | `scan_workspace_access()` | `METADATA_DATA_ACCESS` when persistence is used |
 
 The purple Governance area therefore stores authored definitions. The blue Engineering area stores what the pipeline discovers, profiles, observes, and enforces while it runs. `table_id` is the bridge between the real physical table and both sides of that metadata model.
