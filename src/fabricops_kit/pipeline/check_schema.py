@@ -84,15 +84,15 @@ def check_schema(
     identity = resolve_catalogue_table_identity(
         config, env, table_id, spark_session=spark, context=context,
     )
-    target = identity["target"]
+    store_key = identity["store"]
     schema = identity["schema"]
     table_name = identity["table_name"]
-    store = get_store(config, env, target)
+    store = get_store(config, env, store_key)
     store_type = str(store.kind).lower()
     if store_type != identity["store_type"]:
         raise ValueError(
             f"Catalogue table_id {table_id!r} declares store_type {identity['store_type']!r}, "
-            f"but configured target {target!r} resolves to {store_type!r}."
+            f"but configured store {store_key!r} resolves to {store_type!r}."
         )
     if store_type == "warehouse":
         schema_name, resolved_table, _ = resolve_warehouse_table_location(
@@ -101,17 +101,17 @@ def check_schema(
         if dataframe is None:
             dataframe = read_warehouse_query(
                 f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
-                target=target, spark_session=spark, context=context,
+                store=store_key, spark_session=spark, context=context,
             )
     elif store_type == "lakehouse":
         resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
         if dataframe is None:
             dataframe = read_lakehouse_table(
-                resolved_table, target=target, schema=schema_name,
+                resolved_table, store=store_key, schema=schema_name,
                 spark_session=spark, context=context,
             ).limit(0)
     else:
-        raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
+        raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=spark, table_id=table_id, context=context,
     )
@@ -135,7 +135,7 @@ def check_schema(
         }
         write_guardrail_result_row(
             spark_session=spark, config=config, env=env, run_id="", dataset_name="",
-            table_name=resolved_table, store_type=store_type, layer=target,
+            table_name=resolved_table, store_type=store_type, layer=store_key,
             schema_name=schema_name, guardrail_type="schema",
             rule_type=str(result.get("rule_type")), result=result,
         )

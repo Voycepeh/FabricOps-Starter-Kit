@@ -238,7 +238,7 @@ def test_pipeline_widget_explicit_identity_wins_live_runtime(monkeypatch, fake_n
 def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake_notebookutils):
     """The widget adds no identity arguments and reports exhausted resolution."""
     signature = inspect.signature(fabricops_kit.widget_view_catalogue)
-    assert list(signature.parameters) == ["mode", "agreement", "spark_session", "target", "schema", "context"]
+    assert list(signature.parameters) == ["mode", "agreement", "spark_session", "store", "schema", "context"]
 
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     fake_notebookutils.runtime.context.clear()
@@ -348,7 +348,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
             {"table_id": "unprofiled-key", "environment_name": "dev", "store_type": "lakehouse", "layer": "curated", "schema_name": "sales", "table_name": "customers", "last_profiled_at": latest_snapshot},
         ],
         role_options=None,
-        target="metadata",
+        store="metadata",
         schema=None,
         spark_session=object(),
         runtime_context={"env": "dev"},

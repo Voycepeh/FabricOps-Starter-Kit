@@ -49,7 +49,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def pipeline_read(
-    target: str | None=None,
+    store: str | None=None,
     schema: str | None=None,
     table_name: str | None=None,
     table_id: str | None=None,
@@ -68,7 +68,7 @@ Read a governed table without knowing whether ``source`` resolves to a
 Lakehouse or Warehouse:
 
 >>> result = pipeline_read(
-...     target="source",
+...     store="source",
 ...     schema="demo",
 ...     table_name="orders",
 ... )
@@ -78,7 +78,7 @@ Lakehouse or Warehouse:
 Read a governed Warehouse source through project-owned SQL:
 
 >>> result = pipeline_read(
-...     target="product",
+...     store="product",
 ...     schema="demo",
 ...     table_name="order_history",
 ...     query='''
@@ -101,10 +101,10 @@ complete physical ``demo.order_history`` source table.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `target` | `str \| None` | No | Configured source target key, such as ``"source"`` or ``"product"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `store` | `str \| None` | No | Configured source store key, such as ``"source"`` or ``"product"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
 | `schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical source table name. Required with ``target`` when ``table_id`` is omitted. ``target``, optional ``schema``, and ``table_name`` form one identity form. |
-| `table_id` | `str \| None` | No | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``target``, ``schema``, and ``table_name``. |
+| `table_name` | `str \| None` | No | Physical source table name. Required with ``store`` when ``table_id`` is omitted. ``store``, optional ``schema``, and ``table_name`` form one identity form. |
+| `table_id` | `str \| None` | No | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
 | `query` | `str \| None` | No | Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
 | `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
 

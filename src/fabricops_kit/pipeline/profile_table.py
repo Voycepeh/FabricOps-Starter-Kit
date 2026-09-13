@@ -89,7 +89,7 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
     )
     rows = []
     for row in read_warehouse_query(
-        query, target=str(identity["target"]), spark_session=spark_session, context=context
+        query, store=str(identity["store"]), spark_session=spark_session, context=context
     ).collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
         normalized = {str(key).upper(): item for key, item in value.items()}
@@ -241,7 +241,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
     wide_profile = read_warehouse_query(
         _warehouse_statistical_query(identity, profile_columns),
-        target=str(identity["target"]), spark_session=spark_session, context=context,
+        store=str(identity["store"]), spark_session=spark_session, context=context,
     )
     profile = _warehouse_statistical_dataframe(
         wide_profile, profile_columns, spark_session=spark_session
@@ -263,7 +263,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         selected_metadata = [column for column in all_columns if column[0] in selected_set]
         frequency = read_warehouse_query(
             _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
-            target=str(identity["target"]), spark_session=spark_session, context=context,
+            store=str(identity["store"]), spark_session=spark_session, context=context,
         ).select(*FREQUENCY_PROFILE_COLUMNS)
     return profile, frequency, all_columns
 
@@ -352,14 +352,14 @@ def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[st
     """Validate a caller-supplied identity against the active Fabric config."""
     if not isinstance(table, Mapping):
         raise ValueError("table must be a canonical table identity mapping.")
-    required = {"table_id", "target", "schema", "table_name", "store_kind"}
+    required = {"table_id", "store", "schema", "table_name", "store_kind"}
     missing = sorted(required - set(table))
     if missing:
         raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
     resolved = resolve_physical_table_identity(
         config,
         env,
-        target=table["target"],
+        store=table["store"],
         schema=table["schema"],
         table_name=table["table_name"],
     )
@@ -566,7 +566,7 @@ def _replace_frequency_rows(
         write_lakehouse_table(
             frequency_df,
             PROFILED_FREQUENCY_TABLE,
-            target="metadata",
+            store="metadata",
             schema=metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
             context={"config": config, "env": env},
             mode="append",
@@ -717,7 +717,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
 def profile_table(
     *,
     dataframe=None,
-    target: str | None = None,
+    store: str | None = None,
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
@@ -731,7 +731,7 @@ def profile_table(
     frequency distribution close to the data. Supplied DataFrames and physical
     Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
     An identity may be supplied as a
-    canonical ``table_id`` or as ``target``, optional ``schema``, and
+    canonical ``table_id`` or as ``store``, optional ``schema``, and
     ``table_name``. When an identity is present, FabricOps associates the
     result with that governed table and persists Catalogue, profile, and
     frequency metadata. Without an identity, the exact supplied DataFrame is
@@ -742,13 +742,13 @@ def profile_table(
     dataframe : pyspark.sql.DataFrame, optional
         Exact Spark DataFrame to profile. If a governed identity is also
         supplied, FabricOps does not re-read the physical table.
-    target : str, optional
-        Configured physical target key. Supply with ``table_name`` and optional
+    store : str, optional
+        Configured physical store key. Supply with ``table_name`` and optional
         ``schema`` instead of ``table_id``.
     schema : str, optional
         Physical schema when the configured store uses schemas.
     table_name : str, optional
-        Physical table name. Required with ``target`` when ``table_id`` is
+        Physical table name. Required with ``store`` when ``table_id`` is
         omitted.
     table_id : str, optional
         Canonical governed table identity, mutually exclusive with physical
@@ -807,7 +807,7 @@ def profile_table(
 
     Profile a governed complete physical table without knowing its store kind:
 
-    >>> result = profile_table(target="source", schema="dbo", table_name="orders")
+    >>> result = profile_table(store="source", schema="dbo", table_name="orders")
 
     Profile a transformed DataFrame against an explicit governed identity:
 
@@ -819,14 +819,14 @@ def profile_table(
     read_lakehouse_json, read_lakehouse_parquet
 
     """
-    coordinates = (target, schema, table_name)
+    coordinates = (store, schema, table_name)
     has_coordinates = any(value is not None for value in coordinates)
     if table_id is not None and has_coordinates:
-        raise ValueError("table_id cannot be combined with target, schema, or table_name.")
-    if has_coordinates and (target is None or table_name is None):
-        raise ValueError("Provide both target and table_name when using physical identity.")
+        raise ValueError("table_id cannot be combined with store, schema, or table_name.")
+    if has_coordinates and (store is None or table_name is None):
+        raise ValueError("Provide both store and table_name when using physical identity.")
     if dataframe is None and table_id is None and not has_coordinates:
-        raise ValueError("Provide dataframe, table_id, or both target and table_name.")
+        raise ValueError("Provide dataframe, table_id, or both store and table_name.")
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent)
         or not 0.0 <= frequency_max_distinct_percent <= 100.0
@@ -846,7 +846,7 @@ def profile_table(
             identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
         else:
             identity = resolve_physical_table_identity(
-                config, env, target=target, schema=schema, table_name=table_name
+                config, env, store=store, schema=schema, table_name=table_name
             )
         store_kind = str(identity.get("store_kind") or identity.get("store_type") or "").lower()
         if store_kind not in {"lakehouse", "warehouse"}:
@@ -921,7 +921,7 @@ def profile_table(
     write_lakehouse_table(
         profiled_df,
         PROFILED_TABLE,
-        target="metadata",
+        store="metadata",
         schema=metadata_table_physical_schema(config, PROFILED_TABLE),
         context={"config": config, "env": env},
         mode="append",
@@ -937,7 +937,7 @@ def profile_table(
         profiled_df,
         source_df=dataframe,
         store_type=identity["store_kind"],
-        layer=identity["target"],
+        layer=identity["store"],
         schema_name=identity["schema"],
         table_name=identity["table_name"],
         load_strategy=None,

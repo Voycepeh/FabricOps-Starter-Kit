@@ -10,7 +10,7 @@ from .shared import get_spark_session, read_csv_path, resolve_configured_file_pa
 def read_lakehouse_csv(
     relative_path: str,
     *,
-    target: str = "source",
+    store: str = "source",
     spark_session=None,
     header: bool = True,
     context: dict[str, Any] | None = None,
@@ -35,8 +35,8 @@ def read_lakehouse_csv(
     relative_path : str
         Relative CSV file or folder path resolved underneath the configured
         Lakehouse ``Files`` area.
-    target : str, default="source"
-        Logical Lakehouse target from ``00_env_config``. It is not necessarily
+    store : str, default="source"
+        Logical Lakehouse store key from ``00_env_config``. It is not necessarily
         the literal physical Lakehouse name.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
@@ -73,13 +73,13 @@ def read_lakehouse_csv(
 
     Compact examples:
 
-    ``df = read_lakehouse_csv("incoming/customers.csv", target="source")``
+    ``df = read_lakehouse_csv("incoming/customers.csv", store="source")``
 
-    ``df = read_lakehouse_csv("incoming/customers/", target="source")``
+    ``df = read_lakehouse_csv("incoming/customers/", store="source")``
 
-    ``df = read_lakehouse_csv("incoming/customers.csv", target="source", inferSchema=True)``
+    ``df = read_lakehouse_csv("incoming/customers.csv", store="source", inferSchema=True)``
 
-    ``df = read_lakehouse_csv("incoming/orders.csv", target="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
+    ``df = read_lakehouse_csv("incoming/orders.csv", store="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
 
     When a folder path is supplied, Spark reads compatible CSV files from that
     path into one DataFrame according to Spark CSV reader behavior. FabricOps
@@ -100,5 +100,5 @@ def read_lakehouse_csv(
     the returned DataFrame.
 
     """
-    _store, _relative_path, path = resolve_configured_file_path(target, relative_path, context=context)
+    _store, _relative_path, path = resolve_configured_file_path(store, relative_path, context=context)
     return read_csv_path(get_spark_session(spark_session), path, header=header, options=options)

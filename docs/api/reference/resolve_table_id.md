@@ -36,7 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def resolve_table_id(*, target: str, schema: str | None=None, table_name: str) -> str
+def resolve_table_id(*, store: str, schema: str | None=None, table_name: str) -> str
 ```
 
 </div>
@@ -46,7 +46,7 @@ def resolve_table_id(*, target: str, schema: str | None=None, table_name: str) -
 <div class="reference-example-usage" markdown="1">
 
 >>> table_id = resolve_table_id(
-...     target="unified", schema="dbo", table_name="curated_orders"
+...     store="unified", schema="dbo", table_name="curated_orders"
 ... )
 
 </div>
@@ -55,7 +55,7 @@ def resolve_table_id(*, target: str, schema: str | None=None, table_name: str) -
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `target` | `str` | Yes | Configured FabricStore target key. |
+| `store` | `str` | Yes | Configured FabricStore key. |
 | `schema` | `str \| None` | No | Physical schema, or ``None`` when the configured store does not use one. |
 | `table_name` | `str` | Yes | Physical table name. |
 
@@ -66,7 +66,7 @@ Deterministic canonical table_id for the configured physical identity.
 ## Raises / Errors
 
 ValueError
-    If the target, schema, table name, or configured store is invalid.
+    If the store, schema, table name, or configured store is invalid.
 
 ## See also
 

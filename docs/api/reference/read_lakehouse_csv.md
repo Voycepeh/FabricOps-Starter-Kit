@@ -56,7 +56,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_csv(
     relative_path: str,
-    target: str='source',
+    store: str='source',
     spark_session=None,
     header: bool=True,
     context: dict[str, Any] | None=None,
@@ -71,7 +71,7 @@ def read_lakehouse_csv(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", target="source", header=True, inferSchema=True, spark_session=spark)
+source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="source", header=True, inferSchema=True, spark_session=spark)
 ```
 
 </div>
@@ -81,7 +81,7 @@ source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", target="
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
-| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
+| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `header` | `bool` | No | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them. |
@@ -119,13 +119,13 @@ immediately load the complete file into notebook memory.
 
 Compact examples:
 
-``df = read_lakehouse_csv("incoming/customers.csv", target="source")``
+``df = read_lakehouse_csv("incoming/customers.csv", store="source")``
 
-``df = read_lakehouse_csv("incoming/customers/", target="source")``
+``df = read_lakehouse_csv("incoming/customers/", store="source")``
 
-``df = read_lakehouse_csv("incoming/customers.csv", target="source", inferSchema=True)``
+``df = read_lakehouse_csv("incoming/customers.csv", store="source", inferSchema=True)``
 
-``df = read_lakehouse_csv("incoming/orders.csv", target="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
+``df = read_lakehouse_csv("incoming/orders.csv", store="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
 
 When a folder path is supplied, Spark reads compatible CSV files from that
 path into one DataFrame according to Spark CSV reader behavior. FabricOps
@@ -189,7 +189,7 @@ the returned DataFrame.
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 </ul>
 
 

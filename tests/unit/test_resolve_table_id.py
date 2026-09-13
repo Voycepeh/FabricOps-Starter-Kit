@@ -19,7 +19,7 @@ def test_resolve_table_id_uses_physical_identity_without_catalogue(monkeypatch):
         },
     )
 
-    result = module.resolve_table_id(target="unified", schema="demo", table_name="orders")
+    result = module.resolve_table_id(store="unified", schema="demo", table_name="orders")
 
     assert result == "lakehouse||unified||demo||orders"
     assert fabricops_kit.resolve_table_id is module.resolve_table_id

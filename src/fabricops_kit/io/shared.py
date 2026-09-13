@@ -12,7 +12,7 @@ from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 
 DEFAULT_ENV = "Sandbox"
-DEFAULT_TARGET = "Source"
+DEFAULT_STORE = "Source"
 
 
 # ---------------------------------------------------------------------------
@@ -63,16 +63,16 @@ def _normalize_schema_name(schema: str | None) -> str | None:
     return value
 
 
-def _validate_lakehouse_store(store: FabricStore, env: str, target: str) -> None:
+def _validate_lakehouse_store(configured_store: FabricStore, env: str, store: str) -> None:
     """Validate that a resolved store is a lakehouse."""
-    if store.kind != "lakehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a lakehouse store.")
+    if configured_store.kind != "lakehouse":
+        raise ValueError(f"Store '{env}/{store}' is not a lakehouse store.")
 
 
-def _validate_warehouse_store(store: FabricStore, env: str, target: str) -> None:
+def _validate_warehouse_store(configured_store: FabricStore, env: str, store: str) -> None:
     """Validate that a resolved store is a warehouse."""
-    if store.kind != "warehouse":
-        raise ValueError(f"Target '{env}/{target}' is not a warehouse store.")
+    if configured_store.kind != "warehouse":
+        raise ValueError(f"Store '{env}/{store}' is not a warehouse store.")
 
 
 def _validate_relative_path(relative_path: str) -> str:
@@ -125,58 +125,58 @@ def get_spark_session(spark_session=None):
         ) from exc
 
 
-def resolve_target_store(
-    target: str, expected_kind: str, *, context: dict[str, Any] | None = None
+def resolve_store(
+    store: str, expected_kind: str, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str]:
-    """Resolve and validate a configured Fabric target store."""
+    """Resolve and validate a configured FabricStore."""
     config, env, _context = resolve_fabric_context(context=context)
-    store = get_store(config, env, target)
+    configured_store = get_store(config, env, store)
     if expected_kind == "lakehouse":
-        _validate_lakehouse_store(store, env, target)
+        _validate_lakehouse_store(configured_store, env, store)
     elif expected_kind == "warehouse":
-        _validate_warehouse_store(store, env, target)
+        _validate_warehouse_store(configured_store, env, store)
     else:
         raise ValueError("expected_kind must be one of: lakehouse, warehouse.")
-    return store, env
+    return configured_store, env
 
 
 def resolve_configured_file_path(
-    target: str, relative_path: str, *, context: dict[str, Any] | None = None
+    store: str, relative_path: str, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str, str]:
-    """Resolve a logical target and relative file path through Fabric config."""
-    store, _env = resolve_target_store(target, "lakehouse", context=context)
-    normalized_relative_path, path = resolve_lakehouse_file_location(store, relative_path)
-    return store, normalized_relative_path, path
+    """Resolve a logical store key and relative file path through Fabric config."""
+    configured_store, _env = resolve_store(store, "lakehouse", context=context)
+    normalized_relative_path, path = resolve_lakehouse_file_location(configured_store, relative_path)
+    return configured_store, normalized_relative_path, path
 
 
 def resolve_configured_lakehouse_table(
-    target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None
+    store: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str, str | None, str]:
-    """Resolve a logical target and table through configured lakehouse metadata."""
+    """Resolve a logical store key and table through configured lakehouse metadata."""
     config, env, resolved_context = resolve_fabric_context(context=context)
-    store, _env = resolve_target_store(target, "lakehouse", context=resolved_context)
-    if target.strip().lower() == "metadata":
+    configured_store, _env = resolve_store(store, "lakehouse", context=resolved_context)
+    if store.strip().lower() == "metadata":
         from fabricops_kit.config.metadata_schemas import METADATA_TABLE_OWNERSHIP, metadata_table_physical_schema
 
         if table_name in METADATA_TABLE_OWNERSHIP:
             schema = metadata_table_physical_schema(config, table_name)
-    table_value, schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
-    return store, table_value, schema_value, path
+    table_value, schema_value, path = resolve_lakehouse_table_location(configured_store, table_name, schema)
+    return configured_store, table_value, schema_value, path
 
 
 def resolve_configured_warehouse_table(
-    target: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None
+    store: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str, str, str]:
-    """Resolve a logical target and table through configured warehouse metadata."""
-    store, _env = resolve_target_store(target, "warehouse", context=context)
-    schema_value, table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
-    return store, schema_value, table_value, object_name
+    """Resolve a logical store key and table through configured warehouse metadata."""
+    configured_store, _env = resolve_store(store, "warehouse", context=context)
+    schema_value, table_value, object_name = resolve_warehouse_table_location(configured_store, schema, table_name)
+    return configured_store, schema_value, table_value, object_name
 
 
-def resolve_configured_warehouse_query_target(target: str, *, context: dict[str, Any] | None = None) -> FabricStore:
-    """Resolve a logical target for Fabric warehouse query execution."""
-    store, _env = resolve_target_store(target, "warehouse", context=context)
-    return store
+def resolve_configured_warehouse_query_store(store: str, *, context: dict[str, Any] | None = None) -> FabricStore:
+    """Resolve a logical store key for Fabric warehouse query execution."""
+    configured_store, _env = resolve_store(store, "warehouse", context=context)
+    return configured_store
 
 
 def resolve_lakehouse_table_location(
@@ -319,15 +319,15 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
     writer.save(path)
 
 
-def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | None:
-    """Return the configured schema for a schema-enabled lakehouse target."""
+def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None:
+    """Return the configured schema for a schema-enabled Lakehouse store."""
     try:
-        store = get_store(config, env, target)
+        configured_store = get_store(config, env, store)
     except ValueError:
         return None
-    if store.kind != "lakehouse" or not getattr(store, "schema_enabled", False):
+    if configured_store.kind != "lakehouse" or not getattr(configured_store, "schema_enabled", False):
         return None
-    return _normalize_schema_name(getattr(store, "schema", None))
+    return _normalize_schema_name(getattr(configured_store, "schema", None))
 
 
 def read_warehouse_synapsesql(
@@ -348,21 +348,21 @@ def read_warehouse_synapsesql(
 def read_sql_endpoint_query_core(
     query: str,
     *,
-    target: str,
+    store: str,
     spark_session=None,
     context: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ):
     """Execute a validated query against a configured Warehouse or Lakehouse SQL endpoint."""
     config, env, _resolved_context = resolve_fabric_context(context=context)
-    store = get_store(config, env, target)
-    if store.kind not in {"warehouse", "lakehouse"}:
+    configured_store = get_store(config, env, store)
+    if configured_store.kind not in {"warehouse", "lakehouse"}:
         raise ValueError(
-            f"Target '{env}/{target}' cannot expose the supported SQL permission catalogue views; "
+            f"Store '{env}/{store}' cannot expose the supported SQL permission catalogue views; "
             "expected a warehouse or lakehouse store."
         )
     sql = validate_select_query(query)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql, options=options)
+    return read_warehouse_synapsesql(get_spark_session(spark_session), configured_store, sql, options=options)
 
 
 def write_warehouse_synapsesql(
@@ -437,7 +437,7 @@ def execute_warehouse_processing(
     *,
     schema: str,
     table_name: str,
-    target: str,
+    store: str,
     processing: Mapping[str, Any],
     context: Mapping[str, Any] | None = None,
     options: dict[str, Any] | None = None,
@@ -474,11 +474,11 @@ def execute_warehouse_processing(
             raise ValueError(f"Incoming Warehouse SCD2 data is missing required columns: {', '.join(missing)}.")
         tracked = resolve_scd2_tracked_columns(columns, definition)
 
-    store, schema_value, table_value, _object_name = resolve_configured_warehouse_table(
-        target, schema, table_name, context=dict(context or {})
+    configured_store, schema_value, table_value, _object_name = resolve_configured_warehouse_table(
+        store, schema, table_name, context=dict(context or {})
     )
     stage_name = f"_fabricops_scd_{uuid4().hex}"
-    stage_object = _build_warehouse_object_name(store.name, schema_value, stage_name)
+    stage_object = _build_warehouse_object_name(configured_store.name, schema_value, stage_name)
 
     qschema = _quoted_warehouse_identifier(schema_value)
     qtarget = f"{qschema}.{_quoted_warehouse_identifier(table_value)}"

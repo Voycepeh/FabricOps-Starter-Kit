@@ -154,50 +154,50 @@ def resolve_physical_table_identity(
     config: Any,
     env: str,
     *,
-    target: Any,
+    store: Any,
     schema: Any,
     table_name: Any,
 ) -> dict[str, str | None]:
     """Resolve one configured table to its canonical physical identity."""
-    if not isinstance(target, str) or not target.strip():
-        raise ValueError("target must be a non-empty string.")
+    if not isinstance(store, str) or not store.strip():
+        raise ValueError("store must be a non-empty string.")
     if not isinstance(table_name, str) or not table_name.strip():
         raise ValueError("table_name must be a non-empty string.")
-    normalized_target = target.strip().lower()
-    store = get_store(config, env, normalized_target)
-    store_kind = str(getattr(store, "kind", "")).strip().lower()
+    normalized_store = store.strip().lower()
+    configured_store = get_store(config, env, normalized_store)
+    store_kind = str(getattr(configured_store, "kind", "")).strip().lower()
     if store_kind == "lakehouse":
-        if getattr(store, "schema_enabled", False) and schema is None and not getattr(store, "schema", None):
+        if getattr(configured_store, "schema_enabled", False) and schema is None and not getattr(configured_store, "schema", None):
             raise ValueError(
-                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                f"schema is required for schema-enabled Lakehouse store '{normalized_store}'; "
                 "pass schema or configure a default schema."
             )
         normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(
-            store, table_name, schema
+            configured_store, table_name, schema
         )
-        if getattr(store, "schema_enabled", False) and normalized_schema is None:
+        if getattr(configured_store, "schema_enabled", False) and normalized_schema is None:
             raise ValueError(
-                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                f"schema is required for schema-enabled Lakehouse store '{normalized_store}'; "
                 "pass schema or configure a default schema."
             )
     elif store_kind == "warehouse":
-        configured_schema = schema if schema is not None else getattr(store, "schema", None)
+        configured_schema = schema if schema is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
             raise ValueError(
-                f"schema is required for Warehouse target '{normalized_target}'; "
+                f"schema is required for Warehouse store '{normalized_store}'; "
                 "pass schema or configure a default schema."
             )
         normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
-            store, configured_schema, table_name
+            configured_store, configured_schema, table_name
         )
     else:
         raise ValueError(
-            f"Target '{normalized_target}' has unsupported store kind {store_kind or '<blank>'!r}; "
+            f"Store '{normalized_store}' has unsupported kind {store_kind or '<blank>'!r}; "
             "supported kinds are: lakehouse, warehouse."
         )
     return {
-        "table_id": build_table_id(store_kind, normalized_target, normalized_schema, normalized_table),
-        "target": normalized_target,
+        "table_id": build_table_id(store_kind, normalized_store, normalized_schema, normalized_table),
+        "store": normalized_store,
         "schema": normalized_schema,
         "table_name": normalized_table,
         "store_kind": store_kind,
@@ -565,7 +565,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     history = read_lakehouse_table(
         _SOURCE_OBSERVATION_TABLE,
-        target="metadata",
+        store="metadata",
         schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
         context=context,
     )
@@ -610,7 +610,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     write_lakehouse_table(
         frame,
         _SOURCE_OBSERVATION_TABLE,
-        target="metadata",
+        store="metadata",
         schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
         context=context,
         mode="append",
@@ -706,7 +706,7 @@ def write_guardrail_result_row(
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
-        target="metadata",
+        store="metadata",
         schema=metadata_table_physical_schema(config, results_table),
         context={"config": config, "env": env},
         mode="append",
@@ -1175,7 +1175,7 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     """Resolve the unambiguous active frozen contract for one logical table."""
     try:
         frame = read_lakehouse_table(
-            DATA_CONTRACT_TABLE, target="metadata",
+            DATA_CONTRACT_TABLE, store="metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session, context={"config": config, "env": env},
         )
@@ -1223,7 +1223,7 @@ def _resolve_data_contract_version(
     try:
         frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE,
-            target="metadata",
+            store="metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session,
             context=context or {"config": config, "env": env},
@@ -1303,7 +1303,7 @@ def resolve_catalogue_table_id(
 ) -> str:
     """Resolve one physical runtime table to its canonical Catalogue identity."""
     frame = read_lakehouse_table(
-        CATALOGUE_TABLE, target="metadata",
+        CATALOGUE_TABLE, store="metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session, context={"config": config, "env": env},
     )
@@ -1344,7 +1344,7 @@ def resolve_catalogue_table_identity(
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
     frame = read_lakehouse_table(
         CATALOGUE_TABLE,
-        target="metadata",
+        store="metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session,
         context=context or {"config": config, "env": env},
@@ -1387,7 +1387,7 @@ def resolve_catalogue_table_identity(
         **row,
         "table_id": canonical_id,
         "store_type": store_type,
-        "target": str(row["layer"]).strip().lower(),
+        "store": str(row["layer"]).strip().lower(),
         "schema": str(row.get("schema_name") or "").strip() or None,
         "table_name": str(row["table_name"]).strip(),
     }
@@ -1644,7 +1644,7 @@ def execute_lakehouse_processing(
     df,
     *,
     table_name: str,
-    target: str,
+    store: str,
     schema: str | None,
     processing: Mapping[str, Any],
     scope: Mapping[str, Any],
@@ -1665,11 +1665,11 @@ def execute_lakehouse_processing(
         persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
     if strategy == "append":
-        write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
         if scope_type == "full_dataset":
-            write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
             return
         if scope.get("column") != processing.get("partition_column"):
             raise ValueError("Write partition scope must match the target processing partition_column.")
@@ -1677,7 +1677,7 @@ def execute_lakehouse_processing(
             raise ValueError("Partition-scoped overwrite requires persisted _partition_bucket target state.")
         predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
         write_lakehouse_table(
-            persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
+            persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context,
             options={"replaceWhere": predicate},
         )
         return
@@ -1685,13 +1685,13 @@ def execute_lakehouse_processing(
     from delta.tables import DeltaTable
     from pyspark.sql import functions as F
 
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(store, table_name, schema, context=context)
     keys = list(processing["key_columns"])
     duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
         return
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
@@ -1728,7 +1728,7 @@ def execute_lakehouse_processing(
     current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
     incoming = persisted_df.join(current, on=keys, how="left_anti")
     if incoming.limit(1).count():
-        write_lakehouse_table(incoming, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table(incoming, table_name, store=store, schema=schema, mode="append", context=context)
 
 
 def load_table_guardrail_rules(
@@ -2553,7 +2553,7 @@ def check_dq_runtime(
     table_name: str,
     *,
     table_id: str,
-    target: str,
+    store: str,
     store_type: str,
     schema_name: str | None,
     dataset_name: str = "",
@@ -2640,7 +2640,7 @@ def check_dq_runtime(
     context = {"config": config, "env": env}
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
-        "METADATA_GUARDRAIL_RESULTS", target="metadata",
+        "METADATA_GUARDRAIL_RESULTS", store="metadata",
         schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
     )
 

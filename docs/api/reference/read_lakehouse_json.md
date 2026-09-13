@@ -11,7 +11,7 @@ Read JSON data from a configured Lakehouse Files path through Spark JSON.
 
 <div class="reference-docstring-intro" markdown="1">
 
-FabricOps resolves ``target`` and ``relative_path`` to the configured
+FabricOps resolves ``store`` and ``relative_path`` to the configured
 Lakehouse ``Files`` area, then delegates JSON parsing to Spark's native
 JSON reader. Use ``read_lakehouse_table`` instead for managed Delta tables
 in the Lakehouse ``Tables`` area.
@@ -47,7 +47,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_json(
     relative_path: str,
-    target: str='source',
+    store: str='source',
     spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
@@ -60,9 +60,9 @@ def read_lakehouse_json(
 
 <div class="reference-example-usage" markdown="1">
 
-``df = read_lakehouse_json("incoming/events.json", target="source")``
+``df = read_lakehouse_json("incoming/events.json", store="source")``
 
-``df = read_lakehouse_json("incoming/events.json", target="source", multiLine=True)``
+``df = read_lakehouse_json("incoming/events.json", store="source", multiLine=True)``
 
 This function does not read managed Delta tables, register metadata,
 profile data, convert JSON to Delta, mutate source files, or automatically
@@ -75,7 +75,7 @@ cache or persist the returned DataFrame.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | JSON file or folder path underneath the configured Lakehouse ``Files`` area. Root-level and nested paths are supported. |
-| `target` | `str` | No | Logical Lakehouse target configured by ``00_env_config``. |
+| `store` | `str` | No | Logical Lakehouse store key configured by ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Options forwarded unchanged to Spark's JSON reader, such as ``multiLine``, ``mode``, ``columnNameOfCorruptRecord``, ``dateFormat``, ``timestampFormat``, ``encoding``, ``recursiveFileLookup``, ``pathGlobFilter``, ``primitivesAsString``, ``allowComments``, ``allowSingleQuotes``, and ``allowUnquotedFieldNames``. |
 

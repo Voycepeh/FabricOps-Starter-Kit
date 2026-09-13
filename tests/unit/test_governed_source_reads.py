@@ -59,7 +59,7 @@ def test_lakehouse_table_id_read_tags_dataframe_for_profile_safety(monkeypatch):
     monkeypatch.setattr(context_module, "resolve_fabric_context", lambda **_kwargs: ("config", "dev", {}))
     monkeypatch.setattr(shared_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
         "table_id": "source-id", "store_type": "lakehouse", "table_name": "orders",
-        "target": "source", "schema": None,
+        "store": "source", "schema": None,
     })
     monkeypatch.setattr(
         owner, "resolve_configured_lakehouse_table",

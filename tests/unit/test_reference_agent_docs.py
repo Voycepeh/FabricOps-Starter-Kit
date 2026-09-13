@@ -2130,7 +2130,7 @@ def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source(
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.normalize_table_name",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
     ]
     node_by_qn = {
         public_qn: {
@@ -2160,7 +2160,7 @@ def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source(
             "fabricops_kit.io.shared.normalize_table_name",
         ],
         "fabricops_kit.io.shared.resolve_lakehouse_table_location": [
-            "fabricops_kit.io.shared.resolve_target_store",
+            "fabricops_kit.io.shared.resolve_store",
         ],
         **{qn: [] for qn in helper_qns if qn not in {
             "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
@@ -2201,7 +2201,7 @@ def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source(
         "resolve_configured_lakehouse_table",
         "resolve_lakehouse_table_location",
         "normalize_table_name",
-        "resolve_target_store",
+        "resolve_store",
     } <= downstream_names
     assert {
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",

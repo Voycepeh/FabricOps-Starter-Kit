@@ -832,7 +832,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Physical source table name, configured source target, optional schema, and governed target_table_id.',
   'returns': 'Canonical METADATA_SOURCE_OBSERVATION rows for the current activity.',
   'side_effects': 'Appends observation_status=observed evidence; only a successful physical target write appends its committed state.',
-  'preferred_example': 'observation = observe_table("orders", target="source", schema="dbo", target_table_id=target_table_id)',
+  'preferred_example': 'observation = observe_table("orders", store="source", schema="dbo", target_table_id=target_table_id)',
   'related_functions': ['pipeline_read', 'check_freshness', 'check_source_stability']},
  {'kind': 'function',
   'module': 'pipeline',
@@ -874,7 +874,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Canonical table_id or configured target, schema, and table_name, plus optional Warehouse query.',
   'returns': 'DataFrame, canonical source table_id, custom-query signal, and whether an environment-selected Data Contract applies.',
   'side_effects': 'Persists source Lineage and establishes source profile-registration context; it does not run checks, profile rows, or write a target.',
-  'preferred_example': 'read_result = pipeline_read(target="source", schema="dbo", table_name="orders")',
+  'preferred_example': 'read_result = pipeline_read(store="source", schema="dbo", table_name="orders")',
   'related_functions': ['pipeline_write', 'read_lakehouse_table', 'read_warehouse_table', 'read_warehouse_query']},
  {'kind': 'function',
   'module': 'pipeline.resolve_table_id',
@@ -888,7 +888,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Configured physical target, optional schema, and table name.',
   'returns': 'Deterministic canonical table_id for the configured physical identity.',
   'side_effects': 'None; it reads active Fabric configuration without requiring Catalogue or Data Contract records.',
-  'preferred_example': 'table_id = resolve_table_id(target="unified", schema="dbo", table_name="orders")',
+  'preferred_example': 'table_id = resolve_table_id(store="unified", schema="dbo", table_name="orders")',
   'related_functions': ['pipeline_write', 'observe_table', 'check_schema']},
  {'kind': 'function',
   'module': 'pipeline.pipeline_write',
@@ -902,7 +902,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Prepared DataFrame, target identity or physical coordinates, exact canonical source table_ids, and optional Development processing proposal.',
   'returns': 'A small result containing the canonical target table_id.',
   'side_effects': 'Publishes the target, then commits target Lineage and accepted Source Observation state and establishes target profile context.',
-  'preferred_example': 'write_result = pipeline_write(prepared_df, target="unified", schema="dbo", table_name="orders", source_table_ids=[orders_result["table_id"]])',
+  'preferred_example': 'write_result = pipeline_write(prepared_df, store="unified", schema="dbo", table_name="orders", source_table_ids=[orders_result["table_id"]])',
   'related_functions': ['pipeline_read', 'write_lakehouse_table', 'write_warehouse_table']},
  {'kind': 'function',
   'module': 'config.setup_notebook',
@@ -1059,7 +1059,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
   'fabric_context': 'Routes reads through configured FabricOps Lakehouse targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify the target, schema, and table are intended Lakehouse inputs before generating calls.',
-  'preferred_example': 'df_orders = read_lakehouse_table("orders", target="source", schema=SOURCE_SCHEMA, spark_session=spark)',
+  'preferred_example': 'df_orders = read_lakehouse_table("orders", store="source", schema=SOURCE_SCHEMA, spark_session=spark)',
   'related_functions': ['write_lakehouse_table', 'read_lakehouse_csv', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta reader with any supplied reader options.',
   'when_to_use': 'Use near the start of a notebook when Spark processing needs a full Lakehouse table DataFrame.',
@@ -1083,7 +1083,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Writes data to the configured Lakehouse Delta table path.',
   'fabric_context': 'Routes writes through configured FabricOps Lakehouse targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify guardrails passed, target/schema/table routing is intentional, and write mode is safe before generating calls.',
-  'preferred_example': 'write_lakehouse_table(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")',
+  'preferred_example': 'write_lakehouse_table(df_orders, "orders_clean", store="unified", schema=UNIFIED_SCHEMA, mode="overwrite")',
   'related_functions': ['read_lakehouse_table', 'write_warehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta writer with any supplied writer options.',
   'when_to_use': 'Use after transformations and guardrail checks when the destination is a Lakehouse table.',
@@ -1141,7 +1141,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Constructs a Spark JSON read plan; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name.',
   'ai_verification': 'Verify the configured target and relative path, then check schema and rows when an action evaluates the DataFrame.',
-  'preferred_example': 'df = read_lakehouse_json(relative_path="incoming/events.json", target="source", multiLine=True, spark_session=spark)',
+  'preferred_example': 'df = read_lakehouse_json(relative_path="incoming/events.json", store="source", multiLine=True, spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates file or folder parsing and all JSON reader options to Spark.',
   'when_to_use': 'Use for JSON Lines or multi-line JSON source ingestion that should follow configured Fabric target routing.',
@@ -1303,7 +1303,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
                      'check the intended write mode before calling.',
   'preferred_example': 'write_warehouse_table(serving_df, '
-                       'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
+                       'store="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
   'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
@@ -1675,7 +1675,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "side_effects": "Constructs a Spark CSV read plan only; it does not write files, tables, or metadata.",
         "return_interpretation": "The returned DataFrame is a normal lazy Spark DataFrame until an action such as count, display, collect, or write is executed.",
         "common_failure_causes": ["The lakehouse target or Files path cannot be resolved.", "The path is missing or the caller lacks read permission.", "Malformed rows, inconsistent files in a folder, absent headers, or empty files do not match the requested Spark CSV options.", "Schema inference can produce unexpected types; an explicit schema can mismatch source values.", "Some Spark failures appear only when a downstream action evaluates the DataFrame."],
-        "preferred_example": 'source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", target="source", header=True, inferSchema=True, spark_session=spark)',
+        "preferred_example": 'source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="source", header=True, inferSchema=True, spark_session=spark)',
     },
     "read_lakehouse_parquet": {
         "expanded_purpose": "Reads Parquet data from a Fabric lakehouse Files location into a Spark DataFrame while resolving the logical FabricOps lakehouse target and path. It preserves Parquet schema metadata where Spark can infer it and does not register, profile, or write a new table.",
@@ -1683,7 +1683,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "Spark DataFrame backed by the selected Parquet file or folder. One DataFrame row represents one source record; partition columns may be added by Spark when reading partitioned folders.",
         "return_interpretation": "The function verifies decodability with a one-row Spark action before returning, then downstream transformations remain normal Spark DataFrame operations.",
         "common_failure_causes": ["The path is missing, inaccessible, empty, corrupt, or not Parquet.", "Schemas are incompatible across files unless Spark options such as mergeSchema are appropriate.", "Schema merging can be expensive on large partitioned folders.", "The configured target cannot be resolved or read.", "Failures can occur during the initial validation action or later Spark evaluation."],
-        "preferred_example": 'source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", target="source", spark_session=spark)',
+        "preferred_example": 'source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="source", spark_session=spark)',
     },
     "read_lakehouse_table": {
         "expanded_purpose": "Loads a registered lakehouse Delta table into a Spark DataFrame using FabricOps target, schema, and table-name resolution so notebooks do not hardcode fully qualified table paths.",
@@ -1691,7 +1691,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "parameters": "table_name is the logical table name, not a qualified schema.table string; target selects the configured lakehouse; schema optionally qualifies schema-enabled lakehouses; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; reader options are passed to Spark Delta reader.",
         "returns": "Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.",
         "common_failure_causes": ["The target cannot be resolved or is not a lakehouse.", "The table is not found, exists under another lakehouse or schema, or the schema argument is incorrect.", "The caller lacks read permissions or no Spark session is available.", "Spark Delta read failures may be deferred until an action evaluates the DataFrame."],
-        "preferred_example": 'catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", target="metadata", schema=METADATA_SCHEMA, spark_session=spark)',
+        "preferred_example": 'catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="metadata", schema=METADATA_SCHEMA, spark_session=spark)',
     },
     "read_warehouse_query": {
         "expanded_purpose": "Executes caller-supplied read-only SQL against a Fabric Warehouse and returns the result as a Spark DataFrame. Filtering, joins, grouping, and projection run in the Warehouse before rows are transferred to Spark.",
@@ -1700,7 +1700,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "Spark DataFrame containing the rows and columns produced by the Warehouse query. The output schema is determined by the SQL projection and Warehouse result types.",
         "common_failure_causes": ["Invalid, blank, or non-read-only SQL.", "Unknown tables or columns, unresolved Warehouse connection, or permission failure.", "Unsupported Warehouse-to-Spark type conversion.", "Very large result transfers can be slow or fail; empty result sets are successful DataFrames with zero rows."],
         "usage_notes": "Apply selective filters, projections, joins, and aggregations in the SQL query where practical so the Warehouse processes them before rows are transferred into Spark. Avoid SELECT * for very large tables when only a subset of fields is required.",
-        "preferred_example": 'active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = \'Active\'", target="warehouse", spark_session=spark)',
+        "preferred_example": 'active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = \'Active\'", store="warehouse", spark_session=spark)',
     },
     "read_warehouse_table": {
         "expanded_purpose": "Reads a complete Fabric Warehouse table into a Spark DataFrame using the configured Warehouse connection, schema, and table identity. The table remains owned by the Warehouse and is not copied, profiled, registered, or modified.",
@@ -1709,7 +1709,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "Spark DataFrame containing the rows and columns of the resolved Warehouse table.",
         "common_failure_causes": ["The Warehouse connection cannot be resolved.", "The schema or table is not found, the caller lacks permission, or identifiers are invalid.", "The table contains unsupported data types for transfer to Spark.", "Complete-table reads may transfer large datasets; an empty table returns a valid zero-row DataFrame."],
         "usage_notes": "A complete-table read may transfer a large dataset from the Warehouse into Spark. Use read_warehouse_query when the workload can be reduced through SQL projection, filtering, joins, or aggregation.",
-        "preferred_example": 'student_df = read_warehouse_table("dbo", "student_enrolment", target="warehouse", spark_session=spark)',
+        "preferred_example": 'student_df = read_warehouse_table("dbo", "student_enrolment", store="warehouse", spark_session=spark)',
     },
     "write_lakehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric lakehouse table using the configured FabricOps target, schema, table name, and write settings. Spark-side repartitioning can be applied before the physical Delta write so large datasets can be processed by multiple Spark tasks concurrently; physical Delta partitioning is separate and only occurs when partition_by is supplied.",
@@ -1718,7 +1718,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "None. The function validates routing and write settings, optionally repartitions the DataFrame, performs the Spark Delta write, and returns after the write completes or Spark raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.", "Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.", "Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure."],
         "usage_notes": "Parallel processing is Spark distributed execution over DataFrame partitions, not Python threading, multiprocessing, parallel submission of separate tables, or a separate orchestration helper. repartition_by changes Spark execution partitions for the current write; partition_by changes the persisted Delta layout.",
-        "preferred_example": 'write_lakehouse_table(enrolment_df, "STUDENT_ENROLMENT_HISTORY", target="data", schema=DATA_SCHEMA, mode="overwrite", repartition_by=48, partition_by=["academic_year"])',
+        "preferred_example": 'write_lakehouse_table(enrolment_df, "STUDENT_ENROLMENT_HISTORY", store="data", schema=DATA_SCHEMA, mode="overwrite", repartition_by=48, partition_by=["academic_year"])',
     },
     "write_warehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric Warehouse table through the configured Warehouse write path. Spark-side repartitioning can be applied before connector transfer so large datasets can use multiple Spark tasks concurrently; it does not create physical Warehouse table partitions.",
@@ -1727,7 +1727,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "None. The function validates repartitioning, optionally writes a repartitioned DataFrame through the Warehouse connector, and returns after connector execution completes or raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, empty lists/tuples, or non-string column values after any leading partition count.", "Schema or table not found, unsupported write mode, authentication or connector failure, Warehouse permission failure, or unsupported Spark-to-Warehouse type conversion.", "Connector-managed transfer or staging failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one."],
         "usage_notes": "Parallel Spark tasks within one write_warehouse_table call are not the same as several notebooks or jobs writing to the same Warehouse table concurrently. The function does not coordinate independent writers or guarantee safe simultaneous overwrite operations, and it must not be documented with lakehouse-style partition_by behaviour.",
-        "preferred_example": 'write_warehouse_table(transaction_df, "dbo", "FACT_TRANSACTIONS", target="warehouse", mode="append", repartition_by=48)',
+        "preferred_example": 'write_warehouse_table(transaction_df, "dbo", "FACT_TRANSACTIONS", store="warehouse", mode="append", repartition_by=48)',
     },
 
 
@@ -1737,7 +1737,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including profile_id, profile_snapshot_id, stable table_id and column_id identities, environment_name, complete-DataFrame statistics, profiling timestamp, and runtime audit fields.",
         "return_interpretation": "The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency and catalogue rows are side effects and are not returned.",
         "common_failure_causes": ["profile_role must be source or target, or the configured target store kind is unsupported.", "target or table_name is blank, or a schema-enabled store has no explicit or configured schema.", "frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.", "The configured metadata target cannot be resolved or written.", "Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost."],
-        "preferred_example": 'profiled_df = profile_table(source_df, profile_role="source", target="source", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)',
+        "preferred_example": 'profiled_df = profile_table(source_df, profile_role="source", store="source", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)',
     },
 }
 

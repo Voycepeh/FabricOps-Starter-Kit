@@ -42,7 +42,7 @@ def widget_view_catalogue(
     mode: str,
     agreement: dict[str, Any] | None=None,
     spark_session=None,
-    target: str='metadata',
+    store: str='metadata',
     schema: str | None=None,
     context=None,
 ):
@@ -67,7 +67,7 @@ def widget_view_catalogue(
 | `mode` | `str` | Yes | Explicit dataset-scope strategy. No mode is inferred from other inputs. |
 | `agreement` | `dict[str, Any] \| None` | No | Agreement widget state containing the current saved agreement. Required only for ``mode="agreement"``. |
 | `spark_session` | `object` | No | Spark session override. |
-| `target` | `str` | No | Configured metadata FabricStore target. |
+| `store` | `str` | No | Configured metadata FabricStore key. |
 | `schema` | `str \| None` | No | Metadata lakehouse schema override. |
 | `context` | `object` | No | Explicit FabricOps context used for environment and runtime identity. |
 

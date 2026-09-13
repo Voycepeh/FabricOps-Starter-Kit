@@ -64,7 +64,7 @@ A complete-table read may transfer a large dataset from the Warehouse into Spark
 def read_warehouse_table(
     schema: str,
     table_name: str,
-    target: str='warehouse',
+    store: str='warehouse',
     spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
@@ -78,7 +78,7 @@ def read_warehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-student_df = read_warehouse_table("dbo", "student_enrolment", target="warehouse", spark_session=spark)
+student_df = read_warehouse_table("dbo", "student_enrolment", store="warehouse", spark_session=spark)
 ```
 
 </div>
@@ -89,7 +89,7 @@ student_df = read_warehouse_table("dbo", "student_enrolment", target="warehouse"
 | --- | --- | --- | --- |
 | `schema` | `str` | Yes | Physical Warehouse schema name for the source table. |
 | `table_name` | `str` | Yes | Physical Warehouse table name for the source table. |
-| `target` | `str` | No | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
+| `store` | `str` | No | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
@@ -169,7 +169,7 @@ pushdown before Spark receives rows.
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 </ul>
 

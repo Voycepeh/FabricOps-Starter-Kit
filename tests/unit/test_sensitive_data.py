@@ -26,7 +26,7 @@ def _runtime(monkeypatch, rules, writes):
     monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *_a, **_k: {"contract_id": "contract"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_a, **_k: {
         "table_id": "table-id", "table_name": "customers", "store_type": "lakehouse",
-        "target": "unified", "schema": "dbo",
+        "store": "unified", "schema": "dbo",
     })
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *_a, **_k: rules)
     monkeypatch.setattr(module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs["result"]))

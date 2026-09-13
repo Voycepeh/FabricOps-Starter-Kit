@@ -146,7 +146,7 @@ def setup_notebook(
     """
     normalized = validate_framework_config(config)
     targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: get_store(config=normalized, env=env, target=target) for target in targets}
+    resolved_paths = {store_name: get_store(config=normalized, env=env, store=store_name) for store_name in targets}
 
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     resolved_notebook_name = runtime_meta.get("notebook_name")
@@ -175,18 +175,18 @@ def setup_notebook(
             else "notebookutils.runtime unavailable outside Fabric runtime.",
         )
     )
-    for target, store in resolved_paths.items():
+    for store_name, store in resolved_paths.items():
         missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(store, attr, None)]
         if missing:
-            checks.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
+            checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "fail", f"Missing required fields: {missing}"))
         elif store.kind == "lakehouse" and str(store.root).startswith("abfss://"):
             checks.append(
                 ConfigSmokeCheckResult(
-                    f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
+                    f"path:{store_name}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
                 )
             )
         else:
-            checks.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
+            checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "pass", "Store is populated."))
 
     if resolved_notebook_name:
         normalized_name = "_".join(str(resolved_notebook_name).strip().lower().split())

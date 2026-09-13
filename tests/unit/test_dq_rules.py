@@ -24,7 +24,7 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", context))
     monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract-a"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": "orders", "store_type": "lakehouse", "target": "source", "schema": "sales", "table_name": "orders",
+        "table_id": "orders", "store_type": "lakehouse", "store": "source", "schema": "sales", "table_name": "orders",
     })
     monkeypatch.setattr(
         module, "check_dq_runtime",
@@ -43,7 +43,7 @@ def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract-a"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
-        "table_id": "orders", "store_type": "lakehouse", "target": "source",
+        "table_id": "orders", "store_type": "lakehouse", "store": "source",
         "schema": "sales", "table_name": "orders",
     })
     monkeypatch.setattr(module, "check_dq_runtime", lambda *_args, **_kwargs: {"can_continue": False})

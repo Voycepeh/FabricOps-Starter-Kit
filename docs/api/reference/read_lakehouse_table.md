@@ -60,7 +60,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 def read_lakehouse_table(
     table_name: str | None=None,
     table_id: str | None=None,
-    target: str='source',
+    store: str='source',
     schema: str | None=None,
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -75,7 +75,7 @@ def read_lakehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", target="metadata", schema=METADATA_SCHEMA, spark_session=spark)
+catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="metadata", schema=METADATA_SCHEMA, spark_session=spark)
 ```
 
 </div>
@@ -85,8 +85,8 @@ catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", target="metadata"
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `table_name` | `str \| None` | No | Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied. |
-| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``target``, and ``schema`` from the Catalogue. |
-| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path. |
+| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. |
+| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
 | `schema` | `str \| None` | No | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Delta ``DataFrameReader`` options forwarded to the Delta reader. These options do not provide FabricOps-level filtering or projection. |
@@ -119,11 +119,11 @@ FabricOps resolves the configured Lakehouse Tables path from
 supplied reader options. Filtering and column selection are applied later
 through normal Spark DataFrame operations. Conceptual examples:
 
-``df = read_lakehouse_table(table_name="orders", target="source")``
+``df = read_lakehouse_table(table_name="orders", store="source")``
 
-``df = read_lakehouse_table(table_name="orders", target="source", schema="sales")``
+``df = read_lakehouse_table(table_name="orders", store="source", schema="sales")``
 
-``orders_df = read_lakehouse_table(table_name="sales_orders", target="source")``
+``orders_df = read_lakehouse_table(table_name="sales_orders", store="source")``
 
 ``recent_orders_df = orders_df.select("order_id", "customer_id", "order_date", "amount").where("order_date >= '2026-01-01'")``
 
@@ -180,7 +180,7 @@ DataFrame.
 <li><code>fabricops_kit.io.shared.read_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 </ul>

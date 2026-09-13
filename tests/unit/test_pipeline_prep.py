@@ -24,7 +24,7 @@ def _identity(table_id="warehouse:source:dbo:student_source", *, store_type="war
         "table_id": table_id,
         "store_type": store_type,
         "store_kind": store_type,
-        "target": "source" if ":source:" in table_id else "unified",
+        "store": "source" if ":source:" in table_id else "unified",
         "schema": "dbo",
         "table_name": table_id.rsplit(":", 1)[-1],
         "load_strategy": "overwrite",
@@ -86,10 +86,10 @@ def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
 
 
 def test_pipeline_read_rejects_identity_conflict():
-    with pytest.raises(ValueError, match="Provide table_id or both target and table_name"):
+    with pytest.raises(ValueError, match="Provide table_id or both store and table_name"):
         read_module.pipeline_read()
     with pytest.raises(ValueError, match="table_id cannot be combined"):
-        read_module.pipeline_read(table_id="id", target="source")
+        read_module.pipeline_read(table_id="id", store="source")
 
 
 def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
@@ -134,7 +134,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
         shared_module, "commit_pipeline_write_success", lambda value: events.append(("metadata", value))
     )
     result = write_module.pipeline_write(
-        object(), target="unified", schema="dbo", table_name="students",
+        object(), store="unified", schema="dbo", table_name="students",
         source_table_ids=["source-a", "source-b"],
     )
 
@@ -282,7 +282,7 @@ def test_pipeline_write_table_id_form_and_conflicting_forms(monkeypatch):
     result = write_module.pipeline_write(object(), table_id=identity["table_id"], source_table_ids=["source-a"])
     assert result["table_id"] == identity["table_id"]
     with pytest.raises(ValueError, match="table_id cannot be combined"):
-        write_module.pipeline_write(object(), table_id="id", target="unified")
+        write_module.pipeline_write(object(), table_id="id", store="unified")
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])

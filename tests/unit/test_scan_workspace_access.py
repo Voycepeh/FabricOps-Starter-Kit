@@ -98,8 +98,8 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
     module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
     calls = []
 
-    def fake_read(query, *, target, spark_session=None, context=None, **options):
-        calls.append((query, target, context))
+    def fake_read(query, *, store, spark_session=None, context=None, **options):
+        calls.append((query, store, context))
         return _observations(spark_session)
 
     monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
@@ -160,8 +160,8 @@ def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_sessi
 
     empty = _observations(spark_session).limit(0)
 
-    def fake_read(query, *, target, spark_session=None, context=None, **options):
-        calls.append(target)
+    def fake_read(query, *, store, spark_session=None, context=None, **options):
+        calls.append(store)
         return empty
 
     monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
@@ -287,7 +287,7 @@ def test_sql_endpoint_reader_supports_configured_physical_data_items(monkeypatch
         ) or "frame",
     )
 
-    assert module.read_sql_endpoint_query_core("SELECT 1", target="item") == "frame"
+    assert module.read_sql_endpoint_query_core("SELECT 1", store="item") == "frame"
     assert calls == [("spark", store, "SELECT 1", None)]
 
 
@@ -298,4 +298,4 @@ def test_sql_endpoint_reader_rejects_unsupported_target_configuration(monkeypatc
     monkeypatch.setattr(module, "get_store", lambda config, env, target: SimpleNamespace(kind="files"))
 
     with pytest.raises(ValueError, match="expected a warehouse or lakehouse store"):
-        module.read_sql_endpoint_query_core("SELECT 1", target="unsupported")
+        module.read_sql_endpoint_query_core("SELECT 1", store="unsupported")

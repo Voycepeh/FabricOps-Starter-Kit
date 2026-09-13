@@ -147,7 +147,7 @@ def test_guardrail_save_uses_metadata_target(monkeypatch):
     spark = type("Spark", (), {"createDataFrame": lambda self, rows: rows})()
     record = {"contract_id": "c", "contract_version": 2, "environment_name": "dev"}
     assert service.save_guardrails([record], config=object(), env="dev", spark_session=spark) == [record]
-    assert writes[0][1]["target"] == "metadata"
+    assert writes[0][1]["store"] == "metadata"
     assert writes[0][1]["schema"] == "governance"
 
 

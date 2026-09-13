@@ -49,7 +49,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def pipeline_write(
     df,
-    target: str | None=None,
+    store: str | None=None,
     schema: str | None=None,
     table_name: str | None=None,
     table_id: str | None=None,
@@ -71,7 +71,7 @@ def pipeline_write(
 Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 
 >>> result = pipeline_write(
-...     prepared_df, target="unified", schema="demo",
+...     prepared_df, store="unified", schema="demo",
 ...     table_name="curated_orders",
 ...     source_table_ids=[orders_result["table_id"]],
 ... )
@@ -81,7 +81,7 @@ Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 Development may propose processing, without bypassing contract authority:
 
 >>> pipeline_write(
-...     prepared_df, target="unified", schema="demo",
+...     prepared_df, store="unified", schema="demo",
 ...     table_name="curated_orders", load_strategy="overwrite",
 ...     source_table_ids=[orders_result["table_id"]],
 ... )
@@ -93,10 +93,10 @@ Development may propose processing, without bypassing contract authority:
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Prepared target DataFrame after explicit target checks have passed. |
-| `target` | `str \| None` | No | Configured target key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `store` | `str \| None` | No | Configured store key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
 | `schema` | `str \| None` | No | Physical target schema when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical target table name. Required with ``target`` when ``table_id`` is omitted. |
-| `table_id` | `str \| None` | No | Canonical registered target identity. This identity form is mutually exclusive with ``target``, ``schema``, and ``table_name``. |
+| `table_name` | `str \| None` | No | Physical target table name. Required with ``store`` when ``table_id`` is omitted. |
+| `table_id` | `str \| None` | No | Canonical registered target identity. This identity form is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
 | `load_strategy` | `str \| None` | No | Development-authored processing proposal. Selected or frozen contract validation applies in Development, and the active approved Data Contract remains authoritative in Production. |
 | `load_strategy_parameters` | `dict[str, Any] \| None` | No | Development-authored strategy parameters, such as key, effective, tracked, or partition columns, subject to contract validation. |
 | `source_table_ids` | `list[str] \| tuple[str, ...] \| None` | No | Canonical identities of the exact governed sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame. |

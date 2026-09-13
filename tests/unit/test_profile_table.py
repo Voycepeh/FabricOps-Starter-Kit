@@ -20,7 +20,7 @@ def test_profile_table_public_signature_and_removed_symbols():
     import fabricops_kit.pipeline as pipeline
 
     assert str(inspect.signature(profile_table)) == (
-        "(*, dataframe=None, target: 'str | None' = None, schema: 'str | None' = None, "
+        "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, frequency_columns=None, "
         "frequency_top_n: 'int | None' = None, frequency_max_distinct_percent: 'float | None' = 80.0)"
     )
@@ -61,8 +61,8 @@ def test_dataframe_only_raw_file_shape_does_not_invent_identity(spark_session):
     "kwargs,message",
     [
         ({}, "Provide dataframe"),
-        ({"table_id": "x", "target": "source", "table_name": "orders"}, "cannot be combined"),
-        ({"target": "source"}, "both target and table_name"),
+        ({"table_id": "x", "store": "source", "table_name": "orders"}, "cannot be combined"),
+        ({"store": "source"}, "both store and table_name"),
     ],
 )
 def test_profile_table_rejects_invalid_identity_forms(kwargs, message):
@@ -75,7 +75,7 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     """Associate the supplied frame with identity without a physical read."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     source = spark_session.createDataFrame([(1,)], ["value"])
-    identity = {"table_id": "lakehouse||source||dbo||orders", "target": "source", "schema": "dbo", "table_name": "orders", "store_kind": "lakehouse"}
+    identity = {"table_id": "lakehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "lakehouse"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not reread"))
@@ -96,7 +96,7 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
 def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatch, capsys):
     """Push physical Warehouse statistics and frequencies into SQL, never a full table read."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
-    identity = {"table_id": "warehouse||source||dbo||orders", "target": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
+    identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     schema_rows = spark_session.createDataFrame(
         [("amount", "int", 10, 0, 1), ("status", "varchar", None, None, 2)],
         ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE", "ORDINAL_POSITION"],
@@ -154,7 +154,7 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
     """Treat a custom or incremental Warehouse query result as the exact supplied Spark batch."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     source = spark_session.createDataFrame([(10,), (None,)], ["amount"])
-    identity = {"table_id": "warehouse||source||dbo||orders", "target": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
+    identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_warehouse_query", lambda *a, **k: pytest.fail("must profile supplied batch in Spark"))

@@ -10,7 +10,7 @@ At the end of this module, you will have run the complete pipeline and written `
 
 !!! info "Pipeline stage terminology"
 
-    In `02_pipeline`, **Read**, **Transform**, and **Write** are the user-facing stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `target="source"` or `target="unified"`.
+    In `02_pipeline`, **Read**, **Transform**, and **Write** are the user-facing stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `store="source"` or `store="unified"`.
 
 !!! important "Step 2 is contract-free"
 

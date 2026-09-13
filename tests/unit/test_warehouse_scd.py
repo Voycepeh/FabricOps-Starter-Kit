@@ -33,7 +33,7 @@ def _capture_sql(monkeypatch, frame, processing):
         lambda _spark, _store, sql, **_kwargs: observed.setdefault("sql", sql),
     )
     io_shared.execute_warehouse_processing(
-        frame, schema="dbo", table_name="customers", target="warehouse", processing=processing
+        frame, schema="dbo", table_name="customers", store="warehouse", processing=processing
     )
     return observed
 
@@ -61,7 +61,7 @@ def test_scd1_rejects_duplicate_incoming_keys_before_staging(monkeypatch, spark_
     monkeypatch.setattr(io_shared, "write_warehouse_synapsesql", lambda *_args, **_kwargs: pytest.fail("mutation"))
     with pytest.raises(ValueError, match="duplicate business keys"):
         io_shared.execute_warehouse_processing(
-            frame, schema="dbo", table_name="customers", target="warehouse",
+            frame, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
         )
 
@@ -98,7 +98,7 @@ def test_scd2_rejects_duplicate_keys_and_missing_lifecycle_columns(monkeypatch, 
     duplicate = spark_session.createDataFrame([(1, "a"), (1, "b")], ["customer_id", "effective_at"])
     with pytest.raises(ValueError, match="duplicate business keys"):
         io_shared.execute_warehouse_processing(
-            duplicate, schema="dbo", table_name="customers", target="warehouse",
+            duplicate, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd2", "key_columns": ["customer_id"], "effective_column": "effective_at"},
         )
     single = spark_session.createDataFrame([(1, "2026-01-01")], ["customer_id", "effective_at"])
@@ -109,7 +109,7 @@ def test_scd2_rejects_duplicate_keys_and_missing_lifecycle_columns(monkeypatch, 
     monkeypatch.setattr(io_shared, "write_warehouse_synapsesql", lambda *_args, **_kwargs: None)
     with pytest.raises(ValueError, match="missing required columns"):
         io_shared.execute_warehouse_processing(
-            single, schema="dbo", table_name="customers", target="warehouse",
+            single, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd2", "key_columns": ["customer_id"], "effective_column": "effective_at"},
         )
 
@@ -136,7 +136,7 @@ def test_staging_write_failure_attempts_cleanup(monkeypatch, spark_session):
 
     with pytest.raises(RuntimeError, match="staging failed"):
         io_shared.execute_warehouse_processing(
-            frame, schema="dbo", table_name="customers", target="warehouse",
+            frame, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
         )
 
@@ -165,7 +165,7 @@ def test_merge_failure_attempts_cleanup(monkeypatch, spark_session):
 
     with pytest.raises(RuntimeError, match="merge failed"):
         io_shared.execute_warehouse_processing(
-            frame, schema="dbo", table_name="customers", target="warehouse",
+            frame, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
         )
 
@@ -195,7 +195,7 @@ def test_cleanup_failure_preserves_original_mutation_error(monkeypatch, spark_se
 
     with pytest.raises(RuntimeError, match="original merge failure"):
         io_shared.execute_warehouse_processing(
-            frame, schema="dbo", table_name="customers", target="warehouse",
+            frame, schema="dbo", table_name="customers", store="warehouse",
             processing={"load_strategy": "scd1", "key_columns": ["customer_id"]},
         )
     assert calls == ["execute", "execute"]

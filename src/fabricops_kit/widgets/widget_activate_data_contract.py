@@ -76,7 +76,7 @@ def _compact_review(payload: dict[str, Any]) -> dict[str, Any]:
 def widget_activate_data_contract(
     *, table_id: str | None = None, contract_id: str | None = None,
     contract_version: int | None = None, agreement_id: str | None = None,
-    agreement_version: str | None = None, target: str = "metadata",
+    agreement_version: str | None = None, store: str = "metadata",
     schema: str | None = None, spark_session=None, context=None,
 ):
     """Link an exact Data Agreement version and activate a frozen Data Contract.
@@ -93,8 +93,8 @@ def widget_activate_data_contract(
         Initial Data Agreement lifecycle identity selected at activation time.
     agreement_version : str, optional
         Initial exact Data Agreement version selected at activation time.
-    target : str, default="metadata"
-        Configured metadata Lakehouse target.
+    store : str, default="metadata"
+        Configured metadata Lakehouse store key.
     schema : str, optional
         Metadata Lakehouse schema override.
     spark_session : object, optional
@@ -138,11 +138,11 @@ def widget_activate_data_contract(
     spark = get_spark_session(spark_session)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
     contracts = [_row_dict(row) for row in read_lakehouse_table(
-        CONTRACT_TABLE, target=target, schema=schema, spark_session=spark,
+        CONTRACT_TABLE, store=store, schema=schema, spark_session=spark,
         context=runtime_context,
     ).collect()]
     agreements = [_row_dict(row) for row in read_lakehouse_table(
-        AGREEMENT_TABLE, target=target,
+        AGREEMENT_TABLE, store=store,
         schema=metadata_table_physical_schema(config, AGREEMENT_TABLE),
         spark_session=spark, context=runtime_context,
     ).collect()]
@@ -191,7 +191,7 @@ def widget_activate_data_contract(
             contract_id=str(selected["contract_id"]),
             contract_version=int(selected["contract_version"]),
             agreement_id=aid, agreement_version=aversion,
-            target=target, schema=schema, spark_session=spark, context=runtime_context,
+            store=store, schema=schema, spark_session=spark, context=runtime_context,
         )
         if not result["changed"]:
             state["message"] = f"Data Contract v{selected['contract_version']} is already active with this Data Agreement."

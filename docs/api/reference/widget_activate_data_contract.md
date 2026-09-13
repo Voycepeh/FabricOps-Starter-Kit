@@ -42,7 +42,7 @@ def widget_activate_data_contract(
     contract_version: int | None=None,
     agreement_id: str | None=None,
     agreement_version: str | None=None,
-    target: str='metadata',
+    store: str='metadata',
     schema: str | None=None,
     spark_session=None,
     context=None,
@@ -72,7 +72,7 @@ def widget_activate_data_contract(
 | `contract_version` | `int \| None` | No | Initial exact immutable Data Contract version. |
 | `agreement_id` | `str \| None` | No | Initial Data Agreement lifecycle identity selected at activation time. |
 | `agreement_version` | `str \| None` | No | Initial exact Data Agreement version selected at activation time. |
-| `target` | `str` | No | Configured metadata Lakehouse target. |
+| `store` | `str` | No | Configured metadata Lakehouse store key. |
 | `schema` | `str \| None` | No | Metadata Lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
 | `context` | `object` | No | FabricOps context normally established by ``00_env_config``. |

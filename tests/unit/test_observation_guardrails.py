@@ -154,7 +154,7 @@ def configure_stability(
     monkeypatch.setattr(stability, "write_guardrail_result_row", lambda **kwargs: None)
     monkeypatch.setattr(stability, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [stability_rule()])
     monkeypatch.setattr(stability, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo",
+        "table_id": args[2], "store_type": "lakehouse", "store": "source", "schema": "dbo",
         "table_name": "orders", "load_strategy": "overwrite", "load_strategy_parameters_json": "{}",
     })
     monkeypatch.setattr(
@@ -173,7 +173,7 @@ def configure_freshness(monkeypatch, rules=None):
     monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: configured_rules)
     monkeypatch.setattr(freshness, "write_guardrail_result_row", lambda **kwargs: None)
     monkeypatch.setattr(freshness, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": args[2], "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
+        "table_id": args[2], "store_type": "lakehouse", "store": "source", "schema": "dbo", "table_name": "orders",
     })
 
 
@@ -448,7 +448,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(schema_module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
+        "table_id": "catalogue-orders", "store_type": "lakehouse", "store": "source", "schema": "dbo", "table_name": "orders",
     })
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "read_lakehouse_table", lambda *args, **kwargs: frame)
@@ -500,7 +500,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
     )
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": "catalogue-orders", "store_type": "warehouse", "target": "product", "schema": "sales", "table_name": "orders",
+        "table_id": "catalogue-orders", "store_type": "warehouse", "store": "product", "schema": "sales", "table_name": "orders",
     })
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
@@ -542,7 +542,7 @@ def test_schema_can_raise_on_blocking_result(monkeypatch):
     monkeypatch.setattr(schema_module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"})
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
-        "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "product", "schema": "dbo", "table_name": "orders",
+        "table_id": "catalogue-orders", "store_type": "lakehouse", "store": "product", "schema": "dbo", "table_name": "orders",
     })
     monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: [result])
     monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: result)

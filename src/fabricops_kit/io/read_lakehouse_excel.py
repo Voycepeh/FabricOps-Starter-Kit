@@ -10,7 +10,7 @@ from .shared import get_spark_session, read_excel_file, resolve_configured_file_
 def read_lakehouse_excel(
     relative_path: str,
     *,
-    target: str = "source",
+    store: str = "source",
     sheet_name=0,
     spark_session=None,
     context: dict[str, Any] | None = None,
@@ -22,8 +22,8 @@ def read_lakehouse_excel(
     ----------
     relative_path : str
         Excel file path resolved by the Fabric resolver.
-    target : str, default="source"
-        Logical lakehouse target from ``00_env_config``.
+    store : str, default="source"
+        Logical Lakehouse store key from ``00_env_config``.
     sheet_name : str or int, default=0
         Worksheet name or index to read.
     spark_session : object, optional
@@ -46,7 +46,7 @@ def read_lakehouse_excel(
     DataFrame.
 
     """
-    _store, _relative_path, lakehouse_path = resolve_configured_file_path(target, relative_path, context=context)
+    _store, _relative_path, lakehouse_path = resolve_configured_file_path(store, relative_path, context=context)
     return read_excel_file(
         get_spark_session(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs
     )

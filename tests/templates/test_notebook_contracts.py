@@ -172,7 +172,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, source)
         for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
     ) if tree is not None for node in ast.walk(tree) if isinstance(node, ast.Name)}
-    assert 'target="metadata"' in source
+    assert 'store="metadata"' in source
     assert 'mode="explore"' in source
     assert 'TABLE_ID = table_selection["table_id"]' in source
     assert 'contract_authoring["table_id"] == TABLE_ID' in source
@@ -242,7 +242,7 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
 def test_02_pipeline_read_blocks_are_cloneable_orchestrated_reads():
     """Every Read exposes the same source variables, orchestration, and explicit checks."""
     required = (
-        "READ_TARGET =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =",
+        "READ_STORE =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =",
         "read_result = pipeline_read(", 'read_df = read_result["dataframe"]',
         'READ_TABLE_ID = read_result["table_id"]', 'if read_result["has_contract"]:',
         "observe_table(", "check_freshness(", "check_source_stability(",
@@ -310,7 +310,7 @@ def test_02_pipeline_write_is_one_complete_copyable_block():
     config = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
     block = _cell_by_id("02_pipeline.ipynb", "write-1").source
     for setting in (
-        "WRITE_TARGET", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY",
+        "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY",
         "WRITE_LOAD_STRATEGY_PARAMETERS",
     ):
         assert f"{setting} =" in config

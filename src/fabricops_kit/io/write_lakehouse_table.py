@@ -17,7 +17,7 @@ def write_lakehouse_table(
     df,
     table_name: str,
     *,
-    target: str = "unified",
+    store: str = "unified",
     schema=None,
     mode="append",
     partition_by=None,
@@ -29,7 +29,7 @@ def write_lakehouse_table(
     """Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
     ``write_lakehouse_table`` writes a Spark DataFrame to a Fabric lakehouse
-    table using the configured FabricOps target, schema, table name, and write
+    table using the configured FabricOps store, schema, table name, and write
     settings. It supports Spark-side repartitioning before the write so large
     datasets can be processed by multiple Spark tasks concurrently.
 
@@ -57,8 +57,8 @@ def write_lakehouse_table(
         Lakehouse table name. Supply ``schema`` and ``table_name`` separately;
         do not pass a qualified name such as ``schema.table`` through
         ``table_name``.
-    target : str, default="unified"
-        Logical Lakehouse target from ``00_env_config``. FabricOps resolves
+    store : str, default="unified"
+        Logical Lakehouse store key from ``00_env_config``. FabricOps resolves
         the selected environment, workspace, Lakehouse item, optional schema,
         table name, and OneLake Delta path under the Lakehouse ``Tables``
         area.
@@ -159,7 +159,7 @@ def write_lakehouse_table(
 
     Implementation sequence
         The function validates the DataFrame writer, validates the table
-        identity and write mode, resolves the lakehouse target and optional
+        identity and write mode, resolves the Lakehouse store and optional
         schema, validates ``repartition_by``, calls ``df.repartition(number)``
         for a positive integer, ``df.repartition(*columns)`` for a column
         name/list/tuple, or ``df.repartition(number, *columns)`` when a list or
@@ -208,7 +208,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     small_lookup_df,
     ...     "COUNTRY_REGION_MAPPING",
-    ...     target="data",
+    ...     store="data",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ... )
@@ -222,7 +222,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     target="data",
+    ...     store="data",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=32,
@@ -237,7 +237,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     target="data",
+    ...     store="data",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=["academic_year", "semester"],
@@ -248,7 +248,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     target="data",
+    ...     store="data",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=32,
@@ -265,7 +265,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     enrolment_df,
     ...     "STUDENT_ENROLMENT_HISTORY",
-    ...     target="data",
+    ...     store="data",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=48,
@@ -278,7 +278,7 @@ def write_lakehouse_table(
     """
     validate_dataframe_writer(df)
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        target, table_name, schema, context=context
+        store, table_name, schema, context=context
     )
     normalized_mode = normalize_write_mode(mode)
     df = repartition_dataframe_for_write(df, repartition_by)
