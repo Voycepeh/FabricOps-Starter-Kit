@@ -107,9 +107,9 @@ Under the Read block, Engineering can keep the more advanced source work explici
 - call [`profile_table()`](api/reference/profile_table.md) for profiling
 - inspect Catalogue or governed source context
 
-The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and the source definition.
+The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
 
-For a Lakehouse, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
+For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
 
 ### Transform
 
@@ -136,13 +136,15 @@ The surrounding Write block can keep the important target decisions explicit:
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
 
-??? info "Read more: what the Read, Profile, and Write functions resolve for you"
+??? info "Read more: how FabricOps routes work across Lakehouse and Warehouse"
 
-    [`pipeline_read()`](api/reference/pipeline_read.md) resolves the governed source identity and dispatches to the correct Lakehouse or Warehouse reader.
+    FabricOps public functions give the notebook stable interfaces while resolving the correct Lakehouse or Warehouse implementation underneath.
 
-    [`profile_table()`](api/reference/profile_table.md) uses Spark for a supplied DataFrame or Lakehouse path, and can use Warehouse-native SQL when profiling a physical Warehouse table.
+    [`pipeline_read()`](api/reference/pipeline_read.md) routes governed table reads to the Lakehouse table, Warehouse table, or Warehouse query implementation. Raw Lakehouse files remain explicit file reads through the foundational file readers.
 
-    [`pipeline_write()`](api/reference/pipeline_write.md) resolves the governed target identity, Data Contract processing definition, and the correct Lakehouse or Warehouse publication path before committing success metadata.
+    [`profile_table()`](api/reference/profile_table.md) uses Spark for a supplied DataFrame or Lakehouse table, and can use Warehouse-native SQL when profiling a physical Warehouse table.
+
+    [`pipeline_write()`](api/reference/pipeline_write.md) resolves the governed target and routes publication through the correct Lakehouse or Warehouse path while applying the Data Contract load strategy.
 
     [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
 
