@@ -130,8 +130,8 @@ The surrounding Write block can keep the important target decisions explicit:
 - run target Schema, Data Quality, and Sensitive Data Guardrails
 - resolve the governed load strategy and its parameters from the Data Contract
 - publish through the correct Lakehouse or Warehouse path
-- attach target audit fields
-- persist the target processing definition in Catalogue
+- add FabricOps technical audit columns to the target data
+- persist the resolved load strategy and parameters in Catalogue
 - commit successful Lineage and Source Observation metadata only after the physical write succeeds
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
