@@ -68,6 +68,9 @@ def test_normalize_payload_stores_functions_and_relationships_once():
             "callee_qualified_name": "fabricops_kit.example.helper",
             "call_count": 2,
             "architecture_violations": [],
+            "architecture_signals": [],
+            "architecture_signal_types": [],
+            "architecture_signal_details": [],
             "violation_types": [],
             "violation_details": [],
         }

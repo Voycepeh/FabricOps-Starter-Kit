@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:716`
+`fabricops_kit/pipeline/profile_table.py:717`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L716-L952">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L717-L953">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -157,7 +157,7 @@ The orchestration performs these mechanical steps:
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 72 |
+| Live-critical dependencies | 60 |
 
 ### Release history
 
@@ -194,27 +194,15 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
-<li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
-<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
-<li><code>fabricops_kit.io.shared.read_warehouse_query_core</code></li>
-<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
-<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
-<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
-<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>

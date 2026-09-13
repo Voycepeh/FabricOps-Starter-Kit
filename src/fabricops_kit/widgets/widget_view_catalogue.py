@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table
+
 import html
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import read_lakehouse_table_core
 import fabricops_kit.widgets.shared as widget_shared
 
 
@@ -73,7 +74,7 @@ def _resolve_agreement_catalogue_scope(
         raise ValueError("A saved agreement selection is required to view its catalogue inventory.")
     from pyspark.sql import functions as F
 
-    contracts = read_lakehouse_table_core(
+    contracts = read_lakehouse_table(
         "METADATA_DATA_CONTRACT",
         target=target,
         schema=schema,
@@ -356,7 +357,7 @@ def _build_catalogue_widget(
                 ("frequency", "METADATA_DATA_PROFILED_FREQUENCY"),
                 ("guardrail_results", "METADATA_GUARDRAIL_RESULTS"),
             ):
-                source_frames[name] = read_lakehouse_table_core(
+                source_frames[name] = read_lakehouse_table(
                     table_name,
                     target=target,
                     schema=schema,
@@ -519,7 +520,7 @@ def _build_catalogue_widget(
             ("frequency", "METADATA_DATA_PROFILED_FREQUENCY"),
             ("guardrail_results", "METADATA_GUARDRAIL_RESULTS"),
         ):
-            source_frames[name] = read_lakehouse_table_core(
+            source_frames[name] = read_lakehouse_table(
                 table_name,
                 target=target,
                 schema=schema,
@@ -684,7 +685,7 @@ def widget_view_catalogue(
             runtime_context=runtime_context,
         )
 
-    catalogue = read_lakehouse_table_core(
+    catalogue = read_lakehouse_table(
         "METADATA_DATA_CATALOGUE",
         target=target,
         schema=schema,

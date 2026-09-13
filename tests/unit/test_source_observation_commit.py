@@ -73,11 +73,11 @@ def _configure_commit(monkeypatch, observations=None):
     written = []
     lineage = []
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(observations))
+    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: Frame(observations))
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(shared, "get_spark_session", Spark)
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(shared, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     return written, lineage
 

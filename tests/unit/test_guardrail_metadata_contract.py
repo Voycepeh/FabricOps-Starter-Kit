@@ -200,7 +200,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     monkeypatch.setattr(guardrails_shared, "metadata_table_physical_schema", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
         guardrails_shared,
-        "write_lakehouse_table_core",
+        "write_lakehouse_table",
         lambda frame, table, **_kwargs: writes.append((table, frame.rows[0])),
     )
 

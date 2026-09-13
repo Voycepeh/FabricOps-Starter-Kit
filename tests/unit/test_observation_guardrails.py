@@ -147,9 +147,9 @@ def configure_stability(
             }
             for value in history
         ])
-    monkeypatch.setattr(stability, "read_lakehouse_table_core", read_metadata)
+    monkeypatch.setattr(stability, "read_lakehouse_table", read_metadata)
     written = []
-    monkeypatch.setattr(stability, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
+    monkeypatch.setattr(stability, "write_lakehouse_table", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(stability, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(stability, "write_guardrail_result_row", lambda **kwargs: None)
     monkeypatch.setattr(stability, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [stability_rule()])
@@ -451,7 +451,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
         "table_id": "catalogue-orders", "store_type": "lakehouse", "target": "source", "schema": "dbo", "table_name": "orders",
     })
     monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
-    monkeypatch.setattr(schema_module, "read_lakehouse_table_core", lambda *args, **kwargs: frame)
+    monkeypatch.setattr(schema_module, "read_lakehouse_table", lambda *args, **kwargs: frame)
     loader_calls = []
     monkeypatch.setattr(
         schema_module, "load_table_guardrail_rules",
@@ -496,7 +496,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
     monkeypatch.setattr(schema_module, "resolve_warehouse_table_location", lambda *args: ("sales", "orders", "path"))
     monkeypatch.setattr(
         schema_module,
-        "read_warehouse_query_core",
+        "read_warehouse_query",
         lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
     )
     monkeypatch.setattr(schema_module, "resolve_catalogue_table_identity", lambda *args, **kwargs: {

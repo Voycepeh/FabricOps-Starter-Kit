@@ -79,7 +79,7 @@ def test_catalogue_widget_dispatches_only_scope_resolution(monkeypatch, mode):
     selected = {"pipeline": "pipeline-id", "agreement": "agreement-id", "explore": "explore-id"}[mode]
     inventory = [{"table_id": selected}, {"table_id": "out-of-scope-id"}]
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
-    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(module, "_collect_catalogue_inventory", lambda *_args: inventory)
     scope = ({selected}, None, {"environment_name": "dev"}, {"Environment": "dev"})
     monkeypatch.setattr(module, "_resolve_pipeline_catalogue_scope", lambda **_kwargs: scope)
@@ -167,8 +167,8 @@ def _run_pipeline_widget(monkeypatch, *, context=None):
     monkeypatch.setitem(sys.modules, "pyspark", pyspark)
     monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", functions)
-    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
-    monkeypatch.setattr(module.widget_shared, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: Frame())
+    monkeypatch.setattr(module.widget_shared, "read_lakehouse_table", lambda *_args, **_kwargs: Frame())
     monkeypatch.setattr(module, "_collect_catalogue_inventory", lambda *_args: [{"table_id": "table-id"}])
     monkeypatch.setattr(module, "_build_catalogue_widget", lambda **kwargs: kwargs)
     explicit = {"config": object(), "env": "dev", **(context or {})}
@@ -337,7 +337,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
         read_calls.append(table)
         return tables[table]
 
-    monkeypatch.setattr(module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(module, "read_lakehouse_table", read_table)
     state = module._build_catalogue_widget(
         title="Pipeline Catalogue Viewer",
         description="View data catalogues used by the current pipeline notebook",

@@ -19,9 +19,9 @@ a deterministic content fingerprint by source partition.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:160`
+`fabricops_kit/pipeline/observe_table.py:159`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L160-L296">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L159-L295">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

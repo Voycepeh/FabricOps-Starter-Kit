@@ -141,3 +141,21 @@ def test_package_callables_obey_architecture_boundaries() -> None:
 def test_io_core_wrapper_module_is_deleted() -> None:
     """Verify Fabric IO no longer keeps a wrapper-on-wrapper io_core layer."""
     assert not (SRC / "io_core.py").exists()
+
+
+def test_domain_source_does_not_bypass_public_fabric_io() -> None:
+    """Require domain, public, and widget source to use foundational public I/O."""
+    bypasses = {
+        "read_lakehouse_table_core",
+        "read_warehouse_query_core",
+        "write_lakehouse_table_core",
+    }
+    offenders = []
+    for path in SRC.rglob("*.py"):
+        if path.parent.name == "io":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and node.id in bypasses:
+                offenders.append(f"{path.relative_to(SRC)}:{node.lineno}:{node.id}")
+    assert offenders == []

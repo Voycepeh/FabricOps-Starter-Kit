@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
+
 import re
 from typing import Any
 from uuid import uuid4
@@ -12,11 +14,8 @@ from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, met
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
     get_spark_session,
-    read_lakehouse_table_core,
-    read_warehouse_query_core,
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
-    write_lakehouse_table_core,
 )
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
@@ -86,7 +85,7 @@ def _observe_lakehouse(
 ) -> list[dict[str, Any]]:
     from pyspark.sql import functions as F
 
-    frame = read_lakehouse_table_core(
+    frame = read_lakehouse_table(
         table_name,
         target=target,
         schema=schema,
@@ -146,7 +145,7 @@ def _persist(
         [coerce_metadata_row_types(OBSERVATION_TABLE, row) for row in values],
         schema=metadata_table_schema_registry()[OBSERVATION_TABLE],
     )
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         frame,
         OBSERVATION_TABLE,
         target="metadata",
@@ -265,7 +264,7 @@ def observe_table(
             schema_value, table_value, partition_value, change_value  # type: ignore[arg-type]
         )
         current = _compact_rows(
-            read_warehouse_query_core(
+            read_warehouse_query(
                 query,
                 target=target_value,
                 spark_session=spark,

@@ -413,13 +413,17 @@ def test_architecture_violation_type_classification() -> None:
 
 
 def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_is_not() -> None:
-    """Allow the explicit downward I/O boundary without weakening Type 1 generally."""
+    """Classify the explicit downward I/O boundary as Type 0 without weakening Type 1."""
     public = info("check_schema", "src/fabricops_kit/check_schema.py")
     foundation = info("read_lakehouse_table", "src/fabricops_kit/io/read_lakehouse_table.py")
     sideways = info("profile_dataframe", "src/fabricops_kit/profile_dataframe.py")
 
     assert flows.classify_architecture_violation(public, foundation, "public_function", "public_dependency") is None
+    assert flows.classify_architecture_signal(
+        public, foundation, callee_is_public=True
+    ) == {"type": "Type 0", "detail": "Calls foundational Fabric I/O."}
     assert flows.classify_architecture_violation(public, sideways, "public_function", "public_dependency")["type"] == "Type 1"
+    assert flows.classify_architecture_signal(public, sideways, callee_is_public=True) is None
 
 
 def test_foundational_io_classification_and_lifecycle_history() -> None:
@@ -506,6 +510,9 @@ def test_nested_foundational_io_is_a_visible_terminal_but_its_root_expands(tmp_p
 
     assert [row["function_name"] for row in caller["flow"]] == ["check_schema", "read_lakehouse_table"]
     assert caller["architecture_violation_count"] == 0
+    boundary = caller["flow"][1]
+    assert boundary["architecture_signal_types"] == ["Type 0"]
+    assert boundary["architecture_violations"] == []
     assert caller["width"] == 1
     assert caller["depth"] == 1
     assert caller["scope"] == caller["transitive_function_count"] == 1
@@ -630,13 +637,15 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="badge muted">Promote to shared</span>' in html
     for violation_type in range(1, 6):
         assert f'<span class="badge danger">Type {violation_type}</span>' in html
+    assert '<span class="badge positive">Type 0</span>' in html
+    assert ".positive{background:#dcfce7;color:#166534}" in html
     assert '<span class="badge danger">Type 6</span>' not in html
     assert "Public function summary card signals" not in html
     assert "Public function table signals" in html
-    assert "Call tree violation rules" in html
+    assert "Call tree architecture edge types" in html
     assert "Selected callable inventory signals" in html
     assert '<details class="flow-details signal-explainer" open><summary>Public function table signals</summary>' in html
-    assert '<details class="flow-details signal-explainer" open><summary>Call tree violation rules</summary>' in html
+    assert '<details class="flow-details signal-explainer" open><summary>Call tree architecture edge types</summary>' in html
     assert '<details class="flow-details signal-explainer" open><summary>Selected callable inventory signals</summary>' in html
     assert '<div class="signal-row"><span class="badge warn">Large width/depth</span><span class="signal-text">Width &gt; 10 or Depth &gt; 5.</span></div>' in html
     assert 'type="button">Width</button>' in html

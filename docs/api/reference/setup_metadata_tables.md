@@ -29,9 +29,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:117`
+`fabricops_kit/config/setup_metadata_tables.py:118`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L117-L450">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L118-L451">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -243,7 +243,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 37 |
+| Live-critical dependencies | 17 |
 
 ### Release history
 
@@ -269,29 +269,9 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
-<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
-<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
-<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
-<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
-<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
-<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
-<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
-<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
-<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
-<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 </ul>
 
 

@@ -1,12 +1,13 @@
 """Public Source Stability Guardrail check."""
 
+from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+
 import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import (
     evaluate_source_stability_guardrail,
     load_table_guardrail_rules,
@@ -165,7 +166,7 @@ def _observation_stability(
     metadata_schema = metadata_table_physical_schema(config, _OBSERVATION_TABLE)
     history = []
     try:
-        history = read_lakehouse_table_core(
+        history = read_lakehouse_table(
             _OBSERVATION_TABLE,
             target="metadata",
             schema=metadata_schema,
@@ -224,7 +225,7 @@ def _observation_stability(
             [coerce_metadata_row_types(_OBSERVATION_TABLE, row) for row in tombstones],
             schema=metadata_table_schema_registry()[_OBSERVATION_TABLE],
         )
-        write_lakehouse_table_core(
+        write_lakehouse_table(
             tombstone_df,
             _OBSERVATION_TABLE,
             target="metadata",

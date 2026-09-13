@@ -64,8 +64,8 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
             return steward_rows
         return []
 
-    monkeypatch.setattr(agreement, "write_lakehouse_table_core", write_table)
-    monkeypatch.setattr(agreement, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(agreement, "read_lakehouse_table", read_table)
 
     steward = steward_widget._create_or_update_data_steward(
         spark=FakeSpark(),
@@ -246,7 +246,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
 
     monkeypatch.setattr(
         guardrails_shared,
-        "write_lakehouse_table_core",
+        "write_lakehouse_table",
         lambda *_args, **_kwargs: pytest.fail("metadata write should not run without audit fields"),
     )
 
@@ -272,7 +272,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
     from fabricops_kit.pipeline import shared as guardrails_shared
 
     writes = []
-    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table", lambda frame, *_args, **_kwargs: writes.append(frame))
     spark = FakeSpark()
     config = framework_config()
     config.path_config.paths["prod"] = config.path_config.paths["dev"]

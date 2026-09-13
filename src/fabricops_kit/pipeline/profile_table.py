@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_warehouse_query, write_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table
+
+
 import json
 import math
 from typing import Any, Mapping, Sequence
@@ -11,12 +15,9 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import (
     get_spark_session,
-    read_warehouse_query_core,
     resolve_configured_lakehouse_table,
-    write_lakehouse_table_core,
 )
 from fabricops_kit.pipeline.shared import (
     build_frequency_distribution_dataframe,
@@ -87,7 +88,7 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
         f"WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {table} ORDER BY ORDINAL_POSITION"
     )
     rows = []
-    for row in read_warehouse_query_core(
+    for row in read_warehouse_query(
         query, target=str(identity["target"]), spark_session=spark_session, context=context
     ).collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
@@ -238,7 +239,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
     ]
     if not profile_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
-    wide_profile = read_warehouse_query_core(
+    wide_profile = read_warehouse_query(
         _warehouse_statistical_query(identity, profile_columns),
         target=str(identity["target"]), spark_session=spark_session, context=context,
     )
@@ -260,7 +261,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
     if selected:
         selected_set = set(selected)
         selected_metadata = [column for column in all_columns if column[0] in selected_set]
-        frequency = read_warehouse_query_core(
+        frequency = read_warehouse_query(
             _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
             target=str(identity["target"]), spark_session=spark_session, context=context,
         ).select(*FREQUENCY_PROFILE_COLUMNS)
@@ -562,7 +563,7 @@ def _replace_frequency_rows(
         .execute()
     )
     if frequency_df is not None:
-        write_lakehouse_table_core(
+        write_lakehouse_table(
             frequency_df,
             PROFILED_FREQUENCY_TABLE,
             target="metadata",
@@ -917,7 +918,7 @@ def profile_table(
             env=env,
             runtime_context=context,
         )
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         profiled_df,
         PROFILED_TABLE,
         target="metadata",
