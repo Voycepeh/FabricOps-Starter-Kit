@@ -5,6 +5,8 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
+import re
+import subprocess
 import time
 
 import pytest
@@ -788,6 +790,38 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "large_depth" not in html
     assert ">large_width<" not in html
     assert ">large_width</span>" not in html
+
+
+def test_dashboard_javascript_classifies_foundational_io_edges_by_caller_layer(tmp_path: Path) -> None:
+    """Execute the dashboard classifier for all public-foundation boundary cases."""
+    root, pkg, init_path = write_project(tmp_path)
+    html = dashboard.render_dashboard(flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path))
+
+    def javascript_function(name: str, next_name: str) -> str:
+        match = re.search(rf"function {name}.*?(?=\nfunction {next_name})", html, flags=re.DOTALL)
+        assert match is not None
+        return match.group(0)
+
+    script = "\n".join([
+        "const ARCHITECTURE_VIOLATION_RULES={'Type 1':'one','Type 2':'two','Type 3':'three','Type 4':'four','Type 5':'five'};",
+        "const PUBLIC_CALLABLE_TYPES=new Set(['public_function','widget_function']);",
+        "function isPublicCallableType(type){return PUBLIC_CALLABLE_TYPES.has(type)}",
+        javascript_function("deriveFlowEdges", "classifyDerivedViolation"),
+        javascript_function("classifyDerivedViolation", "deriveArchitectureViolations"),
+        javascript_function("deriveArchitectureViolations", "deriveInventorySignals"),
+        "const foundation={qualified_name:'foundation',function_type:'public_dependency',architecture_classification:'foundation_io',source_path:'io.py'};",
+        "const ordinary={qualified_name:'ordinary',function_type:'public_dependency',architecture_classification:'domain_public_api',source_path:'ordinary.py'};",
+        "function classify(parent,child){const flow=[{...parent,depth:0,parent_qualified_name:null},{...child,depth:1,parent_qualified_name:parent.qualified_name}];deriveArchitectureViolations(flow);return {signals:flow[1].derived_architecture_signal_types||[],violations:flow[1].derived_violation_types||[]}}",
+        "console.log(JSON.stringify({publicFoundation:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},foundation),publicOrdinary:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},ordinary),sharedFoundation:classify({qualified_name:'shared',function_type:'shared_function',source_path:'shared.py'},foundation),privateFoundation:classify({qualified_name:'private',function_type:'private_function',source_path:'private.py'},foundation)}));",
+    ])
+    result = subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+
+    assert json.loads(result.stdout) == {
+        "publicFoundation": {"signals": ["Type 0"], "violations": []},
+        "publicOrdinary": {"signals": [], "violations": ["Type 1"]},
+        "sharedFoundation": {"signals": [], "violations": ["Type 2"]},
+        "privateFoundation": {"signals": [], "violations": ["Type 3"]},
+    }
 
 
 def test_dashboard_derives_signals_from_old_shape_payload() -> None:
