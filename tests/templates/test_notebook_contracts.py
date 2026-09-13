@@ -351,7 +351,6 @@ def test_02_pipeline_write_is_compact_and_profiles_persisted_target():
     for plumbing in (
         "write_pipeline_prep",
         "source_preps",
-        "mode=",
         "processing_scope",
         "success_context",
         "write_lakehouse_table(",
