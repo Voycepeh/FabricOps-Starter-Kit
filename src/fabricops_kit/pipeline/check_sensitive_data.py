@@ -207,7 +207,7 @@ def check_sensitive_data(
 
     See Also
     --------
-    pipeline_write, write_pii_token_map, stop_if_failed
+    pipeline_write, write_lakehouse_table, write_warehouse_table, stop_if_failed
 
     """
     spark_session = getattr(dataframe, "sparkSession", None)
