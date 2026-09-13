@@ -76,33 +76,41 @@ FabricOps solves that problem with **configuration-driven engineering**. The ide
 
 In FabricOps, `00_env_config` is that configuration surface. You define the Fabric stores available in the current environment once. Pipeline code then passes the configured store name into FabricOps public functions, and FabricOps resolves the physical Fabric resource for you.
 
-```text
-store name used by 02_pipeline
-          ↓
-      00_env_config
-          ↓
-resolve Fabric store type + physical location
-          ↓
-Lakehouse                          Warehouse
-   ↓                                  ↓
-PySpark / ABFSS resolution        SQL pushdown where appropriate
-          \                         /
-           → PySpark DataFrame → transformations
+```mermaid
+flowchart TD
+    STORE["Store name used by 02_pipeline"] --> CONFIG["00_env_config"]
+    CONFIG --> RESOLVE["Resolve Fabric store type + physical location"]
+    RESOLVE --> TYPE{"Fabric store type"}
+    TYPE -->|Lakehouse| LH["PySpark / ABFSS access"]
+    TYPE -->|Warehouse| WH["SQL pushdown"]
+    LH --> DF["PySpark DataFrame"]
+    WH --> DF
+    DF --> TRANSFORM["Project transformations in PySpark"]
 ```
 
 For a **Lakehouse**, FabricOps resolves the configured store to the appropriate Fabric/ABFSS location and uses the PySpark path naturally supported by Fabric notebooks.
 
-For a **Warehouse**, FabricOps can push expensive source-side work down to SQL instead of pulling the whole Warehouse table into Spark unnecessarily. This matters especially for operations such as large-table profiling, filtering, aggregation, counts, and ranges.
+For a **Warehouse**, the challenge is different. PySpark works natively with Lakehouse storage, but a Fabric Warehouse is optimized for the SQL engine. Accessing Warehouse data from a PySpark notebook introduces a translation layer between the Warehouse execution path and Spark. For regular ETL pipelines, especially as datasets grow, repeatedly translating Warehouse data into Spark can become slow and inefficient.
 
-Once the data reaches the transformation stage, the engineering model stays simple: **project transformations are written in PySpark**. FabricOps therefore remains PySpark-first without forcing every source operation through Spark when the source engine can do the work more efficiently.
+FabricOps therefore uses **SQL pushdown for Warehouse sources**. Reads, filtering, aggregation, profiling, and other source-side work can execute in the Warehouse engine first, before the required result is returned into the PySpark workflow.
+
+Once the data reaches the transformation stage, the engineering model stays simple: **project transformations are written in PySpark**.
+
+The execution model is therefore:
+
+**Lakehouse → PySpark directly**  
+**Warehouse → SQL pushdown → PySpark DataFrame**  
+**Transformation → PySpark**
 
 The same logical store names can then resolve to different physical Fabric resources in Development and Production. `02_pipeline` stays focused on engineering logic while `00_env_config` owns the environment-specific wiring.
 
-??? info "Read more: why SQL pushdown matters"
+??? info "Read more: why SQL pushdown for Warehouse sources?"
 
-    Pulling millions of Warehouse rows into Spark only to calculate summary statistics creates avoidable data movement and memory work. SQL pushdown performs that work where the data already lives and returns only the result the notebook needs.
+    PySpark works naturally with Lakehouse data because Spark can operate directly against the Lakehouse storage layer. Warehouse sources use a different execution engine, so bringing Warehouse data into a PySpark notebook requires translation between the SQL and Spark execution paths.
 
-    This is an execution optimization, not a second FabricOps workflow. The same pipeline still resolves configuration, produces the same governed metadata, and participates in the same Data Contract lifecycle.
+    On regular ETL workloads, especially with larger datasets, that translation can become a significant performance cost. FabricOps keeps the pipeline PySpark-first for transformation while using SQL pushdown for Warehouse reads and source-side operations so the Warehouse engine does the work it is optimized for before returning the result to Spark.
+
+    This is still one FabricOps workflow. Configuration, metadata capture, Data Contract resolution, and governed validation remain the same regardless of which source execution path is used.
 
     [How does configuration-driven resolution work in detail?](reference/engineering-cheat-sheet.md#config-driven-engineering)
 
