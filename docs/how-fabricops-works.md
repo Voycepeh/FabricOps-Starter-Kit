@@ -62,110 +62,96 @@ The rest of this page zooms into that picture without changing the story.
 
 <div class="fabricops-section-block" markdown>
 
-## How do code-first pipelines work across Fabric stores?
+## How does Engineering actually run across Fabric stores?
 
-**A Fabric notebook is very convenient when everything lives in one attached Lakehouse or Warehouse. Code-first ETL becomes harder when one pipeline needs to read from several Fabric stores and still stay portable between environments.**
+**`02_pipeline` keeps the project ETL visible, while FabricOps hides the repeated Fabric plumbing underneath a small set of notebook-facing orchestration functions.**
 
-With one default attached store, Fabric already gives a natural notebook experience. Files and tables are easy to browse and use. Traditional ETL is rarely that simple: one pipeline often reads from one store, enriches from another, transforms the combined data, and writes somewhere else.
+With one default attached Lakehouse or Warehouse, Fabric already gives a natural notebook experience. Traditional ETL is rarely confined to one store: a pipeline often reads from one store, enriches from another, transforms the combined data, profiles and validates it, then writes somewhere else.
 
-FabricOps keeps that multi-store wiring out of the project transformation code. `00_env_config` gives each Fabric store a stable logical name. In `02_pipeline`, the engineer describes the source once and calls `pipeline_read()`.
+FabricOps keeps that multi-store wiring out of the project transformation code. `00_env_config` gives each Fabric store a stable logical name. The notebook then works through a recognizable engineering flow:
 
-A typical Read block looks like this:
-
-```python
-read_result = pipeline_read(
-    store="source",
-    schema="demo",
-    table_name="orders",
-    query=None,
-)
-
-read_df = read_result["dataframe"]
-READ_TABLE_ID = read_result["table_id"]
+```text
+Read → Observe / Check / Profile → Transform → Validate target → Write
 ```
 
-`pipeline_read()` then handles the mechanical routing that the notebook should not have to repeat.
+The important abstraction is that the notebook normally works with **`pipeline_read()`**, **`profile_table()`**, and **`pipeline_write()`** rather than manually deciding which Lakehouse or Warehouse implementation to call. FabricOps resolves the configured store and governed identity, then selects the appropriate lower-level path.
 
-### See what `pipeline_read()` actually does
+### See the notebook-facing abstraction
 
 **Questions this diagram answers:**
 
-- What does `02_pipeline` give to `pipeline_read()`?
-- How does FabricOps resolve the canonical `table_id` and physical store?
-- When does it call the Lakehouse reader versus a Warehouse reader?
-- Where does a Warehouse SQL query fit?
-- What comes back to the notebook?
-- What stays explicit outside `pipeline_read()`?
+- What does the Read block call?
+- Where does Lakehouse versus Warehouse routing happen?
+- How does profiling choose Spark versus Warehouse-native execution?
+- What remains explicit project-owned PySpark?
+- What does the Write block call?
+- Which functions should an engineer normally understand first?
+
+```mermaid
+flowchart LR
+    NB["02_pipeline"] --> READ["pipeline_read()"]
+    NB --> PROFILE["profile_table()"]
+    NB --> WRITE["pipeline_write()"]
+
+    READ --> R1["Lakehouse reader"]
+    READ --> R2["Warehouse table reader"]
+    READ --> R3["Warehouse query reader"]
+
+    R1 --> DF["PySpark DataFrame"]
+    R2 --> DF
+    R3 --> DF
+
+    DF --> CHECKS["Observe + Guardrail checks"]
+    CHECKS --> TRANSFORM["Project PySpark transformations"]
+
+    PROFILE --> P1["Spark profiling<br/>Lakehouse or supplied DataFrame"]
+    PROFILE --> P2["Warehouse-native SQL profiling<br/>physical Warehouse table"]
+
+    TRANSFORM --> WRITE
+    WRITE --> W1["Lakehouse publication"]
+    WRITE --> W2["Warehouse publication"]
+    WRITE --> W3["Governed load strategy"]
+```
+
+[`pipeline_read()`](api/reference/pipeline_read.md) is the Read-block orchestration function. You describe the governed source once using the configured store, schema, table, and optional Warehouse query. FabricOps resolves the canonical `table_id`, resolves the physical source, chooses the correct foundational reader, records source participation in Lineage, and returns a small result containing the DataFrame and source metadata the notebook needs.
+
+[`profile_table()`](api/reference/profile_table.md) follows the same principle for profiling. A supplied DataFrame stays in Spark. A physical Lakehouse table is profiled through the Spark path. A physical Warehouse table can use Warehouse-native SQL profiling so large-table statistics are calculated in the engine that owns the data instead of translating the full table into Spark first.
+
+[`pipeline_write()`](api/reference/pipeline_write.md) is the Write-block orchestration function. The notebook supplies the prepared DataFrame, governed target identity, and exact source `table_id` values that fed it. FabricOps resolves the target, the selected or active Data Contract, the governed load strategy, and the correct Lakehouse or Warehouse publication path. Success metadata is committed only after the physical write succeeds.
+
+Between those boundaries, the engineering decisions remain visible. Source observation, Freshness, Source Stability, Schema, Data Quality and Sensitive Data checks are explicit calls in `02_pipeline`, and the actual business transformation stays project-owned **PySpark**.
+
+That means the abstraction is deliberate: FabricOps hides repetitive environment resolution and engine-specific plumbing, but it does not hide the ETL logic, checks, or transformation decisions that engineers need to review.
+
+### See what `pipeline_read()` actually does
 
 ```mermaid
 flowchart TD
-    NB["02_pipeline Read block<br/>store + schema + table_name<br/>optional query"] --> PR["pipeline_read()"]
-
-    PR --> CTX["Resolve 00_env_config<br/>and Fabric context"]
-    CTX --> ID["Resolve canonical table_id<br/>and physical source identity"]
+    INPUT["02_pipeline Read block<br/>store + schema + table_name<br/>optional query"] --> PR["pipeline_read()"]
+    PR --> ID["Resolve Fabric context<br/>table_id + physical source"]
     ID --> KIND{"Resolved store type"}
 
     KIND -->|Lakehouse| LH["read_lakehouse_table()"]
-    KIND -->|Warehouse<br/>no query| WT["read_warehouse_table()"]
-    KIND -->|Warehouse<br/>query supplied| WQ["read_warehouse_query()"]
+    KIND -->|Warehouse table| WT["read_warehouse_table()"]
+    KIND -->|Warehouse + query| WQ["read_warehouse_query()"]
 
-    LH --> LIN["Register source participation<br/>in Data Lineage"]
+    LH --> LIN["Register source Lineage"]
     WT --> LIN
     WQ --> LIN
 
-    LIN --> OUT["Return<br/>dataframe + table_id<br/>is_query + has_contract"]
-    OUT --> EXPLICIT["02_pipeline continues explicitly<br/>observe + checks + profile + PySpark transform"]
+    LIN --> OUT["Return dataframe + table_id<br/>is_query + has_contract"]
+    OUT --> EXPLICIT["02_pipeline continues<br/>observe + checks + profile + transform"]
 ```
 
-This is the important distinction: **`pipeline_read()` is an orchestration function, not the ETL itself.** It resolves identity, chooses the correct foundational reader, records source participation in Lineage, and returns a small result to the notebook.
+The lower-level functions remain available when you need them directly, but higher-level governed pipeline code normally starts with [`pipeline_read()`](api/reference/pipeline_read.md), [`profile_table()`](api/reference/profile_table.md), and [`pipeline_write()`](api/reference/pipeline_write.md).
 
-For a **Lakehouse table**, it routes to `read_lakehouse_table()`. Spark is the natural execution path for Lakehouse data.
+??? info "Read more: how the other checks fit"
 
-For a **Warehouse table**, it routes to `read_warehouse_table()`. When Engineering supplies project-owned SQL through `query=...`, it instead routes to `read_warehouse_query()`, allowing filtering, aggregation, projection, or other source-side SQL work to happen in the Warehouse before the result enters the PySpark workflow.
+    Not every function needs the same store-routing abstraction. Once `pipeline_read()` returns a Spark DataFrame, checks such as Data Quality and Sensitive Data can work directly on that common DataFrame representation.
 
-That query path matters because Warehouse and Spark use different execution paths. On larger ETL workloads, translating more Warehouse data than necessary into Spark can become expensive. SQL pushdown lets Engineering reduce or shape the source in the Warehouse when that is the better execution path.
+    [`check_schema()`](api/reference/check_schema.md) can work on a supplied DataFrame too, but it can also resolve and inspect the persisted physical table when no DataFrame is supplied. Source observation resolves persisted source state, while Freshness and Source Stability evaluate the resulting observation rather than choosing another physical reader.
 
-After `pipeline_read()` returns, the notebook owns the meaningful engineering decisions. Source observation, Freshness, Source Stability, Schema checks, Data Quality checks, profiling, and project transformations remain visible in `02_pipeline`. **Project transformations are written in PySpark.**
-
-The same Read block can therefore point at different physical Fabric resources in Development and Production through `00_env_config`, while the pipeline code continues to describe the logical source rather than hard-coding workspace IDs, item IDs, or physical paths.
-
-??? info "Read more: why the Warehouse query path exists"
-
-    PySpark works naturally with Lakehouse data because Spark can operate against the Lakehouse storage layer. A Fabric Warehouse is optimized around its SQL execution engine.
-
-    `pipeline_read()` does not blindly force every Warehouse source through SQL. A normal Warehouse table read uses `read_warehouse_table()`. Engineering can supply `query=...` when source-side SQL pushdown is useful, and `pipeline_read()` then routes that source through `read_warehouse_query()` before returning the resulting Spark DataFrame.
-
-    This keeps one governed Read interface while still allowing the execution path to match the underlying Fabric store.
-
-    [What does `pipeline_read()` do in the function reference?](api/reference/pipeline_read.md)
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## How does Engineering actually run?
-
-**`02_pipeline` keeps the project-specific ETL visible while FabricOps supplies the reusable operating foundations around it.**
-
-At a high level, an engineering run follows the same recognizable shape:
-
-```text
-Read → Transform → Profile / Catalogue → Validate Guardrails → Write
-```
-
-The transformation itself remains project-specific. FabricOps standardizes the surrounding concerns: configured I/O, table identity, metadata capture, profiling, Lineage, governed validation, and the hand-off into Production.
-
-Each governed target is anchored by a canonical `table_id`. That identity connects what Engineering observes about a physical table with the governance definition that will later be authored for it.
-
-Engineering records technical context such as the **Data Catalogue**, **Data Profiled** results, optional **Data Profiled Frequency**, **Data Lineage**, source observations, and Guardrail Results. Those records are not a second copy of the business data; they are the context that lets FabricOps reason consistently about the governed asset.
-
-??? info "Read more: what FabricOps standardizes around your ETL"
-
-    FabricOps is code-first and notebook-first: governed transformation logic stays explicit and reviewable in `02_pipeline`.
-
-    A pipeline may read multiple upstream sources, but the governed write boundary is intentionally clear so FabricOps can associate the resulting table, observations, Lineage, and Data Contract with one canonical target identity.
-
-    [How do load strategies, Medallion layers, failure-safe processing, and incremental loads work?](reference/engineering-cheat-sheet.md)
+    [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
 
 </div>
 
