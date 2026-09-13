@@ -1690,14 +1690,11 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.access.scan_workspace_access._catalogue_tables",
-        "fabricops_kit.pipeline.observe_table.observe_table",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
       ],
       "inbound_source_references": [
         "fabricops_kit.access.scan_workspace_access._catalogue_tables",
         "fabricops_kit.access.scan_workspace_access::<module>",
-        "fabricops_kit.pipeline.observe_table.observe_table",
-        "fabricops_kit.pipeline.observe_table::<module>",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
         "fabricops_kit.pipeline.shared::<module>"
       ],
@@ -5281,9 +5278,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table._compact_rows",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 73,
+      "source_end_line": 76,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 57,
+      "source_start_line": 60,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5310,9 +5307,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table._identifier",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 35,
+      "source_end_line": 38,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 31,
+      "source_start_line": 34,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5339,9 +5336,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table._observe_lakehouse",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 115,
+      "source_end_line": 122,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 76,
+      "source_start_line": 79,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5368,9 +5365,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table._persist",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 156,
+      "source_end_line": 163,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 118,
+      "source_start_line": 125,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5397,9 +5394,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table._warehouse_observation_query",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 54,
+      "source_end_line": 57,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 38,
+      "source_start_line": 41,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5424,9 +5421,9 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table.observe_table",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 295,
+      "source_end_line": 326,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 159,
+      "source_start_line": 166,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -13074,7 +13071,7 @@
       "depth": 5,
       "direct_call_count": 12,
       "discontinued_in": null,
-      "examples": ">>> observation = observe_table(\n...     \"orders\", store=\"source\", schema=\"dbo\", target_table_id=target_table_id,\n... )\n>>> result = check_freshness(observation)",
+      "examples": ">>> observation = observe_table(\n...     table_id=source_table_id, target_table_id=target_table_id,\n... )\n>>> result = check_freshness(observation)",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -13345,7 +13342,7 @@
       "depth": 6,
       "direct_call_count": 2,
       "discontinued_in": null,
-      "examples": ">>> observation = observe_table(\n...     \"orders\", store=\"source\", schema=\"dbo\",\n...     target_table_id=\"lakehouse:unified:dbo:orders\",\n... )\n>>> result = check_source_stability(observation, target_table_id=\"lakehouse:unified:dbo:orders\")\n>>> result[\"load_strategy\"]\n'append'",
+      "examples": ">>> observation = observe_table(\n...     table_id=source_table_id,\n...     target_table_id=\"lakehouse:unified:dbo:orders\",\n... )\n>>> result = check_source_stability(observation, target_table_id=\"lakehouse:unified:dbo:orders\")\n>>> result[\"load_strategy\"]\n'append'",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -13420,9 +13417,9 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 5,
-      "direct_call_count": 17,
+      "direct_call_count": 16,
       "discontinued_in": null,
-      "examples": "Not documented yet",
+      "examples": ">>> source_result = pipeline_read(\n...     store=\"source\", schema=\"demo\", table_name=\"orders\",\n... )\n>>> observation = observe_table(\n...     table_id=source_result[\"table_id\"],\n...     target_table_id=target_table_id,\n... )",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -13444,22 +13441,10 @@
       "max_depth": 5,
       "parameters": [
         {
-          "description": "Table name within the configured target.",
-          "name": "table_name",
+          "description": "Canonical governed source identity, normally returned by :func:`pipeline_read`. FabricOps resolves its configured physical Lakehouse or Warehouse identity internally.",
+          "name": "table_id",
           "required": "Yes",
           "type": "str"
-        },
-        {
-          "description": "Logical Lakehouse or Warehouse store key configured by ``00_env_config``.",
-          "name": "store",
-          "required": "No",
-          "type": "str"
-        },
-        {
-          "description": "Optional Lakehouse schema. A schema is required for Warehouse targets.",
-          "name": "schema",
-          "required": "No",
-          "type": "str | None"
         },
         {
           "description": "Governed target identity that owns this source observation relationship.",
@@ -13479,7 +13464,7 @@
           "evidence": [
             {
               "depth": 5,
-              "width": 17
+              "width": 16
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -13491,18 +13476,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "pyspark.sql.DataFrame\n    The canonical observation rows written to\n    ``METADATA_SOURCE_OBSERVATION``. Normal observation rows have\n    ``is_present=True``.",
-      "scope": 55,
+      "scope": 53,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def observe_table(table_name: str, *, store: str='source', schema: str | None=None, target_table_id: str) -> Any",
-      "source_end_line": 295,
+      "signature": "def observe_table(*, table_id: str, target_table_id: str) -> Any",
+      "source_end_line": 326,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
-      "source_start_line": 159,
+      "source_start_line": 166,
       "summary": "Collect, persist, and return lightweight source-table evidence.",
-      "transitive_function_count": 55,
-      "usage_notes": "The stored evidence includes a stable ``observation_id``, partition values,\ncounts, observed change-value range, and a deterministic fingerprint over\nbusiness content. Warehouse aggregation is pushed into SQL and Lakehouse\naggregation remains distributed; full business rows are not persisted in\nmetadata.\n\nEvidence is appended only after collection succeeds. This function neither\nloads history nor makes guardrail decisions; ``check_source_stability`` owns\ncomparison and removal tombstones. The stable source ``table_id`` is built from the\nresolved physical identity with the same logical identity rules used by\n:func:`profile_table`. It is independent of Development or\nProduction; ``environment_name`` keeps those operational observations\nseparate without requiring a pre-existing catalogue row.",
-      "width": 17
+      "transitive_function_count": 53,
+      "usage_notes": "The stored evidence includes a stable ``observation_id``, partition values,\ncounts, observed change-value range, and a deterministic fingerprint over\nbusiness content. Warehouse aggregation is pushed into SQL and Lakehouse\naggregation remains distributed; full business rows are not persisted in\nmetadata.\n\nEvidence is appended only after collection succeeds. This function neither\nloads history nor makes guardrail decisions; ``check_source_stability`` owns\ncomparison and removal tombstones. The supplied canonical source\n``table_id`` remains authoritative through persistence. It is independent\nof Development or Production; ``environment_name`` keeps those operational\nobservations separate.",
+      "width": 16
     },
     {
       "architecture_classification": "pipeline_orchestration",
@@ -18890,17 +18875,6 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
-      "caller_qualified_name": "fabricops_kit.pipeline.observe_table.observe_table",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.config.shared.build_table_id",
       "caller_qualified_name": "fabricops_kit.pipeline.observe_table.observe_table",
       "violation_details": [],
       "violation_types": []
@@ -24752,7 +24726,7 @@
     "detached_function_count": 46,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 775,
+    "relationship_count": 774,
     "source_referenced_function_count": 44,
     "used_function_count": 309
   },

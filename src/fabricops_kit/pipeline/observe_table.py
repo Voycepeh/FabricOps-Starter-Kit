@@ -9,8 +9,11 @@ from typing import Any
 from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.shared import build_table_id
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import (
+    coerce_metadata_row_types,
+    metadata_table_physical_schema,
+    metadata_table_schema_registry,
+)
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
     get_spark_session,
@@ -97,20 +100,24 @@ def _observe_lakehouse(
         "_fabricops_content_hash",
         F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
     )
-    observed = with_fingerprint.groupBy(partition_column).agg(
-        F.count(F.lit(1)).alias("row_count"),
-        F.min(F.col(change_column)).alias("min_change_value"),
-        F.max(F.col(change_column)).alias("max_change_value"),
-        F.sha2(
-            F.concat_ws("", F.sort_array(F.collect_list("_fabricops_content_hash"))),
-            256,
-        ).alias("content_fingerprint"),
-    ).select(
-        F.col(partition_column).alias("partition_value"),
-        "row_count",
-        "min_change_value",
-        "max_change_value",
-        "content_fingerprint",
+    observed = (
+        with_fingerprint.groupBy(partition_column)
+        .agg(
+            F.count(F.lit(1)).alias("row_count"),
+            F.min(F.col(change_column)).alias("min_change_value"),
+            F.max(F.col(change_column)).alias("max_change_value"),
+            F.sha2(
+                F.concat_ws("", F.sort_array(F.collect_list("_fabricops_content_hash"))),
+                256,
+            ).alias("content_fingerprint"),
+        )
+        .select(
+            F.col(partition_column).alias("partition_value"),
+            "row_count",
+            "min_change_value",
+            "max_change_value",
+            "content_fingerprint",
+        )
     )
     return _compact_rows(observed)
 
@@ -157,10 +164,8 @@ def _persist(
 
 
 def observe_table(
-    table_name: str,
     *,
-    store: str = "source",
-    schema: str | None = None,
+    table_id: str,
     target_table_id: str,
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
@@ -170,12 +175,10 @@ def observe_table(
 
     Parameters
     ----------
-    table_name : str
-        Table name within the configured target.
-    store : str, default="source"
-        Logical Lakehouse or Warehouse store key configured by ``00_env_config``.
-    schema : str or None, default=None
-        Optional Lakehouse schema. A schema is required for Warehouse targets.
+    table_id : str
+        Canonical governed source identity, normally returned by
+        :func:`pipeline_read`. FabricOps resolves its configured physical
+        Lakehouse or Warehouse identity internally.
     target_table_id : str
         Governed target identity that owns this source observation relationship.
 
@@ -205,23 +208,42 @@ def observe_table(
 
     Evidence is appended only after collection succeeds. This function neither
     loads history nor makes guardrail decisions; ``check_source_stability`` owns
-    comparison and removal tombstones. The stable source ``table_id`` is built from the
-    resolved physical identity with the same logical identity rules used by
-    :func:`profile_table`. It is independent of Development or
-    Production; ``environment_name`` keeps those operational observations
-    separate without requiring a pre-existing catalogue row.
+    comparison and removal tombstones. The supplied canonical source
+    ``table_id`` remains authoritative through persistence. It is independent
+    of Development or Production; ``environment_name`` keeps those operational
+    observations separate.
+
+    Examples
+    --------
+    >>> source_result = pipeline_read(
+    ...     store="source", schema="demo", table_name="orders",
+    ... )
+    >>> observation = observe_table(
+    ...     table_id=source_result["table_id"],
+    ...     target_table_id=target_table_id,
+    ... )
 
     """
-    table_value = _identifier(table_name, "table_name")
-    store_key = str(store or "").strip().lower()
-    if not store_key:
-        raise ValueError("store must be a configured store name.")
-    schema_value = _identifier(schema, "schema") if schema is not None else None
     config, env, context = resolve_fabric_context()
-    configured_store = get_store(config, env, store_key)
-    source_type = str(configured_store.kind).lower()
+    spark = get_spark_session()
+    governed_source = resolve_catalogue_table_identity(
+        config,
+        env,
+        table_id,
+        spark_session=spark,
+        context=context,
+    )
+    governed_table_id = str(governed_source["table_id"])
+    store_key = str(governed_source["store"])
+    table_value = _identifier(governed_source["table_name"], "table_name")
+    schema = governed_source.get("schema")
+    schema_value = _identifier(schema, "schema") if schema is not None else None
+    source_type = str(
+        governed_source.get("store_type") or governed_source.get("store_kind") or ""
+    ).lower()
     if source_type not in {"lakehouse", "warehouse"}:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
+    configured_store = get_store(config, env, store_key)
     if source_type == "warehouse":
         configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
@@ -236,24 +258,30 @@ def observe_table(
                 "schema is required for schema-enabled Lakehouse observation; pass it or configure a default schema."
             )
 
-    spark = get_spark_session()
-    table_id = build_table_id(source_type, store_key, schema_value, table_value)
     target_identity = resolve_catalogue_table_identity(
-        config, env, target_table_id, spark_session=spark, context=context,
+        config,
+        env,
+        target_table_id,
+        spark_session=spark,
+        context=context,
     )
 
     rules_df = load_table_guardrail_rules(
-        config, env, spark_session=spark, table_id=table_id, context=context,
+        config,
+        env,
+        spark_session=spark,
+        table_id=governed_table_id,
+        context=context,
     )
     rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="source_stability",
-        table_id=table_id,
+        table_id=governed_table_id,
         environment_name=env,
     )
     if rule is None:
         raise ValueError(
-            f"No active approved Source Stability rule exists for {table_id!r}; "
+            f"No active approved Source Stability rule exists for {governed_table_id!r}; "
             "Governance must author and activate one before source observation can run."
         )
     partition_value, change_value = resolve_source_stability_observation_columns(rule)
@@ -261,7 +289,10 @@ def observe_table(
 
     if source_type == "warehouse":
         query = _warehouse_observation_query(
-            schema_value, table_value, partition_value, change_value  # type: ignore[arg-type]
+            schema_value,
+            table_value,
+            partition_value,
+            change_value,  # type: ignore[arg-type]
         )
         current = _compact_rows(
             read_warehouse_query(
@@ -285,7 +316,7 @@ def observe_table(
     return _persist(
         current,
         observation_id=str(uuid4()),
-        source_table_id=table_id,
+        source_table_id=governed_table_id,
         target_table_id=str(target_identity["table_id"]),
         spark_session=spark,
         config=config,
