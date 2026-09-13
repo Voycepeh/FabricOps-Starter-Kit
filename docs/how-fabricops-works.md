@@ -156,7 +156,7 @@ This gives `02_pipeline` a consistent shape without turning it into a black box:
 [`profile_table()`](api/reference/profile_table.md) profiles the actual table in its Lakehouse or Warehouse and writes the observed structure and statistics into the **Data Catalogue** and profiling metadata.
 
 ```mermaid
-flowchart TD
+flowchart LR
     TABLE["Table in Lakehouse or Warehouse"] --> PROFILE["profile_table()"]
     PROFILE --> CATALOGUE["Data Catalogue"]
     CATALOGUE --> GOVERNANCE["Governance adds<br/>Enrichment + Guardrails"]
