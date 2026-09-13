@@ -152,23 +152,24 @@ This gives `02_pipeline` a consistent shape without turning it into a black box:
 
 ## Where does Governance enter the engineering flow?
 
-**Engineering first makes the governed asset observable; Governance then turns that context into an explicit Data Contract.**
+**Engineering produces the actual data first. FabricOps then turns what it observes into governance context.**
 
-Engineering Development produces the table and records what FabricOps can observe about it. Governance works from the same `table_id`, Data Catalogue, profile, and related technical context rather than authoring rules against an unrelated document.
+In `02_pipeline`, Engineering reads the source data, transforms it, and writes the actual target table. FabricOps keeps the physical output tied to its governed `table_id`, Lineage, and runtime context.
 
-```text
-Engineering output
-      ↓
-Data Catalogue + Profile + Lineage + observations
-      ↓
-canonical table_id
-      ↓
-Governance authors a Data Contract
+[`profile_table()`](api/reference/profile_table.md) then profiles the table and updates the **Data Catalogue** plus the profiling metadata. The Catalogue gives Governance the stable table identity and column structure, while the profile adds observed statistics and distributions from the data that Engineering actually produced.
+
+```mermaid
+flowchart LR
+    ENG["02_pipeline<br/>Read → Transform → Write"] --> TABLE["Actual target table"]
+    TABLE --> PROFILE["profile_table()"]
+    PROFILE --> CONTEXT["Data Catalogue + Profile<br/>table_id · columns · types · statistics"]
+    CONTEXT --> GOV["01_governance<br/>read observed context"]
+    GOV --> CONTRACT["Author Data Contract"]
 ```
 
-Before the contract is authored, `01_governance` can also establish **Data Stewards** and the **Data Agreement** that describes the governed sharing context between provider and recipient: ownership, purpose, approved usage, validity, and related agreement-level information.
+Governance therefore starts from the real engineered table and the metadata FabricOps observed from it, rather than from a blank form or disconnected document.
 
-FabricOps can optionally use Microsoft Fabric AI Functions to propose descriptions and information classifications from Catalogue and profiling context. Those suggestions remain editable and require Governance review; AI assistance does not replace the governance decision.
+`01_governance` can also establish the **Data Steward** and **Data Agreement** around that governed asset. Fabric AI Functions can optionally use the Catalogue and profiling context to suggest descriptions and classifications, which Governance reviews and edits before they become part of the governed definition.
 
 </div>
 
