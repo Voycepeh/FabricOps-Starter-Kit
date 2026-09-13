@@ -11,8 +11,10 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io import read_lakehouse_table, read_warehouse_table
+from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import (
+    get_spark_session,
+    read_warehouse_query_core,
     resolve_configured_lakehouse_table,
     write_lakehouse_table_core,
 )
@@ -30,6 +32,239 @@ PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
+_PROFILE_EXCLUDED_NAMES = {
+    "_pipeline_run_id", "_pipeline_name", "_pipeline_environment", "_source_table",
+    "_record_loaded_timestamp", "_notebook_name", "_loaded_by", "_dq_check_status",
+    "_dq_failed_rules", "_source_system", "_source_extract_timestamp", "_watermark_value",
+    "_partition_bucket", "_sample_bucket", "_row_ingest_id", "_business_key_hash",
+    "_row_hash", "pipeline_ts", "ingested_at_utc", "notebook_name", "loaded_by",
+    "p_bucket", "sample_bucket", "row_ingest_id", "ingest_run_id", "pipeline_run_id",
+    "loaded_at", "run_ingest_id", "_fabricops_run_id", "_fabricops_pipeline_name",
+    "_fabricops_created_at",
+}
+_PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
+_WAREHOUSE_NUMERIC_TYPES = {
+    "bigint", "decimal", "float", "int", "money", "numeric", "real",
+    "smallint", "smallmoney", "tinyint",
+}
+_WAREHOUSE_MIN_MAX_TYPES = _WAREHOUSE_NUMERIC_TYPES | {
+    "char", "date", "datetime", "datetime2", "datetimeoffset", "nchar",
+    "nvarchar", "smalldatetime", "time", "varchar",
+}
+_WAREHOUSE_NON_SCALAR_TYPES = {"binary", "image", "varbinary", "xml"}
+
+
+def _sql_identifier(value: str) -> str:
+    """Quote one resolved SQL Server identifier."""
+    return f"[{str(value).replace(']', ']]')}]"
+
+
+def _sql_string(value: str) -> str:
+    """Quote one internal SQL string literal."""
+    return "N'" + str(value).replace("'", "''") + "'"
+
+
+def _warehouse_type_name(row: Mapping[str, Any]) -> str:
+    """Return the canonical Spark-style type name for Warehouse metadata."""
+    name = str(row["DATA_TYPE"]).lower()
+    if name in {"decimal", "numeric"}:
+        return f"decimal({int(row['NUMERIC_PRECISION'])},{int(row['NUMERIC_SCALE'])})"
+    return {
+        "bigint": "bigint", "bit": "boolean", "float": "double", "int": "int",
+        "real": "float", "smallint": "smallint", "tinyint": "tinyint",
+        "date": "date", "datetime": "timestamp", "datetime2": "timestamp",
+        "smalldatetime": "timestamp",
+    }.get(name, "string")
+
+
+def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any]):
+    """Read compact Warehouse column metadata without reading business rows."""
+    schema = _sql_string(str(identity["schema"]))
+    table = _sql_string(str(identity["table_name"]))
+    query = (
+        "SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE, ORDINAL_POSITION "
+        "FROM INFORMATION_SCHEMA.COLUMNS "
+        f"WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {table} ORDER BY ORDINAL_POSITION"
+    )
+    rows = []
+    for row in read_warehouse_query_core(
+        query, target=str(identity["target"]), spark_session=spark_session, context=context
+    ).collect():
+        value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        normalized = {str(key).upper(): item for key, item in value.items()}
+        rows.append((str(normalized["COLUMN_NAME"]), _warehouse_type_name(normalized), str(normalized["DATA_TYPE"]).lower()))
+    return rows
+
+
+def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]]) -> str:
+    """Build one wide aggregate pass and one wide numeric-percentile pass."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    aggregate_expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
+    aggregate_outputs = ["metrics.ROW_COUNT"]
+    percentile_expressions = []
+    percentile_outputs = []
+    for index, (name, _canonical_type, sql_type) in enumerate(columns):
+        column = _sql_identifier(name)
+        numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
+        min_max = sql_type in _WAREHOUSE_MIN_MAX_TYPES
+        prefix = f"C{index}"
+        aggregate_expressions.extend(
+            [
+                f"COUNT_BIG({column}) AS {prefix}_NON_NULL_COUNT",
+                f"COUNT_BIG(DISTINCT {column}) AS {prefix}_DISTINCT_COUNT",
+                (
+                    f"AVG(CONVERT(float, {column})) AS {prefix}_MEAN"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_MEAN"
+                ),
+                (
+                    f"STDEV(CONVERT(float, {column})) AS {prefix}_STDDEV"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_STDDEV"
+                ),
+                (
+                    f"CONVERT(nvarchar(max), MIN({column})) AS {prefix}_MIN_VALUE"
+                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MIN_VALUE"
+                ),
+                (
+                    f"CONVERT(nvarchar(max), MAX({column})) AS {prefix}_MAX_VALUE"
+                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MAX_VALUE"
+                ),
+            ]
+        )
+        aggregate_outputs.extend(
+            f"metrics.{prefix}_{suffix}"
+            for suffix in ("NON_NULL_COUNT", "DISTINCT_COUNT", "MEAN", "STDDEV", "MIN_VALUE", "MAX_VALUE")
+        )
+        if numeric:
+            percentile_expressions.extend(
+                [
+                    f"PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P25",
+                    f"PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P50",
+                    f"PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P75",
+                ]
+            )
+            percentile_outputs.extend(
+                [
+                    f"MAX({prefix}_P25) AS {prefix}_P25",
+                    f"MAX({prefix}_P50) AS {prefix}_P50",
+                    f"MAX({prefix}_P75) AS {prefix}_P75",
+                ]
+            )
+    metrics = "metrics AS (SELECT\n  " + ",\n  ".join(aggregate_expressions) + f"\nFROM {source})"
+    if not percentile_expressions:
+        return f"WITH {metrics}\nSELECT " + ", ".join(aggregate_outputs) + " FROM metrics"
+    percentile_rows = (
+        "percentile_rows AS (SELECT\n  " + ",\n  ".join(percentile_expressions) + f"\nFROM {source})"
+    )
+    percentiles = "percentiles AS (SELECT\n  " + ",\n  ".join(percentile_outputs) + "\nFROM percentile_rows)"
+    return f"WITH {metrics},\n{percentile_rows},\n{percentiles}\nSELECT metrics.*, percentiles.* FROM metrics CROSS JOIN percentiles"
+
+
+def _warehouse_statistical_dataframe(wide_frame: Any, columns, *, spark_session: Any):
+    """Reshape one compact wide Warehouse result into canonical profile rows."""
+    from pyspark.sql import types as T
+
+    collected = wide_frame.collect()
+    if len(collected) != 1:
+        raise RuntimeError("Warehouse statistical profiling must return exactly one compact aggregate row.")
+    raw = collected[0].asDict(recursive=True) if hasattr(collected[0], "asDict") else dict(collected[0])
+    values = {str(key).upper(): value for key, value in raw.items()}
+    row_count = int(values.get("ROW_COUNT") or 0)
+
+    def percent(numerator: int) -> float:
+        return 0.0 if row_count == 0 else round((numerator / row_count) * 100.0, 3)
+
+    rows = []
+    for index, (name, canonical_type, sql_type) in enumerate(columns):
+        prefix = f"C{index}"
+        non_null_count = int(values.get(f"{prefix}_NON_NULL_COUNT") or 0)
+        distinct_count = int(values.get(f"{prefix}_DISTINCT_COUNT") or 0)
+        numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
+        rows.append(
+            (
+                name, canonical_type, row_count, non_null_count, row_count - non_null_count,
+                percent(row_count - non_null_count), distinct_count, percent(distinct_count),
+                values.get(f"{prefix}_MEAN") if numeric else None,
+                values.get(f"{prefix}_STDDEV") if numeric else None,
+                values.get(f"{prefix}_MIN_VALUE"), values.get(f"{prefix}_P25") if numeric else None,
+                values.get(f"{prefix}_P50") if numeric else None,
+                values.get(f"{prefix}_P75") if numeric else None, values.get(f"{prefix}_MAX_VALUE"),
+            )
+        )
+    schema = T.StructType(
+        [
+            T.StructField("COLUMN_NAME", T.StringType(), False), T.StructField("DATA_TYPE", T.StringType(), False),
+            T.StructField("ROW_COUNT", T.LongType(), False), T.StructField("NON_NULL_COUNT", T.LongType(), False),
+            T.StructField("NULL_COUNT", T.LongType(), False), T.StructField("NULL_PERCENT", T.DoubleType(), False),
+            T.StructField("DISTINCT_COUNT", T.LongType(), False), T.StructField("DISTINCT_PERCENT", T.DoubleType(), False),
+            T.StructField("MEAN", T.DoubleType(), True), T.StructField("STDDEV", T.DoubleType(), True),
+            T.StructField("MIN_VALUE", T.StringType(), True), T.StructField("PERCENTILE_25", T.DoubleType(), True),
+            T.StructField("MEDIAN", T.DoubleType(), True), T.StructField("PERCENTILE_75", T.DoubleType(), True),
+            T.StructField("MAX_VALUE", T.StringType(), True),
+        ]
+    )
+    return spark_session.createDataFrame(rows, schema=schema)
+
+
+def _warehouse_frequency_query(
+    identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]], *, top_n: int | None
+) -> str:
+    """Build Warehouse-native exact frequency queries with per-column ranking."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    branches = []
+    for name, canonical_type, _sql_type in columns:
+        column = _sql_identifier(name)
+        limit = f"WHERE FREQUENCY_RANK <= {int(top_n)}" if top_n is not None else ""
+        branches.append(
+            "SELECT COLUMN_NAME, DATA_TYPE, VALUE, FREQUENCY_COUNT, FREQUENCY_PERCENT, FREQUENCY_RANK, "
+            f"PROFILED_ROW_COUNT, PROFILED_NON_NULL_COUNT FROM (SELECT {_sql_string(name)} AS COLUMN_NAME, "
+            f"{_sql_string(canonical_type)} AS DATA_TYPE, CONVERT(nvarchar(max), {column}) AS VALUE, COUNT_BIG(*) AS FREQUENCY_COUNT, "
+            f"CAST(ROUND(100.0 * COUNT_BIG(*) / NULLIF(SUM(COUNT_BIG(*)) OVER (), 0), 3) AS float) AS FREQUENCY_PERCENT, "
+            f"ROW_NUMBER() OVER (ORDER BY COUNT_BIG(*) DESC, CASE WHEN {column} IS NULL THEN 0 ELSE 1 END, CONVERT(nvarchar(max), {column})) AS FREQUENCY_RANK, "
+            f"SUM(COUNT_BIG(*)) OVER () AS PROFILED_ROW_COUNT, SUM(COUNT_BIG({column})) OVER () AS PROFILED_NON_NULL_COUNT "
+            f"FROM {source} GROUP BY {column}) AS ranked {limit}"
+        )
+    return "\nUNION ALL\n".join(branches)
+
+
+def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency_columns, threshold_percent, top_n):
+    """Calculate compact canonical profile outputs in Fabric Warehouse."""
+    from fabricops_kit.pipeline.shared import FREQUENCY_PROFILE_COLUMNS, PROFILE_DATAFRAME_COLUMNS
+
+    all_columns = _warehouse_columns(identity, spark_session=spark_session, context=context)
+    profile_columns = [
+        column for column in all_columns
+        if column[0] not in _PROFILE_EXCLUDED_NAMES
+        and not any(column[0].startswith(prefix) for prefix in _PROFILE_EXCLUDED_PREFIXES)
+    ]
+    if not profile_columns:
+        raise ValueError("No eligible non-technical columns found for metadata profiling.")
+    wide_profile = read_warehouse_query_core(
+        _warehouse_statistical_query(identity, profile_columns),
+        target=str(identity["target"]), spark_session=spark_session, context=context,
+    )
+    profile = _warehouse_statistical_dataframe(
+        wide_profile, profile_columns, spark_session=spark_session
+    ).select(*PROFILE_DATAFRAME_COLUMNS)
+    if frequency_columns is None:
+        scalar = {name for name, _canonical, sql_type in profile_columns if sql_type not in _WAREHOUSE_NON_SCALAR_TYPES}
+        selected = _automatic_frequency_columns(
+            profile, scalar_columns=list(scalar), threshold_percent=threshold_percent
+        )
+    else:
+        selected = list(frequency_columns)
+        available = {name for name, _canonical, _sql_type in all_columns}
+        missing = [name for name in selected if name not in available]
+        if missing:
+            raise ValueError(f"Requested columns do not exist: {', '.join(missing)}")
+    frequency = None
+    if selected:
+        selected_set = set(selected)
+        selected_metadata = [column for column in all_columns if column[0] in selected_set]
+        frequency = read_warehouse_query_core(
+            _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
+            target=str(identity["target"]), spark_session=spark_session, context=context,
+        ).select(*FREQUENCY_PROFILE_COLUMNS)
+    return profile, frequency, all_columns
 
 
 def _require_non_empty_string(value: Any, name: str) -> str:
@@ -347,6 +582,7 @@ def _catalogue_dataframe_from_profiled(
     table_name: str,
     load_strategy: str | None = None,
     load_strategy_parameters_json: str | None = None,
+    source_fields: Sequence[tuple[str, str]] | None = None,
 ):
     """Return one table row and one row for each observed column asset."""
     from pyspark.sql import functions as F
@@ -392,8 +628,9 @@ def _catalogue_dataframe_from_profiled(
             },
         )
     ]
-    for field in source_df.schema.fields:
-        column_id = build_column_id(first["table_id"], field.name)
+    fields = source_fields or [(field.name, field.dataType.simpleString()) for field in source_df.schema.fields]
+    for column_name, data_type in fields:
+        column_id = build_column_id(first["table_id"], column_name)
         rows.append(
             coerce_metadata_row_types(
                 CATALOGUE_TABLE,
@@ -401,8 +638,8 @@ def _catalogue_dataframe_from_profiled(
                     **common,
                     "metadata_level": "column",
                     "column_id": column_id,
-                    "column_name": field.name,
-                    "data_type": field.dataType.simpleString(),
+                    "column_name": column_name,
+                    "data_type": data_type,
                     "load_strategy": None,
                     "load_strategy_parameters_json": None,
                 },
@@ -490,7 +727,9 @@ def profile_table(
     """Profile a Spark DataFrame or a complete governed physical table.
 
     FabricOps calculates the canonical statistical profile and applicable
-    frequency distribution with PySpark. An identity may be supplied as a
+    frequency distribution close to the data. Supplied DataFrames and physical
+    Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
+    An identity may be supplied as a
     canonical ``table_id`` or as ``target``, optional ``schema``, and
     ``table_name``. When an identity is present, FabricOps associates the
     result with that governed table and persists Catalogue, profile, and
@@ -545,9 +784,9 @@ def profile_table(
     The orchestration performs these mechanical steps:
 
     1. Validate and resolve the optional canonical governed identity.
-    2. Use the supplied DataFrame exactly, or read the complete physical table
-       through the resolved Lakehouse or Warehouse reader.
-    3. Calculate canonical statistical metrics with PySpark.
+    2. Use the supplied DataFrame exactly, read a physical Lakehouse table into
+       Spark, or keep physical Warehouse aggregation in Warehouse SQL.
+    3. Calculate canonical statistical metrics with the selected backend.
     4. Select eligible frequency columns and calculate exact grouped counts,
        including null as a frequency value.
     5. When governed, create stable table and column identities, append
@@ -594,8 +833,12 @@ def profile_table(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
+    if frequency_top_n is not None and frequency_top_n <= 0:
+        raise ValueError("frequency_top_n must be greater than zero when supplied.")
     identity = None
     config = env = context = None
+    warehouse_fields = None
+    warehouse_physical = False
     if table_id is not None or has_coordinates:
         config, env, context = resolve_fabric_context()
         if table_id is not None:
@@ -611,15 +854,16 @@ def profile_table(
         if dataframe is None:
             if store_kind == "lakehouse":
                 dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
-            else:
-                dataframe = read_warehouse_table(
-                    str(identity["schema"]), str(identity["table_name"]),
-                    target=str(identity["target"]), context=context,
+                print(
+                    f"FabricOps: profiling governed Lakehouse table '{identity['table_id']}'. "
+                    "PySpark profiling will be used and metadata will be persisted."
                 )
-            print(
-                f"FabricOps: profiling governed table '{identity['table_id']}'. "
-                "Profile and catalogue metadata will be persisted."
-            )
+            else:
+                warehouse_physical = True
+                print(
+                    f"FabricOps: profiling governed Warehouse table '{identity['table_id']}'. "
+                    "Warehouse SQL profiling will be used and metadata will be persisted."
+                )
         else:
             print(
                 f"FabricOps: profiling supplied DataFrame against governed table '{identity['table_id']}'. "
@@ -631,15 +875,24 @@ def profile_table(
             "will be persisted because no table identity was provided."
         )
 
-    statistical_profile = build_profile_dataframe(dataframe)
-    selected_columns = _selected_frequency_columns(
-        dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
-    )
-    frequency_profile = None
-    if selected_columns:
-        frequency_profile = build_frequency_distribution_dataframe(
-            dataframe, columns=selected_columns, top_n=frequency_top_n
+    spark_session = dataframe.sparkSession if dataframe is not None else get_spark_session()
+    if warehouse_physical:
+        statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
+            identity, spark_session=spark_session, context=context,
+            frequency_columns=selected_frequency_columns,
+            threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n,
         )
+        warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
+    else:
+        statistical_profile = build_profile_dataframe(dataframe)
+        selected_columns = _selected_frequency_columns(
+            dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
+        )
+        frequency_profile = None
+        if selected_columns:
+            frequency_profile = build_frequency_distribution_dataframe(
+                dataframe, columns=selected_columns, top_n=frequency_top_n
+            )
     if identity is None:
         return {"profile": statistical_profile, "frequency_profile": frequency_profile}
 
@@ -677,7 +930,7 @@ def profile_table(
         profiled_df=profiled_df,
         config=config,
         env=env,
-        spark_session=dataframe.sparkSession,
+        spark_session=spark_session,
     )
     catalogue_df = _catalogue_dataframe_from_profiled(
         profiled_df,
@@ -688,11 +941,12 @@ def profile_table(
         table_name=identity["table_name"],
         load_strategy=None,
         load_strategy_parameters_json=None,
+        source_fields=warehouse_fields,
     )
     _upsert_catalogue_identities(
         catalogue_df=catalogue_df,
         config=config,
         env=env,
-        spark_session=dataframe.sparkSession,
+        spark_session=spark_session,
     )
     return {"profile": profiled_df, "frequency_profile": frequency_profile}
