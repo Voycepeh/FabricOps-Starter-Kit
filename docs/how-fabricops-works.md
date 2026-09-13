@@ -176,16 +176,36 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 **The Data Contract is the versioned governance definition for a governed table, not passive documentation beside the pipeline.**
 
-Governance selects the `table_id` and authors a table-centric Data Contract in `01_governance`. It brings together:
+Governance authors it through [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
 
 - **Enrichment** for descriptive table and column metadata and information classification
 - **Guardrails** for enforceable expectations such as Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements
 - the governed target processing definition, including its load strategy and parameters
 - the logical notebook ownership that identifies which pipeline owns the governed write
 
-Engineering then uses the selected or active Data Contract during execution. FabricOps check functions enforce its Guardrails against the real pipeline, with each Guardrail able to **Warn** or **Block** according to the authored action.
+Engineering sets the contract context in `02_pipeline` through [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md). In Development, the engineer selects the Data Contract version to validate for each linked `table_id`; in Production, FabricOps resolves the active version automatically.
 
-That is the core **Governance as Code** idea in FabricOps: Governance decisions become a versioned definition that Engineering can execute against instead of remaining a separate policy document.
+The selected or active Data Contract is then **enforced in Engineering through the FabricOps Guardrail functions**:
+
+- [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
+- [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
+- [`check_source_stability()`](api/reference/check_source_stability.md) enforces Source Stability Guardrails
+- [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
+- [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
+
+```mermaid
+flowchart LR
+    GOV["01_governance"] --> AUTHOR["widget_author_data_contract()"]
+    AUTHOR --> CONTRACT["Data Contract"]
+    CONTRACT --> SELECT["widget_select_data_contract()"]
+    SELECT --> SCHEMA["check_schema()"]
+    SELECT --> FRESH["check_freshness()"]
+    SELECT --> STABILITY["check_source_stability()"]
+    SELECT --> DQ["check_dq()"]
+    SELECT --> SENSITIVE["check_sensitive_data()"]
+```
+
+That is the core **Governance as Code** idea in FabricOps: Governance authors the definition once, Engineering explicitly selects or resolves it, and the pipeline functions execute those governed expectations against the real data flow.
 
 ??? info "Read more: what exactly is authored and activated?"
 
