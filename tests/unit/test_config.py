@@ -232,7 +232,7 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
     assert context.paths["product"].name == "wh_product_dev"
     assert context.paths["metadata"].name == "lh_metadata_dev"
     assert context.readiness_status in {"ready", "not_ready"}
-    with pytest.raises(ValueError, match="Target 'missing' was not found"):
+    with pytest.raises(ValueError, match="Store 'missing' was not found"):
         setup_notebook(config=config, env="dev", required_targets=["missing"])
 
 
@@ -312,8 +312,8 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
 
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
-    def read_table(table_name, *, target, schema=None, spark_session=None, context=None):
-        assert target == "metadata"
+    def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
+        assert store == "metadata"
         assert schema == ("governance" if table_name in {
             "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
             "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
@@ -324,9 +324,9 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         return Table(spark.tables[table_name])
 
     def write_table(
-        df, table_name, *, target, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
+        df, table_name, *, store, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
     ):
-        assert target == "metadata"
+        assert store == "metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "overwrite"
         assert options is None

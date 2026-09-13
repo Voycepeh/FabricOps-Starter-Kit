@@ -17,7 +17,7 @@ def write_warehouse_table(
     schema: str,
     table_name: str,
     *,
-    target: str = "warehouse",
+    store: str = "warehouse",
     mode: str = "append",
     repartition_by=None,
     options: dict[str, Any] | None = None,
@@ -55,9 +55,9 @@ def write_warehouse_table(
         inference.
     table_name : str
         Warehouse table name.
-    target : str, default="warehouse"
-        Logical Warehouse target from ``00_env_config``. FabricOps resolves
-        the logical target, workspace ID, Warehouse item ID, Warehouse database
+    store : str, default="warehouse"
+        Logical Warehouse store key from ``00_env_config``. FabricOps resolves
+        the logical store key, workspace ID, Warehouse item ID, Warehouse database
         name, schema, and table name.
     mode : {"append", "overwrite", "errorifexists", "ignore"}, default="append"
         Requested Warehouse write behaviour passed to the Fabric Warehouse
@@ -189,7 +189,7 @@ def write_warehouse_table(
     ...     department_lookup_df,
     ...     "dbo",
     ...     "DIM_DEPARTMENT",
-    ...     target="warehouse",
+    ...     store="warehouse",
     ...     mode="overwrite",
     ... )
 
@@ -203,7 +203,7 @@ def write_warehouse_table(
     ...     large_fact_df,
     ...     "dbo",
     ...     "FACT_STUDENT_ENROLMENT",
-    ...     target="warehouse",
+    ...     store="warehouse",
     ...     mode="append",
     ...     repartition_by=32,
     ... )
@@ -214,7 +214,7 @@ def write_warehouse_table(
     ...     large_fact_df,
     ...     "dbo",
     ...     "FACT_STUDENT_ENROLMENT",
-    ...     target="warehouse",
+    ...     store="warehouse",
     ...     mode="append",
     ...     repartition_by=["academic_year", "semester"],
     ... )
@@ -225,7 +225,7 @@ def write_warehouse_table(
     ...     transaction_df,
     ...     "dbo",
     ...     "FACT_TRANSACTIONS",
-    ...     target="warehouse",
+    ...     store="warehouse",
     ...     mode="append",
     ...     repartition_by=48,
     ... )
@@ -238,6 +238,6 @@ def write_warehouse_table(
     validate_dataframe_writer(df)
     df = repartition_dataframe_for_write(df, repartition_by)
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
-        target, schema, table_name, context=context
+        store, schema, table_name, context=context
     )
     write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)

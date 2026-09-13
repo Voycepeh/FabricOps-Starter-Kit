@@ -101,7 +101,7 @@ def check_dq(
     )
     result = check_dq_runtime(
         dataframe, config, env, identity["table_name"], table_id=identity["table_id"],
-        target=identity["target"], store_type=identity["store_type"], schema_name=identity["schema"],
+        store=identity["store"], store_type=identity["store_type"], schema_name=identity["schema"],
         dataset_name=dataset_name, run_id=run_id,
         row_identity_columns=row_identity_columns, context=context,
     )

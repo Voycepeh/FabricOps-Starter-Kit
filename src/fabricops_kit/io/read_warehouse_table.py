@@ -11,7 +11,7 @@ def read_warehouse_table(
     schema: str,
     table_name: str,
     *,
-    target: str = "warehouse",
+    store: str = "warehouse",
     spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
@@ -45,7 +45,7 @@ def read_warehouse_table(
         Physical Warehouse schema name for the source table.
     table_name : str
         Physical Warehouse table name for the source table.
-    target : str, default="warehouse"
+    store : str, default="warehouse"
         Logical Warehouse configuration name from ``00_env_config``. This
         identifies the configured Warehouse target, while ``schema`` and
         ``table_name`` identify the physical Warehouse table.
@@ -76,7 +76,7 @@ def read_warehouse_table(
 
     """
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
-        target, schema, table_name, context=context
+        store, schema, table_name, context=context
     )
     return read_warehouse_synapsesql(
         get_spark_session(spark_session), store, object_name, options=options

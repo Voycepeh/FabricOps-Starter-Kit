@@ -66,7 +66,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="read-transform-write">
 <summary><strong>Read / Transform / Write</strong> — The user-facing stages of the canonical 02_pipeline engineering flow: Read, Transform, and Write.</summary>
-<p>In FabricOps, Read, Transform, and Write name the user-facing stages in 02_pipeline. Read prepares and reads one or more upstream sources, Transform contains project-owned business logic, and Write prepares and publishes one governed output. Source and target remain technical terms for datasets, lineage roles, processing state, and FabricOps configuration or API fields such as target="source" or target="unified"; they are not competing notebook stage names.</p>
+<p>In FabricOps, Read, Transform, and Write name the user-facing stages in 02_pipeline. Read prepares and reads one or more upstream sources, Transform contains project-owned business logic, and Write prepares and publishes one governed output. Source and target remain technical terms for datasets, lineage roles, processing state, and FabricOps configuration or API fields such as store="source" or store="unified"; they are not competing notebook stage names.</p>
 <p><strong>Also known as:</strong> Read → Transform → Write, RTW</p>
 </details>
 

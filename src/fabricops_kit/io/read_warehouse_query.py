@@ -7,7 +7,7 @@ from typing import Any
 from .shared import (
     get_spark_session,
     read_warehouse_synapsesql,
-    resolve_configured_warehouse_query_target,
+    resolve_configured_warehouse_query_store,
     validate_select_query,
 )
 
@@ -15,7 +15,7 @@ from .shared import (
 def read_warehouse_query(
     query: str,
     *,
-    target: str = "warehouse",
+    store: str = "warehouse",
     spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
@@ -51,8 +51,8 @@ def read_warehouse_query(
         Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH``
         and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL
         serving engine.
-    target : str, default="warehouse"
-        Logical warehouse target from ``00_env_config``.
+    store : str, default="warehouse"
+        Logical Warehouse store key from ``00_env_config``.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
@@ -69,10 +69,10 @@ def read_warehouse_query(
 
     Notes
     -----
-    FabricOps resolves the configured Warehouse target, sets the Fabric
+    FabricOps resolves the configured Warehouse store, sets the Fabric
     connector database to that warehouse artifact, and delegates the read-only
     SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
-    can use two-part names such as ``dbo.orders`` when the configured target
+    can use two-part names such as ``dbo.orders`` when the configured store
     identifies the warehouse database/artifact. Conceptual example:
 
     ``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``
@@ -81,7 +81,7 @@ def read_warehouse_query(
     Warehouse engine, and transfers only the resulting dataset to Spark.
 
     """
-    store = resolve_configured_warehouse_query_target(target, context=context)
+    store = resolve_configured_warehouse_query_store(store, context=context)
     sql = validate_select_query(query)
     return read_warehouse_synapsesql(
         get_spark_session(spark_session),

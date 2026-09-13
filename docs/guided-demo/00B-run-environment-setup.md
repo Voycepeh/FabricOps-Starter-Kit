@@ -119,7 +119,7 @@ Ready for 02_pipeline
     ```python
     orders_df = read_lakehouse_csv(
         "DemoData/orders.csv",
-        target="source",
+        store="source",
         spark_session=spark,
         header=True,
         inferSchema=True,
@@ -131,13 +131,13 @@ Ready for 02_pipeline
     ```python
     # Equivalent alternatives — choose one instead of the CSV call above.
     # orders_df = read_lakehouse_json(
-    #     "DemoData/orders.json", target="source", spark_session=spark,
+    #     "DemoData/orders.json", store="source", spark_session=spark,
     # )
     # orders_df = read_lakehouse_parquet(
-    #     "DemoData/orders.parquet", target="source", spark_session=spark,
+    #     "DemoData/orders.parquet", store="source", spark_session=spark,
     # )
     # orders_df = read_lakehouse_excel(
-    #     "DemoData/orders.xlsx", target="source", spark_session=spark,
+    #     "DemoData/orders.xlsx", store="source", spark_session=spark,
     #     sheet_name="orders",
     # )
     ```
@@ -151,7 +151,7 @@ Ready for 02_pipeline
     ```python
     products_df = read_lakehouse_csv(
         "DemoData/products.csv",
-        target="source",
+        store="source",
         spark_session=spark,
         header=True,
         inferSchema=True,
@@ -159,7 +159,7 @@ Ready for 02_pipeline
 
     order_history_df = read_lakehouse_csv(
         "DemoData/order_history.csv",
-        target="source",
+        store="source",
         spark_session=spark,
         header=True,
         inferSchema=True,
@@ -174,7 +174,7 @@ Ready for 02_pipeline
     write_lakehouse_table(
         orders_df,
         "orders",
-        target="source",
+        store="source",
         schema="demo",
         mode="overwrite",
     )
@@ -182,7 +182,7 @@ Ready for 02_pipeline
     write_lakehouse_table(
         products_df,
         "products",
-        target="source",
+        store="source",
         schema="demo",
         mode="overwrite",
     )
@@ -195,7 +195,7 @@ Ready for 02_pipeline
         order_history_df,
         "demo",
         "order_history",
-        target="product",
+        store="product",
         mode="overwrite",
     )
     ```
@@ -211,7 +211,7 @@ Ready for 02_pipeline
     ```python
     orders_table_df = read_lakehouse_table(
         "orders",
-        target="source",
+        store="source",
         schema="demo",
         spark_session=spark,
     )
@@ -219,7 +219,7 @@ Ready for 02_pipeline
 
     products_table_df = read_lakehouse_table(
         "products",
-        target="source",
+        store="source",
         schema="demo",
         spark_session=spark,
     )
@@ -228,7 +228,7 @@ Ready for 02_pipeline
     order_history_table_df = read_warehouse_table(
         "demo",
         "order_history",
-        target="product",
+        store="product",
         spark_session=spark,
     )
     display(order_history_table_df)

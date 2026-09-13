@@ -162,7 +162,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     runtime_context = {"config": config, "env": env, **(resolved or {})}
     lineage_schema = metadata_table_physical_schema(config, LINEAGE_TABLE)
     pairs, notebook_scope = resolve_notebook_lineage_tables(
-        environment_name=env, target="metadata", schema=lineage_schema,
+        environment_name=env, store="metadata", schema=lineage_schema,
         spark_session=spark, context=runtime_context, runtime_context=runtime_context,
         required=env == "prod",
     )
@@ -201,7 +201,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     else:
         try:
             contracts = [_row_dict(row) for row in read_lakehouse_table(
-                CONTRACT_TABLE, target="metadata",
+                CONTRACT_TABLE, store="metadata",
                 schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
                 spark_session=spark, context=runtime_context,
             ).collect()]

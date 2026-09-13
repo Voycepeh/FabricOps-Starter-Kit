@@ -51,15 +51,15 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     writes = []
     steward_rows = []
 
-    def write_table(df, table, *, target, context, **kwargs):
+    def write_table(df, table, *, store, context, **kwargs):
         assert context["env"] == "dev"
-        assert target == "metadata"
-        writes.append((table, df.rows, context["env"], target, kwargs))
+        assert store == "metadata"
+        writes.append((table, df.rows, context["env"], store, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
 
-    def read_table(table, *, target, context, **kwargs):
-        assert (context["env"], target) == ("dev", "metadata")
+    def read_table(table, *, store, context, **kwargs):
+        assert (context["env"], store) == ("dev", "metadata")
         if table == agreement.DATA_STEWARD_TABLE:
             return steward_rows
         return []

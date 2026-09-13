@@ -669,17 +669,17 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any:
-    """Resolve a configured Fabric path for an environment and target.
+def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Any:
+    """Resolve a configured FabricStore for an environment and logical store key.
 
     Parameters
     ----------
     env : str
         Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
-    target : str
-        Target key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+    store : str
+        Logical store key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
     config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-target path mappings.
+        Configuration that contains environment-to-store mappings.
 
     Returns
     -------
@@ -689,7 +689,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any
     Raises
     ------
     ValueError
-        If config is missing, or if the environment/target mapping does not exist.
+        If config is missing, or if the environment/store mapping does not exist.
 
     Examples
     --------
@@ -703,12 +703,12 @@ def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any
         raise ValueError(
             f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
         )
-    if target not in paths[env]:
+    if store not in paths[env]:
         available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
         raise ValueError(
-            f"Target '{target}' was not found under environment '{env}'. Available targets: {available_targets}."
+            f"Store '{store}' was not found under environment '{env}'. Available stores: {available_targets}."
         )
-    return paths[env][target]
+    return paths[env][store]
 
 
 # ---------------------------------------------------------------------------

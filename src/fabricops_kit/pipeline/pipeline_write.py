@@ -56,7 +56,7 @@ def _persist_target_processing(
             "column_id": None,
             "environment_name": env,
             "store_type": str(identity.get("store_type") or identity.get("store_kind") or "").lower(),
-            "layer": str(identity["target"]),
+            "layer": str(identity["store"]),
             "schema_name": identity.get("schema"),
             "table_name": str(identity["table_name"]),
             "column_name": None,
@@ -179,7 +179,7 @@ def _validate_target_writer_ownership(*, table_id: str, processing: dict[str, An
 def pipeline_write(
     df,
     *,
-    target: str | None = None,
+    store: str | None = None,
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
@@ -203,17 +203,17 @@ def pipeline_write(
     ----------
     df : pyspark.sql.DataFrame
         Prepared target DataFrame after explicit target checks have passed.
-    target : str, optional
-        Configured target key. Supply it with ``table_name`` and optional
+    store : str, optional
+        Configured store key. Supply it with ``table_name`` and optional
         ``schema`` instead of ``table_id``.
     schema : str, optional
         Physical target schema when the configured store uses schemas.
     table_name : str, optional
-        Physical target table name. Required with ``target`` when ``table_id``
+        Physical target table name. Required with ``store`` when ``table_id``
         is omitted.
     table_id : str, optional
         Canonical registered target identity. This identity form is mutually
-        exclusive with ``target``, ``schema``, and ``table_name``.
+        exclusive with ``store``, ``schema``, and ``table_name``.
     load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
         Development-authored processing proposal. Selected or frozen contract
         validation applies in Development, and the active approved Data
@@ -292,7 +292,7 @@ def pipeline_write(
     Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 
     >>> result = pipeline_write(
-    ...     prepared_df, target="unified", schema="demo",
+    ...     prepared_df, store="unified", schema="demo",
     ...     table_name="curated_orders",
     ...     source_table_ids=[orders_result["table_id"]],
     ... )
@@ -302,7 +302,7 @@ def pipeline_write(
     Development may propose processing, without bypassing contract authority:
 
     >>> pipeline_write(
-    ...     prepared_df, target="unified", schema="demo",
+    ...     prepared_df, store="unified", schema="demo",
     ...     table_name="curated_orders", load_strategy="overwrite",
     ...     source_table_ids=[orders_result["table_id"]],
     ... )
@@ -318,11 +318,11 @@ def pipeline_write(
     from fabricops_kit.pipeline.shared import commit_pipeline_write_success, execute_lakehouse_processing
 
     config, env, context = resolve_fabric_context()
-    coordinates = (target, schema, table_name)
+    coordinates = (store, schema, table_name)
     if table_id and any(value is not None for value in coordinates):
-        raise ValueError("table_id cannot be combined with target, schema, or table_name.")
-    if not table_id and (target is None or table_name is None):
-        raise ValueError("Provide table_id or both target and table_name.")
+        raise ValueError("table_id cannot be combined with store, schema, or table_name.")
+    if not table_id and (store is None or table_name is None):
+        raise ValueError("Provide table_id or both store and table_name.")
 
     if table_id:
         identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
@@ -332,7 +332,7 @@ def pipeline_write(
             else catalogue_authored_processing(identity)
         )
     else:
-        identity = resolve_physical_table_identity(config, env, target=target, schema=schema, table_name=table_name)
+        identity = resolve_physical_table_identity(config, env, store=store, schema=schema, table_name=table_name)
         identity["store_type"] = identity["store_kind"]
         authored = {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
 
@@ -344,7 +344,7 @@ def pipeline_write(
     strategy = str(processing.get("load_strategy") or "")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     physical_identity = ".".join(
-        str(value) for value in (identity.get("target"), identity.get("schema"), identity.get("table_name")) if value
+        str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
     )
     physical_options = dict(options or {})
     partition_column = str(processing.get("partition_column") or "")
@@ -392,7 +392,7 @@ def pipeline_write(
             write_lakehouse_table(
                 prepared_df,
                 str(identity["table_name"]),
-                target=str(identity["target"]),
+                store=str(identity["store"]),
                 schema=identity.get("schema"),
                 mode=strategy,
                 repartition_by=repartition_by,
@@ -404,7 +404,7 @@ def pipeline_write(
             execute_lakehouse_processing(
                 prepared_df,
                 table_name=str(identity["table_name"]),
-                target=str(identity["target"]),
+                store=str(identity["store"]),
                 schema=identity.get("schema"),
                 processing=processing,
                 scope=scope,
@@ -418,7 +418,7 @@ def pipeline_write(
                 prepared_df,
                 str(identity["schema"]),
                 str(identity["table_name"]),
-                target=str(identity["target"]),
+                store=str(identity["store"]),
                 mode=strategy,
                 repartition_by=repartition_by,
                 options=physical_options,
@@ -429,7 +429,7 @@ def pipeline_write(
                 prepared_df,
                 schema=str(identity["schema"]),
                 table_name=str(identity["table_name"]),
-                target=str(identity["target"]),
+                store=str(identity["store"]),
                 processing=processing,
                 context=context,
                 options=physical_options,
@@ -437,7 +437,7 @@ def pipeline_write(
         else:
             raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
     else:
-        raise ValueError(f"Configured target has unsupported store kind {store_kind or '<blank>'!r}.")
+        raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
 
     _persist_target_processing(
         identity=identity,

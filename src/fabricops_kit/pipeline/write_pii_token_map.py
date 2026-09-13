@@ -97,7 +97,7 @@ def write_pii_token_map(
     column_id: str,
     original_column: str,
     token_column: str,
-    target: str = "support",
+    store: str = "support",
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Persist reversible PII mappings for one governed table outside metadata.
@@ -130,19 +130,19 @@ def write_pii_token_map(
     token_column : str
         Column in ``df`` containing the tokenised value that replaces the
         original value in the governed physical table.
-    target : str, default="support"
-        Logical Lakehouse target configured in ``00_env_config`` for support
+    store : str, default="support"
+        Logical Lakehouse store key configured in ``00_env_config`` for support
         assets. This can point to the governed table's Lakehouse or to a
         separate restricted Lakehouse.
     schema : str or None, default=None
         Optional support-schema override. When omitted, the configured schema
-        for ``target`` is used when that Lakehouse is schema-enabled.
+        for ``store`` is used when that Lakehouse is schema-enabled.
 
     Returns
     -------
     dict[str, Any]
         Resolved support location containing ``table_id``, ``column_id``,
-        ``target``, ``schema``, ``table_name``, ``path``, and ``action``.
+        ``store``, ``schema``, ``table_name``, ``path``, and ``action``.
         ``action`` is ``created`` for a new map or ``merged`` when an existing
         map was idempotently extended.
 
@@ -181,7 +181,7 @@ def write_pii_token_map(
     ...     column_id=EMAIL_COLUMN_ID,
     ...     original_column="email_address",
     ...     token_column="email_address_token",
-    ...     target="support",
+    ...     store="support",
     ...     schema="fabricops_support",
     ... )
     >>> result["table_name"].endswith("__pii_token_map")
@@ -196,8 +196,8 @@ def write_pii_token_map(
         raise ValueError("original_column is required.")
     if not str(token_column or "").strip():
         raise ValueError("token_column is required.")
-    if not str(target or "").strip():
-        raise ValueError("target is required.")
+    if not str(store or "").strip():
+        raise ValueError("store is required.")
 
     config, env, context = resolve_fabric_context()
     spark_session = getattr(df, "sparkSession", None)
@@ -210,7 +210,7 @@ def write_pii_token_map(
     )
     support_table = _token_map_table_name(identity["table_id"], identity["table_name"])
     _store, table_name, schema_name, path = resolve_configured_lakehouse_table(
-        target,
+        store,
         support_table,
         schema,
         context=context,
@@ -227,7 +227,7 @@ def write_pii_token_map(
     return {
         "table_id": identity["table_id"],
         "column_id": column_id,
-        "target": target,
+        "store": store,
         "schema": schema_name,
         "table_name": table_name,
         "path": path,

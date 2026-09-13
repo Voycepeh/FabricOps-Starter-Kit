@@ -65,7 +65,7 @@ Apply selective filters, projections, joins, and aggregations in the SQL query w
 ```python
 def read_warehouse_query(
     query: str,
-    target: str='warehouse',
+    store: str='warehouse',
     spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
@@ -79,7 +79,7 @@ def read_warehouse_query(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = 'Active'", target="warehouse", spark_session=spark)
+active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = 'Active'", store="warehouse", spark_session=spark)
 ```
 
 </div>
@@ -89,7 +89,7 @@ active_students_df = read_warehouse_query("SELECT student_id, programme_code, en
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `query` | `str` | Yes | Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine. |
-| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `store` | `str` | No | Logical Warehouse store key from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
@@ -116,10 +116,10 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 
 <div class="reference-docstring-notes" markdown="1">
 
-FabricOps resolves the configured Warehouse target, sets the Fabric
+FabricOps resolves the configured Warehouse store, sets the Fabric
 connector database to that warehouse artifact, and delegates the read-only
 SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
-can use two-part names such as ``dbo.orders`` when the configured target
+can use two-part names such as ``dbo.orders`` when the configured store
 identifies the warehouse database/artifact. Conceptual example:
 
 ``df = read_warehouse_query("""SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1""")``
@@ -167,8 +167,8 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.validate_select_query</code></li>
 </ul>
 

@@ -4,13 +4,13 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import resolve_physical_table_identity
 
 
-def resolve_table_id(*, target: str, schema: str | None = None, table_name: str) -> str:
+def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str:
     """Return the canonical table identity for configured physical coordinates.
 
     Parameters
     ----------
-    target : str
-        Configured FabricStore target key.
+    store : str
+        Configured FabricStore key.
     schema : str, optional
         Physical schema, or ``None`` when the configured store does not use one.
     table_name : str
@@ -25,12 +25,12 @@ def resolve_table_id(*, target: str, schema: str | None = None, table_name: str)
     Raises
     ------
     ValueError
-        If the target, schema, table name, or configured store is invalid.
+        If the store, schema, table name, or configured store is invalid.
 
     Examples
     --------
     >>> table_id = resolve_table_id(
-    ...     target="unified", schema="dbo", table_name="curated_orders"
+    ...     store="unified", schema="dbo", table_name="curated_orders"
     ... )
 
     See Also
@@ -40,6 +40,6 @@ def resolve_table_id(*, target: str, schema: str | None = None, table_name: str)
     """
     config, env, _context = resolve_fabric_context()
     identity = resolve_physical_table_identity(
-        config, env, target=target, schema=schema, table_name=table_name
+        config, env, store=store, schema=schema, table_name=table_name
     )
     return str(identity["table_id"])

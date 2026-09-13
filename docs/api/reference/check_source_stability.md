@@ -46,7 +46,7 @@ def check_source_stability(observation, *, target_table_id: str) -> dict
 <div class="reference-example-usage" markdown="1">
 
 >>> observation = observe_table(
-...     "orders", target="source", schema="dbo",
+...     "orders", store="source", schema="dbo",
 ...     target_table_id="lakehouse:unified:dbo:orders",
 ... )
 >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")

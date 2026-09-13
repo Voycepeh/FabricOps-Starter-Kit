@@ -205,7 +205,7 @@ source_1_df = read_warehouse_query(
     HAVING COUNT(*) > 100
     ORDER BY student_count DESC
     """,
-    target=SOURCE_TARGET,
+    store=SOURCE_STORE,
     spark_session=spark,
 )
 ```

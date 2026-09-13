@@ -56,7 +56,7 @@ def run(monkeypatch, current, *, kind="warehouse", persist_spy=None, **arguments
         lambda rows, **kwargs: (persisted.extend(rows), persist_spy and persist_spy(rows, kwargs), Frame(rows))[2],
     )
     monkeypatch.setattr(module, "read_warehouse_query", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
-    call = dict(table_name="orders", target="source", schema="dbo", target_table_id="target")
+    call = dict(table_name="orders", store="source", schema="dbo", target_table_id="target")
     call.update(arguments)
     result = module.observe_table(**call)
     return result, queries, persisted
@@ -165,7 +165,7 @@ def test_logical_source_target_routes_to_configured_warehouse(monkeypatch):
     captured = []
     _, queries, _ = run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: captured.append(kwargs))
     assert captured[0]["source_table_id"] == build_table_id("warehouse", "source", "dbo", "orders")
-    assert queries[0][1]["target"] == "source"
+    assert queries[0][1]["store"] == "source"
 
 
 def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
@@ -181,7 +181,7 @@ def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
     monkeypatch.setattr(module, "_observe_lakehouse", lambda *args, **kwargs: captured.append(args) or [{**evidence(), "is_present": True}])
     identities = []
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: identities.append(kwargs) or Frame(rows))
-    module.observe_table(table_name="orders", target="source", schema="dbo", target_table_id="target")
+    module.observe_table(table_name="orders", store="source", schema="dbo", target_table_id="target")
     assert captured[0][:3] == ("orders", "source", "dbo")
     assert identities[0]["source_table_id"] == build_table_id("lakehouse", "source", "dbo", "orders")
 

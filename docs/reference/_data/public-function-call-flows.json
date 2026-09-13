@@ -1859,7 +1859,7 @@
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.observe_table.observe_table",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
@@ -1875,7 +1875,7 @@
         "fabricops_kit.config.setup_notebook::<module>",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared::<module>",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.check_schema::<module>",
@@ -1973,7 +1973,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_schema.check_schema",
@@ -2000,7 +2000,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.shared.read_sql_endpoint_query_core",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared::<module>",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_dq::<module>",
@@ -3610,10 +3610,10 @@
       "function_name": "_validate_lakehouse_store",
       "function_type": "private_function",
       "inbound_callers": [
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "inbound_source_references": [
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
@@ -3684,10 +3684,10 @@
       "function_name": "_validate_warehouse_store",
       "function_type": "private_function",
       "inbound_callers": [
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "inbound_source_references": [
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
@@ -4354,7 +4354,7 @@
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
       ],
       "discontinued_in": null,
-      "function_name": "resolve_configured_warehouse_query_target",
+      "function_name": "resolve_configured_warehouse_query_store",
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
@@ -4367,7 +4367,7 @@
       "live_impact_level": "direct_live_dependency",
       "live_since": null,
       "public_flow_reachable": true,
-      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
       "release_history": [],
       "release_versions": [],
       "source_end_line": 179,
@@ -4534,25 +4534,25 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
-      "function_name": "resolve_target_store",
+      "function_name": "resolve_store",
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-        "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table"
       ],
       "inbound_source_references": [
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-        "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "live_since": null,
       "public_flow_reachable": true,
-      "qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "qualified_name": "fabricops_kit.io.shared.resolve_store",
       "release_history": [],
       "release_versions": [],
       "source_end_line": 140,
@@ -13173,7 +13173,7 @@
       "depth": 5,
       "direct_call_count": 12,
       "discontinued_in": null,
-      "examples": ">>> observation = observe_table(\n...     \"orders\", target=\"source\", schema=\"dbo\", target_table_id=target_table_id,\n... )\n>>> result = check_freshness(observation)",
+      "examples": ">>> observation = observe_table(\n...     \"orders\", store=\"source\", schema=\"dbo\", target_table_id=target_table_id,\n... )\n>>> result = check_freshness(observation)",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -13741,7 +13741,7 @@
       "depth": 6,
       "direct_call_count": 2,
       "discontinued_in": null,
-      "examples": ">>> observation = observe_table(\n...     \"orders\", target=\"source\", schema=\"dbo\",\n...     target_table_id=\"lakehouse:unified:dbo:orders\",\n... )\n>>> result = check_source_stability(observation, target_table_id=\"lakehouse:unified:dbo:orders\")\n>>> result[\"load_strategy\"]\n'append'",
+      "examples": ">>> observation = observe_table(\n...     \"orders\", store=\"source\", schema=\"dbo\",\n...     target_table_id=\"lakehouse:unified:dbo:orders\",\n... )\n>>> result = check_source_stability(observation, target_table_id=\"lakehouse:unified:dbo:orders\")\n>>> result[\"load_strategy\"]\n'append'",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -13975,8 +13975,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Lakehouse or Warehouse target configured by ``00_env_config``.",
-          "name": "target",
+          "description": "Logical Lakehouse or Warehouse store key configured by ``00_env_config``.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -14104,7 +14104,7 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def observe_table(table_name: str, *, target: str='source', schema: str | None=None, target_table_id: str) -> Any",
+      "signature": "def observe_table(table_name: str, *, store: str='source', schema: str | None=None, target_table_id: str) -> Any",
       "source_end_line": 295,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
       "source_start_line": 159,
@@ -14122,7 +14122,7 @@
       "depth": 5,
       "direct_call_count": 8,
       "discontinued_in": null,
-      "examples": "Read a governed table without knowing whether ``source`` resolves to a\nLakehouse or Warehouse:\n\n>>> result = pipeline_read(\n...     target=\"source\",\n...     schema=\"demo\",\n...     table_name=\"orders\",\n... )\n>>> orders_df = result[\"dataframe\"]\n>>> orders_table_id = result[\"table_id\"]\n\nRead a governed Warehouse source through project-owned SQL:\n\n>>> result = pipeline_read(\n...     target=\"product\",\n...     schema=\"demo\",\n...     table_name=\"order_history\",\n...     query='''\n...         SELECT customer_id, COUNT(*) AS order_count\n...         FROM demo.order_history\n...         GROUP BY customer_id\n...     ''',\n... )\n>>> history_df = result[\"dataframe\"]\n>>> result[\"is_query\"]\nTrue\n\nThe query result is marked as derived so later notebook logic can use\n``profile_table(dataframe=history_df)`` without registering it as the\ncomplete physical ``demo.order_history`` source table.",
+      "examples": "Read a governed table without knowing whether ``source`` resolves to a\nLakehouse or Warehouse:\n\n>>> result = pipeline_read(\n...     store=\"source\",\n...     schema=\"demo\",\n...     table_name=\"orders\",\n... )\n>>> orders_df = result[\"dataframe\"]\n>>> orders_table_id = result[\"table_id\"]\n\nRead a governed Warehouse source through project-owned SQL:\n\n>>> result = pipeline_read(\n...     store=\"product\",\n...     schema=\"demo\",\n...     table_name=\"order_history\",\n...     query='''\n...         SELECT customer_id, COUNT(*) AS order_count\n...         FROM demo.order_history\n...         GROUP BY customer_id\n...     ''',\n... )\n>>> history_df = result[\"dataframe\"]\n>>> result[\"is_query\"]\nTrue\n\nThe query result is marked as derived so later notebook logic can use\n``profile_table(dataframe=history_df)`` without registering it as the\ncomplete physical ``demo.order_history`` source table.",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -14144,8 +14144,8 @@
       "max_depth": 5,
       "parameters": [
         {
-          "description": "Configured source target key, such as ``\"source\"`` or ``\"product\"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``.",
-          "name": "target",
+          "description": "Configured source store key, such as ``\"source\"`` or ``\"product\"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``.",
+          "name": "store",
           "required": "No",
           "type": "str | None"
         },
@@ -14156,13 +14156,13 @@
           "type": "str | None"
         },
         {
-          "description": "Physical source table name. Required with ``target`` when ``table_id`` is omitted. ``target``, optional ``schema``, and ``table_name`` form one identity form.",
+          "description": "Physical source table name. Required with ``store`` when ``table_id`` is omitted. ``store``, optional ``schema``, and ``table_name`` form one identity form.",
           "name": "table_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``target``, ``schema``, and ``table_name``.",
+          "description": "Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``.",
           "name": "table_id",
           "required": "No",
           "type": "str | None"
@@ -14248,7 +14248,7 @@
       "signals": [
         "architecture_violation"
       ],
-      "signature": "def pipeline_read(*, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, verbose: bool=True) -> dict[str, Any]",
+      "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, verbose: bool=True) -> dict[str, Any]",
       "source_end_line": 209,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 17,
@@ -14266,7 +14266,7 @@
       "depth": 6,
       "direct_call_count": 17,
       "discontinued_in": null,
-      "examples": "Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:\n\n>>> result = pipeline_write(\n...     prepared_df, target=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )\n>>> result[\"table_id\"]\n'lakehouse:unified:demo:curated_orders'\n\nDevelopment may propose processing, without bypassing contract authority:\n\n>>> pipeline_write(\n...     prepared_df, target=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\", load_strategy=\"overwrite\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )",
+      "examples": "Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:\n\n>>> result = pipeline_write(\n...     prepared_df, store=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )\n>>> result[\"table_id\"]\n'lakehouse:unified:demo:curated_orders'\n\nDevelopment may propose processing, without bypassing contract authority:\n\n>>> pipeline_write(\n...     prepared_df, store=\"unified\", schema=\"demo\",\n...     table_name=\"curated_orders\", load_strategy=\"overwrite\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -14294,8 +14294,8 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Configured target key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``.",
-          "name": "target",
+          "description": "Configured store key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``.",
+          "name": "store",
           "required": "No",
           "type": "str | None"
         },
@@ -14306,13 +14306,13 @@
           "type": "str | None"
         },
         {
-          "description": "Physical target table name. Required with ``target`` when ``table_id`` is omitted.",
+          "description": "Physical target table name. Required with ``store`` when ``table_id`` is omitted.",
           "name": "table_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Canonical registered target identity. This identity form is mutually exclusive with ``target``, ``schema``, and ``table_name``.",
+          "description": "Canonical registered target identity. This identity form is mutually exclusive with ``store``, ``schema``, and ``table_name``.",
           "name": "table_id",
           "required": "No",
           "type": "str | None"
@@ -14480,7 +14480,7 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def pipeline_write(df, *, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, verbose: bool=True) -> dict[str, str]",
+      "signature": "def pipeline_write(df, *, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, verbose: bool=True) -> dict[str, str]",
       "source_end_line": 460,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
       "source_start_line": 179,
@@ -14498,7 +14498,7 @@
       "depth": 6,
       "direct_call_count": 16,
       "discontinued_in": null,
-      "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(target=\"source\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)",
+      "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(store=\"source\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -14548,7 +14548,7 @@
         "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.pipeline.profile_table._audit_literal_columns",
         "fabricops_kit.pipeline.profile_table._automatic_frequency_columns",
@@ -14587,8 +14587,8 @@
           "type": "pyspark.sql.DataFrame, optional"
         },
         {
-          "description": "Configured physical target key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``.",
-          "name": "target",
+          "description": "Configured physical store key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``.",
+          "name": "store",
           "required": "No",
           "type": "str | None"
         },
@@ -14599,7 +14599,7 @@
           "type": "str | None"
         },
         {
-          "description": "Physical table name. Required with ``target`` when ``table_id`` is omitted.",
+          "description": "Physical table name. Required with ``store`` when ``table_id`` is omitted.",
           "name": "table_name",
           "required": "No",
           "type": "str | None"
@@ -14732,7 +14732,7 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def profile_table(*, dataframe=None, target: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0)",
+      "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0)",
       "source_end_line": 953,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 717,
@@ -14774,7 +14774,7 @@
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_lakehouse_file_location",
         "fabricops_kit.io.shared.resolve_lakehouse_file_path",
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "live_critical_dependency_count": 14,
       "live_since": "0.1.0",
@@ -14787,8 +14787,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Lakehouse target from ``00_env_config``. It is not necessarily the literal physical Lakehouse name.",
-          "name": "target",
+          "description": "Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -14834,13 +14834,13 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the CSV file or compatible CSV\n    files found at the resolved Lakehouse ``Files`` path. Column types\n    follow Spark CSV reader behavior and generally remain strings unless\n    schema inference or other schema handling is explicitly requested.",
       "scope": 14,
       "signals": [],
-      "signature": "def read_lakehouse_csv(relative_path: str, *, target: str='source', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_lakehouse_csv(relative_path: str, *, store: str='source', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 104,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
       "source_start_line": 10,
       "summary": "Resolve CSV data in a Lakehouse Files path and return a lazy Spark DataFrame.",
       "transitive_function_count": 14,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions. Calling this function constructs a Spark read plan, and the file\nscan occurs when a downstream action executes, such as ``display``,\n``count``, ``collect``, or a DataFrame write. The function does not\nimmediately load the complete file into notebook memory.\n\nCompact examples:\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", target=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers/\", target=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", target=\"source\", inferSchema=True)``\n\n``df = read_lakehouse_csv(\"incoming/orders.csv\", target=\"source\", header=True, inferSchema=True, sep=\",\", encoding=\"UTF-8\", mode=\"PERMISSIVE\")``\n\nWhen a folder path is supplied, Spark reads compatible CSV files from that\npath into one DataFrame according to Spark CSV reader behavior. FabricOps\ndoes not manually loop through or append files.\n\nThe function sets the ``header`` option and forwards the caller's CSV\noptions. It does not automatically infer data types. Unless the caller\nrequests schema inference or another schema strategy, Spark CSV columns are\ngenerally read as strings. ``inferSchema=True`` can be passed through\n``**options`` when inference is desired.\n\nThis function does not convert CSV data into a Delta table, write, move,\nrename, or delete source files, register metadata, profile the returned\nDataFrame, remove duplicate rows, standardize column names, infer schema\nunless requested through Spark options, validate that every CSV file in a\nfolder has identical structure, apply custom malformed-record handling\nbeyond the supplied Spark CSV options, or automatically cache or persist\nthe returned DataFrame.",
+      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions. Calling this function constructs a Spark read plan, and the file\nscan occurs when a downstream action executes, such as ``display``,\n``count``, ``collect``, or a DataFrame write. The function does not\nimmediately load the complete file into notebook memory.\n\nCompact examples:\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", store=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers/\", store=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", store=\"source\", inferSchema=True)``\n\n``df = read_lakehouse_csv(\"incoming/orders.csv\", store=\"source\", header=True, inferSchema=True, sep=\",\", encoding=\"UTF-8\", mode=\"PERMISSIVE\")``\n\nWhen a folder path is supplied, Spark reads compatible CSV files from that\npath into one DataFrame according to Spark CSV reader behavior. FabricOps\ndoes not manually loop through or append files.\n\nThe function sets the ``header`` option and forwards the caller's CSV\noptions. It does not automatically infer data types. Unless the caller\nrequests schema inference or another schema strategy, Spark CSV columns are\ngenerally read as strings. ``inferSchema=True`` can be passed through\n``**options`` when inference is desired.\n\nThis function does not convert CSV data into a Delta table, write, move,\nrename, or delete source files, register metadata, profile the returned\nDataFrame, remove duplicate rows, standardize column names, infer schema\nunless requested through Spark options, validate that every CSV file in a\nfolder has identical structure, apply custom malformed-record handling\nbeyond the supplied Spark CSV options, or automatically cache or persist\nthe returned DataFrame.",
       "width": 3
     },
     {
@@ -14877,7 +14877,7 @@
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_lakehouse_file_location",
         "fabricops_kit.io.shared.resolve_lakehouse_file_path",
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "live_critical_dependency_count": 15,
       "live_since": "0.1.0",
@@ -14890,8 +14890,8 @@
           "type": "str"
         },
         {
-          "description": "Logical lakehouse target from ``00_env_config``.",
-          "name": "target",
+          "description": "Logical Lakehouse store key from ``00_env_config``.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -14937,7 +14937,7 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame converted from the selected Excel worksheet.",
       "scope": 15,
       "signals": [],
-      "signature": "def read_lakehouse_excel(relative_path: str, *, target: str='source', sheet_name=0, spark_session=None, context: dict[str, Any] | None=None, **read_excel_kwargs)",
+      "signature": "def read_lakehouse_excel(relative_path: str, *, store: str='source', sheet_name=0, spark_session=None, context: dict[str, Any] | None=None, **read_excel_kwargs)",
       "source_end_line": 52,
       "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
       "source_start_line": 10,
@@ -14955,7 +14955,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
-      "examples": "``df = read_lakehouse_json(\"incoming/events.json\", target=\"source\")``\n\n``df = read_lakehouse_json(\"incoming/events.json\", target=\"source\", multiLine=True)``\n\nThis function does not read managed Delta tables, register metadata,\nprofile data, convert JSON to Delta, mutate source files, or automatically\ncache or persist the returned DataFrame.",
+      "examples": "``df = read_lakehouse_json(\"incoming/events.json\", store=\"source\")``\n\n``df = read_lakehouse_json(\"incoming/events.json\", store=\"source\", multiLine=True)``\n\nThis function does not read managed Delta tables, register metadata,\nprofile data, convert JSON to Delta, mutate source files, or automatically\ncache or persist the returned DataFrame.",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_json.py",
@@ -14977,8 +14977,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Lakehouse target configured by ``00_env_config``.",
-          "name": "target",
+          "description": "Logical Lakehouse store key configured by ``00_env_config``.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15006,7 +15006,7 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame backed by the resolved JSON file or compatible\n    files in the supplied folder path.",
       "scope": 14,
       "signals": [],
-      "signature": "def read_lakehouse_json(relative_path: str, *, target: str='source', spark_session=None, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_lakehouse_json(relative_path: str, *, store: str='source', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 68,
       "source_path": "src/fabricops_kit/io/read_lakehouse_json.py",
       "source_start_line": 10,
@@ -15048,7 +15048,7 @@
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_lakehouse_file_location",
         "fabricops_kit.io.shared.resolve_lakehouse_file_path",
-        "fabricops_kit.io.shared.resolve_target_store"
+        "fabricops_kit.io.shared.resolve_store"
       ],
       "live_critical_dependency_count": 14,
       "live_since": "0.1.0",
@@ -15061,8 +15061,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Lakehouse target from ``00_env_config``.",
-          "name": "target",
+          "description": "Logical Lakehouse store key from ``00_env_config``.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15108,13 +15108,13 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame backed by either the original resolved Parquet path\n    or the compatible ``_tsus`` fallback path. Before returning, the\n    function executes a one-row Spark action to verify that the selected\n    data can be decoded.",
       "scope": 14,
       "signals": [],
-      "signature": "def read_lakehouse_parquet(relative_path: str, *, target: str='source', verbose: bool=True, spark_session=None, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_lakehouse_parquet(relative_path: str, *, store: str='source', verbose: bool=True, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 210,
       "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
       "source_start_line": 15,
       "summary": "Read Parquet data from the configured Lakehouse ``Files`` area through Spark.",
       "transitive_function_count": 14,
-      "usage_notes": "Normal read flow:\n\n``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``\n\nSpark reads are normally lazy, but this function deliberately executes\n``limit(1).collect()`` before returning. The validation action confirms\nthat Spark can decode at least one row. The function is therefore not a\npurely lazy reader, but it does not collect the entire dataset to the\ndriver.\n\n``target`` is a logical Lakehouse target from ``00_env_config`` and\n``relative_path`` is resolved under the configured Lakehouse ``Files``\narea. Root-level and nested paths are supported. The resolved location is\nconceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:\n\n``df = read_lakehouse_parquet(\"customers.parquet\", target=\"source\")``\n\n``df = read_lakehouse_parquet(\"incoming/2026/customers.parquet\", target=\"source\")``\n\nDerived ``_tsus`` fallback naming:\n\n- ``customers.parquet`` becomes ``customers_tsus.parquet``.\n- ``incoming/2026/customers.parquet`` becomes\n  ``incoming/2026_tsus/customers.parquet``.\n\nThe function does not replace the original file.\n\nThe fallback begins after any exception from the original Spark read or\nvalidation action. The current implementation does not first confirm that\nthe original failure is definitely timestamp-related. It then attempts the\n``_tsus`` path. If that path is missing, it performs one single-file\nconversion and retries. If both original and fallback reads fail, the\nfunction raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,\nmount, or conversion errors may appear in verbose output before the final\n``RuntimeError``.\n\nThe compatibility copy is produced by reading the original Parquet file\nwith pandas and PyArrow, then rewriting it as a new Parquet file using\nmicrosecond timestamp precision with ``coerce_timestamps=\"us\"`` and\ntruncated timestamps allowed. The compatibility copy may lose\nsub-microsecond timestamp precision because nanosecond timestamps are\ncoerced to microseconds.\n\nSpark may normally read a Parquet file or compatible dataset path, but the\nautomatic conversion helper is designed for one local Parquet file. It is\nnot a distributed folder conversion workflow, and large or multi-file\nremediation should be handled as a separate conversion pipeline.\n\nThe normal Spark read uses the resolved configured ABFSS path. The\nconversion fallback assumes the file is also accessible through the\nnotebook's default attached Lakehouse mount under\n``/lakehouse/default/Files/``. A configured target may resolve correctly\nfor Spark reading while still being unavailable to the local fallback\nmount, in which case fallback conversion can fail.\n\nCompact reader-option example:\n\n``df = read_lakehouse_parquet(\"incoming/events.parquet\", target=\"source\", mergeSchema=True)``\n\nThis function does not read a managed Delta table, register Parquet data as\na Lakehouse table, replace or modify the original Parquet file, convert\nevery file in a Parquet folder, perform a distributed timestamp\nconversion, guarantee that the original failure was timestamp-related,\npreserve nanosecond precision in the converted copy, delete or refresh an\nexisting ``_tsus`` copy, register metadata, profile the returned\nDataFrame, or automatically cache or persist the returned DataFrame.",
+      "usage_notes": "Normal read flow:\n\n``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``\n\nSpark reads are normally lazy, but this function deliberately executes\n``limit(1).collect()`` before returning. The validation action confirms\nthat Spark can decode at least one row. The function is therefore not a\npurely lazy reader, but it does not collect the entire dataset to the\ndriver.\n\n``store`` is a logical Lakehouse target from ``00_env_config`` and\n``relative_path`` is resolved under the configured Lakehouse ``Files``\narea. Root-level and nested paths are supported. The resolved location is\nconceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:\n\n``df = read_lakehouse_parquet(\"customers.parquet\", store=\"source\")``\n\n``df = read_lakehouse_parquet(\"incoming/2026/customers.parquet\", store=\"source\")``\n\nDerived ``_tsus`` fallback naming:\n\n- ``customers.parquet`` becomes ``customers_tsus.parquet``.\n- ``incoming/2026/customers.parquet`` becomes\n  ``incoming/2026_tsus/customers.parquet``.\n\nThe function does not replace the original file.\n\nThe fallback begins after any exception from the original Spark read or\nvalidation action. The current implementation does not first confirm that\nthe original failure is definitely timestamp-related. It then attempts the\n``_tsus`` path. If that path is missing, it performs one single-file\nconversion and retries. If both original and fallback reads fail, the\nfunction raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,\nmount, or conversion errors may appear in verbose output before the final\n``RuntimeError``.\n\nThe compatibility copy is produced by reading the original Parquet file\nwith pandas and PyArrow, then rewriting it as a new Parquet file using\nmicrosecond timestamp precision with ``coerce_timestamps=\"us\"`` and\ntruncated timestamps allowed. The compatibility copy may lose\nsub-microsecond timestamp precision because nanosecond timestamps are\ncoerced to microseconds.\n\nSpark may normally read a Parquet file or compatible dataset path, but the\nautomatic conversion helper is designed for one local Parquet file. It is\nnot a distributed folder conversion workflow, and large or multi-file\nremediation should be handled as a separate conversion pipeline.\n\nThe normal Spark read uses the resolved configured ABFSS path. The\nconversion fallback assumes the file is also accessible through the\nnotebook's default attached Lakehouse mount under\n``/lakehouse/default/Files/``. A configured target may resolve correctly\nfor Spark reading while still being unavailable to the local fallback\nmount, in which case fallback conversion can fail.\n\nCompact reader-option example:\n\n``df = read_lakehouse_parquet(\"incoming/events.parquet\", store=\"source\", mergeSchema=True)``\n\nThis function does not read a managed Delta table, register Parquet data as\na Lakehouse table, replace or modify the original Parquet file, convert\nevery file in a Parquet folder, perform a distributed timestamp\nconversion, guarantee that the original failure was timestamp-related,\npreserve nanosecond precision in the converted copy, delete or refresh an\nexisting ``_tsus`` copy, register metadata, profile the returned\nDataFrame, or automatically cache or persist the returned DataFrame.",
       "width": 4
     },
     {
@@ -15156,7 +15156,7 @@
         "fabricops_kit.io.shared.read_delta_path",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.pipeline.shared._row_to_dict",
         "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
       ],
@@ -15171,14 +15171,14 @@
           "type": "str | None"
         },
         {
-          "description": "Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``target``, and ``schema`` from the Catalogue.",
+          "description": "Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue.",
           "name": "table_id",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Logical Lakehouse target from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path.",
-          "name": "target",
+          "description": "Logical Lakehouse store key from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15251,13 +15251,13 @@
       "signals": [
         "architecture_violation"
       ],
-      "signature": "def read_lakehouse_table(table_name: str | None=None, *, table_id: str | None=None, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_lakehouse_table(table_name: str | None=None, *, table_id: str | None=None, store: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 116,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 10,
       "summary": "Resolve a configured Lakehouse Delta table and return a Spark DataFrame.",
       "transitive_function_count": 20,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options. Filtering and column selection are applied later\nthrough normal Spark DataFrame operations. Conceptual examples:\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\")``\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\", schema=\"sales\")``\n\n``orders_df = read_lakehouse_table(table_name=\"sales_orders\", target=\"source\")``\n\n``recent_orders_df = orders_df.select(\"order_id\", \"customer_id\", \"order_date\", \"amount\").where(\"order_date >= '2026-01-01'\")``\n\nThis function does not read through the Warehouse SQL connector, execute a\nSQL query, write or copy the table, register metadata, create the table,\nmutate the source table, or automatically cache or persist the returned\nDataFrame.",
+      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options. Filtering and column selection are applied later\nthrough normal Spark DataFrame operations. Conceptual examples:\n\n``df = read_lakehouse_table(table_name=\"orders\", store=\"source\")``\n\n``df = read_lakehouse_table(table_name=\"orders\", store=\"source\", schema=\"sales\")``\n\n``orders_df = read_lakehouse_table(table_name=\"sales_orders\", store=\"source\")``\n\n``recent_orders_df = orders_df.select(\"order_id\", \"customer_id\", \"order_date\", \"amount\").where(\"order_date >= '2026-01-01'\")``\n\nThis function does not read through the Warehouse SQL connector, execute a\nSQL query, write or copy the table, register metadata, create the table,\nmutate the source table, or automatically cache or persist the returned\nDataFrame.",
       "width": 5
     },
     {
@@ -15289,8 +15289,8 @@
         "fabricops_kit.io.shared._validate_warehouse_store",
         "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
-        "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared.validate_select_query"
       ],
       "live_critical_dependency_count": 12,
@@ -15304,8 +15304,8 @@
           "type": "str"
         },
         {
-          "description": "Logical warehouse target from ``00_env_config``.",
-          "name": "target",
+          "description": "Logical Warehouse store key from ``00_env_config``.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15345,7 +15345,7 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing exactly the rows and columns returned by\n    the supplied Warehouse SQL query.",
       "scope": 12,
       "signals": [],
-      "signature": "def read_warehouse_query(query: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_warehouse_query(query: str, *, store: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 91,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
       "source_start_line": 15,
@@ -15387,7 +15387,7 @@
         "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared.resolve_warehouse_table_location"
       ],
       "live_critical_dependency_count": 15,
@@ -15408,7 +15408,7 @@
         },
         {
           "description": "Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table.",
-          "name": "target",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15448,7 +15448,7 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing all rows and columns returned from the\n    resolved Warehouse table.",
       "scope": 15,
       "signals": [],
-      "signature": "def read_warehouse_table(schema: str, table_name: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
+      "signature": "def read_warehouse_table(schema: str, table_name: str, *, store: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 83,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
       "source_start_line": 10,
@@ -15466,7 +15466,7 @@
       "depth": 4,
       "direct_call_count": 2,
       "discontinued_in": null,
-      "examples": ">>> table_id = resolve_table_id(\n...     target=\"unified\", schema=\"dbo\", table_name=\"curated_orders\"\n... )",
+      "examples": ">>> table_id = resolve_table_id(\n...     store=\"unified\", schema=\"dbo\", table_name=\"curated_orders\"\n... )",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -15483,8 +15483,8 @@
       "max_depth": 4,
       "parameters": [
         {
-          "description": "Configured FabricStore target key.",
-          "name": "target",
+          "description": "Configured FabricStore key.",
+          "name": "store",
           "required": "Yes",
           "type": "str"
         },
@@ -15504,7 +15504,7 @@
       "public_import_path": "fabricops_kit.resolve_table_id",
       "public_signals": [],
       "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-      "raises_documentation": "ValueError\n    If the target, schema, table name, or configured store is invalid.",
+      "raises_documentation": "ValueError\n    If the store, schema, table name, or configured store is invalid.",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [],
@@ -15512,7 +15512,7 @@
       "returns_documentation": "str\n    Deterministic canonical ``table_id``. The physical table and Catalogue\n    record do not need to exist yet.",
       "scope": 15,
       "signals": [],
-      "signature": "def resolve_table_id(*, target: str, schema: str | None=None, table_name: str) -> str",
+      "signature": "def resolve_table_id(*, store: str, schema: str | None=None, table_name: str) -> str",
       "source_end_line": 45,
       "source_path": "src/fabricops_kit/pipeline/resolve_table_id.py",
       "source_start_line": 7,
@@ -15891,8 +15891,8 @@
           "type": "str | None"
         },
         {
-          "description": "Configured metadata Lakehouse target.",
-          "name": "target",
+          "description": "Configured metadata Lakehouse store key.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -15966,7 +15966,7 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def widget_activate_data_contract(*, table_id: str | None=None, contract_id: str | None=None, contract_version: int | None=None, agreement_id: str | None=None, agreement_version: str | None=None, target: str='metadata', schema: str | None=None, spark_session=None, context=None)",
+      "signature": "def widget_activate_data_contract(*, table_id: str | None=None, contract_id: str | None=None, contract_version: int | None=None, agreement_id: str | None=None, agreement_version: str | None=None, store: str='metadata', schema: str | None=None, spark_session=None, context=None)",
       "source_end_line": 283,
       "source_path": "src/fabricops_kit/widgets/widget_activate_data_contract.py",
       "source_start_line": 76,
@@ -16621,8 +16621,8 @@
           "type": "object, optional"
         },
         {
-          "description": "Configured metadata FabricStore target.",
-          "name": "target",
+          "description": "Configured metadata FabricStore key.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -16707,7 +16707,7 @@
       "signals": [
         "architecture_violation"
       ],
-      "signature": "def widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None=None, spark_session=None, target: str='metadata', schema: str | None=None, context=None)",
+      "signature": "def widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None=None, spark_session=None, store: str='metadata', schema: str | None=None, context=None)",
       "source_end_line": 736,
       "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
       "source_start_line": 599,
@@ -16725,7 +16725,7 @@
       "depth": 4,
       "direct_call_count": 5,
       "discontinued_in": null,
-      "examples": "Small lookup table without explicit repartitioning:\n\n>>> write_lakehouse_table(\n...     small_lookup_df,\n...     \"COUNTRY_REGION_MAPPING\",\n...     target=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n... )\n\nA small lookup table generally does not need explicit repartitioning.\nForcing many Spark partitions for a small dataset can create unnecessary\nshuffle work and many small output files.\n\nInteger repartitioning for a large dataset:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     target=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=32,\n... )\n\nThe DataFrame is shuffled into 32 Spark partitions before the Delta write.\nThis is appropriate only when the dataset is large enough to benefit from\nadditional parallel tasks.\n\nColumn-based repartitioning:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     target=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=[\"academic_year\", \"semester\"],\n... )\n\nCombined Spark repartitioning and physical Delta partitioning:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     target=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=32,\n...     partition_by=[\"academic_year\"],\n... )\n\nHere, Spark first creates 32 execution partitions to distribute the write\nwork. The resulting Delta table is physically partitioned by\n``academic_year``. The number of Spark execution partitions is not the same\nthing as the number of physical table partition values.\n\nLarge historical dataset pattern:\n\n>>> write_lakehouse_table(\n...     enrolment_df,\n...     \"STUDENT_ENROLMENT_HISTORY\",\n...     target=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=48,\n...     partition_by=[\"academic_year\"],\n... )\n\nThis pattern is intended for a large historical dataset containing millions\nof rows. The value ``48`` is an example, not a universal recommendation.",
+      "examples": "Small lookup table without explicit repartitioning:\n\n>>> write_lakehouse_table(\n...     small_lookup_df,\n...     \"COUNTRY_REGION_MAPPING\",\n...     store=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n... )\n\nA small lookup table generally does not need explicit repartitioning.\nForcing many Spark partitions for a small dataset can create unnecessary\nshuffle work and many small output files.\n\nInteger repartitioning for a large dataset:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     store=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=32,\n... )\n\nThe DataFrame is shuffled into 32 Spark partitions before the Delta write.\nThis is appropriate only when the dataset is large enough to benefit from\nadditional parallel tasks.\n\nColumn-based repartitioning:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     store=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=[\"academic_year\", \"semester\"],\n... )\n\nCombined Spark repartitioning and physical Delta partitioning:\n\n>>> write_lakehouse_table(\n...     large_df,\n...     \"STUDENT_ENROLMENT_CURATED\",\n...     store=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=32,\n...     partition_by=[\"academic_year\"],\n... )\n\nHere, Spark first creates 32 execution partitions to distribute the write\nwork. The resulting Delta table is physically partitioned by\n``academic_year``. The number of Spark execution partitions is not the same\nthing as the number of physical table partition values.\n\nLarge historical dataset pattern:\n\n>>> write_lakehouse_table(\n...     enrolment_df,\n...     \"STUDENT_ENROLMENT_HISTORY\",\n...     store=\"data\",\n...     schema=DATA_SCHEMA,\n...     mode=\"overwrite\",\n...     repartition_by=48,\n...     partition_by=[\"academic_year\"],\n... )\n\nThis pattern is intended for a large historical dataset containing millions\nof rows. The value ``48`` is an example, not a universal recommendation.",
       "files_touched": [
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/shared.py",
@@ -16754,7 +16754,7 @@
         "fabricops_kit.io.shared.repartition_dataframe_for_write",
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared.validate_dataframe_writer",
         "fabricops_kit.io.shared.write_delta_path"
       ],
@@ -16775,8 +16775,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area.",
-          "name": "target",
+          "description": "Logical Lakehouse store key from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -16846,7 +16846,7 @@
       "returns_documentation": "None\n    The function performs the Spark Delta write before returning.",
       "scope": 20,
       "signals": [],
-      "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None)",
+      "signature": "def write_lakehouse_table(df, table_name: str, *, store: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None)",
       "source_end_line": 287,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 16,
@@ -16864,7 +16864,7 @@
       "depth": 4,
       "direct_call_count": 4,
       "discontinued_in": null,
-      "examples": "Small dimension table without explicit repartitioning:\n\n>>> write_warehouse_table(\n...     department_lookup_df,\n...     \"dbo\",\n...     \"DIM_DEPARTMENT\",\n...     target=\"warehouse\",\n...     mode=\"overwrite\",\n... )\n\nA small dimension or lookup table usually does not require repartitioning.\nAdding many partitions to a small DataFrame can increase overhead without\nimproving the write.\n\nInteger repartitioning for a large fact dataset:\n\n>>> write_warehouse_table(\n...     large_fact_df,\n...     \"dbo\",\n...     \"FACT_STUDENT_ENROLMENT\",\n...     target=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=32,\n... )\n\nColumn-based repartitioning:\n\n>>> write_warehouse_table(\n...     large_fact_df,\n...     \"dbo\",\n...     \"FACT_STUDENT_ENROLMENT\",\n...     target=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=[\"academic_year\", \"semester\"],\n... )\n\nLarge fact dataset pattern:\n\n>>> write_warehouse_table(\n...     transaction_df,\n...     \"dbo\",\n...     \"FACT_TRANSACTIONS\",\n...     target=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=48,\n... )\n\nThe value ``48`` is illustrative. The correct value depends on DataFrame\nsize, existing partitions, skew, executor capacity, connector behaviour,\nand Warehouse ingestion limits.",
+      "examples": "Small dimension table without explicit repartitioning:\n\n>>> write_warehouse_table(\n...     department_lookup_df,\n...     \"dbo\",\n...     \"DIM_DEPARTMENT\",\n...     store=\"warehouse\",\n...     mode=\"overwrite\",\n... )\n\nA small dimension or lookup table usually does not require repartitioning.\nAdding many partitions to a small DataFrame can increase overhead without\nimproving the write.\n\nInteger repartitioning for a large fact dataset:\n\n>>> write_warehouse_table(\n...     large_fact_df,\n...     \"dbo\",\n...     \"FACT_STUDENT_ENROLMENT\",\n...     store=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=32,\n... )\n\nColumn-based repartitioning:\n\n>>> write_warehouse_table(\n...     large_fact_df,\n...     \"dbo\",\n...     \"FACT_STUDENT_ENROLMENT\",\n...     store=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=[\"academic_year\", \"semester\"],\n... )\n\nLarge fact dataset pattern:\n\n>>> write_warehouse_table(\n...     transaction_df,\n...     \"dbo\",\n...     \"FACT_TRANSACTIONS\",\n...     store=\"warehouse\",\n...     mode=\"append\",\n...     repartition_by=48,\n... )\n\nThe value ``48`` is illustrative. The correct value depends on DataFrame\nsize, existing partitions, skew, executor capacity, connector behaviour,\nand Warehouse ingestion limits.",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -16887,7 +16887,7 @@
         "fabricops_kit.io.shared._validate_warehouse_store",
         "fabricops_kit.io.shared.repartition_dataframe_for_write",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
-        "fabricops_kit.io.shared.resolve_target_store",
+        "fabricops_kit.io.shared.resolve_store",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.io.shared.validate_dataframe_writer",
         "fabricops_kit.io.shared.write_warehouse_synapsesql"
@@ -16915,8 +16915,8 @@
           "type": "str"
         },
         {
-          "description": "Logical Warehouse target from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name.",
-          "name": "target",
+          "description": "Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name.",
+          "name": "store",
           "required": "No",
           "type": "str"
         },
@@ -16968,7 +16968,7 @@
       "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
       "scope": 16,
       "signals": [],
-      "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
+      "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, store: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
       "source_end_line": 243,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 15,
@@ -18586,7 +18586,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
       "caller_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
       "violation_details": [],
       "violation_types": []
@@ -18971,7 +18971,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "caller_qualified_name": "fabricops_kit.io.shared.resolve_configured_file_path",
       "violation_details": [],
       "violation_types": []
@@ -19015,7 +19015,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "caller_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
       "violation_details": [],
       "violation_types": []
@@ -19026,8 +19026,8 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
-      "caller_qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_store",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
       "violation_details": [],
       "violation_types": []
     },
@@ -19037,7 +19037,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "caller_qualified_name": "fabricops_kit.io.shared.resolve_configured_warehouse_table",
       "violation_details": [],
       "violation_types": []
@@ -19137,7 +19137,7 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.shared.get_store",
-      "caller_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "violation_details": [],
       "violation_types": []
     },
@@ -19148,7 +19148,7 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
-      "caller_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "violation_details": [],
       "violation_types": []
     },
@@ -19159,7 +19159,7 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared._validate_lakehouse_store",
-      "caller_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "violation_details": [],
       "violation_types": []
     },
@@ -19170,7 +19170,7 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.shared._validate_warehouse_store",
-      "caller_qualified_name": "fabricops_kit.io.shared.resolve_target_store",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_store",
       "violation_details": [],
       "violation_types": []
     },
@@ -26060,12 +26060,12 @@
     "fabricops_kit.io.shared.repartition_dataframe_for_write",
     "fabricops_kit.io.shared.resolve_configured_file_path",
     "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-    "fabricops_kit.io.shared.resolve_configured_warehouse_query_target",
+    "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
     "fabricops_kit.io.shared.resolve_configured_warehouse_table",
     "fabricops_kit.io.shared.resolve_lakehouse_file_location",
     "fabricops_kit.io.shared.resolve_lakehouse_file_path",
     "fabricops_kit.io.shared.resolve_lakehouse_table_location",
-    "fabricops_kit.io.shared.resolve_target_store",
+    "fabricops_kit.io.shared.resolve_store",
     "fabricops_kit.io.shared.resolve_warehouse_table_location",
     "fabricops_kit.io.shared.validate_dataframe_writer",
     "fabricops_kit.io.shared.validate_select_query",

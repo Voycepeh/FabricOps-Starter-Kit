@@ -18,7 +18,7 @@ def _patch_runtime(monkeypatch):
         "table_id": "lakehouse:unified:dbo:students",
         "table_name": "students",
         "schema": "dbo",
-        "target": "unified",
+        "store": "unified",
         "store_type": "lakehouse",
     }
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ("config", "dev", {"activity_id": "activity"}))
@@ -75,12 +75,12 @@ def test_write_pii_token_map_writes_deduplicated_mapping(monkeypatch, spark_sess
         column_id="column-email",
         original_column="email_address",
         token_column="email_token",
-        target="pii_support",
+        store="pii_support",
         schema="secure",
     )
 
     assert result["action"] == "created"
-    assert result["target"] == "pii_support"
+    assert result["store"] == "pii_support"
     assert result["schema"] == "secure"
     assert result["table_name"].startswith("students__")
     assert result["table_name"].endswith("__pii_token_map")

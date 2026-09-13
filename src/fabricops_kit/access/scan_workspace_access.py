@@ -94,11 +94,11 @@ def _normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
     values = [targets] if isinstance(targets, str) else list(targets)
     normalised = []
     for value in values:
-        target = str(value or "").strip()
-        if not target:
+        store = str(value or "").strip()
+        if not store:
             raise ValueError("Workspace access scan targets must be non-empty strings.")
-        if target not in normalised:
-            normalised.append(target)
+        if store not in normalised:
+            normalised.append(store)
     if not normalised:
         raise ValueError("At least one configured physical data item target is required for access scanning.")
     return normalised
@@ -108,13 +108,13 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
     from pyspark.sql import functions as F
 
     frames = []
-    for target in targets:
+    for store in targets:
         frame = read_sql_endpoint_query_core(
             SQL_ACCESS_QUERY,
-            target=target,
+            store=store,
             spark_session=spark_session,
             context=context,
-        ).withColumn("_target", F.lit(target))
+        ).withColumn("_target", F.lit(store))
         frames.append(frame)
 
     result = frames[0]
@@ -126,8 +126,8 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
 def _target_store_kinds(config, environment_name: str, targets: list[str]) -> dict[str, str]:
     """Resolve each configured physical data item target to its store kind."""
     return {
-        target: str(get_store(config, environment_name, target).kind).strip().lower()
-        for target in targets
+        store: str(get_store(config, environment_name, store).kind).strip().lower()
+        for store in targets
     }
 
 

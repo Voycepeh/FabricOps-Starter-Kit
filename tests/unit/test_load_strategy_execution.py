@@ -34,7 +34,7 @@ AUDIT = {
 def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
-        object(), table_name="students", target="unified", schema="dbo",
+        object(), table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": "overwrite"}, scope={"type": "full_dataset"},
     )
     assert calls[0][1]["mode"] == "overwrite"
@@ -44,7 +44,7 @@ def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
 def test_incremental_overwrite_uses_replace_where(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
-        type("Frame", (), {"columns": ["_partition_bucket"]})(), table_name="students", target="unified", schema="dbo",
+        type("Frame", (), {"columns": ["_partition_bucket"]})(), table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": "overwrite", "partition_column": "business_date"},
         scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
     )
@@ -56,7 +56,7 @@ def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatc
     calls = _capture_writes(monkeypatch)
     with pytest.raises(ValueError, match="must match the target processing partition_column"):
         shared.execute_lakehouse_processing(
-            object(), table_name="students", target="unified", schema="dbo",
+            object(), table_name="students", store="unified", schema="dbo",
             processing={"load_strategy": "overwrite", "partition_column": "other_date"},
             scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
         )
@@ -66,7 +66,7 @@ def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatc
 def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
-        object(), table_name="students", target="unified", schema="dbo",
+        object(), table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": "append"},
         scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
     )
@@ -77,7 +77,7 @@ def test_partition_scoped_write_never_accepts_an_empty_scope(monkeypatch):
     calls = _capture_writes(monkeypatch)
     with pytest.raises(ValueError, match="at least one partition value"):
         shared.execute_lakehouse_processing(
-            object(), table_name="students", target="unified", schema="dbo",
+            object(), table_name="students", store="unified", schema="dbo",
             processing={"load_strategy": "append"},
             scope={"type": "partition", "column": "business_date", "values": []},
         )
@@ -95,7 +95,7 @@ def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spar
     )
     incoming = spark_session.createDataFrame([(1, "active"), (2, "inactive")], ["student_id", "status"])
     shared.execute_lakehouse_processing(
-        incoming, table_name="students", target="unified", schema="dbo",
+        incoming, table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": strategy},
         scope={"type": "full_dataset"},
         context={"activity_id": "activity-1"},
@@ -144,7 +144,7 @@ def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, 
         "_effective_to", F.lit(None).cast("string")
     ).withColumn("_is_current", F.lit(True))
     shared.execute_lakehouse_processing(
-        incoming, table_name="students", target="unified", schema="dbo",
+        incoming, table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
         scope={"type": "full_dataset"}, context={},
     )
@@ -165,7 +165,7 @@ def test_scd_duplicate_incoming_business_keys_are_rejected(monkeypatch, spark_se
     incoming = spark_session.createDataFrame([(1, "a"), (1, "b")], ["student_id", "status"])
     with pytest.raises(ValueError, match="duplicate business keys"):
         shared.execute_lakehouse_processing(
-            incoming, table_name="students", target="unified", schema="dbo",
+            incoming, table_name="students", store="unified", schema="dbo",
             processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
             scope={"type": "full_dataset"}, context={},
         )
@@ -212,7 +212,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
         ["student_id", "status", "_watermark_value", "_committed_by"],
     )
     shared.execute_lakehouse_processing(
-        incoming, table_name="students", target="unified", schema="dbo",
+        incoming, table_name="students", store="unified", schema="dbo",
         processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
         scope={"type": "full_dataset"}, context={},
     )
@@ -297,7 +297,7 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
     shared.execute_lakehouse_processing(
         incoming,
         table_name="students",
-        target="unified",
+        store="unified",
         schema="dbo",
         processing={"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
         scope={"type": "full_dataset"},
@@ -374,7 +374,7 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
     )
     kwargs = {
         "table_name": "students",
-        "target": "unified",
+        "store": "unified",
         "schema": "dbo",
         "processing": {"load_strategy": "scd2", "key_columns": ["student_id"], "effective_column": "effective_at"},
         "scope": {"type": "full_dataset"},

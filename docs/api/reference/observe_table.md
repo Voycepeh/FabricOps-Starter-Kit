@@ -45,7 +45,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def observe_table(
     table_name: str,
-    target: str='source',
+    store: str='source',
     schema: str | None=None,
     target_table_id: str,
 ) -> Any:
@@ -58,7 +58,7 @@ def observe_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-observation = observe_table("orders", target="source", schema="dbo", target_table_id=target_table_id)
+observation = observe_table("orders", store="source", schema="dbo", target_table_id=target_table_id)
 ```
 
 </div>
@@ -68,7 +68,7 @@ observation = observe_table("orders", target="source", schema="dbo", target_tabl
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `table_name` | `str` | Yes | Table name within the configured target. |
-| `target` | `str` | No | Logical Lakehouse or Warehouse target configured by ``00_env_config``. |
+| `store` | `str` | No | Logical Lakehouse or Warehouse store key configured by ``00_env_config``. |
 | `schema` | `str \| None` | No | Optional Lakehouse schema. A schema is required for Warehouse targets. |
 | `target_table_id` | `str` | Yes | Governed target identity that owns this source observation relationship. |
 

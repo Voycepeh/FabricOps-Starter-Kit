@@ -309,7 +309,7 @@ def setup_metadata_tables(
 
     """
     normalized = validate_framework_config(config)
-    metadata_store = get_store(config=normalized, env=env, target="metadata")
+    metadata_store = get_store(config=normalized, env=env, store="metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
     if metadata_store.schema_enabled is not True:
@@ -331,7 +331,7 @@ def setup_metadata_tables(
             created = False
             try:
                 table = read_lakehouse_table(
-                    table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+                    table_name, store="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
             except Exception as exc:
                 if not is_table_not_found_error(exc):
@@ -342,7 +342,7 @@ def setup_metadata_tables(
                 write_lakehouse_table(
                     empty_frame,
                     table_name,
-                    target="metadata",
+                    store="metadata",
                     schema=resolved_metadata_schema,
                     mode="overwrite",
                     verbose=False,
@@ -350,7 +350,7 @@ def setup_metadata_tables(
                 )
                 created = True
                 table = read_lakehouse_table(
-                    table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+                    table_name, store="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
             if table is not None and hasattr(table, "schema"):
                 _validate_existing_metadata_schema(table_name, table.schema, schema)

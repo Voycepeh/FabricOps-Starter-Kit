@@ -16,7 +16,7 @@ FabricOps calculates the canonical statistical profile and applicable
 frequency distribution close to the data. Supplied DataFrames and physical
 Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
 An identity may be supplied as a
-canonical ``table_id`` or as ``target``, optional ``schema``, and
+canonical ``table_id`` or as ``store``, optional ``schema``, and
 ``table_name``. When an identity is present, FabricOps associates the
 result with that governed table and persists Catalogue, profile, and
 frequency metadata. Without an identity, the exact supplied DataFrame is
@@ -54,7 +54,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def profile_table(
     dataframe=None,
-    target: str | None=None,
+    store: str | None=None,
     schema: str | None=None,
     table_name: str | None=None,
     table_id: str | None=None,
@@ -78,7 +78,7 @@ Profile an arbitrary DataFrame without persistence:
 
 Profile a governed complete physical table without knowing its store kind:
 
->>> result = profile_table(target="source", schema="dbo", table_name="orders")
+>>> result = profile_table(store="source", schema="dbo", table_name="orders")
 
 Profile a transformed DataFrame against an explicit governed identity:
 
@@ -91,9 +91,9 @@ Profile a transformed DataFrame against an explicit governed identity:
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `dataframe` | `pyspark.sql.DataFrame` | No | Exact Spark DataFrame to profile. If a governed identity is also supplied, FabricOps does not re-read the physical table. |
-| `target` | `str \| None` | No | Configured physical target key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `store` | `str \| None` | No | Configured physical store key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``. |
 | `schema` | `str \| None` | No | Physical schema when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical table name. Required with ``target`` when ``table_id`` is omitted. |
+| `table_name` | `str \| None` | No | Physical table name. Required with ``store`` when ``table_id`` is omitted. |
 | `table_id` | `str \| None` | No | Canonical governed table identity, mutually exclusive with physical coordinates. |
 | `frequency_columns` | `sequence of str` | No | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | Ranked values to retain per frequency column. ``None`` retains all. |
@@ -201,7 +201,7 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>

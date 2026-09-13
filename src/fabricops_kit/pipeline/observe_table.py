@@ -75,7 +75,7 @@ def _compact_rows(frame: Any) -> list[dict[str, Any]]:
 
 def _observe_lakehouse(
     table_name: str,
-    target: str,
+    store: str,
     schema: str | None,
     partition_column: str,
     change_column: str,
@@ -87,7 +87,7 @@ def _observe_lakehouse(
 
     frame = read_lakehouse_table(
         table_name,
-        target=target,
+        store=store,
         schema=schema,
         spark_session=spark_session,
         context=context,
@@ -148,7 +148,7 @@ def _persist(
     write_lakehouse_table(
         frame,
         OBSERVATION_TABLE,
-        target="metadata",
+        store="metadata",
         schema=metadata_schema,
         context=context,
         mode="append",
@@ -159,7 +159,7 @@ def _persist(
 def observe_table(
     table_name: str,
     *,
-    target: str = "source",
+    store: str = "source",
     schema: str | None = None,
     target_table_id: str,
 ) -> Any:
@@ -172,8 +172,8 @@ def observe_table(
     ----------
     table_name : str
         Table name within the configured target.
-    target : str, default="source"
-        Logical Lakehouse or Warehouse target configured by ``00_env_config``.
+    store : str, default="source"
+        Logical Lakehouse or Warehouse store key configured by ``00_env_config``.
     schema : str or None, default=None
         Optional Lakehouse schema. A schema is required for Warehouse targets.
     target_table_id : str
@@ -213,31 +213,31 @@ def observe_table(
 
     """
     table_value = _identifier(table_name, "table_name")
-    target_value = str(target or "").strip().lower()
-    if not target_value:
-        raise ValueError("target must be a configured target name.")
+    store_key = str(store or "").strip().lower()
+    if not store_key:
+        raise ValueError("store must be a configured store name.")
     schema_value = _identifier(schema, "schema") if schema is not None else None
     config, env, context = resolve_fabric_context()
-    store = get_store(config, env, target_value)
-    source_type = str(store.kind).lower()
+    configured_store = get_store(config, env, store_key)
+    source_type = str(configured_store.kind).lower()
     if source_type not in {"lakehouse", "warehouse"}:
-        raise ValueError(f"Target {target_value!r} must resolve to a Lakehouse or Warehouse.")
+        raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
     if source_type == "warehouse":
-        configured_schema = schema_value if schema_value is not None else getattr(store, "schema", None)
+        configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
             raise ValueError("schema is required for Warehouse observation; pass it or configure a default schema.")
         schema_value, table_value, _object_name = resolve_warehouse_table_location(
-            store, configured_schema, table_value
+            configured_store, configured_schema, table_value
         )
     else:
-        table_value, schema_value, _path = resolve_lakehouse_table_location(store, table_value, schema_value)
-        if getattr(store, "schema_enabled", False) and schema_value is None:
+        table_value, schema_value, _path = resolve_lakehouse_table_location(configured_store, table_value, schema_value)
+        if getattr(configured_store, "schema_enabled", False) and schema_value is None:
             raise ValueError(
                 "schema is required for schema-enabled Lakehouse observation; pass it or configure a default schema."
             )
 
     spark = get_spark_session()
-    table_id = build_table_id(source_type, target_value, schema_value, table_value)
+    table_id = build_table_id(source_type, store_key, schema_value, table_value)
     target_identity = resolve_catalogue_table_identity(
         config, env, target_table_id, spark_session=spark, context=context,
     )
@@ -266,7 +266,7 @@ def observe_table(
         current = _compact_rows(
             read_warehouse_query(
                 query,
-                target=target_value,
+                store=store_key,
                 spark_session=spark,
                 context=context,
             )
@@ -274,7 +274,7 @@ def observe_table(
     else:
         current = _observe_lakehouse(
             table_value,
-            target_value,
+            store_key,
             schema_value,
             partition_value,
             change_value,

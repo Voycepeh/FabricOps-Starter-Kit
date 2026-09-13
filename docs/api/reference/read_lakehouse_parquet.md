@@ -17,7 +17,7 @@ Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
 tables stored under the Lakehouse ``Tables`` area.
 
 This function reads from the Lakehouse ``Files`` area, not a managed Delta
-table in the ``Tables`` area. FabricOps resolves the logical target and
+table in the ``Tables`` area. FabricOps resolves the logical store key and
 relative path through configuration, attempts a normal Spark Parquet read
 first, forces a small Spark action to verify that the data can actually be
 decoded, falls back to a derived ``_tsus`` path when the original read
@@ -57,7 +57,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_parquet(
     relative_path: str,
-    target: str='source',
+    store: str='source',
     verbose: bool=True,
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -72,7 +72,7 @@ def read_lakehouse_parquet(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", target="source", spark_session=spark)
+source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="source", spark_session=spark)
 ```
 
 </div>
@@ -82,7 +82,7 @@ source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", target="s
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
-| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. |
+| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. |
 | `verbose` | `bool` | No | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options. |
@@ -121,14 +121,14 @@ that Spark can decode at least one row. The function is therefore not a
 purely lazy reader, but it does not collect the entire dataset to the
 driver.
 
-``target`` is a logical Lakehouse target from ``00_env_config`` and
+``store`` is a logical Lakehouse target from ``00_env_config`` and
 ``relative_path`` is resolved under the configured Lakehouse ``Files``
 area. Root-level and nested paths are supported. The resolved location is
 conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:
 
-``df = read_lakehouse_parquet("customers.parquet", target="source")``
+``df = read_lakehouse_parquet("customers.parquet", store="source")``
 
-``df = read_lakehouse_parquet("incoming/2026/customers.parquet", target="source")``
+``df = read_lakehouse_parquet("incoming/2026/customers.parquet", store="source")``
 
 Derived ``_tsus`` fallback naming:
 
@@ -162,13 +162,13 @@ remediation should be handled as a separate conversion pipeline.
 The normal Spark read uses the resolved configured ABFSS path. The
 conversion fallback assumes the file is also accessible through the
 notebook's default attached Lakehouse mount under
-``/lakehouse/default/Files/``. A configured target may resolve correctly
+``/lakehouse/default/Files/``. A configured store may resolve correctly
 for Spark reading while still being unavailable to the local fallback
 mount, in which case fallback conversion can fail.
 
 Compact reader-option example:
 
-``df = read_lakehouse_parquet("incoming/events.parquet", target="source", mergeSchema=True)``
+``df = read_lakehouse_parquet("incoming/events.parquet", store="source", mergeSchema=True)``
 
 This function does not read a managed Delta table, register Parquet data as
 a Lakehouse table, replace or modify the original Parquet file, convert
@@ -222,7 +222,7 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 </ul>
 
 

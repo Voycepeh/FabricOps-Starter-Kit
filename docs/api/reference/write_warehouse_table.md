@@ -62,7 +62,7 @@ def write_warehouse_table(
     df,
     schema: str,
     table_name: str,
-    target: str='warehouse',
+    store: str='warehouse',
     mode: str='append',
     repartition_by=None,
     options: dict[str, Any] | None=None,
@@ -82,7 +82,7 @@ Small dimension table without explicit repartitioning:
 ...     department_lookup_df,
 ...     "dbo",
 ...     "DIM_DEPARTMENT",
-...     target="warehouse",
+...     store="warehouse",
 ...     mode="overwrite",
 ... )
 
@@ -96,7 +96,7 @@ Integer repartitioning for a large fact dataset:
 ...     large_fact_df,
 ...     "dbo",
 ...     "FACT_STUDENT_ENROLMENT",
-...     target="warehouse",
+...     store="warehouse",
 ...     mode="append",
 ...     repartition_by=32,
 ... )
@@ -107,7 +107,7 @@ Column-based repartitioning:
 ...     large_fact_df,
 ...     "dbo",
 ...     "FACT_STUDENT_ENROLMENT",
-...     target="warehouse",
+...     store="warehouse",
 ...     mode="append",
 ...     repartition_by=["academic_year", "semester"],
 ... )
@@ -118,7 +118,7 @@ Large fact dataset pattern:
 ...     transaction_df,
 ...     "dbo",
 ...     "FACT_TRANSACTIONS",
-...     target="warehouse",
+...     store="warehouse",
 ...     mode="append",
 ...     repartition_by=48,
 ... )
@@ -136,7 +136,7 @@ and Warehouse ingestion limits.
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to transfer into the Warehouse. The original DataFrame object is not modified; a repartitioned DataFrame is used for the write when requested. |
 | `schema` | `str` | Yes | Warehouse schema containing the target table, such as ``dbo``. This is part of the Warehouse object identity and is unrelated to Spark schema inference. |
 | `table_name` | `str` | Yes | Warehouse table name. |
-| `target` | `str` | No | Logical Warehouse target from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. |
+| `store` | `str` | No | Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical store key, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. |
 | `mode` | `str` | No | Requested Warehouse write behaviour passed to the Fabric Warehouse Spark connector. ``append`` adds rows and can duplicate repeated publications. ``overwrite`` requests replacement behaviour and should be treated as destructive. Other supported modes are passed through to Spark/connector semantics. |
 | `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
@@ -298,7 +298,7 @@ Side effects
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>

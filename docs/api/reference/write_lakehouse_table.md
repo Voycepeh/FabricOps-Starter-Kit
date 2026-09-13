@@ -13,7 +13,7 @@ Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 <div class="reference-docstring-intro" markdown="1">
 
 ``write_lakehouse_table`` writes a Spark DataFrame to a Fabric lakehouse
-table using the configured FabricOps target, schema, table name, and write
+table using the configured FabricOps store, schema, table name, and write
 settings. It supports Spark-side repartitioning before the write so large
 datasets can be processed by multiple Spark tasks concurrently.
 
@@ -64,7 +64,7 @@ Parallel processing is Spark distributed execution over DataFrame partitions, no
 def write_lakehouse_table(
     df,
     table_name: str,
-    target: str='unified',
+    store: str='unified',
     schema=None,
     mode='append',
     partition_by=None,
@@ -86,7 +86,7 @@ Small lookup table without explicit repartitioning:
 >>> write_lakehouse_table(
 ...     small_lookup_df,
 ...     "COUNTRY_REGION_MAPPING",
-...     target="data",
+...     store="data",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ... )
@@ -100,7 +100,7 @@ Integer repartitioning for a large dataset:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     target="data",
+...     store="data",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=32,
@@ -115,7 +115,7 @@ Column-based repartitioning:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     target="data",
+...     store="data",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=["academic_year", "semester"],
@@ -126,7 +126,7 @@ Combined Spark repartitioning and physical Delta partitioning:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     target="data",
+...     store="data",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=32,
@@ -143,7 +143,7 @@ Large historical dataset pattern:
 >>> write_lakehouse_table(
 ...     enrolment_df,
 ...     "STUDENT_ENROLMENT_HISTORY",
-...     target="data",
+...     store="data",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=48,
@@ -161,7 +161,7 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. When ``repartition_by`` is provided, the function creates a repartitioned DataFrame for the write; it does not mutate the original DataFrame object. |
 | `table_name` | `str` | Yes | Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``. |
-| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area. |
+| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area. |
 | `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. |
 | `mode` | `{"append", "overwrite", "errorifexists", "ignore"}, default="append"` | No | Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. |
 | `partition_by` | `str or list[str] or tuple[str, ...]` | No | Optional column name or collection of columns used to physically partition the persisted Delta table. This controls the table's stored layout and is separate from Spark execution repartitioning. Use columns with appropriate cardinality and stable downstream filtering value. |
@@ -251,7 +251,7 @@ Repartitioning versus physical Delta partitioning
 
 Implementation sequence
     The function validates the DataFrame writer, validates the table
-    identity and write mode, resolves the lakehouse target and optional
+    identity and write mode, resolves the Lakehouse store and optional
     schema, validates ``repartition_by``, calls ``df.repartition(number)``
     for a positive integer, ``df.repartition(*columns)`` for a column
     name/list/tuple, or ``df.repartition(number, *columns)`` when a list or
@@ -341,7 +341,7 @@ Side effects
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 </ul>

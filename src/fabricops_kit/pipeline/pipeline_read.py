@@ -16,7 +16,7 @@ from fabricops_kit.pipeline.shared import (
 
 def pipeline_read(
     *,
-    target: str | None = None,
+    store: str | None = None,
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
@@ -35,19 +35,19 @@ def pipeline_read(
 
     Parameters
     ----------
-    target : str, optional
-        Configured source target key, such as ``"source"`` or ``"product"``.
+    store : str, optional
+        Configured source store key, such as ``"source"`` or ``"product"``.
         Supply it with ``table_name`` and optional ``schema`` instead of
         ``table_id``.
     schema : str, optional
         Physical source schema, when the configured store uses schemas.
     table_name : str, optional
-        Physical source table name. Required with ``target`` when ``table_id``
-        is omitted. ``target``, optional ``schema``, and ``table_name`` form
+        Physical source table name. Required with ``store`` when ``table_id``
+        is omitted. ``store``, optional ``schema``, and ``table_name`` form
         one identity form.
     table_id : str, optional
         Canonical registered source identity. This is the alternative identity
-        form and is mutually exclusive with ``target``, ``schema``, and
+        form and is mutually exclusive with ``store``, ``schema``, and
         ``table_name``.
     query : str, optional
         Read-only SQL for a configured Warehouse source. The supplied source
@@ -116,7 +116,7 @@ def pipeline_read(
     Lakehouse or Warehouse:
 
     >>> result = pipeline_read(
-    ...     target="source",
+    ...     store="source",
     ...     schema="demo",
     ...     table_name="orders",
     ... )
@@ -126,7 +126,7 @@ def pipeline_read(
     Read a governed Warehouse source through project-owned SQL:
 
     >>> result = pipeline_read(
-    ...     target="product",
+    ...     store="product",
     ...     schema="demo",
     ...     table_name="order_history",
     ...     query='''
@@ -149,18 +149,18 @@ def pipeline_read(
     profile_table
 
     """
-    coordinates = (target, schema, table_name)
+    coordinates = (store, schema, table_name)
     if table_id and any(value is not None for value in coordinates):
-        raise ValueError("table_id cannot be combined with target, schema, or table_name.")
-    if not table_id and (target is None or table_name is None):
-        raise ValueError("Provide table_id or both target and table_name.")
+        raise ValueError("table_id cannot be combined with store, schema, or table_name.")
+    if not table_id and (store is None or table_name is None):
+        raise ValueError("Provide table_id or both store and table_name.")
 
     config, env, context = resolve_fabric_context()
     if table_id:
         identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
     else:
         identity = resolve_physical_table_identity(
-            config, env, target=target, schema=schema, table_name=table_name
+            config, env, store=store, schema=schema, table_name=table_name
         )
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     identity["store_type"] = store_kind
@@ -178,7 +178,7 @@ def pipeline_read(
         config, env, str(identity["table_id"]), context=context
     ) is not None
     physical_identity = ".".join(
-        str(value) for value in (identity.get("target"), identity.get("schema"), identity.get("table_name")) if value
+        str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
     )
     if store_kind == "lakehouse":
         if verbose:
@@ -188,14 +188,14 @@ def pipeline_read(
         if query is not None:
             if verbose:
                 print(f"FabricOps Read → Warehouse query on '{physical_identity}' → read_warehouse_query")
-            dataframe = read_warehouse_query(query, target=str(identity["target"]), context=context)
+            dataframe = read_warehouse_query(query, store=str(identity["store"]), context=context)
         else:
             if verbose:
                 print(f"FabricOps Read → Warehouse table '{physical_identity}' → read_warehouse_table")
             dataframe = read_warehouse_table(
                 str(identity["schema"]),
                 str(identity["table_name"]),
-                target=str(identity["target"]),
+                store=str(identity["store"]),
                 context=context,
             )
     persist_lineage_participation(

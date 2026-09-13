@@ -168,7 +168,7 @@ def _observation_stability(
     try:
         history = read_lakehouse_table(
             _OBSERVATION_TABLE,
-            target="metadata",
+            store="metadata",
             schema=metadata_schema,
             spark_session=getattr(observation, "sparkSession", None),
             context=context,
@@ -228,7 +228,7 @@ def _observation_stability(
         write_lakehouse_table(
             tombstone_df,
             _OBSERVATION_TABLE,
-            target="metadata",
+            store="metadata",
             schema=metadata_schema,
             context=context,
             mode="append",
@@ -338,7 +338,7 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
     Examples
     --------
     >>> observation = observe_table(
-    ...     "orders", target="source", schema="dbo",
+    ...     "orders", store="source", schema="dbo",
     ...     target_table_id="lakehouse:unified:dbo:orders",
     ... )
     >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")

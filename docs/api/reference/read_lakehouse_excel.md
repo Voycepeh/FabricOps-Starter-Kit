@@ -40,7 +40,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_excel(
     relative_path: str,
-    target: str='source',
+    store: str='source',
     sheet_name=0,
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -65,7 +65,7 @@ mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx"
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | Excel file path resolved by the Fabric resolver. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. |
 | `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``. |
@@ -143,7 +143,7 @@ DataFrame.
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 </ul>
 
 

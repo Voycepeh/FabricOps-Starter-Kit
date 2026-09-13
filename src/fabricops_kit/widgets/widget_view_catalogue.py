@@ -39,7 +39,7 @@ def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[
 def _resolve_pipeline_catalogue_scope(
     *,
     environment_name: str,
-    target: str,
+    store: str,
     schema: str | None,
     spark_session: Any,
     context: Any,
@@ -47,7 +47,7 @@ def _resolve_pipeline_catalogue_scope(
 ) -> tuple[set[str], list[tuple[str, str]], dict[str, Any], dict[str, Any]]:
     """Resolve notebook-lineage table IDs and pipeline-role choices."""
     pairs, selection_context = widget_shared.resolve_notebook_lineage_tables(
-        environment_name=environment_name, target=target, schema=schema,
+        environment_name=environment_name, store=store, schema=schema,
         spark_session=spark_session, context=context, runtime_context=runtime_context,
     )
     notebook_name = str(selection_context["notebook_name"])
@@ -63,7 +63,7 @@ def _resolve_agreement_catalogue_scope(
     *,
     agreement: dict[str, Any] | None,
     environment_name: str,
-    target: str,
+    store: str,
     schema: str | None,
     spark_session: Any,
     runtime_context: dict[str, Any],
@@ -76,7 +76,7 @@ def _resolve_agreement_catalogue_scope(
 
     contracts = read_lakehouse_table(
         "METADATA_DATA_CONTRACT",
-        target=target,
+        store=store,
         schema=schema,
         spark_session=spark_session,
         context=runtime_context,
@@ -174,7 +174,7 @@ def _build_catalogue_widget(
     display_context: dict[str, Any],
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None,
-    target: str,
+    store: str,
     schema: str | None,
     spark_session: Any,
     runtime_context: dict[str, Any],
@@ -359,7 +359,7 @@ def _build_catalogue_widget(
             ):
                 source_frames[name] = read_lakehouse_table(
                     table_name,
-                    target=target,
+                    store=store,
                     schema=schema,
                     spark_session=spark_session,
                     context=runtime_context,
@@ -522,7 +522,7 @@ def _build_catalogue_widget(
         ):
             source_frames[name] = read_lakehouse_table(
                 table_name,
-                target=target,
+                store=store,
                 schema=schema,
                 spark_session=spark_session,
                 context=runtime_context,
@@ -601,7 +601,7 @@ def widget_view_catalogue(
     mode: str,
     agreement: dict[str, Any] | None = None,
     spark_session=None,
-    target: str = "metadata",
+    store: str = "metadata",
     schema: str | None = None,
     context=None,
 ):
@@ -616,8 +616,8 @@ def widget_view_catalogue(
         only for ``mode="agreement"``.
     spark_session : object, optional
         Spark session override.
-    target : str, default="metadata"
-        Configured metadata FabricStore target.
+    store : str, default="metadata"
+        Configured metadata FabricStore key.
     schema : str, optional
         Metadata lakehouse schema override.
     context : object, optional
@@ -669,7 +669,7 @@ def widget_view_catalogue(
     if mode == "pipeline":
         scope = _resolve_pipeline_catalogue_scope(
             environment_name=environment_name,
-            target=target,
+            store=store,
             schema=schema,
             spark_session=spark_session,
             context=context,
@@ -679,7 +679,7 @@ def widget_view_catalogue(
         scope = _resolve_agreement_catalogue_scope(
             agreement=agreement,
             environment_name=environment_name,
-            target=target,
+            store=store,
             schema=schema,
             spark_session=spark_session,
             runtime_context=runtime_context,
@@ -687,7 +687,7 @@ def widget_view_catalogue(
 
     catalogue = read_lakehouse_table(
         "METADATA_DATA_CATALOGUE",
-        target=target,
+        store=store,
         schema=schema,
         spark_session=spark_session,
         context=runtime_context,
@@ -728,7 +728,7 @@ def widget_view_catalogue(
         display_context=display_context,
         inventory_rows=rows,
         role_options=role_options,
-        target=target,
+        store=store,
         schema=schema,
         spark_session=spark_session,
         runtime_context=runtime_context,
