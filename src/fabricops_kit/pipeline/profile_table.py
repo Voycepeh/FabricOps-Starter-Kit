@@ -68,7 +68,7 @@ def _sql_string(value: str) -> str:
 def _warehouse_type_name(row: Mapping[str, Any]) -> str:
     """Return the canonical Spark-style type name for Warehouse metadata."""
     name = str(row["DATA_TYPE"]).lower()
-    if name in {"decimal", "numeric"}:
+    if name in {"decimal", "numeric", "money", "smallmoney"}:
         return f"decimal({int(row['NUMERIC_PRECISION'])},{int(row['NUMERIC_SCALE'])})"
     return {
         "bigint": "bigint", "bit": "boolean", "float": "double", "int": "int",
