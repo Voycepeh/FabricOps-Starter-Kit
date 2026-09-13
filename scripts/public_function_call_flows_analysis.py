@@ -27,9 +27,9 @@ SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/m
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
 ARCHITECTURE_VIOLATION_RULES = {
-    "Type 1": "Public function calls another public function directly, unless the callee is foundational I/O.",
-    "Type 2": "Shared function calls a public function directly.",
-    "Type 3": "Private function calls a public function directly.",
+    "Type 1": "Public function calls a non-foundational public function directly.",
+    "Type 2": "Shared function calls a non-foundational public function directly.",
+    "Type 3": "Private function calls a non-foundational public function directly.",
     "Type 4": "Shared function calls a private function from another file.",
     "Type 5": "Private function calls a private function from another file.",
 }
@@ -497,7 +497,7 @@ def classify_architecture_violation(
     else:
         callee_public = callee_type in PUBLIC_CALLABLE_TYPES or callee_type == "public_dependency"
     different_file = caller.source_path != callee.source_path
-    if caller_public and callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+    if callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
         return None
     if caller_type == "widget_function" and callee_public:
         return None
@@ -522,8 +522,12 @@ def classify_architecture_signal(
     callee_is_public: bool,
 ) -> dict[str, str] | None:
     """Return a positive architecture signal for an allowed boundary edge."""
-    caller_public = caller_type in PUBLIC_CALLABLE_TYPES or caller_type == "public_dependency"
-    if caller_public and callee_is_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+    if (
+        caller is not None
+        and caller_type is not None
+        and callee_is_public
+        and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES
+    ):
         return {"type": "Type 0", "detail": ARCHITECTURE_EDGE_SIGNALS["Type 0"]}
     return None
 

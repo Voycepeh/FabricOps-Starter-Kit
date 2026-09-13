@@ -12927,9 +12927,9 @@
       "Type 0": "Calls foundational Fabric I/O."
     },
     "architecture_violation_rules": {
-      "Type 1": "Public function calls another public function directly, unless the callee is foundational I/O.",
-      "Type 2": "Shared function calls a public function directly.",
-      "Type 3": "Private function calls a public function directly.",
+      "Type 1": "Public function calls a non-foundational public function directly.",
+      "Type 2": "Shared function calls a non-foundational public function directly.",
+      "Type 3": "Private function calls a non-foundational public function directly.",
       "Type 4": "Shared function calls a private function from another file.",
       "Type 5": "Private function calls a private function from another file."
     },
@@ -12960,7 +12960,7 @@
   "public_functions": [
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -12978,7 +12978,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_dq",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13031,8 +13031,7 @@
       ],
       "public_import_path": "fabricops_kit.check_dq",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
       "raises_documentation": "ValueError\n    If configured identity columns are absent or governed rule metadata is\n    invalid.\nRuntimeError\n    If Spark is unavailable in the Microsoft Fabric runtime, or\n    ``raise_on_failure=True`` and a blocking DQ result cannot continue.",
@@ -13047,113 +13046,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 5,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 5,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Overall ``status`` and ``can_continue`` decision, concise ``summary``,\n    one check per evaluated rule, the original DataFrame with DQ status columns,\n    and a normalized ``failed_values`` DataFrame. Failure detail has one\n    row per failed rule, involved column, and source record, with a shared\n    ``failure_event_id``, row and rule identities, action, column role,\n    string ``raw_value``, original ``raw_value_type``, and reason. It does\n    not copy unrelated source columns. Evaluated rules also include the\n    resolved ``run_id``.",
       "scope": 45,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_dq(dataframe, *, table_id: str, dataset_name: str='', run_id: str='', row_identity_columns: list[str] | None=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
       "source_end_line": 110,
@@ -13166,7 +13067,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -13185,7 +13086,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_freshness",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13220,8 +13121,7 @@
       ],
       "public_import_path": "fabricops_kit.check_freshness",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_freshness.check_freshness",
       "raises_documentation": "ValueError\n    If the observation or configured freshness rule is invalid.\nRuntimeError\n    If ``raise_on_failure=True`` and a blocking freshness result cannot\n    continue.",
@@ -13236,113 +13136,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Structured freshness evidence and continuation decision. Governed\n    observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.",
       "scope": 49,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_freshness(observation, *, table_id: str | None=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
       "source_end_line": 189,
@@ -13355,7 +13157,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -13375,7 +13177,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_schema",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13410,8 +13212,7 @@
       ],
       "public_import_path": "fabricops_kit.check_schema",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
       "raises_documentation": "ValueError\n    If the target is unsupported or no active approved Schema guardrail\n    exists for the resolved table.\nRuntimeError\n    If ``raise_on_failure=True`` and a blocking schema result cannot\n    continue.",
@@ -13426,113 +13227,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Structured guardrail status, continuation decision, checks, and schema\n    differences. Governed configured-table checks append the outcome to\n    ``METADATA_GUARDRAIL_RESULTS``.",
       "scope": 55,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_schema(table_id: str, *, dataframe=None, enabled: bool=True, raise_on_failure: bool=False) -> dict",
       "source_end_line": 144,
@@ -13545,7 +13248,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -13564,7 +13267,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_sensitive_data",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13599,8 +13302,7 @@
       ],
       "public_import_path": "fabricops_kit.check_sensitive_data",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
       "raises_documentation": "RuntimeError\n    If ``dataframe`` is not a Spark DataFrame in the Fabric runtime.",
@@ -13615,113 +13317,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    ``dataframe`` contains every successfully applied treatment;\n    ``support_mapping`` contains caller-owned token mappings, or ``None``;\n    ``checks`` contains sanitized outcomes; and ``can_continue`` is false\n    only when a Block treatment fails. No mapping is persisted automatically.",
       "scope": 37,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_sensitive_data(dataframe, *, table_id: str, run_id: str='', existing_mapping=None) -> dict",
       "source_end_line": 311,
@@ -13734,7 +13338,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 8,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -13752,7 +13356,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_source_stability",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13775,8 +13379,7 @@
       ],
       "public_import_path": "fabricops_kit.check_source_stability",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_source_stability.check_source_stability",
       "raises_documentation": "ValueError\n    If the observation, Source Stability rule, or target processing is invalid.",
@@ -13791,143 +13394,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 5,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 5,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Source Stability evidence and its compatibility with the governed\n    target load strategy. The function never writes target data.",
       "scope": 45,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_source_stability(observation, *, target_table_id: str) -> dict",
       "source_end_line": 351,
@@ -13940,7 +13415,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 5,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -13960,7 +13435,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "observe_table",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -13995,8 +13470,7 @@
       ],
       "public_import_path": "fabricops_kit.observe_table",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.observe_table.observe_table",
       "raises_documentation": "ValueError\n    If table identity, target type, or a required active Source Stability rule\n    is invalid.\nRuntimeError\n    If ``00_env_config`` has not initialized FabricOps or observation\n    cannot be collected or persisted.",
@@ -14011,98 +13485,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "pyspark.sql.DataFrame\n    The canonical observation rows written to\n    ``METADATA_SOURCE_OBSERVATION``. Normal observation rows have\n    ``is_present=True``.",
       "scope": 55,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def observe_table(table_name: str, *, store: str='source', schema: str | None=None, target_table_id: str) -> Any",
       "source_end_line": 295,
@@ -14115,7 +13506,7 @@
     },
     {
       "architecture_classification": "pipeline_orchestration",
-      "architecture_violation_count": 3,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -14135,7 +13526,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "pipeline_read",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": false,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -14181,73 +13572,16 @@
         }
       ],
       "public_import_path": "fabricops_kit.pipeline_read",
-      "public_signals": [
-        "architecture_violation"
-      ],
+      "public_signals": [],
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
       "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, the source is not\n    registered, its configured store kind is unsupported, or a query is\n    supplied for a Lakehouse source.",
-      "refactor_signals": [
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
-        }
-      ],
-      "refactor_summary": "Review 1 refactor signal(s): architecture_violation.",
+      "refactor_signals": [],
+      "refactor_summary": "No refactor signals detected.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom Warehouse query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an environment-selected immutable Data\n      Contract applies. The contract record itself is not exposed.",
       "scope": 47,
-      "signals": [
-        "architecture_violation"
-      ],
+      "signals": [],
       "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, verbose: bool=True) -> dict[str, Any]",
       "source_end_line": 209,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
@@ -14259,7 +13593,7 @@
     },
     {
       "architecture_classification": "pipeline_orchestration",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -14279,7 +13613,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "pipeline_write",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -14356,8 +13690,7 @@
       ],
       "public_import_path": "fabricops_kit.pipeline_write",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
       "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, ``source_table_ids`` is\n    missing or invalid, governed processing is invalid, ownership does not\n    match, or the target store is unsupported.",
@@ -14372,113 +13705,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    A deliberately small result containing only the canonical ``table_id``.\n    Profile the persisted target through an explicit read-back rather than\n    treating the input DataFrame as persisted state.",
       "scope": 73,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def pipeline_write(df, *, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, verbose: bool=True) -> dict[str, str]",
       "source_end_line": 460,
@@ -14491,7 +13726,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 4,
+      "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "contract_risk": "live",
@@ -14511,7 +13746,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "profile_table",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "live",
       "live_critical_dependencies": [
@@ -14631,8 +13866,7 @@
       ],
       "public_import_path": "fabricops_kit.profile_table",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
       "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, neither a DataFrame nor\n    identity is supplied, frequency settings are invalid, or the resolved\n    store is unsupported.\nRuntimeError\n    If a governed metadata write requires unavailable Delta support.",
@@ -14647,76 +13881,9 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_warehouse_query",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
-              "source_end_line": 91,
-              "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
-              "source_start_line": 15,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_warehouse_query",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
-              "source_end_line": 91,
-              "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
-              "source_start_line": 15,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "live",
@@ -14729,8 +13896,7 @@
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
       "scope": 63,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0)",
       "source_end_line": 953,
@@ -15114,12 +14280,12 @@
       "source_start_line": 15,
       "summary": "Read Parquet data from the configured Lakehouse ``Files`` area through Spark.",
       "transitive_function_count": 14,
-      "usage_notes": "Normal read flow:\n\n``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``\n\nSpark reads are normally lazy, but this function deliberately executes\n``limit(1).collect()`` before returning. The validation action confirms\nthat Spark can decode at least one row. The function is therefore not a\npurely lazy reader, but it does not collect the entire dataset to the\ndriver.\n\n``store`` is a logical Lakehouse target from ``00_env_config`` and\n``relative_path`` is resolved under the configured Lakehouse ``Files``\narea. Root-level and nested paths are supported. The resolved location is\nconceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:\n\n``df = read_lakehouse_parquet(\"customers.parquet\", store=\"source\")``\n\n``df = read_lakehouse_parquet(\"incoming/2026/customers.parquet\", store=\"source\")``\n\nDerived ``_tsus`` fallback naming:\n\n- ``customers.parquet`` becomes ``customers_tsus.parquet``.\n- ``incoming/2026/customers.parquet`` becomes\n  ``incoming/2026_tsus/customers.parquet``.\n\nThe function does not replace the original file.\n\nThe fallback begins after any exception from the original Spark read or\nvalidation action. The current implementation does not first confirm that\nthe original failure is definitely timestamp-related. It then attempts the\n``_tsus`` path. If that path is missing, it performs one single-file\nconversion and retries. If both original and fallback reads fail, the\nfunction raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,\nmount, or conversion errors may appear in verbose output before the final\n``RuntimeError``.\n\nThe compatibility copy is produced by reading the original Parquet file\nwith pandas and PyArrow, then rewriting it as a new Parquet file using\nmicrosecond timestamp precision with ``coerce_timestamps=\"us\"`` and\ntruncated timestamps allowed. The compatibility copy may lose\nsub-microsecond timestamp precision because nanosecond timestamps are\ncoerced to microseconds.\n\nSpark may normally read a Parquet file or compatible dataset path, but the\nautomatic conversion helper is designed for one local Parquet file. It is\nnot a distributed folder conversion workflow, and large or multi-file\nremediation should be handled as a separate conversion pipeline.\n\nThe normal Spark read uses the resolved configured ABFSS path. The\nconversion fallback assumes the file is also accessible through the\nnotebook's default attached Lakehouse mount under\n``/lakehouse/default/Files/``. A configured target may resolve correctly\nfor Spark reading while still being unavailable to the local fallback\nmount, in which case fallback conversion can fail.\n\nCompact reader-option example:\n\n``df = read_lakehouse_parquet(\"incoming/events.parquet\", store=\"source\", mergeSchema=True)``\n\nThis function does not read a managed Delta table, register Parquet data as\na Lakehouse table, replace or modify the original Parquet file, convert\nevery file in a Parquet folder, perform a distributed timestamp\nconversion, guarantee that the original failure was timestamp-related,\npreserve nanosecond precision in the converted copy, delete or refresh an\nexisting ``_tsus`` copy, register metadata, profile the returned\nDataFrame, or automatically cache or persist the returned DataFrame.",
+      "usage_notes": "Normal read flow:\n\n``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``\n\nSpark reads are normally lazy, but this function deliberately executes\n``limit(1).collect()`` before returning. The validation action confirms\nthat Spark can decode at least one row. The function is therefore not a\npurely lazy reader, but it does not collect the entire dataset to the\ndriver.\n\n``store`` is a logical Lakehouse target from ``00_env_config`` and\n``relative_path`` is resolved under the configured Lakehouse ``Files``\narea. Root-level and nested paths are supported. The resolved location is\nconceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:\n\n``df = read_lakehouse_parquet(\"customers.parquet\", store=\"source\")``\n\n``df = read_lakehouse_parquet(\"incoming/2026/customers.parquet\", store=\"source\")``\n\nDerived ``_tsus`` fallback naming:\n\n- ``customers.parquet`` becomes ``customers_tsus.parquet``.\n- ``incoming/2026/customers.parquet`` becomes\n  ``incoming/2026_tsus/customers.parquet``.\n\nThe function does not replace the original file.\n\nThe fallback begins after any exception from the original Spark read or\nvalidation action. The current implementation does not first confirm that\nthe original failure is definitely timestamp-related. It then attempts the\n``_tsus`` path. If that path is missing, it performs one single-file\nconversion and retries. If both original and fallback reads fail, the\nfunction raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,\nmount, or conversion errors may appear in verbose output before the final\n``RuntimeError``.\n\nThe compatibility copy is produced by reading the original Parquet file\nwith pandas and PyArrow, then rewriting it as a new Parquet file using\nmicrosecond timestamp precision with ``coerce_timestamps=\"us\"`` and\ntruncated timestamps allowed. The compatibility copy may lose\nsub-microsecond timestamp precision because nanosecond timestamps are\ncoerced to microseconds.\n\nSpark may normally read a Parquet file or compatible dataset path, but the\nautomatic conversion helper is designed for one local Parquet file. It is\nnot a distributed folder conversion workflow, and large or multi-file\nremediation should be handled as a separate conversion pipeline.\n\nThe normal Spark read uses the resolved configured ABFSS path. The\nconversion fallback assumes the file is also accessible through the\nnotebook's default attached Lakehouse mount under\n``/lakehouse/default/Files/``. A configured store may resolve correctly\nfor Spark reading while still being unavailable to the local fallback\nmount, in which case fallback conversion can fail.\n\nCompact reader-option example:\n\n``df = read_lakehouse_parquet(\"incoming/events.parquet\", store=\"source\", mergeSchema=True)``\n\nThis function does not read a managed Delta table, register Parquet data as\na Lakehouse table, replace or modify the original Parquet file, convert\nevery file in a Parquet folder, perform a distributed timestamp\nconversion, guarantee that the original failure was timestamp-related,\npreserve nanosecond precision in the converted copy, delete or refresh an\nexisting ``_tsus`` copy, register metadata, profile the returned\nDataFrame, or automatically cache or persist the returned DataFrame.",
       "width": 4
     },
     {
       "architecture_classification": "foundation_io",
-      "architecture_violation_count": 1,
+      "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.1.0",
       "contract_risk": "live",
@@ -15135,7 +14301,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "read_lakehouse_table",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": false,
       "lifecycle_status": "live",
       "live_critical_dependencies": [
@@ -15177,7 +14343,7 @@
           "type": "str | None"
         },
         {
-          "description": "Logical Lakehouse store key from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path.",
+          "description": "Logical Lakehouse store key from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path.",
           "name": "store",
           "required": "No",
           "type": "str"
@@ -15202,36 +14368,11 @@
         }
       ],
       "public_import_path": "fabricops_kit.read_lakehouse_table",
-      "public_signals": [
-        "architecture_violation"
-      ],
+      "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "raises_documentation": "Not documented yet",
-      "refactor_signals": [
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_function",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
-        }
-      ],
-      "refactor_summary": "Review 1 refactor signal(s): architecture_violation.",
+      "refactor_signals": [],
+      "refactor_summary": "No refactor signals detected.",
       "release_history": [
         {
           "status": "live",
@@ -15248,9 +14389,7 @@
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the governed rows and all columns\n    in the resolved Lakehouse Delta table. The data is evaluated when a\n    downstream Spark action runs.",
       "scope": 20,
-      "signals": [
-        "architecture_violation"
-      ],
+      "signals": [],
       "signature": "def read_lakehouse_table(table_name: str | None=None, *, table_id: str | None=None, store: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 116,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
@@ -15351,7 +14490,7 @@
       "source_start_line": 15,
       "summary": "Execute a read-only Warehouse SQL query and return the query result.",
       "transitive_function_count": 12,
-      "usage_notes": "FabricOps resolves the configured Warehouse target, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured target\nidentifies the warehouse database/artifact. Conceptual example:\n\n``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``\n\nThat query returns only the selected columns, filters rows in the\nWarehouse engine, and transfers only the resulting dataset to Spark.",
+      "usage_notes": "FabricOps resolves the configured Warehouse store, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured store\nidentifies the warehouse database/artifact. Conceptual example:\n\n``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``\n\nThat query returns only the selected columns, filters rows in the\nWarehouse engine, and transfers only the resulting dataset to Spark.",
       "width": 4
     },
     {
@@ -15835,7 +14974,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 1,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -15852,7 +14991,7 @@
         "src/fabricops_kit/widgets/widget_activate_data_contract.py"
       ],
       "function_name": "widget_activate_data_contract",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -15917,8 +15056,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_activate_data_contract",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
       "raises_documentation": "ValueError\n    If the contract or exact Agreement version is missing, mismatched, or ineligible.\nRuntimeError\n    If active-contract metadata is ambiguous or the atomic Delta update fails.",
@@ -15933,38 +15071,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Selection state, immutable review, controls, and an ``activate`` callable.",
       "scope": 33,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def widget_activate_data_contract(*, table_id: str | None=None, contract_id: str | None=None, contract_version: int | None=None, agreement_id: str | None=None, agreement_version: str | None=None, store: str='metadata', schema: str | None=None, spark_session=None, context=None)",
       "source_end_line": 283,
@@ -15977,7 +15092,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -15998,7 +15113,7 @@
         "src/fabricops_kit/widgets/widget_author_data_contract.py"
       ],
       "function_name": "widget_author_data_contract",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16027,8 +15142,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_author_data_contract",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
       "raises_documentation": "ValueError\n    If the table has no active Catalogue row or authored input is invalid.\nRuntimeError\n    If Fabric context, metadata routing, or freezing is unavailable.",
@@ -16043,113 +15157,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict[str, Any]\n    Table-owned exact-version state, compact controls, displayed UI, and callable\n    ``render_section``, ``validate``, and ``freeze`` actions.",
       "scope": 69,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def widget_author_data_contract(*, table_id: str, spark_session: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 355,
@@ -16162,7 +15178,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 5,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -16180,7 +15196,7 @@
         "src/fabricops_kit/widgets/widget_render_data_agreement.py"
       ],
       "function_name": "widget_render_data_agreement",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16203,8 +15219,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_render_data_agreement",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
       "raises_documentation": "Not documented yet",
@@ -16219,91 +15234,9 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "preview",
@@ -16321,8 +15254,7 @@
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
       "scope": 61,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 433,
@@ -16335,7 +15267,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -16353,7 +15285,7 @@
         "src/fabricops_kit/widgets/widget_render_data_steward.py"
       ],
       "function_name": "widget_render_data_steward",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16376,8 +15308,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_render_data_steward",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
       "raises_documentation": "Not documented yet",
@@ -16392,46 +15323,9 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "write_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-              "source_end_line": 287,
-              "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-              "source_start_line": 16,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "preview",
@@ -16449,8 +15343,7 @@
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
       "scope": 46,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 205,
@@ -16463,7 +15356,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -16481,7 +15374,7 @@
         "src/fabricops_kit/widgets/widget_select_data_contract.py"
       ],
       "function_name": "widget_select_data_contract",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16504,8 +15397,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_select_data_contract",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
       "raises_documentation": "ValueError\n    If notebook identity is missing, a requested version is unavailable,\n    or Production has no active contract for a Lineage-linked table.\nRuntimeError\n    If Production has multiple active versions for a lineage-linked table.",
@@ -16520,53 +15412,15 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Notebook scope, role-preserving table states, table-scoped resolved\n    contracts, controls, and Development ``select`` and ``deselect`` callables.",
       "scope": 25,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def widget_select_data_contract(*, spark_session=None, context=None)",
       "source_end_line": 330,
@@ -16579,7 +15433,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 3,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -16594,7 +15448,7 @@
         "src/fabricops_kit/widgets/widget_view_catalogue.py"
       ],
       "function_name": "widget_view_catalogue",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": false,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16640,73 +15494,16 @@
         }
       ],
       "public_import_path": "fabricops_kit.widget_view_catalogue",
-      "public_signals": [
-        "architecture_violation"
-      ],
+      "public_signals": [],
       "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
       "raises_documentation": "ValueError\n    If ``mode`` is unsupported, pipeline notebook identity cannot be\n    resolved, or agreement mode has no saved agreement selection.",
-      "refactor_signals": [
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Private function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 3"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "read_lakehouse_table",
-              "function_type": "public_dependency",
-              "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-              "source_end_line": 116,
-              "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-              "source_start_line": 10,
-              "violation_details": [
-                "Shared function calls a public function directly."
-              ],
-              "violation_types": [
-                "Type 2"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
-        }
-      ],
-      "refactor_summary": "Review 1 refactor signal(s): architecture_violation.",
+      "refactor_signals": [],
+      "refactor_summary": "No refactor signals detected.",
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Common state with ``get_selection``, ``get_views``, ``refresh``, and\n    ``show``. ``show(table_id=...)`` refreshes and displays Catalogue,\n    Profile, and Frequency metadata for one canonical table identity.\n    ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,\n    and ``guardrail_results`` Spark DataFrames.\n    Catalogue and profile views expose readable asset/column fields first;\n    frequency rows are enriched with ``column_name`` through the normalized\n    ``profile_id`` relationship.",
       "scope": 23,
-      "signals": [
-        "architecture_violation"
-      ],
+      "signals": [],
       "signature": "def widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None=None, spark_session=None, store: str='metadata', schema: str | None=None, context=None)",
       "source_end_line": 736,
       "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
@@ -16852,7 +15649,7 @@
       "source_start_line": 16,
       "summary": "Write a Spark DataFrame to a configured Fabric lakehouse Delta table.",
       "transitive_function_count": 20,
-      "usage_notes": "Parallel processing and write concurrency\n    Spark writes DataFrame partitions concurrently across available\n    executors. ``write_lakehouse_table`` can repartition the input\n    DataFrame before writing, allowing the caller to influence how many\n    Spark tasks participate in the write and how records are distributed\n    between those tasks.\n\n    This is distributed Spark execution, not Python thread-level\n    concurrency. The function does not start multiple Python writers and\n    does not submit the same table write several times.\n\n    Repartitioning can improve throughput when the existing DataFrame has\n    too few partitions, poorly distributed partitions, or severe data\n    skew. It also introduces a Spark shuffle, so increasing the partition\n    count does not automatically make every write faster.\n\nInteger repartitioning\n    Passing a positive integer to ``repartition_by`` redistributes the\n    DataFrame into that number of Spark partitions before writing by\n    calling ``df.repartition(number)``. Spark can then schedule up to that\n    many partition-writing tasks, subject to available executor capacity\n    and Spark/Delta writer behaviour.\n\nColumn-based repartitioning\n    Passing a column name, string-only list, or string-only tuple repartitions\n    the DataFrame by the selected values before writing by calling\n    ``df.repartition(*columns)``.\n    Rows with the same partitioning key are routed consistently according\n    to Spark's hash partitioning. Column-based repartitioning can help\n    distribute a large write using meaningful keys, but low-cardinality or\n    heavily skewed keys can create unbalanced partitions. This does not\n    physically partition the stored Delta table unless ``partition_by`` is\n    also supplied. A list or tuple such as ``(32, \"academic_year\",\n    \"semester\")`` calls ``df.repartition(32, \"academic_year\",\n    \"semester\")`` and controls both Spark task count and distribution keys\n    for the current write.\n\nRepartitioning versus physical Delta partitioning\n\n    | Setting | Affects | Purpose | Persisted in table layout |\n    | --- | --- | --- | --- |\n    | ``repartition_by`` | Spark DataFrame before writing | Controls task parallelism and row distribution during the write | No |\n    | ``partition_by`` | Delta table files and folders | Organizes stored data by selected columns for pruning and maintenance | Yes |\n\n    ``repartition_by`` changes the DataFrame's Spark execution partitions\n    before the write. It affects how Spark performs the current operation\n    but does not define the long-term physical partition columns of the\n    Delta table.\n\n    ``partition_by`` defines the physical Delta table partition layout. It\n    should be selected based on query patterns, cardinality, data volume,\n    and file-management considerations rather than being used as a general\n    concurrency switch.\n\n    Both options may be used together when the execution distribution and\n    persisted Delta layout intentionally serve different requirements.\n\nImplementation sequence\n    The function validates the DataFrame writer, validates the table\n    identity and write mode, resolves the lakehouse target and optional\n    schema, validates ``repartition_by``, calls ``df.repartition(number)``\n    for a positive integer, ``df.repartition(*columns)`` for a column\n    name/list/tuple, or ``df.repartition(number, *columns)`` when a list or\n    tuple begins with a positive integer, passes the resulting DataFrame to\n    the Delta writer,\n    applies ``partition_by`` only to the physical Delta write\n    configuration, executes the selected write mode, and returns ``None``.\n    It does not resolve Data Contracts or processing strategies and does\n    not commit pipeline metadata.\n\nPerformance notes\n    The existing number of DataFrame partitions may already be\n    appropriate. Check the workload before forcing repartitioning. Too few\n    partitions can underuse available Spark executors and produce very\n    large individual write tasks. Too many partitions can increase shuffle\n    overhead and create excessive small files. Repartitioning by a skewed\n    column may concentrate a large proportion of records in only a few\n    tasks. Physical Delta partitioning with high-cardinality columns can\n    create excessive directories and small files. Repartitioning improves\n    the opportunity for concurrent Spark task execution but does not\n    override cluster capacity, lakehouse service limits, locking\n    behaviour, or concurrent-operation constraints.\n\nErrors and edge cases\n    ``repartition_by`` rejects zero or negative integers, missing columns\n    when DataFrame columns are available, unsupported types, empty lists or\n    tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,\n    append-versus-overwrite conflicts, insufficient permissions,\n    concurrent writes to the same target table, partial or failed Delta\n    commits, empty DataFrames, small-file risk, and Spark shuffle failures\n    are handled by Spark/Delta or the configured Fabric runtime. The\n    function does not make simultaneous independent writes to the same\n    table safe.\n\nSide effects\n    This function performs a physical Delta table write and triggers Spark\n    execution. Depending on the selected mode, it may create, append to,\n    replace, or overwrite the target table. ``repartition_by`` triggers a\n    shuffle before the write. ``partition_by`` affects the persisted Delta\n    layout.",
+      "usage_notes": "Parallel processing and write concurrency\n    Spark writes DataFrame partitions concurrently across available\n    executors. ``write_lakehouse_table`` can repartition the input\n    DataFrame before writing, allowing the caller to influence how many\n    Spark tasks participate in the write and how records are distributed\n    between those tasks.\n\n    This is distributed Spark execution, not Python thread-level\n    concurrency. The function does not start multiple Python writers and\n    does not submit the same table write several times.\n\n    Repartitioning can improve throughput when the existing DataFrame has\n    too few partitions, poorly distributed partitions, or severe data\n    skew. It also introduces a Spark shuffle, so increasing the partition\n    count does not automatically make every write faster.\n\nInteger repartitioning\n    Passing a positive integer to ``repartition_by`` redistributes the\n    DataFrame into that number of Spark partitions before writing by\n    calling ``df.repartition(number)``. Spark can then schedule up to that\n    many partition-writing tasks, subject to available executor capacity\n    and Spark/Delta writer behaviour.\n\nColumn-based repartitioning\n    Passing a column name, string-only list, or string-only tuple repartitions\n    the DataFrame by the selected values before writing by calling\n    ``df.repartition(*columns)``.\n    Rows with the same partitioning key are routed consistently according\n    to Spark's hash partitioning. Column-based repartitioning can help\n    distribute a large write using meaningful keys, but low-cardinality or\n    heavily skewed keys can create unbalanced partitions. This does not\n    physically partition the stored Delta table unless ``partition_by`` is\n    also supplied. A list or tuple such as ``(32, \"academic_year\",\n    \"semester\")`` calls ``df.repartition(32, \"academic_year\",\n    \"semester\")`` and controls both Spark task count and distribution keys\n    for the current write.\n\nRepartitioning versus physical Delta partitioning\n\n    | Setting | Affects | Purpose | Persisted in table layout |\n    | --- | --- | --- | --- |\n    | ``repartition_by`` | Spark DataFrame before writing | Controls task parallelism and row distribution during the write | No |\n    | ``partition_by`` | Delta table files and folders | Organizes stored data by selected columns for pruning and maintenance | Yes |\n\n    ``repartition_by`` changes the DataFrame's Spark execution partitions\n    before the write. It affects how Spark performs the current operation\n    but does not define the long-term physical partition columns of the\n    Delta table.\n\n    ``partition_by`` defines the physical Delta table partition layout. It\n    should be selected based on query patterns, cardinality, data volume,\n    and file-management considerations rather than being used as a general\n    concurrency switch.\n\n    Both options may be used together when the execution distribution and\n    persisted Delta layout intentionally serve different requirements.\n\nImplementation sequence\n    The function validates the DataFrame writer, validates the table\n    identity and write mode, resolves the Lakehouse store and optional\n    schema, validates ``repartition_by``, calls ``df.repartition(number)``\n    for a positive integer, ``df.repartition(*columns)`` for a column\n    name/list/tuple, or ``df.repartition(number, *columns)`` when a list or\n    tuple begins with a positive integer, passes the resulting DataFrame to\n    the Delta writer,\n    applies ``partition_by`` only to the physical Delta write\n    configuration, executes the selected write mode, and returns ``None``.\n    It does not resolve Data Contracts or processing strategies and does\n    not commit pipeline metadata.\n\nPerformance notes\n    The existing number of DataFrame partitions may already be\n    appropriate. Check the workload before forcing repartitioning. Too few\n    partitions can underuse available Spark executors and produce very\n    large individual write tasks. Too many partitions can increase shuffle\n    overhead and create excessive small files. Repartitioning by a skewed\n    column may concentrate a large proportion of records in only a few\n    tasks. Physical Delta partitioning with high-cardinality columns can\n    create excessive directories and small files. Repartitioning improves\n    the opportunity for concurrent Spark task execution but does not\n    override cluster capacity, lakehouse service limits, locking\n    behaviour, or concurrent-operation constraints.\n\nErrors and edge cases\n    ``repartition_by`` rejects zero or negative integers, missing columns\n    when DataFrame columns are available, unsupported types, empty lists or\n    tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,\n    append-versus-overwrite conflicts, insufficient permissions,\n    concurrent writes to the same target table, partial or failed Delta\n    commits, empty DataFrames, small-file risk, and Spark shuffle failures\n    are handled by Spark/Delta or the configured Fabric runtime. The\n    function does not make simultaneous independent writes to the same\n    table safe.\n\nSide effects\n    This function performs a physical Delta table write and triggers Spark\n    execution. Depending on the selected mode, it may create, append to,\n    replace, or overwrite the target table. ``repartition_by`` triggers a\n    shuffle before the write. ``partition_by`` affects the persisted Delta\n    layout.",
       "width": 5
     },
     {
@@ -16915,7 +15712,7 @@
           "type": "str"
         },
         {
-          "description": "Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name.",
+          "description": "Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical store key, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name.",
           "name": "store",
           "required": "No",
           "type": "str"
@@ -17856,44 +16653,44 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.create_contract_draft",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.create_contract_draft",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -17984,24 +16781,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -18081,24 +16878,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.get_contract_authoring_state",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -18233,24 +17030,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.save_enrichment",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -18297,24 +17094,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.save_guardrails",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -19842,44 +18639,44 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.check_source_stability._observation_stability",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.check_source_stability._observation_stability",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -20003,24 +18800,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.observe_table._observe_lakehouse",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -20067,24 +18864,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.observe_table._persist",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -20801,24 +19598,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -20876,24 +19673,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._warehouse_columns",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -20940,24 +19737,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._warehouse_profile_dataframes",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -21759,24 +20556,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared._resolve_data_contract_version",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22153,24 +20950,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.check_dq_runtime",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22327,24 +21124,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22358,24 +21155,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22466,24 +21263,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22794,24 +21591,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_active_data_contract",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -22880,24 +21677,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -23274,24 +22071,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.write_guardrail_result_row",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -23536,24 +22333,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.shared.activate_contract_version",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -23809,24 +22606,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.shared.list_all_data_agreement_rows",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -23884,24 +22681,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.shared.list_data_stewards",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -24069,24 +22866,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.shared.resolve_notebook_lineage_tables",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -24177,24 +22974,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Shared function calls a public function directly.",
-          "type": "Type 2"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.shared.write_widget_metadata_row",
-      "violation_details": [
-        "Shared function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 2"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -25634,24 +24431,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.widget_view_catalogue._build_catalogue_widget",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -25764,24 +24561,24 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
         {
-          "detail": "Private function calls a public function directly.",
-          "type": "Type 3"
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
         }
       ],
+      "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
       "caller_qualified_name": "fabricops_kit.widgets.widget_view_catalogue._resolve_agreement_catalogue_scope",
-      "violation_details": [
-        "Private function calls a public function directly."
-      ],
-      "violation_types": [
-        "Type 3"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
