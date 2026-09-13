@@ -12,9 +12,9 @@ Check whether source timing satisfies direct or approved freshness intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_freshness.py:42`
+`fabricops_kit/pipeline/check_freshness.py:44`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L42-L189">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L44-L191">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,8 +37,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def check_freshness(
-    observation,
-    table_id: str | None=None,
+    table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
 ) -> dict:
@@ -50,10 +49,7 @@ def check_freshness(
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table(
-...     table_id=source_table_id, target_table_id=target_table_id,
-... )
->>> result = check_freshness(observation)
+>>> result = check_freshness(source_result["table_id"])
 
 </div>
 
@@ -61,8 +57,7 @@ def check_freshness(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
-| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, it must match the identity carried by the observation. |
+| `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
 | `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking freshness result cannot continue. |
 

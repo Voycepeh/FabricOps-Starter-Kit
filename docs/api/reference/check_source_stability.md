@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Detect mutation of previously processed source data and validate compatibility with the governed target load strategy.
+Validate source changes against one target consumption baseline and load strategy.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_stability.py:303`
+`fabricops_kit/pipeline/check_source_stability.py:11`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L303-L351">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L11-L77">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,7 +36,11 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_source_stability(observation, *, target_table_id: str) -> dict
+def check_source_stability(
+    table_id: str,
+    target_table_id: str,
+    raise_on_failure: bool=False,
+) -> dict:
 ```
 
 </div>
@@ -45,13 +49,12 @@ def check_source_stability(observation, *, target_table_id: str) -> dict
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table(
-...     table_id=source_table_id,
-...     target_table_id="lakehouse:unified:dbo:orders",
+>>> result = check_source_stability(
+...     source_result["table_id"],
+...     target_table_id=target_table_id,
 ... )
->>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")
->>> result["load_strategy"]
-'append'
+>>> result["target_table_id"] == target_table_id
+True
 
 </div>
 
@@ -59,8 +62,9 @@ def check_source_stability(observation, *, target_table_id: str) -> dict
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
-| `target_table_id` | `str` | Yes | Governed target identity whose frozen Data Contract supplies the authoritative load strategy. |
+| `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
+| `target_table_id` | `str` | Yes | Canonical governed target identity whose consumption baseline and load strategy determine Source Stability compatibility. |
+| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking result cannot continue. |
 
 ## Returns
 
@@ -69,22 +73,20 @@ First-observation, changed or unchanged, and new, changed, removed, or reappeare
 ## Raises / Errors
 
 ValueError
-    If the observation, Source Stability rule, or target processing is invalid.
+    If either identity, transient observation, rule, or target processing
+    definition is invalid.
+RuntimeError
+    If metadata history cannot be read, or ``raise_on_failure=True`` and
+    the target cannot safely reconcile the observed source change.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-The comparison baseline is the latest ``committed`` row in
-``METADATA_SOURCE_OBSERVATION`` for the active logical notebook name,
-source ``table_id``, and ``target_table_id``. Raw ``observed`` rows from
-failed attempts or other relationships are not baselines.
-
-New source data is compatible with append. Mutation, removal, or
-reappearance of previously processed data violates append stability;
-overwrite, SCD1, and SCD2 report that evidence as compatible because their
-governed write semantics can reconcile it. This Guardrail detects and
-validates evidence; it does not execute the load strategy.
+Normal notebook orchestration does not call this function directly.
+:func:`pipeline_write` evaluates it for every explicit ``source_table_id``
+before physical publication. A successful write then commits the new
+source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
 
 </div>
 

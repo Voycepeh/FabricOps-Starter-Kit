@@ -1,5 +1,6 @@
 """Public source freshness guardrail check."""
 
+from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
@@ -14,6 +15,7 @@ from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import (
     guardrail_compatibility_observation,
     observation_rows,
+    get_current_source_observation,
 )
 
 _OBSERVATION_COLUMNS = {
@@ -40,9 +42,8 @@ def _is_source_observation(observation) -> bool:
 
 
 def check_freshness(
-    observation,
+    table_id: str,
     *,
-    table_id: str | None = None,
     enabled: bool = True,
     raise_on_failure: bool = False,
 ) -> dict:
@@ -50,11 +51,8 @@ def check_freshness(
     
     Parameters
     ----------
-    observation : pyspark.sql.DataFrame
-        Canonical evidence returned by :func:`observe_table`.
-    table_id : str, optional
-        Canonical registered table identity. When supplied, it must match the
-        identity carried by the observation.
+    table_id : str
+        Canonical governed source identity returned by :func:`pipeline_read`.
     enabled : bool, default=True
         Explicitly disable this check when ``False``. Normally omit this value;
         FabricOps enforces the resolved pipeline Data Contract automatically.
@@ -83,16 +81,21 @@ def check_freshness(
     
     Examples
     --------
-    >>> observation = observe_table(
-    ...     table_id=source_table_id, target_table_id=target_table_id,
-    ... )
-    >>> result = check_freshness(observation)
+    >>> result = check_freshness(source_result["table_id"])
 
     """
     if not enabled:
         return {"status": "skipped", "can_continue": True, "checks": []}
+    config, env, context = resolve_fabric_context()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    requested_table_id = str(table_id).strip()
+    observation = get_current_source_observation(
+        environment_name=env,
+        activity_id=str(audit["_activity_id"]),
+        table_id=requested_table_id,
+    )
     if not _is_source_observation(observation):
-        raise ValueError("observation must be canonical evidence returned by observe_table()")
+        raise ValueError("pipeline_read() captured invalid source observation state")
     rows = observation_rows(observation)
     if not rows:
         raise ValueError("observation must contain at least one canonical evidence row")
@@ -106,13 +109,12 @@ def check_freshness(
     if any(str(row.get("environment_name") or "") != environment_name for row in rows):
         raise ValueError("observation dataframe must contain one shared environment_name")
 
-    config, env, context = resolve_fabric_context()
     if environment_name != env:
         raise ValueError(
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
-    requested_table_id = str(table_id or observed_table_id).strip()
+    requested_table_id = str(table_id).strip()
     if requested_table_id != observed_table_id:
         raise ValueError(
             f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."

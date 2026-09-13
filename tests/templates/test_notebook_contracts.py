@@ -217,9 +217,9 @@ def test_02_pipeline_is_a_sequential_engineering_notebook():
     headings = (
         "# 0. Environment",
         "# 1. Data Contracts",
-        "# 2. Target",
-        "# 3. Read",
-        "# 4. Transform",
+        "# 2. Read",
+        "# 3. Transform",
+        "# 4. Target",
         "# 5. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
@@ -280,20 +280,17 @@ def test_02_pipeline_profiles_each_governed_physical_source_by_identity():
         assert 'display(profile["profile"])' in block
 
 
-def test_02_pipeline_source_observation_and_guardrails_remain_explicit():
+def test_02_pipeline_source_guardrails_remain_explicit():
     """Each Read block visibly guards contract-driven source checks; Write owns target checks."""
     for index in (1, 2, 3):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
         assert 'if read_result["has_contract"]:' in block
-        assert "observation = observe_table(" in block
-        assert "table_id=table_id" in block
-        assert "target_table_id=WRITE_TABLE_ID" in block
-        assert "check_freshness(observation, raise_on_failure=True)" in block
-        assert "check_source_stability(" in block
+        assert "observe_table" not in block
+        assert "check_freshness(table_id, raise_on_failure=True)" in block
+        assert "check_source_stability" not in block
         assert "schema_result = check_schema(table_id, dataframe=df, raise_on_failure=True)" in block
         assert "dq_result = check_dq(df, table_id=table_id, raise_on_failure=True)" in block
         assert "Governed checks skipped" in block
-        assert "METADATA_SOURCE_OBSERVATION" in block
         assert "METADATA_GUARDRAIL_RESULTS" in block
         assert "METADATA_DATA_CATALOGUE" in block
         assert "METADATA_DATA_PROFILED" in block
@@ -318,16 +315,16 @@ def test_02_pipeline_transform_directly_uses_named_project_dataframes():
     assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_target_is_defined_before_read_for_current_stability_api():
-    """Target is temporarily defined before Read because current Source Stability requires it."""
+def test_02_pipeline_target_is_defined_after_read_and_transform():
+    """Target configuration follows source reads and project transformation."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     cell_ids = [cell.get("id") for cell in notebook.cells]
     config = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
-    assert cell_ids.index("pipeline-target") < cell_ids.index("read-1")
+    assert cell_ids.index("pipeline-target") > cell_ids.index("transform")
     for setting in ("WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
         assert f"{setting} =" in config
     assert "resolve_table_id(" in config
-    assert "current Source Stability requires target_table_id" in config
+    assert "target_table_id" not in config
     assert "WRITE_LOAD_STRATEGY_PARAMETERS" not in _notebook_source("02_pipeline.ipynb")
     assert "load_strategy_parameters=" not in _notebook_source("02_pipeline.ipynb")
 
