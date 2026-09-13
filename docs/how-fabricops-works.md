@@ -64,55 +64,80 @@ The rest of this page zooms into that picture without changing the story.
 
 ## How do code-first pipelines work across Fabric stores?
 
-**A Fabric notebook is very convenient when everything lives in one attached Lakehouse or Warehouse. Code-first ETL becomes harder when the same pipeline needs to move data across several Fabric stores and environments.**
+**A Fabric notebook is very convenient when everything lives in one attached Lakehouse or Warehouse. Code-first ETL becomes harder when one pipeline needs to read from several Fabric stores and still stay portable between environments.**
 
-With one default attached store, Fabric already gives a very natural notebook experience. Files and tables are easy to browse, reference, and use from the notebook without repeatedly describing where they live.
+With one default attached store, Fabric already gives a natural notebook experience. Files and tables are easy to browse and use. Traditional ETL is rarely that simple: one pipeline often reads from one store, enriches from another, transforms the combined data, and writes somewhere else.
 
-Real ETL rarely stays inside one store. A pipeline commonly reads from one data store, transforms the data, and writes to another. It may also need to move between Development and Production without changing the engineering logic.
+FabricOps keeps that multi-store wiring out of the project transformation code. `00_env_config` gives each Fabric store a stable logical name. In `02_pipeline`, the engineer describes the source once and calls `pipeline_read()`.
 
-At the time of writing, Fabric does not provide the same simple notebook-level abstraction for a code-first pipeline that needs to resolve two or more arbitrary Fabric stores. Without another layer, projects tend to repeat workspace IDs, item IDs, ABFSS paths, or connection details throughout their code. That makes otherwise reusable pipeline logic environment-specific.
+A typical Read block looks like this:
 
-FabricOps solves that problem with **configuration-driven engineering**. The idea is inspired by the configuration files commonly used in software engineering: give a resource a stable logical name once, then let application code refer to that name instead of embedding its physical location everywhere.
+```python
+read_result = pipeline_read(
+    store="source",
+    schema="demo",
+    table_name="orders",
+    query=None,
+)
 
-In FabricOps, `00_env_config` is that configuration surface. You define the Fabric stores available in the current environment once. Pipeline code then passes the configured store name into FabricOps public functions, and FabricOps resolves the physical Fabric resource for you.
+read_df = read_result["dataframe"]
+READ_TABLE_ID = read_result["table_id"]
+```
+
+`pipeline_read()` then handles the mechanical routing that the notebook should not have to repeat.
+
+### See what `pipeline_read()` actually does
+
+**Questions this diagram answers:**
+
+- What does `02_pipeline` give to `pipeline_read()`?
+- How does FabricOps resolve the canonical `table_id` and physical store?
+- When does it call the Lakehouse reader versus a Warehouse reader?
+- Where does a Warehouse SQL query fit?
+- What comes back to the notebook?
+- What stays explicit outside `pipeline_read()`?
 
 ```mermaid
 flowchart TD
-    STORE["Store name used by 02_pipeline"] --> CONFIG["00_env_config"]
-    CONFIG --> RESOLVE["Resolve Fabric store type + physical location"]
-    RESOLVE --> TYPE{"Fabric store type"}
-    TYPE -->|Lakehouse| LH["PySpark / ABFSS access"]
-    TYPE -->|Warehouse| WH["SQL pushdown"]
-    LH --> DF["PySpark DataFrame"]
-    WH --> DF
-    DF --> TRANSFORM["Project transformations in PySpark"]
+    NB["02_pipeline Read block<br/>store + schema + table_name<br/>optional query"] --> PR["pipeline_read()"]
+
+    PR --> CTX["Resolve 00_env_config<br/>and Fabric context"]
+    CTX --> ID["Resolve canonical table_id<br/>and physical source identity"]
+    ID --> KIND{"Resolved store type"}
+
+    KIND -->|Lakehouse| LH["read_lakehouse_table()"]
+    KIND -->|Warehouse<br/>no query| WT["read_warehouse_table()"]
+    KIND -->|Warehouse<br/>query supplied| WQ["read_warehouse_query()"]
+
+    LH --> LIN["Register source participation<br/>in Data Lineage"]
+    WT --> LIN
+    WQ --> LIN
+
+    LIN --> OUT["Return<br/>dataframe + table_id<br/>is_query + has_contract"]
+    OUT --> EXPLICIT["02_pipeline continues explicitly<br/>observe + checks + profile + PySpark transform"]
 ```
 
-For a **Lakehouse**, FabricOps resolves the configured store to the appropriate Fabric/ABFSS location and uses the PySpark path naturally supported by Fabric notebooks.
+This is the important distinction: **`pipeline_read()` is an orchestration function, not the ETL itself.** It resolves identity, chooses the correct foundational reader, records source participation in Lineage, and returns a small result to the notebook.
 
-For a **Warehouse**, the challenge is different. PySpark works natively with Lakehouse storage, but a Fabric Warehouse is optimized for the SQL engine. Accessing Warehouse data from a PySpark notebook introduces a translation layer between the Warehouse execution path and Spark. For regular ETL pipelines, especially as datasets grow, repeatedly translating Warehouse data into Spark can become slow and inefficient.
+For a **Lakehouse table**, it routes to `read_lakehouse_table()`. Spark is the natural execution path for Lakehouse data.
 
-FabricOps therefore uses **SQL pushdown for Warehouse sources**. Reads, filtering, aggregation, profiling, and other source-side work can execute in the Warehouse engine first, before the required result is returned into the PySpark workflow.
+For a **Warehouse table**, it routes to `read_warehouse_table()`. When Engineering supplies project-owned SQL through `query=...`, it instead routes to `read_warehouse_query()`, allowing filtering, aggregation, projection, or other source-side SQL work to happen in the Warehouse before the result enters the PySpark workflow.
 
-Once the data reaches the transformation stage, the engineering model stays simple: **project transformations are written in PySpark**.
+That query path matters because Warehouse and Spark use different execution paths. On larger ETL workloads, translating more Warehouse data than necessary into Spark can become expensive. SQL pushdown lets Engineering reduce or shape the source in the Warehouse when that is the better execution path.
 
-The execution model is therefore:
+After `pipeline_read()` returns, the notebook owns the meaningful engineering decisions. Source observation, Freshness, Source Stability, Schema checks, Data Quality checks, profiling, and project transformations remain visible in `02_pipeline`. **Project transformations are written in PySpark.**
 
-**Lakehouse → PySpark directly**  
-**Warehouse → SQL pushdown → PySpark DataFrame**  
-**Transformation → PySpark**
+The same Read block can therefore point at different physical Fabric resources in Development and Production through `00_env_config`, while the pipeline code continues to describe the logical source rather than hard-coding workspace IDs, item IDs, or physical paths.
 
-The same logical store names can then resolve to different physical Fabric resources in Development and Production. `02_pipeline` stays focused on engineering logic while `00_env_config` owns the environment-specific wiring.
+??? info "Read more: why the Warehouse query path exists"
 
-??? info "Read more: why SQL pushdown for Warehouse sources?"
+    PySpark works naturally with Lakehouse data because Spark can operate against the Lakehouse storage layer. A Fabric Warehouse is optimized around its SQL execution engine.
 
-    PySpark works naturally with Lakehouse data because Spark can operate directly against the Lakehouse storage layer. Warehouse sources use a different execution engine, so bringing Warehouse data into a PySpark notebook requires translation between the SQL and Spark execution paths.
+    `pipeline_read()` does not blindly force every Warehouse source through SQL. A normal Warehouse table read uses `read_warehouse_table()`. Engineering can supply `query=...` when source-side SQL pushdown is useful, and `pipeline_read()` then routes that source through `read_warehouse_query()` before returning the resulting Spark DataFrame.
 
-    On regular ETL workloads, especially with larger datasets, that translation can become a significant performance cost. FabricOps keeps the pipeline PySpark-first for transformation while using SQL pushdown for Warehouse reads and source-side operations so the Warehouse engine does the work it is optimized for before returning the result to Spark.
+    This keeps one governed Read interface while still allowing the execution path to match the underlying Fabric store.
 
-    This is still one FabricOps workflow. Configuration, metadata capture, Data Contract resolution, and governed validation remain the same regardless of which source execution path is used.
-
-    [How does configuration-driven resolution work in detail?](reference/engineering-cheat-sheet.md#config-driven-engineering)
+    [What does `pipeline_read()` do in the function reference?](api/reference/pipeline_read.md)
 
 </div>
 
