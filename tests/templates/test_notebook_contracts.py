@@ -342,7 +342,7 @@ def test_02_pipeline_write_is_compact_and_profiles_persisted_target():
         "check_schema(",
         "check_dq(",
         "check_sensitive_data(",
-        "pipeline_write(",
+        "write_result = pipeline_write(",
         'write_profile = profile_table(table_id=write_result["table_id"])',
         'display(write_profile["profile"])',
         '# catalogue_widget["show"](table_id=write_result["table_id"])',
