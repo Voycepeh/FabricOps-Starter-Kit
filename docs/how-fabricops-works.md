@@ -151,23 +151,20 @@ This gives `02_pipeline` a consistent shape without turning it into a black box:
 
 ## Where does Governance enter the engineering flow?
 
-**Engineering produces the actual data first. FabricOps then turns what it observes into governance context.**
+**Engineering produces the physical table. Profiling makes that table visible to Governance, and the Data Contract turns Governance decisions back into executable checks.**
 
-In `02_pipeline`, Engineering reads the source data, transforms it, and writes the actual target table. FabricOps keeps the physical output tied to its governed `table_id`, Lineage, and runtime context.
-
-[`profile_table()`](api/reference/profile_table.md) profiles the actual governed tables in their respective Fabric data stores and updates the **Data Catalogue** plus profiling metadata.
+[`profile_table()`](api/reference/profile_table.md) profiles the actual table in its Lakehouse or Warehouse and writes the observed structure and statistics into the **Data Catalogue** and profiling metadata.
 
 ```mermaid
-flowchart LR
-    TABLES["Actual tables<br/>in Fabric stores"] --> PROFILE["profile_table()"]
-    PROFILE --> CATALOGUE["Data Catalogue + Profile"]
-    CATALOGUE --> GOV["01_governance"]
-    GOV --> CONTRACT["Data Contract"]
+flowchart TD
+    TABLE["Table in Lakehouse or Warehouse"] --> PROFILE["profile_table()"]
+    PROFILE --> CATALOGUE["Data Catalogue"]
+    CATALOGUE --> GOVERNANCE["Governance adds<br/>Enrichment + Guardrails"]
+    GOVERNANCE --> CONTRACT["Freeze Data Contract"]
+    CONTRACT --> ETL["ETL validates runs<br/>against the Data Contract"]
 ```
 
-Governance reads from the **Data Catalogue**, which represents the actual governed tables in their respective Fabric data stores. This gives Governance the real `table_id`, column structure, data types, and profiling context for the tables Engineering produced.
-
-Governance then authors the Data Contract against that governed table identity rather than against a separate or manually recreated definition.
+Governance reads the actual governed table through its Data Catalogue entry, adds **Enrichment** and **Guardrails**, then freezes those decisions into a versioned **Data Contract**. Engineering selects that frozen contract in Development, and Production resolves the active contract, so the ETL can validate real runs against the governed definition.
 
 `01_governance` can also establish the **Data Steward** and **Data Agreement** around that governed asset. Fabric AI Functions can optionally use the Catalogue and profiling context to suggest descriptions and classifications, which Governance reviews and edits before they become part of the governed definition.
 
