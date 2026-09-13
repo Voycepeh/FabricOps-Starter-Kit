@@ -13,7 +13,9 @@ Profile a Spark DataFrame or complete governed table with one PySpark API.
 <div class="reference-docstring-intro" markdown="1">
 
 FabricOps calculates the canonical statistical profile and applicable
-frequency distribution with PySpark. An identity may be supplied as a
+frequency distribution close to the data. Supplied DataFrames and physical
+Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
+An identity may be supplied as a
 canonical ``table_id`` or as ``target``, optional ``schema``, and
 ``table_name``. When an identity is present, FabricOps associates the
 result with that governed table and persists Catalogue, profile, and
@@ -25,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:479`
+`fabricops_kit/pipeline/profile_table.py:648`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L479-L698">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L648-L884">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -124,9 +126,9 @@ Raises ValueError for missing or conflicting identity inputs and invalid frequen
 The orchestration performs these mechanical steps:
 
 1. Validate and resolve the optional canonical governed identity.
-2. Use the supplied DataFrame exactly, or read the complete physical table
-   through the resolved Lakehouse or Warehouse reader.
-3. Calculate canonical statistical metrics with PySpark.
+2. Use the supplied DataFrame exactly, read a physical Lakehouse table into
+   Spark, or keep physical Warehouse aggregation in Warehouse SQL.
+3. Calculate canonical statistical metrics with the selected backend.
 4. Select eligible frequency columns and calculate exact grouped counts,
    including null as a frequency value.
 5. When governed, create stable table and column identities, append
@@ -155,7 +157,7 @@ The orchestration performs these mechanical steps:
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 59 |
+| Live-critical dependencies | 71 |
 
 ### Release history
 
@@ -192,6 +194,7 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
@@ -200,12 +203,16 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.read_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
+<li><code>fabricops_kit.io.shared.read_warehouse_query_core</code></li>
+<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
@@ -216,7 +223,14 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.pipeline.profile_table._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._sql_identifier</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._sql_string</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._upsert_catalogue_identities</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_profile_dataframes</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>

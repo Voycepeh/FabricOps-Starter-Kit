@@ -47,6 +47,10 @@ Freshness asks whether the source is recent enough. Source Stability asks whethe
 
 A normal complete-table source read can refresh the canonical registered source Profile. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_table(dataframe=df)` for diagnostic profiling instead of registering it as the canonical physical-table profile.
 
+FabricOps keeps profiling close to the underlying data. Physical Lakehouse tables are profiled with PySpark, while physical Warehouse tables use SQL pushdown to avoid unnecessary full-table materialization in Spark. FabricOps still runs through PySpark notebooks and chooses this profiling engine from the governed physical identity; users continue to call the same `profile_table(...)` API and do not select an engine manually.
+
+Any caller-supplied DataFrame is always profiled with PySpark, including a filtered or incremental batch returned by a custom Warehouse query. Omitting `dataframe` and supplying that Warehouse table's governed identity instead profiles the complete physical Warehouse table with SQL pushdown. Both routes normalize to the same Profile and Frequency Profile structures before FabricOps updates `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, and `METADATA_DATA_PROFILED_FREQUENCY`.
+
 ## Review the completed run
 
 After the baseline pipeline succeeds, confirm that the target exists and that `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records were written.
