@@ -19,7 +19,7 @@
 }
 </style>
 
-If you have watched the FabricOps overview video, this page is the same story with more depth. It explains the operating model and why the pieces fit together. The [Guided Demo](guided-demo.md) is where you actually configure and run the workflow.
+If you have watched the FabricOps overview video, this page is the same story with more depth. It explains how the pieces fit together and why the workflow is structured this way. The [Guided Demo](guided-demo.md) is where you actually configure and run it.
 
 <div class="fabricops-section-block" markdown>
 
@@ -40,9 +40,21 @@ FabricOps packages that operating pattern around four reusable notebooks:
 
 The notebooks are supported by the FabricOps package: reusable public functions and widgets provide the repeatable pieces, while the project keeps its own transformation logic.
 
+### See the whole operating model
+
+**Questions this diagram answers:**
+
+- Where do Governance, Engineering Development, Engineering Production, and project-specific consumers sit?
+- Which notebooks belong in each workspace?
+- Where does the shared Metadata Lakehouse fit?
+- What is promoted to Production?
+- Where are approved outputs consumed from?
+
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-The result is a standardized flow from **configuration → engineering → governance → validation → Production → consumption**, rather than a collection of disconnected notebooks.
+Read it from top to bottom. Governance defines and versions governed expectations. Engineering Development builds and validates the implementation. The validated `02_pipeline` is promoted to Engineering Production, where active contracts are resolved and governed outputs are produced. Project-specific consumers then use approved Production data through `99_explore`.
+
+The rest of this page zooms into that picture without changing the story.
 
 </div>
 
@@ -191,19 +203,28 @@ Guardrail Results
 
 That is the core **Governance as Code** idea in FabricOps. Governance definitions are connected to executable engineering behavior through the Data Contract rather than remaining a separate policy document.
 
-??? info "Read more: what belongs to Enrichment and Guardrails"
+??? info "Read more: what exactly is authored and activated?"
+
+    ```mermaid
+    flowchart LR
+        subgraph AUTHOR[Author]
+            TABLE["table_id"] --> CONTRACT["Data Contract version"]
+            CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
+            CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Source Stability<br/>Data Quality · Sensitive Data"]
+            CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
+        end
+        subgraph ACTIVATE[Activate]
+            TESTED["Tested frozen Data Contract version"] --> LINK["Explicit linkage"]
+            AGREEMENT["Data Agreement version"] --> LINK
+            LINK --> ACTIVE["ACTIVE for Production"]
+        end
+    ```
 
     **Enrichment** is descriptive. It helps people and downstream systems understand what the table and columns mean and how the information is classified.
 
     **Guardrails** are enforceable expectations. Examples include schema expectations, freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
 
-    Freshness asks whether incoming source data is recent enough. Source Stability asks whether data already observed by the pipeline changed unexpectedly. The target load strategy determines whether such historical change is compatible with the governed processing definition.
-
-??? info "Read more: why freeze before activation"
-
-    Authoring and activation are deliberately separate Governance decisions. A frozen version gives Engineering Development an immutable definition to test. If the contract needs refinement, Governance authors another version and Engineering validates again.
-
-    Only after the selected frozen version has been tested does Governance explicitly link the exact Data Agreement version and activate the contract for Production.
+    Authoring and activation are deliberately separate Governance decisions. A frozen version gives Engineering Development an immutable definition to test. Only after the selected frozen version has been tested does Governance explicitly link the exact Data Agreement version and activate the contract for Production.
 
 </div>
 
@@ -213,9 +234,20 @@ That is the core **Governance as Code** idea in FabricOps. Governance definition
 
 **Because a governed expectation should be tested against the real engineering implementation before it becomes the active Production definition.**
 
+### See the Governance and Engineering loop
+
+**Questions this diagram answers:**
+
+- What happens first in Governance and Engineering Development?
+- Where is the Data Contract authored?
+- Why do steps 3 and 4 repeat?
+- What is activated before Production runs?
+- What is promoted into Engineering Production?
+- Where do consumers enter the flow?
+
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-The loop is easier to understand as one story:
+Read the numbered stages as one controlled feedback loop:
 
 1. Governance establishes the Data Stewards and Data Agreement.
 2. Engineering Development builds the ETL, produces the governed table, and records Catalogue, profiling, Lineage, and runtime observations.
@@ -223,11 +255,19 @@ The loop is easier to understand as one story:
 4. Engineering Development selects that frozen version and validates its Guardrails against the real pipeline.
 5. If the definition needs refinement, Governance and Engineering repeat the author-and-validate loop.
 6. Governance links the tested contract to the Data Agreement and activates it.
-7. Engineering promotes the validated `02_pipeline` and Production runs against the active contract.
+7. Engineering promotes the validated `02_pipeline`, Production runs against the active contract, and consumers use the approved result.
 
 This is not Governance handing Engineering a document once. It is a controlled feedback loop between what Governance expects and what Engineering actually observes and executes.
 
 ??? info "Read more: how Development and Production resolve contracts"
+
+    ```mermaid
+    flowchart LR
+        NB["notebook_id"] --> LIN["METADATA_DATA_LINEAGE"]
+        LIN --> T["linked table_id values"]
+        T --> DEV["Development<br/>select frozen version per table_id"]
+        T --> PROD["Production<br/>resolve active version per table_id"]
+    ```
 
     Development uses notebook Lineage to discover linked `table_id` values and lets the developer select one exact frozen contract version for each governed table being validated.
 
@@ -281,17 +321,31 @@ The consumer workspace does not need its own copy of the governed ETL just to us
 
 **The Metadata Lakehouse carries the shared FabricOps context, with a clear ownership boundary between Governance definitions and Engineering/runtime evidence.**
 
+### See the metadata ownership model
+
+**Questions this diagram answers:**
+
+- Which metadata belongs to the Governance schema?
+- Which metadata is written by Engineering/runtime?
+- How does `table_id` connect the governed asset across both sides?
+- How do Data Contracts own Enrichment and Guardrails?
+- Where do profiling, Lineage, Source Observation, access, and Guardrail Results live?
+
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-Governance writes authoritative definitions in the `governance` schema. Engineering/runtime writes discovered metadata, execution observations, and results in the `engineering` schema. Engineering can read Governance definitions during pipeline execution without taking ownership of them.
+The purple Governance area contains authoritative definitions: Data Stewards, Data Agreements, Data Contracts, Enrichment, and Guardrails. The blue Engineering area contains what Engineering discovers or records while the workflow runs: Catalogue, profiles, Lineage, Source Observation, access, and Guardrail Results.
 
-The governed output table itself is project-owned physical data rather than FabricOps metadata. Optional support data such as Data Quality failed rows or Sensitive Data token mappings remains caller-owned; FabricOps does not automatically turn failing business rows into metadata records or prescribe a mandatory persistence location for that support data.
+The bridge between those areas is the governed asset identity. `table_id` anchors the physical table in Engineering metadata and lets the selected Data Contract attach the governed definition to that same asset.
 
-??? info "Read more: why table_id matters"
+Engineering can read Governance definitions during pipeline execution without taking ownership of them. The governed output table itself is project-owned physical data rather than FabricOps metadata.
 
-    `table_id` anchors the governed data asset across the workflow. Engineering metadata describes that asset directly. The Data Contract binds the Governance definition to the same asset, and contract-owned Enrichment and Guardrails resolve through the selected contract version.
+??? info "Read more: what is not stored as FabricOps metadata"
 
-    `METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not copies of the failing business rows. For exact schemas, ownership, and field definitions, use the [Metadata Tables reference](reference/metadata.md).
+    Optional support data such as Data Quality failed rows or Sensitive Data token mappings remains caller-owned. FabricOps does not automatically turn failing business rows into metadata records or prescribe a mandatory persistence location for that support data.
+
+    `METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not copies of the failing business rows.
+
+    For exact schemas, ownership, and field definitions, use the [Metadata Tables reference](reference/metadata.md).
 
 </div>
 
