@@ -101,7 +101,7 @@ Each Read block is designed to be **fully clonable**. Copy the whole block, chan
 
 After the source is read, the Read block keeps the governed checks and profiling explicit:
 
-- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md)
+- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md)
 - enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
 - profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
@@ -127,6 +127,7 @@ The target identity is resolved with [`resolve_table_id()`](api/reference/resolv
 
 The surrounding Write block keeps the important target decisions explicit and in sequence:
 
+- enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
 - enforce target Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md); when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
