@@ -148,7 +148,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'check_schema',
         'check_freshness',
             'check_source_stability',
-            'observe_table',
             'check_dq',
             'check_sensitive_data',
         'profile_table',

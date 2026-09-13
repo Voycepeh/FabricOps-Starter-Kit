@@ -24,9 +24,9 @@ choose between Lakehouse and Warehouse table readers.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:17`
+`fabricops_kit/pipeline/pipeline_read.py:18`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L209">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L18-L214">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -130,8 +130,10 @@ The governed orchestration performs these mechanical steps:
 3. Infer whether that configured source is a Lakehouse or Warehouse.
 4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
    ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
-5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
-6. Return the DataFrame, explicit ``table_id``, and small source metadata
+5. Capture transient current-run Source Observation state when a Data
+   Contract applies, without advancing ``METADATA_SOURCE_OBSERVATION``.
+6. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
+7. Return the DataFrame, explicit ``table_id``, and small source metadata
    required by the notebook.
 
 Higher-level governed pipeline code normally uses ``pipeline_read``.
@@ -141,8 +143,8 @@ general-purpose Fabric reads that do not need pipeline orchestration.
 Files do not have a canonical ``table_id`` and should continue to use the
 foundational CSV, Excel, JSON, or Parquet readers directly.
 
-This function does not execute source observation, Freshness, Source
-Stability, Schema, DQ, or Sensitive Data checks. It also does not profile
+This function does not execute Freshness, Source Stability, Schema, DQ, or
+Sensitive Data checks. It also does not profile
 data, transform rows, or write a pipeline target. Those meaningful
 engineering decisions remain explicit in ``02_pipeline``.
 

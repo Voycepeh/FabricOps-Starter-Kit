@@ -1,12 +1,12 @@
 """Public Source Stability Guardrail check."""
 
-from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table
 
 import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.pipeline.shared import (
     evaluate_source_stability_guardrail,
@@ -17,6 +17,7 @@ from fabricops_kit.pipeline.shared import (
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import observation_rows
+from fabricops_kit.pipeline.shared import get_current_source_observation, set_current_source_observation
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _OBSERVATION_COLUMNS = {
@@ -44,23 +45,18 @@ def _is_source_observation(observation) -> bool:
 
 
 def _previous_observation(
-    history, *, source_table_id: str, target_table_id: str, notebook_name: str,
-    environment_name: str, committed_at, observation_id: str | None = None
+    history, *, source_table_id: str, environment_name: str, committed_at
 ) -> list[dict[str, Any]]:
-    """Return the latest committed observation for one logical relationship."""
+    """Return the latest committed observation for one governed source."""
     if hasattr(history, "where") and hasattr(history, "agg"):
         from pyspark.sql import functions as F
 
         comparable = history.where(
             (F.col("source_table_id") == source_table_id)
-            & (F.col("target_table_id") == target_table_id)
-            & (F.col("_notebook_name") == notebook_name)
             & (F.col("environment_name") == environment_name)
             & (F.col("observation_status") == "committed")
             & (F.col("_committed_at") < F.lit(committed_at))
         )
-        if observation_id is not None:
-            comparable = comparable.where(F.col("observation_id") == observation_id)
         timestamp_rows = comparable.agg(F.max("_committed_at").alias("previous_committed_at")).collect()
         previous_at = timestamp_rows[0]["previous_committed_at"] if timestamp_rows else None
         if previous_at is None:
@@ -87,12 +83,9 @@ def _previous_observation(
         row
         for row in observation_rows(history)
         if str(row.get("source_table_id") or "") == source_table_id
-        and str(row.get("target_table_id") or "") == target_table_id
-        and str(row.get("_notebook_name") or "") == notebook_name
         and str(row.get("environment_name") or "") == environment_name
         and str(row.get("observation_status") or "") == "committed"
         and row.get("_committed_at") < committed_at
-        and (observation_id is None or str(row.get("observation_id") or "") == observation_id)
     ]
     previous_at = max((row["_committed_at"] for row in candidates), default=None)
     return [row for row in candidates if row["_committed_at"] == previous_at]
@@ -100,8 +93,6 @@ def _previous_observation(
 
 def _observation_stability(
     observation,
-    *,
-    target_table_id: str,
 ) -> dict:
     """Return persisted change evidence for one canonical source observation."""
     current = observation_rows(observation)
@@ -109,14 +100,13 @@ def _observation_stability(
         raise ValueError("observation dataframe must contain at least one row")
 
     observed_table_id = str(current[0].get("source_table_id") or "")
-    observed_target_table_id = str(current[0].get("target_table_id") or "")
     environment_name = str(current[0].get("environment_name") or "")
     observation_id = str(current[0].get("observation_id") or "")
     committed_at = current[0]["_committed_at"]
     activity_id = str(current[0].get("_activity_id") or "")
-    if not observed_table_id or not observed_target_table_id or not observation_id or not environment_name or not activity_id:
+    if not observed_table_id or not observation_id or not environment_name or not activity_id:
         raise ValueError(
-            "observation dataframe must contain source_table_id, target_table_id, observation_id, environment_name, and _activity_id"
+            "observation dataframe must contain source_table_id, observation_id, environment_name, and _activity_id"
         )
     if any(row["_committed_at"] != committed_at for row in current):
         raise ValueError("observation dataframe must contain one shared _committed_at snapshot")
@@ -126,8 +116,6 @@ def _observation_stability(
         raise ValueError("observation dataframe must contain one shared observation_id")
     if any(str(row.get("source_table_id") or "") != observed_table_id for row in current):
         raise ValueError("observation dataframe must contain one shared source_table_id")
-    if any(str(row.get("target_table_id") or "") != observed_target_table_id for row in current):
-        raise ValueError("observation dataframe must contain one shared target_table_id")
     if any(str(row.get("environment_name") or "") != environment_name for row in current):
         raise ValueError("observation dataframe must contain one shared environment_name")
     if any(str(row.get("observation_status") or "") != "observed" for row in current):
@@ -144,25 +132,19 @@ def _observation_stability(
         config, env, source_table_id, spark_session=spark_session, context=context,
     )
     table_id = identity["table_id"]
-    target_identity = resolve_catalogue_table_identity(
-        config, env, str(target_table_id).strip(), spark_session=spark_session, context=context,
-    )
-    if observed_target_table_id != str(target_identity["table_id"]):
-        raise ValueError("observation target_table_id does not match the governed target_table_id.")
     authored_processing = {
-        **json.loads(target_identity.get("load_strategy_parameters_json") or "{}"),
-        "load_strategy": target_identity.get("load_strategy"),
+        **json.loads(identity.get("load_strategy_parameters_json") or "{}"),
+        "load_strategy": identity.get("load_strategy"),
     }
     processing = resolve_table_processing_definition(
         config,
         env,
-        target_identity["table_id"],
+        table_id,
         spark_session=spark_session,
         context=context,
         authored_processing=authored_processing,
     )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    notebook_name = str(audit.get("_notebook_name") or "").strip()
     metadata_schema = metadata_table_physical_schema(config, _OBSERVATION_TABLE)
     history = []
     try:
@@ -176,8 +158,6 @@ def _observation_stability(
         previous = _previous_observation(
             history,
             source_table_id=table_id,
-            target_table_id=str(target_identity["table_id"]),
-            notebook_name=notebook_name,
             environment_name=environment_name,
             committed_at=committed_at,
         )
@@ -220,18 +200,13 @@ def _observation_stability(
             }
             for value in removed
         ]
-        spark = getattr(observation, "sparkSession", None)
-        tombstone_df = spark.createDataFrame(
-            [coerce_metadata_row_types(_OBSERVATION_TABLE, row) for row in tombstones],
-            schema=metadata_table_schema_registry()[_OBSERVATION_TABLE],
-        )
-        write_lakehouse_table(
-            tombstone_df,
-            _OBSERVATION_TABLE,
-            store="metadata",
-            schema=metadata_schema,
-            context=context,
-            mode="append",
+        if hasattr(observation, "sparkSession"):
+            observation = observation.sparkSession.createDataFrame([*current, *tombstones])
+        else:
+            observation = [*current, *tombstones]
+        set_current_source_observation(
+            environment_name=env, activity_id=activity_id, table_id=table_id,
+            observation=observation,
         )
 
     rules_df = load_table_guardrail_rules(
@@ -254,7 +229,6 @@ def _observation_stability(
     has_changes = first_observation or bool(new or changed or removed or reappeared)
     result = {
         "table_id": table_id,
-        "target_table_id": target_identity["table_id"],
         "environment_name": environment_name,
         "observation_id": observation_id,
         "status": "changed" if has_changes else "unchanged",
@@ -300,22 +274,21 @@ def _observation_stability(
     return result
 
 
-def check_source_stability(observation, *, target_table_id: str) -> dict:
-    """Validate previously processed source data against the target load strategy.
+def check_source_stability(table_id: str, *, raise_on_failure: bool = False) -> dict:
+    """Validate previously processed source data against its governed load strategy.
     
     Parameters
     ----------
-    observation : pyspark.sql.DataFrame
-        Canonical evidence returned by :func:`observe_table`.
-    target_table_id : str
-        Governed target identity whose frozen Data Contract supplies the
-        authoritative load strategy.
+    table_id : str
+        Canonical governed source identity returned by :func:`pipeline_read`.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking result cannot continue.
     
     Returns
     -------
     dict
         Source Stability evidence and its compatibility with the governed
-        target load strategy. The function never writes target data.
+        source load strategy. The function never writes target data.
     
     Raises
     ------
@@ -325,9 +298,9 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
     Notes
     -----
     The comparison baseline is the latest ``committed`` row in
-    ``METADATA_SOURCE_OBSERVATION`` for the active logical notebook name,
-    source ``table_id``, and ``target_table_id``. Raw ``observed`` rows from
-    failed attempts or other relationships are not baselines.
+    ``METADATA_SOURCE_OBSERVATION`` for the source ``table_id`` and active
+    environment. Transient state from failed publication attempts is never a
+    committed baseline.
 
     New source data is compatible with append. Mutation, removal, or
     reappearance of previously processed data violates append stability;
@@ -337,15 +310,20 @@ def check_source_stability(observation, *, target_table_id: str) -> dict:
     
     Examples
     --------
-    >>> observation = observe_table(
-    ...     table_id=source_table_id,
-    ...     target_table_id="lakehouse:unified:dbo:orders",
-    ... )
-    >>> result = check_source_stability(observation, target_table_id="lakehouse:unified:dbo:orders")
+    >>> result = check_source_stability(source_result["table_id"])
     >>> result["load_strategy"]
     'append'
 
     """
+    config, env, context = resolve_fabric_context()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    requested_table_id = str(table_id).strip()
+    observation = get_current_source_observation(
+        environment_name=env, activity_id=str(audit["_activity_id"]), table_id=requested_table_id,
+    )
     if not _is_source_observation(observation):
-        raise ValueError("observation must be canonical evidence returned by observe_table()")
-    return _observation_stability(observation, target_table_id=target_table_id)
+        raise ValueError("pipeline_read() captured invalid source observation state")
+    result = _observation_stability(observation)
+    if raise_on_failure and not result.get("can_continue", False):
+        raise RuntimeError(str(result.get("reason") or "Source Stability check failed."))
+    return result

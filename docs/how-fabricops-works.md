@@ -101,7 +101,7 @@ Each Read block is designed to be **fully clonable**. Copy the whole block, chan
 
 Under the Read block, Engineering can keep the more advanced source work explicit when it is needed:
 
-- inspect the persisted source with [`observe_table()`](api/reference/observe_table.md)
+- read the governed source with [`pipeline_read()`](api/reference/pipeline_read.md), which captures transient Source Observation state
 - enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the target relationship is known
 - enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
 - profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
@@ -268,7 +268,7 @@ The main public functions line up with the metadata model like this:
 | Establish Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
 | Register and profile real tables | [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` |
 | Register pipeline participation | [`pipeline_read()`](api/reference/pipeline_read.md), [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_DATA_LINEAGE` |
-| Observe source state | [`observe_table()`](api/reference/observe_table.md), successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
+| Observe source state | [`pipeline_read()`](api/reference/pipeline_read.md), successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
 | Author the governed definition | [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
 | Activate the Production definition | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
 | Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_stability()`](api/reference/check_source_stability.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |

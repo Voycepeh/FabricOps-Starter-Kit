@@ -49,6 +49,7 @@ def _patch_read(monkeypatch, identity):
     monkeypatch.setattr(read_module, "resolve_catalogue_table_identity", lambda *_a, **_k: identity)
     monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
     monkeypatch.setattr(read_module, "persist_lineage_participation", lambda **_k: None)
+    monkeypatch.setattr(read_module, "capture_source_observation", lambda **_k: "observation")
     return context
 
 
@@ -83,6 +84,17 @@ def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
     read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
 
     assert capsys.readouterr().out == ""
+
+
+def test_pipeline_read_captures_transient_observation_for_governed_source(monkeypatch):
+    identity = _identity(store_type="lakehouse")
+    _patch_read(monkeypatch, identity)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_a, **_k: {"contract_id": "c"})
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
+    captured = []
+    monkeypatch.setattr(read_module, "capture_source_observation", lambda **kwargs: captured.append(kwargs))
+    read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
+    assert captured == [{"table_id": identity["table_id"]}]
 
 
 def test_pipeline_read_rejects_identity_conflict():

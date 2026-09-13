@@ -56,7 +56,6 @@ EXPECTED_V1_CALLABLES = [
     'check_schema',
     'check_freshness',
     'check_source_stability',
-    'observe_table',
     'check_dq',
     'check_sensitive_data',
     'profile_table',

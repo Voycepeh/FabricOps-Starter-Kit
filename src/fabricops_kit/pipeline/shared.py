@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 from functools import reduce
+from uuid import uuid4
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
     resolve_configured_lakehouse_table,
@@ -78,6 +79,26 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
+
+
+def set_current_source_observation(
+    *, environment_name: str, activity_id: str, table_id: str, observation: Any
+) -> None:
+    """Keep one source observation in private current-run pipeline state."""
+    _CURRENT_SOURCE_OBSERVATIONS[(environment_name, activity_id, table_id)] = observation
+
+
+def get_current_source_observation(
+    *, environment_name: str, activity_id: str, table_id: str
+) -> Any:
+    """Return current-run source observation state for one governed table."""
+    key = (environment_name, activity_id, table_id)
+    if key not in _CURRENT_SOURCE_OBSERVATIONS:
+        raise ValueError(
+            f"No current source observation exists for {table_id!r}; call pipeline_read() first."
+        )
+    return _CURRENT_SOURCE_OBSERVATIONS[key]
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -563,34 +584,14 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
 
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    history = read_lakehouse_table(
-        _SOURCE_OBSERVATION_TABLE,
-        store="metadata",
-        schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
-        context=context,
-    )
-    history_rows = observation_rows(history)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
-        candidates = [
-            row for row in history_rows
-            if str(row.get("source_table_id") or "") == source_table_id
-            and str(row.get("target_table_id") or "") == target_table_id
-            and str(row.get("environment_name") or "") == env
-            and str(row.get("_activity_id") or "") == activity_id
-            and str(row.get("_notebook_name") or "") == notebook_name
-            and str(row.get("observation_status") or "") == "observed"
-        ]
-        if not candidates:
-            raise ValueError(
-                f"No source observation from activity {activity_id!r} exists for {source_table_id!r}."
-            )
-        observation_id = str(max(candidates, key=lambda row: row["_committed_at"])["observation_id"])
-        for row in candidates:
-            if str(row.get("observation_id") or "") != observation_id:
-                continue
+        current = get_current_source_observation(
+            environment_name=env, activity_id=activity_id, table_id=source_table_id
+        )
+        for row in observation_rows(current):
             records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
                 **{
                     name: row.get(name)
@@ -604,6 +605,12 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
                 "observation_status": "committed",
                 **audit,
             }))
+    persist_lineage_participation(
+        table_id=target_table_id,
+        pipeline_role="target",
+        activity_id=activity_id,
+        context=context,
+    )
     frame = get_spark_session().createDataFrame(
         records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
     )
@@ -615,12 +622,8 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         context=context,
         mode="append",
     )
-    persist_lineage_participation(
-        table_id=target_table_id,
-        pipeline_role="target",
-        activity_id=activity_id,
-        context=context,
-    )
+    for source_table_id in source_table_ids:
+        _CURRENT_SOURCE_OBSERVATIONS.pop((env, activity_id, source_table_id), None)
     return records
 
 
@@ -651,7 +654,6 @@ from datetime import date, datetime, timedelta
 
 from decimal import Decimal
 
-from uuid import uuid4
 
 from fabricops_kit.config.shared import is_table_not_found_error
 
@@ -2982,3 +2984,200 @@ def schema_check_core(
         severity=severity,
     )
     return result
+
+
+OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _identifier(value: str | None, label: str) -> str:
+    text = str(value or "").strip()
+    if not _IDENTIFIER.fullmatch(text):
+        raise ValueError(f"{label} must be a simple identifier containing letters, numbers, and underscores.")
+    return text
+
+
+def _warehouse_observation_query(schema: str, table_name: str, partition_column: str, change_column: str) -> str:
+    return (
+        "SELECT\n"
+        f"  [{partition_column}] AS partition_value,\n"
+        "  COUNT_BIG(*) AS row_count,\n"
+        f"  MIN([{change_column}]) AS min_change_value,\n"
+        f"  MAX([{change_column}]) AS max_change_value,\n"
+        "  CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "STRING_AGG(CONVERT(varchar(max), row_fingerprint), '') "
+        "WITHIN GROUP (ORDER BY row_fingerprint)), 2) AS content_fingerprint\n"
+        "FROM (\n"
+        "  SELECT source_row.*, CONVERT(varchar(64), HASHBYTES('SHA2_256', "
+        "(SELECT source_row.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)), 2) AS row_fingerprint\n"
+        f"  FROM [{schema}].[{table_name}] AS source_row\n"
+        ") AS fingerprinted\n"
+        f"GROUP BY [{partition_column}]"
+    )
+
+
+def _compact_rows(frame: Any) -> list[dict[str, Any]]:
+    compact = []
+    for row in frame.collect():
+        value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        minimum = value.get("min_change_value")
+        maximum = value.get("max_change_value")
+        compact.append(
+            {
+                "partition_value": str(value.get("partition_value", "")),
+                "is_present": True,
+                "row_count": int(value.get("row_count") or 0),
+                "min_change_value": None if minimum is None else str(minimum),
+                "max_change_value": None if maximum is None else str(maximum),
+                "content_fingerprint": str(value.get("content_fingerprint") or ""),
+            }
+        )
+    return compact
+
+
+def _observe_lakehouse(
+    table_name: str,
+    store: str,
+    schema: str | None,
+    partition_column: str,
+    change_column: str,
+    *,
+    spark_session: Any,
+    context: dict[str, Any],
+) -> list[dict[str, Any]]:
+    from pyspark.sql import functions as F
+
+    frame = read_lakehouse_table(
+        table_name,
+        store=store,
+        schema=schema,
+        spark_session=spark_session,
+        context=context,
+    )
+    row_columns = sorted(frame.columns)
+    with_fingerprint = frame.withColumn(
+        "_fabricops_content_hash",
+        F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
+    )
+    observed = (
+        with_fingerprint.groupBy(partition_column)
+        .agg(
+            F.count(F.lit(1)).alias("row_count"),
+            F.min(F.col(change_column)).alias("min_change_value"),
+            F.max(F.col(change_column)).alias("max_change_value"),
+            F.sha2(
+                F.concat_ws("", F.sort_array(F.collect_list("_fabricops_content_hash"))),
+                256,
+            ).alias("content_fingerprint"),
+        )
+        .select(
+            F.col(partition_column).alias("partition_value"),
+            "row_count",
+            "min_change_value",
+            "max_change_value",
+            "content_fingerprint",
+        )
+    )
+    return _compact_rows(observed)
+
+
+def capture_source_observation(*, table_id: str) -> Any:
+    """Capture one governed source observation in internal current-run state."""
+    config, env, context = resolve_fabric_context()
+    spark = get_spark_session()
+    governed_source = resolve_catalogue_table_identity(
+        config,
+        env,
+        table_id,
+        spark_session=spark,
+        context=context,
+    )
+    governed_table_id = str(governed_source["table_id"])
+    store_key = str(governed_source["store"])
+    table_value = _identifier(governed_source["table_name"], "table_name")
+    schema = governed_source.get("schema")
+    schema_value = _identifier(schema, "schema") if schema is not None else None
+    source_type = str(
+        governed_source.get("store_type") or governed_source.get("store_kind") or ""
+    ).lower()
+    if source_type not in {"lakehouse", "warehouse"}:
+        raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
+    configured_store = get_store(config, env, store_key)
+    if source_type == "warehouse":
+        configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
+        if configured_schema is None or not str(configured_schema).strip():
+            raise ValueError("schema is required for Warehouse observation; pass it or configure a default schema.")
+        schema_value, table_value, _object_name = resolve_warehouse_table_location(
+            configured_store, configured_schema, table_value
+        )
+    else:
+        table_value, schema_value, _path = resolve_lakehouse_table_location(configured_store, table_value, schema_value)
+        if getattr(configured_store, "schema_enabled", False) and schema_value is None:
+            raise ValueError(
+                "schema is required for schema-enabled Lakehouse observation; pass it or configure a default schema."
+            )
+
+    rules_df = load_table_guardrail_rules(
+        config,
+        env,
+        spark_session=spark,
+        table_id=governed_table_id,
+        context=context,
+    )
+    rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="source_stability",
+        table_id=governed_table_id,
+        environment_name=env,
+    )
+    if rule is None:
+        raise ValueError(
+            f"No active approved Source Stability rule exists for {governed_table_id!r}; "
+            "Governance must author and activate one before source observation can run."
+        )
+    partition_value, change_value = resolve_source_stability_observation_columns(rule)
+    if source_type == "warehouse":
+        query = _warehouse_observation_query(
+            schema_value,
+            table_value,
+            partition_value,
+            change_value,  # type: ignore[arg-type]
+        )
+        current = _compact_rows(
+            read_warehouse_query(
+                query,
+                store=store_key,
+                spark_session=spark,
+                context=context,
+            )
+        )
+    else:
+        current = _observe_lakehouse(
+            table_value,
+            store_key,
+            schema_value,
+            partition_value,
+            change_value,
+            spark_session=spark,
+            context=context,
+        )
+
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    observation_id = str(uuid4())
+    values = [coerce_metadata_row_types(OBSERVATION_TABLE, {
+        **row,
+        "observation_id": observation_id,
+        "source_table_id": governed_table_id,
+        "target_table_id": "",
+        "environment_name": env,
+        "observation_status": "observed",
+        **audit,
+    }) for row in current]
+    observation = spark.createDataFrame(values)
+    set_current_source_observation(
+        environment_name=env,
+        activity_id=str(audit["_activity_id"]),
+        table_id=governed_table_id,
+        observation=observation,
+    )
+    return observation
