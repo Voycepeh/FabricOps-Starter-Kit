@@ -19,7 +19,9 @@
 }
 </style>
 
-If you have watched the FabricOps overview video, this page is the same story with more depth. It explains how the pieces fit together and why the workflow is structured this way. The [Guided Demo](guided-demo.md) is where you actually configure and run it.
+The FabricOps overview video introduces the story. This page goes deeper into how the pieces fit together and why the workflow is structured this way.
+
+[Want to run it yourself? Follow the Guided Demo.](guided-demo.md)
 
 <div class="fabricops-section-block" markdown>
 
@@ -84,7 +86,7 @@ The same configuration surface can also carry project-controlled options used by
 
     Engineering Development and Engineering Production can use the same logical pipeline structure while resolving different configured Fabric resources. Promotion therefore does not require rewriting paths throughout `02_pipeline`.
 
-    The [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md#config-driven-engineering) contains the deeper configuration and I/O design.
+    [How does configuration-driven resolution work in detail?](reference/engineering-cheat-sheet.md#config-driven-engineering)
 
 </div>
 
@@ -112,7 +114,7 @@ Engineering records technical context such as the **Data Catalogue**, **Data Pro
 
     A pipeline may read multiple upstream sources, but the governed write boundary is intentionally clear so FabricOps can associate the resulting table, observations, Lineage, and Data Contract with one canonical target identity.
 
-    For the detailed engineering decisions, including load strategies, Medallion usage, failure-safe processing, and full versus incremental processing, use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md).
+    [How do load strategies, Medallion layers, failure-safe processing, and incremental loads work?](reference/engineering-cheat-sheet.md)
 
 </div>
 
@@ -128,7 +130,7 @@ For Lakehouse sources, PySpark is the natural path. FabricOps reads through its 
 Lakehouse → public FabricOps read → PySpark DataFrame → ETL / profile / checks
 ```
 
-If the pipeline already has a DataFrame, the same DataFrame-oriented workflow can continue without creating another source-specific programming model.
+A pipeline that already has a DataFrame can continue through the same DataFrame-oriented workflow without creating another source-specific programming model.
 
 Warehouse sources are different. A large Warehouse table should not be pulled wholesale into Spark merely to compute profile statistics that the Warehouse engine can calculate more efficiently itself. For heavy operations such as large-scale profiling, FabricOps can use SQL pushdown so filtering, aggregation, counts, ranges, or similar work happens in the Warehouse first and only the required result is materialized for the notebook workflow.
 
@@ -253,7 +255,7 @@ Read the numbered stages as one controlled feedback loop:
 2. Engineering Development builds the ETL, produces the governed table, and records Catalogue, profiling, Lineage, and runtime observations.
 3. Governance selects the `table_id`, authors the Data Contract, and freezes a version.
 4. Engineering Development selects that frozen version and validates its Guardrails against the real pipeline.
-5. If the definition needs refinement, Governance and Engineering repeat the author-and-validate loop.
+5. When the definition needs refinement, Governance and Engineering repeat the author-and-validate loop.
 6. Governance links the tested contract to the Data Agreement and activates it.
 7. Engineering promotes the validated `02_pipeline`, Production runs against the active contract, and consumers use the approved result.
 
@@ -345,7 +347,7 @@ Engineering can read Governance definitions during pipeline execution without ta
 
     `METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not copies of the failing business rows.
 
-    For exact schemas, ownership, and field definitions, use the [Metadata Tables reference](reference/metadata.md).
+    [What exactly is stored in each metadata table?](reference/metadata.md)
 
 </div>
 
@@ -371,7 +373,9 @@ Promote + Run Production
 Consume approved output
 ```
 
-That is the operating practice the overview video introduces. This page explains how the pieces connect; the Guided Demo shows you how to perform the workflow yourself.
+That is the operating practice the overview video introduces. This page explains how the pieces connect.
+
+[How do I run the complete workflow myself?](guided-demo.md)
 
 </div>
 
@@ -379,10 +383,10 @@ That is the operating practice the overview video introduces. This page explains
 
 ## Where to go next
 
-- **Run the workflow yourself:** [FabricOps Guided Demo](guided-demo.md)
-- **Understand the engineering choices:** [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md)
-- **Inspect the shared metadata model:** [Metadata Tables](reference/metadata.md)
-- **Browse reusable notebook-facing functions:** [FabricOps Functions](reference/index.md)
-- **Download the notebooks:** [Notebook Templates](notebook-templates.md)
+- [How do I run the workflow myself?](guided-demo.md)
+- [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
+- [What exactly is stored in FabricOps metadata?](reference/metadata.md)
+- [What does each FabricOps function do?](reference/index.md)
+- [Where are the reusable notebook templates?](notebook-templates.md)
 
 </div>
