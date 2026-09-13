@@ -6,7 +6,7 @@
 
 `pipeline_read()` resolves the source `table_id`, physical location, and source Lineage context. FabricOps then delegates to the configured foundational Lakehouse or Warehouse reader. Read preparation does not inspect a downstream target, calculate watermark or partition progress, skip the pipeline, or return a processing scope.
 
-This keeps each Read block independent of its eventual Write destination:
+Each block assigns the returned DataFrame and governed identity to meaningful project names, such as `orders_df` and `ORDERS_TABLE_ID`. This keeps each Read block independent of its eventual Write destination:
 
 ```text
 Identify source
@@ -18,9 +18,9 @@ Physically read the source
 
 Use an explicit Warehouse query when the project needs source-side filtering, projection, joins, or aggregation. That query is project-owned read logic rather than hidden incremental state in Read preparation.
 
-## Choose target processing
+## Choose target processing after Transform
 
-Target processing remains configured at the Write boundary. `pipeline_write()` resolves the target's governed `load_strategy` and applies the corresponding Lakehouse or Warehouse publication behaviour. The foundational writers perform physical I/O only.
+After the named source DataFrames have been transformed with project-owned PySpark, define the target and proposed load strategy. Target processing remains configured at the Write boundary. `pipeline_write()` resolves the target's governed `load_strategy` and applies the corresponding Lakehouse or Warehouse publication behaviour. The foundational writers perform physical I/O only.
 
 In the contract-free Step 2 run, Development identifies the physical target and proposes its processing settings directly in the template. After Governance freezes a Data Contract, Step 4 validates that proposal against the selected version; in Production, the active frozen version is authoritative.
 
@@ -45,7 +45,7 @@ Freshness asks whether the source is recent enough. Source Stability asks whethe
 
 ## Keep canonical profiles complete
 
-A normal complete-table source read can refresh the canonical registered source Profile. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_table(dataframe=df)` for diagnostic profiling instead of registering it as the canonical physical-table profile.
+A normal complete-table source read refreshes the canonical registered source Profile with identity-only profiling, such as `profile_table(table_id=ORDERS_TABLE_ID)`. A filtered, joined, or aggregated Warehouse query should not replace the Profile of the complete physical source. The current `02_pipeline` treats that query result as derived data and uses `profile_table(dataframe=history_df)` for diagnostic profiling instead of registering it as the canonical physical-table profile.
 
 FabricOps keeps profiling close to the underlying data. Physical Lakehouse tables are profiled with PySpark, while physical Warehouse tables use SQL pushdown to avoid unnecessary full-table materialization in Spark. FabricOps still runs through PySpark notebooks and chooses this profiling engine from the governed physical identity; users continue to call the same `profile_table(...)` API and do not select an engine manually.
 
@@ -53,7 +53,7 @@ Any caller-supplied DataFrame is always profiled with PySpark, including a filte
 
 ## Review the completed run
 
-After the baseline pipeline succeeds, confirm that the target exists and that `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records were written.
+After `pipeline_write()` succeeds, the notebook profiles the persisted target with `profile_table(table_id=WRITE_TABLE_ID)`. This store-agnostic call profiles a Lakehouse target in Spark or a Warehouse target through SQL pushdown, rather than assuming the prepared DataFrame is identical to persisted state. Then confirm that the target exists and that `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records were written.
 
 Those concrete metadata records are the handoff to Governance in Step 3.
 

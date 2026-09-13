@@ -4,7 +4,7 @@
 
 ## Add project-specific transformation
 
-Use the **User defined transformation** section in `02_pipeline` for joins, filters, derivations, aggregations, enrichment, and reshaping.
+Use the **Transform** section in `02_pipeline` for joins, filters, derivations, aggregations, enrichment, and reshaping. The Read blocks provide clearly named DataFrames such as `orders_df`, `products_df`, and `history_df` directly from `pipeline_read()` without a shared state dictionary.
 
 ![Transform DataFrame](../../assets/02/Transform_DF.png)
 
@@ -133,12 +133,9 @@ If the pipeline has multiple upstream sources, join their DataFrames in the tran
 
 ```python
 transformed_df = (
-    source_1_df.alias("e")
-    .join(
-        source_2_df.alias("p"),
-        F.col("e.programme_code") == F.col("p.programme_code"),
-        "left",
-    )
+    orders_df.alias("orders")
+    .join(products_df.alias("products"), on="product_id", how="left")
+    .join(history_df.alias("history"), on="customer_id", how="left")
 )
 ```
 
@@ -180,7 +177,7 @@ Read [PySpark first — and where T-SQL fits](../../reference/engineering-cheat-
 
 !!! info "New to SQL in Fabric Warehouse?"
 
-    FabricOps mainly uses SQL for Warehouse-side filtering, projection, joins, aggregation, CTEs, window calculations, and row limits through `read_warehouse_query()`.
+    FabricOps mainly uses SQL for Warehouse-side filtering, projection, joins, aggregation, CTEs, window calculations, and row limits through the `query` argument of `pipeline_read()`.
 
     Use Microsoft Learn for the full Warehouse SQL surface rather than treating the examples below as a complete SQL tutorial:
 
@@ -188,34 +185,26 @@ Read [PySpark first — and where T-SQL fits](../../reference/engineering-cheat-
 
     Fabric Warehouse supports a broad T-SQL surface, but support is not identical to SQL Server. Check the Fabric T-SQL surface-area page when you need syntax beyond the common read/query patterns shown here.
 
-Use `read_warehouse_query()` for engineer-authored Warehouse projection, filtering, joins, aggregation, CTEs, window calculations, or row limits that should be pushed down to the Warehouse engine.
+Pass engineer-authored Warehouse SQL to `pipeline_read()` when projection, filtering, joins, aggregation, CTEs, window calculations, or row limits should be pushed down to the Warehouse engine.
 
 ```python
-source_1_df = read_warehouse_query(
-    """
-    SELECT
-        programme_code,
-        status,
-        COUNT(*) AS student_count
-    FROM dbo.student_enrolment
-    WHERE modified_datetime >= '2026-01-01'
-    GROUP BY
-        programme_code,
-        status
-    HAVING COUNT(*) > 100
-    ORDER BY student_count DESC
+history_result = pipeline_read(
+    store="product",
+    schema="demo",
+    table_name="order_history",
+    query="""
+        SELECT customer_id, COUNT(*) AS historical_order_count
+        FROM demo.order_history
+        GROUP BY customer_id
     """,
-    store=SOURCE_STORE,
-    spark_session=spark,
 )
+history_df = history_result["dataframe"]
+HISTORY_TABLE_ID = history_result["table_id"]
 ```
 
-Here:
+Because `history_df` is a derived query result rather than the complete physical source, profile it diagnostically with `profile_table(dataframe=history_df)`. Complete physical sources instead use identity-only profiling, such as `profile_table(table_id=ORDERS_TABLE_ID)`, so FabricOps can choose Spark for Lakehouse tables and Warehouse SQL pushdown for Warehouse tables.
 
-- `WHERE` filters source rows before aggregation,
-- `GROUP BY` defines the groups being summarised,
-- `HAVING` filters those groups after the aggregate has been calculated,
-- `ORDER BY` sorts the query result.
+Here, `GROUP BY` defines the customer-level result returned to Spark. Add `WHERE`, `HAVING`, or `ORDER BY` when the project-owned query needs source filtering, aggregate filtering, or ordering.
 
 After the Warehouse query returns, continue the project-specific engineering work using the returned PySpark DataFrame.
 
@@ -249,9 +238,7 @@ The template supports managed Lakehouse and Warehouse targets, but each governed
 
 ![Write Lakehouse](../../assets/02/Write_LH.png)
 
-After persistence, read the complete physical target back and profile/register it so the catalogue represents the stored result rather than only an intermediate DataFrame.
-
-![Read written Lakehouse table](../../assets/02/Read_Written_LH.png)
+Define the target after Transform, run the target Guardrails explicitly, and publish the prepared DataFrame with `pipeline_write()`. After successful publication, use `profile_table(table_id=WRITE_TABLE_ID)` so the catalogue represents the stored result rather than only an intermediate DataFrame.
 
 ### Warehouse target
 
@@ -293,7 +280,7 @@ These physical write choices are separate from FabricOps incremental processing 
 
 ## Function details
 
-Use the [Function Reference](../../reference/index.md) for exact parameters for `write_lakehouse_table()`, `write_warehouse_table()`, `profile_table(dataframe=df)`, `profile_table()`, and `profile_table()`.
+Use the [Function Reference](../../reference/index.md) for the exact parameters of `pipeline_read()`, `profile_table()`, and `pipeline_write()`.
 
 **Previous:** [Unit 3: Configure sources](configure-sources.md)  
 **Next:** [Unit 5: Choose target processing and review results](processing-and-results.md)
