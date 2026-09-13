@@ -10,7 +10,6 @@ from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
-from fabricops_kit.pipeline.write_pii_token_map import write_pii_token_map
 from fabricops_kit.pipeline.shared import stop_if_failed
 
 __all__ = [
@@ -23,7 +22,6 @@ __all__ = [
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",
-    "write_pii_token_map",
     "stop_if_failed",
     "profile_table",
 ]

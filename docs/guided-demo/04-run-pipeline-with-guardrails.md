@@ -29,7 +29,7 @@ Confirm Step 3 froze the intended version and that `02_pipeline` is using the En
 
 ??? info "Sensitive Data support mappings"
 
-    Token mappings returned by `check_sensitive_data()` remain caller-owned and outside FabricOps metadata. Projects may write them to an approved restricted store, including through `write_pii_token_map()` where appropriate; FabricOps does not persist them automatically.
+    Token mappings returned by `check_sensitive_data()` remain caller-owned and outside FabricOps metadata. Projects may keep them in memory or explicitly persist them as project-owned physical data with the standard FabricOps write functions where appropriate; FabricOps does not persist them automatically.
 
 ## Expected result
 
