@@ -297,6 +297,13 @@ def test_02_pipeline_source_observation_and_guardrails_remain_explicit():
         assert f"{observation} = observe_table(" in observations
         assert f"check_freshness({observation}, raise_on_failure=True)" in observations
         assert f"check_source_stability({observation}, target_table_id=WRITE_TABLE_ID)" in observations
+    for table_id in ("ORDERS_TABLE_ID", "PRODUCTS_TABLE_ID", "HISTORY_TABLE_ID"):
+        assert f"table_id={table_id}" in observations
+    assert "store=" not in observations
+    assert "schema=" not in observations
+    assert '"orders"' not in observations
+    assert '"products"' not in observations
+    assert '"order_history"' not in observations
     for guardrail in ("check_schema(", "check_dq(", "check_sensitive_data("):
         assert guardrail in validate
     assert 'if not sensitive_result["can_continue"]' in validate

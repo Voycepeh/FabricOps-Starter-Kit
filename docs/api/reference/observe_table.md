@@ -19,9 +19,9 @@ a deterministic content fingerprint by source partition.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:159`
+`fabricops_kit/pipeline/observe_table.py:166`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L159-L295">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L166-L324">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -43,12 +43,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def observe_table(
-    table_name: str,
-    store: str='source',
-    schema: str | None=None,
-    target_table_id: str,
-) -> Any:
+def observe_table(*, table_id: str, target_table_id: str) -> Any
 ```
 
 </div>
@@ -57,9 +52,13 @@ def observe_table(
 
 <div class="reference-example-usage" markdown="1">
 
-```python
-observation = observe_table("orders", store="source", schema="dbo", target_table_id=target_table_id)
-```
+>>> source_result = pipeline_read(
+...     store="source", schema="demo", table_name="orders",
+... )
+>>> observation = observe_table(
+...     table_id=source_result["table_id"],
+...     target_table_id=target_table_id,
+... )
 
 </div>
 
@@ -67,9 +66,7 @@ observation = observe_table("orders", store="source", schema="dbo", target_table
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Table name within the configured target. |
-| `store` | `str` | No | Logical Lakehouse or Warehouse store key configured by ``00_env_config``. |
-| `schema` | `str \| None` | No | Optional Lakehouse schema. A schema is required for Warehouse targets. |
+| `table_id` | `str` | Yes | Canonical governed source identity, normally returned by :func:`pipeline_read`. FabricOps resolves its configured physical Lakehouse or Warehouse identity internally. |
 | `target_table_id` | `str` | Yes | Governed target identity that owns this source observation relationship. |
 
 ## Returns
@@ -97,11 +94,10 @@ metadata.
 
 Evidence is appended only after collection succeeds. This function neither
 loads history nor makes guardrail decisions; ``check_source_stability`` owns
-comparison and removal tombstones. The stable source ``table_id`` is built from the
-resolved physical identity with the same logical identity rules used by
-:func:`profile_table`. It is independent of Development or
-Production; ``environment_name`` keeps those operational observations
-separate without requiring a pre-existing catalogue row.
+comparison and removal tombstones. The supplied canonical source
+``table_id`` remains authoritative through persistence. It is independent
+of Development or Production; ``environment_name`` keeps those operational
+observations separate.
 
 </div>
 

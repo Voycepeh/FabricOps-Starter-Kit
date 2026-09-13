@@ -84,7 +84,7 @@ def check_freshness(
     Examples
     --------
     >>> observation = observe_table(
-    ...     "orders", store="source", schema="dbo", target_table_id=target_table_id,
+    ...     table_id=source_table_id, target_table_id=target_table_id,
     ... )
     >>> result = check_freshness(observation)
 
