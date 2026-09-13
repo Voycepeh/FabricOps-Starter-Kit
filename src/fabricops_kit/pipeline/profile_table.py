@@ -97,47 +97,112 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
 
 
 def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]]) -> str:
-    """Build a Warehouse-native canonical statistical profile query."""
+    """Build one wide aggregate pass and one wide numeric-percentile pass."""
     source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
-    branches = []
-    for name, canonical_type, sql_type in columns:
+    aggregate_expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
+    aggregate_outputs = ["metrics.ROW_COUNT"]
+    percentile_expressions = []
+    percentile_outputs = []
+    for index, (name, _canonical_type, sql_type) in enumerate(columns):
         column = _sql_identifier(name)
         numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
         min_max = sql_type in _WAREHOUSE_MIN_MAX_TYPES
-        mean = f"AVG(CONVERT(float, {column}))" if numeric else "CAST(NULL AS float)"
-        stddev = f"STDEV(CONVERT(float, {column}))" if numeric else "CAST(NULL AS float)"
-        minimum = f"CONVERT(nvarchar(max), MIN({column}))" if min_max else "CAST(NULL AS nvarchar(max))"
-        maximum = f"CONVERT(nvarchar(max), MAX({column}))" if min_max else "CAST(NULL AS nvarchar(max))"
-        if numeric:
-            percentile = (
-                "OUTER APPLY (SELECT MAX(p25) AS p25, MAX(p50) AS p50, MAX(p75) AS p75 FROM ("
-                f"SELECT PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS p25, "
-                f"PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS p50, "
-                f"PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS p75 "
-                f"FROM {source} WHERE {column} IS NOT NULL) AS percentile_rows) AS percentiles"
-            )
-            percentile_values = (
-                "percentiles.p25 AS PERCENTILE_25, percentiles.p50 AS MEDIAN, "
-                "percentiles.p75 AS PERCENTILE_75"
-            )
-        else:
-            percentile = ""
-            percentile_values = (
-                "CAST(NULL AS float) AS PERCENTILE_25, CAST(NULL AS float) AS MEDIAN, "
-                "CAST(NULL AS float) AS PERCENTILE_75"
-            )
-        branches.append(
-            f"SELECT {_sql_string(name)} AS COLUMN_NAME, {_sql_string(canonical_type)} AS DATA_TYPE, "
-            "metrics.ROW_COUNT, metrics.NON_NULL_COUNT, metrics.NULL_COUNT, "
-            "CAST(CASE WHEN metrics.ROW_COUNT = 0 THEN 0 ELSE ROUND(100.0 * metrics.NULL_COUNT / metrics.ROW_COUNT, 3) END AS float) AS NULL_PERCENT, "
-            "metrics.DISTINCT_COUNT, CAST(CASE WHEN metrics.ROW_COUNT = 0 THEN 0 ELSE ROUND(100.0 * metrics.DISTINCT_COUNT / metrics.ROW_COUNT, 3) END AS float) AS DISTINCT_PERCENT, "
-            f"metrics.MEAN, metrics.STDDEV, metrics.MIN_VALUE, {percentile_values}, metrics.MAX_VALUE FROM ("
-            f"SELECT COUNT_BIG(*) AS ROW_COUNT, COUNT_BIG({column}) AS NON_NULL_COUNT, "
-            f"COUNT_BIG(*) - COUNT_BIG({column}) AS NULL_COUNT, COUNT_BIG(DISTINCT {column}) AS DISTINCT_COUNT, "
-            f"{mean} AS MEAN, {stddev} AS STDDEV, {minimum} AS MIN_VALUE, {maximum} AS MAX_VALUE FROM {source}"
-            f") AS metrics {percentile}"
+        prefix = f"C{index}"
+        aggregate_expressions.extend(
+            [
+                f"COUNT_BIG({column}) AS {prefix}_NON_NULL_COUNT",
+                f"COUNT_BIG(DISTINCT {column}) AS {prefix}_DISTINCT_COUNT",
+                (
+                    f"AVG(CONVERT(float, {column})) AS {prefix}_MEAN"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_MEAN"
+                ),
+                (
+                    f"STDEV(CONVERT(float, {column})) AS {prefix}_STDDEV"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_STDDEV"
+                ),
+                (
+                    f"CONVERT(nvarchar(max), MIN({column})) AS {prefix}_MIN_VALUE"
+                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MIN_VALUE"
+                ),
+                (
+                    f"CONVERT(nvarchar(max), MAX({column})) AS {prefix}_MAX_VALUE"
+                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MAX_VALUE"
+                ),
+            ]
         )
-    return "\nUNION ALL\n".join(branches)
+        aggregate_outputs.extend(
+            f"metrics.{prefix}_{suffix}"
+            for suffix in ("NON_NULL_COUNT", "DISTINCT_COUNT", "MEAN", "STDDEV", "MIN_VALUE", "MAX_VALUE")
+        )
+        if numeric:
+            percentile_expressions.extend(
+                [
+                    f"PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P25",
+                    f"PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P50",
+                    f"PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P75",
+                ]
+            )
+            percentile_outputs.extend(
+                [
+                    f"MAX({prefix}_P25) AS {prefix}_P25",
+                    f"MAX({prefix}_P50) AS {prefix}_P50",
+                    f"MAX({prefix}_P75) AS {prefix}_P75",
+                ]
+            )
+    metrics = "metrics AS (SELECT\n  " + ",\n  ".join(aggregate_expressions) + f"\nFROM {source})"
+    if not percentile_expressions:
+        return f"WITH {metrics}\nSELECT " + ", ".join(aggregate_outputs) + " FROM metrics"
+    percentile_rows = (
+        "percentile_rows AS (SELECT\n  " + ",\n  ".join(percentile_expressions) + f"\nFROM {source})"
+    )
+    percentiles = "percentiles AS (SELECT\n  " + ",\n  ".join(percentile_outputs) + "\nFROM percentile_rows)"
+    return f"WITH {metrics},\n{percentile_rows},\n{percentiles}\nSELECT metrics.*, percentiles.* FROM metrics CROSS JOIN percentiles"
+
+
+def _warehouse_statistical_dataframe(wide_frame: Any, columns, *, spark_session: Any):
+    """Reshape one compact wide Warehouse result into canonical profile rows."""
+    from pyspark.sql import types as T
+
+    collected = wide_frame.collect()
+    if len(collected) != 1:
+        raise RuntimeError("Warehouse statistical profiling must return exactly one compact aggregate row.")
+    raw = collected[0].asDict(recursive=True) if hasattr(collected[0], "asDict") else dict(collected[0])
+    values = {str(key).upper(): value for key, value in raw.items()}
+    row_count = int(values.get("ROW_COUNT") or 0)
+
+    def percent(numerator: int) -> float:
+        return 0.0 if row_count == 0 else round((numerator / row_count) * 100.0, 3)
+
+    rows = []
+    for index, (name, canonical_type, sql_type) in enumerate(columns):
+        prefix = f"C{index}"
+        non_null_count = int(values.get(f"{prefix}_NON_NULL_COUNT") or 0)
+        distinct_count = int(values.get(f"{prefix}_DISTINCT_COUNT") or 0)
+        numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
+        rows.append(
+            (
+                name, canonical_type, row_count, non_null_count, row_count - non_null_count,
+                percent(row_count - non_null_count), distinct_count, percent(distinct_count),
+                values.get(f"{prefix}_MEAN") if numeric else None,
+                values.get(f"{prefix}_STDDEV") if numeric else None,
+                values.get(f"{prefix}_MIN_VALUE"), values.get(f"{prefix}_P25") if numeric else None,
+                values.get(f"{prefix}_P50") if numeric else None,
+                values.get(f"{prefix}_P75") if numeric else None, values.get(f"{prefix}_MAX_VALUE"),
+            )
+        )
+    schema = T.StructType(
+        [
+            T.StructField("COLUMN_NAME", T.StringType(), False), T.StructField("DATA_TYPE", T.StringType(), False),
+            T.StructField("ROW_COUNT", T.LongType(), False), T.StructField("NON_NULL_COUNT", T.LongType(), False),
+            T.StructField("NULL_COUNT", T.LongType(), False), T.StructField("NULL_PERCENT", T.DoubleType(), False),
+            T.StructField("DISTINCT_COUNT", T.LongType(), False), T.StructField("DISTINCT_PERCENT", T.DoubleType(), False),
+            T.StructField("MEAN", T.DoubleType(), True), T.StructField("STDDEV", T.DoubleType(), True),
+            T.StructField("MIN_VALUE", T.StringType(), True), T.StructField("PERCENTILE_25", T.DoubleType(), True),
+            T.StructField("MEDIAN", T.DoubleType(), True), T.StructField("PERCENTILE_75", T.DoubleType(), True),
+            T.StructField("MAX_VALUE", T.StringType(), True),
+        ]
+    )
+    return spark_session.createDataFrame(rows, schema=schema)
 
 
 def _warehouse_frequency_query(
@@ -173,9 +238,12 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
     ]
     if not profile_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
-    profile = read_warehouse_query_core(
+    wide_profile = read_warehouse_query_core(
         _warehouse_statistical_query(identity, profile_columns),
         target=str(identity["target"]), spark_session=spark_session, context=context,
+    )
+    profile = _warehouse_statistical_dataframe(
+        wide_profile, profile_columns, spark_session=spark_session
     ).select(*PROFILE_DATAFRAME_COLUMNS)
     if frequency_columns is None:
         scalar = {name for name, _canonical, sql_type in profile_columns if sql_type not in _WAREHOUSE_NON_SCALAR_TYPES}

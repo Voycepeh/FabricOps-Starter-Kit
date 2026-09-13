@@ -102,11 +102,13 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
         ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE", "ORDINAL_POSITION"],
     )
     profile_rows = spark_session.createDataFrame(
+        [(3, 2, 2, 2.0, 1.414, "1", "3", 1.0, 2.0, 3.0, 2, 1, 0.0, 0.0, "A", "A")],
         [
-            ("amount", "int", 3, 2, 1, 33.333, 2, 66.667, 2.0, 1.414, "1", 1.0, 2.0, 3.0, "3"),
-            ("status", "string", 3, 2, 1, 33.333, 1, 33.333, None, None, "A", None, None, None, "A"),
+            "ROW_COUNT", "C0_NON_NULL_COUNT", "C0_DISTINCT_COUNT", "C0_MEAN", "C0_STDDEV",
+            "C0_MIN_VALUE", "C0_MAX_VALUE", "C0_P25", "C0_P50", "C0_P75",
+            "C1_NON_NULL_COUNT", "C1_DISTINCT_COUNT", "C1_MEAN", "C1_STDDEV",
+            "C1_MIN_VALUE", "C1_MAX_VALUE",
         ],
-        ["COLUMN_NAME", "DATA_TYPE", "ROW_COUNT", "NON_NULL_COUNT", "NULL_COUNT", "NULL_PERCENT", "DISTINCT_COUNT", "DISTINCT_PERCENT", "MEAN", "STDDEV", "MIN_VALUE", "PERCENTILE_25", "MEDIAN", "PERCENTILE_75", "MAX_VALUE"],
     )
     frequency_rows = spark_session.createDataFrame(
         [("status", "string", "A", 2, 66.667, 1, 3, 2), ("status", "string", None, 1, 33.333, 2, 3, 2)],
@@ -142,6 +144,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert len(queries) == 3
     assert all("SELECT *" not in query.upper() for query in queries)
     assert "PERCENTILE_CONT(0.5)" in queries[1]
+    assert queries[1].count("FROM [dbo].[orders]") == 2
+    assert "UNION ALL" not in queries[1]
     assert "FREQUENCY_RANK <= 2" in queries[2]
     assert "Warehouse SQL profiling will be used" in capsys.readouterr().out
 

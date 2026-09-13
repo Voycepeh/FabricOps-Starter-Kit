@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:648`
+`fabricops_kit/pipeline/profile_table.py:716`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L648-L884">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L716-L952">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -157,7 +157,7 @@ The orchestration performs these mechanical steps:
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 71 |
+| Live-critical dependencies | 72 |
 
 ### Release history
 
@@ -229,6 +229,7 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_profile_dataframes</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
