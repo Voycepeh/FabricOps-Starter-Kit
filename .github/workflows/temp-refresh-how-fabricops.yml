@@ -1,0 +1,53 @@
+name: Refresh How FabricOps wording
+
+on:
+  push:
+    branches:
+      - docs/refresh-read-write-sequence
+
+permissions:
+  contents: write
+
+jobs:
+  update-doc:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: docs/refresh-read-write-sequence
+      - name: Update flow wording
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('docs/how-fabricops-works.md')
+          text = path.read_text()
+
+          old_read = '''Under the Read block, Engineering can keep the more advanced source work explicit when it is needed:\n\n- inspect the persisted source with [`observe_table()`](api/reference/observe_table.md)\n- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the target relationship is known\n- enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)\n- profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)\n'''
+          new_read = '''After the source is read, the Read block keeps the governed checks and profiling explicit:\n\n- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md)\n- enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)\n- profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)\n- if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)\n- optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)\n'''
+          if old_read not in text:
+              raise SystemExit('Read block text not found')
+          text = text.replace(old_read, new_read, 1)
+
+          old_write = '''The surrounding Write block keeps the important target decisions explicit:\n\n- enforce target Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)\n- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md)\n- publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path\n- add FabricOps technical audit columns to the target data\n- persist the resolved load strategy and parameters in Catalogue\n- commit successful Lineage and Source Observation metadata only after the physical write succeeds\n'''
+          new_write = '''The surrounding Write block keeps the important target decisions explicit and in sequence:\n\n- enforce target Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)\n- if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)\n- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md); when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data\n- publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds\n- profile the persisted target with [`profile_table()`](api/reference/profile_table.md)\n- optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)\n'''
+          if old_write not in text:
+              raise SystemExit('Write block text not found')
+          text = text.replace(old_write, new_write, 1)
+
+          old_row = '| Observe source state | [`observe_table()`](api/reference/observe_table.md), successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |'
+          new_row = '| Commit source observation state after successful publication | successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |'
+          if old_row not in text:
+              raise SystemExit('Metadata observation row not found')
+          text = text.replace(old_row, new_row, 1)
+
+          path.write_text(text)
+          PY
+      - name: Commit doc update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/how-fabricops-works.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'Refresh Read and Write sequence in How FabricOps Works [skip ci]'
+          git push origin HEAD:docs/refresh-read-write-sequence
