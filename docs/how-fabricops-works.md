@@ -42,7 +42,7 @@ FabricOps packages that operating pattern around four reusable notebooks:
 
 The notebooks are supported by the FabricOps package: reusable public functions and widgets provide the repeatable pieces, while the project keeps its own transformation logic.
 
-### See the whole operating model
+#### See the whole operating model
 
 **Questions this diagram answers:**
 
@@ -93,7 +93,7 @@ flowchart LR
     TRANSFORM --> WRITE["Write"]
 ```
 
-### Read
+#### Read
 
 A Read block describes one source and calls [`pipeline_read()`](api/reference/pipeline_read.md). FabricOps then resolves the configured store from `00_env_config`, the canonical `table_id`, the physical Fabric item, and the correct lower-level reader.
 
@@ -111,7 +111,7 @@ The routing stays hidden underneath the public functions. [`pipeline_read()`](ap
 
 For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
 
-### Transform
+#### Transform
 
 Once the Read blocks return Spark DataFrames, FabricOps gets out of the way. **Project transformations are ordinary PySpark DataFrame transformations.**
 
@@ -119,7 +119,7 @@ Join, filter, aggregate, derive columns, reshape data, or apply whatever busines
 
 That also means engineers can use **Microsoft Fabric Copilot** to help write or refine PySpark transformation code while the FabricOps Read and Write boundaries stay standardized.
 
-### Write
+#### Write
 
 A Write block publishes the prepared DataFrame through [`pipeline_write()`](api/reference/pipeline_write.md). Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
 
@@ -237,7 +237,7 @@ That is the core **Governance as Code** idea in FabricOps. Governance definition
 
 **Because a governed expectation should be tested against the real engineering implementation before it becomes the active Production definition.**
 
-### See the Governance and Engineering loop
+#### See the Governance and Engineering loop
 
 **Questions this diagram answers:**
 
@@ -324,7 +324,7 @@ The consumer workspace does not need its own copy of the governed ETL just to us
 
 **The Metadata Lakehouse carries the shared FabricOps context, with a clear ownership boundary between Governance definitions and Engineering/runtime evidence.**
 
-### See the metadata ownership model
+#### See the metadata ownership model
 
 **Questions this diagram answers:**
 
