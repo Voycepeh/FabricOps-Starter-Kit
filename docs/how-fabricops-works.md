@@ -64,7 +64,13 @@ The rest of this page zooms into that picture without changing the story.
 
 ## How does Engineering actually run across Fabric stores?
 
-**At the notebook level, the engineering model is deliberately simple: Read → Transform → Write.**
+Fabric notebooks work very well when a notebook only needs its **single default attached Lakehouse or Warehouse**. You can browse that store naturally and work with its files or tables without repeatedly describing where the data lives.
+
+The difficulty starts when the pipeline needs **two or more Fabric stores**, which is normal for ETL. One pipeline may read from a source Lakehouse, enrich from a Warehouse, and publish to another target store. Without another abstraction, the notebook starts accumulating workspace IDs, item IDs, ABFSS paths, SQL endpoints, or attachment-specific logic.
+
+FabricOps uses [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) to solve that wiring problem. Each Fabric store gets a stable logical name such as `source`, `unified`, or `product`. `02_pipeline` refers to those logical names, while FabricOps resolves the physical resource for the current environment.
+
+That lets the notebook itself stay deliberately simple:
 
 ```mermaid
 flowchart LR
@@ -73,9 +79,7 @@ flowchart LR
 
 FabricOps standardizes the repeatable plumbing around the Read and Write boundaries. The transformation in the middle stays yours.
 
-Before the pipeline runs, [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) defines the logical Fabric stores for the current environment. Instead of hard-coding workspace IDs, item IDs, ABFSS paths, or SQL endpoints throughout `02_pipeline`, the notebook refers to a stable store name such as `source`, `unified`, or `product`. FabricOps resolves the physical Fabric resource behind that name at runtime.
-
-That configuration layer also lets FabricOps choose the execution path that matches the store. Lakehouse access naturally uses the PySpark path. Warehouse sources can use the Warehouse SQL path when source-side SQL is the better execution option. In both cases, the pipeline returns to a **PySpark DataFrame** for project transformation.
+The configuration layer also lets FabricOps choose the execution path that matches the underlying store. Lakehouse access naturally uses the PySpark path. Warehouse sources can use the Warehouse SQL path when source-side SQL is the better execution option. In both cases, the pipeline returns to a **PySpark DataFrame** for project transformation.
 
 ```mermaid
 flowchart LR
