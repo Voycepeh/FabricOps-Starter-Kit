@@ -5421,7 +5421,7 @@
       "qualified_name": "fabricops_kit.pipeline.observe_table.observe_table",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 324,
+      "source_end_line": 326,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
       "source_start_line": 166,
       "supports_live_contract": false,
@@ -13481,7 +13481,7 @@
         "large_width_or_depth"
       ],
       "signature": "def observe_table(*, table_id: str, target_table_id: str) -> Any",
-      "source_end_line": 324,
+      "source_end_line": 326,
       "source_path": "src/fabricops_kit/pipeline/observe_table.py",
       "source_start_line": 166,
       "summary": "Collect, persist, and return lightweight source-table evidence.",

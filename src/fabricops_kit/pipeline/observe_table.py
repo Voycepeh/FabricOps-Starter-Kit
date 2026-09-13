@@ -238,10 +238,12 @@ def observe_table(
     table_value = _identifier(governed_source["table_name"], "table_name")
     schema = governed_source.get("schema")
     schema_value = _identifier(schema, "schema") if schema is not None else None
-    configured_store = get_store(config, env, store_key)
-    source_type = str(governed_source.get("store_type") or configured_store.kind).lower()
+    source_type = str(
+        governed_source.get("store_type") or governed_source.get("store_kind") or ""
+    ).lower()
     if source_type not in {"lakehouse", "warehouse"}:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
+    configured_store = get_store(config, env, store_key)
     if source_type == "warehouse":
         configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():

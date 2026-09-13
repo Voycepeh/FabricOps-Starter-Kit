@@ -150,7 +150,7 @@ def test_unsupported_store_kind_fails_clearly(monkeypatch):
     monkeypatch.setattr(
         module, "resolve_catalogue_table_identity", lambda *args, **kwargs: identity(args[2], kind="filesystem")
     )
-    monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="filesystem"))
+    monkeypatch.setattr(module, "get_store", lambda *args: (_ for _ in ()).throw(AssertionError()))
     with pytest.raises(ValueError, match="must resolve to a Lakehouse or Warehouse"):
         module.observe_table(table_id="source-table-id", target_table_id="target")
 
