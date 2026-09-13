@@ -420,10 +420,27 @@ def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_
 
     assert flows.classify_architecture_violation(public, foundation, "public_function", "public_dependency") is None
     assert flows.classify_architecture_signal(
-        public, foundation, callee_is_public=True
+        public, foundation, "public_function", callee_is_public=True
     ) == {"type": "Type 0", "detail": "Calls foundational Fabric I/O."}
     assert flows.classify_architecture_violation(public, sideways, "public_function", "public_dependency")["type"] == "Type 1"
-    assert flows.classify_architecture_signal(public, sideways, callee_is_public=True) is None
+    assert flows.classify_architecture_signal(
+        public, sideways, "public_function", callee_is_public=True
+    ) is None
+
+    shared = info("shared_helper", "src/fabricops_kit/shared.py")
+    private = info("_private_helper", "src/fabricops_kit/private.py")
+    assert flows.classify_architecture_violation(
+        shared, foundation, "shared_function", "public_dependency"
+    )["type"] == "Type 2"
+    assert flows.classify_architecture_signal(
+        shared, foundation, "shared_function", callee_is_public=True
+    ) is None
+    assert flows.classify_architecture_violation(
+        private, foundation, "private_function", "public_dependency"
+    )["type"] == "Type 3"
+    assert flows.classify_architecture_signal(
+        private, foundation, "private_function", callee_is_public=True
+    ) is None
 
 
 def test_foundational_io_classification_and_lifecycle_history() -> None:
@@ -1117,7 +1134,7 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
 
 def test_committed_json_matches_generator_output() -> None:
     """Validate committed call-flow JSON matches the generator payload."""
-    expected = json.dumps(flows.build_payload(), indent=2, sort_keys=True) + "\n"
+    expected = json.dumps(flows.normalize_payload(flows.build_payload()), indent=2, sort_keys=True) + "\n"
     actual = flows.DATA_PATH.read_text(encoding="utf-8")
 
     assert actual == expected

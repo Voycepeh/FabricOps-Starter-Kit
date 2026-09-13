@@ -143,19 +143,43 @@ def test_io_core_wrapper_module_is_deleted() -> None:
     assert not (SRC / "io_core.py").exists()
 
 
-def test_domain_source_does_not_bypass_public_fabric_io() -> None:
-    """Require domain, public, and widget source to use foundational public I/O."""
-    bypasses = {
-        "read_lakehouse_table_core",
-        "read_warehouse_query_core",
-        "write_lakehouse_table_core",
+def test_foundational_io_has_no_duplicate_core_workflows() -> None:
+    """Require each foundational I/O operation to be owned by its public function."""
+    foundational_names = {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_json",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_query",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
     }
-    offenders = []
-    for path in SRC.rglob("*.py"):
-        if path.parent.name == "io":
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and node.id in bypasses:
-                offenders.append(f"{path.relative_to(SRC)}:{node.lineno}:{node.id}")
-    assert offenders == []
+    tree = ast.parse((SRC / "io" / "shared.py").read_text(encoding="utf-8"))
+    definitions = {node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    assert {f"{name}_core" for name in foundational_names}.isdisjoint(definitions)
+
+
+def test_reference_metadata_has_no_stale_foundational_core_roles() -> None:
+    """Keep generated reference roles aligned with implemented foundational I/O."""
+    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME
+
+    stale_names = {
+        name
+        for name in ROLE_TAGS_BY_NAME
+        if name.endswith("_core")
+        and name.removesuffix("_core")
+        in {
+            "read_lakehouse_csv",
+            "read_lakehouse_excel",
+            "read_lakehouse_json",
+            "read_lakehouse_parquet",
+            "read_lakehouse_table",
+            "read_warehouse_query",
+            "read_warehouse_table",
+            "write_lakehouse_table",
+            "write_warehouse_table",
+        }
+    }
+    assert stale_names == set()

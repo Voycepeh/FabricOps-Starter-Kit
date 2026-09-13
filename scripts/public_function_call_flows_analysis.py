@@ -497,7 +497,7 @@ def classify_architecture_violation(
     else:
         callee_public = callee_type in PUBLIC_CALLABLE_TYPES or callee_type == "public_dependency"
     different_file = caller.source_path != callee.source_path
-    if callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+    if caller_public and callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
         return None
     if caller_type == "widget_function" and callee_public:
         return None
@@ -517,11 +517,13 @@ def classify_architecture_violation(
 def classify_architecture_signal(
     caller: FunctionInfo | None,
     callee: FunctionInfo,
+    caller_type: str | None,
     *,
     callee_is_public: bool,
 ) -> dict[str, str] | None:
     """Return a positive architecture signal for an allowed boundary edge."""
-    if caller is not None and callee_is_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+    caller_public = caller_type in PUBLIC_CALLABLE_TYPES or caller_type == "public_dependency"
+    if caller_public and callee_is_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
         return {"type": "Type 0", "detail": ARCHITECTURE_EDGE_SIGNALS["Type 0"]}
     return None
 
@@ -547,6 +549,7 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
         architecture_signal = classify_architecture_signal(
             parent_info,
             info,
+            caller_type,
             callee_is_public=qn in public_qns,
         )
         used.add(qn)
