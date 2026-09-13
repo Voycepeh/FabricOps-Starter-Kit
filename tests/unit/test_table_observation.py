@@ -55,7 +55,7 @@ def run(monkeypatch, current, *, kind="warehouse", persist_spy=None, **arguments
         module, "_persist",
         lambda rows, **kwargs: (persisted.extend(rows), persist_spy and persist_spy(rows, kwargs), Frame(rows))[2],
     )
-    monkeypatch.setattr(module, "read_warehouse_query_core", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
+    monkeypatch.setattr(module, "read_warehouse_query", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
     call = dict(table_name="orders", target="source", schema="dbo", target_table_id="target")
     call.update(arguments)
     result = module.observe_table(**call)
@@ -104,7 +104,7 @@ def test_lakehouse_fingerprints_complete_business_content(monkeypatch):
     sql.functions = Functions; pyspark.sql = sql
     monkeypatch.setitem(sys.modules, "pyspark", pyspark); monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", Functions)
-    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *args, **kwargs: SparkFrame())
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *args, **kwargs: SparkFrame())
     module._observe_lakehouse("orders", "source", None, "business_date", "modified_at", spark_session=object(), context={})
     assert calls[0] == ("withColumn", "_fabricops_content_hash")
     assert calls[1] == ("groupBy", ("business_date",))
@@ -227,7 +227,7 @@ def test_persist_creates_observed_relationship_state(monkeypatch):
         createDataFrame=lambda rows, schema=None: Frame(rows)  # noqa: ARG005
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: audit)
-    monkeypatch.setattr(module, "write_lakehouse_table_core", lambda frame, *args, **kwargs: captured.extend(frame.collect()))
+    monkeypatch.setattr(module, "write_lakehouse_table", lambda frame, *args, **kwargs: captured.extend(frame.collect()))
     module._persist(
         [{**evidence(), "is_present": True}],
         observation_id="observation-1",
@@ -254,7 +254,7 @@ def test_failed_observation_does_not_persist(monkeypatch):
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
     monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": '{"partition_column":"business_date","change_column":"modified_at"}'})
-    monkeypatch.setattr(module, "read_warehouse_query_core", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("source failed")))
+    monkeypatch.setattr(module, "read_warehouse_query", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("source failed")))
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: persisted.extend(rows))
     with pytest.raises(RuntimeError, match="source failed"):
         module.observe_table(table_name="orders", target_table_id="target")

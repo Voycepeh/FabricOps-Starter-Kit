@@ -151,7 +151,7 @@ DataFrame.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 21 |
+| Live-critical dependencies | 20 |
 
 ### Release history
 
@@ -178,7 +178,6 @@ DataFrame.
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.read_delta_path</code></li>
-<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>

@@ -33,11 +33,11 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     def read(name, **_kwargs):
         return catalogue if name == "METADATA_DATA_CATALOGUE" else contracts
 
-    monkeypatch.setattr(service, "read_lakehouse_table_core", read)
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
     monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _name, row: row)
-    monkeypatch.setattr(service, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
+    monkeypatch.setattr(service, "write_lakehouse_table", lambda frame, *_args, **_kwargs: writes.append(frame))
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
     first = service.create_contract_draft(
         table_id="orders", config=object(), env="dev", spark_session=spark,
@@ -116,7 +116,7 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
         service.GUARDRAIL_TABLE: [],
     }
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
-    monkeypatch.setattr(service, "read_lakehouse_table_core", lambda table, **_kwargs: tables[table])
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda table, **_kwargs: tables[table])
 
     state = service.get_contract_authoring_state(
         config=object(), env="dev", spark_session=object(),
@@ -143,7 +143,7 @@ def test_guardrail_save_uses_metadata_target(monkeypatch):
     monkeypatch.setattr(service, "canonical_guardrail_rule_record", lambda row, **kwargs: dict(row))
     monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _table, row: row)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
-    monkeypatch.setattr(service, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
+    monkeypatch.setattr(service, "write_lakehouse_table", lambda *args, **kwargs: writes.append((args, kwargs)))
     spark = type("Spark", (), {"createDataFrame": lambda self, rows: rows})()
     record = {"contract_id": "c", "contract_version": 2, "environment_name": "dev"}
     assert service.save_guardrails([record], config=object(), env="dev", spark_session=spark) == [record]

@@ -32,6 +32,9 @@ def _empty_relationship(caller: str, callee: str) -> dict[str, Any]:
         "callee_qualified_name": callee,
         "call_count": 1,
         "architecture_violations": [],
+        "architecture_signals": [],
+        "architecture_signal_types": [],
+        "architecture_signal_details": [],
         "violation_types": [],
         "violation_details": [],
     }
@@ -56,6 +59,10 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
                 edge["architecture_violations"] = copy.deepcopy(row["architecture_violations"])
                 edge["violation_types"] = list(row.get("violation_types", []))
                 edge["violation_details"] = list(row.get("violation_details", []))
+            if row.get("architecture_signals"):
+                edge["architecture_signals"] = copy.deepcopy(row["architecture_signals"])
+                edge["architecture_signal_types"] = list(row.get("architecture_signal_types", []))
+                edge["architecture_signal_details"] = list(row.get("architecture_signal_details", []))
 
     # Include resolved calls outside public-root reachability as well. These edges are
     # already represented by each function's canonical inbound_callers list.

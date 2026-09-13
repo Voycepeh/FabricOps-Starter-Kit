@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field as dataclass_field
@@ -14,9 +16,7 @@ import uuid
 from fabricops_kit.config import shared as config_shared
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
-    read_lakehouse_table_core,
     resolve_configured_lakehouse_table,
-    write_lakehouse_table_core,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
@@ -55,7 +55,7 @@ def resolve_notebook_lineage_tables(
     from pyspark.sql import functions as F
 
     try:
-        lineage = read_lakehouse_table_core(
+        lineage = read_lakehouse_table(
             "METADATA_DATA_LINEAGE", target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
@@ -150,7 +150,7 @@ def activate_contract_version(
     agreement_version = str(agreement_version or "").strip()
     if not agreement_id or not agreement_version:
         raise ValueError("Select an exact Data Agreement version before activation.")
-    frame = read_lakehouse_table_core(
+    frame = read_lakehouse_table(
         DATA_CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=context,
     )
@@ -175,7 +175,7 @@ def activate_contract_version(
     requested_agreement = (agreement_id, agreement_version)
     if row.get("is_active") is True and current_agreement != requested_agreement:
         raise ValueError("An active Data Contract cannot be relinked to a different Data Agreement.")
-    agreement_frame = read_lakehouse_table_core(
+    agreement_frame = read_lakehouse_table(
         "METADATA_DATA_AGREEMENT", target=target,
         schema=metadata_table_physical_schema(config, "METADATA_DATA_AGREEMENT"),
         spark_session=spark_session, context=context,
@@ -796,7 +796,7 @@ def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, acti
     """List latest append-only steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table_core(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
+        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
     except Exception:
         if missing_ok:
             return []
@@ -813,7 +813,7 @@ def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, 
     }.get(table, table)
     canonical_schema = metadata_table_schema_registry().get(canonical_table)
     typed_row = coerce_metadata_row_types(canonical_table, row)
-    write_lakehouse_table_core(spark.createDataFrame([typed_row], schema=canonical_schema), table, target="metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "env": env}, mode="append")
+    write_lakehouse_table(spark.createDataFrame([typed_row], schema=canonical_schema), table, target="metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "env": env}, mode="append")
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""
@@ -858,7 +858,7 @@ def list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = 
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table_core(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env}, spark_session=spark_session)
+        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env}, spark_session=spark_session)
     except Exception:
         if missing_ok:
             return []
@@ -1185,7 +1185,7 @@ def read_metadata_table_or_empty(
 ) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries, or an empty list if absent."""
     try:
-        frame = read_lakehouse_table_core(
+        frame = read_lakehouse_table(
             table_name,
             target="metadata",
             schema=metadata_table_physical_schema(config, table_name),

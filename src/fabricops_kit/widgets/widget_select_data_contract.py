@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table
+
 import html
 from typing import Any
 
@@ -11,7 +13,7 @@ from fabricops_kit.config.shared import (
     is_table_not_found_error,
     resolve_fabric_context,
 )
-from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import resolve_active_data_contract
 from fabricops_kit.widgets.shared import (
     form_page,
@@ -198,7 +200,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
         state["message"] = f"Resolved {len(table_ids)} active Production Data Contract(s)."
     else:
         try:
-            contracts = [_row_dict(row) for row in read_lakehouse_table_core(
+            contracts = [_row_dict(row) for row in read_lakehouse_table(
                 CONTRACT_TABLE, target="metadata",
                 schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
                 spark_session=spark, context=runtime_context,

@@ -141,3 +141,45 @@ def test_package_callables_obey_architecture_boundaries() -> None:
 def test_io_core_wrapper_module_is_deleted() -> None:
     """Verify Fabric IO no longer keeps a wrapper-on-wrapper io_core layer."""
     assert not (SRC / "io_core.py").exists()
+
+
+def test_foundational_io_has_no_duplicate_core_workflows() -> None:
+    """Require each foundational I/O operation to be owned by its public function."""
+    foundational_names = {
+        "read_lakehouse_csv",
+        "read_lakehouse_excel",
+        "read_lakehouse_json",
+        "read_lakehouse_parquet",
+        "read_lakehouse_table",
+        "read_warehouse_query",
+        "read_warehouse_table",
+        "write_lakehouse_table",
+        "write_warehouse_table",
+    }
+    tree = ast.parse((SRC / "io" / "shared.py").read_text(encoding="utf-8"))
+    definitions = {node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    assert {f"{name}_core" for name in foundational_names}.isdisjoint(definitions)
+
+
+def test_reference_metadata_has_no_stale_foundational_core_roles() -> None:
+    """Keep generated reference roles aligned with implemented foundational I/O."""
+    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME
+
+    stale_names = {
+        name
+        for name in ROLE_TAGS_BY_NAME
+        if name.endswith("_core")
+        and name.removesuffix("_core")
+        in {
+            "read_lakehouse_csv",
+            "read_lakehouse_excel",
+            "read_lakehouse_json",
+            "read_lakehouse_parquet",
+            "read_lakehouse_table",
+            "read_warehouse_query",
+            "read_warehouse_table",
+            "write_lakehouse_table",
+            "write_warehouse_table",
+        }
+    }
+    assert stale_names == set()

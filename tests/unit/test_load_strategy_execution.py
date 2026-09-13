@@ -15,7 +15,7 @@ pytestmark = pytest.mark.unit
 
 def _capture_writes(monkeypatch):
     calls = []
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *args, **kwargs: calls.append((args, kwargs)))
     monkeypatch.setattr(shared, "resolve_target_audit_fields", lambda _context: {})
     monkeypatch.setattr(shared, "add_target_audit_fields", lambda df, _audit: df)
     return calls
@@ -88,7 +88,7 @@ def test_partition_scoped_write_never_accepts_an_empty_scope(monkeypatch):
 def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spark_session, strategy, mode):
     calls = []
     resolutions = []
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *args, **kwargs: calls.append((args, kwargs)))
     monkeypatch.setattr(
         shared, "resolve_target_audit_fields",
         lambda context: resolutions.append(context) or AUDIT,
@@ -137,7 +137,7 @@ def test_scd2_first_load_adds_audit_and_standard_lifecycle_columns(monkeypatch, 
 
     calls = []
     _install_delta(monkeypatch, MissingDelta)
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *args, **kwargs: calls.append((args, kwargs)))
     incoming = spark_session.createDataFrame(
         [(1, "active", "2026-08-22")], ["student_id", "status", "effective_at"]
     ).withColumn("_effective_from", F.col("effective_at")).withColumn(
@@ -281,7 +281,7 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
     _install_delta(monkeypatch, ExistingDelta)
     monkeypatch.setattr(
         shared,
-        "write_lakehouse_table_core",
+        "write_lakehouse_table",
         lambda *_args, **_kwargs: recorded.__setitem__("appends", recorded["appends"] + 1),
     )
     incoming = (
@@ -362,7 +362,7 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
         history.extend(row.asDict() for row in frame.collect())
 
     _install_delta(monkeypatch, StatefulDelta)
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", append_version)
+    monkeypatch.setattr(shared, "write_lakehouse_table", append_version)
     incoming = (
         spark_session.createDataFrame(
             [(1, "new", "2026-08-22", 200)],

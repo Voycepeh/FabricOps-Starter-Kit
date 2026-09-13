@@ -1,10 +1,10 @@
 """Public schema guardrail check."""
 
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
     get_spark_session,
-    read_lakehouse_table_core,
-    read_warehouse_query_core,
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
@@ -99,14 +99,14 @@ def check_schema(
             store, schema or getattr(store, "schema", None), table_name,
         )
         if dataframe is None:
-            dataframe = read_warehouse_query_core(
+            dataframe = read_warehouse_query(
                 f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
                 target=target, spark_session=spark, context=context,
             )
     elif store_type == "lakehouse":
         resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
         if dataframe is None:
-            dataframe = read_lakehouse_table_core(
+            dataframe = read_lakehouse_table(
                 resolved_table, target=target, schema=schema_name,
                 spark_session=spark, context=context,
             ).limit(0)

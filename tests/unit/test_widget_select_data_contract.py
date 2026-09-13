@@ -44,7 +44,7 @@ def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=
         [("Source", "table-a"), ("Target", "table-b")] if pairs is None else pairs,
         {"notebook_id": "notebook-1", "workspace_id": "workspace-1", "environment_name": env},
     ))
-    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame(rows))
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: _Frame(rows))
     monkeypatch.setattr(module, "resolve_active_data_contract", lambda _c, _e, tid, **_kwargs: (active or {})[tid])
     monkeypatch.setattr(module, "get_default_fabric_context", lambda: context_obj)
     monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))

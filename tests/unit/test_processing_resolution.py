@@ -45,7 +45,7 @@ def catalogue(strategy="overwrite"):
 
 
 def test_development_uses_current_notebook_authoring_without_catalogue(monkeypatch):
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
+    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students", authored_processing={"load_strategy": "overwrite"}
     )
@@ -96,7 +96,7 @@ def test_development_current_authoring_requires_notebook_definition():
 
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("Catalogue read"))
+    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
     resolved = shared.resolve_table_processing_definition(
         object(), "prod", "students",
         authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},

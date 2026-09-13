@@ -419,7 +419,7 @@ def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatc
             created.update(rows=rows, schema=schema)
             return "frame"
 
-    monkeypatch.setattr(agreement, "write_lakehouse_table_core", lambda *args, **kwargs: created.update(table=args[1]))
+    monkeypatch.setattr(agreement, "write_lakehouse_table", lambda *args, **kwargs: created.update(table=args[1]))
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
 
     agreement.write_widget_metadata_row(

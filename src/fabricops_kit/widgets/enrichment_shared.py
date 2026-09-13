@@ -12,7 +12,6 @@ from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
 )
-from fabricops_kit.io.shared import read_lakehouse_table_core
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"

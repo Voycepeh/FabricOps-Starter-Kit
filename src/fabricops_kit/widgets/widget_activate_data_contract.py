@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table
+
 import html
 import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets.shared import (
     activate_contract_version,
     action_row,
@@ -135,11 +137,11 @@ def widget_activate_data_contract(
     config, env, resolved = resolve_fabric_context(context=context)
     spark = get_spark_session(spark_session)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
-    contracts = [_row_dict(row) for row in read_lakehouse_table_core(
+    contracts = [_row_dict(row) for row in read_lakehouse_table(
         CONTRACT_TABLE, target=target, schema=schema, spark_session=spark,
         context=runtime_context,
     ).collect()]
-    agreements = [_row_dict(row) for row in read_lakehouse_table_core(
+    agreements = [_row_dict(row) for row in read_lakehouse_table(
         AGREEMENT_TABLE, target=target,
         schema=metadata_table_physical_schema(config, AGREEMENT_TABLE),
         spark_session=spark, context=runtime_context,

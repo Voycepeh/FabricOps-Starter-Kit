@@ -8,13 +8,12 @@ from functools import reduce
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
-    read_lakehouse_table_core,
     resolve_configured_lakehouse_table,
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
-    write_lakehouse_table_core,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_table_id, get_store
@@ -564,7 +563,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
 
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    history = read_lakehouse_table_core(
+    history = read_lakehouse_table(
         _SOURCE_OBSERVATION_TABLE,
         target="metadata",
         schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
@@ -608,7 +607,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     frame = get_spark_session().createDataFrame(
         records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
     )
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         frame,
         _SOURCE_OBSERVATION_TABLE,
         target="metadata",
@@ -704,7 +703,7 @@ def write_guardrail_result_row(
         "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
         **audit,
     }
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
         target="metadata",
@@ -1175,7 +1174,7 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
 def resolve_active_data_contract(config, env: str, table_id: str, *, spark_session=None, required: bool = True) -> dict[str, Any] | None:
     """Resolve the unambiguous active frozen contract for one logical table."""
     try:
-        frame = read_lakehouse_table_core(
+        frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE, target="metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session, context={"config": config, "env": env},
@@ -1222,7 +1221,7 @@ def _resolve_data_contract_version(
     except (TypeError, ValueError) as exc:
         raise ValueError("data_contract_version must identify an exact integer version.") from exc
     try:
-        frame = read_lakehouse_table_core(
+        frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE,
             target="metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
@@ -1303,7 +1302,7 @@ def resolve_catalogue_table_id(
     spark_session=None,
 ) -> str:
     """Resolve one physical runtime table to its canonical Catalogue identity."""
-    frame = read_lakehouse_table_core(
+    frame = read_lakehouse_table(
         CATALOGUE_TABLE, target="metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session, context={"config": config, "env": env},
@@ -1343,7 +1342,7 @@ def resolve_catalogue_table_identity(
     canonical_id = str(table_id or "").strip()
     if not canonical_id:
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
-    frame = read_lakehouse_table_core(
+    frame = read_lakehouse_table(
         CATALOGUE_TABLE,
         target="metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
@@ -1666,18 +1665,18 @@ def execute_lakehouse_processing(
         persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
     if strategy == "append":
-        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
         if scope_type == "full_dataset":
-            write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+            write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
             return
         if scope.get("column") != processing.get("partition_column"):
             raise ValueError("Write partition scope must match the target processing partition_column.")
         if "_partition_bucket" not in columns:
             raise ValueError("Partition-scoped overwrite requires persisted _partition_bucket target state.")
         predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
-        write_lakehouse_table_core(
+        write_lakehouse_table(
             persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context,
             options={"replaceWhere": predicate},
         )
@@ -1692,7 +1691,7 @@ def execute_lakehouse_processing(
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        write_lakehouse_table_core(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
+        write_lakehouse_table(persisted_df, table_name, target=target, schema=schema, mode="overwrite", context=context)
         return
     delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
@@ -1729,7 +1728,7 @@ def execute_lakehouse_processing(
     current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
     incoming = persisted_df.join(current, on=keys, how="left_anti")
     if incoming.limit(1).count():
-        write_lakehouse_table_core(incoming, table_name, target=target, schema=schema, mode="append", context=context)
+        write_lakehouse_table(incoming, table_name, target=target, schema=schema, mode="append", context=context)
 
 
 def load_table_guardrail_rules(
@@ -2639,7 +2638,7 @@ def check_dq_runtime(
             **audit,
         })
     context = {"config": config, "env": env}
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
         "METADATA_GUARDRAIL_RESULTS", target="metadata",
         schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",

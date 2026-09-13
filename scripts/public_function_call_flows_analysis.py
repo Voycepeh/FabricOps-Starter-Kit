@@ -33,6 +33,9 @@ ARCHITECTURE_VIOLATION_RULES = {
     "Type 4": "Shared function calls a private function from another file.",
     "Type 5": "Private function calls a private function from another file.",
 }
+ARCHITECTURE_EDGE_SIGNALS = {
+    "Type 0": "Calls foundational Fabric I/O.",
+}
 PUBLIC_LIFECYCLE_STATUSES = {"live", "preview", "discontinued"}
 PUBLIC_CALLABLE_TYPES = {"public_function", "widget_function"}
 FOUNDATIONAL_IO_FUNCTION_NAMES = frozenset({
@@ -494,9 +497,9 @@ def classify_architecture_violation(
     else:
         callee_public = callee_type in PUBLIC_CALLABLE_TYPES or callee_type == "public_dependency"
     different_file = caller.source_path != callee.source_path
-    if caller_type == "widget_function" and callee_public:
-        return None
     if caller_public and callee_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+        return None
+    if caller_type == "widget_function" and callee_public:
         return None
     if caller_public and callee_public:
         return {"type": "Type 1", "detail": ARCHITECTURE_VIOLATION_RULES["Type 1"]}
@@ -508,6 +511,20 @@ def classify_architecture_violation(
         return {"type": "Type 4", "detail": ARCHITECTURE_VIOLATION_RULES["Type 4"]}
     if caller_type == "private_function" and callee_type == "private_function" and different_file:
         return {"type": "Type 5", "detail": ARCHITECTURE_VIOLATION_RULES["Type 5"]}
+    return None
+
+
+def classify_architecture_signal(
+    caller: FunctionInfo | None,
+    callee: FunctionInfo,
+    caller_type: str | None,
+    *,
+    callee_is_public: bool,
+) -> dict[str, str] | None:
+    """Return a positive architecture signal for an allowed boundary edge."""
+    caller_public = caller_type in PUBLIC_CALLABLE_TYPES or caller_type == "public_dependency"
+    if caller_public and callee_is_public and callee.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
+        return {"type": "Type 0", "detail": ARCHITECTURE_EDGE_SIGNALS["Type 0"]}
     return None
 
 
@@ -529,6 +546,12 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
             current_type,
             callee_is_public=qn in public_qns,
         )
+        architecture_signal = classify_architecture_signal(
+            parent_info,
+            info,
+            caller_type,
+            callee_is_public=qn in public_qns,
+        )
         used.add(qn)
         flow.append({
             "depth": depth,
@@ -542,6 +565,9 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
             "parent_qualified_name": parent,
             "edge_type": "root" if parent is None else "direct",
             "architecture_violations": [violation] if violation else [],
+            "architecture_signals": [architecture_signal] if architecture_signal else [],
+            "architecture_signal_types": [architecture_signal["type"]] if architecture_signal else [],
+            "architecture_signal_details": [architecture_signal["detail"]] if architecture_signal else [],
             "violation_types": [violation["type"]] if violation else [],
             "violation_details": [violation["detail"]] if violation else [],
             "call_count_from_parent": 0 if parent is None else 1,
@@ -903,6 +929,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "foundational_io_functions": sorted(FOUNDATIONAL_IO_FUNCTION_NAMES),
             "foundational_io_boundary": "A foundational I/O public dependency is retained as a terminal node when traversed from another public root; it expands normally when selected as the root.",
             "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
+            "architecture_edge_signals": ARCHITECTURE_EDGE_SIGNALS,
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
             "unused_function_definition": "Not reachable from a public function flow, has no inbound package source references, and is not an implicit Python runtime hook.",
             "detached_function_definition": "Not reachable from a public function flow but referenced elsewhere in package source or callable implicitly by Python.",

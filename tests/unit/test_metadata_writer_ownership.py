@@ -83,17 +83,17 @@ def test_widgets_shared_does_not_define_legacy_getattr_fallbacks():
     assert all(not (isinstance(node, ast.FunctionDef) and node.name == "__getattr__") for node in tree.body)
 
 
-def _calls_write_lakehouse_table_core(source: str) -> bool:
-    """Return whether source calls write_lakehouse_table_core directly."""
+def _calls_write_lakehouse_table(source: str) -> bool:
+    """Return whether source calls write_lakehouse_table directly."""
     tree = ast.parse(source)
-    return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table_core" for node in ast.walk(tree))
+    return any(isinstance(node, ast.Call) and getattr(node.func, "id", "") == "write_lakehouse_table" for node in ast.walk(tree))
 
 
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
     for path, function_name in [("pipeline/shared.py", "write_guardrail_result_row")]:
         source = _function_source(path, function_name)
-        assert _calls_write_lakehouse_table_core(source)
+        assert _calls_write_lakehouse_table(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
         assert "GUARDRAIL_TABLE" not in source
 
@@ -131,7 +131,7 @@ def test_pipeline_write_calls_do_not_target_governance_owned_tables():
             and isinstance(node.value.value, str)
         }
         for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or getattr(node.func, "id", "") != "write_lakehouse_table_core":
+            if not isinstance(node, ast.Call) or getattr(node.func, "id", "") != "write_lakehouse_table":
                 continue
             for argument in node.args[1:2]:
                 table_name = argument.value if isinstance(argument, ast.Constant) else constants.get(getattr(argument, "id", ""))

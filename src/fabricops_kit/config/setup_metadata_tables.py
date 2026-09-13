@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+
 from typing import Any
-from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 
 from .metadata_schemas import (
     CANONICAL_METADATA_TABLES,
@@ -329,7 +330,7 @@ def setup_metadata_tables(
         try:
             created = False
             try:
-                table = read_lakehouse_table_core(
+                table = read_lakehouse_table(
                     table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
             except Exception as exc:
@@ -338,7 +339,7 @@ def setup_metadata_tables(
                         f"Unable to read metadata table {table_name!r}. Original {type(exc).__name__}: {exc}"
                     ) from exc
                 empty_frame = spark.createDataFrame([], schema=schema)
-                write_lakehouse_table_core(
+                write_lakehouse_table(
                     empty_frame,
                     table_name,
                     target="metadata",
@@ -348,7 +349,7 @@ def setup_metadata_tables(
                     context=context,
                 )
                 created = True
-                table = read_lakehouse_table_core(
+                table = read_lakehouse_table(
                     table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
             if table is not None and hasattr(table, "schema"):

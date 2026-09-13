@@ -330,47 +330,6 @@ def configured_lakehouse_schema(config: Any, env: str, target: str) -> str | Non
     return _normalize_schema_name(getattr(store, "schema", None))
 
 
-def read_lakehouse_table_core(
-    table_name: str,
-    *,
-    target: str,
-    schema: str | None = None,
-    spark_session=None,
-    context: dict[str, Any] | None = None,
-    options: dict[str, Any] | None = None,
-):
-    """Read a configured Lakehouse Delta table for internal workflows."""
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        target, table_name, schema, context=context
-    )
-    return read_delta_path(get_spark_session(spark_session), path, options=options)
-
-
-def write_lakehouse_table_core(
-    df,
-    table_name: str,
-    *,
-    target: str,
-    schema: str | None = None,
-    mode: str = "append",
-    partition_by=None,
-    repartition_by=None,
-    options=None,
-    verbose: bool = True,
-    context=None,
-):
-    """Write a configured Lakehouse Delta table for internal workflows."""
-    validate_dataframe_writer(df)
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        target, table_name, schema, context=context
-    )
-    normalized_mode = normalize_write_mode(mode)
-    df = repartition_dataframe_for_write(df, repartition_by)
-    if verbose:
-        print(f"Writing Lakehouse table to {path}")
-    write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
-
-
 def read_warehouse_synapsesql(
     spark_obj, store: FabricStore, synapsesql_target: str, *, options: dict[str, Any] | None = None
 ):
@@ -384,16 +343,6 @@ def read_warehouse_synapsesql(
     for key, value in (options or {}).items():
         reader = reader.option(key, value)
     return reader.synapsesql(synapsesql_target)
-
-
-def read_warehouse_query_core(
-    query: str, *, target: str = "warehouse", spark_session=None,
-    context: dict[str, Any] | None = None, options: dict[str, Any] | None = None,
-):
-    """Execute a validated read-only Warehouse query for internal workflows."""
-    store = resolve_configured_warehouse_query_target(target, context=context)
-    sql = validate_select_query(query)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql, options=options)
 
 
 def read_sql_endpoint_query_core(

@@ -5,6 +5,8 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
+import re
+import subprocess
 import time
 
 import pytest
@@ -413,13 +415,34 @@ def test_architecture_violation_type_classification() -> None:
 
 
 def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_is_not() -> None:
-    """Allow the explicit downward I/O boundary without weakening Type 1 generally."""
+    """Classify the explicit downward I/O boundary as Type 0 without weakening Type 1."""
     public = info("check_schema", "src/fabricops_kit/check_schema.py")
     foundation = info("read_lakehouse_table", "src/fabricops_kit/io/read_lakehouse_table.py")
     sideways = info("profile_dataframe", "src/fabricops_kit/profile_dataframe.py")
 
     assert flows.classify_architecture_violation(public, foundation, "public_function", "public_dependency") is None
+    assert flows.classify_architecture_signal(
+        public, foundation, "public_function", callee_is_public=True
+    ) == {"type": "Type 0", "detail": "Calls foundational Fabric I/O."}
     assert flows.classify_architecture_violation(public, sideways, "public_function", "public_dependency")["type"] == "Type 1"
+    assert flows.classify_architecture_signal(
+        public, sideways, "public_function", callee_is_public=True
+    ) is None
+
+    shared = info("shared_helper", "src/fabricops_kit/shared.py")
+    private = info("_private_helper", "src/fabricops_kit/private.py")
+    assert flows.classify_architecture_violation(
+        shared, foundation, "shared_function", "public_dependency"
+    )["type"] == "Type 2"
+    assert flows.classify_architecture_signal(
+        shared, foundation, "shared_function", callee_is_public=True
+    ) is None
+    assert flows.classify_architecture_violation(
+        private, foundation, "private_function", "public_dependency"
+    )["type"] == "Type 3"
+    assert flows.classify_architecture_signal(
+        private, foundation, "private_function", callee_is_public=True
+    ) is None
 
 
 def test_foundational_io_classification_and_lifecycle_history() -> None:
@@ -506,6 +529,9 @@ def test_nested_foundational_io_is_a_visible_terminal_but_its_root_expands(tmp_p
 
     assert [row["function_name"] for row in caller["flow"]] == ["check_schema", "read_lakehouse_table"]
     assert caller["architecture_violation_count"] == 0
+    boundary = caller["flow"][1]
+    assert boundary["architecture_signal_types"] == ["Type 0"]
+    assert boundary["architecture_violations"] == []
     assert caller["width"] == 1
     assert caller["depth"] == 1
     assert caller["scope"] == caller["transitive_function_count"] == 1
@@ -630,13 +656,15 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="badge muted">Promote to shared</span>' in html
     for violation_type in range(1, 6):
         assert f'<span class="badge danger">Type {violation_type}</span>' in html
+    assert '<span class="badge positive">Type 0</span>' in html
+    assert ".positive{background:#dcfce7;color:#166534}" in html
     assert '<span class="badge danger">Type 6</span>' not in html
     assert "Public function summary card signals" not in html
     assert "Public function table signals" in html
-    assert "Call tree violation rules" in html
+    assert "Call tree architecture edge types" in html
     assert "Selected callable inventory signals" in html
     assert '<details class="flow-details signal-explainer" open><summary>Public function table signals</summary>' in html
-    assert '<details class="flow-details signal-explainer" open><summary>Call tree violation rules</summary>' in html
+    assert '<details class="flow-details signal-explainer" open><summary>Call tree architecture edge types</summary>' in html
     assert '<details class="flow-details signal-explainer" open><summary>Selected callable inventory signals</summary>' in html
     assert '<div class="signal-row"><span class="badge warn">Large width/depth</span><span class="signal-text">Width &gt; 10 or Depth &gt; 5.</span></div>' in html
     assert 'type="button">Width</button>' in html
@@ -762,6 +790,38 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "large_depth" not in html
     assert ">large_width<" not in html
     assert ">large_width</span>" not in html
+
+
+def test_dashboard_javascript_classifies_foundational_io_edges_by_caller_layer(tmp_path: Path) -> None:
+    """Execute the dashboard classifier for all public-foundation boundary cases."""
+    root, pkg, init_path = write_project(tmp_path)
+    html = dashboard.render_dashboard(flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path))
+
+    def javascript_function(name: str, next_name: str) -> str:
+        match = re.search(rf"function {name}.*?(?=\nfunction {next_name})", html, flags=re.DOTALL)
+        assert match is not None
+        return match.group(0)
+
+    script = "\n".join([
+        "const ARCHITECTURE_VIOLATION_RULES={'Type 1':'one','Type 2':'two','Type 3':'three','Type 4':'four','Type 5':'five'};",
+        "const PUBLIC_CALLABLE_TYPES=new Set(['public_function','widget_function']);",
+        "function isPublicCallableType(type){return PUBLIC_CALLABLE_TYPES.has(type)}",
+        javascript_function("deriveFlowEdges", "classifyDerivedViolation"),
+        javascript_function("classifyDerivedViolation", "deriveArchitectureViolations"),
+        javascript_function("deriveArchitectureViolations", "deriveInventorySignals"),
+        "const foundation={qualified_name:'foundation',function_type:'public_dependency',architecture_classification:'foundation_io',source_path:'io.py'};",
+        "const ordinary={qualified_name:'ordinary',function_type:'public_dependency',architecture_classification:'domain_public_api',source_path:'ordinary.py'};",
+        "function classify(parent,child){const flow=[{...parent,depth:0,parent_qualified_name:null},{...child,depth:1,parent_qualified_name:parent.qualified_name}];deriveArchitectureViolations(flow);return {signals:flow[1].derived_architecture_signal_types||[],violations:flow[1].derived_violation_types||[]}}",
+        "console.log(JSON.stringify({publicFoundation:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},foundation),publicOrdinary:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},ordinary),sharedFoundation:classify({qualified_name:'shared',function_type:'shared_function',source_path:'shared.py'},foundation),privateFoundation:classify({qualified_name:'private',function_type:'private_function',source_path:'private.py'},foundation)}));",
+    ])
+    result = subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+
+    assert json.loads(result.stdout) == {
+        "publicFoundation": {"signals": ["Type 0"], "violations": []},
+        "publicOrdinary": {"signals": [], "violations": ["Type 1"]},
+        "sharedFoundation": {"signals": [], "violations": ["Type 2"]},
+        "privateFoundation": {"signals": [], "violations": ["Type 3"]},
+    }
 
 
 def test_dashboard_derives_signals_from_old_shape_payload() -> None:
@@ -1108,7 +1168,7 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
 
 def test_committed_json_matches_generator_output() -> None:
     """Validate committed call-flow JSON matches the generator payload."""
-    expected = json.dumps(flows.build_payload(), indent=2, sort_keys=True) + "\n"
+    expected = json.dumps(flows.normalize_payload(flows.build_payload()), indent=2, sort_keys=True) + "\n"
     actual = flows.DATA_PATH.read_text(encoding="utf-8")
 
     assert actual == expected

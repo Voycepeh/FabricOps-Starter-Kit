@@ -171,7 +171,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     from fabricops_kit.pipeline import shared as guardrails_shared
 
     writes = []
-    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
@@ -238,8 +238,8 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
         guardrails=guardrails,
     )
     writes = []
-    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: contract)
-    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, **kwargs: writes.append((table, df.collect())))
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table", lambda *args, **kwargs: contract)
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table", lambda df, table, **kwargs: writes.append((table, df.collect())))
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
         lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-001"),
@@ -308,10 +308,10 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
         columns=[("row_uuid", "string"), ("value", "string")], guardrails=guardrails,
     )
     writes = []
-    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: contract)
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table", lambda *args, **kwargs: contract)
     monkeypatch.setattr(
         guardrails_shared,
-        "write_lakehouse_table_core",
+        "write_lakehouse_table",
         lambda df, table, **kwargs: writes.append((table, df.collect())),
     )
     activities = iter(("activity-auto-run-1", "activity-auto-run-2"))
@@ -385,7 +385,7 @@ def test_dq_no_rules_returns_canonical_empty_failed_values(spark_session, monkey
     dataframe = spark_session.createDataFrame([(1, "unused")], "row_id int, extra string")
     writes = []
     monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [])
-    monkeypatch.setattr(shared, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append(args))
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *args, **kwargs: writes.append(args))
 
     result = shared.check_dq_runtime(
         dataframe, framework_config(), "dev", "orders", table_id="orders",

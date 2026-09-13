@@ -45,8 +45,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     def write_table(*_args, **_kwargs) -> None:
         raise AssertionError("metadata setup must not write existing valid tables")
 
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
-    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+    monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
 
@@ -72,7 +72,7 @@ def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypa
             return Table(["steward_id"])
         return Table(metadata_table_schema_registry()[table_name].fieldNames())
 
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "partial_failure"

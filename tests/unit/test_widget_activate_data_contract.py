@@ -63,7 +63,7 @@ def test_activation_requires_exact_existing_agreement_and_rejects_conflicting_re
         widget_shared.DATA_CONTRACT_TABLE: _Frame([frozen]),
         "METADATA_DATA_AGREEMENT": _Frame([{"agreement_id": "agreement", "agreement_version": "2"}]),
     }
-    monkeypatch.setattr(widget_shared, "read_lakehouse_table_core", lambda name, **_kwargs: frames[name])
+    monkeypatch.setattr(widget_shared, "read_lakehouse_table", lambda name, **_kwargs: frames[name])
     with pytest.raises(ValueError, match="exact Data Agreement"):
         widget_shared.activate_contract_version(
             config=object(), env="dev", table_id="orders", contract_id="contract",
@@ -101,7 +101,7 @@ def test_activation_writes_linkage_and_supersedes_atomically(monkeypatch):
         widget_shared.DATA_CONTRACT_TABLE: _Frame([prior, selected]),
         "METADATA_DATA_AGREEMENT": _Frame([{"agreement_id": "agreement", "agreement_version": "2"}]),
     }
-    monkeypatch.setattr(widget_shared, "read_lakehouse_table_core", lambda name, **_kwargs: frames[name])
+    monkeypatch.setattr(widget_shared, "read_lakehouse_table", lambda name, **_kwargs: frames[name])
     monkeypatch.setattr(widget_shared, "resolve_configured_lakehouse_table", lambda *_args, **_kwargs: (None, None, None, "/contracts"))
     captured = {}
 
@@ -282,7 +282,7 @@ def test_development_without_selection_has_no_contract_guardrails(monkeypatch):
     """Do not select an active Data Contract implicitly in Development."""
     frozen = _contract(1, status="active", active=True, rule="contract-rule")
     monkeypatch.setattr(
-        pipeline_shared, "read_lakehouse_table_core", lambda name, **kwargs: _Frame([frozen]),
+        pipeline_shared, "read_lakehouse_table", lambda name, **kwargs: _Frame([frozen]),
     )
     resolved = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
@@ -298,7 +298,7 @@ def test_production_resolves_physical_table_through_catalogue_to_active_contract
         "environment_name": "prod", "store_type": "lakehouse", "layer": "source",
         "schema_name": "sales", "table_name": "orders", "is_active": True,
     }])
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: catalogue)
+    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table", lambda *args, **kwargs: catalogue)
     resolved_id = pipeline_shared.resolve_catalogue_table_id(
         {}, "prod", store_type="lakehouse", layer="source", schema_name="sales",
         table_name="orders", spark_session=_Spark(),
@@ -324,7 +324,7 @@ def test_production_resolves_physical_table_through_catalogue_to_active_contract
 def test_active_resolver_handles_zero_one_and_multiple_without_selecting_newest(monkeypatch):
     """Honor only explicit activation and reject ambiguous metadata state."""
     rows = [_contract(1, status="active", active=True), _contract(2)]
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame(rows))
+    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table", lambda *args, **kwargs: _Frame(rows))
     resolved = pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
     assert resolved["contract_version"] == 1
     rows[1].update(status="active", is_active=True)
@@ -345,7 +345,7 @@ def test_active_resolver_rejects_null_agreement_linkage(monkeypatch):
     row["agreement_id"] = None
     row["agreement_version"] = None
     monkeypatch.setattr(
-        pipeline_shared, "read_lakehouse_table_core", lambda *_args, **_kwargs: _Frame([row])
+        pipeline_shared, "read_lakehouse_table", lambda *_args, **_kwargs: _Frame([row])
     )
     with pytest.raises(RuntimeError, match="no exact Data Agreement linkage"):
         pipeline_shared.resolve_active_data_contract({}, "prod", "orders")
@@ -355,7 +355,7 @@ def test_active_resolver_rejects_null_agreement_linkage(monkeypatch):
 def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeypatch, status):
     """Allow Development to execute an exact frozen or superseded contract."""
     selected = _contract(2, status=status, rule="frozen-rule")
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame([selected]))
+    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table", lambda *args, **kwargs: _Frame([selected]))
     rules = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders",
         context={"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
@@ -373,7 +373,7 @@ def test_development_exact_override_accepts_non_rejected_frozen_versions(monkeyp
 def test_development_partial_override_fails_without_guessing(monkeypatch, context):
     """Require both immutable identity fields before reading any rule source."""
     monkeypatch.setattr(
-        pipeline_shared, "read_lakehouse_table_core",
+        pipeline_shared, "read_lakehouse_table",
         lambda *args, **kwargs: pytest.fail("partial overrides must fail before metadata reads"),
     )
     with pytest.raises(ValueError, match="requires both"):
@@ -383,7 +383,7 @@ def test_development_partial_override_fails_without_guessing(monkeypatch, contex
 def test_development_exact_override_validates_status_table_and_identity(monkeypatch):
     """Reject unusable, mismatched, missing, and duplicate exact versions."""
     rows = [_contract(2, status="rejected")]
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", lambda *args, **kwargs: _Frame(rows))
+    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table", lambda *args, **kwargs: _Frame(rows))
     kwargs = {
         "spark_session": _Spark(), "table_id": "orders",
         "context": {"data_contract_overrides": {"orders": {"contract_id": "contract", "contract_version": 2}}},
@@ -409,7 +409,7 @@ def test_rule_source_matrix_keeps_frozen_rules_immutable_and_prod_ignores_overri
     def read(name, **kwargs):
         return authoring if name == pipeline_shared.GUARDRAIL_TABLE else _Frame([frozen])
 
-    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table_core", read)
+    monkeypatch.setattr(pipeline_shared, "read_lakehouse_table", read)
     dev_default = pipeline_shared.load_table_guardrail_rules(
         {}, "dev", spark_session=_Spark(), table_id="orders", context={},
     )

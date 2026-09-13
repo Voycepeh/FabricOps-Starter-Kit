@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
+
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 import math
@@ -18,7 +20,6 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
-from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.shared import validated_processing
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -56,7 +57,7 @@ def create_contract_draft(
     """Create or reopen the one agreement-free draft for a governed table."""
     lifecycle_id = contract_lifecycle_id(table_id, env)
     runtime_context = {"config": config, "env": env, **dict(context or {})}
-    catalogue_rows = row_dicts(read_lakehouse_table_core(
+    catalogue_rows = row_dicts(read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", target=target,
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
         spark_session=spark_session, context=runtime_context,
@@ -69,7 +70,7 @@ def create_contract_draft(
         for row in catalogue_rows
     ):
         raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
-    rows = row_dicts(read_lakehouse_table_core(
+    rows = row_dicts(read_lakehouse_table(
         DATA_CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
     ))
@@ -96,7 +97,7 @@ def create_contract_draft(
         "is_active": False,
         **audit,
     })
-    write_lakehouse_table_core(
+    write_lakehouse_table(
         spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]),
         DATA_CONTRACT_TABLE, target=target, schema=schema,
         context=runtime_context, mode="append",
@@ -309,7 +310,7 @@ def read_contract_records(
     contract_version: int,
 ) -> list[dict[str, Any]]:
     """Read exact-version governance records through the configured metadata target."""
-    frame = read_lakehouse_table_core(
+    frame = read_lakehouse_table(
         table_name,
         target="metadata",
         schema=metadata_table_physical_schema(config, table_name),
@@ -327,7 +328,7 @@ def read_contract_records(
 def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[dict[str, Any]]:
     """Read all Enrichment rows in one configured authoring environment."""
     try:
-        frame = read_lakehouse_table_core(
+        frame = read_lakehouse_table(
             ENRICHMENT_TABLE, target="metadata",
             schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
             context={"config": config, "env": env}, spark_session=spark_session,
@@ -374,7 +375,7 @@ def get_contract_authoring_state(
     context = {"config": config, "env": env}
     tables = {}
     for table_name in (DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE", ENRICHMENT_TABLE, GUARDRAIL_TABLE):
-        tables[table_name] = row_dicts(read_lakehouse_table_core(
+        tables[table_name] = row_dicts(read_lakehouse_table(
             table_name, target="metadata",
             schema=metadata_table_physical_schema(config, table_name),
             context=context, spark_session=spark_session,
@@ -449,7 +450,7 @@ def save_enrichment(records: list[dict[str, Any]], *, config: Any, env: str, spa
     """Validate and append Enrichment through the configured metadata target."""
     canonical = build_enrichment_records(records, config=config, env=env)
     if canonical:
-        write_lakehouse_table_core(
+        write_lakehouse_table(
             spark_session.createDataFrame(
                 [coerce_metadata_row_types(ENRICHMENT_TABLE, row) for row in canonical],
                 schema=metadata_table_schema_registry()[ENRICHMENT_TABLE],
@@ -469,7 +470,7 @@ def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spa
         if str(row.get("environment_name") or "") != str(env):
             raise ValueError("Guardrail environment_name must match the authoring environment.")
     if canonical:
-        write_lakehouse_table_core(
+        write_lakehouse_table(
             spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_TABLE, row) for row in canonical]),
             GUARDRAIL_TABLE, target="metadata",
             schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
@@ -657,7 +658,7 @@ def freeze_contract(
 
     runtime_context = {"config": config, "env": env, **dict(context or {})}
     tables = {
-        name: row_dicts(read_lakehouse_table_core(
+        name: row_dicts(read_lakehouse_table(
             name, target=target, schema=schema, spark_session=spark_session,
             context=runtime_context,
         ))
