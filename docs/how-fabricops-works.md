@@ -146,8 +146,6 @@ This gives `02_pipeline` a consistent shape without turning it into a black box:
 
     [`pipeline_write()`](api/reference/pipeline_write.md) resolves the governed target and routes publication through the correct Lakehouse or Warehouse path while applying the Data Contract load strategy.
 
-    [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
-
 </div>
 
 <div class="fabricops-section-block" markdown>
