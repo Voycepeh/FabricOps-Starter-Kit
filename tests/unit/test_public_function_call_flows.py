@@ -155,7 +155,7 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
     assert public_b_row["violation_types"] == ["Type 1"]
     assert public_b_row["violation_details"] == [
-        "Public function calls another public function directly, unless the callee is foundational I/O."
+        "Public function calls a non-foundational public function directly."
     ]
     assert public_b_row["inline_candidate"] is True
     assert public_b_row["promote_to_shared_candidate"] is False
@@ -414,8 +414,8 @@ def test_architecture_violation_type_classification() -> None:
     assert flows.classify_architecture_violation(public, widget, "public_function", "widget_function", callee_is_public=True)["type"] == "Type 1"
 
 
-def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_is_not() -> None:
-    """Classify the explicit downward I/O boundary as Type 0 without weakening Type 1."""
+def test_any_package_callable_can_use_foundational_io_without_a_violation() -> None:
+    """Classify every package-to-foundation edge as allowed Type 0."""
     public = info("check_schema", "src/fabricops_kit/check_schema.py")
     foundation = info("read_lakehouse_table", "src/fabricops_kit/io/read_lakehouse_table.py")
     sideways = info("profile_dataframe", "src/fabricops_kit/profile_dataframe.py")
@@ -429,20 +429,19 @@ def test_foundational_io_public_dependency_is_allowed_but_other_public_coupling_
         public, sideways, "public_function", callee_is_public=True
     ) is None
 
-    shared = info("shared_helper", "src/fabricops_kit/shared.py")
-    private = info("_private_helper", "src/fabricops_kit/private.py")
-    assert flows.classify_architecture_violation(
-        shared, foundation, "shared_function", "public_dependency"
-    )["type"] == "Type 2"
-    assert flows.classify_architecture_signal(
-        shared, foundation, "shared_function", callee_is_public=True
-    ) is None
-    assert flows.classify_architecture_violation(
-        private, foundation, "private_function", "public_dependency"
-    )["type"] == "Type 3"
-    assert flows.classify_architecture_signal(
-        private, foundation, "private_function", callee_is_public=True
-    ) is None
+    callers = [
+        (info("public_dependency", "src/fabricops_kit/dependency.py"), "public_dependency"),
+        (info("shared_helper", "src/fabricops_kit/shared.py"), "shared_function"),
+        (info("_private_helper", "src/fabricops_kit/private.py"), "private_function"),
+        (info("widget_review", "src/fabricops_kit/widgets/review.py"), "widget_function"),
+    ]
+    for caller, caller_type in callers:
+        assert flows.classify_architecture_violation(
+            caller, foundation, caller_type, "public_dependency"
+        ) is None
+        assert flows.classify_architecture_signal(
+            caller, foundation, caller_type, callee_is_public=True
+        ) == {"type": "Type 0", "detail": "Calls foundational Fabric I/O."}
 
 
 def test_foundational_io_classification_and_lifecycle_history() -> None:
@@ -459,6 +458,30 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
     assert json_reader["lifecycle_status"] == "preview"
     assert json_reader["live_since"] is None
     assert json_reader["release_history"] == []
+
+
+def test_repository_type_zero_edges_never_contribute_architecture_violations() -> None:
+    """Keep every foundational I/O edge green and out of violation counts."""
+    payload = flows.build_payload()
+    type_zero_rows = [
+        row
+        for public_function in payload["public_functions"]
+        for row in public_function["flow"]
+        if "Type 0" in row["architecture_signal_types"]
+    ]
+
+    assert type_zero_rows
+    assert all(not row["architecture_violations"] for row in type_zero_rows)
+    assert all(not row["violation_types"] for row in type_zero_rows)
+
+    catalogue_read = next(
+        row
+        for row in type_zero_rows
+        if row["parent_qualified_name"]
+        == "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
+        and row["function_name"] == "read_lakehouse_table"
+    )
+    assert catalogue_read["function_type"] == "public_dependency"
 
 
 def test_pipeline_read_has_explicit_orchestration_classification() -> None:
@@ -638,9 +661,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
         assert violation_type in html
     assert "Type 6" not in html
-    assert "Public function calls another public function directly, unless the callee is foundational I/O." in html
-    assert "Shared function calls a public function directly." in html
-    assert "Private function calls a public function directly." in html
+    assert "Public function calls a non-foundational public function directly." in html
+    assert "Shared function calls a non-foundational public function directly." in html
+    assert "Private function calls a non-foundational public function directly." in html
     assert "Shared function calls a private function from another file." in html
     assert "Private function calls a private function from another file." in html
     assert "Private function calls a shared function directly." not in html
@@ -812,15 +835,18 @@ def test_dashboard_javascript_classifies_foundational_io_edges_by_caller_layer(t
         "const foundation={qualified_name:'foundation',function_type:'public_dependency',architecture_classification:'foundation_io',source_path:'io.py'};",
         "const ordinary={qualified_name:'ordinary',function_type:'public_dependency',architecture_classification:'domain_public_api',source_path:'ordinary.py'};",
         "function classify(parent,child){const flow=[{...parent,depth:0,parent_qualified_name:null},{...child,depth:1,parent_qualified_name:parent.qualified_name}];deriveArchitectureViolations(flow);return {signals:flow[1].derived_architecture_signal_types||[],violations:flow[1].derived_violation_types||[]}}",
-        "console.log(JSON.stringify({publicFoundation:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},foundation),publicOrdinary:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},ordinary),sharedFoundation:classify({qualified_name:'shared',function_type:'shared_function',source_path:'shared.py'},foundation),privateFoundation:classify({qualified_name:'private',function_type:'private_function',source_path:'private.py'},foundation)}));",
+        "console.log(JSON.stringify({publicFoundation:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},foundation),sharedFoundation:classify({qualified_name:'shared',function_type:'shared_function',source_path:'shared.py'},foundation),privateFoundation:classify({qualified_name:'private',function_type:'private_function',source_path:'private.py'},foundation),widgetFoundation:classify({qualified_name:'widget',function_type:'widget_function',source_path:'widget.py'},foundation),publicOrdinary:classify({qualified_name:'public',function_type:'public_function',source_path:'public.py'},ordinary),sharedOrdinary:classify({qualified_name:'shared',function_type:'shared_function',source_path:'shared.py'},ordinary),privateOrdinary:classify({qualified_name:'private',function_type:'private_function',source_path:'private.py'},ordinary)}));",
     ])
     result = subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
 
     assert json.loads(result.stdout) == {
         "publicFoundation": {"signals": ["Type 0"], "violations": []},
+        "sharedFoundation": {"signals": ["Type 0"], "violations": []},
+        "privateFoundation": {"signals": ["Type 0"], "violations": []},
+        "widgetFoundation": {"signals": ["Type 0"], "violations": []},
         "publicOrdinary": {"signals": [], "violations": ["Type 1"]},
-        "sharedFoundation": {"signals": [], "violations": ["Type 2"]},
-        "privateFoundation": {"signals": [], "violations": ["Type 3"]},
+        "sharedOrdinary": {"signals": [], "violations": ["Type 2"]},
+        "privateOrdinary": {"signals": [], "violations": ["Type 3"]},
     }
 
 
