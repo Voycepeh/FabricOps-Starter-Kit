@@ -287,11 +287,10 @@ def test_02_pipeline_source_guardrails_remain_explicit():
         assert 'if read_result["has_contract"]:' in block
         assert "observe_table" not in block
         assert "check_freshness(table_id, raise_on_failure=True)" in block
-        assert "check_source_stability(table_id, raise_on_failure=True)" in block
+        assert "check_source_stability" not in block
         assert "schema_result = check_schema(table_id, dataframe=df, raise_on_failure=True)" in block
         assert "dq_result = check_dq(df, table_id=table_id, raise_on_failure=True)" in block
         assert "Governed checks skipped" in block
-        assert "METADATA_SOURCE_OBSERVATION" in block
         assert "METADATA_GUARDRAIL_RESULTS" in block
         assert "METADATA_DATA_CATALOGUE" in block
         assert "METADATA_DATA_PROFILED" in block

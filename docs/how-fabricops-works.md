@@ -102,7 +102,7 @@ Each Read block is designed to be **fully clonable**. Copy the whole block, chan
 Under the Read block, Engineering can keep the more advanced source work explicit when it is needed:
 
 - read the governed source with [`pipeline_read()`](api/reference/pipeline_read.md), which captures transient Source Observation state
-- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the target relationship is known
+- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md); `pipeline_write()` enforces target-specific Source Stability after the target relationship is known
 - enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
 - profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
 
@@ -189,7 +189,7 @@ The selected or active Data Contract is then **enforced in Engineering through t
 
 - [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
 - [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
-- [`check_source_stability()`](api/reference/check_source_stability.md) enforces Source Stability Guardrails
+- [`pipeline_write()`](api/reference/pipeline_write.md) enforces Source Stability for each explicit source-to-target relationship before publication
 - [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
 - [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
 
@@ -200,7 +200,7 @@ flowchart LR
     CONTRACT --> SELECT["widget_select_data_contract()"]
     SELECT --> SCHEMA["check_schema()"]
     SELECT --> FRESH["check_freshness()"]
-    SELECT --> STABILITY["check_source_stability()"]
+    SELECT --> STABILITY["pipeline_write(): Source Stability"]
     SELECT --> DQ["check_dq()"]
     SELECT --> SENSITIVE["check_sensitive_data()"]
 ```

@@ -24,9 +24,9 @@ choose between Lakehouse and Warehouse table readers.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:18`
+`fabricops_kit/pipeline/pipeline_read.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L18-L214">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L17-L211">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -132,8 +132,7 @@ The governed orchestration performs these mechanical steps:
    ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
 5. Capture transient current-run Source Observation state when a Data
    Contract applies, without advancing ``METADATA_SOURCE_OBSERVATION``.
-6. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
-7. Return the DataFrame, explicit ``table_id``, and small source metadata
+6. Return the DataFrame, explicit ``table_id``, and small source metadata
    required by the notebook.
 
 Higher-level governed pipeline code normally uses ``pipeline_read``.

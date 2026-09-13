@@ -8,7 +8,11 @@ from functools import reduce
 from uuid import uuid4
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from fabricops_kit.config.shared import (
+    get_audit_timezone,
+    get_current_audit_timestamp,
+    resolve_fabric_context,
+)
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
@@ -80,6 +84,7 @@ _TARGET_TECHNICAL_COLUMNS = {
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
+_PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 
 
 def set_current_source_observation(
@@ -572,6 +577,160 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in values or []]
 
 
+def _previous_source_target_observation(
+    history: Any,
+    *,
+    source_table_id: str,
+    target_table_id: str,
+    environment_name: str,
+    committed_at: Any,
+) -> list[dict[str, Any]]:
+    """Return the latest baseline for one source-to-target relationship."""
+    candidates = [
+        row
+        for row in observation_rows(history)
+        if str(row.get("source_table_id") or "") == source_table_id
+        and str(row.get("target_table_id") or "") == target_table_id
+        and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("observation_status") or "") == "committed"
+        and row.get("_committed_at") < committed_at
+    ]
+    previous_at = max((row["_committed_at"] for row in candidates), default=None)
+    return [row for row in candidates if row["_committed_at"] == previous_at]
+
+
+def check_source_stability_for_target(
+    *,
+    source_table_id: str,
+    target_table_id: str,
+    target_processing: Mapping[str, Any],
+    raise_on_failure: bool = True,
+) -> dict[str, Any]:
+    """Evaluate one current source snapshot against a target-specific baseline."""
+    config, env, context = resolve_fabric_context()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    activity_id = str(audit["_activity_id"])
+    observation = get_current_source_observation(
+        environment_name=env, activity_id=activity_id, table_id=source_table_id
+    )
+    current = observation_rows(observation)
+    if not current:
+        raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
+    committed_at = current[0]["_committed_at"]
+    try:
+        history = read_lakehouse_table(
+            _SOURCE_OBSERVATION_TABLE,
+            store="metadata",
+            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            context=context,
+        )
+        previous = _previous_source_target_observation(
+            history,
+            source_table_id=source_table_id,
+            target_table_id=target_table_id,
+            environment_name=env,
+            committed_at=committed_at,
+        )
+    except Exception as exc:
+        if not is_table_not_found_error(exc):
+            raise RuntimeError(
+                f"Unable to load Source Observation history for {source_table_id!r}: {exc}"
+            ) from exc
+        previous = []
+
+    current_by = {str(row["partition_value"]): row for row in current}
+    previous_by = {str(row["partition_value"]): row for row in previous}
+    new, changed, reappeared = [], [], []
+    for value, row in current_by.items():
+        prior = previous_by.get(value)
+        if prior is None:
+            new.append(row["partition_value"])
+        elif not prior.get("is_present", True):
+            reappeared.append(row["partition_value"])
+        elif any(
+            prior.get(field) != row.get(field)
+            for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
+        ):
+            changed.append(row["partition_value"])
+    removed = [
+        row["partition_value"]
+        for value, row in previous_by.items()
+        if row.get("is_present", True) and value not in current_by
+    ]
+    pending = [dict(row) for row in current]
+    pending.extend(
+        {
+            **current[0],
+            "partition_value": value,
+            "row_count": 0,
+            "min_change_value": None,
+            "max_change_value": None,
+            "content_fingerprint": None,
+            "is_present": False,
+        }
+        for value in removed
+    )
+    _PENDING_SOURCE_OBSERVATIONS[(env, activity_id, source_table_id, target_table_id)] = pending
+
+    rules_df = load_table_guardrail_rules(
+        config, env, table_id=source_table_id, context=context
+    )
+    selected_rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="source_stability",
+        table_id=source_table_id,
+        environment_name=env,
+    )
+    if selected_rule is None:
+        raise ValueError(f"No active approved Source Stability rule exists for {source_table_id!r}.")
+    parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
+    first_observation = not previous
+    has_changes = first_observation or bool(new or changed or removed or reappeared)
+    result = evaluate_source_stability_guardrail(
+        {
+            "table_id": source_table_id,
+            "target_table_id": target_table_id,
+            "environment_name": env,
+            "observation_id": str(current[0].get("observation_id") or ""),
+            "status": "changed" if has_changes else "unchanged",
+            "can_continue": True,
+            "check_type": "source_stability",
+            "guardrail_type": "source_stability",
+            "changed": has_changes,
+            "first_observation": first_observation,
+            "new_partitions": new,
+            "changed_partitions": changed,
+            "removed_partitions": removed,
+            "reappeared_partitions": reappeared,
+            "affected_partitions": [*new, *changed, *removed, *reappeared],
+            "partition_column": parameters.get("partition_column"),
+            "reason": "First target consumption." if first_observation else "Source comparison complete.",
+        },
+        rules_df=rules_df,
+        environment_name=env,
+        table_id=source_table_id,
+        load_strategy=str(target_processing["load_strategy"]),
+    )
+    if result.get("guardrail_rule_id"):
+        write_guardrail_result_row(
+            spark_session=getattr(observation, "sparkSession", None),
+            config=config,
+            env=env,
+            run_id=activity_id,
+            dataset_name="",
+            table_name="",
+            store_type="",
+            layer="",
+            schema_name=None,
+            guardrail_type="source_stability",
+            rule_type="historical_mutation",
+            result=result,
+        )
+    if raise_on_failure and not result.get("can_continue", False):
+        raise RuntimeError(str(result.get("reason") or "Source Stability check failed."))
+    return result
+
+
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Commit target Lineage and promote current source observations after a write."""
     if not isinstance(success_context, Mapping):
@@ -588,23 +747,34 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     audit["_activity_id"] = activity_id
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
-        current = get_current_source_observation(
-            environment_name=env, activity_id=activity_id, table_id=source_table_id
-        )
-        for row in observation_rows(current):
+        pending_key = (env, activity_id, source_table_id, target_table_id)
+        current = _PENDING_SOURCE_OBSERVATIONS.get(pending_key)
+        if current is None:
+            raise ValueError(
+                f"Source Stability was not evaluated for {source_table_id!r} and target {target_table_id!r}."
+            )
+        for row in current:
             records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
                 **{
                     name: row.get(name)
                     for name in (
-                        "observation_id", "source_table_id", "target_table_id",
+                        "observation_id", "source_table_id",
                         "environment_name", "partition_value", "row_count",
                         "min_change_value", "max_change_value", "content_fingerprint",
                         "is_present",
                     )
                 },
+                "target_table_id": target_table_id,
                 "observation_status": "committed",
                 **audit,
             }))
+    for source_table_id in source_table_ids:
+        persist_lineage_participation(
+            table_id=source_table_id,
+            pipeline_role="source",
+            activity_id=activity_id,
+            context=context,
+        )
     persist_lineage_participation(
         table_id=target_table_id,
         pipeline_role="target",
@@ -623,7 +793,9 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         mode="append",
     )
     for source_table_id in source_table_ids:
-        _CURRENT_SOURCE_OBSERVATIONS.pop((env, activity_id, source_table_id), None)
+        _PENDING_SOURCE_OBSERVATIONS.pop(
+            (env, activity_id, source_table_id, target_table_id), None
+        )
     return records
 
 
@@ -3054,6 +3226,15 @@ def _observe_lakehouse(
         spark_session=spark_session,
         context=context,
     )
+    return _observe_dataframe(frame, partition_column, change_column)
+
+
+def _observe_dataframe(
+    frame: Any, partition_column: str, change_column: str
+) -> list[dict[str, Any]]:
+    """Aggregate an already-read source DataFrame into observation rows."""
+    from pyspark.sql import functions as F
+
     row_columns = sorted(frame.columns)
     with_fingerprint = frame.withColumn(
         "_fabricops_content_hash",
@@ -3081,7 +3262,7 @@ def _observe_lakehouse(
     return _compact_rows(observed)
 
 
-def capture_source_observation(*, table_id: str) -> Any:
+def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
     """Capture one governed source observation in internal current-run state."""
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
@@ -3136,7 +3317,10 @@ def capture_source_observation(*, table_id: str) -> Any:
             "Governance must author and activate one before source observation can run."
         )
     partition_value, change_value = resolve_source_stability_observation_columns(rule)
-    if source_type == "warehouse":
+    observation_columns = {partition_value, change_value}
+    if dataframe is not None and observation_columns <= set(getattr(dataframe, "columns", ())):
+        current = _observe_dataframe(dataframe, partition_value, change_value)
+    elif source_type == "warehouse":
         query = _warehouse_observation_query(
             schema_value,
             table_value,

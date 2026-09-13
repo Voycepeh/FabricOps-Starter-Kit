@@ -74,8 +74,10 @@ def _configure_commit(monkeypatch, observations=None):
     lineage = []
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
+    shared._PENDING_SOURCE_OBSERVATIONS.clear()
     for observation in observations:
         shared.set_current_source_observation(environment_name="dev", activity_id="run-1", table_id=observation["source_table_id"], observation=Frame([observation]))
+        shared._PENDING_SOURCE_OBSERVATIONS[("dev", "run-1", observation["source_table_id"], "target-x")] = [observation]
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(shared, "get_spark_session", Spark)
@@ -91,14 +93,16 @@ def test_successful_write_commits_one_observation_per_source(monkeypatch):
         ("source-a", "committed"), ("source-b", "committed")
     }
     assert written == records
-    assert lineage == [{
-        "table_id": "target-x", "pipeline_role": "target", "activity_id": "run-1", "context": {}
-    }]
+    assert [(item["table_id"], item["pipeline_role"]) for item in lineage] == [
+        ("source-a", "source"),
+        ("source-b", "source"),
+        ("target-x", "target"),
+    ]
 
 
 def test_write_rejects_a_source_not_captured_by_pipeline_read(monkeypatch):
     written, lineage = _configure_commit(monkeypatch, [_observation("source-a")])
-    with pytest.raises(ValueError, match="call pipeline_read"):
+    with pytest.raises(ValueError, match="Source Stability was not evaluated"):
         shared.commit_pipeline_write_success(_context(sources=("source-b",)))
     assert written == []
     assert lineage == []
