@@ -242,15 +242,12 @@ Read the seven stages as one lifecycle:
 2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
 3. **Governance authors the Data Contract for that `table_id`.** [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
 4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
+
+**Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
+
 5. **Governance activates the tested definition.** [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) links the exact Data Agreement version and makes the selected Data Contract the one active version for that `table_id`. Development stays flexible: it can select any eligible immutable version, including frozen, active, or superseded versions. Draft and rejected versions are not selectable. Production is strict: it must resolve exactly one active version for each linked `table_id`.
 6. **Engineering promotes and runs the same pipeline in Production.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state.
 7. **Project teams consume the approved Production result.** `99_explore` provides the reusable read-only exploration entry point without recreating the Production ETL in every consumer workspace.
-
-#### The important loop is 3 ↔ 4
-
-Steps 3 and 4 are intentionally iterative. Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run.
-
-That loop continues until the governed definition and the real engineering implementation agree. Activation happens after that validation, not instead of it.
 
 </div>
 
