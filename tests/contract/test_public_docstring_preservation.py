@@ -20,10 +20,12 @@ def _assert_numpy_parameter_contract(function) -> None:
 def test_live_observation_checks_keep_their_supported_public_signatures() -> None:
     """Protect the explicitly governed observation-check signatures."""
     assert str(inspect.signature(check_freshness)) == (
-        "(observation, *, table_id: str | None = None, enabled: bool = True, "
-        "raise_on_failure: bool = False) -> dict"
+        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False) -> dict"
     )
-    assert str(inspect.signature(check_source_stability)) == "(observation, *, target_table_id: str) -> dict"
+    assert str(inspect.signature(check_source_stability)) == (
+        "(table_id: str, *, target_table_id: str, raise_on_failure: bool = False) -> dict"
+    )
+    assert not hasattr(fabricops_kit, "observe_table")
     assert not hasattr(fabricops_kit, "check_changes")
 
 

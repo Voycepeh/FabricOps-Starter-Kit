@@ -4,7 +4,6 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_source_stability import check_source_stability
-from fabricops_kit.pipeline.observe_table import observe_table
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
@@ -16,7 +15,6 @@ __all__ = [
     "check_schema",
     "check_freshness",
     "check_source_stability",
-    "observe_table",
     "check_dq",
     "check_sensitive_data",
     "pipeline_read",

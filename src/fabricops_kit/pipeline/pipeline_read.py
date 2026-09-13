@@ -7,10 +7,10 @@ from typing import Any
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table
 from fabricops_kit.pipeline.shared import (
-    persist_lineage_participation,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
     resolve_physical_table_identity,
+    capture_source_observation,
 )
 
 
@@ -91,7 +91,8 @@ def pipeline_read(
     3. Infer whether that configured source is a Lakehouse or Warehouse.
     4. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
        ``read_warehouse_query`` as the foundational physical Fabric I/O boundary.
-    5. Register source participation in ``METADATA_DATA_LINEAGE`` exactly once.
+    5. Capture transient current-run Source Observation state when a Data
+       Contract applies, without advancing ``METADATA_SOURCE_OBSERVATION``.
     6. Return the DataFrame, explicit ``table_id``, and small source metadata
        required by the notebook.
 
@@ -102,8 +103,8 @@ def pipeline_read(
     Files do not have a canonical ``table_id`` and should continue to use the
     foundational CSV, Excel, JSON, or Parquet readers directly.
 
-    This function does not execute source observation, Freshness, Source
-    Stability, Schema, DQ, or Sensitive Data checks. It also does not profile
+    This function does not execute Freshness, Source Stability, Schema, DQ, or
+    Sensitive Data checks. It also does not profile
     data, transform rows, or write a pipeline target. Those meaningful
     engineering decisions remain explicit in ``02_pipeline``.
 
@@ -198,9 +199,10 @@ def pipeline_read(
                 store=str(identity["store"]),
                 context=context,
             )
-    persist_lineage_participation(
-        table_id=str(identity["table_id"]), pipeline_role="source", context=dict(context)
-    )
+    if has_contract:
+        capture_source_observation(
+            table_id=str(identity["table_id"]), dataframe=dataframe
+        )
     return {
         "dataframe": dataframe,
         "table_id": str(identity["table_id"]),
