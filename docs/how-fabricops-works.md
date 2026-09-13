@@ -176,32 +176,16 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 **The Data Contract is the versioned governance definition for a governed table, not passive documentation beside the pipeline.**
 
-Governance selects the `table_id` and authors a table-centric Data Contract in `01_governance`. The contract brings together the definition Engineering is expected to run against, including:
+Governance selects the `table_id` and authors a table-centric Data Contract in `01_governance`. It brings together:
 
 - **Enrichment** for descriptive table and column metadata and information classification
-- **Guardrails** for enforceable expectations such as schema, freshness, Source Stability, Data Quality, and Sensitive Data requirements
-- the governed target processing definition, including its load strategy
-- the logical notebook ownership needed to keep the governed write relationship unambiguous
+- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements
+- the governed target processing definition, including its load strategy and parameters
+- the logical notebook ownership that identifies which pipeline owns the governed write
 
-Governance reviews that definition and freezes an immutable version for Development validation.
+Engineering then uses the selected or active Data Contract during execution. FabricOps check functions enforce its Guardrails against the real pipeline, with each Guardrail able to **Warn** or **Block** according to the authored action.
 
-The important point is what happens next: **Engineering selects that frozen contract and FabricOps check functions enforce its Guardrails against the real pipeline.** Guardrails can continue with a warning or block governed write continuation according to the authored action.
-
-```text
-Governance authors
-      ↓
-Data Contract version
-      ↓
-Freeze
-      ↓
-Engineering selects
-      ↓
-FabricOps check functions enforce Guardrails
-      ↓
-Guardrail Results
-```
-
-That is the core **Governance as Code** idea in FabricOps. Governance definitions are connected to executable engineering behavior through the Data Contract rather than remaining a separate policy document.
+That is the core **Governance as Code** idea in FabricOps: Governance decisions become a versioned definition that Engineering can execute against instead of remaining a separate policy document.
 
 ??? info "Read more: what exactly is authored and activated?"
 
@@ -211,10 +195,10 @@ That is the core **Governance as Code** idea in FabricOps. Governance definition
             TABLE["table_id"] --> CONTRACT["Data Contract version"]
             CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
             CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Source Stability<br/>Data Quality · Sensitive Data"]
-            CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
+            CONTRACT --> PROCESS["Processing definition<br/>Load strategy + parameters"]
         end
         subgraph ACTIVATE[Activate]
-            TESTED["Tested frozen Data Contract version"] --> LINK["Explicit linkage"]
+            CONTRACT_VERSION["Approved Data Contract version"] --> LINK["Explicit linkage"]
             AGREEMENT["Data Agreement version"] --> LINK
             LINK --> ACTIVE["ACTIVE for Production"]
         end
@@ -222,9 +206,9 @@ That is the core **Governance as Code** idea in FabricOps. Governance definition
 
     **Enrichment** is descriptive. It helps people and downstream systems understand what the table and columns mean and how the information is classified.
 
-    **Guardrails** are enforceable expectations. Examples include schema expectations, freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
+    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
 
-    Authoring and activation are deliberately separate Governance decisions. A frozen version gives Engineering Development an immutable definition to test. Only after the selected frozen version has been tested does Governance explicitly link the exact Data Agreement version and activate the contract for Production.
+    Activation links the approved Data Contract version to the relevant Data Agreement version so Production has one explicit governed definition to resolve.
 
 </div>
 
