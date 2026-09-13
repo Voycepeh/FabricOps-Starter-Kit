@@ -5,6 +5,7 @@ from fabricops_kit.pipeline.shared import (
     check_dq_runtime,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
+    print_guardrail_result,
 )
 
 
@@ -17,6 +18,7 @@ def check_dq(
     row_identity_columns: list[str] | None = None,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    verbose: bool = True,
 ) -> dict:
     """Evaluate active governed DQ rules and persist runtime evidence.
 
@@ -40,6 +42,8 @@ def check_dq(
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking DQ result cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
 
     Returns
     -------
@@ -84,27 +88,51 @@ def check_dq(
 
     """
     if not enabled:
-        return {"status": "skipped", "can_continue": True, "checks": []}
+        result = {"status": "skipped", "can_continue": True, "checks": []}
+        print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        return result
     config, env, context = resolve_fabric_context()
     spark_session = getattr(dataframe, "sparkSession", None)
     contract = resolve_pipeline_data_contract(
-        config, env, table_id, spark_session=spark_session, context=context,
+        config,
+        env,
+        table_id,
+        spark_session=spark_session,
+        context=context,
     )
     if contract is None:
-        return {
-            "status": "skipped", "can_continue": True, "checks": [],
+        result = {
+            "status": "skipped",
+            "can_continue": True,
+            "checks": [],
             "reason": "No Data Contract selected; Development only.",
-            "table_id": table_id, "environment_name": env,
+            "table_id": table_id,
+            "environment_name": env,
         }
+        print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        return result
     identity = resolve_catalogue_table_identity(
-        config, env, table_id, spark_session=spark_session, context=context,
+        config,
+        env,
+        table_id,
+        spark_session=spark_session,
+        context=context,
     )
     result = check_dq_runtime(
-        dataframe, config, env, identity["table_name"], table_id=identity["table_id"],
-        store=identity["store"], store_type=identity["store_type"], schema_name=identity["schema"],
-        dataset_name=dataset_name, run_id=run_id,
-        row_identity_columns=row_identity_columns, context=context,
+        dataframe,
+        config,
+        env,
+        identity["table_name"],
+        table_id=identity["table_id"],
+        store=identity["store"],
+        store_type=identity["store_type"],
+        schema_name=identity["schema"],
+        dataset_name=dataset_name,
+        run_id=run_id,
+        row_identity_columns=row_identity_columns,
+        context=context,
     )
+    print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking DQ Guardrail failed for table_id {identity['table_id']!r}.")
     return result

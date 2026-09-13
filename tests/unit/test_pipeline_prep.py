@@ -55,9 +55,24 @@ def _patch_read(monkeypatch, identity):
 @pytest.mark.parametrize(
     ("store_type", "query", "reader_name", "message"),
     [
-        ("lakehouse", None, "read_lakehouse_table", "Lakehouse table 'source.dbo.student_source' → read_lakehouse_table"),
-        ("warehouse", None, "read_warehouse_table", "Warehouse table 'source.dbo.student_source' → read_warehouse_table"),
-        ("warehouse", "SELECT customer_id FROM dbo.orders", "read_warehouse_query", "Warehouse query on 'source.dbo.student_source' → read_warehouse_query"),
+        (
+            "lakehouse",
+            None,
+            "read_lakehouse_table",
+            "Lakehouse table 'source.dbo.student_source' → read_lakehouse_table",
+        ),
+        (
+            "warehouse",
+            None,
+            "read_warehouse_table",
+            "Warehouse table 'source.dbo.student_source' → read_warehouse_table",
+        ),
+        (
+            "warehouse",
+            "SELECT customer_id FROM dbo.orders",
+            "read_warehouse_query",
+            "Warehouse query on 'source.dbo.student_source' → read_warehouse_query",
+        ),
     ],
 )
 def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query, reader_name, message):
@@ -122,7 +137,6 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
-    monkeypatch.setattr(write_module, "check_source_stability_for_target", lambda **_kwargs: {})
     return identity, context
 
 
@@ -140,29 +154,23 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
 ):
     identity, context = _patch_write(monkeypatch, store_type=store_type, strategy=strategy)
     events = []
-    monkeypatch.setattr(
-        write_module,
-        "check_source_stability_for_target",
-        lambda **kwargs: events.append(("stability", kwargs["source_table_id"], kwargs["target_table_id"])),
-    )
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: events.append("lakehouse"))
     monkeypatch.setattr(io_package, "write_warehouse_table", lambda *a, **k: events.append("warehouse"))
     monkeypatch.setattr(
         shared_module, "commit_pipeline_write_success", lambda value: events.append(("metadata", value))
     )
     result = write_module.pipeline_write(
-        object(), store="unified", schema="dbo", table_name="students",
+        object(),
+        store="unified",
+        schema="dbo",
+        table_name="students",
         source_table_ids=["source-a", "source-b"],
     )
 
     assert result == {"table_id": identity["table_id"]}
-    assert events[:2] == [
-        ("stability", "source-a", identity["table_id"]),
-        ("stability", "source-b", identity["table_id"]),
-    ]
-    assert events[2] == writer
-    assert events[3][0] == "metadata"
-    assert events[3][1]["source_table_ids"] == ["source-a", "source-b"]
+    assert events[0] == writer
+    assert events[1][0] == "metadata"
+    assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
     assert "_fabricops_active_profile_registration" not in context
     assert "store_type" not in signature(write_module.pipeline_write).parameters
     assert capsys.readouterr().out.strip() == (
@@ -170,18 +178,15 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     )
 
 
-def test_pipeline_write_blocks_before_physical_publication(monkeypatch):
+def test_pipeline_write_does_not_run_source_stability(monkeypatch):
+    """Source Stability remains an explicit notebook check."""
     _patch_write(monkeypatch)
-    physical = []
-    monkeypatch.setattr(
-        write_module,
-        "check_source_stability_for_target",
-        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("append cannot reconcile mutation")),
-    )
-    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: physical.append(1))
-    with pytest.raises(RuntimeError, match="append cannot reconcile"):
-        write_module.pipeline_write(object(), table_id="target", source_table_ids=["source"])
-    assert physical == []
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: None)
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+
+    write_module.pipeline_write(object(), table_id="target", source_table_ids=["source"])
+
+    assert not hasattr(write_module, "check_source_stability_for_target")
 
 
 def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):
@@ -249,9 +254,13 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
     monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
     monkeypatch.setattr(write_module, "coerce_metadata_row_types", lambda _table, row: row)
-    monkeypatch.setattr(write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"})
+    monkeypatch.setattr(
+        write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"}
+    )
     monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: None)
-    monkeypatch.setattr(write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue"))
+    monkeypatch.setattr(
+        write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
+    )
 
     write_module._persist_target_processing(
         identity=_identity("lakehouse:unified:dbo:students", store_type="lakehouse"),
@@ -302,9 +311,7 @@ def test_pipeline_write_verbose_false_suppresses_output_and_low_level_lakehouse_
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: writer_kwargs.append(k))
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
 
-    write_module.pipeline_write(
-        object(), table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
-    )
+    write_module.pipeline_write(object(), table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False)
 
     assert capsys.readouterr().out == ""
     assert writer_kwargs[0]["verbose"] is False
@@ -393,5 +400,11 @@ def test_foundational_writers_exclude_governed_parameters():
 
 
 def test_pipeline_write_does_not_own_visible_checks():
-    for name in ("check_schema", "check_dq", "check_sensitive_data", "profile_table"):
+    for name in (
+        "check_schema",
+        "check_dq",
+        "check_sensitive_data",
+        "check_source_stability_for_target",
+        "profile_table",
+    ):
         assert not hasattr(write_module, name)

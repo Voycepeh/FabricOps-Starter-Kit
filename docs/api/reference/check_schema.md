@@ -12,9 +12,9 @@ Check observed table schema against direct or approved schema intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_schema.py:21`
+`fabricops_kit/pipeline/check_schema.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L21-L144">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L187">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,10 +37,11 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def check_schema(
-    table_id: str,
     dataframe=None,
+    table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    verbose: bool=True,
 ) -> dict:
 ```
 
@@ -60,10 +61,11 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `dataframe` | `DataFrame` | No | Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked. |
+| `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking schema result cannot continue. |
+| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
 

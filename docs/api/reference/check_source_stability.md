@@ -12,9 +12,9 @@ Validate source changes against one target consumption baseline and load strateg
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_stability.py:11`
+`fabricops_kit/pipeline/check_source_stability.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L11-L77">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L12-L102">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,9 +37,11 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def check_source_stability(
-    table_id: str,
+    source_table_id: str,
     target_table_id: str,
+    enabled: bool=True,
     raise_on_failure: bool=False,
+    verbose: bool=True,
 ) -> dict:
 ```
 
@@ -62,9 +64,11 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
+| `source_table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
 | `target_table_id` | `str` | Yes | Canonical governed target identity whose consumption baseline and load strategy determine Source Stability compatibility. |
+| `enabled` | `bool` | No | Explicitly skip the check when ``False``. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking result cannot continue. |
+| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
 
@@ -83,10 +87,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Normal notebook orchestration does not call this function directly.
-:func:`pipeline_write` evaluates it for every explicit ``source_table_id``
-before physical publication. A successful write then commits the new
-source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
+Notebook orchestration calls this function explicitly for every governed
+source before :func:`pipeline_write`. A successful write then commits the
+accepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
 
 </div>
 

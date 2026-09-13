@@ -102,12 +102,15 @@ Each Read block is designed to be **fully clonable**. Copy the whole block, chan
 After the source is read, the Read block keeps the governed checks and profiling explicit:
 
 - enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md)
-- enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
-- profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
+- enforce Schema on the returned DataFrame with [`check_schema()`](api/reference/check_schema.md)
+- enforce Data Quality on that same DataFrame with [`check_dq()`](api/reference/check_dq.md)
+- call [`profile_table()`](api/reference/profile_table.md) explicitly with either the returned DataFrame for **read scope** or only its canonical `table_id` for **full scope**
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
+
+`02_pipeline` keeps the profile-scope choice visible. **Read scope** reuses exactly the DataFrame returned by `pipeline_read()`, including an incremental batch or custom Warehouse query result. **Full scope** intentionally reads or queries the complete persisted governed table again. Those are different semantic scopes, so the latter is deliberate I/O rather than a duplicate read.
 
 For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
 
@@ -128,12 +131,12 @@ The target identity is resolved with [`resolve_table_id()`](api/reference/resolv
 The surrounding Write block keeps the important target decisions explicit and in sequence:
 
 - enforce target Schema with [`check_schema()`](api/reference/check_schema.md)
-- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md); when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
+- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md), then carry its returned DataFrame into every later step; when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
 - enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
-- enforce Data Quality with [`check_dq()`](api/reference/check_dq.md)
+- enforce target Data Quality on the Sensitive Data output with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
-- profile the persisted target with [`profile_table()`](api/reference/profile_table.md)
+- profile the complete persisted target with an explicit post-write [`profile_table()`](api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
 - optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
@@ -192,7 +195,7 @@ The selected or active Data Contract is then **enforced in Engineering through t
 
 - [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
 - [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
-- [`pipeline_write()`](api/reference/pipeline_write.md) enforces Source Stability for each explicit source-to-target relationship before publication
+- [`check_source_stability()`](api/reference/check_source_stability.md) explicitly enforces Source Stability for each source-to-target relationship before publication
 - [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
 - [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
 
@@ -203,7 +206,7 @@ flowchart LR
     CONTRACT --> SELECT["widget_select_data_contract()"]
     SELECT --> SCHEMA["check_schema()"]
     SELECT --> FRESH["check_freshness()"]
-    SELECT --> STABILITY["pipeline_write(): Source Stability"]
+    SELECT --> STABILITY["check_source_stability()"]
     SELECT --> DQ["check_dq()"]
     SELECT --> SENSITIVE["check_sensitive_data()"]
 ```

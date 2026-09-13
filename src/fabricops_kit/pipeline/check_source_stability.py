@@ -5,26 +5,33 @@ from fabricops_kit.pipeline.shared import (
     check_source_stability_for_target,
     resolve_catalogue_table_identity,
     resolve_table_processing_definition,
+    print_guardrail_result,
 )
 
 
 def check_source_stability(
-    table_id: str,
+    source_table_id: str,
     *,
     target_table_id: str,
+    enabled: bool = True,
     raise_on_failure: bool = False,
+    verbose: bool = True,
 ) -> dict:
     """Validate a source snapshot against one target consumption baseline.
 
     Parameters
     ----------
-    table_id : str
+    source_table_id : str
         Canonical governed source identity returned by :func:`pipeline_read`.
     target_table_id : str
         Canonical governed target identity whose consumption baseline and load
         strategy determine Source Stability compatibility.
+    enabled : bool, default=True
+        Explicitly skip the check when ``False``.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking result cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
 
     Returns
     -------
@@ -43,10 +50,9 @@ def check_source_stability(
 
     Notes
     -----
-    Normal notebook orchestration does not call this function directly.
-    :func:`pipeline_write` evaluates it for every explicit ``source_table_id``
-    before physical publication. A successful write then commits the new
-    source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
+    Notebook orchestration calls this function explicitly for every governed
+    source before :func:`pipeline_write`. A successful write then commits the
+    accepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
 
     Examples
     --------
@@ -62,16 +68,35 @@ def check_source_stability(
     pipeline_read, pipeline_write
 
     """
+    if not enabled:
+        result = {"status": "skipped", "can_continue": True, "checks": []}
+        print_guardrail_result(
+            "Source Stability",
+            result,
+            verbose=verbose,
+            source_table_id=source_table_id,
+            target_table_id=target_table_id,
+        )
+        return result
     config, env, context = resolve_fabric_context()
-    target = resolve_catalogue_table_identity(
-        config, env, target_table_id, context=context
-    )
-    processing = resolve_table_processing_definition(
-        config, env, str(target["table_id"]), context=context
-    )
-    return check_source_stability_for_target(
-        source_table_id=str(table_id),
+    target = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+    processing = resolve_table_processing_definition(config, env, str(target["table_id"]), context=context)
+    result = check_source_stability_for_target(
+        source_table_id=str(source_table_id),
         target_table_id=str(target["table_id"]),
         target_processing=processing,
-        raise_on_failure=raise_on_failure,
+        raise_on_failure=False,
     )
+    print_guardrail_result(
+        "Source Stability",
+        result,
+        verbose=verbose,
+        source_table_id=source_table_id,
+        target_table_id=str(target["table_id"]),
+    )
+    if raise_on_failure and not result["can_continue"]:
+        raise RuntimeError(
+            f"A blocking Source Stability Guardrail failed for source_table_id {source_table_id!r} "
+            f"and target_table_id {target['table_id']!r}."
+        )
+    return result

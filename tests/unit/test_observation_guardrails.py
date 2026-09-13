@@ -1,4 +1,5 @@
 """Tests for table-id-driven observation Guardrails."""
+
 # ruff: noqa: D103
 from __future__ import annotations
 
@@ -12,10 +13,10 @@ from fabricops_kit import check_freshness, check_source_stability
 
 def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
     assert str(inspect.signature(check_freshness)) == (
-        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False) -> dict"
+        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
     )
     assert str(inspect.signature(check_source_stability)) == (
-        "(table_id: str, *, target_table_id: str, raise_on_failure: bool = False) -> dict"
+        "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
     )
 
 
@@ -39,9 +40,11 @@ def test_source_stability_resolves_target_processing(monkeypatch) -> None:
     )
     result = check_source_stability("source-a", target_table_id="target-a")
     assert result["can_continue"] is True
-    assert calls == [{
-        "source_table_id": "source-a",
-        "target_table_id": "target-canonical",
-        "target_processing": {"load_strategy": "append"},
-        "raise_on_failure": False,
-    }]
+    assert calls == [
+        {
+            "source_table_id": "source-a",
+            "target_table_id": "target-canonical",
+            "target_processing": {"load_strategy": "append"},
+            "raise_on_failure": False,
+        }
+    ]

@@ -87,6 +87,39 @@ _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 
 
+def print_guardrail_result(
+    name: str,
+    result: Mapping[str, Any],
+    *,
+    verbose: bool,
+    table_id: str | None = None,
+    source_table_id: str | None = None,
+    target_table_id: str | None = None,
+) -> None:
+    """Print one concise, normalized public Guardrail outcome."""
+    if not verbose:
+        return
+    raw_status = str(result.get("status") or "skipped").strip().lower()
+    status = {
+        "passed": "PASS",
+        "pass": "PASS",
+        "warning": "WARN",
+        "warn": "WARN",
+        "failed": "BLOCK" if not result.get("can_continue", False) else "WARN",
+        "block": "BLOCK",
+        "blocked": "BLOCK",
+        "skipped": "SKIPPED",
+    }.get(raw_status, raw_status.upper())
+    print(f"FabricOps Check → {name}")
+    if table_id:
+        print(f"  Table  {table_id}")
+    if source_table_id:
+        print(f"  Source {source_table_id}")
+    if target_table_id:
+        print(f"  Target {target_table_id}")
+    print(f"  Result {status}")
+
+
 def set_current_source_observation(
     *, environment_name: str, activity_id: str, table_id: str, observation: Any
 ) -> None:
