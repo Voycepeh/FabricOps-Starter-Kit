@@ -62,29 +62,47 @@ The rest of this page zooms into that picture without changing the story.
 
 <div class="fabricops-section-block" markdown>
 
-## How does FabricOps know where my data lives?
+## How do code-first pipelines work across Fabric stores?
 
-**FabricOps is configuration-driven: environment-specific Fabric resources are resolved through `00_env_config` instead of being scattered through pipeline code.**
+**A Fabric notebook is very convenient when everything lives in one attached Lakehouse or Warehouse. Code-first ETL becomes harder when the same pipeline needs to move data across several Fabric stores and environments.**
 
-`00_env_config` defines the active environment and the logical Fabric stores available to the workflow. Public FabricOps functions consume that configuration and resolve the physical Fabric item or path they need at runtime.
+With one default attached store, Fabric already gives a very natural notebook experience. Files and tables are easy to browse, reference, and use from the notebook without repeatedly describing where they live.
+
+Real ETL rarely stays inside one store. A pipeline commonly reads from one data store, transforms the data, and writes to another. It may also need to move between Development and Production without changing the engineering logic.
+
+At the time of writing, Fabric does not provide the same simple notebook-level abstraction for a code-first pipeline that needs to resolve two or more arbitrary Fabric stores. Without another layer, projects tend to repeat workspace IDs, item IDs, ABFSS paths, or connection details throughout their code. That makes otherwise reusable pipeline logic environment-specific.
+
+FabricOps solves that problem with **configuration-driven engineering**. The idea is inspired by the configuration files commonly used in software engineering: give a resource a stable logical name once, then let application code refer to that name instead of embedding its physical location everywhere.
+
+In FabricOps, `00_env_config` is that configuration surface. You define the Fabric stores available in the current environment once. Pipeline code then passes the configured store name into FabricOps public functions, and FabricOps resolves the physical Fabric resource for you.
 
 ```text
-logical Fabric store
-        ↓
-00_env_config
-        ↓
-FabricOps public function
-        ↓
-resolved Lakehouse / Warehouse / configured Fabric resource
+store name used by 02_pipeline
+          ↓
+      00_env_config
+          ↓
+resolve Fabric store type + physical location
+          ↓
+Lakehouse                          Warehouse
+   ↓                                  ↓
+PySpark / ABFSS resolution        SQL pushdown where appropriate
+          \                         /
+           → PySpark DataFrame → transformations
 ```
 
-That separation matters when the same engineering pattern moves between Development and Production. The pipeline should express *what* it wants to read or write; environment configuration determines *where* that resource lives.
+For a **Lakehouse**, FabricOps resolves the configured store to the appropriate Fabric/ABFSS location and uses the PySpark path naturally supported by Fabric notebooks.
 
-The same configuration surface can also carry project-controlled options used by the FabricOps workflow, such as governance authoring settings. The goal is not to hide project logic in configuration. It is to keep environment-specific identities and reusable operating settings out of the ETL implementation.
+For a **Warehouse**, FabricOps can push expensive source-side work down to SQL instead of pulling the whole Warehouse table into Spark unnecessarily. This matters especially for operations such as large-table profiling, filtering, aggregation, counts, and ranges.
 
-??? info "Read more: why this matters for promotion"
+Once the data reaches the transformation stage, the engineering model stays simple: **project transformations are written in PySpark**. FabricOps therefore remains PySpark-first without forcing every source operation through Spark when the source engine can do the work more efficiently.
 
-    Engineering Development and Engineering Production can use the same logical pipeline structure while resolving different configured Fabric resources. Promotion therefore does not require rewriting paths throughout `02_pipeline`.
+The same logical store names can then resolve to different physical Fabric resources in Development and Production. `02_pipeline` stays focused on engineering logic while `00_env_config` owns the environment-specific wiring.
+
+??? info "Read more: why SQL pushdown matters"
+
+    Pulling millions of Warehouse rows into Spark only to calculate summary statistics creates avoidable data movement and memory work. SQL pushdown performs that work where the data already lives and returns only the result the notebook needs.
+
+    This is an execution optimization, not a second FabricOps workflow. The same pipeline still resolves configuration, produces the same governed metadata, and participates in the same Data Contract lifecycle.
 
     [How does configuration-driven resolution work in detail?](reference/engineering-cheat-sheet.md#config-driven-engineering)
 
@@ -115,36 +133,6 @@ Engineering records technical context such as the **Data Catalogue**, **Data Pro
     A pipeline may read multiple upstream sources, but the governed write boundary is intentionally clear so FabricOps can associate the resulting table, observations, Lineage, and Data Contract with one canonical target identity.
 
     [How do load strategies, Medallion layers, failure-safe processing, and incremental loads work?](reference/engineering-cheat-sheet.md)
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## Does PySpark-first mean Spark for everything?
-
-**No. FabricOps is PySpark-first at the notebook workflow level, but it should execute expensive work close to the data when another engine is materially more efficient.**
-
-For Lakehouse sources, PySpark is the natural path. FabricOps reads through its public I/O surface into a Spark DataFrame, after which the pipeline can transform, profile, and validate the data in the normal PySpark workflow.
-
-```text
-Lakehouse → public FabricOps read → PySpark DataFrame → ETL / profile / checks
-```
-
-A pipeline that already has a DataFrame can continue through the same DataFrame-oriented workflow without creating another source-specific programming model.
-
-Warehouse sources are different. A large Warehouse table should not be pulled wholesale into Spark merely to compute profile statistics that the Warehouse engine can calculate more efficiently itself. For heavy operations such as large-scale profiling, FabricOps can use SQL pushdown so filtering, aggregation, counts, ranges, or similar work happens in the Warehouse first and only the required result is materialized for the notebook workflow.
-
-```text
-Warehouse → SQL pushdown → reduced / aggregated result → DataFrame when needed
-```
-
-The principle is therefore **PySpark-first, not Spark-only**. Lakehouse work naturally stays in Spark; Warehouse work can use T-SQL close to the data when moving the full source into Spark would be unnecessarily expensive.
-
-??? info "Read more: why SQL pushdown matters"
-
-    The cost becomes visible on large Warehouse tables. Rendering millions of Warehouse rows into Spark just to calculate summary statistics creates data movement and memory work that is often unnecessary. SQL pushdown lets the Warehouse perform the heavy calculation and return the smaller result required by the pipeline.
-
-    This is an execution optimization, not a second FabricOps operating model. The same pipeline still resolves configuration, identifies the same governed tables, produces the same metadata context, and participates in the same Data Contract lifecycle.
 
 </div>
 
