@@ -17,365 +17,279 @@
 .md-typeset .fabricops-section-block > :last-child {
   margin-bottom: 0;
 }
-
-.md-typeset .fabricops-workflow-steps {
-  margin: 1rem 0 0;
-  border-top: 1px solid var(--md-default-fg-color--lightest);
-}
-
-.md-typeset details.fabricops-workflow-step {
-  margin: 0;
-  border: 0;
-  border-bottom: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.md-typeset details.fabricops-workflow-step > summary {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.8rem;
-  align-items: center;
-  min-height: 3.5rem;
-  padding: 0.8rem 0.15rem;
-  cursor: pointer;
-  list-style: none;
-  background: transparent;
-}
-
-.md-typeset details.fabricops-workflow-step > summary::before,
-.md-typeset details.fabricops-workflow-step > summary::after {
-  display: none !important;
-  content: none !important;
-}
-
-.md-typeset details.fabricops-workflow-step > summary::-webkit-details-marker {
-  display: none;
-}
-
-.md-typeset .fabricops-step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--md-accent-fg-color) 12%, transparent);
-  color: var(--md-accent-fg-color);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.md-typeset .fabricops-step-heading {
-  min-width: 0;
-}
-
-.md-typeset .fabricops-step-role {
-  display: block;
-  margin-bottom: 0.12rem;
-  color: var(--md-accent-fg-color);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.045em;
-  text-transform: uppercase;
-}
-
-.md-typeset .fabricops-step-title {
-  display: block;
-  color: var(--md-default-fg-color);
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.md-typeset .fabricops-step-chevron {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-right: 0.1rem solid var(--md-default-fg-color--light);
-  border-bottom: 0.1rem solid var(--md-default-fg-color--light);
-  transform: rotate(45deg);
-  transition: transform 0.15s ease;
-}
-
-.md-typeset details.fabricops-workflow-step[open] > summary .fabricops-step-chevron {
-  transform: rotate(225deg);
-}
-
-.md-typeset details.fabricops-workflow-step[open] > summary {
-  border-bottom: 1px solid var(--md-default-fg-color--lightest);
-}
-
-.md-typeset .fabricops-step-body {
-  padding: 0.15rem 0.15rem 1rem 2.7rem;
-}
-
-.md-typeset .fabricops-step-body > :first-child {
-  margin-top: 0.55rem;
-}
-
-.md-typeset .fabricops-step-body > :last-child {
-  margin-bottom: 0;
-}
-
-@media screen and (max-width: 44.9844em) {
-  .md-typeset .fabricops-step-body {
-    padding-left: 0.15rem;
-  }
-}
 </style>
+
+The FabricOps overview video introduces the story. This page goes deeper into how the pieces fit together and why the workflow is structured this way.
+
+[Want to run it yourself? Follow the Guided Demo.](guided-demo.md)
 
 <div class="fabricops-section-block" markdown>
 
-**FabricOps connects Governance, Engineering Development, Engineering Production, and project-specific consumer workspaces through one governed workflow.**
+## What problem is FabricOps solving?
+
+**Microsoft Fabric gives the platform. FabricOps gives the operating practice.**
+
+Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
+
+FabricOps packages that operating pattern around four reusable notebooks:
+
+| Notebook | Role |
+| --- | --- |
+| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | Defines the active environment and configured Fabric stores. |
+| [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb) | Authors the governance context and versioned Data Contracts. |
+| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Performs project-specific engineering, records technical metadata, and enforces governed expectations. |
+| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific workspaces consume approved Production data without recreating the Production engineering workflow. |
+
+The notebooks are supported by the FabricOps package: reusable public functions and widgets provide the repeatable pieces, while the project keeps its own transformation logic.
+
+#### See the whole operating model
+
+**Questions this diagram answers:**
+
+- Where do Governance, Engineering Development, Engineering Production, and project-specific consumers sit?
+- Which notebooks belong in each workspace?
+- Where does the shared Metadata Lakehouse fit?
+- What is promoted to Production?
+- Where are approved outputs consumed from?
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-The shared Metadata Lakehouse carries FabricOps metadata in two ownership boundaries: Governance writes authoritative definitions in the `governance` schema, while Engineering/runtime writes discoveries, observations, and results in the `engineering` schema. Governance defines, Engineering discovers and runs, Governance reviews and activates, Engineering produces governed physical outputs, and projects decide whether supporting evidence should be persisted.
+Read it from top to bottom. Governance defines and versions governed expectations. Engineering Development builds and validates the implementation. The validated `02_pipeline` is promoted to Engineering Production, where active contracts are resolved and governed outputs are produced. Project-specific consumers then use approved Production data through `99_explore`.
 
-<!-- VIDEO SLOT: Main How FabricOps Works overview -->
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## The workflow at a glance
-
-FabricOps is built around four reusable notebooks that work together as one operating practice:
-
-| Notebook | Role in the workflow |
-| --- | --- |
-| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | Defines the active environment and the configured Fabric items used by the workflow. |
-| [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb) | Creates Data Stewards and Data Agreements, enriches governed tables, defines Guardrails, and manages Data Contract versions. |
-| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Performs project-specific engineering, records technical metadata, validates governed expectations, and runs the governed Production pipeline. |
-| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific consumer workspaces use approved Production data without recreating the Production engineering workflow. |
-
-[Browse all reusable notebook templates](notebook-templates.md).
-
-For the deeper engineering reasoning behind `00_env_config`, FabricOps I/O functions, Lakehouse/Warehouse choices, PySpark, incremental processing, and the detailed `02_pipeline` structure, use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md).
+The rest of this page zooms into that picture without changing the story.
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## The Governance and Engineering loop
+## How does Engineering actually run across Fabric stores?
+
+Fabric notebooks work very well when a notebook only needs its **single default attached Lakehouse or Warehouse**. You can browse that store naturally and work with its files or tables without repeatedly describing where the data lives.
+
+The difficulty starts when the pipeline needs **two or more Fabric stores**, which is normal for ETL. One pipeline may read from a source Lakehouse, enrich from a Warehouse, and publish to another target store. Without another abstraction, the notebook starts accumulating workspace IDs, item IDs, ABFSS paths, SQL endpoints, or attachment-specific logic.
+
+FabricOps uses [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) to solve that wiring problem. Each Fabric store gets a stable logical name such as `source`, `unified`, or `product`. `02_pipeline` refers to those logical names, while FabricOps resolves the physical resource for the current environment.
+
+That lets the notebook itself stay deliberately simple:
+
+```mermaid
+flowchart LR
+    READ["Read"] --> TRANSFORM["Transform"] --> WRITE["Write"]
+```
+
+FabricOps standardizes the repeatable plumbing around the Read and Write boundaries. The transformation in the middle stays yours.
+
+The configuration layer also lets FabricOps choose the execution path that matches the underlying store. Lakehouse access naturally uses the PySpark path. Warehouse sources can use the Warehouse SQL path when source-side SQL is the better execution option. In both cases, the pipeline returns to a **PySpark DataFrame** for project transformation.
+
+```mermaid
+flowchart LR
+    CONFIG["00_env_config<br/>logical store names"] --> PIPELINE["02_pipeline"]
+    PIPELINE --> READ["Read"]
+    READ -->|Lakehouse| SPARK["PySpark read path"]
+    READ -->|Warehouse| SQL["Warehouse SQL path<br/>when appropriate"]
+    SPARK --> DF["PySpark DataFrame"]
+    SQL --> DF
+    DF --> TRANSFORM["Transform in PySpark"]
+    TRANSFORM --> WRITE["Write"]
+```
+
+#### Read
+
+A Read block describes one source and calls [`pipeline_read()`](api/reference/pipeline_read.md). FabricOps then resolves the configured store from `00_env_config`, the canonical `table_id`, the physical Fabric item, and the correct lower-level reader.
+
+Each Read block is designed to be **fully clonable**. Copy the whole block, change the small set of variables at the top such as the store, schema, table, or optional Warehouse query, and the same structure works for the next source.
+
+Under the Read block, Engineering can keep the more advanced source work explicit when it is needed:
+
+- inspect the persisted source with [`observe_table()`](api/reference/observe_table.md)
+- enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md) and Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the target relationship is known
+- enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
+- profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
+
+The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
+
+For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
+
+#### Transform
+
+Once the Read blocks return Spark DataFrames, FabricOps gets out of the way. **Project transformations are ordinary PySpark DataFrame transformations.**
+
+Join, filter, aggregate, derive columns, reshape data, or apply whatever business logic the project requires. This keeps the transformation readable to engineers instead of hiding it inside a framework-specific DSL.
+
+That also means engineers can use **Microsoft Fabric Copilot** to help write or refine PySpark transformation code while the FabricOps Read and Write boundaries stay standardized.
+
+#### Write
+
+A Write block publishes the prepared DataFrame through [`pipeline_write()`](api/reference/pipeline_write.md). Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
+
+The target identity is resolved with [`resolve_table_id()`](api/reference/resolve_table_id.md). The Write block is where the Data Contract becomes operational: FabricOps resolves the selected or active Data Contract and uses its governed processing definition to determine how the target is published.
+
+The surrounding Write block keeps the important target decisions explicit:
+
+- enforce target Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
+- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md)
+- publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path
+- add FabricOps technical audit columns to the target data
+- persist the resolved load strategy and parameters in Catalogue
+- commit successful Lineage and Source Observation metadata only after the physical write succeeds
+
+This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
+
+??? info "Read more: how FabricOps routes work across Lakehouse and Warehouse"
+
+    FabricOps public functions give the notebook stable interfaces while resolving the correct Lakehouse or Warehouse implementation underneath.
+
+    [`pipeline_read()`](api/reference/pipeline_read.md) routes governed table reads to the Lakehouse table, Warehouse table, or Warehouse query implementation. Raw Lakehouse files remain explicit file reads through the foundational file readers.
+
+    [`profile_table()`](api/reference/profile_table.md) uses Spark for a supplied DataFrame or Lakehouse table, and can use Warehouse-native SQL when profiling a physical Warehouse table.
+
+    [`pipeline_write()`](api/reference/pipeline_write.md) resolves the governed target and routes publication through the correct Lakehouse or Warehouse path while applying the Data Contract load strategy.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
+
+## Where does Governance enter the engineering flow?
+
+**Engineering produces the physical table. Profiling makes that table visible to Governance, and the Data Contract turns Governance decisions back into executable checks.**
+
+[`profile_table()`](api/reference/profile_table.md) profiles the actual table in its Lakehouse or Warehouse and writes the observed structure and statistics into the **Data Catalogue** and profiling metadata.
+
+```mermaid
+flowchart LR
+    TABLE["Table in Lakehouse or Warehouse"] --> PROFILE["profile_table()"]
+    PROFILE --> CATALOGUE["Data Catalogue"]
+    CATALOGUE --> GOVERNANCE["Governance adds<br/>Enrichment + Guardrails"]
+    GOVERNANCE --> CONTRACT["Data Contract"]
+    CONTRACT --> ETL["ETL validates runs<br/>against the Data Contract"]
+```
+
+Governance reads the actual governed table through its Data Catalogue entry, adds **Enrichment** and **Guardrails**, and authors the versioned **Data Contract** against that real `table_id`. Engineering then uses the contract so the ETL can validate real runs against the governed definition.
+
+`01_governance` can also establish the **Data Steward** and **Data Agreement** around that governed asset. Fabric AI Functions can optionally use the Catalogue and profiling context to suggest descriptions and classifications, which Governance reviews and edits before they become part of the governed definition.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
+
+## What is a Data Contract in FabricOps?
+
+**The Data Contract is the versioned governance definition for a governed table, not passive documentation beside the pipeline.**
+
+Governance authors it through [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
+
+- **Enrichment** for descriptive table and column metadata and information classification
+- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements
+- the governed target processing definition, including its load strategy and parameters
+- the logical notebook ownership that identifies which pipeline owns the governed write
+
+Engineering sets the contract context in `02_pipeline` through [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md). In Development, an engineer can select an eligible immutable version for each linked `table_id`; in Production, FabricOps ignores overrides and resolves exactly one active version automatically.
+
+The selected or active Data Contract is then **enforced in Engineering through the FabricOps Guardrail functions**:
+
+- [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
+- [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
+- [`check_source_stability()`](api/reference/check_source_stability.md) enforces Source Stability Guardrails
+- [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
+- [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
+
+```mermaid
+flowchart LR
+    GOV["01_governance"] --> AUTHOR["widget_author_data_contract()"]
+    AUTHOR --> CONTRACT["Data Contract"]
+    CONTRACT --> SELECT["widget_select_data_contract()"]
+    SELECT --> SCHEMA["check_schema()"]
+    SELECT --> FRESH["check_freshness()"]
+    SELECT --> STABILITY["check_source_stability()"]
+    SELECT --> DQ["check_dq()"]
+    SELECT --> SENSITIVE["check_sensitive_data()"]
+```
+
+That is the core **Governance as Code** idea in FabricOps: Governance authors the definition once, Engineering explicitly selects or resolves it, and the pipeline functions execute those governed expectations against the real data flow.
+
+??? info "Read more: what exactly is authored and activated?"
+
+    ```mermaid
+    flowchart LR
+        TABLE["table_id"] --> AUTHOR["widget_author_data_contract()"]
+        AUTHOR --> CONTRACT["Data Contract version<br/>Enrichment · Guardrails · Processing"]
+        CONTRACT --> ACTIVATE["widget_activate_data_contract()"]
+        AGREEMENT["Data Agreement version"] --> ACTIVATE
+        ACTIVATE --> ACTIVE["ACTIVE for Production"]
+    ```
+
+    **Enrichment** is descriptive. It helps people and downstream systems understand what the table and columns mean and how the information is classified.
+
+    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
+
+    Activation links the approved Data Contract version to the relevant Data Agreement version so Production has one explicit governed definition to resolve.
+
+</div>
+
+<div class="fabricops-section-block" markdown>
+
+## How does the whole FabricOps workflow run?
+
+**The seven stages below are the core operating flow. They connect the Governance and Engineering responsibilities shown in the workflow image to the metadata written behind the scenes.**
+
+#### See the Governance and Engineering workflow
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-FabricOps deliberately loops between Governance and Engineering Development before the approved pipeline runs in Production. Scan the seven stages below, then expand a stage when you need the implementation detail.
+Read the seven stages as one lifecycle:
 
-<!-- VIDEO SLOT: Governance and Engineering loop -->
+1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
+2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
+3. **Governance authors the Data Contract for that `table_id`.** [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
+4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
 
-<div class="fabricops-workflow-steps" markdown>
+**Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
 
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">1</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Create Data Stewards and a Data Agreement in <code>01_governance</code></span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-In `01_governance`, Governance creates the provider and recipient **Data Stewards** and a **Data Agreement** between them.
-
-The Data Agreement establishes the governed sharing context: who is providing and receiving the data, the business purpose, approved usages, validity, and other agreement-level governance information.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">2</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Build the ETL pipeline within <code>02_pipeline</code></span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-Engineering Development uses `02_pipeline` to read one or more configured sources, perform project-specific transformations, and write governed target tables to the configured Lakehouse or Warehouse.
-
-Each governed target is identified by a canonical `table_id`. Engineering then records the technical context around that table, including:
-
-- **Data Catalogue metadata** — the governed table and column structure used as the canonical technical identity for the target.
-- **Data Profiled records** — observed characteristics of the data that help Engineering and Governance understand what is actually present.
-- **Data Profiled Frequency**, where applicable — the recorded frequency distribution for profiled values where that deeper profile is useful.
-- **Data Lineage** — the relationship between the source data used by the pipeline and the governed target it produces.
-
-The `table_id` is the shared identity that lets the rest of the FabricOps workflow refer to the same governed table.
-
-#### Engineering choices
-
-FabricOps makes several engineering choices so projects do not need to redefine the same foundations every time. This page only introduces them; use each link to jump into the deeper Engineering Guide explanation.
-
-- **[Configuration-driven engineering](reference/engineering-cheat-sheet.md#config-driven-engineering)** — separate reusable `02_pipeline` logic from environment-specific Fabric item identities through `00_env_config` and FabricOps I/O resolution.
-- **[Code-first engineering](reference/engineering-cheat-sheet.md#notebook-first)** — keep governed transformation logic explicit, reviewable, and versionable in code, with `02_pipeline` as the primary engineering implementation.
-- **[ETL lifecycle implementation](reference/engineering-cheat-sheet.md#etl-lifecycle)** — keep one visible `Environment → Extract → Transform → Load` lifecycle while FabricOps supplies the repeatable engineering behaviour around it.
-- **[PySpark-first transformation](reference/engineering-cheat-sheet.md#pyspark-first)** — use PySpark DataFrames for the main transformation path, with T-SQL for efficient Warehouse-side operations before data enters Spark.
-- **[Lakehouse-first engineering](reference/engineering-cheat-sheet.md#lakehouse-first)** — prefer Lakehouse for substantial or repeated Spark engineering while still supporting Warehouse as a relational source or curated serving layer.
-- **[Single-target pipeline implementation](reference/engineering-cheat-sheet.md#single-target-pipeline)** — allow many upstream sources to feed one `02_pipeline`, but publish one governed target so independent writes cannot leave a partially completed multi-target pipeline.
-- **[Governance as Code](reference/engineering-cheat-sheet.md#governance-as-code)** — use `table_id` as the canonical asset identity, keep descriptive Enrichment separate from executable Guardrails, and resolve both through an exact Data Contract version.
-- **[Medallion architecture implementation](reference/engineering-cheat-sheet.md#medallion-architecture)** — implement progressive data layers where they add architectural value without forcing unnecessary copies or fixed layer names.
-- **[Read preparation and target processing](reference/engineering-cheat-sheet.md#full-vs-incremental)** — keep source identity and physical reads separate from governed target-write behaviour.
-- **[Failure-safe processing and recovery](reference/engineering-cheat-sheet.md#failure-safe-processing)** — keep recovery and idempotency within the governed target load strategy and transaction.
-
-The exact ETL implementation stays project-specific. FabricOps standardizes the environment, I/O boundaries, metadata capture, validation, and governed hand-offs around that engineering work.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">3</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Select the <code>table_id</code>, author the Data Contract, and freeze the version</span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-Back in `01_governance`, Governance selects the same canonical `table_id` from the Data Catalogue and reads the Catalogue and Profile information produced by Engineering. Governance then uses `widget_author_data_contract()` to author and freeze one table-centric Data Contract version.
-
-As parts of that Data Contract definition, Governance can add:
-
-- **Enrichment**, limited to descriptive table and column descriptions and information classifications
-- **Guardrails**, such as schema, freshness, and Data Quality expectations
-- the governed target **load strategy** and its parameters, such as overwrite, append, SCD1, or SCD2, as part of the table definition that will be saved into the Data Contract
-- the target's owning logical notebook name, so one governed `table_id` has one writer across environments; the physical notebook ID remains diagnostic metadata
-
-Freshness asks whether the latest source data is recent enough. Source Stability asks whether data already processed by the pipeline changed unexpectedly. The authoritative target load strategy determines whether that historical mutation is compatible; Source Stability does not define a second processing strategy.
-
-`METADATA_SOURCE_OBSERVATION` stores relationship-scoped evidence as `observed` rows. After a physical target write succeeds, FabricOps appends their `committed` state for the same logical `notebook_name` + source `table_id` + target `table_id` relationship and only then records successful target Lineage. Failed writes leave attempt evidence intact but do not advance the accepted baseline.
-
-Together, these records form the authored Data Contract definition. Enrichment and Guardrails belong to that contract definition rather than standing alone as separate authoring journeys. Governance reviews the definition and freezes an immutable version before Engineering validates it.
-
-The Data Agreement is not linked at this authoring stage. Governance makes that explicit linkage after the frozen version has been tested, as part of Step 5.
-
-### AI-assisted governance authoring
-
-FabricOps can use Microsoft Fabric AI Functions to propose descriptions and
-information classifications from Data Catalogue and profiling context. The
-suggestions remain editable and require Governance review before they become
-part of the Data Contract. Classification options and AI authoring instructions
-are project-configurable through `00_env_config`; manual authoring remains
-available when AI assistance is disabled or unavailable.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">4</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Development</span><span class="fabricops-step-title">Select the frozen Data Contract in <code>02_pipeline</code> and validate it</span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-Engineering Development uses `widget_select_data_contract()` in `02_pipeline`. FabricOps resolves the current `notebook_id`, follows `METADATA_DATA_LINEAGE` to every linked Source and Target `table_id`, and lets the developer select one exact frozen version independently for each table.
-
-The pipeline evaluates the governed expectations against the real ETL and writes summary and continuation evidence to `METADATA_GUARDRAIL_RESULTS`. Any DQ `failed_rows` remain a caller-owned DataFrame; FabricOps does not persist failing business rows automatically.
-
-If the expectations do not yet work, the workflow returns to `01_governance` so Governance can refine the definition before Engineering validates it again.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">5</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Governance</span><span class="fabricops-step-title">Link the tested Data Contract to the Data Agreement and activate it</span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-After Engineering has tested the frozen version, Governance explicitly links that version to the required Data Agreement and verifies the Agreement version, Data Stewards, purpose, and approved usages. This linkage was not finalized during Step 3 authoring.
-
-After governance sign-off, Governance activates the linked version in `01_governance` so Engineering Production resolves it. Testing and sign-off remain operating practice rather than a technically enforced activation gate.
-
-<!-- VIDEO SLOT: Data Agreement and Data Contract lifecycle -->
-
-!!! important "Data Contract activation and pipeline promotion are separate"
-
-    **Activate** in `01_governance` selects the saved Data Contract version that Production may resolve. FabricOps currently treats test and governance sign-off as workflow practice rather than a technical activation gate.
-
-    **Promote** moves the validated `02_pipeline` notebook into Engineering Production using the organisation's deployment process.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">6</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Engineering Production</span><span class="fabricops-step-title">Promote <code>02_pipeline</code> and run with the active Data Contract</span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-Engineering promotes the validated `02_pipeline` into the Engineering Production workspace using the organisation's deployment process.
-
-At runtime, Production uses the same current-notebook `METADATA_DATA_LINEAGE` scope. For every linked `table_id`, zero active contracts or more than one active contract fails resolution; exactly one active contract is used automatically. Production does not manually select contract versions.
-
-</div>
-</details>
-
-<details class="fabricops-workflow-step" markdown>
-<summary><span class="fabricops-step-number">7</span><span class="fabricops-step-heading"><span class="fabricops-step-role">Consumers</span><span class="fabricops-step-title">Use <code>99_explore</code> to consume approved Production data only</span></span><span class="fabricops-step-chevron"></span></summary>
-<div class="fabricops-step-body" markdown>
-
-Project-specific consumer workspaces use `99_explore` to read approved data from Engineering Production for Power BI, AI, data science, exploration, and other downstream project work.
-
-Consumer workspaces do not recreate the Production pipeline or maintain their own Production copy of the engineering workflow. Engineering Production remains the trusted Production source.
-
-<!-- VIDEO SLOT: Development to Production to Consumer -->
-
-</div>
-</details>
-
-</div>
+5. **Governance activates the tested definition.** [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) links the exact Data Agreement version and makes the selected Data Contract the one active version for that `table_id`. Development stays flexible: it can select any eligible immutable version, including frozen, active, or superseded versions. Draft and rejected versions are not selectable. Production is strict: it must resolve exactly one active version for each linked `table_id`.
+6. **Engineering promotes and runs the same pipeline in Production.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state.
+7. **Project teams consume the approved Production result.** `99_explore` provides the reusable read-only exploration entry point without recreating the Production ETL in every consumer workspace.
 
 </div>
 
 <div class="fabricops-section-block" markdown>
 
-## The contract transition
+## What does the workflow write into FabricOps metadata?
 
-The lifecycle diagram and expandable steps above show the complete loop. The contract transition is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**. The Data Contract remains table-centric during authoring; the explicit Agreement linkage follows Development validation. Testing and governance sign-off are recommended operating practice because activation is not currently blocked by a recorded approval state.
+**The metadata model is the storage view of the same seven-step workflow above.** The workflow explains when Governance and Engineering act; this diagram shows where those definitions, observations, and runtime results are persisted.
 
-<!-- VIDEO SLOT: Governance as Code / core loop -->
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## The Data Contract boundaries
-
-**Authoring and activation are separate Governance decisions.**
-
-```mermaid
-flowchart LR
-    subgraph AUTHOR[Author]
-        TABLE["table_id"] --> CONTRACT["Data Contract version"]
-        CONTRACT --> ENRICH["Enrichment<br/>Description + Classification"]
-        CONTRACT --> RULES["Guardrails<br/>Schema · Freshness · Source Stability<br/>Data Quality · Sensitive Data"]
-        CONTRACT --> SNAPSHOT["Immutable schema / processing definition"]
-    end
-    subgraph ACTIVATE[Activate]
-        TESTED["Tested frozen Data Contract version"] --> LINK["Explicit linkage"]
-        AGREEMENT["Data Agreement version"] --> LINK
-        LINK --> ACTIVE["ACTIVE for Production"]
-    end
-```
-
-During **Author**, Enrichment is descriptive metadata only. Guardrails are enforced requirements with a **Warn** or **Block** action; a blocking requirement stops governed write continuation. No Data Agreement is linked while this table-centric definition is authored and frozen.
-
-During **Activate**, Governance selects and explicitly links the exact Data Agreement version only after the frozen Data Contract version has been tested.
-
-### Resolve by notebook Lineage
-
-```mermaid
-flowchart LR
-    NB["notebook_id"] --> LIN["METADATA_DATA_LINEAGE"]
-    LIN --> T["linked table_id values"]
-
-    T --> DEV["Development<br/>select frozen version per table_id"]
-    T --> PROD["Production<br/>resolve active version per table_id"]
-```
-
-Development selections are independent per linked `table_id`. Production has no manual selection and requires exactly one active version per linked `table_id`; zero or multiple active versions fail the run.
-
-</div>
-
-<div class="fabricops-section-block" markdown>
-
-## Ownership carries the context
-
-**`table_id` anchors the governed data asset across FabricOps.**
+#### See the metadata ownership model
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-Engineering metadata describes the governed asset directly through `table_id`. Governance binds its governed definition to that asset through `METADATA_DATA_CONTRACT`; Enrichment and Guardrails belong to the contract definition and resolve the asset through the selected contract. Governance writes these authoritative definitions to the Metadata Lakehouse's `governance` schema. Engineering reads them during pipeline execution but does not own or mutate them as part of a normal run. Engineering/runtime writes discovered metadata, execution observations, and results to the `engineering` schema, where Governance can review them.
+The main public functions line up with the metadata model like this:
 
-The governed output table is project-owned physical data rather than FabricOps metadata. Optional support data is separate again: DQ `failed_rows` and Sensitive Data token mappings are caller-owned DataFrames that a project may inspect, discard, or optionally persist in an approved project-owned location.
+| Workflow activity | Public function(s) | Main metadata written |
+| --- | --- | --- |
+| Establish Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
+| Register and profile real tables | [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` |
+| Register pipeline participation | [`pipeline_read()`](api/reference/pipeline_read.md), [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_DATA_LINEAGE` |
+| Observe source state | [`observe_table()`](api/reference/observe_table.md), successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
+| Author the governed definition | [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
+| Activate the Production definition | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
+| Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_stability()`](api/reference/check_source_stability.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
+| Optional access observation | `scan_workspace_access()` | `METADATA_DATA_ACCESS` when persistence is used |
 
-`METADATA_GUARDRAIL_RESULTS` stores runtime summaries and continuation decisions, not failing business rows. `check_sensitive_data()` returns governed/transformed data and may also return a token/support mapping; a project may keep it in memory or use `write_pii_token_map()` where appropriate. These DataFrames are not FabricOps metadata and are never persisted automatically. FabricOps does not prescribe a mandatory PII vault or detokenization framework.
+The purple Governance area therefore stores authored definitions. The blue Engineering area stores what the pipeline discovers, profiles, observes, and enforces while it runs. `table_id` is the bridge between the real physical table and both sides of that metadata model.
 
-The important point is not the number of tables; it is the clear ownership boundary and the Data Contract's role in bridging asset identity into contract-owned governance definitions.
+??? info "Read more: caller-owned Guardrail output DataFrames"
 
-<!-- VIDEO SLOT: Shared metadata model -->
+    Some Guardrail functions also return **row-level support DataFrames** alongside the summary written to `METADATA_GUARDRAIL_RESULTS`.
 
-For exact table schemas, ownership, and field definitions, use the [Metadata Tables reference](reference/metadata.md).
+    - [`check_dq()`](api/reference/check_dq.md) returns the DQ failure evidence DataFrame as `failed_values`, so the project can inspect the individual failed values and rows behind the summary result.
+    - [`check_sensitive_data()`](api/reference/check_sensitive_data.md) returns the treated business DataFrame and, when tokenization is used, an optional caller-owned `support_mapping` DataFrame containing the PII/token mapping needed to preserve token assignments across runs.
+
+    These support DataFrames are **not written to any FabricOps metadata table automatically**. They stay with the caller so the project can decide whether they should remain in memory or be persisted as normal physical data.
+
+    When persistence is required, the project can write the DataFrame itself through the existing write APIs: [`pipeline_write()`](api/reference/pipeline_write.md), [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md), or [`write_warehouse_table()`](api/reference/write_warehouse_table.md), depending on whether the output is a governed pipeline target or caller-owned support data in a Lakehouse or Warehouse.
+
+    `METADATA_GUARDRAIL_RESULTS` therefore remains the lightweight runtime summary and continuation record, while detailed DQ failures and PII/token mappings remain project-owned physical data.
+
+    [What exactly is stored in each metadata table?](reference/metadata.md)
 
 </div>
 
@@ -383,10 +297,10 @@ For exact table schemas, ownership, and field definitions, use the [Metadata Tab
 
 ## Where to go next
 
-- **Run the workflow yourself:** [FabricOps Guided Demo](guided-demo.md)
-- **Understand the engineering choices:** [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md)
-- **Inspect the shared metadata model:** [Metadata Tables](reference/metadata.md)
-- **Browse reusable notebook-facing functions:** [FabricOps Functions](reference/index.md)
-- **Download the notebooks:** [Notebook Templates](notebook-templates.md)
+- [How do I run the workflow myself?](guided-demo.md)
+- [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
+- [What exactly is stored in FabricOps metadata?](reference/metadata.md)
+- [What does each FabricOps function do?](reference/index.md)
+- [Where are the reusable notebook templates?](notebook-templates.md)
 
 </div>
