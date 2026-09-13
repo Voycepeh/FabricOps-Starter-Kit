@@ -212,16 +212,15 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
 
 def test_02_pipeline_is_a_sequential_engineering_notebook():
-    """The visible workflow follows the newcomer story without generic state registries."""
+    """The visible workflow follows the cloneable engineering story."""
     source = _notebook_source("02_pipeline.ipynb")
     headings = (
         "# 0. Environment",
         "# 1. Data Contracts",
-        "# 2. Read",
-        "# 3. Transform",
-        "# 4. Target",
-        "# 5. Validate",
-        "# 6. Write",
+        "# 2. Target",
+        "# 3. Read",
+        "# 4. Transform",
+        "# 5. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
     assert "READ_DFS" not in source
@@ -242,20 +241,24 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert 'CONTRACTS["' not in source
 
 
-def test_02_pipeline_read_blocks_use_named_outputs_and_public_orchestration():
-    """Each cloneable Read block assigns meaningful DataFrame and table identity names."""
-    expected = {
-        1: ("orders_result", "orders_df", "ORDERS_TABLE_ID"),
-        2: ("products_result", "products_df", "PRODUCTS_TABLE_ID"),
-        3: ("history_result", "history_df", "HISTORY_TABLE_ID"),
-    }
-    for index, (result, dataframe, table_id) in expected.items():
+def test_02_pipeline_read_blocks_are_cloneable_and_use_public_orchestration():
+    """Each Read block uses the same generic working variables and source registry handoff."""
+    for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
-        for fragment in ("READ_STORE =", "READ_SCHEMA =", "READ_TABLE =", "READ_QUERY =", f"{result} = pipeline_read("):
+        for fragment in (
+            f'READ_NAME = "{read_name}"',
+            "READ_STORE =",
+            "READ_SCHEMA =",
+            "READ_TABLE =",
+            "READ_QUERY =",
+            "read_result = pipeline_read(",
+            'df = read_result["dataframe"]',
+            'table_id = read_result["table_id"]',
+            "sources[READ_NAME] = {",
+            '# catalogue_widget = widget_view_catalogue(mode="pipeline")',
+            '# catalogue_widget["show"](table_id=table_id)',
+        ):
             assert fragment in block
-        assert f'{dataframe} = {result}["dataframe"]' in block
-        assert f'{table_id} = {result}["table_id"]' in block
-        assert f'catalogue_widget["show"](table_id={table_id})' in block
         for plumbing in (
             "READ_MODE",
             "SOURCE_READER",
@@ -268,46 +271,40 @@ def test_02_pipeline_read_blocks_use_named_outputs_and_public_orchestration():
             assert plumbing not in block
 
 
-def test_02_pipeline_profiles_physical_tables_by_identity_and_query_results_by_dataframe():
-    """Physical profiling stays engine-aware while custom-query profiling remains diagnostic."""
-    orders = _cell_by_id("02_pipeline.ipynb", "read-1").source
-    products = _cell_by_id("02_pipeline.ipynb", "read-2").source
-    history = _cell_by_id("02_pipeline.ipynb", "read-3").source
-
-    assert "profile_table(table_id=ORDERS_TABLE_ID)" in orders
-    assert "profile_table(dataframe=orders_df" not in orders
-    assert "profile_table(table_id=PRODUCTS_TABLE_ID)" in products
-    assert "profile_table(dataframe=products_df" not in products
-    assert "history_profile = profile_table(dataframe=history_df)" in history
-    assert "profile_table(dataframe=history_df, table_id=" not in history
-    assert "profile_table(table_id=HISTORY_TABLE_ID)" not in history
-    assert "check_schema(" not in history and "check_dq(" not in history
+def test_02_pipeline_profiles_each_governed_physical_source_by_identity():
+    """Every Read block profiles the governed physical table after source validation."""
+    for index in (1, 2, 3):
+        block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
+        assert "profile = profile_table(table_id=table_id)" in block
+        assert "profile_table(dataframe=df" not in block
+        assert 'display(profile["profile"])' in block
 
 
 def test_02_pipeline_source_observation_and_guardrails_remain_explicit():
-    """Target-dependent source observations and all target Guardrails remain visible."""
-    observations = _cell_by_id("02_pipeline.ipynb", "source-observations").source
-    validate = _cell_by_id("02_pipeline.ipynb", "validate").source
-    for result, observation in (
-        ("orders_result", "orders_observation"),
-        ("products_result", "products_observation"),
-        ("history_result", "history_observation"),
-    ):
-        assert f'if {result}["has_contract"]:' in observations
-        assert f"{observation} = observe_table(" in observations
-        assert f"check_freshness({observation}, raise_on_failure=True)" in observations
-        assert f"check_source_stability({observation}, target_table_id=WRITE_TABLE_ID)" in observations
-    for table_id in ("ORDERS_TABLE_ID", "PRODUCTS_TABLE_ID", "HISTORY_TABLE_ID"):
-        assert f"table_id={table_id}" in observations
-    assert "store=" not in observations
-    assert "schema=" not in observations
-    assert '"orders"' not in observations
-    assert '"products"' not in observations
-    assert '"order_history"' not in observations
+    """Each Read block visibly guards contract-driven source checks; Write owns target checks."""
+    for index in (1, 2, 3):
+        block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
+        assert 'if read_result["has_contract"]:' in block
+        assert "observation = observe_table(" in block
+        assert "table_id=table_id" in block
+        assert "target_table_id=WRITE_TABLE_ID" in block
+        assert "check_freshness(observation, raise_on_failure=True)" in block
+        assert "check_source_stability(" in block
+        assert "schema_result = check_schema(table_id, dataframe=df, raise_on_failure=True)" in block
+        assert "dq_result = check_dq(df, table_id=table_id, raise_on_failure=True)" in block
+        assert "Governed checks skipped" in block
+        assert "METADATA_SOURCE_OBSERVATION" in block
+        assert "METADATA_GUARDRAIL_RESULTS" in block
+        assert "METADATA_DATA_CATALOGUE" in block
+        assert "METADATA_DATA_PROFILED" in block
+
+    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
     for guardrail in ("check_schema(", "check_dq(", "check_sensitive_data("):
-        assert guardrail in validate
-    assert 'if not sensitive_result["can_continue"]' in validate
-    assert 'prepared_df = sensitive_result["dataframe"]' in validate
+        assert guardrail in write
+    assert 'if not sensitive_result["can_continue"]' in write
+    assert 'prepared_df = sensitive_result["dataframe"]' in write
+    assert "METADATA_DATA_LINEAGE" in write
+    assert "METADATA_SOURCE_OBSERVATION" in write
 
 
 def test_02_pipeline_transform_directly_uses_named_project_dataframes():
@@ -321,33 +318,34 @@ def test_02_pipeline_transform_directly_uses_named_project_dataframes():
     assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_target_is_defined_after_transform_without_empty_parameters():
-    """Target configuration appears only after Transform and contains no placeholder options."""
+def test_02_pipeline_target_is_defined_before_read_for_current_stability_api():
+    """Target is temporarily defined before Read because current Source Stability requires it."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     cell_ids = [cell.get("id") for cell in notebook.cells]
     config = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
-    assert cell_ids.index("pipeline-target") > cell_ids.index("transform")
+    assert cell_ids.index("pipeline-target") < cell_ids.index("read-1")
     for setting in ("WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
         assert f"{setting} =" in config
     assert "resolve_table_id(" in config
+    assert "current Source Stability requires target_table_id" in config
     assert "WRITE_LOAD_STRATEGY_PARAMETERS" not in _notebook_source("02_pipeline.ipynb")
     assert "load_strategy_parameters=" not in _notebook_source("02_pipeline.ipynb")
 
 
 def test_02_pipeline_write_is_compact_and_profiles_persisted_target():
-    """The governed Write declares exact named sources and profiles persisted state by identity."""
+    """The governed Write uses registered source identities and profiles persisted state."""
     block = _cell_by_id("02_pipeline.ipynb", "write-1").source
     assert "write_result = pipeline_write(" in block
     assert "load_strategy=WRITE_LOAD_STRATEGY" in block
-    source_ids = block[block.index("source_table_ids=[") : block.index("],", block.index("source_table_ids=["))]
-    for table_id in ("ORDERS_TABLE_ID", "PRODUCTS_TABLE_ID", "HISTORY_TABLE_ID"):
-        assert table_id in source_ids
+    assert 'source_table_ids=[source["table_id"] for source in sources.values()]' in block
     stages = (
+        "check_schema(",
+        "check_dq(",
+        "check_sensitive_data(",
         "pipeline_write(",
-        'WRITE_TABLE_ID = write_result["table_id"]',
-        "write_profile = profile_table(table_id=WRITE_TABLE_ID)",
+        'write_profile = profile_table(table_id=write_result["table_id"])',
         'display(write_profile["profile"])',
-        'catalogue_widget["show"](table_id=WRITE_TABLE_ID)',
+        '# catalogue_widget["show"](table_id=write_result["table_id"])',
     )
     assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
     for plumbing in (
@@ -366,8 +364,8 @@ def test_02_pipeline_write_is_compact_and_profiles_persisted_target():
 def test_02_pipeline_omits_foundational_routing_and_safe_default_plumbing():
     """Normal notebook code leaves physical dispatch and safe defaults inside FabricOps."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count("pipeline_read(") == 3
-    assert source.count("pipeline_write(") == 1
+    assert source.count("read_result = pipeline_read(") == 3
+    assert source.count("write_result = pipeline_write(") == 1
     for removed in (
         "read_lakehouse_table",
         "read_warehouse_table",
@@ -391,13 +389,12 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     required = {
         "contracts",
+        "pipeline-target",
+        "read-setup",
         "read-1",
         "read-2",
         "read-3",
         "transform",
-        "pipeline-target",
-        "source-observations",
-        "validate",
         "write-1",
     }
     by_id = {cell.get("id"): cell for cell in notebook.cells}
