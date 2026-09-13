@@ -127,10 +127,11 @@ The target identity is resolved with [`resolve_table_id()`](api/reference/resolv
 
 The surrounding Write block keeps the important target decisions explicit and in sequence:
 
-- enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
-- enforce target Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
-- if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
+- enforce target Schema with [`check_schema()`](api/reference/check_schema.md)
 - enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md); when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
+- enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
+- enforce Data Quality with [`check_dq()`](api/reference/check_dq.md)
+- if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
 - profile the persisted target with [`profile_table()`](api/reference/profile_table.md)
 - optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
