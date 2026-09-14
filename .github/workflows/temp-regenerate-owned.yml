@@ -6,10 +6,11 @@ on:
       - fix/full-read-pipeline-template
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   regenerate:
+    if: github.event.head_commit.message != 'Regenerate owned artifacts'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,17 +40,20 @@ jobs:
           diff -u /tmp/reference-index-first.md docs/reference/index.md
           diff -u /tmp/function-call-graph-first.md docs/reference/function-call-graph.md
           diff -ru /tmp/reference-pages-first docs/api/reference
-      - name: Stage generated outputs
+      - name: Commit generated outputs
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p generated/docs/reference/_data generated/docs/reference generated/docs/api
-          cp docs/reference/_data/public-function-call-flows.json generated/docs/reference/_data/
-          cp docs/reference/_data/generated-artifacts.json generated/docs/reference/_data/
-          cp docs/reference/index.md generated/docs/reference/
-          cp docs/reference/function-call-graph.md generated/docs/reference/
-          cp -R docs/api/reference generated/docs/api/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: regenerated-owned-artifacts
-          path: generated
+          git add docs/reference/_data/public-function-call-flows.json \
+                  docs/reference/_data/generated-artifacts.json \
+                  docs/reference/index.md \
+                  docs/reference/function-call-graph.md \
+                  docs/api/reference
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Regenerate owned artifacts'
+          git push origin HEAD:fix/full-read-pipeline-template
