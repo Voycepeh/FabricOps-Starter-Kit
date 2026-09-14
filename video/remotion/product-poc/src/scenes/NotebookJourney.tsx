@@ -1,4 +1,5 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
@@ -14,10 +15,12 @@ const NOTEBOOK = {
 } as const;
 
 const IMPORT_GROUPS = [
-  ['read_lakehouse_csv,', 'write_lakehouse_table,'],
+  ['pipeline_read,', 'pipeline_write,'],
   ['widget_author_data_contract,', 'widget_select_data_contract,'],
   ['check_schema,', 'check_dq,'],
 ] as const;
+
+const EnvironmentIcon = OPENING_ARTIFACTS[3].icon;
 
 const NotebookGlyph = ({color}: {color: string}) => (
   <div style={{position: 'relative', width: NOTEBOOK.glyphSize, height: NOTEBOOK.glyphSize, flex: '0 0 auto'}}>
@@ -89,12 +92,85 @@ const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
       {IMPORT_GROUPS.map((group, index) => {
         const progress = spring({frame: frame - importFrames[index], fps, config: {damping: 17, stiffness: 105}});
         return <div key={group[0]} style={{marginLeft: 46, opacity: progress, transform: `translateX(${(1 - progress) * 24}px)`}}>
-          {group.map((functionName) => <div key={functionName} style={{color: index === 2 ? theme.production : '#f3f7fc', textShadow: index === 2 ? `0 0 18px ${theme.production}55` : 'none'}}>{functionName}</div>)}
+          {group.map((functionName) => <div key={functionName} style={{color: '#f3f7fc'}}>{functionName}</div>)}
         </div>;
       })}
       <div style={{color: '#8ed8ff'}}>)</div>
     </div>
   </div>;
+};
+
+const SetupFlow = ({frame, fps}: {frame: number; fps: number}) => {
+  const {timingSeconds, layout} = VIDEO_TUNING.notebook;
+  const workspaceAt = notebookFrame(timingSeconds.setupWorkspace, fps);
+  const environmentAt = notebookFrame(timingSeconds.setupEnvironment, fps);
+  const configLinkAt = notebookFrame(timingSeconds.setupConfigLink, fps);
+  const setupExit = notebookFrame(timingSeconds.setupExit, fps);
+  const workspace = spring({frame: frame - workspaceAt, fps, config: {damping: 20, stiffness: 86}});
+  const environment = spring({frame: frame - environmentAt, fps, config: {damping: 18, stiffness: 92}});
+  const packageToEnvironment = interpolate(frame, [environmentAt, environmentAt + 24], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const environmentToConfig = interpolate(frame, [configLinkAt, configLinkAt + 26], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const fadeOut = interpolate(frame, [setupExit - 18, setupExit], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const groupOpacity = workspace * fadeOut;
+  const whl = layout.whl;
+  const fabricEnvironment = layout.fabricEnvironment;
+  const config = layout.setupEnvironment;
+  const whlCenterY = whl.top + whl.height / 2;
+  const environmentCenterX = fabricEnvironment.left + fabricEnvironment.width / 2;
+  const environmentCenterY = fabricEnvironment.top + fabricEnvironment.height / 2;
+  const configCenterX = config.left + NOTEBOOK.width / 2;
+
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: groupOpacity}}>
+      <div style={{position: 'absolute', ...layout.workspace, boxSizing: 'border-box', borderRadius: 34, background: 'linear-gradient(180deg, #10203a80 0%, #09142670 100%)', border: '2px solid #71839a55', boxShadow: 'inset 0 1px 0 #ffffff12, 0 28px 80px #0005'}}>
+        <div style={{position: 'absolute', left: 34, top: 24, fontSize: 22, fontWeight: 720, letterSpacing: 1.2, color: '#91a0b4', textTransform: 'uppercase'}}>Fabric workspace</div>
+      </div>
+
+      <div style={{position: 'absolute', ...whl, boxSizing: 'border-box', borderRadius: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '14px 18px 16px', background: 'linear-gradient(150deg, #4f2875, #2a1744 78%)', border: '2px solid #a978e0aa', boxShadow: '0 24px 56px #0008, 0 0 34px #8f4ad733'}}>
+        <div style={{position: 'relative', width: 92, height: 108, flex: '0 0 auto', borderRadius: '14px 14px 18px 18px', border: '5px solid #c89cf0', background: '#ffffff08'}}>
+          <div style={{position: 'absolute', top: -5, right: -5, width: 34, height: 34, background: '#7c55a6', clipPath: 'polygon(0 0, 100% 100%, 0 100%)'}} />
+          <div style={{position: 'absolute', top: 12, left: 0, right: 0, textAlign: 'center', fontSize: 28, fontWeight: 850, color: '#fff'}}>WHL</div>
+          <div style={{position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center', fontFamily: 'monospace', fontSize: 17, fontWeight: 720, color: '#e4cff9'}}>&lt;/&gt;</div>
+        </div>
+        <div style={{textAlign: 'center', fontSize: 20, lineHeight: 1.05, fontWeight: 760, color: '#eadcf7'}}>
+          <div>FabricOps</div>
+          <div>package</div>
+        </div>
+      </div>
+
+      <div style={{position: 'absolute', ...fabricEnvironment, boxSizing: 'border-box', borderRadius: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '16px 18px', background: 'linear-gradient(150deg, #142844, #0c182a 78%)', border: '2px solid #4e91d899', boxShadow: '0 24px 56px #0008, 0 0 34px #3097dd22', opacity: environment, transform: `scale(${0.9 + environment * 0.1})`}}>
+        <div style={{width: 72, height: 72, display: 'grid', placeItems: 'center', transform: 'scale(1.45)'}}>
+          <EnvironmentIcon aria-hidden="true" width={48} height={48} />
+        </div>
+        <div style={{textAlign: 'center', fontSize: 20, lineHeight: 1.08, fontWeight: 760, color: '#eef6ff'}}>
+          <div>Fabric</div>
+          <div>Environment</div>
+        </div>
+      </div>
+
+      <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+        <defs>
+          <marker id="setup-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+            <path d="M0 0 L9 4.5 L0 9 Z" fill="#8fa0b6" />
+          </marker>
+        </defs>
+        <path d={`M${whl.left + whl.width} ${whlCenterY} C${whl.left + whl.width + 38} ${whlCenterY}, ${fabricEnvironment.left - 38} ${environmentCenterY}, ${fabricEnvironment.left} ${environmentCenterY}`} fill="none" stroke="#8fa0b6" strokeWidth="4" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - packageToEnvironment} opacity={packageToEnvironment} markerEnd="url(#setup-arrow)" />
+        <path d={`M${environmentCenterX} ${fabricEnvironment.top + fabricEnvironment.height} C${environmentCenterX} ${fabricEnvironment.top + fabricEnvironment.height + 48}, ${configCenterX} ${config.top - 48}, ${configCenterX} ${config.top}`} fill="none" stroke="#8fa0b6" strokeWidth="4" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - environmentToConfig} opacity={environmentToConfig} markerEnd="url(#setup-arrow)" />
+      </svg>
+    </div>
+  );
 };
 
 export const NotebookJourney = () => {
@@ -104,11 +180,18 @@ export const NotebookJourney = () => {
   const {timingSeconds, layout} = VIDEO_TUNING.notebook;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
   const environmentAt = notebookFrame(timingSeconds.environment, fps);
+  const setupExitAt = notebookFrame(timingSeconds.setupExit, fps);
   const foundationAt = notebookFrame(timingSeconds.foundation, fps);
   const lowerNotebooksAt = notebookFrame(timingSeconds.lowerNotebooks, fps);
   const contractAt = notebookFrame(timingSeconds.contract, fps);
   const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
   const environment = enter(environmentAt);
+  const environmentTop = interpolate(frame, [setupExitAt, setupExitAt + 18], [layout.setupEnvironment.top, layout.environment.top], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const environmentPosition = {left: layout.environment.left, top: environmentTop};
   const foundationFlow = interpolate(frame, [foundationAt, foundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const lowerNotebooks = enter(lowerNotebooksAt);
   const contract = enter(contractAt);
@@ -116,17 +199,21 @@ export const NotebookJourney = () => {
   const connectorSettle = spring({frame: frame - relationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const connectorY = layout.connectorY;
+  const environmentBottomY = layout.environment.top + NOTEBOOK.height;
+  const environmentLeftX = layout.environment.left + 100;
+  const environmentRightX = layout.environment.left + NOTEBOOK.width - 100;
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     <CodePackage frame={frame} fps={fps} />
+    <SetupFlow frame={frame} fps={fps} />
 
     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
       <defs>
         <marker id="notebook-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill={theme.neutral} /></marker>
       </defs>
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M855 455 C855 535 425 535 425 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
-        <path d="M1065 455 C1065 535 1495 535 1495 638" stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
+        <path d={`M${environmentLeftX} ${environmentBottomY} C${environmentLeftX} ${environmentBottomY + 44}, 425 ${environmentBottomY + 44}, 425 638`} stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
+        <path d={`M${environmentRightX} ${environmentBottomY} C${environmentRightX} ${environmentBottomY + 44}, 1495 ${environmentBottomY + 44}, 1495 638`} stroke={theme.neutral} strokeWidth="4" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - foundationFlow} opacity={foundationFlow * 0.72} markerEnd="url(#notebook-arrow)" />
         <path d={`M630 ${connectorY} H760`} stroke={theme.governance} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
         <path d={`M1160 ${connectorY} H1290`} stroke={theme.engineering} strokeWidth="14" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - relationshipFlow} opacity={relationshipFlow} />
       </g>
@@ -142,7 +229,7 @@ export const NotebookJourney = () => {
       </g>
     </svg>
 
-    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={layout.environment} />
+    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={environmentPosition} />
     <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={layout.governance} />
     <ContractDocument progress={contract} />
     <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={layout.pipeline} />

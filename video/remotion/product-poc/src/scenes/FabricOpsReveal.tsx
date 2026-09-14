@@ -144,7 +144,7 @@ export const FabricOpsReveal = () => {
           <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
             {orbitVisible ? (
               <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
-                <ellipse cx="960" cy="540" rx="760" ry="245" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="3300" strokeDashoffset={3300 * (1 - orbitProgress)} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
+                <ellipse cx="960" cy="540" rx="760" ry="245" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - orbitProgress} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
                 <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
                 <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
               </svg>
