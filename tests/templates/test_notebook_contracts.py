@@ -257,15 +257,17 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
 
 
 def test_02_pipeline_transform_is_plain_pyspark():
-    """Project transformation remains ordinary readable PySpark."""
+    """Project transformation remains ordinary readable PySpark and produces two target DataFrames."""
     transform = _cell_by_id("02_pipeline.ipynb", "transform").source
     assert transform.count(".join(") == 2
     assert ".withColumn(" in transform
+    assert "transformed_df = (" in transform
+    assert "customer_summary_df = (" in transform
     assert "pipeline_transform" not in transform
 
 
 def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
-    """Write blocks mirror Read blocks and demonstrate Lakehouse plus Warehouse targets."""
+    """Write blocks demonstrate distinct Lakehouse and Warehouse target outputs."""
     setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
     assert "Dictionary used to keep multiple write results" in setup
     assert "Key = WRITE_NAME" in setup
@@ -273,14 +275,16 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
     assert "writes = {}" in setup
 
     expected = (
-        (1, "curated_orders_lakehouse", "unified"),
-        (2, "curated_orders_warehouse", "product"),
+        (1, "curated_orders_lakehouse", "transformed_df", "unified", "curated_orders"),
+        (2, "customer_summary_warehouse", "customer_summary_df", "product", "customer_summary"),
     )
-    for index, write_name, store in expected:
+    for index, write_name, dataframe, store, table in expected:
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
         for fragment in (
             f'WRITE_NAME = "{write_name}"',
+            f"WRITE_DATAFRAME = {dataframe}",
             f'WRITE_STORE = "{store}"',
+            f'WRITE_TABLE = "{table}"',
             'WRITE_SOURCE_NAMES = ("orders", "products", "history")',
             "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]",
             "target_table_id = resolve_table_id(",
@@ -290,21 +294,32 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
             "check_source_drift(",
             "check_dq(",
             'target_dq_failed_values = target_dq_result.get("failed_values")',
+            "check_guardrail_coverage(",
             "write_result = pipeline_write(",
+            "table_id=target_table_id",
             'source_table_ids=[source["table_id"] for source in write_sources]',
             "writes[WRITE_NAME] = write_result",
             'write_profile = profile_table(table_id=write_result["table_id"])',
             '# display(write_profile["profile"])',
         ):
             assert fragment in block
-        stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(", "pipeline_write(", "profile_table(")
+        stages = (
+            "check_schema(",
+            "check_sensitive_data(",
+            "check_source_drift(",
+            "check_dq(",
+            "check_guardrail_coverage(",
+            "pipeline_write(",
+            "profile_table(",
+        )
         assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
 
 
 def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
-    """Read, checks, profiling, and governed publication remain separate notebook calls."""
+    """Read, checks, coverage, profiling, and governed publication remain separate notebook calls."""
     source = _notebook_source("02_pipeline.ipynb")
     assert source.count("source = pipeline_read(") == 3
+    assert source.count("coverage_result = check_guardrail_coverage(") == 2
     assert source.count("write_result = pipeline_write(") == 2
     assert "report_check" not in source
     assert "run_all_checks" not in source
