@@ -64,12 +64,12 @@ jobs:
           export PYTHONPATH=src
           python scripts/generate_public_function_call_flows_json.py
           git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/callflow-first.diff
-          python scripts/generate_public_function_call_flows_json.py
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 python scripts/generate_public_function_call_flows_json.py
           git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/callflow-second.diff
           cmp /tmp/callflow-first.diff /tmp/callflow-second.diff
           python scripts/generate_individual_function_reference_pages.py
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-first.diff
-          python scripts/generate_individual_function_reference_pages.py
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 python scripts/generate_individual_function_reference_pages.py
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-second.diff
           cmp /tmp/reference-first.diff /tmp/reference-second.diff
           git diff --name-only -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > generated-files.txt
