@@ -157,7 +157,7 @@ The orchestration performs these mechanical steps:
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 60 |
+| Live-critical dependencies | 62 |
 
 ### Release history
 
@@ -220,6 +220,8 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
+<li><code>fabricops_kit.pipeline.shared._activity_cache_key</code></li>
+<li><code>fabricops_kit.pipeline.shared._cache_activity_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>

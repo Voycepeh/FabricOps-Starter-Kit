@@ -12,6 +12,7 @@ from fabricops_kit.config.shared import (
     get_audit_timezone,
     get_current_audit_timestamp,
     resolve_fabric_context,
+    resolve_runtime_context,
 )
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
@@ -64,6 +65,45 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_dq_check_status",
     "_dq_failed_rules",
 }
+
+
+# Metadata resolved during one Fabric activity is immutable for that activity: a
+# Production contract is frozen and Development selects an exact frozen version.
+# Keep this deliberately private and activity-scoped so explicit notebook calls
+# can share resolution without carrying cache state in the public API.
+_ACTIVITY_METADATA_CACHE: dict[tuple[Any, ...], Any] = {}
+
+
+def _activity_cache_key(
+    kind: str,
+    config: Any,
+    env: str,
+    table_id: str,
+    context: Mapping[str, Any] | None,
+) -> tuple[Any, ...] | None:
+    """Return a bounded metadata-cache key when an activity identity exists."""
+    activity_id = resolve_runtime_context(
+        context=dict(context or {}), active_context=dict(context or {})
+    ).get("activity_id")
+    if not str(activity_id or "").strip():
+        return None
+    return (kind, id(config), str(env), str(activity_id).strip(), str(table_id).strip())
+
+
+def _cache_activity_value(key: tuple[Any, ...] | None, value: Any) -> Any:
+    """Store one value and discard values belonging to older activities."""
+    if key is None:
+        return value
+    activity_scope = key[1:4]
+    stale = [
+        existing
+        for existing in _ACTIVITY_METADATA_CACHE
+        if existing[1:3] == key[1:3] and existing[1:4] != activity_scope
+    ]
+    for existing in stale:
+        _ACTIVITY_METADATA_CACHE.pop(existing, None)
+    _ACTIVITY_METADATA_CACHE[key] = value
+    return value
 _DEFAULT_PROFILE_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 _TARGET_AUDIT_COLUMNS = (
     "_committed_at",
@@ -1434,10 +1474,14 @@ def resolve_pipeline_data_contract(
     context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Resolve the pipeline-selected contract, or no contract in Development."""
+    cache_key = _activity_cache_key("contract", config, env, table_id, context)
+    if cache_key is not None and cache_key in _ACTIVITY_METADATA_CACHE:
+        return _ACTIVITY_METADATA_CACHE[cache_key]
     if env == "prod":
-        return resolve_active_data_contract(
+        resolved = resolve_active_data_contract(
             config, env, table_id, spark_session=spark_session, required=True,
         )
+        return _cache_activity_value(cache_key, resolved)
     runtime_context = context or {}
     overrides = runtime_context.get("data_contract_overrides") or {}
     if not isinstance(overrides, Mapping):
@@ -1452,11 +1496,12 @@ def resolve_pipeline_data_contract(
             f"Development Data Contract override for table_id {table_id!r} requires both contract_id and contract_version."
         )
     if not contract_id:
-        return None
-    return _resolve_data_contract_version(
+        return _cache_activity_value(cache_key, None)
+    resolved = _resolve_data_contract_version(
         config, env, table_id, contract_id, version,
         spark_session=spark_session, context=context,
     )
+    return _cache_activity_value(cache_key, resolved)
 
 
 def resolve_catalogue_table_id(
@@ -1510,6 +1555,9 @@ def resolve_catalogue_table_identity(
     canonical_id = str(table_id or "").strip()
     if not canonical_id:
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
+    cache_key = _activity_cache_key("catalogue", config, env, canonical_id, context)
+    if cache_key is not None and cache_key in _ACTIVITY_METADATA_CACHE:
+        return dict(_ACTIVITY_METADATA_CACHE[cache_key])
     frame = read_lakehouse_table(
         CATALOGUE_TABLE,
         store="metadata",
@@ -1551,7 +1599,7 @@ def resolve_catalogue_table_identity(
         raise ValueError(
             f"Catalogue table_id {canonical_id!r} has unsupported store_type {store_type!r}."
         )
-    return {
+    resolved = {
         **row,
         "table_id": canonical_id,
         "store_type": store_type,
@@ -1559,6 +1607,8 @@ def resolve_catalogue_table_identity(
         "schema": str(row.get("schema_name") or "").strip() or None,
         "table_name": str(row["table_name"]).strip(),
     }
+    _cache_activity_value(cache_key, resolved)
+    return dict(resolved)
 
 
 def catalogue_authored_processing(identity: Mapping[str, Any]) -> dict[str, Any]:
@@ -1685,25 +1735,13 @@ def resolve_table_processing_definition(
     """Resolve authored processing and validate it against the applicable contract."""
     runtime_context = context or {}
     authored = validated_processing(dict(authored_processing)) if authored_processing is not None else None
-    contract = None
-    if env == "prod":
-        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
-    else:
-        overrides = runtime_context.get("data_contract_overrides") or {}
-        if not isinstance(overrides, Mapping):
-            raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
-        selected = overrides.get(table_id) or {}
-        if not isinstance(selected, Mapping):
-            raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
-        contract_id = str(selected.get("contract_id") or "").strip()
-        version = selected.get("contract_version")
-        if bool(contract_id) != bool(str(version or "").strip()):
-            raise ValueError("Development Data Contract override requires both contract_id and contract_version.")
-        if contract_id:
-            contract = _resolve_data_contract_version(
-                config, env, table_id, contract_id, version,
-                spark_session=spark_session, context=context,
-            )
+    contract = resolve_pipeline_data_contract(
+        config,
+        env,
+        table_id,
+        spark_session=spark_session,
+        context=runtime_context,
+    )
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
         table_definition = payload.get("table") or {}
