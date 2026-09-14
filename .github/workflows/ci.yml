@@ -47,11 +47,49 @@ jobs:
         run: uv run python scripts/release_navigation.py --check
 
       - name: Validate owned generated artifacts
+        id: generated_check
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
           source .venv/bin/activate
           python scripts/validate_generated_artifact_ownership.py
+
+      - name: Regenerate owned artifacts for handoff
+        if: steps.generated_check.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          export PYTHONPATH=src
+          python scripts/generate_public_function_call_flows_json.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/callflow-first.diff
+          python scripts/generate_public_function_call_flows_json.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/callflow-second.diff
+          cmp /tmp/callflow-first.diff /tmp/callflow-second.diff
+          python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-first.diff
+          python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-second.diff
+          cmp /tmp/reference-first.diff /tmp/reference-second.diff
+          git diff --name-only -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > generated-files.txt
+
+      - name: Upload regenerated artifact handoff
+        if: steps.generated_check.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-owned-artifacts
+          path: |
+            generated-files.txt
+            docs/reference/_data/public-function-call-flows.json
+            docs/reference/_data/generated-artifacts.json
+            docs/api/reference
+            docs/reference/index.md
+            docs/reference/function-call-graph.md
+
+      - name: Preserve generated validation failure
+        if: steps.generated_check.outcome == 'failure'
+        run: exit 1
 
       - name: Build strict documentation
         env:
