@@ -70,6 +70,8 @@ The difficulty starts when the pipeline needs **two or more Fabric stores**, whi
 
 FabricOps uses [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) to solve that wiring problem. Each Fabric store gets a stable logical name such as `source`, `unified`, or `product`. `02_pipeline` refers to those logical names, while FabricOps resolves the physical resource for the current environment.
 
+`02_pipeline` is deliberately a **full-read pipeline template**. Each governed source is read and canonically profiled as the complete persisted table on every run rather than as an incremental source batch. The target can still use its governed write strategy such as append, overwrite, partition overwrite, SCD1, or SCD2; full-read describes the source-processing model, not the target write mode.
+
 That lets the notebook itself stay deliberately simple:
 
 ```mermaid
@@ -104,13 +106,12 @@ After the source is read, the Read block keeps the governed checks and profiling
 - enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md)
 - enforce Schema on the returned DataFrame with [`check_schema()`](api/reference/check_schema.md)
 - enforce Data Quality on that same DataFrame with [`check_dq()`](api/reference/check_dq.md)
-- call [`profile_table()`](api/reference/profile_table.md) explicitly with either the returned DataFrame for **read scope** or only its canonical `table_id` for **full scope**
+- canonically profile the complete persisted source with [`profile_table()`](api/reference/profile_table.md) using its `table_id`
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
-- optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
 
-`02_pipeline` keeps the profile-scope choice visible. **Read scope** reuses exactly the DataFrame returned by `pipeline_read()`, including an incremental batch or custom Warehouse query result. **Full scope** intentionally reads or queries the complete persisted governed table again. Those are different semantic scopes, so the latter is deliberate I/O rather than a duplicate read.
+A normal governed source therefore follows one canonical path in `02_pipeline`: read the complete source, run the source Guardrails, and refresh the complete physical table Profile. A filtered, joined, or aggregated Warehouse query may still be used as derived project data, but it does not replace the canonical Profile of the complete governed source table.
 
 For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
 
@@ -135,9 +136,9 @@ The surrounding Write block keeps the important target decisions explicit and in
 - enforce Source Drift with [`check_source_drift()`](api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
 - enforce target Data Quality on the Sensitive Data output with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
+- verify the governed target has the required Guardrail coverage with `check_guardrail_coverage()` before publication
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
 - profile the complete persisted target with an explicit post-write [`profile_table()`](api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
-- optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
 
