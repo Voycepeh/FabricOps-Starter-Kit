@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -55,7 +56,7 @@ jobs:
           source .venv/bin/activate
           python scripts/validate_generated_artifact_ownership.py
 
-      - name: Regenerate owned artifacts for handoff
+      - name: Regenerate and commit owned artifacts
         if: steps.generated_check.outcome == 'failure'
         shell: bash
         run: |
@@ -73,19 +74,12 @@ jobs:
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-second.diff
           cmp /tmp/reference-first.diff /tmp/reference-second.diff
           git diff --name-only -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > generated-files.txt
-
-      - name: Upload regenerated artifact handoff
-        if: steps.generated_check.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: regenerated-owned-artifacts
-          path: |
-            generated-files.txt
-            docs/reference/_data/public-function-call-flows.json
-            docs/reference/_data/generated-artifacts.json
-            docs/api/reference
-            docs/reference/index.md
-            docs/reference/function-call-graph.md
+          test -s generated-files.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          xargs git add -- < generated-files.txt
+          git commit -m "chore: refresh generated references [skip ci]"
+          git push origin HEAD:${{ github.head_ref }}
 
       - name: Preserve generated validation failure
         if: steps.generated_check.outcome == 'failure'
