@@ -186,7 +186,7 @@ export const NotebookJourney = () => {
   const contractAt = notebookFrame(timingSeconds.contract, fps);
   const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
   const environment = enter(environmentAt);
-  const environmentTop = interpolate(frame, [setupExitAt - 18, setupExitAt], [layout.setupEnvironment.top, layout.environment.top], {
+  const environmentTop = interpolate(frame, [setupExitAt, setupExitAt + 18], [layout.setupEnvironment.top, layout.environment.top], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
