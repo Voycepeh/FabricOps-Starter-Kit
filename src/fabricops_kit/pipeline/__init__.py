@@ -6,6 +6,7 @@ from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
+from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_coverage
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
@@ -17,6 +18,7 @@ __all__ = [
     "check_source_drift",
     "check_dq",
     "check_sensitive_data",
+    "check_guardrail_coverage",
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",

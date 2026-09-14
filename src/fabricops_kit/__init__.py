@@ -34,6 +34,7 @@ from .pipeline import (
     check_freshness,
     check_schema,
     check_sensitive_data,
+    check_guardrail_coverage,
     pipeline_read,
     resolve_table_id,
     profile_table,

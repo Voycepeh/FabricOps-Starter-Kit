@@ -39,25 +39,6 @@ def _cell_by_id(notebook_name: str, cell_id: str) -> nbformat.NotebookNode:
     return next(cell for cell in notebook.cells if cell.get("id") == cell_id)
 
 
-def _preview_payload(notebook_name: str, cell_id: str) -> str:
-    """Return Python stored inside one disabled triple-quoted Preview code cell."""
-    cell = _cell_by_id(notebook_name, cell_id)
-    assert cell.cell_type == "code"
-    assert cell.metadata.get("collapsed") is True
-    tree = ast.parse(cell.source)
-    assert len(tree.body) == 1
-    expression = tree.body[0]
-    assert isinstance(expression, ast.Expr)
-    assert isinstance(expression.value, ast.Constant)
-    assert isinstance(expression.value.value, str)
-    payload_lines = expression.value.value.splitlines()
-    while payload_lines and not payload_lines[0].strip():
-        payload_lines = payload_lines[1:]
-    if payload_lines and payload_lines[0].lstrip().startswith("PREVIEW "):
-        payload_lines = payload_lines[1:]
-    return "\n".join(payload_lines).lstrip()
-
-
 def _portable_python_source(source: str) -> str | None:
     """Return Python source for syntax checks, or None for cell magics."""
     lines = source.splitlines()
@@ -73,7 +54,7 @@ def _parse_code_cell(path: Path, cell_index: int, source: str) -> ast.Module | N
         return None
     try:
         return ast.parse(portable_source, filename=f"{path}:{cell_index}")
-    except SyntaxError as exc:  # pragma: no cover - assertion path includes notebook context.
+    except SyntaxError as exc:  # pragma: no cover
         raise AssertionError(f"Invalid Python syntax in {path.name} cell {cell_index}: {exc}") from exc
 
 
@@ -142,7 +123,6 @@ def _notebook_source(notebook_name: str) -> str:
 def test_official_governance_workflow_inventory():
     """The active templates expose one persistent Governance entry point."""
     names = {path.name for path in NOTEBOOKS}
-
     assert {"00_env_config.ipynb", "01_governance.ipynb", "02_pipeline.ipynb", "99_explore.ipynb"} <= names
     assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
 
@@ -211,21 +191,13 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production" in overview
 
 
-def test_02_pipeline_is_a_sequential_engineering_notebook():
-    """The visible workflow follows the authoritative engineering sequence."""
+def test_02_pipeline_has_simple_top_level_sequence():
+    """The template stays Read -> Transform -> Write without splitting one write across sections."""
     source = _notebook_source("02_pipeline.ipynb")
-    headings = (
-        "# 0. Environment",
-        "# 1. Data Contracts",
-        "# 1A. Processing Scope",
-        "# 2. Read",
-        "# 3. Transform",
-        "# 4. Target",
-        "# 5. Write Preparation / Guardrails",
-        "# 6. Write",
-        "# 7. Persisted Target Profile",
-    )
+    headings = ("# 0. Environment", "# 1. Data Contract", "# 2. Full Read", "# 3. Transform", "# 4. Write")
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
+    for removed in ("# 4. Target", "# 5. Write Preparation / Guardrails", "# 6. Write", "# 7. Persisted Target Profile"):
+        assert removed not in source
 
 
 def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
@@ -237,77 +209,152 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert source.count("widget_select_data_contract()") == 1
 
 
-def test_02_pipeline_makes_profile_scope_explicit():
-    """Read and full persisted profiling scopes remain visibly distinct."""
+def test_02_pipeline_is_full_read_and_full_profile_by_design():
+    """The default pipeline reads and profiles complete governed sources."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert 'PROFILE_SCOPE = "full"  # "read" | "full"' in source
-    assert source.count('if PROFILE_SCOPE == "read":') == 3
-    assert source.count("profile_table(dataframe=df, table_id=table_id)") == 3
+    assert "full-read pipeline template" in source
+    assert "source-side incremental reads" in source
+    assert "PROFILE_SCOPE" not in source
+    assert "PROCESSING_SCOPE" not in source
     assert source.count("profile_table(table_id=table_id)") == 3
+    assert "profile_table(dataframe=df, table_id=table_id)" not in source
+
+
+def test_02_pipeline_source_dictionary_is_explained():
+    """The notebook tells engineers exactly what the multi-source dictionary contains."""
+    setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
+    assert "Dictionary used to keep multiple source reads" in setup
+    assert "Key = READ_NAME" in setup
+    assert "source DataFrame and table_id" in setup
+    assert "sources = {}" in setup
 
 
 def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
-    """Every source block repeats the explicit governed read workflow."""
+    """Every source block repeats the explicit governed full-read workflow."""
     for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
         for fragment in (
             f'READ_NAME = "{read_name}"',
-            "READ_STORE =",
-            "READ_SCHEMA =",
-            "READ_TABLE =",
-            "READ_QUERY =",
             "source = pipeline_read(",
             'df = source["dataframe"]',
             'table_id = source["table_id"]',
             "check_freshness(",
             "check_schema(df,",
             "check_dq(df,",
+            'dq_df = dq_result.get("dataframe", df)',
+            'dq_failed_values = dq_result.get("failed_values")',
+            "profile_table(table_id=table_id)",
             "sources[READ_NAME] = source",
+            "# display(df)",
+            '# display(profile_result["profile"])',
+            "# display(dq_df)",
+            "# display(dq_failed_values)",
+            '# catalogue_widget["show"](table_id=table_id)',
         ):
             assert fragment in block
         assert "report_check" not in block
-        assert "Rule source:" not in block
         assert "METADATA_GUARDRAIL_RESULTS" not in block
 
 
 def test_02_pipeline_transform_is_plain_pyspark():
-    """Project transformation remains ordinary readable PySpark."""
+    """Project transformation remains ordinary readable PySpark and produces two target DataFrames."""
     transform = _cell_by_id("02_pipeline.ipynb", "transform").source
     assert transform.count(".join(") == 2
     assert ".withColumn(" in transform
+    assert "transformed_df = (" in transform
+    assert "customer_summary_df = (" in transform
     assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_target_and_write_guardrails_are_explicit():
-    """Target checks precede publication and use the protected DataFrame."""
-    target = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
-    checks = _cell_by_id("02_pipeline.ipynb", "write-preparation").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    profile = _cell_by_id("02_pipeline.ipynb", "write-profile").source
-    assert "target_table_id = resolve_table_id(" in target
-    stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(")
-    assert [checks.index(stage) for stage in stages] == sorted(checks.index(stage) for stage in stages)
-    assert 'prepared_df = sensitive_result["dataframe"]' in checks
-    assert "check_dq(\n    prepared_df," in checks
-    assert "pipeline_write(\n    prepared_df," in write
-    assert 'source_table_ids=[source["table_id"] for source in sources.values()]' in write
-    assert 'profile_table(table_id=write_result["table_id"])' in profile
-    assert checks.count("check_source_drift(") == 1
-    for index in (1, 2, 3):
-        assert "check_source_drift(" not in _cell_by_id(
-            "02_pipeline.ipynb", f"read-{index}"
-        ).source
+def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
+    """Write blocks demonstrate distinct Lakehouse and Warehouse target outputs."""
+    setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
+    assert "Dictionary used to keep multiple write results" in setup
+    assert "Key = WRITE_NAME" in setup
+    assert "target table_id" in setup
+    assert "writes = {}" in setup
+
+    expected = (
+        (1, "curated_orders_lakehouse", "transformed_df", "unified", "curated_orders"),
+        (2, "customer_summary_warehouse", "customer_summary_df", "product", "customer_summary"),
+    )
+    for index, write_name, dataframe, store, table in expected:
+        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        for fragment in (
+            f'WRITE_NAME = "{write_name}"',
+            f"WRITE_DATAFRAME = {dataframe}",
+            f'WRITE_STORE = "{store}"',
+            f'WRITE_TABLE = "{table}"',
+            'WRITE_SOURCE_NAMES = ("orders", "products", "history")',
+            "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]",
+            "target_table_id = resolve_table_id(",
+            "check_schema(",
+            "check_sensitive_data(",
+            'support_mapping_df = sensitive_result.get("support_mapping")',
+            "check_source_drift(",
+            "check_dq(",
+            'target_dq_failed_values = target_dq_result.get("failed_values")',
+            "check_guardrail_coverage(",
+            "write_result = pipeline_write(",
+            "table_id=target_table_id",
+            'source_table_ids=[source["table_id"] for source in write_sources]',
+            "writes[WRITE_NAME] = write_result",
+            'write_profile = profile_table(table_id=write_result["table_id"])',
+            '# display(write_profile["profile"])',
+        ):
+            assert fragment in block
+        stages = (
+            "check_schema(",
+            "check_sensitive_data(",
+            "check_source_drift(",
+            "check_dq(",
+            "check_guardrail_coverage(",
+            "pipeline_write(",
+            "profile_table(",
+        )
+        assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
 
 
 def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
-    """Read, checks, profiling, and write remain separate notebook calls."""
+    """Read, checks, coverage, profiling, and governed publication remain separate notebook calls."""
     source = _notebook_source("02_pipeline.ipynb")
     assert source.count("source = pipeline_read(") == 3
-    assert source.count("write_result = pipeline_write(") == 1
+    assert source.count("coverage_result = check_guardrail_coverage(") == 2
+    assert source.count("write_result = pipeline_write(") == 2
     assert "report_check" not in source
     assert "run_all_checks" not in source
-    for hidden in ("read_lakehouse_table", "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table"):
+    for hidden in ("read_lakehouse_table", "read_warehouse_table"):
         assert hidden not in source
+
+
+def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
+    """Development inspection helpers stay opt-in and do not add default Spark actions or support writes."""
+    notebook_path = NOTEBOOK_DIR / "02_pipeline.ipynb"
+    active_calls: set[str] = set()
+    for cell_index, source in _code_cells(notebook_path):
+        tree = _parse_code_cell(notebook_path, cell_index, source)
+        if tree is None:
+            continue
+        active_calls.update(
+            node.func.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        )
+
+    assert {"display", "write_lakehouse_table", "write_warehouse_table"}.isdisjoint(active_calls)
+
+    source = _notebook_source("02_pipeline.ipynb")
+    for optional in (
+        "# display(df)",
+        '# display(profile_result["profile"])',
+        "# display(dq_df)",
+        "# display(dq_failed_values)",
+        "# display(transformed_df)",
+        "# display(target_dq_failed_values)",
+        "# display(support_mapping_df)",
+        '# display(write_profile["profile"])',
+    ):
+        assert optional in source
 
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
@@ -315,16 +362,14 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     required = {
         "contracts",
-        "processing-scope",
-        "pipeline-target",
         "read-setup",
         "read-1",
         "read-2",
         "read-3",
         "transform",
-        "write-preparation",
+        "write-setup",
         "write-1",
-        "write-profile",
+        "write-2",
     }
     by_id = {cell.get("id"): cell for cell in notebook.cells}
     for cell_id in required:
