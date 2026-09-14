@@ -39,25 +39,6 @@ def _cell_by_id(notebook_name: str, cell_id: str) -> nbformat.NotebookNode:
     return next(cell for cell in notebook.cells if cell.get("id") == cell_id)
 
 
-def _preview_payload(notebook_name: str, cell_id: str) -> str:
-    """Return Python stored inside one disabled triple-quoted Preview code cell."""
-    cell = _cell_by_id(notebook_name, cell_id)
-    assert cell.cell_type == "code"
-    assert cell.metadata.get("collapsed") is True
-    tree = ast.parse(cell.source)
-    assert len(tree.body) == 1
-    expression = tree.body[0]
-    assert isinstance(expression, ast.Expr)
-    assert isinstance(expression.value, ast.Constant)
-    assert isinstance(expression.value.value, str)
-    payload_lines = expression.value.value.splitlines()
-    while payload_lines and not payload_lines[0].strip():
-        payload_lines = payload_lines[1:]
-    if payload_lines and payload_lines[0].lstrip().startswith("PREVIEW "):
-        payload_lines = payload_lines[1:]
-    return "\n".join(payload_lines).lstrip()
-
-
 def _portable_python_source(source: str) -> str | None:
     """Return Python source for syntax checks, or None for cell magics."""
     lines = source.splitlines()
@@ -73,7 +54,7 @@ def _parse_code_cell(path: Path, cell_index: int, source: str) -> ast.Module | N
         return None
     try:
         return ast.parse(portable_source, filename=f"{path}:{cell_index}")
-    except SyntaxError as exc:  # pragma: no cover - assertion path includes notebook context.
+    except SyntaxError as exc:  # pragma: no cover
         raise AssertionError(f"Invalid Python syntax in {path.name} cell {cell_index}: {exc}") from exc
 
 
@@ -142,7 +123,6 @@ def _notebook_source(notebook_name: str) -> str:
 def test_official_governance_workflow_inventory():
     """The active templates expose one persistent Governance entry point."""
     names = {path.name for path in NOTEBOOKS}
-
     assert {"00_env_config.ipynb", "01_governance.ipynb", "02_pipeline.ipynb", "99_explore.ipynb"} <= names
     assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
 
@@ -211,20 +191,13 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production" in overview
 
 
-def test_02_pipeline_is_a_sequential_engineering_notebook():
-    """The visible workflow follows the authoritative full-read engineering sequence."""
+def test_02_pipeline_has_simple_top_level_sequence():
+    """The template stays Read -> Transform -> Write without splitting one write across sections."""
     source = _notebook_source("02_pipeline.ipynb")
-    headings = (
-        "# 0. Environment",
-        "# 1. Data Contract",
-        "# 2. Full Read",
-        "# 3. Transform",
-        "# 4. Target",
-        "# 5. Write Preparation / Guardrails",
-        "# 6. Write",
-        "# 7. Persisted Target Profile",
-    )
+    headings = ("# 0. Environment", "# 1. Data Contract", "# 2. Full Read", "# 3. Transform", "# 4. Write")
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
+    for removed in ("# 4. Target", "# 5. Write Preparation / Guardrails", "# 6. Write", "# 7. Persisted Target Profile"):
+        assert removed not in source
 
 
 def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
@@ -247,16 +220,21 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "profile_table(dataframe=df, table_id=table_id)" not in source
 
 
+def test_02_pipeline_source_dictionary_is_explained():
+    """The notebook tells engineers exactly what the multi-source dictionary contains."""
+    setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
+    assert "Dictionary used to keep multiple source reads" in setup
+    assert "Key = READ_NAME" in setup
+    assert "source DataFrame and table_id" in setup
+    assert "sources = {}" in setup
+
+
 def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
     """Every source block repeats the explicit governed full-read workflow."""
     for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
         for fragment in (
             f'READ_NAME = "{read_name}"',
-            "READ_STORE =",
-            "READ_SCHEMA =",
-            "READ_TABLE =",
-            "READ_QUERY =",
             "source = pipeline_read(",
             'df = source["dataframe"]',
             'table_id = source["table_id"]',
@@ -271,13 +249,10 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             '# display(profile_result["profile"])',
             "# display(dq_df)",
             "# display(dq_failed_values)",
-            "# write_lakehouse_table(",
-            "# write_warehouse_table(",
             '# catalogue_widget["show"](table_id=table_id)',
         ):
             assert fragment in block
         assert "report_check" not in block
-        assert "Rule source:" not in block
         assert "METADATA_GUARDRAIL_RESULTS" not in block
 
 
@@ -289,40 +264,48 @@ def test_02_pipeline_transform_is_plain_pyspark():
     assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_target_and_write_guardrails_are_explicit():
-    """Target checks precede publication and use only its declared source subset."""
-    target = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
-    checks = _cell_by_id("02_pipeline.ipynb", "write-preparation").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    profile = _cell_by_id("02_pipeline.ipynb", "write-profile").source
-    assert "WRITE_DATAFRAME = transformed_df" in target
-    assert 'WRITE_SOURCE_NAMES = ("orders", "products", "history")' in target
-    assert "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]" in target
-    assert "target_table_id = resolve_table_id(" in target
-    stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(")
-    assert [checks.index(stage) for stage in stages] == sorted(checks.index(stage) for stage in stages)
-    assert 'prepared_df = sensitive_result["dataframe"]' in checks
-    assert "for source in write_sources:" in checks
-    assert "check_dq(\n    prepared_df," in checks
-    assert 'target_dq_df = target_dq_result.get("dataframe", prepared_df)' in checks
-    assert 'target_dq_failed_values = target_dq_result.get("failed_values")' in checks
-    assert "# display(target_dq_df)" in checks
-    assert "# display(target_dq_failed_values)" in checks
-    assert "pipeline_write(\n    prepared_df," in write
-    assert 'source_table_ids=[source["table_id"] for source in write_sources]' in write
-    assert 'profile_table(table_id=write_result["table_id"])' in profile
-    assert checks.count("check_source_drift(") == 1
-    for index in (1, 2, 3):
-        assert "check_source_drift(" not in _cell_by_id(
-            "02_pipeline.ipynb", f"read-{index}"
-        ).source
+def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
+    """Write blocks mirror Read blocks and demonstrate Lakehouse plus Warehouse targets."""
+    setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
+    assert "Dictionary used to keep multiple write results" in setup
+    assert "Key = WRITE_NAME" in setup
+    assert "target table_id" in setup
+    assert "writes = {}" in setup
+
+    expected = (
+        (1, "curated_orders_lakehouse", "unified"),
+        (2, "curated_orders_warehouse", "product"),
+    )
+    for index, write_name, store in expected:
+        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        for fragment in (
+            f'WRITE_NAME = "{write_name}"',
+            f'WRITE_STORE = "{store}"',
+            'WRITE_SOURCE_NAMES = ("orders", "products", "history")',
+            "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]",
+            "target_table_id = resolve_table_id(",
+            "check_schema(",
+            "check_sensitive_data(",
+            'support_mapping_df = sensitive_result.get("support_mapping")',
+            "check_source_drift(",
+            "check_dq(",
+            'target_dq_failed_values = target_dq_result.get("failed_values")',
+            "write_result = pipeline_write(",
+            'source_table_ids=[source["table_id"] for source in write_sources]',
+            "writes[WRITE_NAME] = write_result",
+            'write_profile = profile_table(table_id=write_result["table_id"])',
+            '# display(write_profile["profile"])',
+        ):
+            assert fragment in block
+        stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(", "pipeline_write(", "profile_table(")
+        assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
 
 
 def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
     """Read, checks, profiling, and governed publication remain separate notebook calls."""
     source = _notebook_source("02_pipeline.ipynb")
     assert source.count("source = pipeline_read(") == 3
-    assert source.count("write_result = pipeline_write(") == 1
+    assert source.count("write_result = pipeline_write(") == 2
     assert "report_check" not in source
     assert "run_all_checks" not in source
     for hidden in ("read_lakehouse_table", "read_warehouse_table"):
@@ -351,9 +334,9 @@ def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
         '# display(profile_result["profile"])',
         "# display(dq_df)",
         "# display(dq_failed_values)",
-        "# write_lakehouse_table(",
-        "# write_warehouse_table(",
         "# display(transformed_df)",
+        "# display(target_dq_failed_values)",
+        "# display(support_mapping_df)",
         '# display(write_profile["profile"])',
     ):
         assert optional in source
@@ -364,15 +347,14 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     required = {
         "contracts",
-        "pipeline-target",
         "read-setup",
         "read-1",
         "read-2",
         "read-3",
         "transform",
-        "write-preparation",
+        "write-setup",
         "write-1",
-        "write-profile",
+        "write-2",
     }
     by_id = {cell.get("id"): cell for cell in notebook.cells}
     for cell_id in required:
