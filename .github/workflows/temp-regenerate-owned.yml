@@ -31,6 +31,7 @@ jobs:
           cp docs/reference/index.md /tmp/reference-index-first.md
           cp docs/reference/function-call-graph.md /tmp/function-call-graph-first.md
           cp -R docs/api/reference /tmp/reference-pages-first
+          export FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1
           uv run python scripts/generate_public_function_call_flows_json.py
           uv run python scripts/generate_individual_function_reference_pages.py
           diff -u /tmp/call-flow-first.json docs/reference/_data/public-function-call-flows.json
