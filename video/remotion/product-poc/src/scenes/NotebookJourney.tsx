@@ -126,7 +126,7 @@ const SetupFlow = ({frame, fps}: {frame: number; fps: number}) => {
   const groupOpacity = workspace * fadeOut;
   const whl = layout.whl;
   const fabricEnvironment = layout.fabricEnvironment;
-  const config = layout.environment;
+  const config = layout.setupEnvironment;
   const whlCenterY = whl.top + whl.height / 2;
   const environmentCenterX = fabricEnvironment.left + fabricEnvironment.width / 2;
   const environmentCenterY = fabricEnvironment.top + fabricEnvironment.height / 2;
@@ -180,11 +180,18 @@ export const NotebookJourney = () => {
   const {timingSeconds, layout} = VIDEO_TUNING.notebook;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
   const environmentAt = notebookFrame(timingSeconds.environment, fps);
+  const setupExitAt = notebookFrame(timingSeconds.setupExit, fps);
   const foundationAt = notebookFrame(timingSeconds.foundation, fps);
   const lowerNotebooksAt = notebookFrame(timingSeconds.lowerNotebooks, fps);
   const contractAt = notebookFrame(timingSeconds.contract, fps);
   const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
   const environment = enter(environmentAt);
+  const environmentTop = interpolate(frame, [setupExitAt - 18, setupExitAt], [layout.setupEnvironment.top, layout.environment.top], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const environmentPosition = {left: layout.environment.left, top: environmentTop};
   const foundationFlow = interpolate(frame, [foundationAt, foundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const lowerNotebooks = enter(lowerNotebooksAt);
   const contract = enter(contractAt);
@@ -222,7 +229,7 @@ export const NotebookJourney = () => {
       </g>
     </svg>
 
-    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={layout.environment} />
+    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={environmentPosition} />
     <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={layout.governance} />
     <ContractDocument progress={contract} />
     <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={layout.pipeline} />
