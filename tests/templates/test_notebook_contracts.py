@@ -263,8 +263,17 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             "check_freshness(",
             "check_schema(df,",
             "check_dq(df,",
+            'dq_df = dq_result.get("dataframe", df)',
+            'dq_failed_values = dq_result.get("failed_values")',
             "profile_table(table_id=table_id)",
             "sources[READ_NAME] = source",
+            "# display(df)",
+            '# display(profile_result["profile"])',
+            "# display(dq_df)",
+            "# display(dq_failed_values)",
+            "# write_lakehouse_table(",
+            "# write_warehouse_table(",
+            '# catalogue_widget["show"](table_id=table_id)',
         ):
             assert fragment in block
         assert "report_check" not in block
@@ -295,6 +304,10 @@ def test_02_pipeline_target_and_write_guardrails_are_explicit():
     assert 'prepared_df = sensitive_result["dataframe"]' in checks
     assert "for source in write_sources:" in checks
     assert "check_dq(\n    prepared_df," in checks
+    assert 'target_dq_df = target_dq_result.get("dataframe", prepared_df)' in checks
+    assert 'target_dq_failed_values = target_dq_result.get("failed_values")' in checks
+    assert "# display(target_dq_df)" in checks
+    assert "# display(target_dq_failed_values)" in checks
     assert "pipeline_write(\n    prepared_df," in write
     assert 'source_table_ids=[source["table_id"] for source in write_sources]' in write
     assert 'profile_table(table_id=write_result["table_id"])' in profile
@@ -306,14 +319,44 @@ def test_02_pipeline_target_and_write_guardrails_are_explicit():
 
 
 def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
-    """Read, checks, profiling, and write remain separate notebook calls."""
+    """Read, checks, profiling, and governed publication remain separate notebook calls."""
     source = _notebook_source("02_pipeline.ipynb")
     assert source.count("source = pipeline_read(") == 3
     assert source.count("write_result = pipeline_write(") == 1
     assert "report_check" not in source
     assert "run_all_checks" not in source
-    for hidden in ("read_lakehouse_table", "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table"):
+    for hidden in ("read_lakehouse_table", "read_warehouse_table"):
         assert hidden not in source
+
+
+def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
+    """Development inspection helpers stay opt-in and do not add default Spark actions or support writes."""
+    notebook_path = NOTEBOOK_DIR / "02_pipeline.ipynb"
+    active_calls: set[str] = set()
+    for cell_index, source in _code_cells(notebook_path):
+        tree = _parse_code_cell(notebook_path, cell_index, source)
+        if tree is None:
+            continue
+        active_calls.update(
+            node.func.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        )
+
+    assert {"display", "write_lakehouse_table", "write_warehouse_table"}.isdisjoint(active_calls)
+
+    source = _notebook_source("02_pipeline.ipynb")
+    for optional in (
+        "# display(df)",
+        '# display(profile_result["profile"])',
+        "# display(dq_df)",
+        "# display(dq_failed_values)",
+        "# write_lakehouse_table(",
+        "# write_warehouse_table(",
+        "# display(transformed_df)",
+        '# display(write_profile["profile"])',
+    ):
+        assert optional in source
 
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
