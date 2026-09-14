@@ -88,6 +88,48 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     assert not hasattr(pipeline, "_source_read_type")
 
 
+def test_contract_resolution_is_reused_only_within_one_activity(monkeypatch):
+    """Avoid repeated contract metadata reads without leaking across activities."""
+    pipeline_shared._ACTIVITY_METADATA_CACHE.clear()
+    calls = []
+    monkeypatch.setattr(
+        pipeline_shared,
+        "resolve_active_data_contract",
+        lambda *_args, **_kwargs: calls.append("read") or {"contract_id": "contract"},
+    )
+    config = object()
+
+    first = pipeline_shared.resolve_pipeline_data_contract(
+        config, "prod", "source-a", context={"activity_id": "activity-a"}
+    )
+    second = pipeline_shared.resolve_pipeline_data_contract(
+        config, "prod", "source-a", context={"activity_id": "activity-a"}
+    )
+    third = pipeline_shared.resolve_pipeline_data_contract(
+        config, "prod", "source-a", context={"activity_id": "activity-b"}
+    )
+
+    assert first == second == third == {"contract_id": "contract"}
+    assert calls == ["read", "read"]
+
+
+def test_contract_resolution_without_activity_is_not_cached(monkeypatch):
+    """Keep independently callable helpers live when no activity bounds a cache."""
+    pipeline_shared._ACTIVITY_METADATA_CACHE.clear()
+    calls = []
+    monkeypatch.setattr(
+        pipeline_shared,
+        "resolve_active_data_contract",
+        lambda *_args, **_kwargs: calls.append("read") or {"contract_id": "contract"},
+    )
+    config = object()
+
+    pipeline_shared.resolve_pipeline_data_contract(config, "prod", "source-a", context={})
+    pipeline_shared.resolve_pipeline_data_contract(config, "prod", "source-a", context={})
+
+    assert calls == ["read", "read"]
+
+
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     """Verify schema guardrail strict and allow new columns behavior."""
     from fabricops_kit.pipeline.shared import schema_check_core
