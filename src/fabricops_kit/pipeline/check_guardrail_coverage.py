@@ -1,0 +1,169 @@
+"""Public pre-write Guardrail coverage validation."""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table
+from fabricops_kit.pipeline.shared import load_table_guardrail_rules, resolve_catalogue_table_identity
+
+_GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+_SOURCE_GUARDRAILS = {"freshness", "schema", "dq", "source_drift"}
+_TARGET_GUARDRAILS = {"schema", "sensitive_data", "dq"}
+_LABELS = {
+    "freshness": "Freshness",
+    "schema": "Schema",
+    "dq": "Data Quality",
+    "source_drift": "Source Drift",
+    "sensitive_data": "Sensitive Data",
+}
+
+
+def _rows(value: Any) -> list[dict[str, Any]]:
+    source = value.collect() if hasattr(value, "collect") else value
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source or []]
+
+
+def _rules(config: Any, env: str, table_id: str, *, spark, context) -> list[dict[str, Any]]:
+    rows = _rows(load_table_guardrail_rules(config, env, spark_session=spark, table_id=table_id, context=context))
+    return [row for row in rows if row.get("is_active", True) is not False]
+
+
+def _payload(row: dict[str, Any]) -> dict[str, Any]:
+    raw = row.get("result_payload_json") or "{}"
+    try:
+        parsed = json.loads(raw) if isinstance(raw, str) else dict(raw)
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
+    try:
+        identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark, context=context)
+    except Exception:
+        return table_id
+    return str(identity.get("table_name") or table_id)
+
+
+def check_guardrail_coverage(
+    *,
+    target_table_id: str,
+    source_table_ids: list[str] | tuple[str, ...],
+    verbose: bool = True,
+) -> dict[str, Any]:
+    """Verify configured Guardrails were evaluated before publication.
+
+    The check does not execute Guardrails. It compares the applicable Guardrails
+    from the selected Development or active Production Data Contracts with
+    current-activity evidence in ``METADATA_GUARDRAIL_RESULTS``.
+
+    Missing configured coverage warns in Development and blocks in Production.
+    """
+    target_id = str(target_table_id or "").strip()
+    source_ids = list(dict.fromkeys(str(value or "").strip() for value in source_table_ids or ()))
+    if not target_id:
+        raise ValueError("target_table_id must be a non-empty canonical table_id.")
+    if not source_ids or any(not value for value in source_ids):
+        raise ValueError("source_table_ids must contain at least one non-empty canonical table_id.")
+
+    config, env, context = resolve_fabric_context()
+    spark = get_spark_session()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    activity_id = str(audit.get("_activity_id") or "").strip()
+    if not activity_id:
+        raise ValueError("Current Fabric activity_id is required to validate Guardrail coverage.")
+
+    from pyspark.sql import functions as F
+
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "metadata",
+        _GUARDRAIL_RESULTS_TABLE,
+        metadata_table_physical_schema(config, _GUARDRAIL_RESULTS_TABLE),
+        context=context,
+    )
+    result_rows = _rows(
+        spark.read.format("delta").load(path).where(
+            (F.col("environment_name") == F.lit(env)) & (F.col("_activity_id") == F.lit(activity_id))
+        )
+    )
+    evidence_by_rule: dict[str, list[dict[str, Any]]] = {}
+    for row in result_rows:
+        evidence_by_rule.setdefault(str(row.get("guardrail_rule_id") or ""), []).append(row)
+
+    coverage: list[dict[str, Any]] = []
+    for source_id in source_ids:
+        source_label = _label(config, env, source_id, spark=spark, context=context)
+        for rule in _rules(config, env, source_id, spark=spark, context=context):
+            guardrail_type = str(rule.get("guardrail_type") or "").strip().lower()
+            if guardrail_type not in _SOURCE_GUARDRAILS:
+                continue
+            rule_id = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or "").strip()
+            matches = evidence_by_rule.get(rule_id, [])
+            if guardrail_type == "source_drift":
+                matches = [
+                    row for row in matches
+                    if str(_payload(row).get("source_table_id") or source_id).strip() == source_id
+                    and str(_payload(row).get("target_table_id") or "").strip() == target_id
+                ]
+            coverage.append({
+                "scope": "source_target" if guardrail_type == "source_drift" else "source",
+                "table_id": source_id,
+                "table_name": source_label,
+                "target_table_id": target_id if guardrail_type == "source_drift" else None,
+                "guardrail_type": guardrail_type,
+                "guardrail_rule_id": rule_id,
+                "evaluated": bool(matches),
+            })
+
+    target_label = _label(config, env, target_id, spark=spark, context=context)
+    for rule in _rules(config, env, target_id, spark=spark, context=context):
+        guardrail_type = str(rule.get("guardrail_type") or "").strip().lower()
+        if guardrail_type not in _TARGET_GUARDRAILS:
+            continue
+        rule_id = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or "").strip()
+        coverage.append({
+            "scope": "target",
+            "table_id": target_id,
+            "table_name": target_label,
+            "target_table_id": None,
+            "guardrail_type": guardrail_type,
+            "guardrail_rule_id": rule_id,
+            "evaluated": bool(evidence_by_rule.get(rule_id, [])),
+        })
+
+    missing = [item for item in coverage if not item["evaluated"]]
+    is_production = str(env).strip().lower() in {"prod", "production"}
+    result = {
+        "status": "passed" if not missing else ("blocked" if is_production else "warning"),
+        "can_continue": not (is_production and missing),
+        "environment_name": env,
+        "activity_id": activity_id,
+        "target_table_id": target_id,
+        "source_table_ids": source_ids,
+        "coverage": coverage,
+        "missing": missing,
+    }
+
+    if verbose:
+        print("FabricOps Contract Coverage")
+        for item in coverage:
+            scope_label = item["table_name"]
+            if item["scope"] == "source_target":
+                scope_label = f"{scope_label} → {target_label}"
+            mark = "✓" if item["evaluated"] else "✗"
+            print(f"{mark} {scope_label}: {_LABELS.get(item['guardrail_type'], item['guardrail_type'])}")
+        final = "PASS" if not missing else ("BLOCK" if is_production else "WARN")
+        print(f"Result: {final} ({env})")
+
+    if is_production and missing:
+        detail = ", ".join(
+            f"{item['table_name']} / {_LABELS.get(item['guardrail_type'], item['guardrail_type'])}"
+            for item in missing
+        )
+        raise RuntimeError(f"Missing required Guardrail coverage before publication: {detail}.")
+    return result
