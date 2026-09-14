@@ -12,9 +12,9 @@ Check whether source timing satisfies direct or approved freshness intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_freshness.py:44`
+`fabricops_kit/pipeline/check_freshness.py:45`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L44-L191">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L45-L213">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,6 +40,7 @@ def check_freshness(
     table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    verbose: bool=True,
 ) -> dict:
 ```
 
@@ -60,6 +61,7 @@ def check_freshness(
 | `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
 | `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking freshness result cannot continue. |
+| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
 

@@ -47,7 +47,7 @@ const NotebookCard = ({title, subtitle, color, progress, position}: {
 );
 
 const ContractDocument = ({progress}: {progress: number}) => {
-  const guardrails = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Stability'];
+  const guardrails = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Drift'];
   const {contract} = VIDEO_TUNING.notebook.layout;
   return (
     <div style={{position: 'absolute', ...contract, boxSizing: 'border-box', padding: '34px 38px 24px', background: 'linear-gradient(150deg, #303a49, #1b2432 78%)', border: '2px solid #7f8b9b', borderRadius: '16px 16px 20px 20px', boxShadow: '0 28px 65px #0009, inset 0 1px 0 #ffffff1a', opacity: progress, transform: `translateY(${(1 - progress) * 18}px) scale(${0.95 + progress * 0.05})`, overflow: 'hidden'}}>

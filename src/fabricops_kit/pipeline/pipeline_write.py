@@ -15,7 +15,6 @@ from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
-    check_source_stability_for_target,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -38,9 +37,7 @@ def _persist_target_processing(
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(
-            "Delta Lake merge support is required to persist target processing metadata."
-        ) from exc
+        raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
 
     parameter_names = {
         "partition_column",
@@ -73,9 +70,7 @@ def _persist_target_processing(
         },
     )
     spark_session = dataframe.sparkSession
-    source = spark_session.createDataFrame(
-        [row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE]
-    )
+    source = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "metadata",
         CATALOGUE_TABLE,
@@ -197,9 +192,7 @@ def pipeline_write(
     :func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
     the governed target once; FabricOps resolves its canonical identity and
     configured store, resolves governed processing from the selected or active
-    Data Contract, selects the appropriate physical publication path, and
-    evaluates each explicit source against this target's last successful
-    consumption baseline and load strategy before publication. It commits
+    Data Contract, and selects the appropriate physical publication path. It commits
     Lineage and Source Observation metadata only after publication succeeds.
 
     Parameters
@@ -284,10 +277,8 @@ def pipeline_write(
     ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
 
     This function does not perform transformations, schema checks, DQ checks,
-    Sensitive Data Guardrails, or profiling. Source Stability is the exception:
-    it is target-dependent and therefore runs inside this write boundary. The
-    other checks remain explicit notebook
-    engineering and governance steps. ``pipeline_write`` publishes governed
+    Sensitive Data Guardrails, Source Drift, or profiling. These remain
+    explicit notebook engineering and governance steps. ``pipeline_write`` publishes governed
     table targets only. Raw Lakehouse Files do not have a canonical FabricOps
     ``table_id``; direct file-output concerns, if supported in future, belong
     outside this governed table orchestration API.
@@ -345,12 +336,6 @@ def pipeline_write(
         config, env, str(identity["table_id"]), context=context, authored_processing=authored
     )
     publication_source_ids = _source_table_ids(source_table_ids)
-    for source_table_id in publication_source_ids:
-        check_source_stability_for_target(
-            source_table_id=source_table_id,
-            target_table_id=str(identity["table_id"]),
-            target_processing=processing,
-        )
     scope = _write_scope()
     strategy = str(processing.get("load_strategy") or "")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
@@ -393,7 +378,9 @@ def pipeline_write(
         store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
         if strategy in {"scd1", "scd2"}:
             processing_label = "governed Delta merge" if store_kind == "lakehouse" else "governed Warehouse merge"
-            print(f"FabricOps Write → {store_label} table '{physical_identity}' → {strategy.upper()} → {processing_label}")
+            print(
+                f"FabricOps Write → {store_label} table '{physical_identity}' → {strategy.upper()} → {processing_label}"
+            )
         else:
             writer_name = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
             print(f"FabricOps Write → {store_label} table '{physical_identity}' → {strategy} → {writer_name}")

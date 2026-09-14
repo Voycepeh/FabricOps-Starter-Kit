@@ -11,7 +11,7 @@ from fabricops_kit.data_contract import shared as contract_authoring
 from fabricops_kit.widgets import shared
 
 _SECTIONS = ("Overview", "Enrichment", "Guardrails", "Review")
-_GUARDRAIL_TYPES = ("Schema", "Freshness", "Source Stability", "Data Quality", "Sensitive Data")
+_GUARDRAIL_TYPES = ("Schema", "Freshness", "Source Drift", "Data Quality", "Sensitive Data")
 _ACTIONS = ("Warn", "Block")
 
 
@@ -240,12 +240,12 @@ def widget_author_data_contract(
                 fields = [column, age, unit]
                 def build() -> dict[str, Any]:
                     return shared.build_rule_record(rule_state, guardrail_type="freshness", rule_id="freshness", rule_type="max_age", parameters={"freshness_column": column.value, "maximum_age": age.value, "maximum_age_unit": str(unit.value).lower()}, action=action.value)
-            elif kind.value == "Source Stability":
+            elif kind.value == "Source Drift":
                 partition = widgets.Dropdown(options=[("None", ""), *[(name, name) for name in names]], description="Partition column")
                 watermark = widgets.Dropdown(options=[("None", ""), *[(name, name) for name in names]], description="Change column")
                 fields = [partition, watermark]
                 def build() -> dict[str, Any]:
-                    return shared.build_rule_record(rule_state, guardrail_type="source_stability", rule_id="source_stability", rule_type="historical_mutation", parameters={"partition_column": partition.value, "change_column": watermark.value}, action=action.value)
+                    return shared.build_rule_record(rule_state, guardrail_type="source_drift", rule_id="source_drift", rule_type="historical_mutation", parameters={"partition_column": partition.value, "change_column": watermark.value}, action=action.value)
             elif kind.value == "Data Quality":
                 rule = widgets.Dropdown(options=("missing_values", "unique_values", "accepted_values", "value_range", "regex_match"), description="Rule")
                 columns = widgets.SelectMultiple(options=names, description="Columns")

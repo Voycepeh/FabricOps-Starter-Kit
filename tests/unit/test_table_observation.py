@@ -51,7 +51,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
     monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
     monkeypatch.setattr(shared, "select_table_guardrail_rule", lambda *args, **kwargs: object())
-    monkeypatch.setattr(shared, "resolve_source_stability_observation_columns", lambda rule: ("partition", "changed"))
+    monkeypatch.setattr(shared, "resolve_source_drift_observation_columns", lambda rule: ("partition", "changed"))
     monkeypatch.setattr(shared, "_observe_dataframe", lambda frame, *args: [{
         "partition_value": "p", "row_count": 1, "min_change_value": "1",
         "max_change_value": "1", "content_fingerprint": "hash", "is_present": True,

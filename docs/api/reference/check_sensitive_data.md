@@ -12,9 +12,9 @@ Apply explicit Sensitive Data treatment before a governed write.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_sensitive_data.py:150`
+`fabricops_kit/pipeline/check_sensitive_data.py:162`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L150-L311">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L162-L358">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -41,6 +41,9 @@ def check_sensitive_data(
     table_id: str,
     run_id: str='',
     existing_mapping=None,
+    enabled: bool=True,
+    raise_on_failure: bool=False,
+    verbose: bool=True,
 ) -> dict:
 ```
 
@@ -64,6 +67,9 @@ def check_sensitive_data(
 | `table_id` | `str` | Yes | Canonical identity used to resolve the applicable exact Data Contract version. |
 | `run_id` | `str` | No | Pipeline run identity recorded with Guardrail summary evidence. |
 | `existing_mapping` | `pyspark.sql.DataFrame` | No | Previously persisted mappings to reuse. Rows are scoped by ``table_id`` and ``column_id``; established original-to-token assignments are preserved. |
+| `enabled` | `bool` | No | Explicitly skip the check and return the supplied DataFrame when ``False``. |
+| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking treatment cannot continue. |
+| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
 

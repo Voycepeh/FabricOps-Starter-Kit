@@ -54,7 +54,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Governed rules that FabricOps evaluates against data and pipeline behaviour.",
-    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Stability, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
+    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Drift, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },
@@ -121,7 +121,7 @@
     "id": "read-transform-write",
     "term": "Read / Transform / Write",
     "aliases": [
-      "Read \u2192 Transform \u2192 Write",
+      "Read → Transform → Write",
       "RTW"
     ],
     "category": "FabricOps concepts",
@@ -150,16 +150,16 @@
     "short_definition": "The authoritative governed behaviour used to write one target table.",
     "long_definition": "A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.",
     "preferred_usage": "Use load strategy for governed target write behaviour.",
-    "avoid_usage": "source pattern or Source Stability behaviour as a second strategy"
+    "avoid_usage": "source pattern or Source Drift behaviour as a second strategy"
   },
   {
-    "id": "source-stability",
-    "term": "source stability",
+    "id": "source-drift",
+    "term": "source drift",
     "aliases": [],
     "category": "FabricOps concepts",
-    "short_definition": "Whether source data previously processed by a pipeline remains unchanged.",
-    "long_definition": "The Source Stability Guardrail compares current source evidence with the latest committed METADATA_SOURCE_OBSERVATION rows for the same logical notebook name, source table_id, and target table_id. Observed rows become committed only after the associated physical target write succeeds. The Guardrail reports new, changed, removed, and reappeared data where supported, then validates historical mutation against the target's governed Load Strategy.",
-    "preferred_usage": "Distinguish Source Stability from Freshness: Freshness asks whether data is current; Source Stability asks whether previously processed data changed unexpectedly.",
+    "short_definition": "Whether source data previously consumed by a downstream target changed unexpectedly.",
+    "long_definition": "The Source Drift Guardrail compares the current source observation with the latest committed METADATA_SOURCE_OBSERVATION rows for the same source table_id, target table_id, and environment. The source table's governed processing and load strategy determine allowed source changes. The target identity selects that target's last-successful consumption baseline; the target's write strategy does not determine drift compatibility. Observed rows become committed only after the associated physical target write succeeds.",
+    "preferred_usage": "Distinguish Source Drift from Freshness: Freshness asks whether data is current; Source Drift asks whether source history changed unexpectedly since this target last successfully consumed it.",
     "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
   },
   {

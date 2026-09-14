@@ -102,12 +102,15 @@ Each Read block is designed to be **fully clonable**. Copy the whole block, chan
 After the source is read, the Read block keeps the governed checks and profiling explicit:
 
 - enforce Freshness with [`check_freshness()`](api/reference/check_freshness.md)
-- enforce Schema with [`check_schema()`](api/reference/check_schema.md) and Data Quality with [`check_dq()`](api/reference/check_dq.md)
-- profile the governed table or supplied DataFrame with [`profile_table()`](api/reference/profile_table.md)
+- enforce Schema on the returned DataFrame with [`check_schema()`](api/reference/check_schema.md)
+- enforce Data Quality on that same DataFrame with [`check_dq()`](api/reference/check_dq.md)
+- call [`profile_table()`](api/reference/profile_table.md) explicitly with either the returned DataFrame for **read scope** or only its canonical `table_id` for **full scope**
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 The routing stays hidden underneath the public functions. [`pipeline_read()`](api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
+
+`02_pipeline` keeps the profile-scope choice visible. **Read scope** reuses exactly the DataFrame returned by `pipeline_read()`, including an incremental batch or custom Warehouse query result. **Full scope** intentionally reads or queries the complete persisted governed table again. Those are different semantic scopes, so the latter is deliberate I/O rather than a duplicate read.
 
 For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
 
@@ -128,12 +131,12 @@ The target identity is resolved with [`resolve_table_id()`](api/reference/resolv
 The surrounding Write block keeps the important target decisions explicit and in sequence:
 
 - enforce target Schema with [`check_schema()`](api/reference/check_schema.md)
-- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md); when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
-- enforce Source Stability with [`check_source_stability()`](api/reference/check_source_stability.md) once the governed source-to-target relationship is known
-- enforce Data Quality with [`check_dq()`](api/reference/check_dq.md)
+- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](api/reference/check_sensitive_data.md), then carry its returned DataFrame into every later step; when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
+- enforce Source Drift with [`check_source_drift()`](api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
+- enforce target Data Quality on the Sensitive Data output with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
-- profile the persisted target with [`profile_table()`](api/reference/profile_table.md)
+- profile the complete persisted target with an explicit post-write [`profile_table()`](api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
 - optionally inspect the resulting Data Catalogue and profile metadata with [`widget_view_catalogue()`](api/reference/widget_view_catalogue.md)
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
@@ -182,7 +185,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 Governance authors it through [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
 
 - **Enrichment** for descriptive table and column metadata and information classification
-- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Stability, Data Quality, and Sensitive Data requirements
+- **Guardrails** for enforceable expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements
 - the governed target processing definition, including its load strategy and parameters
 - the logical notebook ownership that identifies which pipeline owns the governed write
 
@@ -192,7 +195,7 @@ The selected or active Data Contract is then **enforced in Engineering through t
 
 - [`check_schema()`](api/reference/check_schema.md) enforces Schema Guardrails
 - [`check_freshness()`](api/reference/check_freshness.md) enforces Freshness Guardrails
-- [`pipeline_write()`](api/reference/pipeline_write.md) enforces Source Stability for each explicit source-to-target relationship before publication
+- [`check_source_drift()`](api/reference/check_source_drift.md) explicitly enforces Source Drift for each source-to-target relationship before publication
 - [`check_dq()`](api/reference/check_dq.md) enforces Data Quality Guardrails
 - [`check_sensitive_data()`](api/reference/check_sensitive_data.md) enforces Sensitive Data Guardrails before governed publication
 
@@ -203,7 +206,7 @@ flowchart LR
     CONTRACT --> SELECT["widget_select_data_contract()"]
     SELECT --> SCHEMA["check_schema()"]
     SELECT --> FRESH["check_freshness()"]
-    SELECT --> STABILITY["pipeline_write(): Source Stability"]
+    SELECT --> STABILITY["check_source_drift()"]
     SELECT --> DQ["check_dq()"]
     SELECT --> SENSITIVE["check_sensitive_data()"]
 ```
@@ -223,7 +226,7 @@ That is the core **Governance as Code** idea in FabricOps: Governance authors th
 
     **Enrichment** is descriptive. It helps people and downstream systems understand what the table and columns mean and how the information is classified.
 
-    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Stability, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
+    **Guardrails** are enforceable expectations. Examples include Schema, Freshness, Source Drift, Data Quality, and Sensitive Data handling. A Guardrail can use a **Warn** or **Block** action.
 
     Activation links the approved Data Contract version to the relevant Data Agreement version so Production has one explicit governed definition to resolve.
 
@@ -274,7 +277,7 @@ The main public functions line up with the metadata model like this:
 | Commit source observation state after successful publication | successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
 | Author the governed definition | [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
 | Activate the Production definition | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
-| Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_stability()`](api/reference/check_source_stability.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
+| Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_drift()`](api/reference/check_source_drift.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
 | Optional access observation | `scan_workspace_access()` | `METADATA_DATA_ACCESS` when persistence is used |
 
 The purple Governance area therefore stores authored definitions. The blue Engineering area stores what the pipeline discovers, profiles, observes, and enforces while it runs. `table_id` is the bridge between the real physical table and both sides of that metadata model.

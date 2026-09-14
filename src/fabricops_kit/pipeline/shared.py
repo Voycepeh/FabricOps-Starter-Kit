@@ -87,6 +87,39 @@ _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 
 
+def print_guardrail_result(
+    name: str,
+    result: Mapping[str, Any],
+    *,
+    verbose: bool,
+    table_id: str | None = None,
+    source_table_id: str | None = None,
+    target_table_id: str | None = None,
+) -> None:
+    """Print one concise, normalized public Guardrail outcome."""
+    if not verbose:
+        return
+    raw_status = str(result.get("status") or "skipped").strip().lower()
+    status = {
+        "passed": "PASS",
+        "pass": "PASS",
+        "warning": "WARN",
+        "warn": "WARN",
+        "failed": "BLOCK" if not result.get("can_continue", False) else "WARN",
+        "block": "BLOCK",
+        "blocked": "BLOCK",
+        "skipped": "SKIPPED",
+    }.get(raw_status, raw_status.upper())
+    print(f"FabricOps Check → {name}")
+    if table_id:
+        print(f"  Table  {table_id}")
+    if source_table_id:
+        print(f"  Source {source_table_id}")
+    if target_table_id:
+        print(f"  Target {target_table_id}")
+    print(f"  Result {status}")
+
+
 def set_current_source_observation(
     *, environment_name: str, activity_id: str, table_id: str, observation: Any
 ) -> None:
@@ -599,14 +632,14 @@ def _previous_source_target_observation(
     return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
-def check_source_stability_for_target(
+def check_source_drift_for_target(
     *,
     source_table_id: str,
     target_table_id: str,
-    target_processing: Mapping[str, Any],
+    source_processing: Mapping[str, Any],
     raise_on_failure: bool = True,
 ) -> dict[str, Any]:
-    """Evaluate one current source snapshot against a target-specific baseline."""
+    """Evaluate source-governed drift against a target-specific baseline."""
     config, env, context = resolve_fabric_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = str(audit["_activity_id"])
@@ -677,16 +710,16 @@ def check_source_stability_for_target(
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="source_stability",
+        guardrail_type="source_drift",
         table_id=source_table_id,
         environment_name=env,
     )
     if selected_rule is None:
-        raise ValueError(f"No active approved Source Stability rule exists for {source_table_id!r}.")
+        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
     first_observation = not previous
     has_changes = first_observation or bool(new or changed or removed or reappeared)
-    result = evaluate_source_stability_guardrail(
+    result = evaluate_source_drift_guardrail(
         {
             "table_id": source_table_id,
             "target_table_id": target_table_id,
@@ -694,8 +727,8 @@ def check_source_stability_for_target(
             "observation_id": str(current[0].get("observation_id") or ""),
             "status": "changed" if has_changes else "unchanged",
             "can_continue": True,
-            "check_type": "source_stability",
-            "guardrail_type": "source_stability",
+            "check_type": "source_drift",
+            "guardrail_type": "source_drift",
             "changed": has_changes,
             "first_observation": first_observation,
             "new_partitions": new,
@@ -709,7 +742,7 @@ def check_source_stability_for_target(
         rules_df=rules_df,
         environment_name=env,
         table_id=source_table_id,
-        load_strategy=str(target_processing["load_strategy"]),
+        load_strategy=str(source_processing["load_strategy"]),
     )
     if result.get("guardrail_rule_id"):
         write_guardrail_result_row(
@@ -722,12 +755,12 @@ def check_source_stability_for_target(
             store_type="",
             layer="",
             schema_name=None,
-            guardrail_type="source_stability",
+            guardrail_type="source_drift",
             rule_type="historical_mutation",
             result=result,
         )
     if raise_on_failure and not result.get("can_continue", False):
-        raise RuntimeError(str(result.get("reason") or "Source Stability check failed."))
+        raise RuntimeError(str(result.get("reason") or "Source Drift check failed."))
     return result
 
 
@@ -748,11 +781,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
         pending_key = (env, activity_id, source_table_id, target_table_id)
-        current = _PENDING_SOURCE_OBSERVATIONS.get(pending_key)
-        if current is None:
-            raise ValueError(
-                f"Source Stability was not evaluated for {source_table_id!r} and target {target_table_id!r}."
-            )
+        current = _PENDING_SOURCE_OBSERVATIONS.get(pending_key, [])
         for row in current:
             records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
                 **{
@@ -781,17 +810,18 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         activity_id=activity_id,
         context=context,
     )
-    frame = get_spark_session().createDataFrame(
-        records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
-    )
-    write_lakehouse_table(
-        frame,
-        _SOURCE_OBSERVATION_TABLE,
-        store="metadata",
-        schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
-        context=context,
-        mode="append",
-    )
+    if records:
+        frame = get_spark_session().createDataFrame(
+            records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
+        )
+        write_lakehouse_table(
+            frame,
+            _SOURCE_OBSERVATION_TABLE,
+            store="metadata",
+            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            context=context,
+            mode="append",
+        )
     for source_table_id in source_table_ids:
         _PENDING_SOURCE_OBSERVATIONS.pop(
             (env, activity_id, source_table_id, target_table_id), None
@@ -1134,7 +1164,7 @@ def _changes_content_columns(columns, keys, non_key_columns):
         if column not in keys
     )
 
-def source_stability_check_core(
+def source_drift_check_core(
     dataframe,
     previous_dataframe=None,
     *,
@@ -1224,7 +1254,7 @@ def source_stability_check_core(
     current_by_id = {item["_partition_id"]: item for item in current_observations}
     result = {
         "status": "changed" if changed else "unchanged", "can_continue": True,
-        "check_type": "source_stability", "guardrail_type": "source_stability", "changed": changed,
+        "check_type": "source_drift", "guardrail_type": "source_drift", "changed": changed,
         "comparison_scope": scope,
         "partition_observations": _strip_internal_observation_fields(current_observations),
         "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
@@ -1895,20 +1925,20 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
         environment_name=environment_name, table_id=table_id,
     )
 
-def resolve_source_stability_observation_columns(rule: dict) -> tuple[str, str]:
-    """Return validated observation columns from an active Source Stability rule."""
+def resolve_source_drift_observation_columns(rule: dict) -> tuple[str, str]:
+    """Return validated observation columns from an active Source Drift rule."""
     parameters = _parse_rule_parameters(rule)
     resolved = []
     for name in ("partition_column", "change_column"):
         value = str(parameters.get(name) or "").strip()
         if not value:
-            raise ValueError(f"Active Source Stability rule is invalid: {name} is missing.")
+            raise ValueError(f"Active Source Drift rule is invalid: {name} is missing.")
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-            raise ValueError(f"Active Source Stability rule is invalid: {name} must be a simple identifier.")
+            raise ValueError(f"Active Source Drift rule is invalid: {name} must be a simple identifier.")
         resolved.append(value)
     return resolved[0], resolved[1]
 
-def evaluate_source_stability_guardrail(
+def evaluate_source_drift_guardrail(
     result: dict,
     *,
     rules_df,
@@ -1920,13 +1950,13 @@ def evaluate_source_stability_guardrail(
 ) -> dict:
     """Validate detected historical mutation against a governed load strategy."""
     rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="source_stability", dataset_name=dataset_name,
+        rules_df, guardrail_type="source_drift", dataset_name=dataset_name,
         table_name=table_name, environment_name=environment_name,
         table_id=table_id,
     )
     if not rule:
         raise ValueError(
-            f"No active approved Source Stability rule exists for {table_id!r}; "
+            f"No active approved Source Drift rule exists for {table_id!r}; "
             "Governance must author and activate one first."
         )
     strategy = _string_value(load_strategy).lower()
@@ -1963,7 +1993,7 @@ def evaluate_source_stability_guardrail(
             status="baseline_created",
             can_continue=True,
             changed=False,
-            reason="First Source Stability baseline created.",
+            reason="First Source Drift baseline created.",
         )
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
@@ -1973,7 +2003,7 @@ def evaluate_source_stability_guardrail(
         result.update(
             status="passed",
             can_continue=True,
-            reason=f"Observed source stability is compatible with governed {strategy!r} processing.",
+            reason=f"Observed source drift is compatible with governed {strategy!r} processing.",
         )
     else:
         blocking = severity == "blocking"
@@ -3307,16 +3337,16 @@ def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
     )
     rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="source_stability",
+        guardrail_type="source_drift",
         table_id=governed_table_id,
         environment_name=env,
     )
     if rule is None:
         raise ValueError(
-            f"No active approved Source Stability rule exists for {governed_table_id!r}; "
+            f"No active approved Source Drift rule exists for {governed_table_id!r}; "
             "Governance must author and activate one before source observation can run."
         )
-    partition_value, change_value = resolve_source_stability_observation_columns(rule)
+    partition_value, change_value = resolve_source_drift_observation_columns(rule)
     observation_columns = {partition_value, change_value}
     if dataframe is not None and observation_columns <= set(getattr(dataframe, "columns", ())):
         current = _observe_dataframe(dataframe, partition_value, change_value)

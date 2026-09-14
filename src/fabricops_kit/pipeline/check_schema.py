@@ -14,31 +14,35 @@ from fabricops_kit.pipeline.shared import (
     resolve_catalogue_table_identity,
     schema_check_core,
     select_table_guardrail_rule,
+    print_guardrail_result,
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
 
 
 def check_schema(
-    table_id: str,
-    *,
     dataframe=None,
+    *,
+    table_id: str,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    verbose: bool = True,
 ) -> dict:
     """Check a persisted or supplied schema against configured schema intent.
 
     Parameters
     ----------
-    table_id : str
-        Canonical identity of an active registered Catalogue table.
     dataframe : DataFrame, optional
         Incoming DataFrame whose schema should be checked. When omitted, the
         schema of the configured physical table is checked.
+    table_id : str
+        Canonical identity of an active registered Catalogue table.
     enabled : bool, default=True
         Explicitly disable this check when ``False``. Normally omit this value;
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking schema result cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
 
     Returns
     -------
@@ -69,20 +73,35 @@ def check_schema(
 
     """
     if not enabled:
-        return {"status": "skipped", "can_continue": True, "checks": []}
+        result = {"status": "skipped", "can_continue": True, "checks": []}
+        print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        return result
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     contract = resolve_pipeline_data_contract(
-        config, env, table_id, spark_session=spark, context=context,
+        config,
+        env,
+        table_id,
+        spark_session=spark,
+        context=context,
     )
     if contract is None:
-        return {
-            "status": "skipped", "can_continue": True, "checks": [],
+        result = {
+            "status": "skipped",
+            "can_continue": True,
+            "checks": [],
             "reason": "No Data Contract selected; Development only.",
-            "table_id": table_id, "environment_name": env,
+            "table_id": table_id,
+            "environment_name": env,
         }
+        print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        return result
     identity = resolve_catalogue_table_identity(
-        config, env, table_id, spark_session=spark, context=context,
+        config,
+        env,
+        table_id,
+        spark_session=spark,
+        context=context,
     )
     store_key = identity["store"]
     schema = identity["schema"]
@@ -96,49 +115,73 @@ def check_schema(
         )
     if store_type == "warehouse":
         schema_name, resolved_table, _ = resolve_warehouse_table_location(
-            store, schema or getattr(store, "schema", None), table_name,
+            store,
+            schema or getattr(store, "schema", None),
+            table_name,
         )
         if dataframe is None:
             dataframe = read_warehouse_query(
                 f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
-                store=store_key, spark_session=spark, context=context,
+                store=store_key,
+                spark_session=spark,
+                context=context,
             )
     elif store_type == "lakehouse":
         resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
         if dataframe is None:
             dataframe = read_lakehouse_table(
-                resolved_table, store=store_key, schema=schema_name,
-                spark_session=spark, context=context,
+                resolved_table,
+                store=store_key,
+                schema=schema_name,
+                spark_session=spark,
+                context=context,
             ).limit(0)
     else:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
     rules_df = load_table_guardrail_rules(
-        config, env, spark_session=spark, table_id=table_id, context=context,
+        config,
+        env,
+        spark_session=spark,
+        table_id=table_id,
+        context=context,
     )
     selected_rule = select_table_guardrail_rule(
-        rules_df, guardrail_type="schema", table_id=table_id,
+        rules_df,
+        guardrail_type="schema",
+        table_id=table_id,
         environment_name=env,
     )
     if selected_rule is None:
         raise ValueError(f"No active approved schema rule exists for {table_id!r}.")
     result = schema_check_core(
-        dataframe, rules_df=rules_df, table_name=resolved_table,
-        environment_name=env, table_id=table_id,
+        dataframe,
+        rules_df=rules_df,
+        table_name=resolved_table,
+        environment_name=env,
+        table_id=table_id,
     )
     if selected_rule is not None:
         result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
         result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
         result["expected"] = {"schema_rule": result.get("rule_type")}
         result["actual"] = {
-            name: result.get(name, [])
-            for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
+            name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
         }
         write_guardrail_result_row(
-            spark_session=spark, config=config, env=env, run_id="", dataset_name="",
-            table_name=resolved_table, store_type=store_type, layer=store_key,
-            schema_name=schema_name, guardrail_type="schema",
-            rule_type=str(result.get("rule_type")), result=result,
+            spark_session=spark,
+            config=config,
+            env=env,
+            run_id="",
+            dataset_name="",
+            table_name=resolved_table,
+            store_type=store_type,
+            layer=store_key,
+            schema_name=schema_name,
+            guardrail_type="schema",
+            rule_type=str(result.get("rule_type")),
+            result=result,
         )
+    print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result

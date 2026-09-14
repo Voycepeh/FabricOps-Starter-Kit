@@ -24,7 +24,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
-    "fabricops_kit.pipeline.check_source_stability",
+    "fabricops_kit.pipeline.check_source_drift",
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",

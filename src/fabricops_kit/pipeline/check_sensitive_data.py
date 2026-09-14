@@ -12,6 +12,7 @@ from fabricops_kit.pipeline.shared import (
     resolve_pipeline_data_contract,
     resolve_catalogue_table_identity,
     write_guardrail_result_row,
+    print_guardrail_result,
 )
 
 
@@ -41,40 +42,54 @@ def _tokenize_column(dataframe, *, column_name, column_id, table_id, existing_ma
     else:
         missing = sorted(required - set(existing_mapping.columns))
         if missing:
-            raise ValueError(
-                "existing_mapping is missing required column(s): " + ", ".join(missing) + "."
+            raise ValueError("existing_mapping is missing required column(s): " + ", ".join(missing) + ".")
+        established = (
+            existing_mapping.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id))
+            .select("table_id", "column_id", "original_value", "token_value")
+            .dropDuplicates()
             )
-        established = existing_mapping.where(
-            (F.col("table_id") == table_id) & (F.col("column_id") == column_id)
-        ).select("table_id", "column_id", "original_value", "token_value").dropDuplicates()
-        if established.where(
-            F.col("original_value").isNull() | F.col("token_value").isNull()
-        ).limit(1).count():
+        if established.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
             raise ValueError("Existing token mappings must contain non-null original and token values.")
-        if established.groupBy("original_value").agg(
-            F.countDistinct("token_value").alias("count")
-        ).where(F.col("count") > 1).limit(1).count():
+        if (
+            established.groupBy("original_value")
+            .agg(F.countDistinct("token_value").alias("count"))
+            .where(F.col("count") > 1)
+            .limit(1)
+            .count()
+        ):
             raise ValueError("Existing mapping assigns multiple tokens to one original value.")
-        if established.groupBy("token_value").agg(
-            F.countDistinct("original_value").alias("count")
-        ).where(F.col("count") > 1).limit(1).count():
+        if (
+            established.groupBy("token_value")
+            .agg(F.countDistinct("original_value").alias("count"))
+            .where(F.col("count") > 1)
+            .limit(1)
+            .count()
+        ):
             raise ValueError("Existing mapping reuses one token for multiple original values.")
 
     original_type = dataframe.schema[column_name].dataType.simpleString()
-    originals = dataframe.where(F.col(column_name).isNotNull()).select(
-        F.col(column_name).cast("string").alias("original_value")
-    ).dropDuplicates()
-    unmatched = originals if established is None else originals.join(
-        established.select("original_value"), on="original_value", how="left_anti"
+    originals = (
+        dataframe.where(F.col(column_name).isNotNull())
+        .select(F.col(column_name).cast("string").alias("original_value"))
+        .dropDuplicates()
+    )
+    unmatched = (
+        originals
+        if established is None
+        else originals.join(established.select("original_value"), on="original_value", how="left_anti")
     )
     generated = unmatched.withColumn("token_value", F.expr("uuid()"))
-    generated = generated.withColumn("table_id", F.lit(table_id)).withColumn(
-        "column_id", F.lit(column_id)
-    ).select("table_id", "column_id", "original_value", "token_value")
+    generated = (
+        generated.withColumn("table_id", F.lit(table_id))
+        .withColumn("column_id", F.lit(column_id))
+        .select("table_id", "column_id", "original_value", "token_value")
+    )
     available_mapping = generated if established is None else established.unionByName(generated)
-    mapping = available_mapping.join(originals, on="original_value", how="inner").withColumn(
-        "original_data_type", F.lit(original_type)
-    ).cache()
+    mapping = (
+        available_mapping.join(originals, on="original_value", how="inner")
+        .withColumn("original_data_type", F.lit(original_type))
+        .cache()
+    )
     mapping.count()  # Materialize opaque UUID assignments once for this returned mapping/run.
     original_temp = "__fabricops_sensitive_original"
     token_temp = "__fabricops_sensitive_token"
@@ -85,12 +100,15 @@ def _tokenize_column(dataframe, *, column_name, column_id, table_id, existing_ma
         F.col("original_value").alias(original_temp),
         F.col("token_value").alias(token_temp),
     )
-    tokenized = dataframe.withColumn(original_temp, F.col(column_name).cast("string")).join(
-        F.broadcast(lookup), on=original_temp, how="left"
-    ).withColumn(
+    tokenized = (
+        dataframe.withColumn(original_temp, F.col(column_name).cast("string"))
+        .join(F.broadcast(lookup), on=original_temp, how="left")
+        .withColumn(
         column_name,
         F.when(F.col(original_temp).isNull(), F.lit(None)).otherwise(F.col(token_temp)),
-    ).drop(original_temp, token_temp)
+        )
+        .drop(original_temp, token_temp)
+    )
     return tokenized, mapping
 
 
@@ -115,18 +133,14 @@ def _mask_column(dataframe, *, column_name, parameters):
         end = F.reverse(F.substring(F.reverse(value), 1, preserve_end))
     else:
         end = F.lit("")
-    masked = F.when(
-        length <= preserve_start + preserve_end + 1, value
-    ).otherwise(
+    masked = F.when(length <= preserve_start + preserve_end + 1, value).otherwise(
         F.concat(
             start,
             hidden,
             end,
         )
     )
-    return dataframe.withColumn(
-        column_name, F.when(F.col(column_name).isNull(), F.lit(None)).otherwise(masked)
-    )
+    return dataframe.withColumn(column_name, F.when(F.col(column_name).isNull(), F.lit(None)).otherwise(masked))
 
 
 def _bucket_column(dataframe, *, column_name, parameters):
@@ -142,9 +156,7 @@ def _bucket_column(dataframe, *, column_name, parameters):
     bucket = F.lit(labels[0])
     for boundary, label in zip(bins[1:], labels[1:]):
         bucket = F.when(value >= F.lit(boundary), F.lit(label)).otherwise(bucket)
-    return dataframe.withColumn(
-        column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket)
-    )
+    return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket))
 
 
 def check_sensitive_data(
@@ -153,6 +165,9 @@ def check_sensitive_data(
     table_id: str,
     run_id: str = "",
     existing_mapping=None,
+    enabled: bool = True,
+    raise_on_failure: bool = False,
+    verbose: bool = True,
 ) -> dict:
     """Apply exact-contract Sensitive Data Guardrails before a governed write.
 
@@ -167,6 +182,12 @@ def check_sensitive_data(
     existing_mapping : pyspark.sql.DataFrame, optional
         Previously persisted mappings to reuse. Rows are scoped by ``table_id``
         and ``column_id``; established original-to-token assignments are preserved.
+    enabled : bool, default=True
+        Explicitly skip the check and return the supplied DataFrame when ``False``.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking treatment cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
 
     Returns
     -------
@@ -210,15 +231,23 @@ def check_sensitive_data(
     pipeline_write, write_lakehouse_table, write_warehouse_table, stop_if_failed
 
     """
+    if not enabled:
+        result = {
+            "status": "skipped",
+            "can_continue": True,
+            "dataframe": dataframe,
+            "support_mapping": None,
+            "checks": [],
+        }
+        print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        return result
     spark_session = getattr(dataframe, "sparkSession", None)
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_sensitive_data requires a Spark DataFrame in the active Microsoft Fabric runtime.")
     config, env, context = resolve_fabric_context()
-    contract = resolve_pipeline_data_contract(
-        config, env, table_id, spark_session=spark_session, context=context
-    )
+    contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark_session, context=context)
     if contract is None:
-        return {
+        result = {
             "status": "skipped",
             "can_continue": True,
             "dataframe": dataframe,
@@ -226,14 +255,16 @@ def check_sensitive_data(
             "checks": [],
             "reason": "No Data Contract selected; Development only.",
         }
-    identity = resolve_catalogue_table_identity(
-        config, env, table_id, spark_session=spark_session, context=context
-    )
+        print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        return result
+    identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
     rules = [
         row
-        for row in _rows(load_table_guardrail_rules(
+        for row in _rows(
+            load_table_guardrail_rules(
             config, env, spark_session=spark_session, table_id=identity["table_id"], context=context
-        ))
+            )
+        )
         if str(row.get("guardrail_type") or "").strip().lower() == "sensitive_data"
         and row.get("is_active", True) is not False
     ]
@@ -259,18 +290,17 @@ def check_sensitive_data(
                 transformed = transformed.drop(column_name)
             elif treatment == "tokenize":
                 transformed, mapping = _tokenize_column(
-                    transformed, column_name=column_name, column_id=column_id,
-                    table_id=identity["table_id"], existing_mapping=existing_mapping,
+                    transformed,
+                    column_name=column_name,
+                    column_id=column_id,
+                    table_id=identity["table_id"],
+                    existing_mapping=existing_mapping,
                 )
                 mappings.append(mapping)
             elif treatment == "mask":
-                transformed = _mask_column(
-                    transformed, column_name=column_name, parameters=params
-                )
+                transformed = _mask_column(transformed, column_name=column_name, parameters=params)
             else:
-                transformed = _bucket_column(
-                    transformed, column_name=column_name, parameters=params
-                )
+                transformed = _bucket_column(transformed, column_name=column_name, parameters=params)
         except ValueError as exc:
             error = str(exc)
         except Exception:
@@ -282,8 +312,10 @@ def check_sensitive_data(
             "guardrail_version": int(rule.get("guardrail_version") or 1),
             "contract_id": str(rule.get("contract_id") or ""),
             "contract_version": int(rule.get("contract_version") or 0),
-            "table_id": identity["table_id"], "column_id": column_id,
-            "treatment": treatment, "action": action,
+            "table_id": identity["table_id"],
+            "column_id": column_id,
+            "treatment": treatment,
+            "action": action,
             "status": "passed" if passed else ("warning" if can_continue else "failed"),
             "can_continue": can_continue,
             "severity": "warning" if action == "Warn" else "blocking",
@@ -291,10 +323,19 @@ def check_sensitive_data(
         }
         checks.append(check)
         write_guardrail_result_row(
-            spark_session=spark_session, config=config, env=env, run_id=run_id,
-            dataset_name="", table_name=identity["table_name"], store_type=identity["store_type"],
-            layer="", schema_name=identity["schema"], guardrail_type="sensitive_data",
-            rule_type=treatment, result=check, column_name=column_name,
+            spark_session=spark_session,
+            config=config,
+            env=env,
+            run_id=run_id,
+            dataset_name="",
+            table_name=identity["table_name"],
+            store_type=identity["store_type"],
+            layer="",
+            schema_name=identity["schema"],
+            guardrail_type="sensitive_data",
+            rule_type=treatment,
+            result=check,
+            column_name=column_name,
         )
     support_mapping = None
     if mappings:
@@ -302,10 +343,16 @@ def check_sensitive_data(
         for mapping in mappings[1:]:
             support_mapping = support_mapping.unionByName(mapping)
     can_continue = all(check["can_continue"] for check in checks)
-    return {
-        "status": "passed" if all(check["status"] == "passed" for check in checks) else ("warning" if can_continue else "failed"),
+    result = {
+        "status": "passed"
+        if all(check["status"] == "passed" for check in checks)
+        else ("warning" if can_continue else "failed"),
         "can_continue": can_continue,
         "dataframe": transformed,
         "support_mapping": support_mapping,
         "checks": checks,
     }
+    print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+    if raise_on_failure and not result["can_continue"]:
+        raise RuntimeError(f"A blocking Sensitive Data Guardrail failed for table_id {table_id!r}.")
+    return result

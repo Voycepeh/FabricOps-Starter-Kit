@@ -15,9 +15,7 @@ Publish one governed pipeline target through its configured Fabric store.
 :func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
 the governed target once; FabricOps resolves its canonical identity and
 configured store, resolves governed processing from the selected or active
-Data Contract, selects the appropriate physical publication path, and
-evaluates each explicit source against this target's last successful
-consumption baseline and load strategy before publication. It commits
+Data Contract, and selects the appropriate physical publication path. It commits
 Lineage and Source Observation metadata only after publication succeeds.
 
 </div>
@@ -25,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:180`
+`fabricops_kit/pipeline/pipeline_write.py:175`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L180-L471">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L175-L458">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -149,10 +147,8 @@ With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
 ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
 
 This function does not perform transformations, schema checks, DQ checks,
-Sensitive Data Guardrails, or profiling. Source Stability is the exception:
-it is target-dependent and therefore runs inside this write boundary. The
-other checks remain explicit notebook
-engineering and governance steps. ``pipeline_write`` publishes governed
+Sensitive Data Guardrails, Source Drift, or profiling. These remain
+explicit notebook engineering and governance steps. ``pipeline_write`` publishes governed
 table targets only. Raw Lakehouse Files do not have a canonical FabricOps
 ``table_id``; direct file-output concerns, if supported in future, belong
 outside this governed table orchestration API.

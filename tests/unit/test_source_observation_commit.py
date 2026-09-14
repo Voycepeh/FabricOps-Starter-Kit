@@ -100,12 +100,15 @@ def test_successful_write_commits_one_observation_per_source(monkeypatch):
     ]
 
 
-def test_write_rejects_a_source_not_captured_by_pipeline_read(monkeypatch):
+def test_write_without_source_drift_still_commits_lineage(monkeypatch):
     written, lineage = _configure_commit(monkeypatch, [_observation("source-a")])
-    with pytest.raises(ValueError, match="Source Stability was not evaluated"):
-        shared.commit_pipeline_write_success(_context(sources=("source-b",)))
+    records = shared.commit_pipeline_write_success(_context(sources=("source-b",)))
+    assert records == []
     assert written == []
-    assert lineage == []
+    assert [(item["table_id"], item["pipeline_role"]) for item in lineage] == [
+        ("source-b", "source"),
+        ("target-x", "target"),
+    ]
 
 
 def test_physical_notebook_id_is_diagnostic_only(monkeypatch):

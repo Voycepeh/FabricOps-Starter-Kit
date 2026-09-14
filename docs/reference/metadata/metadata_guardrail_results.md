@@ -7,7 +7,7 @@ Store runtime Guardrail summaries and continuation decisions; caller-owned faile
 * [`check_dq`](../../api/reference/check_dq.md)
 * [`check_freshness`](../../api/reference/check_freshness.md)
 * [`check_schema`](../../api/reference/check_schema.md)
-* [`check_source_stability`](../../api/reference/check_source_stability.md)
+* [`check_source_drift`](../../api/reference/check_source_drift.md)
 
 ## Used in Workflow Template
 

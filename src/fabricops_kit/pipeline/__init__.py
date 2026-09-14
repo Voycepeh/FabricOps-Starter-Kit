@@ -3,7 +3,7 @@
 from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_freshness import check_freshness
-from fabricops_kit.pipeline.check_source_stability import check_source_stability
+from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
@@ -14,7 +14,7 @@ from fabricops_kit.pipeline.shared import stop_if_failed
 __all__ = [
     "check_schema",
     "check_freshness",
-    "check_source_stability",
+    "check_source_drift",
     "check_dq",
     "check_sensitive_data",
     "pipeline_read",

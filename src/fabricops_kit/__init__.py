@@ -29,7 +29,7 @@ from .io import (
     write_warehouse_table,
 )
 from .pipeline import (
-    check_source_stability,
+    check_source_drift,
     check_dq,
     check_freshness,
     check_schema,
@@ -71,7 +71,7 @@ IO_EXPORTS = (
 PIPELINE_EXPORTS = (
     "check_schema",
     "check_freshness",
-    "check_source_stability",
+    "check_source_drift",
     "check_dq",
     "check_sensitive_data",
     "profile_table",

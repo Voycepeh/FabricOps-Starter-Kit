@@ -6,7 +6,7 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     load_table_guardrail_rules,
-    resolve_source_stability_observation_columns,
+    resolve_source_drift_observation_columns,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
     select_table_guardrail_rule,
@@ -16,6 +16,7 @@ from fabricops_kit.pipeline.shared import (
     guardrail_compatibility_observation,
     observation_rows,
     get_current_source_observation,
+    print_guardrail_result,
 )
 
 _OBSERVATION_COLUMNS = {
@@ -46,6 +47,7 @@ def check_freshness(
     *,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    verbose: bool = True,
 ) -> dict:
     """Check whether a source satisfies configured freshness intent.
     
@@ -58,6 +60,8 @@ def check_freshness(
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking freshness result cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
     
     Returns
     -------
@@ -85,7 +89,9 @@ def check_freshness(
 
     """
     if not enabled:
-        return {"status": "skipped", "can_continue": True, "checks": []}
+        result = {"status": "skipped", "can_continue": True, "checks": []}
+        print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+        return result
     config, env, context = resolve_fabric_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     requested_table_id = str(table_id).strip()
@@ -116,24 +122,39 @@ def check_freshness(
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
     requested_table_id = str(table_id).strip()
     if requested_table_id != observed_table_id:
-        raise ValueError(
-            f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}."
-        )
+        raise ValueError(f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}.")
     contract = resolve_pipeline_data_contract(
-        config, env, requested_table_id, spark_session=spark_session, context=context,
+        config,
+        env,
+        requested_table_id,
+        spark_session=spark_session,
+        context=context,
     )
     if contract is None:
-        return {
-            "status": "skipped", "can_continue": True, "checks": [],
+        result = {
+            "status": "skipped",
+            "can_continue": True,
+            "checks": [],
             "reason": "No Data Contract selected; Development only.",
-            "table_id": requested_table_id, "environment_name": env,
+            "table_id": requested_table_id,
+            "environment_name": env,
         }
+        print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
+        return result
     identity = resolve_catalogue_table_identity(
-        config, env, requested_table_id, spark_session=spark_session, context=context,
+        config,
+        env,
+        requested_table_id,
+        spark_session=spark_session,
+        context=context,
     )
     table_id = identity["table_id"]
     rules_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=table_id, context=context,
+        config,
+        env,
+        spark_session=spark_session,
+        table_id=table_id,
+        context=context,
     )
     freshness_rule = select_table_guardrail_rule(
         rules_df,
@@ -145,16 +166,16 @@ def check_freshness(
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
     change_rule = select_table_guardrail_rule(
         rules_df,
-        guardrail_type="source_stability",
+        guardrail_type="source_drift",
         table_id=table_id,
         environment_name=env,
     )
     if change_rule is None:
         raise ValueError(
-            f"No active approved Source Stability rule exists for {table_id!r}; "
+            f"No active approved Source Drift rule exists for {table_id!r}; "
             "the observation change column cannot be resolved."
         )
-    _partition_column, change_column = resolve_source_stability_observation_columns(change_rule)
+    _partition_column, change_column = resolve_source_drift_observation_columns(change_rule)
     compatibility_observation = guardrail_compatibility_observation(
         observation,
         table_id=table_id,
@@ -186,6 +207,7 @@ def check_freshness(
             rule_type=str(result.get("rule_type") or ""),
             result=result,
         )
+    print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking freshness Guardrail failed for table_id {table_id!r}.")
     return result

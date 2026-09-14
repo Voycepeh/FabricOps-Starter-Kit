@@ -1,4 +1,4 @@
-# `check_source_stability`
+# `check_source_drift`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,14 +7,22 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Validate source changes against one target consumption baseline and load strategy.
+Validate source changes against one target consumption baseline using the source's governed load behaviour.
+
+<div class="reference-docstring-intro" markdown="1">
+
+Compare the current source observation with the last source observation
+successfully consumed by this target and detect source changes that violate
+the source table's governed load behaviour.
+
+</div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_stability.py:11`
+`fabricops_kit/pipeline/check_source_drift.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_stability.py#L11-L77">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L13-L131">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,10 +44,12 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_source_stability(
-    table_id: str,
+def check_source_drift(
+    source_table_id: str,
     target_table_id: str,
+    enabled: bool=True,
     raise_on_failure: bool=False,
+    verbose: bool=True,
 ) -> dict:
 ```
 
@@ -49,7 +59,7 @@ def check_source_stability(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_source_stability(
+>>> result = check_source_drift(
 ...     source_result["table_id"],
 ...     target_table_id=target_table_id,
 ... )
@@ -62,9 +72,11 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
-| `target_table_id` | `str` | Yes | Canonical governed target identity whose consumption baseline and load strategy determine Source Stability compatibility. |
+| `source_table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
+| `target_table_id` | `str` | Yes | Canonical governed target identity used to select the last successfully consumed Source Observation baseline. |
+| `enabled` | `bool` | No | Explicitly skip the check when ``False``. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking result cannot continue. |
+| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
 
@@ -73,7 +85,7 @@ First-observation, changed or unchanged, and new, changed, removed, or reappeare
 ## Raises / Errors
 
 ValueError
-    If either identity, transient observation, rule, or target processing
+    If either identity, transient observation, rule, or source processing
     definition is invalid.
 RuntimeError
     If metadata history cannot be read, or ``raise_on_failure=True`` and
@@ -83,10 +95,9 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Normal notebook orchestration does not call this function directly.
-:func:`pipeline_write` evaluates it for every explicit ``source_table_id``
-before physical publication. A successful write then commits the new
-source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
+Notebook orchestration calls this function explicitly for every governed
+source before :func:`pipeline_write`. A successful write then commits the
+accepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
 
 </div>
 

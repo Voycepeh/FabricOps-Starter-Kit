@@ -156,7 +156,7 @@ def test_one_selected_enrichment_column_uses_service(widget):
     assert record["contract_version"] == 3
 
 
-@pytest.mark.parametrize("kind", ["Schema", "Freshness", "Source Stability", "Data Quality", "Sensitive Data"])
+@pytest.mark.parametrize("kind", ["Schema", "Freshness", "Source Drift", "Data Quality", "Sensitive Data"])
 def test_each_guardrail_subtype_is_lazy_and_uses_normalized_service(widget, kind):
     """Only the selected subtype mounts controls and every subtype saves centrally."""
     result, calls = widget
@@ -172,7 +172,7 @@ def test_each_guardrail_subtype_is_lazy_and_uses_normalized_service(widget, kind
         fields[1].value = ("column_0",)
     subtype["save"].click()
     assert calls["guardrails"]
-    expected = {"Schema": "schema", "Freshness": "freshness", "Source Stability": "source_stability", "Data Quality": "data_quality", "Sensitive Data": "sensitive_data"}[kind]
+    expected = {"Schema": "schema", "Freshness": "freshness", "Source Drift": "source_drift", "Data Quality": "data_quality", "Sensitive Data": "sensitive_data"}[kind]
     assert calls["guardrails"][0][0]["guardrail_type"] == expected
 
 

@@ -126,7 +126,7 @@ The governed load strategy controls how the target is maintained. It does not de
 
 One governed target `table_id` should have one owning pipeline/notebook writer. The frozen Data Contract records that owner together with the authoritative load strategy. Multiple independent writers are unsafe because they can race, duplicate writes, overwrite state, break SCD history, or use conflicting target assumptions.
 
-The Source Stability Guardrail detects whether previously processed source data mutated or disappeared. It uses the target's governed load strategy to validate compatibility: append expects historical source data to remain stable, while overwrite, SCD1, and SCD2 can reconcile detected changes. It never defines processing behaviour itself.
+The Source Drift Guardrail detects whether previously consumed source data mutated or disappeared. The source table's governed load strategy defines allowed source changes: for example, append expects historical source data to remain stable. The downstream target identity selects that target's last-successful Source Observation baseline; the target's own write strategy does not determine drift compatibility.
 
 Raw `METADATA_SOURCE_OBSERVATION` rows use `observation_status="observed"` and are attempt evidence, not an accepted baseline. Only a successful physical target write appends `committed` rows for the same logical notebook name, source `table_id`, and target `table_id` relationship.
 
