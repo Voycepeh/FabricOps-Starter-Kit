@@ -136,7 +136,7 @@ The surrounding Write block keeps the important target decisions explicit and in
 - enforce Source Drift with [`check_source_drift()`](api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
 - enforce target Data Quality on the Sensitive Data output with [`check_dq()`](api/reference/check_dq.md)
 - if [`check_dq()`](api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md)
-- verify the governed target has the required Guardrail coverage with [`check_guardrail_coverage()`](api/reference/check_guardrail_coverage.md) before publication
+- verify the governed target has the required Guardrail coverage with `check_guardrail_coverage()` before publication
 - publish the prepared DataFrame with [`pipeline_write()`](api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
 - profile the complete persisted target with an explicit post-write [`profile_table()`](api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
 
