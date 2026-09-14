@@ -1,0 +1,47 @@
+name: Temp regenerate owned artifacts
+
+on:
+  push:
+    branches:
+      - fix/full-read-pipeline-template
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Run generators twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH=src
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+          cp docs/reference/_data/public-function-call-flows.json /tmp/call-flow-first.json
+          cp docs/reference/index.md /tmp/reference-index-first.md
+          cp docs/reference/function-call-graph.md /tmp/function-call-graph-first.md
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+          diff -u /tmp/call-flow-first.json docs/reference/_data/public-function-call-flows.json
+          diff -u /tmp/reference-index-first.md docs/reference/index.md
+          diff -u /tmp/function-call-graph-first.md docs/reference/function-call-graph.md
+      - name: Stage generated outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p generated/docs/reference/_data generated/docs/reference generated/docs/api
+          cp docs/reference/_data/public-function-call-flows.json generated/docs/reference/_data/
+          cp docs/reference/index.md generated/docs/reference/
+          cp docs/reference/function-call-graph.md generated/docs/reference/
+          cp -R docs/api/reference generated/docs/api/
+          cp docs/reference/_data/generated-artifacts.json generated/docs/reference/_data/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-owned-artifacts
+          path: generated
