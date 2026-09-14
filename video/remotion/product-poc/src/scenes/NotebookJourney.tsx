@@ -1,4 +1,5 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
@@ -14,10 +15,12 @@ const NOTEBOOK = {
 } as const;
 
 const IMPORT_GROUPS = [
-  ['read_lakehouse_csv,', 'write_lakehouse_table,'],
+  ['pipeline_read,', 'pipeline_write,'],
   ['widget_author_data_contract,', 'widget_select_data_contract,'],
   ['check_schema,', 'check_dq,'],
 ] as const;
+
+const EnvironmentIcon = OPENING_ARTIFACTS[3].icon;
 
 const NotebookGlyph = ({color}: {color: string}) => (
   <div style={{position: 'relative', width: NOTEBOOK.glyphSize, height: NOTEBOOK.glyphSize, flex: '0 0 auto'}}>
@@ -89,12 +92,78 @@ const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
       {IMPORT_GROUPS.map((group, index) => {
         const progress = spring({frame: frame - importFrames[index], fps, config: {damping: 17, stiffness: 105}});
         return <div key={group[0]} style={{marginLeft: 46, opacity: progress, transform: `translateX(${(1 - progress) * 24}px)`}}>
-          {group.map((functionName) => <div key={functionName} style={{color: index === 2 ? theme.production : '#f3f7fc', textShadow: index === 2 ? `0 0 18px ${theme.production}55` : 'none'}}>{functionName}</div>)}
+          {group.map((functionName) => <div key={functionName} style={{color: '#f3f7fc'}}>{functionName}</div>)}
         </div>;
       })}
       <div style={{color: '#8ed8ff'}}>)</div>
     </div>
   </div>;
+};
+
+const SetupFlow = ({frame, fps}: {frame: number; fps: number}) => {
+  const {timingSeconds, layout} = VIDEO_TUNING.notebook;
+  const workspaceAt = notebookFrame(timingSeconds.setupWorkspace, fps);
+  const environmentAt = notebookFrame(timingSeconds.setupEnvironment, fps);
+  const configLinkAt = notebookFrame(timingSeconds.setupConfigLink, fps);
+  const setupExit = notebookFrame(timingSeconds.setupExit, fps);
+  const workspace = spring({frame: frame - workspaceAt, fps, config: {damping: 20, stiffness: 86}});
+  const environment = spring({frame: frame - environmentAt, fps, config: {damping: 18, stiffness: 92}});
+  const packageToEnvironment = interpolate(frame, [environmentAt, environmentAt + 24], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const environmentToConfig = interpolate(frame, [configLinkAt, configLinkAt + 26], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const fadeOut = interpolate(frame, [setupExit - 18, setupExit], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const groupOpacity = workspace * fadeOut;
+  const whl = layout.whl;
+  const fabricEnvironment = layout.fabricEnvironment;
+  const config = layout.environment;
+  const whlCenterY = whl.top + whl.height / 2;
+  const environmentCenterY = fabricEnvironment.top + fabricEnvironment.height / 2;
+  const configCenterY = config.top + NOTEBOOK.height / 2;
+
+  return (
+    <div style={{position: 'absolute', inset: 0, opacity: groupOpacity}}>
+      <div style={{position: 'absolute', ...layout.workspace, boxSizing: 'border-box', borderRadius: 34, background: 'linear-gradient(180deg, #10203a80 0%, #09142670 100%)', border: '2px solid #71839a55', boxShadow: 'inset 0 1px 0 #ffffff12, 0 28px 80px #0005'}}>
+        <div style={{position: 'absolute', left: 34, top: 24, fontSize: 22, fontWeight: 720, letterSpacing: 1.2, color: '#91a0b4', textTransform: 'uppercase'}}>Fabric workspace</div>
+      </div>
+
+      <div style={{position: 'absolute', ...whl, boxSizing: 'border-box', borderRadius: 24, display: 'grid', placeItems: 'center', background: 'linear-gradient(150deg, #4f2875, #2a1744 78%)', border: '2px solid #a978e0aa', boxShadow: '0 24px 56px #0008, 0 0 34px #8f4ad733'}}>
+        <div style={{position: 'relative', width: 92, height: 112, borderRadius: '14px 14px 18px 18px', border: '5px solid #c89cf0', background: '#ffffff08'}}>
+          <div style={{position: 'absolute', top: -5, right: -5, width: 34, height: 34, background: '#7c55a6', clipPath: 'polygon(0 0, 100% 100%, 0 100%)'}} />
+          <div style={{position: 'absolute', top: 12, left: 0, right: 0, textAlign: 'center', fontSize: 28, fontWeight: 850, color: '#fff'}}>WHL</div>
+          <div style={{position: 'absolute', bottom: 18, left: 0, right: 0, textAlign: 'center', fontFamily: 'monospace', fontSize: 17, fontWeight: 720, color: '#e4cff9'}}>&lt;/&gt;</div>
+        </div>
+        <div style={{position: 'absolute', bottom: 14, left: 0, right: 0, textAlign: 'center', fontSize: 18, fontWeight: 720, color: '#eadcf7'}}>FabricOps package</div>
+      </div>
+
+      <div style={{position: 'absolute', ...fabricEnvironment, boxSizing: 'border-box', borderRadius: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(150deg, #142844, #0c182a 78%)', border: '2px solid #4e91d899', boxShadow: '0 24px 56px #0008, 0 0 34px #3097dd22', opacity: environment, transform: `scale(${0.9 + environment * 0.1})`}}>
+        <div style={{width: 72, height: 72, display: 'grid', placeItems: 'center', transform: 'scale(1.45)'}}>
+          <EnvironmentIcon aria-hidden="true" width={48} height={48} />
+        </div>
+        <div style={{fontSize: 19, fontWeight: 760, color: '#eef6ff'}}>Fabric Environment</div>
+      </div>
+
+      <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+        <defs>
+          <marker id="setup-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+            <path d="M0 0 L9 4.5 L0 9 Z" fill="#8fa0b6" />
+          </marker>
+        </defs>
+        <path d={`M${whl.left + whl.width} ${whlCenterY} C${whl.left + whl.width + 28} ${whlCenterY}, ${fabricEnvironment.left - 28} ${environmentCenterY}, ${fabricEnvironment.left} ${environmentCenterY}`} fill="none" stroke="#8fa0b6" strokeWidth="4" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - packageToEnvironment} opacity={packageToEnvironment} markerEnd="url(#setup-arrow)" />
+        <path d={`M${fabricEnvironment.left + fabricEnvironment.width} ${environmentCenterY} C${fabricEnvironment.left + fabricEnvironment.width + 28} ${environmentCenterY}, ${config.left - 28} ${configCenterY}, ${config.left} ${configCenterY}`} fill="none" stroke="#8fa0b6" strokeWidth="4" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - environmentToConfig} opacity={environmentToConfig} markerEnd="url(#setup-arrow)" />
+      </svg>
+    </div>
+  );
 };
 
 export const NotebookJourney = () => {
@@ -119,6 +188,7 @@ export const NotebookJourney = () => {
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     <CodePackage frame={frame} fps={fps} />
+    <SetupFlow frame={frame} fps={fps} />
 
     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
       <defs>
