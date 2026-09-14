@@ -212,13 +212,12 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
 
 def test_02_pipeline_is_a_sequential_engineering_notebook():
-    """The visible workflow follows the authoritative engineering sequence."""
+    """The visible workflow follows the authoritative full-read engineering sequence."""
     source = _notebook_source("02_pipeline.ipynb")
     headings = (
         "# 0. Environment",
-        "# 1. Data Contracts",
-        "# 1A. Processing Scope",
-        "# 2. Read",
+        "# 1. Data Contract",
+        "# 2. Full Read",
         "# 3. Transform",
         "# 4. Target",
         "# 5. Write Preparation / Guardrails",
@@ -237,17 +236,19 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert source.count("widget_select_data_contract()") == 1
 
 
-def test_02_pipeline_makes_profile_scope_explicit():
-    """Read and full persisted profiling scopes remain visibly distinct."""
+def test_02_pipeline_is_full_read_and_full_profile_by_design():
+    """The default pipeline reads and profiles complete governed sources."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert 'PROFILE_SCOPE = "full"  # "read" | "full"' in source
-    assert source.count('if PROFILE_SCOPE == "read":') == 3
-    assert source.count("profile_table(dataframe=df, table_id=table_id)") == 3
+    assert "full-read pipeline template" in source
+    assert "source-side incremental reads" in source
+    assert "PROFILE_SCOPE" not in source
+    assert "PROCESSING_SCOPE" not in source
     assert source.count("profile_table(table_id=table_id)") == 3
+    assert "profile_table(dataframe=df, table_id=table_id)" not in source
 
 
 def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
-    """Every source block repeats the explicit governed read workflow."""
+    """Every source block repeats the explicit governed full-read workflow."""
     for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
         for fragment in (
@@ -262,6 +263,7 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             "check_freshness(",
             "check_schema(df,",
             "check_dq(df,",
+            "profile_table(table_id=table_id)",
             "sources[READ_NAME] = source",
         ):
             assert fragment in block
@@ -279,18 +281,22 @@ def test_02_pipeline_transform_is_plain_pyspark():
 
 
 def test_02_pipeline_target_and_write_guardrails_are_explicit():
-    """Target checks precede publication and use the protected DataFrame."""
+    """Target checks precede publication and use only its declared source subset."""
     target = _cell_by_id("02_pipeline.ipynb", "pipeline-target").source
     checks = _cell_by_id("02_pipeline.ipynb", "write-preparation").source
     write = _cell_by_id("02_pipeline.ipynb", "write-1").source
     profile = _cell_by_id("02_pipeline.ipynb", "write-profile").source
+    assert "WRITE_DATAFRAME = transformed_df" in target
+    assert 'WRITE_SOURCE_NAMES = ("orders", "products", "history")' in target
+    assert "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]" in target
     assert "target_table_id = resolve_table_id(" in target
     stages = ("check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(")
     assert [checks.index(stage) for stage in stages] == sorted(checks.index(stage) for stage in stages)
     assert 'prepared_df = sensitive_result["dataframe"]' in checks
+    assert "for source in write_sources:" in checks
     assert "check_dq(\n    prepared_df," in checks
     assert "pipeline_write(\n    prepared_df," in write
-    assert 'source_table_ids=[source["table_id"] for source in sources.values()]' in write
+    assert 'source_table_ids=[source["table_id"] for source in write_sources]' in write
     assert 'profile_table(table_id=write_result["table_id"])' in profile
     assert checks.count("check_source_drift(") == 1
     for index in (1, 2, 3):
@@ -315,7 +321,6 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     required = {
         "contracts",
-        "processing-scope",
         "pipeline-target",
         "read-setup",
         "read-1",
