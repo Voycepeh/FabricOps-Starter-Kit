@@ -181,28 +181,45 @@ def pipeline_read(
     physical_identity = ".".join(
         str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
     )
+    store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
     if store_kind == "lakehouse":
-        if verbose:
-            print(f"FabricOps Read → Lakehouse table '{physical_identity}' → read_lakehouse_table")
-        dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+        reader_name = "read_lakehouse_table"
+    elif query is not None:
+        reader_name = "read_warehouse_query"
     else:
-        if query is not None:
-            if verbose:
-                print(f"FabricOps Read → Warehouse query on '{physical_identity}' → read_warehouse_query")
-            dataframe = read_warehouse_query(query, store=str(identity["store"]), context=context)
-        else:
-            if verbose:
-                print(f"FabricOps Read → Warehouse table '{physical_identity}' → read_warehouse_table")
-            dataframe = read_warehouse_table(
-                str(identity["schema"]),
-                str(identity["table_name"]),
-                store=str(identity["store"]),
-                context=context,
-            )
+        reader_name = "read_warehouse_table"
+
+    if verbose:
+        contract_label = "selected" if has_contract else "none"
+        print("FabricOps Read")
+        print(f"1. Identity → {identity['table_id']} → {store_label} table '{physical_identity}'")
+        print(f"2. Data Contract → {contract_label}")
+        print(f"3. Physical read → {reader_name}")
+
+    if store_kind == "lakehouse":
+        dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+    elif query is not None:
+        dataframe = read_warehouse_query(query, store=str(identity["store"]), context=context)
+    else:
+        dataframe = read_warehouse_table(
+            str(identity["schema"]),
+            str(identity["table_name"]),
+            store=str(identity["store"]),
+            context=context,
+        )
+
     if has_contract:
         capture_source_observation(
             table_id=str(identity["table_id"]), dataframe=dataframe
         )
+        observation_label = "captured current-run state"
+    else:
+        observation_label = "skipped; no selected Data Contract"
+
+    if verbose:
+        print(f"4. Source Observation → {observation_label}")
+        print("Result → DataFrame returned; checks, profiling, transformations, and writes remain explicit.")
+
     return {
         "dataframe": dataframe,
         "table_id": str(identity["table_id"]),
