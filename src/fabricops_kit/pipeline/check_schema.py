@@ -122,6 +122,7 @@ def check_schema(
             store,
             schema or getattr(store, "schema", None),
             table_name,
+            warehouse_name=store.key,
         )
         if dataframe is None:
             dataframe = read_warehouse_query(

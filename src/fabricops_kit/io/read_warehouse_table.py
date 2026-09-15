@@ -75,9 +75,10 @@ def read_warehouse_table(
     pushdown before Spark receives rows.
 
     """
+    database_name = store
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
     )
     return read_warehouse_synapsesql(
-        get_spark_session(spark_session), store, object_name, options=options
+        get_spark_session(spark_session), store, object_name, database_name=database_name, options=options
     )

@@ -288,7 +288,7 @@ def pipeline_write(
     Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 
     >>> result = pipeline_write(
-    ...     prepared_df, store="unified", schema="demo",
+    ...     prepared_df, store="silver", schema="demo",
     ...     table_name="curated_orders",
     ...     source_table_ids=[orders_result["table_id"]],
     ... )
@@ -298,7 +298,7 @@ def pipeline_write(
     Development may propose processing, without bypassing contract authority:
 
     >>> pipeline_write(
-    ...     prepared_df, store="unified", schema="demo",
+    ...     prepared_df, store="silver", schema="demo",
     ...     table_name="curated_orders", load_strategy="overwrite",
     ...     source_table_ids=[orders_result["table_id"]],
     ... )

@@ -10,7 +10,7 @@ from .shared import get_spark_session, read_json_path, resolve_configured_file_p
 def read_lakehouse_json(
     relative_path: str,
     *,
-    store: str = "source",
+    store: str = "bronze",
     spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
@@ -55,9 +55,9 @@ def read_lakehouse_json(
 
     Examples
     --------
-    ``df = read_lakehouse_json("incoming/events.json", store="source")``
+    ``df = read_lakehouse_json("incoming/events.json", store="bronze")``
 
-    ``df = read_lakehouse_json("incoming/events.json", store="source", multiLine=True)``
+    ``df = read_lakehouse_json("incoming/events.json", store="bronze", multiLine=True)``
 
     This function does not read managed Delta tables, register metadata,
     profile data, convert JSON to Delta, mutate source files, or automatically

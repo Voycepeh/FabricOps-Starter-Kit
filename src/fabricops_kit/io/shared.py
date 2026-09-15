@@ -169,7 +169,9 @@ def resolve_configured_warehouse_table(
 ) -> tuple[FabricStore, str, str, str]:
     """Resolve a logical store key and table through configured warehouse metadata."""
     configured_store, _env = resolve_store(store, "warehouse", context=context)
-    schema_value, table_value, object_name = resolve_warehouse_table_location(configured_store, schema, table_name)
+    schema_value, table_value, object_name = resolve_warehouse_table_location(
+        configured_store, schema, table_name, warehouse_name=configured_store.key
+    )
     return configured_store, schema_value, table_value, object_name
 
 
@@ -200,11 +202,13 @@ def resolve_lakehouse_file_path(store: FabricStore, relative_path: str) -> str:
     return _join_lakehouse_area_path(store, "Files", normalized_relative_path)
 
 
-def resolve_warehouse_table_location(store: FabricStore, schema: str, table_name: str) -> tuple[str, str, str]:
+def resolve_warehouse_table_location(
+    store: FabricStore, schema: str, table_name: str, *, warehouse_name: str
+) -> tuple[str, str, str]:
     """Resolve a Warehouse table to normalized schema, table, and connector target."""
     schema_value = _normalize_schema_name(schema)
     table_value = _normalize_table_name(table_name)
-    return schema_value, table_value, _build_warehouse_object_name(store.name, schema_value, table_value)
+    return schema_value, table_value, _build_warehouse_object_name(warehouse_name, schema_value, table_value)
 
 
 def normalize_write_mode(mode: str) -> str:
@@ -331,14 +335,14 @@ def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None
 
 
 def read_warehouse_synapsesql(
-    spark_obj, store: FabricStore, synapsesql_target: str, *, options: dict[str, Any] | None = None
+    spark_obj, store: FabricStore, synapsesql_target: str, *, database_name: str, options: dict[str, Any] | None = None
 ):
     """Read from Fabric Warehouse through the Spark connector."""
     constants = _require_fabric_connector()
     reader = (
         spark_obj.read.option(constants.WorkspaceId, store.workspace_id)
         .option(constants.DatawarehouseId, store.item_id)
-        .option(constants.DatabaseName, store.name)
+        .option(constants.DatabaseName, database_name)
     )
     for key, value in (options or {}).items():
         reader = reader.option(key, value)
@@ -362,7 +366,9 @@ def read_sql_endpoint_query_core(
             "expected a warehouse or lakehouse store."
         )
     sql = validate_select_query(query)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), configured_store, sql, options=options)
+    return read_warehouse_synapsesql(
+        get_spark_session(spark_session), configured_store, sql, database_name=store, options=options
+    )
 
 
 def write_warehouse_synapsesql(
@@ -381,10 +387,10 @@ def write_warehouse_synapsesql(
 
 
 def execute_warehouse_sql(
-    spark_obj, store: FabricStore, sql: str, *, options: dict[str, Any] | None = None
+    spark_obj, store: FabricStore, sql: str, *, database_name: str, options: dict[str, Any] | None = None
 ) -> None:
     """Execute a Warehouse T-SQL mutation batch through the configured connector."""
-    read_warehouse_synapsesql(spark_obj, store, sql, options=options).collect()
+    read_warehouse_synapsesql(spark_obj, store, sql, database_name=database_name, options=options).collect()
 
 
 def _quoted_warehouse_identifier(value: str) -> str:
@@ -418,6 +424,7 @@ def _drop_warehouse_stage_best_effort(
     schema_name: str,
     stage_name: str,
     *,
+    database_name: str,
     options: dict[str, Any] | None = None,
 ) -> None:
     """Try to remove a failed run's Warehouse staging table."""
@@ -425,7 +432,7 @@ def _drop_warehouse_stage_best_effort(
     sql = f"""IF OBJECT_ID(N'{schema_name}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstage};
 SELECT CAST(1 AS int) AS fabricops_stage_cleanup_attempted;"""
     try:
-        execute_warehouse_sql(spark_obj, store, sql, options=options)
+        execute_warehouse_sql(spark_obj, store, sql, database_name=database_name, options=options)
     except Exception:
         # Cleanup is deliberately secondary: callers must receive the original
         # staging or target-mutation error even when this attempt also fails.
@@ -478,7 +485,7 @@ def execute_warehouse_processing(
         store, schema, table_name, context=dict(context or {})
     )
     stage_name = f"_fabricops_scd_{uuid4().hex}"
-    stage_object = _build_warehouse_object_name(configured_store.name, schema_value, stage_name)
+    stage_object = _build_warehouse_object_name(store, schema_value, stage_name)
 
     qschema = _quoted_warehouse_identifier(schema_value)
     qtarget = f"{qschema}.{_quoted_warehouse_identifier(table_value)}"
@@ -580,14 +587,15 @@ IF OBJECT_ID(N'{schema_value}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstag
 THROW;
 END CATCH;"""
     try:
-        write_warehouse_synapsesql(df, store, stage_object, mode="overwrite", options=options)
-        execute_warehouse_sql(df.sparkSession, store, sql, options=options)
+        write_warehouse_synapsesql(df, configured_store, stage_object, mode="overwrite", options=options)
+        execute_warehouse_sql(df.sparkSession, configured_store, sql, database_name=store, options=options)
     except Exception:
         _drop_warehouse_stage_best_effort(
             df.sparkSession,
-            store,
+            configured_store,
             schema_value,
             stage_name,
+            database_name=store,
             options=options,
         )
         raise

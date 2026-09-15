@@ -109,7 +109,7 @@ def test_pipeline_read_rejects_identity_conflict():
     with pytest.raises(ValueError, match="Provide table_id or both store and table_name"):
         read_module.pipeline_read()
     with pytest.raises(ValueError, match="table_id cannot be combined"):
-        read_module.pipeline_read(table_id="id", store="source")
+        read_module.pipeline_read(table_id="id", store="bronze")
 
 
 def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
@@ -155,7 +155,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     )
     result = write_module.pipeline_write(
         object(),
-        store="unified",
+        store="silver",
         schema="dbo",
         table_name="students",
         source_table_ids=["source-a", "source-b"],
@@ -330,7 +330,7 @@ def test_pipeline_write_table_id_form_and_conflicting_forms(monkeypatch):
     result = write_module.pipeline_write(object(), table_id=identity["table_id"], source_table_ids=["source-a"])
     assert result["table_id"] == identity["table_id"]
     with pytest.raises(ValueError, match="table_id cannot be combined"):
-        write_module.pipeline_write(object(), table_id="id", store="unified")
+        write_module.pipeline_write(object(), table_id="id", store="silver")
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])

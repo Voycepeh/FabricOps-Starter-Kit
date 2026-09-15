@@ -48,7 +48,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_json(
     relative_path: str,
-    store: str='source',
+    store: str='bronze',
     spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
@@ -61,9 +61,9 @@ def read_lakehouse_json(
 
 <div class="reference-example-usage" markdown="1">
 
-``df = read_lakehouse_json("incoming/events.json", store="source")``
+``df = read_lakehouse_json("incoming/events.json", store="bronze")``
 
-``df = read_lakehouse_json("incoming/events.json", store="source", multiLine=True)``
+``df = read_lakehouse_json("incoming/events.json", store="bronze", multiLine=True)``
 
 This function does not read managed Delta tables, register metadata,
 profile data, convert JSON to Delta, mutate source files, or automatically

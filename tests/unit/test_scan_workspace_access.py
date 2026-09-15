@@ -282,13 +282,13 @@ def test_sql_endpoint_reader_supports_configured_physical_data_items(monkeypatch
     monkeypatch.setattr(
         module,
         "read_warehouse_synapsesql",
-        lambda spark, resolved_store, query, options=None: calls.append(
-            (spark, resolved_store, query, options)
+        lambda spark, resolved_store, query, *, database_name, options=None: calls.append(
+            (spark, resolved_store, query, database_name, options)
         ) or "frame",
     )
 
     assert module.read_sql_endpoint_query_core("SELECT 1", store="item") == "frame"
-    assert calls == [("spark", store, "SELECT 1", None)]
+    assert calls == [("spark", store, "SELECT 1", "item", None)]
 
 
 def test_sql_endpoint_reader_rejects_unsupported_target_configuration(monkeypatch):

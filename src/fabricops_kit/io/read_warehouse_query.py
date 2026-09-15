@@ -81,11 +81,13 @@ def read_warehouse_query(
     Warehouse engine, and transfers only the resulting dataset to Spark.
 
     """
+    database_name = store
     store = resolve_configured_warehouse_query_store(store, context=context)
     sql = validate_select_query(query)
     return read_warehouse_synapsesql(
         get_spark_session(spark_session),
         store,
         sql,
+        database_name=database_name,
         options=options,
     )

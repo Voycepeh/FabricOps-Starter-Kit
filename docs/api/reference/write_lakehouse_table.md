@@ -64,7 +64,7 @@ Parallel processing is Spark distributed execution over DataFrame partitions, no
 def write_lakehouse_table(
     df,
     table_name: str,
-    store: str='unified',
+    store: str='silver',
     schema=None,
     mode='append',
     partition_by=None,

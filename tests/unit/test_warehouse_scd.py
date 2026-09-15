@@ -43,7 +43,7 @@ def test_scd1_generates_transactional_create_upsert_and_replay_safe_merge(monkey
     frame = spark_session.createDataFrame([(1, "Ada")], ["customer_id", "name"])
     observed = _capture_sql(monkeypatch, frame, {"load_strategy": "scd1", "key_columns": ["customer_id"]})
 
-    assert observed["writes"][0][0].startswith("product.dbo._fabricops_scd_")
+    assert observed["writes"][0][0].startswith("warehouse.dbo._fabricops_scd_")
     assert observed["writes"][0][1]["mode"] == "overwrite"
     sql = observed["sql"]
     assert "BEGIN TRANSACTION" in sql and "COMMIT TRANSACTION" in sql

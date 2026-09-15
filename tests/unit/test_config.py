@@ -20,6 +20,7 @@ from fabricops_kit.config import (
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import (
     get_current_audit_timestamp,
+    get_store,
     _validate_audit_timezone,
     validate_framework_config,
     get_default_fabric_context,
@@ -29,6 +30,34 @@ from fabricops_kit.config.shared import (
 from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
+
+
+def test_fabric_store_name_is_derived_only_when_resolved():
+    """Configured keys, not duplicated fields, identify physical Fabric items."""
+    configured = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse")
+
+    with pytest.raises(TypeError, match="unexpected keyword argument 'name'"):
+        FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse", name="gold")
+
+    resolved = get_store(PathConfig(paths={"dev": {"gold": configured}}), "dev", "gold")
+    assert resolved.key == "gold"
+    assert not hasattr(configured, "name")
+
+    for removed_alias in ("source", "unified", "product"):
+        with pytest.raises(ValueError, match=f"Store '{removed_alias}' was not found"):
+            get_store(PathConfig(paths={"dev": {"bronze": configured}}), "dev", removed_alias)
+
+
+def test_env_config_uses_physical_item_keys_without_duplicate_names():
+    """The starter configuration exposes only its four physical item names."""
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+
+    for key in ("bronze", "silver", "gold", "metadata"):
+        assert f'"{key}": FabricStore(' in source
+    for removed_alias in ("source", "unified", "product"):
+        assert f'"{removed_alias}": FabricStore(' not in source
+    assert "name=" not in source
 
 
 def test_config_setup_public_api_signatures_match_frozen_contract():
@@ -184,7 +213,7 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
 
 def test_framework_config_uses_simplified_config_sections():
     """Verify FrameworkConfig only exposes active config sections."""
-    config = FrameworkConfig(path_config=PathConfig(paths={"dev": {"source": store()}}))
+    config = FrameworkConfig(path_config=PathConfig(paths={"dev": {"bronze": store()}}))
 
     assert isinstance(config.governance_config, GovernanceConfig)
     assert isinstance(config.data_agreement_config, DataAgreementConfig)
@@ -198,7 +227,7 @@ def test_dict_framework_config_defaults_simplified_sections_when_omitted():
     """Verify dict framework config defaults simplified sections when omitted."""
     config = validate_framework_config(
         {
-            "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
+            "path_config": PathConfig(paths={"dev": {"bronze": store(), "silver": store()}}),
         }
     )
 
@@ -220,17 +249,17 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
     """Verify setup notebook resolves environment paths and reports invalid targets."""
     config = framework_config()
 
-    required_targets = ["source", "unified", "product", "metadata"]
+    required_targets = ["bronze", "silver", "gold", "metadata"]
     context = setup_notebook(
         config=config, env="dev", required_targets=required_targets, notebook_name="99_explore_orders"
     )
 
     assert context.environment == "dev"
     assert set(context.paths) == set(required_targets)
-    assert context.paths["source"].name == "lh_source_dev"
-    assert context.paths["unified"].name == "lh_unified_dev"
-    assert context.paths["product"].name == "wh_product_dev"
-    assert context.paths["metadata"].name == "lh_metadata_dev"
+    assert context.paths["bronze"].key == "bronze"
+    assert context.paths["silver"].key == "silver"
+    assert context.paths["gold"].key == "gold"
+    assert context.paths["metadata"].key == "metadata"
     assert context.readiness_status in {"ready", "not_ready"}
     with pytest.raises(ValueError, match="Store 'missing' was not found"):
         setup_notebook(config=config, env="dev", required_targets=["missing"])
@@ -240,8 +269,8 @@ def test_setup_notebook_uses_consolidated_governance_name_contract(fake_notebook
     """Accept 01_governance and reject the removed Governance notebook type."""
     config = framework_config()
 
-    governance = setup_notebook(config=config, env="dev", required_targets=["source"], notebook_name="01_governance_orders")
-    legacy = setup_notebook(config=config, env="dev", required_targets=["source"], notebook_name="03_governance_orders")
+    governance = setup_notebook(config=config, env="dev", required_targets=["bronze"], notebook_name="01_governance_orders")
+    legacy = setup_notebook(config=config, env="dev", required_targets=["bronze"], notebook_name="03_governance_orders")
 
     governance_check = next(check for check in governance.validation_results if check.name == "notebook_naming")
     legacy_check = next(check for check in legacy.validation_results if check.name == "notebook_naming")
@@ -358,7 +387,6 @@ def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
         env=metadata_store.env,
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,
-        name=metadata_store.name,
         kind=metadata_store.kind,
     )
 
@@ -460,7 +488,6 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
         env=metadata_store.env,
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,
-        name=metadata_store.name,
         kind=metadata_store.kind,
         schema_enabled=True,
         schema="dbo",

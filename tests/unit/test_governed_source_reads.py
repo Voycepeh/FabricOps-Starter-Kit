@@ -29,7 +29,7 @@ def test_lakehouse_reader_uses_resolved_delta_path(monkeypatch):
 
 def test_warehouse_reader_uses_resolved_object_name(monkeypatch):
     owner = importlib.import_module("fabricops_kit.io.read_warehouse_table")
-    store = FabricStore(env="dev", workspace_id="w", item_id="i", name="warehouse", kind="warehouse")
+    store = FabricStore(env="dev", workspace_id="w", item_id="i", kind="warehouse")
     calls = []
     monkeypatch.setattr(
         owner,
@@ -40,7 +40,7 @@ def test_warehouse_reader_uses_resolved_object_name(monkeypatch):
     monkeypatch.setattr(
         owner,
         "read_warehouse_synapsesql",
-        lambda spark, resolved_store, target, *, options=None: calls.append((resolved_store, target, options)) or "frame",
+        lambda spark, resolved_store, target, *, database_name, options=None: calls.append((resolved_store, target, options)) or "frame",
     )
 
     assert owner.read_warehouse_table("dbo", "Bookings", spark_session=object(), timeout=30) == "frame"

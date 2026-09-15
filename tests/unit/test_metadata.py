@@ -27,7 +27,7 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
     assert audit["_workspace_name"] == "FabricOps Test Workspace"
     assert audit["_committed_by"] == "fabricops.test@example.com"
-    assert audit["_metadata_lakehouse_name"] == "lh_metadata_dev"
+    assert audit["_metadata_lakehouse_name"] == "metadata"
     assert audit["_activity_id"] == "manual-activity"
 
 

@@ -57,7 +57,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_parquet(
     relative_path: str,
-    store: str='source',
+    store: str='bronze',
     verbose: bool=True,
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -72,7 +72,7 @@ def read_lakehouse_parquet(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="source", spark_session=spark)
+source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="bronze", spark_session=spark)
 ```
 
 </div>
@@ -126,9 +126,9 @@ driver.
 area. Root-level and nested paths are supported. The resolved location is
 conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:
 
-``df = read_lakehouse_parquet("customers.parquet", store="source")``
+``df = read_lakehouse_parquet("customers.parquet", store="bronze")``
 
-``df = read_lakehouse_parquet("incoming/2026/customers.parquet", store="source")``
+``df = read_lakehouse_parquet("incoming/2026/customers.parquet", store="bronze")``
 
 Derived ``_tsus`` fallback naming:
 
@@ -168,7 +168,7 @@ mount, in which case fallback conversion can fail.
 
 Compact reader-option example:
 
-``df = read_lakehouse_parquet("incoming/events.parquet", store="source", mergeSchema=True)``
+``df = read_lakehouse_parquet("incoming/events.parquet", store="bronze", mergeSchema=True)``
 
 This function does not read a managed Delta table, register Parquet data as
 a Lakehouse table, replace or modify the original Parquet file, convert
