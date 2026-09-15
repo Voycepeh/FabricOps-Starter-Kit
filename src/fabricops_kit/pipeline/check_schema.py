@@ -27,54 +27,12 @@ def check_schema(
     raise_on_failure: bool = False,
     verbose: bool = True,
 ) -> dict:
-    """Check a persisted or supplied schema against configured schema intent.
-
-    Parameters
-    ----------
-    dataframe : DataFrame, optional
-        Incoming DataFrame whose schema should be checked. When omitted, the
-        schema of the configured physical table is checked.
-    table_id : str
-        Canonical identity of an active registered Catalogue table.
-    enabled : bool, default=True
-        Explicitly disable this check when ``False``. Normally omit this value;
-        FabricOps enforces the resolved pipeline Data Contract automatically.
-    raise_on_failure : bool, default=False
-        Raise ``RuntimeError`` when a blocking schema result cannot continue.
-    verbose : bool, default=True
-        Print the concise normalized check outcome when ``True``.
-
-    Returns
-    -------
-    dict
-        Structured guardrail status, continuation decision, checks, and schema
-        differences. Governed configured-table checks append the outcome to
-        ``METADATA_GUARDRAIL_RESULTS``.
-
-    Raises
-    ------
-    ValueError
-        If the target is unsupported or no active approved Schema guardrail
-        exists for the resolved table.
-    RuntimeError
-        If ``raise_on_failure=True`` and a blocking schema result cannot
-        continue.
-
-    Notes
-    -----
-    Production uses the active Data Contract. Development uses an explicitly
-    selected immutable version, or safely skips when no contract is selected.
-
-    Examples
-    --------
-    >>> result = check_schema(table_id="lakehouse||source||dbo||orders")
-    >>> result["can_continue"]
-    True
-
-    """
+    """Check a persisted or supplied schema against configured schema intent."""
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Evaluation skipped by caller; no schema rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
@@ -95,6 +53,8 @@ def check_schema(
             "environment_name": env,
         }
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -160,28 +120,38 @@ def check_schema(
         environment_name=env,
         table_id=table_id,
     )
-    if selected_rule is not None:
-        result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
-        result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
-        result["expected"] = {"schema_rule": result.get("rule_type")}
-        result["actual"] = {
-            name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
-        }
-        write_guardrail_result_row(
-            spark_session=spark,
-            config=config,
-            env=env,
-            run_id="",
-            dataset_name="",
-            table_name=resolved_table,
-            store_type=store_type,
-            layer=store_key,
-            schema_name=schema_name,
-            guardrail_type="schema",
-            rule_type=str(result.get("rule_type")),
-            result=result,
-        )
+    result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
+    result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
+    result["expected"] = {"schema_rule": result.get("rule_type")}
+    result["actual"] = {
+        name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
+    }
+    write_guardrail_result_row(
+        spark_session=spark,
+        config=config,
+        env=env,
+        run_id="",
+        dataset_name="",
+        table_name=resolved_table,
+        store_type=store_type,
+        layer=store_key,
+        schema_name=schema_name,
+        guardrail_type="schema",
+        rule_type=str(result.get("rule_type")),
+        result=result,
+    )
     print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        print(
+            f"  Rule {result['guardrail_rule_id']} v{result['guardrail_version']} from the selected Data Contract."
+        )
+        print(
+            "  Differences "
+            f"missing={len(result.get('missing_columns') or [])}, "
+            f"unexpected={len(result.get('unexpected_columns') or [])}, "
+            f"datatype={len(result.get('datatype_mismatches') or [])}."
+        )
+        print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result
