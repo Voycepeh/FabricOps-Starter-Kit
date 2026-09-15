@@ -102,7 +102,19 @@ jobs:
 
           path = Path("tests/templates/test_notebook_contracts.py")
           text = path.read_text(encoding="utf-8")
-          text = text.replace('                \'# catalogue_widget["show"](table_id=table_id)\',\n', "")
+          text = text.replace('            \'# catalogue_widget["show"](table_id=table_id)\',\n', "")
+          path.write_text(text, encoding="utf-8")
+
+          path = Path("tests/unit/test_release_inventory.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace('if item["status"] == "live") == 11', 'if item["status"] == "live") == 12')
+          path.write_text(text, encoding="utf-8")
+
+          path = Path("tests/unit/test_public_function_call_flows.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace('assert json_reader["lifecycle_status"] == "preview"', 'assert json_reader["lifecycle_status"] == "live"')
+          text = text.replace('assert json_reader["live_since"] is None', 'assert json_reader["live_since"] == "0.2.0"')
+          text = text.replace('assert json_reader["release_history"] == []', 'assert json_reader["release_history"] == [{"version": "0.2.0", "status": "live"}]')
           path.write_text(text, encoding="utf-8")
 
           changelog = Path("CHANGELOG.md")
