@@ -75,7 +75,10 @@ def check_schema(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details disabled explicitly; no contract, rule, data, or evidence was evaluated")
         return result
+    supplied_dataframe = dataframe is not None
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     contract = resolve_pipeline_data_contract(
@@ -95,6 +98,8 @@ def check_schema(
             "environment_name": env,
         }
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details no Data Contract selected; schema evaluation and evidence persistence skipped")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -182,6 +187,19 @@ def check_schema(
             result=result,
         )
     print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        input_label = "supplied DataFrame" if supplied_dataframe else f"persisted {store_type.title()} table schema"
+        rule_label = str(result.get("rule_type") or selected_rule.get("rule_type") or "schema")
+        action = str(selected_rule.get("action") or "").strip() or "default"
+        missing = len(result.get("missing_columns") or [])
+        unexpected = len(result.get("unexpected_columns") or [])
+        mismatched = len(result.get("datatype_mismatches") or [])
+        print("  Details")
+        print("    Contract selected and active Schema rule resolved")
+        print(f"    Input {input_label}")
+        print(f"    Rule {rule_label} (action {action})")
+        print(f"    Differences missing={missing}, unexpected={unexpected}, datatype_mismatches={mismatched}")
+        print("    Evidence appended to METADATA_GUARDRAIL_RESULTS")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result
