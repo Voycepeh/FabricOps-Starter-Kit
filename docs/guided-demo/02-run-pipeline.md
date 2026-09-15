@@ -1,85 +1,183 @@
-# Module 2: Engineer and run a data pipeline
+# `02_pipeline`: run the governed engineering pipeline
 
-**Use the pre-wired `02_pipeline` template to run a complete FabricOps pipeline in Engineering Development.**
+**Use `02_pipeline` as the reusable Engineering template in Development and Production. It reads governed sources in full, keeps project transformation logic as ordinary PySpark, and standardizes the governed checks and publication work around the Read and Write boundaries.**
 
-**Approx. 30 min · 5 units · Engineering Development**
+The current template is a **full-read pipeline**. It does not implement source-side incremental processing. Target publication can still use the governed load strategy defined in the Data Contract, such as overwrite, append, partition overwrite, SCD1, or SCD2.
 
-The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific Read, Transform, Write, and processing configuration. For this first run, skip its reusable Data Contract selection section; Governance has not created a Data Contract yet.
+## Before you begin
 
-At the end of this module, you will have run the complete pipeline and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
+Complete [`00_env_config`](00-env-config.md) and establish the initial steward/agreement context in [`01_governance`](01-governance.md).
 
-!!! info "Pipeline stage terminology"
-
-    In `02_pipeline`, **Read**, **Transform**, and **Write** are the user-facing stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `store="source"` or `store="unified"`.
-
-!!! important "Step 2 is contract-free"
-
-    No Guardrails or Data Contract have been created for the demo table yet. That is expected.
-
-    Do not select, validate, or activate a Data Contract in Step 2. Skip the template's reusable Data Contract selection section and run the baseline Read → Transform → Write path. In Step 3, Governance selects the target `table_id`, authors Enrichment and Guardrails in the unified editor, and freezes the first Data Contract version. Step 4 is Engineering's first use of that version in `02_pipeline`. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the same pipeline in Production against the active contract.
-
-## Learning objectives
-
-By the end of this module, you'll be able to:
-
-- understand what the `02_pipeline` template already handles for you,
-- run a complete Read → Transform → Write flow with demo data,
-- read the two managed Lakehouse tables and the managed Warehouse source prepared in Step 0B,
-- keep project-specific transformation logic visible in the intended notebook section,
-- choose Full Dataset, Incremental Watermark, or Incremental Partition processing when required,
-- review the target plus the `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` records produced by the run.
-
-## Prerequisites
-
-Before starting this module:
-
-- complete [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md),
-- complete [Step 0B: Set up the operating environment](00B-run-environment-setup.md),
-- complete [Step 1: Create data stewards and a data agreement](01-create-agreement.md),
-- confirm Step 0B created `demo.orders` and `demo.products` in the Source Lakehouse and `demo.order_history` in the Product Warehouse.
-
-## Module units
-
-| Unit | What you'll learn |
-| --- | --- |
-| [1. Understand the `02_pipeline` template](02-run-pipeline/understand-template.md) | See what FabricOps wires automatically and what remains project-owned. |
-| [2. Run the baseline pipeline](02-run-pipeline/run-baseline-etl.md) | Execute Read → Transform → Write before any Data Contract or Guardrails exist. |
-| [3. Configure the managed sources](02-run-pipeline/configure-sources.md) | Use the two Lakehouse table Read blocks and the Warehouse query block pre-wired for this walkthrough. |
-| [4. Transform and write](02-run-pipeline/transform-and-load.md) | Add project logic and publish one governed target. |
-| [5. Choose target processing and review results](02-run-pipeline/processing-and-results.md) | Understand target processing and inspect the concrete metadata records handed to Governance. |
-
-## The learning-path story
+For the supplied walkthrough, confirm these managed source tables exist:
 
 ```text
-Step 2
-Run the full pipeline
-Write Catalogue / Profiled / Lineage metadata
-        ↓
-Step 3
-Select table_id
-Author Enrichment + Guardrails
-Freeze Data Contract version
-        ↓
-Step 4
-Select the frozen version for table_id
-Run the same pipeline and validate
-        ↓
-Step 5
-Link the tested version to the Data Agreement
-Activate the linked version
-        ↓
-Step 6
-Run the same pipeline in Production
-against the active contract
+Source Lakehouse
+  demo.orders
+  demo.products
+
+Product Warehouse
+  demo.order_history
 ```
 
-The important point is that FabricOps does not require a separate basic pipeline, Guardrail pipeline, and Production pipeline. The same engineering template progresses through a governed lifecycle as governance records are added around it.
+## 0. Environment
 
-## Start the module
+`02_pipeline` begins by loading the shared configuration:
 
-[Start Unit 1: Understand the `02_pipeline` template](02-run-pipeline/understand-template.md)
+```python
+%run 00_env_config
+```
 
-Need an exact function signature or parameter instead of the learning path? Use the [Function Reference](../reference/index.md).
+The template then imports the public FabricOps functions used by the pipeline. Keep the Fabric-specific routing in the reusable FabricOps boundaries and keep your project transformation logic in the Transform section.
 
-**Previous:** [Step 1: Create data stewards and a data agreement](01-create-agreement.md)  
-**Next after completing this module:** [Step 3: Author and freeze the Data Contract](03-enrich-guardrails.md)
+## 1. Data Contract
+
+Development uses `widget_select_data_contract()` to establish the contract context for the tables being tested.
+
+On the first engineering run, Governance may not yet have a frozen Data Contract for the new target. That is acceptable in Development: run the pipeline to establish the real table identity and profiling evidence Governance needs. Missing configured Guardrail coverage warns in Development rather than turning this into a separate baseline workflow.
+
+After Governance freezes a contract version, return to this same section, select that immutable version, and rerun the same pipeline against it.
+
+In Production, FabricOps resolves the active Data Contract automatically rather than using a Development override.
+
+## 2. Full Read
+
+Each Read block handles one complete governed source.
+
+For the supplied demo, the template contains three cloneable Read blocks:
+
+- Orders from `source.demo.orders`,
+- Products from `source.demo.products`,
+- Order History from `product.demo.order_history`.
+
+A Read block calls `pipeline_read()` to return the source DataFrame and canonical `table_id`, then keeps the governed checks and profiling visible in the notebook.
+
+For each source, the current template performs:
+
+1. `pipeline_read()` to read the complete governed table and resolve its `table_id`,
+2. `check_freshness()` to enforce the configured Freshness expectation when present,
+3. `check_schema()` against the returned DataFrame,
+4. `check_dq()` against the same DataFrame,
+5. `profile_table(table_id=...)` to refresh the canonical profile for the complete persisted source.
+
+Optional `display()` calls and caller-owned failure persistence remain commented out in the template so the normal run stays uncluttered. Uncomment them only when you need development inspection or project-owned failure tables.
+
+### Clone a Read block
+
+To add another governed source, clone a complete Read block and change the small variable set at the top:
+
+```python
+READ_NAME = "orders"
+READ_STORE = "source"
+READ_SCHEMA = "demo"
+READ_TABLE = "orders"
+READ_QUERY = None
+```
+
+Do not rewrite the internal check/profile sequence for every source.
+
+## 3. Transform
+
+The Transform section is project-owned PySpark.
+
+The supplied example reads the named source DataFrames from the `sources` dictionary, joins Orders and Products, adds historical customer context, and creates two outputs:
+
+- detailed curated Orders,
+- a customer-level summary.
+
+This section is intentionally ordinary PySpark. FabricOps standardizes the operating boundaries without introducing a transformation DSL.
+
+Replace the example transformation with your project logic while keeping the surrounding Read and Write contracts intact.
+
+## 4. Write
+
+Each Write block is one complete governed target flow. Clone the block for additional outputs.
+
+The template demonstrates both a Lakehouse target and a Warehouse target. Each target declares its DataFrame, source relationships, configured store, schema, table name, and Development fallback load strategy.
+
+The current Write sequence is explicit:
+
+1. resolve the target `table_id` with `resolve_table_id()`,
+2. enforce target Schema with `check_schema()`,
+3. enforce Sensitive Data requirements with `check_sensitive_data()` and carry its returned DataFrame forward,
+4. enforce Source Drift for each source-to-target relationship with `check_source_drift()`,
+5. enforce target Data Quality with `check_dq()`,
+6. call `check_guardrail_coverage()` so the publication has the expected governed checks,
+7. publish through `pipeline_write()`, which resolves the governed target load strategy and records successful technical metadata only after the physical write succeeds,
+8. call `profile_table(table_id=...)` after the write so profiling reflects the complete persisted target rather than only the input DataFrame.
+
+The Write block is intentionally not a black box. The public functions abstract the repetitive plumbing while the notebook still shows the checks that run and the order they run in.
+
+### Development load strategy
+
+The example Write block includes a Development fallback such as:
+
+```python
+WRITE_LOAD_STRATEGY = "overwrite"
+```
+
+Once the selected Data Contract defines the target processing strategy, the governed contract is the operational definition. The fallback is not a second processing model.
+
+### Clone a Write block
+
+Change the target-specific variables at the top of the cloned block and keep the governed sequence intact.
+
+For example:
+
+```python
+WRITE_NAME = "curated_orders_lakehouse"
+WRITE_DATAFRAME = transformed_df
+WRITE_SOURCE_NAMES = ("orders", "products", "history")
+WRITE_STORE = "unified"
+WRITE_SCHEMA = "demo"
+WRITE_TABLE = "curated_orders"
+WRITE_LOAD_STRATEGY = "overwrite"
+```
+
+## First Development run
+
+Run the notebook from top to bottom.
+
+The purpose of the first run is to prove the engineering path and establish real table/catalogue/profile evidence. Governance can then use the resulting target `table_id` in `01_governance` rather than authoring a contract against an imagined table definition.
+
+After the run, return to [`01_governance`](01-governance.md#5-return-to-01_governance-after-the-engineering-run), select the governed target, author the Data Contract, and freeze the first immutable version.
+
+## Validate the frozen contract in Development
+
+After Governance freezes a version:
+
+1. return to the Data Contract section of the same `02_pipeline`,
+2. select the frozen version,
+3. rerun the full pipeline,
+4. review any Warn or Block outcomes from the configured Guardrails,
+5. confirm the physical outputs and persisted technical metadata are correct.
+
+If the governed definition needs changes, return to `01_governance`, refine it, freeze a new version, and test that new immutable version. Do not create a separate Guardrail pipeline.
+
+## Production run
+
+After Development validation, Governance links the tested contract version to the required Data Agreement version and activates it.
+
+Promote the validated `02_pipeline` through your organisation's normal Fabric deployment process. In Engineering Production:
+
+1. run the Production `00_env_config`,
+2. use the promoted `02_pipeline`,
+3. run the same full-read pipeline structure,
+4. allow FabricOps to resolve the active contract automatically,
+5. publish governed Production outputs using the active processing definition.
+
+Only the validated pipeline logic is promoted. Do not copy Development output tables or draft Governance metadata into Production as part of the promotion step.
+
+## Expected result
+
+You now have one engineering notebook pattern that:
+
+- reads every governed source in full,
+- keeps the source checks and profiling explicit,
+- leaves project transformation as normal PySpark,
+- enforces target governance before publication,
+- writes using the governed target strategy,
+- records technical metadata around successful publication,
+- profiles the complete persisted target after the write,
+- moves from Development testing to Production without inventing a second pipeline template.
+
+**Next:** return to [`01_governance`](01-governance.md) to complete contract authoring or activation as appropriate. Use [`99_explore`](99-explore.md) only when optional discovery or troubleshooting support is useful.
