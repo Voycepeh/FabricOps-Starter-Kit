@@ -82,6 +82,8 @@ def check_source_drift(
             source_table_id=source_table_id,
             target_table_id=target_table_id,
         )
+        if verbose:
+            print("  Details disabled explicitly; no contract, baseline, observation, or rule was evaluated")
         return result
     config, env, context = resolve_fabric_context()
     source = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
@@ -106,6 +108,8 @@ def check_source_drift(
             source_table_id=str(source["table_id"]),
             target_table_id=str(target["table_id"]),
         )
+        if verbose:
+            print("  Details no source Data Contract selected; drift evaluation and evidence persistence skipped")
         return result
     source_processing = resolve_table_processing_definition(
         config, env, str(source["table_id"]), context=context
@@ -123,6 +127,18 @@ def check_source_drift(
         source_table_id=source_table_id,
         target_table_id=str(target["table_id"]),
     )
+    if verbose:
+        strategy = str(source_processing.get("load_strategy") or "unspecified")
+        rule_type = str(result.get("rule_type") or "source_drift")
+        action = str(result.get("action") or "").strip() or "default"
+        print("  Details")
+        print("    Source and target identities resolved from the Data Catalogue")
+        print("    Source Data Contract selected and Source Drift rule resolved")
+        print(f"    Source processing strategy {strategy}")
+        print("    Current observation comes from pipeline_read(); baseline is the last observation successfully consumed by this target")
+        print(f"    Rule {rule_type} (action {action})")
+        print("    Evaluation compares current source state with the target-specific accepted baseline")
+        print("    Guardrail evidence appended to METADATA_GUARDRAIL_RESULTS; accepted baseline advances only after pipeline_write() succeeds")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(
             f"A blocking Source Drift Guardrail failed for source_table_id {source_table_id!r} "
