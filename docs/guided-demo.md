@@ -33,9 +33,3 @@
 | [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | `01_governance` | Link the tested contract version to the Data Agreement version and activate it for Production. |
 | [6. Promote and run Production](guided-demo/06-promote-to-production.md) | `02_pipeline` | Promote the validated pipeline and run it with Production configuration and the active contract. |
 | [7. Consume approved Production data](guided-demo/99-explore.md) | `99_explore` | Read approved Production outputs from the consumer workspace. |
-
-For the rationale behind the workflow, Data Contracts, Guardrails, metadata, and the Engineering design, see [How FabricOps Works](how-fabricops-works.md).
-
-## Start
-
-[Begin with 0A: Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md)
