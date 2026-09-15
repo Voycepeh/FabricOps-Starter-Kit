@@ -1,6 +1,6 @@
 # 0A. Prepare the Fabric environment
 
-**Create the Fabric workspaces and stores, then install FabricOps into a Fabric Environment.**
+**Create the Fabric workspaces and stores, then install FabricOps into a Fabric Environment in each workspace that will run FabricOps notebooks.**
 
 This is foundation setup, not one of the seven FabricOps lifecycle steps.
 
@@ -67,11 +67,11 @@ uv build
 
 The built wheel will be available under `dist/`.
 
-## 6. Create a Fabric Environment and install FabricOps
+## 6. Create Fabric Environments and install FabricOps
 
-Return to the **Governance** workspace and create a Fabric **Environment**.
+A Fabric Environment belongs to a **workspace**. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
 
-In the Environment:
+Start in the **Governance** workspace and create a Fabric **Environment**. Then:
 
 1. Open **Custom libraries**.
 2. Upload the FabricOps `.whl` file.
@@ -82,14 +82,25 @@ Publishing is required before the installed FabricOps package is available to no
 
 ![Install the FabricOps wheel as a custom library](../assets/00A/install-custom-whl.png)
 
+Repeat the same Environment setup in every workspace that will run FabricOps notebooks:
+
+| Workspace | Environment needed? | Why |
+| --- | --- | --- |
+| **Governance** | Yes | Runs `01_governance` and Governance metadata operations. |
+| **Engineering Development** | Yes | Runs `00_env_config` and `02_pipeline` during Development. |
+| **Engineering Production** | Yes when you reach Step 6 | Runs the Production copy of the validated pipeline. |
+| **Consumer** | Yes when you reach Step 7 | Runs `99_explore` using the FabricOps package. |
+
+Use the same FabricOps wheel version in each workspace so Governance, Development, Production, and Consumer are running the same package version during the Guided Demo.
+
 ## Expected result
 
 You now have:
 
 - a Governance workspace with the `metadata` Lakehouse and a published Fabric Environment containing FabricOps;
-- an Engineering Development workspace with `bronze`, `silver`, and `gold`;
-- optionally, a matching Engineering Production workspace for Step 6; and
-- optionally, a Consumer workspace for Step 7.
+- an Engineering Development workspace with `bronze`, `silver`, and `gold`, plus its own published Fabric Environment containing the same FabricOps wheel;
+- optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
+- optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run `99_explore`.
 
 The physical Fabric foundation is ready. The next step configures FabricOps to use these items and loads the demo data.
 
