@@ -22,9 +22,17 @@
 
 ## The seven-step FabricOps workflow
 
-The Guided Demo follows this operating flow. Use the navigation on the left to move through each numbered step.
-
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
+
+| Step | Notebook | What you do |
+| --- | --- | --- |
+| [1. Establish Governance context](guided-demo/01-create-agreement.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
+| [2. Build and run the ETL](guided-demo/02-run-pipeline.md) | `02_pipeline` | Run the full-read Read → Transform → Write pipeline and profile the real governed tables. |
+| [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
+| [4. Select and validate the Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | `02_pipeline` | Select the frozen contract and rerun the pipeline with its checks enforced. |
+| [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | `01_governance` | Link the tested contract version to the Data Agreement version and activate it for Production. |
+| [6. Promote and run Production](guided-demo/06-promote-to-production.md) | `02_pipeline` | Promote the validated pipeline and run it with Production configuration and the active contract. |
+| [7. Consume approved Production data](guided-demo/99-explore.md) | `99_explore` | Read approved Production outputs from the consumer workspace. |
 
 For the rationale behind the workflow, Data Contracts, Guardrails, metadata, and the Engineering design, see [How FabricOps Works](how-fabricops-works.md).
 
