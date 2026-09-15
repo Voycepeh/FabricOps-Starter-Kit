@@ -102,6 +102,6 @@ You now have:
 - optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
 - optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run `99_explore`.
 
-The physical Fabric foundation is ready. The next step configures FabricOps to use these items and loads the demo data.
+The physical Fabric foundation is ready. The next step imports the FabricOps notebook templates and demo data.
 
 **Next:** [0B. Configure the environment and load demo data](00B-run-environment-setup.md)
