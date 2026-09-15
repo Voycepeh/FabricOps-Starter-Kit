@@ -164,26 +164,27 @@ def check_schema(
         environment_name=env,
         table_id=table_id,
     )
-    result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
-    result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
-    result["expected"] = {"schema_rule": result.get("rule_type")}
-    result["actual"] = {
-        name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
-    }
-    write_guardrail_result_row(
-        spark_session=spark,
-        config=config,
-        env=env,
-        run_id="",
-        dataset_name="",
-        table_name=resolved_table,
-        store_type=store_type,
-        layer=store_key,
-        schema_name=schema_name,
-        guardrail_type="schema",
-        rule_type=str(result.get("rule_type")),
-        result=result,
-    )
+    if selected_rule is not None:
+        result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
+        result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
+        result["expected"] = {"schema_rule": result.get("rule_type")}
+        result["actual"] = {
+            name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
+        }
+        write_guardrail_result_row(
+            spark_session=spark,
+            config=config,
+            env=env,
+            run_id="",
+            dataset_name="",
+            table_name=resolved_table,
+            store_type=store_type,
+            layer=store_key,
+            schema_name=schema_name,
+            guardrail_type="schema",
+            rule_type=str(result.get("rule_type")),
+            result=result,
+        )
     print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
     if verbose:
         print(
