@@ -30,10 +30,10 @@ For Steps 1–5, only **Governance** and **Engineering Development** are require
 Open the **Governance** workspace and create a Lakehouse named:
 
 ```text
-metadata
+Metadata
 ```
 
-FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
+Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
 
 ![Create the Governance metadata Lakehouse](../assets/00A/Create_Lakehouse.png)
 
@@ -97,7 +97,7 @@ Use the same FabricOps wheel version in each workspace so Governance, Developmen
 
 You now have:
 
-- a Governance workspace with the `metadata` Lakehouse and a published Fabric Environment containing FabricOps;
+- a Governance workspace with the `Metadata` Lakehouse and a published Fabric Environment containing FabricOps;
 - an Engineering Development workspace with `bronze`, `silver`, and `gold`, plus its own published Fabric Environment containing the same FabricOps wheel;
 - optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
 - optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run `99_explore`.
