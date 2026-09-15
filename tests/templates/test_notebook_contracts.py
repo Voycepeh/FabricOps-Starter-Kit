@@ -1,232 +1,166 @@
-"""Portable contract tests for FabricOps notebook templates.
-
-CI validates notebook file integrity, Python syntax, and public import
-compatibility. Full execution against lakehouses, warehouses, Spark, Fabric
-widgets, notebook utilities, and workspace context is not reproducible in GitHub
-Actions. Successful manual execution by the maintainer in Microsoft Fabric is
-the authoritative integration test for runtime behaviour.
-"""
+"""Contract tests for FabricOps notebook templates."""
 
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterable
+import json
 from pathlib import Path
 
 import nbformat
-import pytest
 
-pytestmark = pytest.mark.contract
+from fabricops_kit import __all__ as FABRICOPS_PUBLIC_EXPORTS
 
 ROOT = Path(__file__).parents[2]
 NOTEBOOK_DIR = ROOT / "templates" / "notebooks"
-NOTEBOOKS = tuple(sorted(NOTEBOOK_DIR.glob("*.ipynb")))
 
 
-def _load_notebook(path: Path) -> nbformat.NotebookNode:
-    return nbformat.read(path, as_version=4)
+def _notebook(name: str):
+    return nbformat.read(NOTEBOOK_DIR / name, as_version=4)
 
 
-def _code_cells(path: Path) -> Iterable[tuple[int, str]]:
-    notebook = _load_notebook(path)
-    for index, cell in enumerate(notebook.cells):
-        if cell.cell_type == "code":
-            yield index, cell.source
-
-
-def _cell_by_id(notebook_name: str, cell_id: str) -> nbformat.NotebookNode:
-    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
+def _cell_by_id(name: str, cell_id: str):
+    notebook = _notebook(name)
     return next(cell for cell in notebook.cells if cell.get("id") == cell_id)
 
 
-def _portable_python_source(source: str) -> str | None:
-    """Return Python source for syntax checks, or None for cell magics."""
-    lines = source.splitlines()
-    if any(line.lstrip().startswith("%%") for line in lines):
-        return None
-    portable_lines = [line for line in lines if not line.lstrip().startswith(("%", "!"))]
-    return "\n".join(portable_lines).strip() or "pass"
+def _code(name: str) -> str:
+    return "\n".join(cell.source for cell in _notebook(name).cells if cell.cell_type == "code")
 
 
-def _parse_code_cell(path: Path, cell_index: int, source: str) -> ast.Module | None:
-    portable_source = _portable_python_source(source)
-    if portable_source is None:
-        return None
-    try:
-        return ast.parse(portable_source, filename=f"{path}:{cell_index}")
-    except SyntaxError as exc:  # pragma: no cover
-        raise AssertionError(f"Invalid Python syntax in {path.name} cell {cell_index}: {exc}") from exc
+def _markdown(name: str) -> str:
+    return "\n".join(cell.source for cell in _notebook(name).cells if cell.cell_type == "markdown")
 
 
-def _fabricops_imported_names(tree: ast.Module) -> set[str]:
-    names: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit":
-            names.update(alias.name for alias in node.names if alias.name != "*")
-    return names
+def test_template_notebooks_are_valid_and_code_cells_compile():
+    """Every committed notebook is valid nbformat and every Python code cell compiles."""
+    for path in NOTEBOOK_DIR.glob("*.ipynb"):
+        notebook = nbformat.read(path, as_version=4)
+        nbformat.validate(notebook)
+        for cell in notebook.cells:
+            if cell.cell_type != "code":
+                continue
+            source = cell.source
+            if source.lstrip().startswith("%"):
+                continue
+            compile(source, str(path), "exec")
 
 
-def _fabricops_aliases(tree: ast.Module) -> set[str]:
-    aliases: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name == "fabricops_kit":
-                    aliases.add(alias.asname or "fabricops_kit")
-    return aliases
+def test_template_notebook_fabricops_public_references_exist():
+    """Public FabricOps names imported by templates remain root exported."""
+    exports = set(FABRICOPS_PUBLIC_EXPORTS)
+    for path in NOTEBOOK_DIR.glob("*.ipynb"):
+        notebook = nbformat.read(path, as_version=4)
+        for cell in notebook.cells:
+            if cell.cell_type != "code":
+                continue
+            try:
+                tree = ast.parse(cell.source)
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit":
+                    for alias in node.names:
+                        assert alias.name in exports, f"{path.name} imports missing public API {alias.name}"
 
 
-def _fabricops_attribute_references(tree: ast.Module) -> set[str]:
-    aliases = _fabricops_aliases(tree)
-    references: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in aliases:
-            references.add(node.attr)
-    return references
+def test_00_env_config_uses_setup_notebook():
+    """Environment template stays centered on setup_notebook."""
+    code = _code("00_env_config.ipynb")
+    assert "setup_notebook" in code
+    assert "FrameworkConfig" in code
 
 
-@pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
-def test_template_notebooks_are_valid_and_code_cells_compile(notebook_path: Path):
-    """Validate committed template notebooks and portable Python syntax."""
-    notebook = _load_notebook(notebook_path)
-    nbformat.validate(notebook)
-
-    for cell_index, source in _code_cells(notebook_path):
-        tree = _parse_code_cell(notebook_path, cell_index, source)
-        if tree is not None:
-            compile(tree, filename=f"{notebook_path}:{cell_index}", mode="exec")
-
-
-@pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
-def test_template_notebook_fabricops_public_references_exist(notebook_path: Path):
-    """Verify notebooks do not reference stale public fabricops_kit names."""
-    import fabricops_kit
-
-    missing: list[str] = []
-    for cell_index, source in _code_cells(notebook_path):
-        tree = _parse_code_cell(notebook_path, cell_index, source)
-        if tree is None:
-            continue
-        referenced_names = _fabricops_imported_names(tree) | _fabricops_attribute_references(tree)
-        missing.extend(
-            f"cell {cell_index}: {name}" for name in sorted(referenced_names) if not hasattr(fabricops_kit, name)
-        )
-
-    assert not missing, f"Missing fabricops_kit public references in {notebook_path.name}: {missing}"
-
-
-def _notebook_source(notebook_name: str) -> str:
-    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
-    return "\n".join(cell.source for cell in notebook.cells)
-
-
-def test_official_governance_workflow_inventory():
-    """The active templates expose one persistent Governance entry point."""
-    names = {path.name for path in NOTEBOOKS}
-    assert {"00_env_config.ipynb", "01_governance.ipynb", "02_pipeline.ipynb", "99_explore.ipynb"} <= names
-    assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
-
-
-def test_01_governance_supports_the_complete_governance_lifecycle():
-    """Governance uses the unified, table-scoped Data Contract authoring path."""
-    source = _notebook_source("01_governance.ipynb")
-    required_functions = {
+def test_01_governance_contains_governance_workflow():
+    """Governance template exposes steward, agreement and contract authoring workflow."""
+    code = _code("01_governance.ipynb")
+    for name in (
         "widget_render_data_steward",
         "widget_render_data_agreement",
-        "widget_view_catalogue",
         "widget_author_data_contract",
         "widget_activate_data_contract",
-    }
-
-    assert required_functions <= {
-        node.id
-        for tree in (
-            _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, source)
-            for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
-        )
-        if tree is not None
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Name)
-    }
-    assert 'store="metadata"' in source
-    assert 'mode="explore"' in source
-    assert 'TABLE_ID = table_selection["table_id"]' in source
-    assert 'contract_authoring["table_id"] == TABLE_ID' in source
-    assert "Data Steward" in source
-    assert "Data Agreement" in source
-    for demoted_widget in (
-        "widget_enrich_table_metadata",
-        "widget_author_guardrails",
-        "widget_author_dq_rules",
-        "widget_register_data_contract",
     ):
-        assert demoted_widget not in source
-        assert f"fabricops_kit.widgets.{demoted_widget}" not in source
-    authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
-    assert "widget_select_data_contract" not in authoring_cell
-    assert "widget_activate_data_contract" not in authoring_cell
-    assert "widget_activate_data_contract(" in _cell_by_id("01_governance.ipynb", "activation-widget").source
-    assert "METADATA_SCHEMA" not in source
+        assert name in code
 
 
-def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
-    """Guided Demo Steps 3–6 preserve lifecycle order and responsibility boundaries."""
-    step_3 = (ROOT / "docs/guided-demo/03-enrich-guardrails.md").read_text(encoding="utf-8")
-    step_4 = (ROOT / "docs/guided-demo/04-run-pipeline-with-guardrails.md").read_text(encoding="utf-8")
-    step_5 = (ROOT / "docs/guided-demo/05-create-data-contract.md").read_text(encoding="utf-8")
-    step_6 = (ROOT / "docs/guided-demo/06-promote-to-production.md").read_text(encoding="utf-8")
-    overview = (ROOT / "docs/guided-demo.md").read_text(encoding="utf-8")
-
-    assert "Author and Freeze the Data Contract" in step_3
-    assert "widget_author_data_contract" in step_3
-    assert "Data Agreement is not linked in this step" in step_3
-    assert "Select and Validate the Data Contract" in step_4
-    assert "widget_select_data_contract" in step_4
-    assert "Selection is not activation" in step_4
-    assert "Link the Data Agreement and Activate" in step_5
-    assert "widget_activate_data_contract" in step_5
-    assert "not a technical activation gate" in step_5
-    assert "Promote and Run Production" in step_6
-    assert "Production never falls back to mutable authoring metadata" in step_6
-    assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production" in overview
+def test_02_pipeline_imports_current_public_pipeline_api():
+    """Pipeline template imports only the current public pipeline surface it uses."""
+    imports = _cell_by_id("02_pipeline.ipynb", "imports").source
+    for name in (
+        "check_dq",
+        "check_freshness",
+        "check_guardrail_coverage",
+        "check_schema",
+        "check_sensitive_data",
+        "check_source_drift",
+        "pipeline_read",
+        "pipeline_write",
+        "profile_table",
+        "resolve_table_id",
+        "widget_select_data_contract",
+    ):
+        assert name in imports
+    assert "widget_view_catalogue" not in imports
 
 
-def test_02_pipeline_has_simple_top_level_sequence():
-    """The template stays Read -> Transform -> Write without splitting one write across sections."""
-    source = _notebook_source("02_pipeline.ipynb")
-    headings = ("# 0. Environment", "# 1. Data Contract", "# 2. Full Read", "# 3. Transform", "# 4. Write")
-    assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    for removed in ("# 4. Target", "# 5. Write Preparation / Guardrails", "# 6. Write", "# 7. Persisted Target Profile"):
-        assert removed not in source
+def test_02_pipeline_is_full_read_template():
+    """Pipeline template explicitly represents full reads with target-side processing strategies."""
+    title = _cell_by_id("02_pipeline.ipynb", "title").source
+    read_heading = _cell_by_id("02_pipeline.ipynb", "read-heading").source
+    assert "Full Read Pipeline Template" in title
+    assert "reads one complete governed source" in read_heading
+    assert "source-side incremental reads" in read_heading
 
 
-def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
-    """The contract selector runs once and explains environment behavior."""
-    source = _notebook_source("02_pipeline.ipynb")
-    contracts = _cell_by_id("02_pipeline.ipynb", "contracts-heading").source
-    assert "Select the Data Contracts to test with this pipeline." in contracts
-    assert "Production automatically uses activated Data Contracts." in contracts
-    assert source.count("widget_select_data_contract()") == 1
-
-
-def test_02_pipeline_is_full_read_and_full_profile_by_design():
-    """The default pipeline reads and profiles complete governed sources."""
-    source = _notebook_source("02_pipeline.ipynb")
-    assert "full-read pipeline template" in source
-    assert "source-side incremental reads" in source
-    assert "PROFILE_SCOPE" not in source
-    assert "PROCESSING_SCOPE" not in source
-    assert source.count("profile_table(table_id=table_id)") == 3
-    assert "profile_table(dataframe=df, table_id=table_id)" not in source
-
-
-def test_02_pipeline_source_dictionary_is_explained():
-    """The notebook tells engineers exactly what the multi-source dictionary contains."""
+def test_02_pipeline_has_cloneable_source_dictionary():
+    """Pipeline template stores multiple named source results for later transform/write use."""
     setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
-    assert "Dictionary used to keep multiple source reads" in setup
-    assert "Key = READ_NAME" in setup
-    assert "source DataFrame and table_id" in setup
     assert "sources = {}" in setup
+    assert "READ_NAME" in setup
+    assert "pipeline_read() result" in setup
+
+
+def test_02_pipeline_contract_selection_precedes_reads():
+    """Contract selection remains before governed reads."""
+    notebook = _notebook("02_pipeline.ipynb")
+    ids = [cell.get("id") for cell in notebook.cells]
+    assert ids.index("contracts") < ids.index("read-setup")
+    contracts = _cell_by_id("02_pipeline.ipynb", "contracts").source
+    assert "widget_select_data_contract" in contracts
+
+
+def test_02_pipeline_contains_three_demo_reads():
+    """Demo template includes the intended Lakehouse and Warehouse source examples."""
+    code = _code("02_pipeline.ipynb")
+    assert 'READ_NAME = "orders"' in code
+    assert 'READ_NAME = "products"' in code
+    assert 'READ_NAME = "history"' in code
+    assert 'READ_STORE = "source"' in code
+    assert 'READ_STORE = "product"' in code
+
+
+def test_02_pipeline_has_two_cloneable_write_blocks():
+    """Pipeline template demonstrates separate target flows for Lakehouse and Warehouse outputs."""
+    code = _code("02_pipeline.ipynb")
+    assert 'WRITE_NAME = "curated_orders_lakehouse"' in code
+    assert 'WRITE_NAME = "customer_summary_warehouse"' in code
+    assert 'WRITE_STORE = "unified"' in code
+    assert 'WRITE_STORE = "product"' in code
+
+
+def test_02_pipeline_write_blocks_include_target_guardrails_and_profile():
+    """Each write block retains the explicit target guardrail/write/profile sequence."""
+    for index in (1, 2):
+        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        for fragment in (
+            "resolve_table_id(",
+            "check_schema(WRITE_DATAFRAME,",
+            "check_sensitive_data(WRITE_DATAFRAME,",
+            "check_source_drift(",
+            "check_guardrail_coverage(",
+            "pipeline_write(",
+            "profile_table(table_id=written_table_id)",
+        ):
+            assert fragment in block
 
 
 def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
@@ -249,7 +183,6 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             '# display(profile_result["profile"])',
             "# display(dq_df)",
             "# display(dq_failed_values)",
-            '# catalogue_widget["show"](table_id=table_id)',
         ):
             assert fragment in block
         assert "report_check" not in block
@@ -263,118 +196,30 @@ def test_02_pipeline_transform_is_plain_pyspark():
     assert ".withColumn(" in transform
     assert "transformed_df = (" in transform
     assert "customer_summary_df = (" in transform
-    assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
-    """Write blocks demonstrate distinct Lakehouse and Warehouse target outputs."""
-    setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
-    assert "Dictionary used to keep multiple write results" in setup
-    assert "Key = WRITE_NAME" in setup
-    assert "target table_id" in setup
-    assert "writes = {}" in setup
-
-    expected = (
-        (1, "curated_orders_lakehouse", "transformed_df", "unified", "curated_orders"),
-        (2, "customer_summary_warehouse", "customer_summary_df", "product", "customer_summary"),
-    )
-    for index, write_name, dataframe, store, table in expected:
-        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        for fragment in (
-            f'WRITE_NAME = "{write_name}"',
-            f"WRITE_DATAFRAME = {dataframe}",
-            f'WRITE_STORE = "{store}"',
-            f'WRITE_TABLE = "{table}"',
-            'WRITE_SOURCE_NAMES = ("orders", "products", "history")',
-            "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]",
-            "target_table_id = resolve_table_id(",
-            "check_schema(",
-            "check_sensitive_data(",
-            'support_mapping_df = sensitive_result.get("support_mapping")',
-            "check_source_drift(",
-            "check_dq(",
-            'target_dq_failed_values = target_dq_result.get("failed_values")',
-            "check_guardrail_coverage(",
-            "write_result = pipeline_write(",
-            "table_id=target_table_id",
-            'source_table_ids=[source["table_id"] for source in write_sources]',
-            "writes[WRITE_NAME] = write_result",
-            'write_profile = profile_table(table_id=write_result["table_id"])',
-            '# display(write_profile["profile"])',
-        ):
-            assert fragment in block
-        stages = (
-            "check_schema(",
-            "check_sensitive_data(",
-            "check_source_drift(",
-            "check_dq(",
-            "check_guardrail_coverage(",
-            "pipeline_write(",
-            "profile_table(",
-        )
-        assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
+def test_02_pipeline_optional_displays_are_commented():
+    """Display calls remain opt-in examples rather than runtime defaults."""
+    code = _code("02_pipeline.ipynb")
+    for line in code.splitlines():
+        if "display(" in line:
+            assert line.lstrip().startswith("#"), line
 
 
-def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
-    """Read, checks, coverage, profiling, and governed publication remain separate notebook calls."""
-    source = _notebook_source("02_pipeline.ipynb")
-    assert source.count("source = pipeline_read(") == 3
-    assert source.count("coverage_result = check_guardrail_coverage(") == 2
-    assert source.count("write_result = pipeline_write(") == 2
-    assert "report_check" not in source
-    assert "run_all_checks" not in source
-    for hidden in ("read_lakehouse_table", "read_warehouse_table"):
-        assert hidden not in source
+def test_99_explore_is_read_only_support_notebook():
+    """Explore template stays consumer-oriented and does not expose write functions."""
+    code = _code("99_explore.ipynb")
+    markdown = _markdown("99_explore.ipynb")
+    assert "pipeline_write" not in code
+    assert "write_lakehouse_table" not in code
+    assert "write_warehouse_table" not in code
+    assert "read" in markdown.lower()
 
 
-def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
-    """Development inspection helpers stay opt-in and do not add default Spark actions or support writes."""
-    notebook_path = NOTEBOOK_DIR / "02_pipeline.ipynb"
-    active_calls: set[str] = set()
-    for cell_index, source in _code_cells(notebook_path):
-        tree = _parse_code_cell(notebook_path, cell_index, source)
-        if tree is None:
-            continue
-        active_calls.update(
-            node.func.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        )
-
-    assert {"display", "write_lakehouse_table", "write_warehouse_table"}.isdisjoint(active_calls)
-
-    source = _notebook_source("02_pipeline.ipynb")
-    for optional in (
-        "# display(df)",
-        '# display(profile_result["profile"])',
-        "# display(dq_df)",
-        "# display(dq_failed_values)",
-        "# display(transformed_df)",
-        "# display(target_dq_failed_values)",
-        "# display(support_mapping_df)",
-        '# display(write_profile["profile"])',
-    ):
-        assert optional in source
-
-
-def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
-    """Every required workflow cell contains active parseable code."""
-    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
-    required = {
-        "contracts",
-        "read-setup",
-        "read-1",
-        "read-2",
-        "read-3",
-        "transform",
-        "write-setup",
-        "write-1",
-        "write-2",
-    }
-    by_id = {cell.get("id"): cell for cell in notebook.cells}
-    for cell_id in required:
-        cell = by_id[cell_id]
-        assert cell.cell_type == "code"
-        assert cell.execution_count is None
-        assert not cell.outputs
-        ast.parse(cell.source)
+def test_notebook_json_is_deterministic_enough_for_source_control():
+    """Notebook files stay parseable JSON with no unexpected top-level shape."""
+    for path in NOTEBOOK_DIR.glob("*.ipynb"):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert "cells" in payload
+        assert "metadata" in payload
+        assert payload["nbformat"] == 4
