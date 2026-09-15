@@ -1,81 +1,57 @@
 # FabricOps Guided Demo
 
-**The Guided Demo is the practical, step-by-step path for running the FabricOps workflow from initial Fabric preparation through Governance, Engineering Development validation, Engineering Production, and downstream consumption.**
+**Run the current FabricOps operating workflow using the four notebook templates that ship with the starter kit: `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`.**
 
-Read [How FabricOps Works](how-fabricops-works.md) first for the operating model and the Governance ↔ Engineering workflow. Use the [FabricOps Engineering Guide](reference/engineering-cheat-sheet.md) when you want the deeper reasoning behind `00_env_config`, I/O, Lakehouse/Warehouse choices, PySpark, and processing patterns.
+Read [How FabricOps Works](how-fabricops-works.md) first if you want the operating model before the hands-on walkthrough. This Guided Demo stays practical and follows the notebooks as they exist today.
 
-!!! tip "New to Microsoft Fabric?"
+## The current notebook flow
 
-    Start with [Microsoft Learn: Fabric fundamentals](https://learn.microsoft.com/en-us/fabric/fundamentals/) for the platform concepts used throughout the demo. When you reach the engineering parts, continue with [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/) for Lakehouse, notebooks, Spark, and Data Engineering workflows.
+FabricOps does not use a separate notebook for every governance or engineering stage. The workflow is intentionally concentrated into four reusable notebooks.
 
-    **Useful visual reference:** [Microsoft Fabric Visual Notes](https://www.slideshare.net/slideshow/microsoft-fabric-complete-handwritten-notes-pdf/289496813) — a visual community reference covering Fabric architecture, PySpark, pipelines, incremental loading, data quality, CI/CD, monitoring, and related concepts.
+| Notebook | Where it runs | What you do |
+| --- | --- | --- |
+| [`00_env_config`](guided-demo/00-env-config.md) | Governance, Engineering Development, Engineering Production | Configure the Fabric Environment, logical stores, metadata target, and reusable runtime context. Seed the demo data used by the walkthrough. |
+| [`01_governance`](guided-demo/01-governance.md) | Governance | Create Data Stewards and a Data Agreement. After Engineering produces catalogue and profile evidence, return here to author, freeze, and later activate the Data Contract. |
+| [`02_pipeline`](guided-demo/02-run-pipeline.md) | Engineering Development, then Engineering Production | Run the full-read governed pipeline: select the contract context, read complete governed sources, run checks and profiling, transform in PySpark, enforce target guardrails, write using the governed load strategy, and profile the persisted target. |
+| [`99_explore`](guided-demo/99-explore.md) | Optional support / project-specific exploration | Read and inspect configured Fabric data, use exploratory profiling and catalogue views, and troubleshoot without replacing the governed delivery path. |
 
-    FabricOps documentation remains the source of truth for how this starter kit is designed and used.
+The required delivery loop is:
 
-## What you'll build
+**`01_governance` → `02_pipeline` → `01_governance`**
 
-You will progressively take the same governed pipeline through the FabricOps lifecycle. **Steps 1–7 are the core FabricOps workflow; 0A prepares the Fabric artifacts and raw inputs, while 0B configures the environment and lands the managed demo sources before that workflow begins.**
+`00_env_config` supplies the shared environment context used by those notebooks. `99_explore` is optional support.
 
-See the canonical stage-level lifecycle in [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop). This page keeps the detailed learning path below instead of repeating that diagram.
+## What you will do
 
-The non-linear part is **Steps 3, 4, and 5**. Governance authors and freezes a table-centric Data Contract definition in Step 3. Engineering selects and validates that exact frozen version for the same `table_id` in Step 4. Governance explicitly links the tested version to the required Data Agreement and activates it in Step 5. If validation shows the definition needs work, return to Step 3 and freeze a new version after refinement.
+1. Configure the Fabric workspaces, stores, Environment, metadata target, and demo inputs through the `00_env_config` walkthrough.
+2. Open `01_governance` and establish the steward and agreement context.
+3. Run `02_pipeline` in Engineering Development so the real governed tables are read, checked, profiled, transformed, and published.
+4. Return to `01_governance`, select the resulting `table_id`, author Enrichment, Guardrails, and processing requirements, then freeze the immutable Data Contract version.
+5. Return to `02_pipeline`, select the frozen version in Development, rerun the pipeline, and validate it against the governed definition.
+6. Return to `01_governance`, link the tested contract version to the required Data Agreement version and activate it for Production.
+7. Promote the validated `02_pipeline` through your organisation's Fabric deployment process and run it in Engineering Production. Production resolves the active contract automatically.
+8. Use `99_explore` only when you need read-oriented discovery, profiling, catalogue inspection, or troubleshooting around the governed workflow.
 
-The canonical transition is **Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production**.
+This is one Governance ↔ Engineering lifecycle, not a chain of separate FabricOps notebooks for each state change.
 
-Testing and governance sign-off are part of the recommended operating workflow. The current implementation does not technically block activation based on a recorded pass or approval state.
+## Before you start
 
-The demo is intentionally action-oriented. Each module tells you what to do, what you should see, and what FabricOps records at that stage.
+Prepare the Fabric items required by your environment. For the full workspace pattern this normally means Governance, Engineering Development, Engineering Production, and any project-specific consumer workspaces. A small demo can place the required items in one workspace.
 
-<!-- SCREEN-RECORDING SLOT: Optional 20-30 second demo orientation -->
+For the supplied demo story, create or configure:
 
-## Learning path
+- a Governance metadata Lakehouse,
+- a Source Lakehouse,
+- a Unified Lakehouse,
+- a Product Warehouse,
+- the Fabric Environment containing the FabricOps wheel,
+- copies of the four notebook templates from [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks),
+- the demo files from [`templates/DemoData`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData).
 
-| Module | Workspace | Notebook | What you do | What FabricOps records / proves |
-| --- | --- | --- | --- | --- |
-| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Governance, Engineering Development, Engineering Production, and required consumer workspaces | — | Create the Fabric items and upload the canonical raw Orders demo files. | The physical environment and raw inputs are ready for configuration-driven setup. |
-| [0B. Set up the operating environment](guided-demo/00B-run-environment-setup.md) | Governance, Engineering Development, Engineering Production | `00_env_config` + plain PySpark notebook | Configure environment-aware Fabric routing, create or validate Governance metadata tables, then read the raw demo files and seed the managed Lakehouse/Warehouse sources. | Logical stores resolve correctly and basic FabricOps I/O works from a plain configured notebook before `02_pipeline`. |
-| [1. Data Stewards and Data Agreement](guided-demo/01-create-agreement.md) | Governance | `01_governance` | Create provider and recipient Data Stewards and a Data Agreement. | The governed sharing relationship is established. |
-| [2. Baseline pipeline, Profile, and Catalogue](guided-demo/02-run-pipeline.md) | Engineering Development | `02_pipeline` | Run Read → Transform → Write from the managed sources, without a Data Contract. | Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records are written for the governed `table_id`. |
-| [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | Governance | `01_governance` | Select the `table_id`, author Enrichment and Guardrails in the unified editor, review, and freeze the version. | One immutable, table-centric Data Contract version is ready for validation. |
-| [4. Select and validate the Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | Engineering Development | `02_pipeline` | Select the frozen version for the same `table_id`, rerun Read → Transform → Write, and inspect Guardrail behavior and results. | The exact frozen version is tested against the pipeline. |
-| [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | Governance | `01_governance` | Explicitly link the tested version to the required Data Agreement, complete sign-off, and activate it. | One tested, linked version is designated active for Production resolution. |
-| [6. Promote and Run Production](guided-demo/06-promote-to-production.md) | Engineering Production | `02_pipeline` | Promote the validated pipeline using the organisation's deployment process, resolve the active Data Contract, and run the governed Production pipeline. | Production executes against the active saved immutable contract definition. |
-| [7. Consume approved Production data](guided-demo/99-explore-via-notebook.md) | Project-Specific Consumer | `99_explore` | Consume approved Production data without duplicating the Production engineering workflow. | Downstream BI, AI, data science, and exploration use the trusted Production source. |
+The walkthrough uses logical store names such as `source`, `unified`, `product`, and `metadata`. They are examples configured in `00_env_config`, not mandatory FabricOps naming conventions.
 
-## How to use each module
+## Start the walkthrough
 
-Each action page should stay practical and use the same rhythm:
+[Start with `00_env_config`](guided-demo/00-env-config.md)
 
-1. **What you are doing** — the purpose of the step in one sentence.
-2. **Do this** — the actual notebook, widget, or Fabric action.
-3. **What you should see** — the expected result, supported by a screenshot or short real screen recording where motion matters.
-4. **What FabricOps recorded** — the metadata, result, or governed state created by the step.
-5. **Go deeper** — link back to [How FabricOps Works](how-fabricops-works.md) for the operating concept or the [Engineering Guide](reference/engineering-cheat-sheet.md) for technical reasoning.
-
-The Guided Demo should not repeat long architecture or engineering explanations. Those concepts live on the pages above so this path can stay focused on doing the work.
-
-For the conceptual explanation of the Step 3 → Step 4 → Step 5 loop and the Data Contract lifecycle, see [How FabricOps Works](how-fabricops-works.md#the-governance-and-engineering-loop).
-
-## Promotion mechanism
-
-!!! note "Promotion remains separate from contract activation"
-
-    The canonical **Promote** stage remains part of FabricOps. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
-
-    The current demo assumes the validated `02_pipeline` is made available in Engineering Production through the organisation's current Fabric process before the Production run.
-
-## Live, Preview, and Planned content
-
-Action pages use these maturity labels where implementation status matters:
-
-???+ success "Live — validated demo component"
-
-    Expanded by default. These components are part of the currently validated Guided Demo path.
-
-??? info "Preview — implemented capability"
-
-    Collapsed by default. These components are implemented and part of the intended FabricOps workflow, but are not yet part of the fully validated baseline demo path.
-
-??? note "Planned — workflow direction"
-
-    Collapsed by default. These items describe planned operating workflow that is not yet implemented end to end in the demo.
+Need conceptual context instead of instructions? Read [How FabricOps Works](how-fabricops-works.md). Need an exact function signature? Use the [Function Reference](reference/index.md).
