@@ -27,7 +27,51 @@ def check_schema(
     raise_on_failure: bool = False,
     verbose: bool = True,
 ) -> dict:
-    """Check a persisted or supplied schema against configured schema intent."""
+    """Check a persisted or supplied schema against configured schema intent.
+
+    Parameters
+    ----------
+    dataframe : DataFrame, optional
+        Incoming DataFrame whose schema should be checked. When omitted, the
+        schema of the configured physical table is checked.
+    table_id : str
+        Canonical identity of an active registered Catalogue table.
+    enabled : bool, default=True
+        Explicitly disable this check when ``False``. Normally omit this value;
+        FabricOps enforces the resolved pipeline Data Contract automatically.
+    raise_on_failure : bool, default=False
+        Raise ``RuntimeError`` when a blocking schema result cannot continue.
+    verbose : bool, default=True
+        Print the concise normalized check outcome when ``True``.
+
+    Returns
+    -------
+    dict
+        Structured guardrail status, continuation decision, checks, and schema
+        differences. Governed configured-table checks append the outcome to
+        ``METADATA_GUARDRAIL_RESULTS``.
+
+    Raises
+    ------
+    ValueError
+        If the target is unsupported or no active approved Schema guardrail
+        exists for the resolved table.
+    RuntimeError
+        If ``raise_on_failure=True`` and a blocking schema result cannot
+        continue.
+
+    Notes
+    -----
+    Production uses the active Data Contract. Development uses an explicitly
+    selected immutable version, or safely skips when no contract is selected.
+
+    Examples
+    --------
+    >>> result = check_schema(table_id="lakehouse||source||dbo||orders")
+    >>> result["can_continue"]
+    True
+
+    """
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
