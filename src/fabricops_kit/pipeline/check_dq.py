@@ -90,6 +90,8 @@ def check_dq(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details disabled explicitly; no contract, rules, rows, or evidence was evaluated")
         return result
     config, env, context = resolve_fabric_context()
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -110,6 +112,8 @@ def check_dq(
             "environment_name": env,
         }
         print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details no Data Contract selected; DQ rule evaluation and evidence persistence skipped")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -133,6 +137,22 @@ def check_dq(
         context=context,
     )
     print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        checks = list(result.get("checks") or [])
+        identity_label = ", ".join(row_identity_columns) if row_identity_columns else "automatic row identity resolution"
+        print("  Details")
+        print("    Contract selected; active Data Quality rules resolved from the governed contract")
+        print("    Input supplied DataFrame")
+        print(f"    Row identity {identity_label}")
+        print(f"    Rules evaluated {len(checks)}")
+        for index, check in enumerate(checks, start=1):
+            rule_id = str(check.get("rule_id") or check.get("guardrail_rule_id") or "rule")
+            rule_type = str(check.get("rule_type") or "data_quality")
+            action = str(check.get("action") or "").strip() or "default"
+            check_status = str(check.get("status") or "unknown").upper()
+            print(f"      {index}. {rule_id} / {rule_type} / {action} / {check_status}")
+        print("    Evidence one summary per evaluated rule appended to METADATA_GUARDRAIL_RESULTS")
+        print("    Failed values returned to the caller only; raw failed values are not persisted automatically")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking DQ Guardrail failed for table_id {identity['table_id']!r}.")
     return result
