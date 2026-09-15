@@ -177,18 +177,42 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     step_6 = (ROOT / "docs/guided-demo/06-promote-to-production.md").read_text(encoding="utf-8")
     overview = (ROOT / "docs/guided-demo.md").read_text(encoding="utf-8")
 
-    assert "Author and Freeze the Data Contract" in step_3
+    normalized = {
+        "step_3": step_3.casefold(),
+        "step_4": step_4.casefold(),
+        "step_5": step_5.casefold(),
+        "step_6": step_6.casefold(),
+        "overview": overview.casefold(),
+    }
+
+    assert "# step 3. author and freeze the data contract" in normalized["step_3"]
     assert "widget_author_data_contract" in step_3
-    assert "Data Agreement is not linked in this step" in step_3
-    assert "Select and Validate the Data Contract" in step_4
-    assert "widget_select_data_contract" in step_4
-    assert "Selection is not activation" in step_4
-    assert "Link the Data Agreement and Activate" in step_5
-    assert "widget_activate_data_contract" in step_5
-    assert "not a technical activation gate" in step_5
-    assert "Promote and Run Production" in step_6
-    assert "Production never falls back to mutable authoring metadata" in step_6
-    assert "Author → Freeze → Select → Validate → Link Data Agreement → Activate → Promote → Run Production" in overview
+    assert "freezing does not activate" in normalized["step_3"]
+    assert "immutable data contract" in normalized["step_3"]
+
+    assert "# step 4. select and validate the data contract" in normalized["step_4"]
+    assert "select the immutable version" in normalized["step_4"]
+    assert "same `02_pipeline`" in step_4
+    assert "do not edit a frozen version in place" in normalized["step_4"]
+
+    assert "# step 5. link the data agreement and activate" in normalized["step_5"]
+    assert "link the data agreement" in normalized["step_5"]
+    assert "activation does **not** deploy `02_pipeline`" in step_5
+    assert "active production definition" in normalized["step_5"]
+
+    assert "# step 6. promote and run production" in normalized["step_6"]
+    assert "production resolves the active data contract automatically" in normalized["step_6"]
+    assert "draft metadata" in normalized["step_6"]
+    assert "validated pipeline logic" in normalized["step_6"]
+
+    lifecycle_steps = (
+        "author and freeze the data contract",
+        "select and validate the data contract",
+        "link the data agreement and activate",
+        "promote and run production",
+    )
+    lifecycle_positions = [normalized["overview"].index(step) for step in lifecycle_steps]
+    assert lifecycle_positions == sorted(lifecycle_positions)
 
 
 def test_02_pipeline_has_simple_top_level_sequence():
