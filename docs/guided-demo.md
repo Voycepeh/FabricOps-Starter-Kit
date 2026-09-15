@@ -1,57 +1,77 @@
 # FabricOps Guided Demo
 
-**Run the current FabricOps operating workflow using the four notebook templates that ship with the starter kit: `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`.**
+**Use the Guided Demo to experience the complete FabricOps operating loop, not just the notebook templates in isolation.**
 
-Read [How FabricOps Works](how-fabricops-works.md) first if you want the operating model before the hands-on walkthrough. This Guided Demo stays practical and follows the notebooks as they exist today.
+`00A` and `00B` prepare the Fabric environment and load the demo data. The seven numbered steps then follow the same lifecycle described in [How FabricOps Works](how-fabricops-works.md): Governance establishes context, Engineering builds the real pipeline, Governance turns observed tables into a Data Contract, Engineering validates it, Governance activates it, Production runs it, and consumers use the approved output.
 
-## The current notebook flow
+## Foundation setup
 
-FabricOps does not use a separate notebook for every governance or engineering stage. The workflow is intentionally concentrated into four reusable notebooks.
-
-| Notebook | Where it runs | What you do |
+| Setup | What you do | Why it matters |
 | --- | --- | --- |
-| [`00_env_config`](guided-demo/00-env-config.md) | Governance, Engineering Development, Engineering Production | Configure the Fabric Environment, logical stores, metadata target, and reusable runtime context. Seed the demo data used by the walkthrough. |
-| [`01_governance`](guided-demo/01-governance.md) | Governance | Create Data Stewards and a Data Agreement. After Engineering produces catalogue and profile evidence, return here to author, freeze, and later activate the Data Contract. |
-| [`02_pipeline`](guided-demo/02-run-pipeline.md) | Engineering Development, then Engineering Production | Run the full-read governed pipeline: select the contract context, read complete governed sources, run checks and profiling, transform in PySpark, enforce target guardrails, write using the governed load strategy, and profile the persisted target. |
-| [`99_explore`](guided-demo/99-explore.md) | Optional support / project-specific exploration | Read and inspect configured Fabric data, use exploratory profiling and catalogue views, and troubleshoot without replacing the governed delivery path. |
+| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Create the workspaces, stores, Fabric Environment, notebook copies, schemas, and upload the supplied demo files. | Everything required by the walkthrough exists physically in Fabric. |
+| [0B. Configure the environment and load demo data](guided-demo/00B-run-environment-setup.md) | Configure `00_env_config`, create the metadata tables, then land the baseline managed source tables. | `01_governance` and `02_pipeline` can work against real configured Fabric stores and real managed tables. |
 
-The required delivery loop is:
+The baseline Orders source starts with the 120 rows in `orders.csv`. Keep `orders_incremental.csv` aside as the later **Day 2** arrival used to demonstrate how the same full-read pipeline behaves when source data changes.
 
-**`01_governance` → `02_pipeline` → `01_governance`**
+## The seven-step FabricOps workflow
 
-`00_env_config` supplies the shared environment context used by those notebooks. `99_explore` is optional support.
+| Step | Notebook | What you learn |
+| --- | --- | --- |
+| [1. Establish Governance context](guided-demo/01-create-agreement.md) | `01_governance` | Create Data Stewards and a Data Agreement, then inspect the rows FabricOps persisted in the Governance metadata Lakehouse. |
+| [2. Build and run the ETL](guided-demo/02-run-pipeline.md) | `02_pipeline` | Run the real full-read Read → Transform → Write workflow before any Data Contract exists. See checks safely skip in Development, multiple sources feed multiple targets, and each target remains independently publishable. |
+| [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | `01_governance` | Select the real `table_id`, add Enrichment, Guardrails, and Processing, review the complete definition, then freeze an immutable version. |
+| [4. Select and validate the Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | `02_pipeline` | Select the frozen version and rerun the same pipeline so the checks that previously skipped now enforce the authored contract. |
+| [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | `01_governance` | Link the tested contract version to the correct Data Agreement version and activate it for Production. |
+| [6. Promote and run Production](guided-demo/06-promote-to-production.md) | `02_pipeline` | Promote the validated pipeline logic and run it with Production `00_env_config`; FabricOps resolves the active contract automatically. |
+| [7. Consume approved Production data](guided-demo/99-explore.md) | `99_explore` | Read approved Production outputs without recreating the Production engineering workflow. |
 
-## What you will do
+The core loop is therefore:
 
-1. Configure the Fabric workspaces, stores, Environment, metadata target, and demo inputs through the `00_env_config` walkthrough.
-2. Open `01_governance` and establish the steward and agreement context.
-3. Run `02_pipeline` in Engineering Development so the real governed tables are read, checked, profiled, transformed, and published.
-4. Return to `01_governance`, select the resulting `table_id`, author Enrichment, Guardrails, and processing requirements, then freeze the immutable Data Contract version.
-5. Return to `02_pipeline`, select the frozen version in Development, rerun the pipeline, and validate it against the governed definition.
-6. Return to `01_governance`, link the tested contract version to the required Data Agreement version and activate it for Production.
-7. Promote the validated `02_pipeline` through your organisation's Fabric deployment process and run it in Engineering Production. Production resolves the active contract automatically.
-8. Use `99_explore` only when you need read-oriented discovery, profiling, catalogue inspection, or troubleshooting around the governed workflow.
+**Governance → Engineering → Governance → Engineering → Governance → Production → Consume**
 
-This is one Governance ↔ Engineering lifecycle, not a chain of separate FabricOps notebooks for each state change.
+The notebooks remain only `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`. The seven steps describe how those notebooks are reused through the lifecycle.
 
-## Before you start
+## Why Step 2 is the centrepiece
 
-Prepare the Fabric items required by your environment. For the full workspace pattern this normally means Governance, Engineering Development, Engineering Production, and any project-specific consumer workspaces. A small demo can place the required items in one workspace.
+The Guided Demo deliberately teaches `02_pipeline` before introducing a Data Contract. This makes the value of FabricOps visible in layers:
 
-For the supplied demo story, create or configure:
+1. Engineering can already use the reusable orchestrators and configured stores.
+2. `pipeline_read()` resolves each source and its canonical `table_id`.
+3. Guardrail checks are still called, but in Development they safely return `skipped` when no Data Contract is selected.
+4. `profile_table()` records the real physical table evidence Governance needs.
+5. Project transformation stays normal PySpark.
+6. Independent Write blocks publish different targets and record exact source-to-target Lineage.
+7. Governance then authors the Data Contract against tables that actually exist.
+8. The same `02_pipeline` is rerun and the previously skipped checks become governed enforcement.
 
-- a Governance metadata Lakehouse,
-- a Source Lakehouse,
-- a Unified Lakehouse,
-- a Product Warehouse,
-- the Fabric Environment containing the FabricOps wheel,
-- copies of the four notebook templates from [`templates/notebooks`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks),
-- the demo files from [`templates/DemoData`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData).
+By the end of the demo, the user should understand not only which functions to call, but **how FabricOps connects environment configuration, engineering, metadata, governance, Data Contracts, validation, Production, and consumption into one repeatable operating practice.**
 
-The walkthrough uses logical store names such as `source`, `unified`, `product`, and `metadata`. They are examples configured in `00_env_config`, not mandatory FabricOps naming conventions.
+## The demo data story
 
-## Start the walkthrough
+Use the supplied Orders fixtures as a simple two-run story:
 
-[Start with `00_env_config`](guided-demo/00-env-config.md)
+```text
+Day 1
+orders.csv = 120 rows
+        ↓
+02_pipeline full read
+        ↓
+multiple transformed targets
 
-Need conceptual context instead of instructions? Read [How FabricOps Works](how-fabricops-works.md). Need an exact function signature? Use the [Function Reference](reference/index.md).
+Day 2
+append orders_incremental.csv = 12 new source rows
+        ↓
+source.demo.orders = 132 rows
+        ↓
+02_pipeline still performs a full read
+        ↓
+target behaviour depends on each target's load strategy
+```
+
+This separation is important: **full read describes how `02_pipeline` reads governed sources. Load strategy describes how each target is published.** An overwrite target replaces its persisted result, an append target adds rows, and governed SCD strategies apply their own key and history semantics.
+
+The main walkthrough uses sequential independent Write blocks because that is the canonical and easiest-to-debug notebook pattern. Where independent target writes are orchestrated concurrently by Fabric or Spark, treat that as execution optimisation around the same Write blocks rather than a different FabricOps contract.
+
+## Start
+
+[Begin with 0A: Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md)
