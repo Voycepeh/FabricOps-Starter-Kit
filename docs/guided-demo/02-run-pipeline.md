@@ -139,7 +139,7 @@ Run the notebook from top to bottom.
 
 The purpose of the first run is to prove the engineering path and establish real table/catalogue/profile evidence. Governance can then use the resulting target `table_id` in `01_governance` rather than authoring a contract against an imagined table definition.
 
-After the run, return to [`01_governance`](01-governance.md#5-return-to-01_governance-after-the-engineering-run), select the governed target, author the Data Contract, and freeze the first immutable version.
+After the run, return to [`01_governance`](01-governance.md), select the governed target, author the Data Contract, and freeze the first immutable version.
 
 ## Validate the frozen contract in Development
 
