@@ -82,6 +82,8 @@ def check_source_drift(
             source_table_id=source_table_id,
             target_table_id=target_table_id,
         )
+        if verbose:
+            print("  Evaluation skipped by caller; no drift comparison or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
     source = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
@@ -106,6 +108,8 @@ def check_source_drift(
             source_table_id=str(source["table_id"]),
             target_table_id=str(target["table_id"]),
         )
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     source_processing = resolve_table_processing_definition(
         config, env, str(source["table_id"]), context=context
@@ -123,6 +127,22 @@ def check_source_drift(
         source_table_id=source_table_id,
         target_table_id=str(target["table_id"]),
     )
+    if verbose:
+        print(
+            f"  Source processing {str(source_processing.get('load_strategy') or '').upper()} from governed processing definition."
+        )
+        print(
+            f"  Comparison scope {result.get('comparison_scope', 'configured')} against the last accepted source-to-target baseline."
+        )
+        print(
+            "  Changes "
+            f"inserted={result.get('inserted_count', 0)}, "
+            f"updated={result.get('updated_count', 0)}, "
+            f"deleted={result.get('deleted_count', 0)}, "
+            f"recent={result.get('recent_changes', 0)}, "
+            f"historical={result.get('historical_changes', 0)}."
+        )
+        print("  Accepted baseline is committed only after pipeline_write() succeeds.")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(
             f"A blocking Source Drift Guardrail failed for source_table_id {source_table_id!r} "
