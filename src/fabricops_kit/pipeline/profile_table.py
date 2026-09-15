@@ -840,6 +840,9 @@ def profile_table(
     config = env = context = None
     warehouse_fields = None
     warehouse_physical = False
+    profile_input_label = "supplied DataFrame"
+    backend_label = "PySpark"
+
     if table_id is not None or has_coordinates:
         config, env, context = resolve_fabric_context()
         if table_id is not None:
@@ -852,29 +855,29 @@ def profile_table(
         if store_kind not in {"lakehouse", "warehouse"}:
             raise ValueError(f"Configured table has unsupported store kind {store_kind or '<blank>'!r}.")
         identity["store_kind"] = store_kind
+        physical_identity = ".".join(
+            str(value)
+            for value in (identity.get("store"), identity.get("schema"), identity.get("table_name"))
+            if value
+        )
         if dataframe is None:
             if store_kind == "lakehouse":
                 dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
-                print(
-                    f"FabricOps: profiling governed Lakehouse table '{identity['table_id']}'. "
-                    "PySpark profiling will be used and metadata will be persisted."
-                )
+                profile_input_label = f"governed Lakehouse table '{physical_identity}'"
             else:
                 warehouse_physical = True
-                print(
-                    f"FabricOps: profiling governed Warehouse table '{identity['table_id']}'. "
-                    "Warehouse SQL profiling will be used and metadata will be persisted."
-                )
+                backend_label = "Warehouse SQL pushdown"
+                profile_input_label = f"governed Warehouse table '{physical_identity}'"
         else:
-            print(
-                f"FabricOps: profiling supplied DataFrame against governed table '{identity['table_id']}'. "
-                "Profile and catalogue metadata will be persisted."
-            )
+            profile_input_label = f"supplied DataFrame for governed table '{identity['table_id']}'"
+
+        print("FabricOps Profile")
+        print(f"1. Identity → {identity['table_id']} → {profile_input_label}")
+        print(f"2. Profiling backend → {backend_label}")
     else:
-        print(
-            "FabricOps: profiling supplied DataFrame only. No Data Catalogue or profiling metadata "
-            "will be persisted because no table identity was provided."
-        )
+        print("FabricOps Profile")
+        print("1. Identity → DataFrame only; no governed table_id")
+        print("2. Profiling backend → PySpark")
 
     spark_session = dataframe.sparkSession if dataframe is not None else get_spark_session()
     if warehouse_physical:
@@ -894,7 +897,14 @@ def profile_table(
             frequency_profile = build_frequency_distribution_dataframe(
                 dataframe, columns=selected_columns, top_n=frequency_top_n
             )
+
+    frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
+    print("3. Statistical profile → calculated")
+    print(f"4. Frequency profile → {frequency_label}")
+
     if identity is None:
+        print("5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
+        print("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         return {"profile": statistical_profile, "frequency_profile": frequency_profile}
 
     profile_snapshot_id = str(uuid4())
@@ -926,6 +936,8 @@ def profile_table(
         context={"config": config, "env": env},
         mode="append",
     )
+    print(f"5. {PROFILED_TABLE} → appended current profiling snapshot")
+
     _replace_frequency_rows(
         frequency_df=frequency_metadata_df,
         profiled_df=profiled_df,
@@ -933,6 +945,9 @@ def profile_table(
         env=env,
         spark_session=spark_session,
     )
+    frequency_persist_label = "replaced current snapshot rows" if frequency_metadata_df is not None else "cleared current snapshot rows; no frequencies selected"
+    print(f"6. {PROFILED_FREQUENCY_TABLE} → {frequency_persist_label}")
+
     catalogue_df = _catalogue_dataframe_from_profiled(
         profiled_df,
         source_df=dataframe,
@@ -950,4 +965,9 @@ def profile_table(
         env=env,
         spark_session=spark_session,
     )
+    print(
+        f"7. {CATALOGUE_TABLE} → table/column identities and observed schema upserted; "
+        "existing load strategy and parameters preserved"
+    )
+    print("Result → governed profile returned and profiling metadata persisted.")
     return {"profile": profiled_df, "frequency_profile": frequency_profile}
