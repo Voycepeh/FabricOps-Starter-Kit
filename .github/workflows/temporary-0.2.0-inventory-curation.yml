@@ -1,0 +1,151 @@
+name: Temporary 0.2.0 inventory curation
+
+on:
+  push:
+    branches:
+      - release/0.2.0-inventory-curation
+
+permissions:
+  contents: write
+
+jobs:
+  curate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: release/0.2.0-inventory-curation
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: uv sync --frozen --extra docs --extra dev
+
+      - name: Curate authoritative 0.2.0 lifecycle decisions
+        shell: bash
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+          from fabricops_kit.public_api import PREVIEW_PUBLIC_API, SUPPORTED_PUBLIC_API
+          from scripts.release_inventory import _load_manifest, discover_inventory, dump_manifest, synchronize_manifest
+
+          version = "0.2.0"
+          path = Path("docs/releases/manifests/0.2.0.yml")
+          existing = _load_manifest(path)
+          discovered = discover_inventory()
+
+          # Historical assets that have left the authoritative registries remain
+          # in release history as explicitly discontinued rather than silently disappearing.
+          for group in ("functions", "metadata_tables"):
+              discovered_names = {asset.name for asset in discovered[group]}
+              for item in existing.get(group, []):
+                  if item.get("name") not in discovered_names and item.get("status") != "discontinued":
+                      item["status"] = "discontinued"
+                      item["discontinued_in"] = version
+                      item["rationale"] = (
+                          "No longer part of the current public API registry."
+                          if group == "functions"
+                          else "No longer part of the canonical metadata schema registry."
+                      )
+
+          manifest = synchronize_manifest(existing, discovered, version)
+
+          live_function_names = {qn.rsplit(".", 1)[-1] for qn in SUPPORTED_PUBLIC_API}
+          preview_function_names = {qn.rsplit(".", 1)[-1] for qn in PREVIEW_PUBLIC_API}
+          for item in manifest["functions"]:
+              name = item["name"]
+              if name in live_function_names:
+                  item["status"] = "live"
+                  item["live_since"] = item.get("live_since") or version
+                  item["introduced_in"] = item.get("introduced_in") or version
+              elif name in preview_function_names:
+                  item["status"] = "preview"
+                  item.pop("live_since", None)
+                  item["introduced_in"] = item.get("introduced_in") or version
+
+          live_metadata = {
+              "METADATA_DATA_CATALOGUE",
+              "METADATA_DATA_PROFILED",
+              "METADATA_DATA_PROFILED_FREQUENCY",
+              "METADATA_DATA_LINEAGE",
+          }
+          discovered_metadata = {asset.name for asset in discovered["metadata_tables"]}
+          for item in manifest["metadata_tables"]:
+              name = item["name"]
+              if name not in discovered_metadata:
+                  continue
+              item["status"] = "live" if name in live_metadata else "preview"
+              if item["status"] == "live":
+                  item["live_since"] = item.get("live_since") or version
+              else:
+                  item.pop("live_since", None)
+              item["introduced_in"] = item.get("introduced_in") or version
+
+          path.write_text(dump_manifest(manifest), encoding="utf-8")
+          PY
+
+      - name: Update contract tests for approved lifecycle changes
+        shell: bash
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/contract/test_public_contract.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace(
+              '    "profile_table",\n}',
+              '    "profile_table",\n    "read_lakehouse_json",\n}',
+          )
+          text = text.replace("assert len(SUPPORTED_PUBLIC_API) == 11, message", "assert len(SUPPORTED_PUBLIC_API) == 12, message")
+          text = text.replace("assert len(set(SUPPORTED_PUBLIC_API)) == 11", "assert len(set(SUPPORTED_PUBLIC_API)) == 12")
+          path.write_text(text, encoding="utf-8")
+
+          # PR #1300 intentionally removed the per-read catalogue widget. Align its
+          # cloneable notebook contract assertion with the current template.
+          path = Path("tests/templates/test_notebook_contracts.py")
+          text = path.read_text(encoding="utf-8")
+          text = text.replace('                \'# catalogue_widget["show"](table_id=table_id)\',\n', "")
+          path.write_text(text, encoding="utf-8")
+
+          changelog = Path("CHANGELOG.md")
+          text = changelog.read_text(encoding="utf-8")
+          marker = "- Promoted `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()` to Live."
+          if marker in text and "`read_lakehouse_json()` to the supported Live public API" not in text:
+              text = text.replace(marker, marker + "\n- Promoted `read_lakehouse_json()` to the supported Live public API.")
+          changelog.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Regenerate release inventory
+        run: PYTHONPATH=src uv run python scripts/generate_release_inventory.py
+      - name: Regenerate public call-flow contract
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+      - name: Regenerate individual function references twice
+        shell: bash
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/reference-first.diff
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/reference-second.diff
+          cmp /tmp/reference-first.diff /tmp/reference-second.diff
+      - name: Regenerate release contract pages
+        run: PYTHONPATH=src uv run python scripts/generate_release_contract_pages.py
+      - name: Validate release inventory
+        run: PYTHONPATH=src uv run python scripts/generate_release_inventory.py --check
+      - name: Run focused validation
+        run: |
+          uv run pytest tests/contract/test_public_contract.py tests/templates/test_notebook_contracts.py tests/unit/test_release_inventory.py tests/unit/test_public_function_call_flows.py
+
+      - name: Commit curated and generated outputs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-0.2.0-inventory-curation.yml
+          git add CHANGELOG.md docs/releases docs/api/reference docs/reference tests src/fabricops_kit/public_api.py
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Complete 0.2.0 release inventory curation"
+          git push origin HEAD:release/0.2.0-inventory-curation
