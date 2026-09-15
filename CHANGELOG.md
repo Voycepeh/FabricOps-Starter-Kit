@@ -42,6 +42,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Promoted `setup_metadata_tables()` to the supported Live public API.
 - Promoted `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()` to Live.
+- Promoted `read_lakehouse_json()` to the supported Live public API.
 - Promoted the catalogue, profile, normalized frequency, and profiling-lineage metadata schemas to Live.
 
 ### Deprecated

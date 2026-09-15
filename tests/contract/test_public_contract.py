@@ -48,6 +48,7 @@ LIVE_V010_CALLABLES = {
 EXPECTED_LIVE_V020_CALLABLES = LIVE_V010_CALLABLES | {
     "setup_metadata_tables",
     "profile_table",
+    "read_lakehouse_json",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -139,8 +140,8 @@ def test_supported_public_api_contract_has_release_count_and_stable_names():
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 11, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 11
+    assert len(SUPPORTED_PUBLIC_API) == 12, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 12
     assert APPROVED_V1_CALLABLES == EXPECTED_LIVE_V020_CALLABLES
 
 

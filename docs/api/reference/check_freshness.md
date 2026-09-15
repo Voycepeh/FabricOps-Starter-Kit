@@ -14,7 +14,7 @@ Check whether source timing satisfies direct or approved freshness intent.
 
 `fabricops_kit/pipeline/check_freshness.py:45`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L45-L213">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L45-L227">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -103,6 +103,12 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.0 |
 
 
 </details>

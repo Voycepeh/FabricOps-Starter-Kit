@@ -7,13 +7,56 @@ github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
 release_motivation: FabricOps 0.2.0 is being revalidated and prepared for republication. The replacement release will define a narrower supported engineering and metadata foundation, with later governance and guardrail capabilities remaining Preview until separately validated.
 functions:
+  - name: check_dq
+    qualified_name: fabricops_kit.pipeline.check_dq.check_dq
+    source_path: src/fabricops_kit/pipeline/check_dq.py
+    documentation_path: docs/api/reference/check_dq.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: check_freshness
+    qualified_name: fabricops_kit.pipeline.check_freshness
+    source_path: src/fabricops_kit/pipeline/check_freshness.py
+    documentation_path: docs/api/reference/check_freshness.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: check_schema
+    qualified_name: fabricops_kit.pipeline.check_schema
+    source_path: src/fabricops_kit/pipeline/check_schema.py
+    documentation_path: docs/api/reference/check_schema.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: check_sensitive_data
+    qualified_name: fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data
+    source_path: src/fabricops_kit/pipeline/check_sensitive_data.py
+    documentation_path: docs/api/reference/check_sensitive_data.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: check_source_drift
+    qualified_name: fabricops_kit.pipeline.check_source_drift
+    source_path: src/fabricops_kit/pipeline/check_source_drift.py
+    documentation_path: docs/api/reference/check_source_drift.md
+    status: preview
+    introduced_in: 0.2.0
   - name: display_guardrail_results
     qualified_name: fabricops_kit.pipeline.display_guardrail_results
     source_path: src/fabricops_kit/pipeline/display_guardrail_results.py
     documentation_path: docs/api/reference/display_guardrail_results.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
+  - name: pipeline_read
+    qualified_name: fabricops_kit.pipeline.pipeline_read.pipeline_read
+    source_path: src/fabricops_kit/pipeline/pipeline_read.py
+    documentation_path: docs/api/reference/pipeline_read.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: pipeline_write
+    qualified_name: fabricops_kit.pipeline.pipeline_write.pipeline_write
+    source_path: src/fabricops_kit/pipeline/pipeline_write.py
+    documentation_path: docs/api/reference/pipeline_write.md
+    status: preview
+    introduced_in: 0.2.0
   - name: prepare_pipeline_table_configs
     qualified_name: fabricops_kit.pipeline.prepare_pipeline_table_configs
     source_path: src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py
@@ -46,6 +89,13 @@ functions:
     live_since: 0.1.0
     rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
     introduced_in: 0.1.0
+  - name: read_lakehouse_json
+    qualified_name: fabricops_kit.io.read_lakehouse_json.read_lakehouse_json
+    source_path: src/fabricops_kit/io/read_lakehouse_json.py
+    documentation_path: docs/api/reference/read_lakehouse_json.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.2.0
   - name: read_lakehouse_parquet
     qualified_name: fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet
     source_path: src/fabricops_kit/io/read_lakehouse_parquet.py
@@ -78,13 +128,26 @@ functions:
     live_since: 0.1.0
     rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
     introduced_in: 0.1.0
+  - name: resolve_table_id
+    qualified_name: fabricops_kit.pipeline.resolve_table_id.resolve_table_id
+    source_path: src/fabricops_kit/pipeline/resolve_table_id.py
+    documentation_path: docs/api/reference/resolve_table_id.md
+    status: preview
+    introduced_in: 0.2.0
   - name: run_table_guardrails
     qualified_name: fabricops_kit.pipeline.run_table_guardrails
     source_path: src/fabricops_kit/pipeline/run_table_guardrails.py
     documentation_path: docs/api/reference/run_table_guardrails.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
+  - name: scan_workspace_access
+    qualified_name: fabricops_kit.access.scan_workspace_access
+    source_path: src/fabricops_kit/access/scan_workspace_access.py
+    documentation_path: docs/api/reference/scan_workspace_access.md
+    status: preview
+    introduced_in: 0.2.0
   - name: setup_metadata_tables
     qualified_name: fabricops_kit.config.setup_metadata_tables.setup_metadata_tables
     source_path: src/fabricops_kit/config/setup_metadata_tables.py
@@ -101,20 +164,34 @@ functions:
     live_since: 0.1.0
     rationale: Supported notebook setup flow included in the first FabricOps release before the Live read and write functions.
     introduced_in: 0.1.0
+  - name: widget_activate_data_contract
+    qualified_name: fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract
+    source_path: src/fabricops_kit/widgets/widget_activate_data_contract.py
+    documentation_path: docs/api/reference/widget_activate_data_contract.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: widget_author_data_contract
+    qualified_name: fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract
+    source_path: src/fabricops_kit/widgets/widget_author_data_contract.py
+    documentation_path: docs/api/reference/widget_author_data_contract.md
+    status: preview
+    introduced_in: 0.2.0
   - name: widget_author_dq_rules
     qualified_name: fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules
     source_path: src/fabricops_kit/widgets/widget_author_dq_rules.py
     documentation_path: docs/api/reference/widget_author_dq_rules.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
   - name: widget_author_schema_freshness_profile_rules
     qualified_name: fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules
     source_path: src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py
     documentation_path: docs/api/reference/widget_author_schema_freshness_profile_rules.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
   - name: widget_browse_metadata_catalogue
     qualified_name: fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue
     source_path: src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py
@@ -127,9 +204,10 @@ functions:
     qualified_name: fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata
     source_path: src/fabricops_kit/widgets/widget_enrich_table_metadata.py
     documentation_path: docs/api/reference/widget_enrich_table_metadata.md
-    status: preview
-    rationale: governance workflow still being validated
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
   - name: widget_pipeline_bootstrap
     qualified_name: fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap
     source_path: src/fabricops_kit/widgets/widget_pipeline_bootstrap.py
@@ -142,8 +220,10 @@ functions:
     qualified_name: fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract
     source_path: src/fabricops_kit/widgets/widget_register_data_contract.py
     documentation_path: docs/api/reference/widget_register_data_contract.md
-    status: preview
+    status: discontinued
     introduced_in: 0.2.0
+    discontinued_in: 0.2.0
+    rationale: No longer part of the current public API registry.
   - name: widget_render_agreement_evidence
     qualified_name: fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence
     source_path: src/fabricops_kit/widgets/widget_render_agreement_evidence.py
@@ -170,34 +250,54 @@ functions:
     qualified_name: fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance
     source_path: src/fabricops_kit/widgets/widget_review_guardrail_governance.py
     documentation_path: docs/api/reference/widget_review_guardrail_governance.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
+  - name: widget_select_data_contract
+    qualified_name: fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract
+    source_path: src/fabricops_kit/widgets/widget_select_data_contract.py
+    documentation_path: docs/api/reference/widget_select_data_contract.md
+    status: preview
+    introduced_in: 0.2.0
   - name: widget_select_guardrail_target
     qualified_name: fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target
     source_path: src/fabricops_kit/widgets/widget_select_guardrail_target.py
     documentation_path: docs/api/reference/widget_select_guardrail_target.md
-    status: preview
-    rationale: DQ authoring and enforcement workflow remains Preview
+    status: discontinued
+    rationale: No longer part of the current public API registry.
     introduced_in: 0.1.0
+    discontinued_in: 0.2.0
   - name: widget_view_agreement_catalogue
     qualified_name: fabricops_kit.widgets.widget_view_agreement_catalogue.widget_view_agreement_catalogue
     source_path: src/fabricops_kit/widgets/widget_view_agreement_catalogue.py
     documentation_path: docs/api/reference/widget_view_agreement_catalogue.md
+    status: discontinued
+    introduced_in: 0.2.0
+    discontinued_in: 0.2.0
+    rationale: No longer part of the current public API registry.
+  - name: widget_view_catalogue
+    qualified_name: fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue
+    source_path: src/fabricops_kit/widgets/widget_view_catalogue.py
+    documentation_path: docs/api/reference/widget_view_catalogue.md
     status: preview
     introduced_in: 0.2.0
   - name: widget_view_data_catalogue
     qualified_name: fabricops_kit.widgets.widget_view_data_catalogue.widget_view_data_catalogue
     source_path: src/fabricops_kit/widgets/widget_view_data_catalogue.py
     documentation_path: docs/api/reference/widget_view_data_catalogue.md
-    status: preview
+    status: discontinued
     introduced_in: 0.2.0
+    discontinued_in: 0.2.0
+    rationale: No longer part of the current public API registry.
   - name: widget_view_pipeline_catalogue
     qualified_name: fabricops_kit.widgets.widget_view_pipeline_catalogue.widget_view_pipeline_catalogue
     source_path: src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py
     documentation_path: docs/api/reference/widget_view_pipeline_catalogue.md
-    status: preview
+    status: discontinued
     introduced_in: 0.2.0
+    discontinued_in: 0.2.0
+    rationale: No longer part of the current public API registry.
   - name: write_lakehouse_table
     qualified_name: fabricops_kit.io.write_lakehouse_table.write_lakehouse_table
     source_path: src/fabricops_kit/io/write_lakehouse_table.py
@@ -235,8 +335,8 @@ metadata_tables:
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_access.md
     status: preview
-    schema_since: 0.1.0
-    schema_fingerprint: 16b89b73a535097a12672f7f2b35206c0ab0eb17b42c522e3b66d4c5c9b6e1a7
+    schema_since: 0.2.0
+    schema_fingerprint: f870e3ebf41aaf20368e97be953607cd4391b42adce5443aec369db28dc0db60
     rationale: access governance model still being stabilised
     introduced_in: 0.1.0
   - name: METADATA_DATA_AGREEMENT
@@ -262,7 +362,7 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: f47b4691ed781db150777327efdaf179273aa603d8e41dc9db20f186e407a49a
+    schema_fingerprint: 45e95fe0faafc398c4a58a90cb5172b2a04e0cfb655da212454fd435cc33ed33
     rationale: Stable v0.2.0 profiling metadata contract.
     introduced_in: 0.1.0
   - name: METADATA_DATA_CONTRACT
@@ -270,7 +370,7 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_data_contract.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: db5db866b15e3db2b32be47c4dcb0d4a8196369a29ec42b1836a16944f1017a3
+    schema_fingerprint: f38c6787cc1a36efa7dc6f2e4e65644b7f3791cef0911cc63bcd7dcbbd3cea13
     introduced_in: 0.2.0
   - name: METADATA_DATA_LINEAGE
     source_path: src/fabricops_kit/config/metadata_schemas.py
@@ -278,7 +378,7 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: f57bb30d25d4ef9a49e4bacf1d6c65542d337b6ae0c62c332b8ebdcc49e86eff
+    schema_fingerprint: 8118c4fca47e8f9ea8c60b69659c43854f07852324f365cddaf58d151b6f6757
     rationale: Stable v0.2.0 profiling metadata contract.
     introduced_in: 0.2.0
   - name: METADATA_DATA_LINEAGE_TABLE
@@ -296,7 +396,7 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: 29054258497f6bc8d6ead1f709752c552ccda9688f879cb17fb7de11443e06e0
+    schema_fingerprint: f4c2e4d883f996a0d14c5216ce7c56c272edfd58b55cf03902d374da6499d703
     rationale: Stable v0.2.0 profiling metadata contract.
     introduced_in: 0.2.0
   - name: METADATA_DATA_PROFILED_FREQUENCY
@@ -305,7 +405,7 @@ metadata_tables:
     status: live
     live_since: 0.2.0
     schema_since: 0.2.0
-    schema_fingerprint: a1fe57fd965608504ca1fed4cd41b5b7cae012c0a598f0edf0963a8dc50a2bb3
+    schema_fingerprint: 49d4337b06f5f82da78c6657636543424426da8f0ab276ab975feb85fdae9212
     rationale: Stable v0.2.0 profiling metadata contract.
     introduced_in: 0.2.0
   - name: METADATA_DATA_STEWARD
@@ -321,7 +421,7 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_enrichment.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: bec352aec7b2929a1685ab753ba112ea4b5d0088411c0a9db123c55fd734d395
+    schema_fingerprint: 6ee84da5ba0ceea5285a594b26e99826636560a1f6c3c77e9cbc2ce016be6281
     introduced_in: 0.2.0
   - name: METADATA_ENRICHMENT_RULES
     source_path: src/fabricops_kit/config/metadata_schemas.py
@@ -337,14 +437,14 @@ metadata_tables:
     documentation_path: docs/reference/metadata/metadata_guardrail.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: 41111bd4af5f562016e255c3b75d7c6be5b59f5d44fab6986c96f3e5d6b39669
+    schema_fingerprint: 2f4f036dfcbe8c38e817bf6a624bb814efb81ad7991f83c70598d32978e0fb14
     introduced_in: 0.2.0
   - name: METADATA_GUARDRAIL_RESULTS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_results.md
     status: preview
     schema_since: 0.2.0
-    schema_fingerprint: 7ed0ff12e79fa28e6d4f626e08233f402ca39da8fe9e6168922e622b9f58e4a3
+    schema_fingerprint: c3ed2b875695cbcde0e4690055ccc4763a2e32e6b567265a570945a766a55c53
     rationale: DQ rule and result contract still Preview
     introduced_in: 0.1.0
   - name: METADATA_GUARDRAIL_RULES
@@ -374,3 +474,10 @@ metadata_tables:
     discontinued_in: 0.2.0
     rationale: No longer part of the canonical metadata schema registry.
     introduced_in: 0.1.0
+  - name: METADATA_SOURCE_OBSERVATION
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_source_observation.md
+    status: preview
+    schema_since: 0.2.0
+    schema_fingerprint: 1c440a9453c202d9cd46a8b65101d47186a0510f70912e166416585c8b0f33fe
+    introduced_in: 0.2.0

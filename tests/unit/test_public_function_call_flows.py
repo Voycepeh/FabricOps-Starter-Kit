@@ -455,9 +455,9 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
         for name in flows.FOUNDATIONAL_IO_FUNCTION_NAMES
     } == {"foundation_io"}
     json_reader = public_by_name["read_lakehouse_json"]
-    assert json_reader["lifecycle_status"] == "preview"
-    assert json_reader["live_since"] is None
-    assert json_reader["release_history"] == []
+    assert json_reader["lifecycle_status"] == "live"
+    assert json_reader["live_since"] == "0.2.0"
+    assert json_reader["release_history"] == [{"version": "0.2.0", "status": "live"}]
 
 
 def test_repository_type_zero_edges_never_contribute_architecture_violations() -> None:

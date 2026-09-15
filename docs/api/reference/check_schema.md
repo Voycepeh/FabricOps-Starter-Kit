@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L187">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L202">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -107,6 +107,12 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.0 |
 
 
 </details>
