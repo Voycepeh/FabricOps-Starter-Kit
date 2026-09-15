@@ -28,6 +28,7 @@ def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[
             "layer",
             "schema_name",
             "table_name",
+            "load_strategy",
             "last_profiled_at",
         )
         .distinct()
@@ -235,6 +236,7 @@ def _build_catalogue_widget(
             "layer": row.get("layer"),
             "schema_name": row.get("schema_name"),
             "table_name": row.get("table_name"),
+            "load_strategy": row.get("load_strategy"),
         }
 
     def refresh_loaded_views() -> None:
@@ -449,10 +451,16 @@ def _build_catalogue_widget(
         state.update(get_selection())
         state["error"] = None if table_id else empty_message
         selection = get_selection()
+        row = rows_by_table_id.get(table_id, {})
         selection_details.value = (
-            f"<b>Dataset:</b> {html.escape(str(selection['dataset_label'] or ''))}<br>"
-            "<b>Profile snapshot:</b> Load views to resolve<br>"
-            "<b>Profile column:</b> Load views to resolve"
+            f"<b>Table:</b> {html.escape(str(selection['dataset_label'] or ''))}<br>"
+            f"<b>Environment:</b> {html.escape(str(selection.get('environment_name') or ''))}<br>"
+            f"<b>Store type:</b> {html.escape(str(selection.get('store_type') or ''))}<br>"
+            f"<b>Layer:</b> {html.escape(str(selection.get('layer') or ''))}<br>"
+            f"<b>Schema / table:</b> {html.escape(str(selection.get('schema_name') or ''))} / "
+            f"{html.escape(str(selection.get('table_name') or ''))}<br>"
+            f"<b>Load strategy:</b> {html.escape(str(selection.get('load_strategy') or 'Not registered'))}<br>"
+            f"<b>Latest profiled:</b> {html.escape(str(row.get('last_profiled_at') or 'Not profiled'))}"
             if table_id
             else ""
         )

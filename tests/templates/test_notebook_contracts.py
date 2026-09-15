@@ -152,6 +152,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'mode="explore"' in source
     assert 'TABLE_ID = table_selection["table_id"]' in source
     assert 'contract_authoring["table_id"] == TABLE_ID' in source
+    assert 'catalogue_widget["get_views"]()' not in source
     assert "Data Steward" in source
     assert "Data Agreement" in source
     for demoted_widget in (
@@ -198,6 +199,8 @@ def test_02_pipeline_has_simple_top_level_sequence():
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
     for removed in ("# 4. Target", "# 5. Write Preparation / Guardrails", "# 6. Write", "# 7. Persisted Target Profile"):
         assert removed not in source
+    assert "widget_view_catalogue" not in source
+    assert "widget_metadata_explorer" not in source
 
 
 def test_02_pipeline_initializes_data_contracts_once_in_plain_language():

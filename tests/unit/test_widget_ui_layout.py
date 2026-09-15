@@ -43,6 +43,7 @@ LIVE_WIDGETS = {
     "widget_activate_data_contract",
     "widget_select_data_contract",
     "widget_view_catalogue",
+    "widget_metadata_explorer",
 }
 
 

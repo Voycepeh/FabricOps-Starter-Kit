@@ -2,6 +2,7 @@
 
 __all__ = [
     "widget_view_catalogue",
+    "widget_metadata_explorer",
     "widget_activate_data_contract",
     "widget_select_data_contract",
     "widget_author_data_contract",

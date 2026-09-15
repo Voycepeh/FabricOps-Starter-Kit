@@ -66,6 +66,7 @@ EXPECTED_V1_CALLABLES = [
     'widget_render_data_steward',
     'widget_render_data_agreement',
     'widget_view_catalogue',
+    'widget_metadata_explorer',
     'widget_activate_data_contract',
     'widget_select_data_contract',
 ]
@@ -84,6 +85,7 @@ def test_widget_public_callables_live_under_widgets_package():
     widget_names = {
         'widget_author_data_contract',
         'widget_view_catalogue',
+        'widget_metadata_explorer',
         'widget_activate_data_contract',
         'widget_select_data_contract',
         'widget_render_data_agreement',
@@ -371,16 +373,20 @@ def test_pipeline_and_config_use_new_governance_owners():
     assert "governance_review" not in config_source
 
 
-def test_99_explore_uses_metadata_catalogue_widget():
-    """Verify 99_explore uses the public catalogue browser widget."""
+def test_99_explore_uses_metadata_explorer_widget():
+    """Verify 99_explore owns broad persisted metadata inspection."""
     root = Path(__file__).parents[2]
 
     notebook = json.loads((root / "templates" / "notebooks" / "99_explore.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
     assert "get_latest_metadata_catalogue" not in code
-    assert "widget_view_catalogue" in code
-    assert 'mode="explore"' in code
+    assert "widget_metadata_explorer" in code
+    assert "widget_view_catalogue" not in code
+    assert 'metadata_explorer["get_views"]()' in code
+    assert all(f'# display(views["{name}"])' in code for name in (
+        "assets", "columns", "governance", "execution", "frequency", "access"
+    ))
     assert "widget_view_data_contract" not in code
     assert "METADATA_DATA_CATALOGUE" not in code
     assert 'F.col("table_name") == source_table_name' not in code
@@ -393,6 +399,7 @@ def test_root_public_governance_and_widget_imports_still_work():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_view_catalogue",
+        "widget_metadata_explorer",
         "widget_select_data_contract",
         "widget_activate_data_contract",
     ]:

@@ -12,19 +12,17 @@ Select catalogue evidence through an explicit pipeline, agreement, or explore da
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_catalogue.py:599`
+`fabricops_kit/widgets/widget_view_catalogue.py:607`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L599-L736">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L607-L744">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_governance</span>
-<span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `01_governance`, `02_pipeline`, `99_explore`
+**Used in notebooks:** `01_governance`
 
 ## Usage notes
 

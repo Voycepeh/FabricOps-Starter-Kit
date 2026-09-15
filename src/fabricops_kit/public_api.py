@@ -33,6 +33,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+    "fabricops_kit.widgets.widget_metadata_explorer.widget_metadata_explorer",
     "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
     "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
 )

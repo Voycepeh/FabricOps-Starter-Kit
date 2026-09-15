@@ -86,6 +86,7 @@ WIDGET_EXPORTS = (
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_view_catalogue",
+    "widget_metadata_explorer",
     "widget_activate_data_contract",
     "widget_select_data_contract",
 )

@@ -39,6 +39,219 @@ _STATUS_MIN_HEIGHT = "32px"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
+def metadata_scope_table_ids(
+    scope: str,
+    selected_id: str,
+    *,
+    environment_name: str,
+    frames: Mapping[str, Any],
+) -> list[str]:
+    """Resolve an explorer entity to canonical table identities in one environment."""
+    from pyspark.sql import functions as F
+
+    scope_key = str(scope or "").strip().lower()
+    selected_id = str(selected_id or "").strip()
+    contracts = frames["contracts"].filter(F.col("environment_name") == environment_name)
+    if scope_key == "table":
+        scoped = frames["catalogue"].filter(
+            (F.col("environment_name") == environment_name)
+            & (F.col("metadata_level") == "table")
+            & (F.col("table_id") == selected_id)
+        ).select("table_id")
+    elif scope_key == "data agreement":
+        scoped = contracts.filter(F.col("agreement_id") == selected_id).select("table_id")
+    elif scope_key == "data steward":
+        agreement_ids = frames["agreements"].filter(
+            (F.col("provider_steward_id") == selected_id)
+            | (F.col("recipient_steward_id") == selected_id)
+        ).select("agreement_id").distinct()
+        scoped = contracts.join(agreement_ids, "agreement_id", "inner").select("table_id")
+    elif scope_key == "pipeline notebook":
+        scoped = frames["lineage"].filter(
+            (F.col("environment_name") == environment_name)
+            & ((F.col("_notebook_id") == selected_id) | (F.col("_notebook_name") == selected_id))
+        ).select("table_id")
+    else:
+        raise ValueError("scope must be Table, Data Agreement, Data Steward, or Pipeline Notebook.")
+    return sorted(str(row["table_id"]) for row in scoped.distinct().collect() if row["table_id"])
+
+
+def metadata_explorer_views(
+    table_ids: Iterable[str],
+    *,
+    environment_name: str,
+    frames: Mapping[str, Any],
+    profile_id: str | None = None,
+) -> dict[str, Any]:
+    """Build read-only metadata views at their natural grains."""
+    from pyspark.sql import Window
+    from pyspark.sql import functions as F
+
+    ids = list(dict.fromkeys(str(value) for value in table_ids if value))
+    catalogue = frames["catalogue"].filter(
+        (F.col("environment_name") == environment_name) & F.col("table_id").isin(ids)
+    )
+    table_rows = catalogue.filter((F.col("metadata_level") == "table") & F.col("is_active"))
+    column_rows = catalogue.filter((F.col("metadata_level") == "column") & F.col("is_active"))
+
+    profiles = frames["profiles"].filter(
+        (F.col("environment_name") == environment_name) & F.col("table_id").isin(ids)
+    )
+    snapshot_rank = Window.partitionBy("table_id").orderBy(
+        F.col("_committed_at").desc_nulls_last(), F.col("profile_snapshot_id").desc()
+    )
+    latest_profiles = profiles.withColumn("_snapshot_rank", F.dense_rank().over(snapshot_rank)).filter(
+        F.col("_snapshot_rank") == 1
+    ).drop("_snapshot_rank")
+    profile_asset = latest_profiles.groupBy("table_id").agg(
+        F.max("row_count").alias("row_count"),
+        F.countDistinct("column_id").alias("column_count"),
+        F.max("_committed_at").alias("latest_profiled_at"),
+    )
+
+    contracts = frames["contracts"].filter(
+        (F.col("environment_name") == environment_name) & F.col("table_id").isin(ids)
+    )
+    contract_rank = Window.partitionBy("table_id").orderBy(
+        F.col("is_active").desc(), F.col("contract_version").desc(), F.col("_committed_at").desc()
+    )
+    current_contract = contracts.withColumn("_rank", F.row_number().over(contract_rank)).filter(
+        F.col("_rank") == 1
+    ).select(
+        "table_id", "contract_id", "contract_version", F.col("status").alias("contract_status"),
+        "agreement_id",
+    )
+    guardrails = frames["guardrails"].filter(F.col("environment_name") == environment_name)
+    contract_guardrails = contracts.select("contract_id", "contract_version", "table_id").join(
+        guardrails, ["contract_id", "contract_version"], "inner"
+    )
+    current_contract_guardrails = current_contract.select(
+        "table_id", "contract_id", "contract_version"
+    ).join(guardrails, ["contract_id", "contract_version"], "inner")
+    guardrail_asset = current_contract_guardrails.groupBy("table_id").agg(
+        F.countDistinct("guardrail_rule_id").alias("authored_guardrail_count")
+    )
+    result_rows = frames["guardrail_results"].filter(F.col("environment_name") == environment_name).select(
+        "guardrail_rule_id", "guardrail_result_id", "run_id", "status", "can_continue",
+        "_notebook_id", "_notebook_name", "_committed_at",
+    )
+    table_results = current_contract_guardrails.select("guardrail_rule_id", "table_id").distinct().join(
+        result_rows, "guardrail_rule_id", "inner"
+    )
+    runs = table_results.groupBy("table_id", "run_id").agg(F.max("_committed_at").alias("run_committed_at"))
+    result_rank = Window.partitionBy("table_id").orderBy(
+        F.col("run_committed_at").desc_nulls_last(), F.col("run_id").desc()
+    )
+    latest_run = runs.withColumn("_rank", F.row_number().over(result_rank)).filter(F.col("_rank") == 1).select(
+        "table_id", "run_id"
+    )
+    latest_results = table_results.join(latest_run, ["table_id", "run_id"], "inner")
+    guardrail_result_asset = latest_results.groupBy("table_id").agg(
+        F.first("run_id").alias("latest_guardrail_run_id"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("status"))).alias("latest_guardrail_statuses"),
+        F.min(F.col("can_continue").cast("integer")).cast("boolean").alias("latest_guardrail_can_continue"),
+    )
+    observations = frames["observations"].filter(F.col("environment_name") == environment_name)
+    observation_events = observations.select(
+        F.col("source_table_id").alias("table_id"), "observation_status", "_committed_at"
+    ).unionByName(observations.select(
+        F.col("target_table_id").alias("table_id"), "observation_status", "_committed_at"
+    )).filter(F.col("table_id").isin(ids))
+    observation_rank = Window.partitionBy("table_id").orderBy(F.col("_committed_at").desc_nulls_last())
+    latest_observation = observation_events.withColumn("_rank", F.row_number().over(observation_rank)).filter(
+        F.col("_rank") == 1
+    ).select("table_id", F.col("observation_status").alias("latest_source_observation_status"))
+
+    assets = table_rows.select(
+        "table_id", "environment_name", "store_type", "layer", "schema_name", "table_name", "load_strategy"
+    ).dropDuplicates(["table_id"]).join(profile_asset, "table_id", "left").join(
+        current_contract, "table_id", "left"
+    ).join(guardrail_asset, "table_id", "left").join(
+        guardrail_result_asset, "table_id", "left"
+    ).join(latest_observation, "table_id", "left")
+
+    enrichments = frames["enrichments"].filter(F.col("environment_name") == environment_name)
+    column_enrichment = enrichments.filter(F.col("column_id").isNotNull()).groupBy(
+        "contract_id", "contract_version", "column_id"
+    ).agg(
+        F.max(F.when(F.lower(F.col("enrichment_type")) == "description", F.col("value"))).alias("description"),
+        F.max(F.when(F.lower(F.col("enrichment_type")) == "classification", F.col("value"))).alias("classification"),
+    )
+    column_guardrails = current_contract_guardrails.filter(F.col("column_id").isNotNull()).groupBy(
+        "table_id", "column_id"
+    ).agg(
+        F.countDistinct("guardrail_rule_id").alias("authored_guardrail_count"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("rule_type"))).alias("authored_guardrail_types"),
+    )
+    active_contract_columns = current_contract.select("table_id", "contract_id", "contract_version").join(
+        column_enrichment, ["contract_id", "contract_version"], "left"
+    )
+    columns = column_rows.select(
+        "table_id", "column_id", "column_name", "data_type"
+    ).dropDuplicates(["table_id", "column_id"]).join(
+        latest_profiles.drop("data_type"), ["table_id", "column_id"], "left"
+    ).join(active_contract_columns, ["table_id", "column_id"], "left").join(
+        column_guardrails, ["table_id", "column_id"], "left"
+    )
+
+    agreements = frames["agreements"]
+    stewards = frames["stewards"]
+    provider = stewards.select(
+        F.col("steward_id").alias("provider_steward_id"), F.col("steward_name").alias("provider_steward_name")
+    )
+    recipient = stewards.select(
+        F.col("steward_id").alias("recipient_steward_id"), F.col("steward_name").alias("recipient_steward_name")
+    )
+    governance_guardrails = contract_guardrails.groupBy("contract_id", "contract_version").agg(
+        F.countDistinct("guardrail_rule_id").alias("authored_guardrail_count"),
+        F.concat_ws(", ", F.sort_array(F.collect_set("rule_type"))).alias("authored_guardrail_types"),
+    )
+    governance = contracts.join(agreements, ["agreement_id", "agreement_version"], "left").join(
+        provider, "provider_steward_id", "left"
+    ).join(recipient, "recipient_steward_id", "left").join(
+        governance_guardrails, ["contract_id", "contract_version"], "left"
+    ).select(
+        "provider_steward_id", "provider_steward_name", "recipient_steward_id", "recipient_steward_name",
+        "agreement_id", "agreement_version", "agreement_name", "contract_id", "contract_version",
+        F.col("status").alias("contract_status"), "table_id", "is_active", "authored_guardrail_count",
+        "authored_guardrail_types",
+    ).dropDuplicates(["agreement_id", "agreement_version", "contract_id", "contract_version", "table_id"])
+
+    lineage = frames["lineage"].filter(
+        (F.col("environment_name") == environment_name) & F.col("table_id").isin(ids)
+    ).select(
+        F.lit("lineage").alias("evidence_type"), "table_id", "pipeline_role", "_notebook_id", "_notebook_name",
+        F.col("lineage_id").alias("evidence_id"), F.lit(None).cast("string").alias("run_id"),
+        F.lit(None).cast("string").alias("status"), "_committed_at",
+    )
+    observation_execution = observation_events.select(
+        F.lit("source_observation").alias("evidence_type"), "table_id",
+        F.lit(None).cast("string").alias("pipeline_role"), F.lit(None).cast("string").alias("_notebook_id"),
+        F.lit(None).cast("string").alias("_notebook_name"), F.lit(None).cast("string").alias("evidence_id"),
+        F.lit(None).cast("string").alias("run_id"), F.col("observation_status").alias("status"), "_committed_at",
+    )
+    result_execution = contract_guardrails.select("guardrail_rule_id", "table_id").distinct().join(
+        result_rows, "guardrail_rule_id", "inner"
+    ).select(
+        F.lit("guardrail_result").alias("evidence_type"), "table_id",
+        F.lit(None).cast("string").alias("pipeline_role"), "_notebook_id", "_notebook_name",
+        F.col("guardrail_result_id").alias("evidence_id"), "run_id", "status", "_committed_at",
+    )
+    execution = lineage.unionByName(observation_execution).unionByName(result_execution)
+
+    frequency = frames["frequency"].join(
+        latest_profiles.select("profile_id", "profile_snapshot_id", "table_id", "column_id"),
+        ["profile_id", "profile_snapshot_id"], "inner"
+    ).join(column_rows.select("table_id", "column_id", "column_name"), ["table_id", "column_id"], "left")
+    if profile_id:
+        frequency = frequency.filter(F.col("profile_id") == profile_id)
+    access = frames["access"].filter(
+        (F.col("environment_name") == environment_name) & F.col("table_id").isin(ids)
+    )
+    return {"assets": assets, "columns": columns, "governance": governance,
+            "execution": execution, "frequency": frequency, "access": access}
+
+
 def resolve_notebook_lineage_tables(
     *, environment_name: str, store: str, schema: str | None,
     spark_session: Any, context: Any, runtime_context: dict[str, Any], required: bool = True,
