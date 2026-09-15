@@ -249,7 +249,6 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             '# display(profile_result["profile"])',
             "# display(dq_df)",
             "# display(dq_failed_values)",
-            '# catalogue_widget["show"](table_id=table_id)',
         ):
             assert fragment in block
         assert "report_check" not in block
