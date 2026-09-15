@@ -6,15 +6,15 @@ This is still setup, not one of the seven FabricOps lifecycle steps. Run it in *
 
 ## 1. Import the setup notebook
 
-Download and import the Guided Demo notebook asset:
+Download and import the Guided Demo notebook from the same DemoData package used in 0B:
 
-[`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/docs/assets/demo-data/00C_demo_setup.ipynb)
+[`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb)
 
 Place it in the **Engineering Development** workspace beside `00_env_config` and `02_pipeline`.
 
 Attach the same Engineering Development Fabric Environment used by the other notebooks.
 
-`00C_demo_setup` is a Guided Demo asset rather than one of the four reusable FabricOps notebook templates. Its job is to exercise the I/O helpers and seed the demo tables before the seven-step lifecycle begins.
+`00C_demo_setup` is a Guided Demo notebook rather than one of the four reusable FabricOps notebook templates. Its job is to exercise the I/O helpers and seed the demo tables before the seven-step lifecycle begins.
 
 ## 2. Run `00C_demo_setup`
 
