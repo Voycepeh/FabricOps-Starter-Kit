@@ -91,6 +91,8 @@ def check_freshness(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Evaluation skipped by caller; no freshness rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
@@ -140,6 +142,8 @@ def check_freshness(
             "environment_name": env,
         }
         print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -208,6 +212,16 @@ def check_freshness(
             result=result,
         )
     print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        print(
+            f"  Rule {result.get('guardrail_rule_id', '')} v{result.get('guardrail_version', 1)} from the selected Data Contract."
+        )
+        print(f"  Observation change column {change_column} from current-run Source Observation state.")
+        print(
+            f"  Expected max lag {result.get('freshness_max_lag_days')} day(s); "
+            f"latest observed={result.get('latest_value')}, required minimum={result.get('required_min_value')}."
+        )
+        print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking freshness Guardrail failed for table_id {table_id!r}.")
     return result
