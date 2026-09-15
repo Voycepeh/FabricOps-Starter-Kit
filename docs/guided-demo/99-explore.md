@@ -1,74 +1,60 @@
-# `99_explore`: optional exploration support
+# Step 7. Consume approved Production data
 
-**Use `99_explore` for discovery, investigation, troubleshooting, ad hoc analysis, exploratory profiling, and catalogue inspection around the governed workflow.**
+**Use `99_explore` as the final handoff in the Guided Demo: project-specific consumers read approved Production data without recreating the Production engineering workflow.**
 
-It is not part of the required delivery loop. The required path remains:
+The required delivery work is already complete. Governance has established and activated the contract, and Engineering Production has published the governed output.
 
-**`01_governance` → `02_pipeline` → `01_governance`**
+## Load the shared configuration
 
-Keep repeatable project transformation and governed publication in `02_pipeline`. Keep Governance authoring, review, freezing, and activation in `01_governance`.
-
-## 1. Load the configured environment
-
-`99_explore` starts from the same shared configuration:
+`99_explore` starts with:
 
 ```python
 %run 00_env_config
 ```
 
-This lets exploratory work use the configured logical store names instead of embedding workspace IDs, item IDs, or physical paths.
+In a consumer workspace, configure the logical Production stores that users are allowed to read.
 
-## 2. Read configured Fabric data
+## Read approved Production data
 
-The notebook provides examples for the foundational FabricOps readers, including:
+Use the foundational FabricOps readers to inspect the governed Production output through its configured logical store.
 
-- Lakehouse CSV, Excel, and Parquet files,
-- Lakehouse tables,
-- Warehouse tables,
-- Warehouse SQL queries.
+For example, read the appropriate Lakehouse table or Warehouse table/query without copying the `02_pipeline` transformation into the consumer workspace.
 
-Use these examples as a solution bank when you need to inspect data outside the governed `02_pipeline` execution path.
+The consumer should receive the published result, not reimplement the engineering that produced it.
 
-For Warehouse exploration, prefer `read_warehouse_query()` when SQL filtering, projection, or aggregation should happen in the Warehouse before Spark receives the result.
+## Explore without mutating the governed workflow
 
-## 3. Run exploratory profiling
+`99_explore` is useful for:
 
-`99_explore` can call:
+- discovery and ad hoc analysis,
+- BI, AI, and data-science exploration,
+- Warehouse SQL pushdown through `read_warehouse_query()`,
+- local exploratory profiling,
+- read-oriented catalogue inspection and troubleshooting.
 
-```python
-profile_result = profile_table(dataframe=source_df)
-display(profile_result["profile"])
-```
+Keep repeatable transformation and governed publication in `02_pipeline`. Keep Governance authoring and approval in `01_governance`.
 
-When `profile_table()` receives only a DataFrame, this is local exploratory output. It does not replace the canonical table profiling performed by `02_pipeline` against a governed `table_id`.
+## See how the pieces now fit together
 
-Use it to understand unfamiliar data before deciding what belongs in the repeatable engineering flow.
+You have completed the same seven-stage operating flow described in How FabricOps Works:
 
-## 4. Browse existing catalogue context
+1. Governance created the people and agreement context.
+2. Engineering built and ran the real ETL, creating the technical evidence.
+3. Governance authored the table-specific Data Contract.
+4. Engineering selected and validated the frozen version.
+5. Governance linked the agreement and activated the tested version.
+6. Engineering promoted and ran the same pipeline in Production.
+7. Consumers now use the approved Production output.
 
-The notebook can open the catalogue explorer and load the selected table's available catalogue, profile, and frequency views.
+The four reusable notebooks have different responsibilities:
 
-Use this for investigation and troubleshooting when you need to inspect the evidence FabricOps has already recorded.
+| Notebook | Responsibility |
+| --- | --- |
+| `00_env_config` | Environment and Fabric-store wiring. |
+| `01_governance` | Steward, agreement, Data Contract authoring, freezing, and activation. |
+| `02_pipeline` | Repeatable full-read Engineering, explicit checks, project transformation, governed publication, and technical metadata. |
+| `99_explore` | Read-oriented consumption, exploration, and troubleshooting. |
 
-Catalogue inspection does not approve a Data Contract and does not replace the Governance workflow in `01_governance`.
+That is the intended Guided Demo outcome: users should understand not just individual FabricOps functions, but how the entire operating practice fits together from setup through governed Production consumption.
 
-## 5. Keep exploration separate from delivery
-
-The notebook contains reusable I/O examples for learning and smoke testing. In the Guided Demo, treat `99_explore` as optional support rather than a place to publish governed Production outputs.
-
-When exploratory logic becomes repeatable delivery logic:
-
-1. move the transformation into `02_pipeline`,
-2. use the governed Read and Write blocks,
-3. let the pipeline checks, contract context, lineage, source observation, and persisted target profiling run through the standard engineering path.
-
-## Expected result
-
-You should understand where `99_explore` fits without treating it as another lifecycle stage:
-
-- `00_env_config` configures the environment,
-- `01_governance` owns Governance,
-- `02_pipeline` owns repeatable governed engineering,
-- `99_explore` supports optional discovery and troubleshooting around them.
-
-Return to the [Guided Demo overview](../guided-demo.md) or continue with the [Function Reference](../reference/index.md) when you need exact APIs.
+**Complete:** return to the [Guided Demo overview](../guided-demo.md) or continue into the [Function Reference](../reference/index.md) for exact APIs.
