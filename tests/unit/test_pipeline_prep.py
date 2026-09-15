@@ -53,29 +53,14 @@ def _patch_read(monkeypatch, identity):
 
 
 @pytest.mark.parametrize(
-    ("store_type", "query", "reader_name", "message"),
+    ("store_type", "query", "reader_name"),
     [
-        (
-            "lakehouse",
-            None,
-            "read_lakehouse_table",
-            "Lakehouse table 'source.dbo.student_source' → read_lakehouse_table",
-        ),
-        (
-            "warehouse",
-            None,
-            "read_warehouse_table",
-            "Warehouse table 'source.dbo.student_source' → read_warehouse_table",
-        ),
-        (
-            "warehouse",
-            "SELECT customer_id FROM dbo.orders",
-            "read_warehouse_query",
-            "Warehouse query on 'source.dbo.student_source' → read_warehouse_query",
-        ),
+        ("lakehouse", None, "read_lakehouse_table"),
+        ("warehouse", None, "read_warehouse_table"),
+        ("warehouse", "SELECT customer_id FROM dbo.orders", "read_warehouse_query"),
     ],
 )
-def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query, reader_name, message):
+def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query, reader_name):
     identity = _identity(store_type=store_type)
     context = _patch_read(monkeypatch, identity)
     calls = []
@@ -87,7 +72,16 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
     assert result["table_id"] == identity["table_id"]
     assert calls == [reader_name]
     assert "_fabricops_active_profile_registration" not in context
-    assert capsys.readouterr().out.strip() == f"FabricOps Read → {message}"
+    output = capsys.readouterr().out
+    assert "FabricOps Read" in output
+    assert (
+        f"1. Identity → {identity['table_id']} → {store_type.title()} table 'source.dbo.student_source'"
+        in output
+    )
+    assert "2. Data Contract → none" in output
+    assert f"3. Physical read → {reader_name}" in output
+    assert "4. Source Observation → skipped; no selected Data Contract" in output
+    assert "checks, profiling, transformations, and writes remain explicit" in output
 
 
 def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
@@ -173,9 +167,18 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
     assert "_fabricops_active_profile_registration" not in context
     assert "store_type" not in signature(write_module.pipeline_write).parameters
-    assert capsys.readouterr().out.strip() == (
-        f"FabricOps Write → {store_type.title()} table 'unified.dbo.students' → {strategy} → write_{store_type}_table"
+    output = capsys.readouterr().out
+    assert "FabricOps Write" in output
+    assert (
+        f"1. Identity → {identity['table_id']} → {store_type.title()} table 'unified.dbo.students'"
+        in output
     )
+    assert f"2. Processing → {strategy.upper()} from resolved processing" in output
+    assert "3. Scope → full dataset" in output
+    assert "4. Audit + ownership → runtime audit fields applied; writer ownership validated" in output
+    assert f"5. Physical publication → write_{store_type}_table" in output
+    assert "6. Catalogue → resolved load strategy and parameters persisted" in output
+    assert "7. Success metadata → Lineage and accepted Source Observation state committed" in output
 
 
 def test_pipeline_write_does_not_run_source_drift(monkeypatch):
@@ -287,13 +290,13 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
 
 
 @pytest.mark.parametrize(
-    ("store_type", "expected"),
+    ("store_type", "expected_path"),
     [
-        ("lakehouse", "Lakehouse table 'unified.dbo.students' → SCD1 → governed Delta merge"),
-        ("warehouse", "Warehouse table 'unified.dbo.students' → SCD1 → governed Warehouse merge"),
+        ("lakehouse", "execute_lakehouse_processing"),
+        ("warehouse", "execute_warehouse_processing"),
     ],
 )
-def test_pipeline_write_reports_governed_scd_route(monkeypatch, capsys, store_type, expected):
+def test_pipeline_write_reports_governed_scd_route(monkeypatch, capsys, store_type, expected_path):
     identity, _ = _patch_write(monkeypatch, store_type=store_type, strategy="scd1")
     processing = {"load_strategy": "scd1", "key_columns": ["id"]}
     monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
@@ -303,7 +306,9 @@ def test_pipeline_write_reports_governed_scd_route(monkeypatch, capsys, store_ty
 
     write_module.pipeline_write(object(), table_id=identity["table_id"], source_table_ids=["source-a"])
 
-    assert capsys.readouterr().out.strip() == f"FabricOps Write → {expected}"
+    output = capsys.readouterr().out
+    assert "2. Processing → SCD1 from resolved processing" in output
+    assert f"5. Physical publication → {expected_path}" in output
 
 
 def test_pipeline_write_verbose_false_suppresses_output_and_low_level_lakehouse_verbose(monkeypatch, capsys):
