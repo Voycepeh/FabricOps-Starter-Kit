@@ -42,7 +42,13 @@ def test_dataframe_only_profiles_without_metadata_writes_and_prints(spark_sessio
     assert _rows(result["profile"])["amount"]["ROW_COUNT"] == 3
     frequency = result["frequency_profile"].collect()
     assert {(row.VALUE, row.FREQUENCY_COUNT) for row in frequency} == {(None, 1), ("A", 2)}
-    assert "No Data Catalogue or profiling metadata will be persisted" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "FabricOps Profile" in output
+    assert "1. Identity → DataFrame only; no governed table_id" in output
+    assert "2. Profiling backend → PySpark" in output
+    assert "3. Statistical profile → calculated" in output
+    assert "4. Frequency profile → calculated" in output
+    assert "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id" in output
 
 
 def test_dataframe_only_raw_file_shape_does_not_invent_identity(spark_session):
@@ -90,7 +96,12 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     result = profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=[])
 
     assert result["profile"].count() == 1
-    assert "profiling supplied DataFrame against governed table" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert f"1. Identity → {identity['table_id']} → supplied DataFrame for governed table" in output
+    assert "2. Profiling backend → PySpark" in output
+    assert "5. METADATA_DATA_PROFILED → appended current profiling snapshot" in output
+    assert "7. METADATA_DATA_CATALOGUE → table/column identities and observed schema upserted" in output
+    assert "existing load strategy and parameters preserved" in output
 
 
 def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatch, capsys):
@@ -147,7 +158,10 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert queries[1].count("FROM [dbo].[orders]") == 2
     assert "UNION ALL" not in queries[1]
     assert "FREQUENCY_RANK <= 2" in queries[2]
-    assert "Warehouse SQL profiling will be used" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "2. Profiling backend → Warehouse SQL pushdown" in output
+    assert "3. Statistical profile → calculated" in output
+    assert "4. Frequency profile → calculated" in output
 
 
 def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session, monkeypatch):

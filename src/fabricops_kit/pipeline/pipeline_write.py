@@ -374,16 +374,23 @@ def pipeline_write(
             .withColumn("_is_current", F.lit(True))
         )
 
+    store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
+    if strategy in {"scd1", "scd2"}:
+        publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
+    else:
+        publication_path = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
+    processing_source = str(processing.get("source") or "resolved processing")
+    scope_label = "full dataset"
+    if scope.get("type") == "partition":
+        scope_label = f"partition {scope['column']} ({len(scope['values'])} value(s))"
+
     if verbose:
-        store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
-        if strategy in {"scd1", "scd2"}:
-            processing_label = "governed Delta merge" if store_kind == "lakehouse" else "governed Warehouse merge"
-            print(
-                f"FabricOps Write → {store_label} table '{physical_identity}' → {strategy.upper()} → {processing_label}"
-            )
-        else:
-            writer_name = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
-            print(f"FabricOps Write → {store_label} table '{physical_identity}' → {strategy} → {writer_name}")
+        print("FabricOps Write")
+        print(f"1. Identity → {identity['table_id']} → {store_label} table '{physical_identity}'")
+        print(f"2. Processing → {strategy.upper()} from {processing_source}")
+        print(f"3. Scope → {scope_label}")
+        print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
+        print(f"5. Physical publication → {publication_path}")
 
     if store_kind == "lakehouse":
         if strategy in {"append", "overwrite"}:
@@ -445,6 +452,9 @@ def pipeline_write(
         env=env,
         dataframe=df,
     )
+    if verbose:
+        print("6. Catalogue → resolved load strategy and parameters persisted")
+
     commit_pipeline_write_success(
         {
             "target_table_id": str(identity["table_id"]),
@@ -455,4 +465,8 @@ def pipeline_write(
             "context": context,
         }
     )
+    if verbose:
+        print("7. Success metadata → Lineage and accepted Source Observation state committed")
+        print("Result → target published; checks and profiling remain explicit notebook steps.")
+
     return {"table_id": str(identity["table_id"])}
