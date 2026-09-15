@@ -36,8 +36,6 @@ jobs:
           existing = _load_manifest(path)
           discovered = discover_inventory()
 
-          # Historical assets that have left the authoritative registries remain
-          # in release history as explicitly discontinued rather than silently disappearing.
           for group in ("functions", "metadata_tables"):
               discovered_names = {asset.name for asset in discovered[group]}
               for item in existing.get(group, []):
@@ -102,8 +100,6 @@ jobs:
           text = text.replace("assert len(set(SUPPORTED_PUBLIC_API)) == 11", "assert len(set(SUPPORTED_PUBLIC_API)) == 12")
           path.write_text(text, encoding="utf-8")
 
-          # PR #1300 intentionally removed the per-read catalogue widget. Align its
-          # cloneable notebook contract assertion with the current template.
           path = Path("tests/templates/test_notebook_contracts.py")
           text = path.read_text(encoding="utf-8")
           text = text.replace('                \'# catalogue_widget["show"](table_id=table_id)\',\n', "")
@@ -125,10 +121,12 @@ jobs:
         shell: bash
         run: |
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/reference-first.diff
+          find docs/api/reference -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/reference-first.sha
+          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/reference-first.sha
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/reference-second.diff
-          cmp /tmp/reference-first.diff /tmp/reference-second.diff
+          find docs/api/reference -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/reference-second.sha
+          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/reference-second.sha
+          cmp /tmp/reference-first.sha /tmp/reference-second.sha
       - name: Regenerate release contract pages
         run: PYTHONPATH=src uv run python scripts/generate_release_contract_pages.py
       - name: Validate release inventory
