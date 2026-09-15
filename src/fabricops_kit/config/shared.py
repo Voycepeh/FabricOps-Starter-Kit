@@ -273,14 +273,13 @@ class FabricStore:
     env: str
     workspace_id: str
     item_id: str
-    name: str
     kind: str
     schema_enabled: bool = False
     schema: str | None = None
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
-        for field_name in ("env", "workspace_id", "item_id", "name", "kind"):
+        for field_name in ("env", "workspace_id", "item_id", "kind"):
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be a non-empty string.")
@@ -305,6 +304,19 @@ class FabricStore:
         if self.kind != "lakehouse":
             raise ValueError("root is only available for lakehouse stores.")
         return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
+
+
+@dataclass(frozen=True)
+class ResolvedFabricStore(FabricStore):
+    """Configured Fabric store paired with its environment mapping key."""
+
+    key: str = ""
+
+    def __post_init__(self) -> None:
+        """Validate the store details and resolved item name."""
+        super().__post_init__()
+        if not isinstance(self.key, str) or not self.key.strip():
+            raise ValueError("key must be a non-empty string.")
 
 
 @dataclass(frozen=True)
@@ -614,7 +626,7 @@ def validate_framework_config(config: Any | dict[str, Any]) -> Any:
         if not isinstance(targets, dict) or not targets:
             raise ValueError(f"Environment '{env}' must contain at least one target.")
         for target_name, housepath in targets.items():
-            required = ("workspace_id", "item_id", "name", "kind")
+            required = ("workspace_id", "item_id", "kind")
             if not all(hasattr(housepath, attr) for attr in required):
                 raise ValueError(f"Target '{env}/{target_name}' must provide FabricStore fields: {required}.")
 
@@ -669,7 +681,7 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Any:
+def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> ResolvedFabricStore:
     """Resolve a configured FabricStore for an environment and logical store key.
 
     Parameters
@@ -677,14 +689,14 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Any:
     env : str
         Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
     store : str
-        Logical store key such as ``Source``, ``Unified``, ``Product``, or ``Warehouse``.
+        Configured store key and physical Fabric item name, such as ``bronze`` or ``gold``.
     config : FrameworkConfig | PathConfig | None
         Configuration that contains environment-to-store mappings.
 
     Returns
     -------
-    Any
-        FabricStore object with ``workspace_id``, ``house_id``, ``house_name``, and ``root``.
+    ResolvedFabricStore
+        Resolved store with connection details and the configured item ``key``.
 
     Raises
     ------
@@ -693,8 +705,8 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Any:
 
     Examples
     --------
-    >>> get_path("Sandbox", "Source", config=CONFIG)
-    Housepath(...)
+    >>> get_store(CONFIG, "dev", "gold").key
+    'gold'
 
     """
     paths = _normalize_path_config(config).paths
@@ -708,7 +720,18 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Any:
         raise ValueError(
             f"Store '{store}' was not found under environment '{env}'. Available stores: {available_targets}."
         )
-    return paths[env][store]
+    configured_store = paths[env][store]
+    if not isinstance(configured_store, FabricStore):
+        raise ValueError(f"Store '{env}/{store}' must be configured as a FabricStore.")
+    return ResolvedFabricStore(
+        env=configured_store.env,
+        workspace_id=configured_store.workspace_id,
+        item_id=configured_store.item_id,
+        kind=configured_store.kind,
+        schema_enabled=configured_store.schema_enabled,
+        schema=configured_store.schema,
+        key=store,
+    )
 
 
 # ---------------------------------------------------------------------------

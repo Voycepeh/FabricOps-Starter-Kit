@@ -230,7 +230,7 @@ expandEngineeringChoiceFromHash();
     ```python
     source_df = read_lakehouse_table(
         "student_enrolment",
-        store="source",
+        store="bronze",
     )
     ```
 
@@ -723,7 +723,7 @@ Use these when you already know what you want to do and only need a quick syntax
         GROUP BY programme_code, status
         HAVING COUNT(*) > 100
         """,
-        store="product",
+        store="gold",
     )
     ```
 

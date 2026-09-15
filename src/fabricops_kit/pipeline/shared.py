@@ -247,7 +247,7 @@ def resolve_physical_table_identity(
                 "pass schema or configure a default schema."
             )
         normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
-            configured_store, configured_schema, table_name
+            configured_store, configured_schema, table_name, warehouse_name=configured_store.key
         )
     else:
         raise ValueError(
@@ -3319,7 +3319,7 @@ def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
         if configured_schema is None or not str(configured_schema).strip():
             raise ValueError("schema is required for Warehouse observation; pass it or configure a default schema.")
         schema_value, table_value, _object_name = resolve_warehouse_table_location(
-            configured_store, configured_schema, table_value
+            configured_store, configured_schema, table_value, warehouse_name=configured_store.key
         )
     else:
         table_value, schema_value, _path = resolve_lakehouse_table_location(configured_store, table_value, schema_value)

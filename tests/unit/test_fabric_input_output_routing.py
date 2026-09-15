@@ -38,13 +38,12 @@ def test_configured_fabric_store_public_signatures_use_store_not_target():
 
 
 def _store(
-    store: str, kind: str, name: str, *, schema_enabled: bool = False, schema: str | None = None
+    store: str, kind: str, name: str | None = None, *, schema_enabled: bool = False, schema: str | None = None
 ) -> FabricStore:
     return FabricStore(
         env="dev",
         workspace_id=f"dev-{store}-workspace",
         item_id=f"dev-{store}-item",
-        name=name,
         kind=kind,
         schema_enabled=schema_enabled,
         schema=schema,
@@ -55,11 +54,11 @@ def _io_config() -> PathConfig:
     return PathConfig(
         paths={
             "dev": {
-                "source": _store("source", "lakehouse", "lh_source_dev"),
-                "unified": _store("unified", "lakehouse", "lh_unified_dev"),
-                "product": _store("product", "lakehouse", "lh_product_dev"),
-                "metadata": _store("metadata", "lakehouse", "lh_metadata_dev"),
-                "warehouse": _store("warehouse", "warehouse", "wh_product_dev"),
+                "bronze": _store("bronze", "lakehouse"),
+                "silver": _store("silver", "lakehouse"),
+                "gold": _store("gold", "lakehouse"),
+                "metadata": _store("metadata", "lakehouse"),
+                "warehouse": _store("warehouse", "warehouse"),
             }
         }
     )
@@ -69,9 +68,9 @@ def _schema_io_config() -> PathConfig:
     return PathConfig(
         paths={
             "dev": {
-                "source": _store("source", "lakehouse", "lh_source_dev", schema_enabled=True, schema="src"),
-                "unified": _store("unified", "lakehouse", "lh_unified_dev", schema_enabled=True, schema="dbo"),
-                "metadata": _store("metadata", "lakehouse", "lh_metadata_dev", schema_enabled=True, schema="meta"),
+                "bronze": _store("bronze", "lakehouse", schema_enabled=True, schema="src"),
+                "silver": _store("silver", "lakehouse", schema_enabled=True, schema="dbo"),
+                "metadata": _store("metadata", "lakehouse", schema_enabled=True, schema="meta"),
             }
         }
     )
@@ -82,7 +81,7 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     config = _io_config()
     context = {"config": config, "env": "dev"}
 
-    for target in ("source", "unified", "product"):
+    for target in ("bronze", "silver", "gold"):
         spark = _Spark()
         io.read_lakehouse_table("orders", store=target, schema=None, spark_session=spark, context=context)
 
@@ -113,7 +112,7 @@ def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
         lambda *_args, **_kwargs: {
             "table_id": "orders-id",
             "store_type": "lakehouse",
-            "store": "unified",
+            "store": "silver",
             "schema": "dbo",
             "table_name": "orders",
         },
@@ -121,7 +120,7 @@ def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
 
     io.read_lakehouse_table(table_id="orders-id", spark_session=spark, context=context)
 
-    expected = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/dbo/orders"
+    expected = "abfss://dev-silver-workspace@onelake.dfs.fabric.microsoft.com/dev-silver-item/Tables/dbo/orders"
     assert ("load", expected) in spark.read.calls
 
 
@@ -160,7 +159,7 @@ def test_read_lakehouse_table_forwards_delta_reader_options():
 
     io.read_lakehouse_table(
         "orders",
-        store="unified",
+        store="silver",
         schema=None,
         spark_session=spark,
         context=context,
@@ -168,7 +167,7 @@ def test_read_lakehouse_table_forwards_delta_reader_options():
         timestampAsOf="2026-01-01T00:00:00Z",
     )
 
-    expected_path = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders"
+    expected_path = "abfss://dev-silver-workspace@onelake.dfs.fabric.microsoft.com/dev-silver-item/Tables/orders"
     assert ("format", "delta") in spark.read.calls
     assert ("option", "mergeSchema", True) in spark.read.calls
     assert ("option", "timestampAsOf", "2026-01-01T00:00:00Z") in spark.read.calls
@@ -181,18 +180,18 @@ def test_lakehouse_file_readers_build_configured_files_paths():
     context = {"config": config, "env": "dev"}
     spark = _Spark()
 
-    io.read_lakehouse_csv("Files/raw/orders.csv", store="source", spark_session=spark, context=context)
+    io.read_lakehouse_csv("Files/raw/orders.csv", store="bronze", spark_session=spark, context=context)
     io.read_lakehouse_parquet(
-        "curated/orders.parquet", store="unified", spark_session=spark, verbose=False, context=context
+        "curated/orders.parquet", store="silver", spark_session=spark, verbose=False, context=context
     )
 
     assert (
         "csv",
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv",
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/raw/orders.csv",
     ) in spark.read.calls
     assert (
         "parquet",
-        "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet",
+        "abfss://dev-silver-workspace@onelake.dfs.fabric.microsoft.com/dev-silver-item/Files/curated/orders.parquet",
     ) in spark.read.calls
 
 
@@ -208,7 +207,7 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
 
     result = read_lakehouse_csv(
         "Files/raw/orders.csv",
-        store="source",
+        store="bronze",
         spark_session=spark,
         header=False,
         context=context,
@@ -218,14 +217,14 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
 
     assert inspect.signature(read_lakehouse_csv) == inspect.signature(io.read_lakehouse_csv)
     assert result == {
-        "path": "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"
+        "path": "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/raw/orders.csv"
     }
     assert ("option", "header", False) in spark.read.calls
     assert ("option", "delimiter", "|") in spark.read.calls
     assert ("option", "inferSchema", True) in spark.read.calls
     assert (
         "csv",
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv",
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/raw/orders.csv",
     ) in spark.read.calls
 
 
@@ -246,7 +245,7 @@ def test_read_lakehouse_json_resolves_paths_and_forwards_options(relative_path, 
 
     result = read_lakehouse_json(
         relative_path,
-        store="source",
+        store="bronze",
         spark_session=spark_override,
         context=context,
         multiLine=True,
@@ -255,7 +254,7 @@ def test_read_lakehouse_json_resolves_paths_and_forwards_options(relative_path, 
     )
 
     expected_path = (
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item" + expected_suffix
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item" + expected_suffix
     )
     assert result == {"path": expected_path}
     assert ("option", "multiLine", True) in spark_override.read.calls
@@ -285,7 +284,7 @@ def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
 
     io.read_lakehouse_parquet(
         "customers.parquet",
-        store="source",
+        store="bronze",
         spark_session=root_spark,
         verbose=False,
         context=context,
@@ -294,16 +293,16 @@ def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
     )
     io.read_lakehouse_parquet(
         "input/customers.parquet",
-        store="source",
+        store="bronze",
         spark_session=nested_spark,
         verbose=False,
         context=context,
         mergeSchema=True,
     )
 
-    root_path = "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers.parquet"
+    root_path = "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/customers.parquet"
     nested_path = (
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/input/customers.parquet"
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/input/customers.parquet"
     )
     assert ("parquet", root_path) in root_spark.read.calls
     assert ("option", "mergeSchema", True) in root_spark.read.calls
@@ -348,7 +347,7 @@ def test_read_lakehouse_parquet_forwards_options_to_fallback():
 
     result = io.read_lakehouse_parquet(
         "customers.parquet",
-        store="source",
+        store="bronze",
         spark_session=spark,
         verbose=False,
         context=context,
@@ -358,11 +357,11 @@ def test_read_lakehouse_parquet_forwards_options_to_fallback():
     assert isinstance(result, FallbackFrame)
     assert (
         "parquet",
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers.parquet",
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/customers.parquet",
     ) in spark.read.calls
     assert (
         "parquet",
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers_tsus.parquet",
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/customers_tsus.parquet",
     ) in spark.read.calls
     assert spark.read.calls.count(("option", "mergeSchema", True)) == 2
 
@@ -373,14 +372,14 @@ def test_configured_file_path_resolution_normalizes_files_prefix():
 
     config = _io_config()
     store, normalized, path = resolve_configured_file_path(
-        "source",
+        "bronze",
         "/Files/raw/orders.csv",
         context={"config": config, "env": "dev"},
     )
 
-    assert store.name == "lh_source_dev"
+    assert store.key == "bronze"
     assert normalized == "raw/orders.csv"
-    assert path == "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"
+    assert path == "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/raw/orders.csv"
 
 
 def test_csv_path_reader_uses_spark_csv_adapter_options():
@@ -446,16 +445,16 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
         context=context,
     )
 
-    assert read_result == {"synapsesql": "wh_product_dev.dbo.orders"}
+    assert read_result == {"synapsesql": "warehouse.dbo.orders"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
-    assert ("option", "database_name", "wh_product_dev") in spark.read.calls
+    assert ("option", "database_name", "warehouse") in spark.read.calls
     assert ("option", "queryTimeout", "60") in spark.read.calls
     assert ("mode", "overwrite") in frame.write.calls
     assert ("option", "workspace_id", "dev-warehouse-workspace") in frame.write.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in frame.write.calls
     assert ("option", "batchsize", "5000") in frame.write.calls
-    assert ("synapsesql", "wh_product_dev.dbo.orders") in frame.write.calls
+    assert ("synapsesql", "warehouse.dbo.orders") in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
     assert spark.table_calls == []
 
@@ -482,12 +481,12 @@ def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeyp
     warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
     original = _WarehouseRepartitionFrame()
     written = []
-    store = _store("warehouse", "warehouse", "wh_product_dev")
+    store = _store("warehouse", "warehouse")
 
     monkeypatch.setattr(
         warehouse_write_owner,
         "resolve_configured_warehouse_table",
-        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "wh_product_dev.dbo.orders"),
+        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "warehouse.dbo.orders"),
     )
     monkeypatch.setattr(
         warehouse_write_owner,
@@ -506,7 +505,7 @@ def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeyp
     )
 
     assert original.repartition_calls == []
-    assert written == [(original, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
+    assert written == [(original, store, "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"})]
 
 
 @pytest.mark.parametrize(
@@ -529,12 +528,12 @@ def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
     repartitioned = _WarehouseRepartitionFrame("repartitioned")
     original = _WarehouseRepartitionFrame(repartitioned=repartitioned)
     written = []
-    store = _store("warehouse", "warehouse", "wh_product_dev")
+    store = _store("warehouse", "warehouse")
 
     monkeypatch.setattr(
         warehouse_write_owner,
         "resolve_configured_warehouse_table",
-        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "wh_product_dev.dbo.orders"),
+        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "warehouse.dbo.orders"),
     )
     monkeypatch.setattr(
         warehouse_write_owner,
@@ -546,7 +545,7 @@ def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
         original,
         "dbo",
         "orders",
-        store="product",
+        store="gold",
         mode="overwrite",
         repartition_by=repartition_by,
         options={"batchsize": "5000"},
@@ -554,7 +553,7 @@ def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
     )
 
     assert original.repartition_calls == [expected_repartition_call]
-    assert written == [(repartitioned, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
+    assert written == [(repartitioned, store, "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"})]
 
 
 def test_write_lakehouse_table_docstring_examples_cover_small_and_large_writes():
@@ -660,7 +659,7 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_table("orders", store="source", schema="src", spark_session=spark, context=context)
+    io.read_lakehouse_table("orders", store="bronze", schema="src", spark_session=spark, context=context)
     io.write_lakehouse_table(
         frame,
         "METADATA_GUARDRAIL",
@@ -673,7 +672,7 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     )
     assert (
         "load",
-        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders",
+        "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Tables/src/orders",
     ) in spark.read.calls
     assert (
         "save",
@@ -727,7 +726,7 @@ def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
 
     io.read_lakehouse_table("orders", spark_session=spark)
 
-    expected_path = "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/orders"
+    expected_path = "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Tables/orders"
     assert ("load", expected_path) in spark.read.calls
 
 
@@ -741,7 +740,7 @@ def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
     io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
 
     expected_path = (
-        "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders_clean"
+        "abfss://dev-silver-workspace@onelake.dfs.fabric.microsoft.com/dev-silver-item/Tables/orders_clean"
     )
     assert ("save", expected_path) in frame.write.calls
 
@@ -787,7 +786,7 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     assert result == {"synapsesql": "SELECT order_id FROM dbo.orders WHERE status = 'OPEN'"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
-    assert ("option", "database_name", "wh_product_dev") in spark.read.calls
+    assert ("option", "database_name", "warehouse") in spark.read.calls
     assert ("option", "queryTimeout", "60") in spark.read.calls
 
     with pytest.raises(ValueError, match="non-empty SQL SELECT"):
@@ -811,9 +810,9 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
 
     calls = []
-    store = FabricStore(env="dev", workspace_id="workspace", item_id="item", name="warehouse", kind="warehouse")
+    store = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse")
     lakehouse_store = FabricStore(
-        env="dev", workspace_id="workspace", item_id="item", name="lakehouse", kind="lakehouse"
+        env="dev", workspace_id="workspace", item_id="item", kind="lakehouse"
     )
 
     monkeypatch.setattr(
@@ -954,7 +953,7 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     monkeypatch.setattr(
         warehouse_query_owner,
         "read_warehouse_synapsesql",
-        lambda spark, store, sql, *, options=None: calls.append(("warehouse_sql", store.name, sql, options)) or "query",
+        lambda spark, store, sql, *, database_name, options=None: calls.append(("warehouse_sql", database_name, sql, options)) or "query",
     )
     assert (
         warehouse_query_owner.read_warehouse_query(
@@ -974,8 +973,8 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     monkeypatch.setattr(
         warehouse_read_owner,
         "read_warehouse_synapsesql",
-        lambda spark, store, sql, *, options=None: (
-            calls.append(("warehouse_read", store.name, sql, options)) or "warehouse_read"
+        lambda spark, store, sql, *, database_name, options=None: (
+            calls.append(("warehouse_read", database_name, sql, options)) or "warehouse_read"
         ),
     )
     assert (
@@ -1001,7 +1000,7 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     monkeypatch.setattr(
         warehouse_write_owner,
         "write_warehouse_synapsesql",
-        lambda df, store, sql, *, mode, options=None: calls.append(("warehouse_write", store.name, sql, mode, options)),
+        lambda df, store, sql, *, mode, options=None: calls.append(("warehouse_write", "custom", sql, mode, options)),
     )
     warehouse_write_owner.write_warehouse_table(
         frame,
@@ -1020,9 +1019,9 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     assert ("read_delta", "resolved://table", {"mergeSchema": True}) in calls
     assert ("write_delta", "resolved://write_table", "overwrite", None, None) in calls
     assert ("warehouse_query", "custom", {"sentinel": True}) in calls
-    assert ("warehouse_sql", "warehouse", "SELECT 1", {"queryTimeout": "60"}) in calls
-    assert ("warehouse_read", "warehouse", "warehouse.dbo.orders", {"queryTimeout": "60"}) in calls
-    assert ("warehouse_write", "warehouse", "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"}) in calls
+    assert ("warehouse_sql", "custom", "SELECT 1", {"queryTimeout": "60"}) in calls
+    assert ("warehouse_read", "custom", "warehouse.dbo.orders", {"queryTimeout": "60"}) in calls
+    assert ("warehouse_write", "custom", "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"}) in calls
 
 
 def test_public_io_owner_files_do_not_duplicate_stale_resolver_patterns():
@@ -1280,7 +1279,7 @@ def test_write_warehouse_table_repartition_contract(monkeypatch):
             store,
             schema,
             table_name,
-            f"{store.name}.{schema}.{table_name}",
+            f"warehouse.{schema}.{table_name}",
         ),
     )
     monkeypatch.setattr(

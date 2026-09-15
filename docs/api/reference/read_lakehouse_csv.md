@@ -56,7 +56,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_csv(
     relative_path: str,
-    store: str='source',
+    store: str='bronze',
     spark_session=None,
     header: bool=True,
     context: dict[str, Any] | None=None,
@@ -71,7 +71,7 @@ def read_lakehouse_csv(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="source", header=True, inferSchema=True, spark_session=spark)
+source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="bronze", header=True, inferSchema=True, spark_session=spark)
 ```
 
 </div>
@@ -119,13 +119,13 @@ immediately load the complete file into notebook memory.
 
 Compact examples:
 
-``df = read_lakehouse_csv("incoming/customers.csv", store="source")``
+``df = read_lakehouse_csv("incoming/customers.csv", store="bronze")``
 
-``df = read_lakehouse_csv("incoming/customers/", store="source")``
+``df = read_lakehouse_csv("incoming/customers/", store="bronze")``
 
-``df = read_lakehouse_csv("incoming/customers.csv", store="source", inferSchema=True)``
+``df = read_lakehouse_csv("incoming/customers.csv", store="bronze", inferSchema=True)``
 
-``df = read_lakehouse_csv("incoming/orders.csv", store="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
+``df = read_lakehouse_csv("incoming/orders.csv", store="bronze", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
 
 When a folder path is supplied, Spark reads compatible CSV files from that
 path into one DataFrame according to Spark CSV reader behavior. FabricOps

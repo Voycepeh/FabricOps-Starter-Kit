@@ -30,7 +30,7 @@ def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) 
     Examples
     --------
     >>> table_id = resolve_table_id(
-    ...     store="unified", schema="dbo", table_name="curated_orders"
+    ...     store="silver", schema="dbo", table_name="curated_orders"
     ... )
 
     See Also

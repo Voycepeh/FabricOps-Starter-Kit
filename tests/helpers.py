@@ -14,13 +14,12 @@ from fabricops_kit.config import (
 from fabricops_kit.config import FabricStore
 
 
-def store(kind: str = "lakehouse", *, env: str = "dev", name: str | None = None) -> FabricStore:
+def store(kind: str = "lakehouse", *, env: str = "dev") -> FabricStore:
     """Return store."""
     return FabricStore(
         env=env,
         workspace_id=f"{env}-workspace",
         item_id=f"{env}-{kind}-item",
-        name=name or f"{kind}_{env}",
         kind=kind,
     )
 
@@ -31,19 +30,17 @@ def framework_config() -> FrameworkConfig:
         path_config=PathConfig(
             paths={
                 "dev": {
-                    "source": store("lakehouse", name="lh_source_dev"),
-                    "unified": store("lakehouse", name="lh_unified_dev"),
-                    "product": store("warehouse", name="wh_product_dev"),
+                    "bronze": store("lakehouse"),
+                    "silver": store("lakehouse"),
+                    "gold": store("warehouse"),
                     "metadata": FabricStore(
                         env="dev",
                         workspace_id="dev-workspace",
                         item_id="dev-lakehouse-item",
-                        name="lh_metadata_dev",
                         kind="lakehouse",
                         schema_enabled=True,
                         schema="metadata",
                     ),
-                    "warehouse": store("warehouse", name="wh_product_dev"),
                 }
             }
         ),
@@ -56,7 +53,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
     from fabricops_kit.widgets.shared import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 
     return SimpleNamespace(
-        path_config=SimpleNamespace(paths={"dev": {"metadata": store("lakehouse", name="lh_metadata_dev")}}),
+        path_config=SimpleNamespace(paths={"dev": {"metadata": store("lakehouse")}}),
         data_agreement_config=DataAgreementConfig(
             metadata_tables=metadata_tables
             or {

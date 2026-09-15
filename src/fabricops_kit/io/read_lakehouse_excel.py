@@ -10,7 +10,7 @@ from .shared import get_spark_session, read_excel_file, resolve_configured_file_
 def read_lakehouse_excel(
     relative_path: str,
     *,
-    store: str = "source",
+    store: str = "bronze",
     sheet_name=0,
     spark_session=None,
     context: dict[str, Any] | None = None,

@@ -6,16 +6,16 @@ This is the second foundation step. When it is complete, the seven-step FabricOp
 
 ## Configure `00_env_config`
 
-Attach the Fabric Environment containing FabricOps and update the environment-specific configuration so these logical stores resolve correctly:
+Attach the Fabric Environment containing FabricOps and update the environment-specific configuration so these physical Fabric item names resolve correctly:
 
 - `metadata` → Governance metadata Lakehouse
-- `source` → Source Lakehouse
-- `unified` → Unified Lakehouse
-- `product` → Product Warehouse
+- `bronze` → Bronze Lakehouse
+- `silver` → Silver Lakehouse
+- `gold` → Gold Warehouse
 
 ![Path config](../assets/00B/00_config_paths.png)
 
-The walkthrough notebooks should refer to these logical names rather than embedding workspace IDs, item IDs, SQL endpoints, or OneLake paths.
+The walkthrough notebooks should refer to these configured item names rather than embedding workspace IDs, item IDs, SQL endpoints, or OneLake paths.
 
 ## Create or validate metadata tables
 
@@ -38,7 +38,7 @@ from fabricops_kit import (
 
 orders_df = read_lakehouse_csv(
     "DemoData/orders.csv",
-    store="source",
+    store="bronze",
     spark_session=spark,
     header=True,
     inferSchema=True,
@@ -46,7 +46,7 @@ orders_df = read_lakehouse_csv(
 
 products_df = read_lakehouse_csv(
     "DemoData/products.csv",
-    store="source",
+    store="bronze",
     spark_session=spark,
     header=True,
     inferSchema=True,
@@ -54,7 +54,7 @@ products_df = read_lakehouse_csv(
 
 order_history_df = read_lakehouse_csv(
     "DemoData/order_history.csv",
-    store="source",
+    store="bronze",
     spark_session=spark,
     header=True,
     inferSchema=True,
@@ -63,7 +63,7 @@ order_history_df = read_lakehouse_csv(
 write_lakehouse_table(
     orders_df,
     "orders",
-    store="source",
+    store="bronze",
     schema="demo",
     mode="overwrite",
 )
@@ -71,7 +71,7 @@ write_lakehouse_table(
 write_lakehouse_table(
     products_df,
     "products",
-    store="source",
+    store="bronze",
     schema="demo",
     mode="overwrite",
 )
@@ -80,7 +80,7 @@ write_warehouse_table(
     order_history_df,
     "demo",
     "order_history",
-    store="product",
+    store="gold",
     mode="overwrite",
 )
 ```
@@ -88,11 +88,11 @@ write_warehouse_table(
 At this point the managed sources are:
 
 ```text
-Source Lakehouse
+Bronze Lakehouse
   demo.orders       # 120 Day 1 rows
   demo.products
 
-Product Warehouse
+Gold Warehouse
   demo.order_history
 ```
 
@@ -105,7 +105,7 @@ Later in the walkthrough, append it to the managed source table with the same fo
 ```python
 day2_orders_df = read_lakehouse_csv(
     "DemoData/orders_incremental.csv",
-    store="source",
+    store="bronze",
     spark_session=spark,
     header=True,
     inferSchema=True,
@@ -114,13 +114,13 @@ day2_orders_df = read_lakehouse_csv(
 write_lakehouse_table(
     day2_orders_df,
     "orders",
-    store="source",
+    store="bronze",
     schema="demo",
     mode="append",
 )
 ```
 
-After that update, `source.demo.orders` contains 132 rows. `02_pipeline` still reads the complete persisted source on its next run.
+After that update, `bronze.demo.orders` contains 132 rows. `02_pipeline` still reads the complete persisted source on its next run.
 
 ## Expected result
 

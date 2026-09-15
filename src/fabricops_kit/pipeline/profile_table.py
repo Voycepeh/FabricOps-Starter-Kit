@@ -807,7 +807,7 @@ def profile_table(
 
     Profile a governed complete physical table without knowing its store kind:
 
-    >>> result = profile_table(store="source", schema="dbo", table_name="orders")
+    >>> result = profile_table(store="bronze", schema="dbo", table_name="orders")
 
     Profile a transformed DataFrame against an explicit governed identity:
 

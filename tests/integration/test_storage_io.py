@@ -108,8 +108,8 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_csv("Files/raw/orders.csv", store="source", spark_session=spark, context=context)
-    io.write_lakehouse_table(frame, "orders_clean", store="unified", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False, context=context)
+    io.read_lakehouse_csv("Files/raw/orders.csv", store="bronze", spark_session=spark, context=context)
+    io.write_lakehouse_table(frame, "orders_clean", store="silver", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False, context=context)
 
     csv_call = next(call for call in spark.read.calls if call[0] == "csv")
     save_call = next(call for call in frame.write.calls if call[0] == "save")
@@ -162,11 +162,11 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     )
 
     with pytest.raises(ValueError, match="relative_path"):
-        io.read_lakehouse_csv("", store="source", spark_session=spark, context={"config": config, "env": "dev"})
-    io.read_lakehouse_parquet("customers.parquet", store="source", spark_session=spark, verbose=False, context={"config": config, "env": "dev"})
+        io.read_lakehouse_csv("", store="bronze", spark_session=spark, context={"config": config, "env": "dev"})
+    io.read_lakehouse_parquet("customers.parquet", store="bronze", spark_session=spark, verbose=False, context={"config": config, "env": "dev"})
     assert any(call[0] == "parquet" and call[1].endswith("/Files/customers.parquet") for call in spark.read.calls)
 
-    io.read_lakehouse_excel("Files/reference/map.xlsx", store="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"}, skiprows=1)
+    io.read_lakehouse_excel("Files/reference/map.xlsx", store="bronze", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}
 
 
@@ -175,6 +175,6 @@ def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
     config = framework_config()
 
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.read_warehouse_table("dbo", "orders", store="warehouse", spark_session=_Spark(), context={"config": config, "env": "dev"})
+        io.read_warehouse_table("dbo", "orders", store="gold", spark_session=_Spark(), context={"config": config, "env": "dev"})
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.write_warehouse_table(_Frame(), "dbo", "orders", store="warehouse", context={"config": config, "env": "dev"})
+        io.write_warehouse_table(_Frame(), "dbo", "orders", store="gold", context={"config": config, "env": "dev"})
