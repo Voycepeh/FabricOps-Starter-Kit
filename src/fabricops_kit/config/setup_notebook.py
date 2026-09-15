@@ -145,7 +145,7 @@ def setup_notebook(
 
     """
     normalized = validate_framework_config(config)
-    targets = required_targets or ["Source", "Unified"]
+    targets = required_targets if required_targets is not None else list(normalized.path_config.paths.get(env, {}))
     resolved_paths = {store_name: get_store(config=normalized, env=env, store=store_name) for store_name in targets}
 
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
@@ -176,7 +176,7 @@ def setup_notebook(
         )
     )
     for store_name, store in resolved_paths.items():
-        missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(store, attr, None)]
+        missing = [attr for attr in ("workspace_id", "item_id", "kind") if not getattr(store, attr, None)]
         if missing:
             checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "fail", f"Missing required fields: {missing}"))
         elif store.kind == "lakehouse" and str(store.root).startswith("abfss://"):
