@@ -90,7 +90,7 @@ def _tokenize_column(dataframe, *, column_name, column_id, table_id, existing_ma
         .withColumn("original_data_type", F.lit(original_type))
         .cache()
     )
-    mapping.count()  # Materialize opaque UUID assignments once for this returned mapping/run.
+    mapping.count()
     original_temp = "__fabricops_sensitive_original"
     token_temp = "__fabricops_sensitive_token"
     while original_temp in dataframe.columns or token_temp in dataframe.columns:
@@ -240,6 +240,8 @@ def check_sensitive_data(
             "checks": [],
         }
         print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Evaluation skipped by caller; no treatment applied or evidence written.")
         return result
     spark_session = getattr(dataframe, "sparkSession", None)
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
@@ -256,6 +258,8 @@ def check_sensitive_data(
             "reason": "No Data Contract selected; Development only.",
         }
         print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
     rules = [
@@ -353,6 +357,16 @@ def check_sensitive_data(
         "checks": checks,
     }
     print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        treatments = [str(check.get("treatment") or "unknown") for check in checks]
+        print(f"  Contract selected; evaluated {len(checks)} active Sensitive Data rule(s).")
+        print(f"  Treatments applied/evaluated: {', '.join(treatments) if treatments else 'none'}.")
+        print("  Evidence appended to METADATA_GUARDRAIL_RESULTS without raw sensitive values.")
+        print(
+            "  Token support mapping returned to caller and not persisted automatically."
+            if support_mapping is not None
+            else "  No token support mapping produced."
+        )
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking Sensitive Data Guardrail failed for table_id {table_id!r}.")
     return result

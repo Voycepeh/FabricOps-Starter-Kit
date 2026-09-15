@@ -90,6 +90,8 @@ def check_dq(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Evaluation skipped by caller; no rules evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -110,6 +112,8 @@ def check_dq(
             "environment_name": env,
         }
         print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -133,6 +137,13 @@ def check_dq(
         context=context,
     )
     print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        checks = list(result.get("checks") or [])
+        failed = [check for check in checks if str(check.get("status") or "").lower() not in {"passed", "pass"}]
+        print(f"  Contract selected; evaluated {len(checks)} active DQ rule(s).")
+        print(f"  Rule outcomes {len(checks) - len(failed)} passed, {len(failed)} warning/failed.")
+        print("  Evidence appended to METADATA_GUARDRAIL_RESULTS for each evaluated rule.")
+        print("  Failed values stay caller-visible only and are not persisted automatically.")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking DQ Guardrail failed for table_id {identity['table_id']!r}.")
     return result

@@ -75,6 +75,8 @@ def check_schema(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Evaluation skipped by caller; no schema rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
@@ -95,6 +97,8 @@ def check_schema(
             "environment_name": env,
         }
         print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -182,6 +186,17 @@ def check_schema(
             result=result,
         )
     print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        print(
+            f"  Rule {result['guardrail_rule_id']} v{result['guardrail_version']} from the selected Data Contract."
+        )
+        print(
+            "  Differences "
+            f"missing={len(result.get('missing_columns') or [])}, "
+            f"unexpected={len(result.get('unexpected_columns') or [])}, "
+            f"datatype={len(result.get('datatype_mismatches') or [])}."
+        )
+        print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result
