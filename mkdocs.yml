@@ -24,7 +24,8 @@ nav:
   - Guided Demo:
       - Overview: guided-demo.md
       - "0A - Prepare Fabric Artifacts": guided-demo/00A-setup-fabric-artifacts.md
-      - "0B - Configure Environment and Load Data": guided-demo/00B-run-environment-setup.md
+      - "0B - Configure Environment and Load Assets": guided-demo/00B-run-environment-setup.md
+      - "0C - Prepare Demo Data with FabricOps I/O": guided-demo/00C-prepare-demo-data.md
       - "Step 1 - Establish Governance Context": guided-demo/01-create-agreement.md
       - "Step 2 - Build and Run the ETL": guided-demo/02-run-pipeline.md
       - "Step 3 - Author and Freeze Data Contract": guided-demo/03-enrich-guardrails.md
@@ -124,3 +125,21 @@ plugins:
               show_docstring_returns: true
               show_docstring_warns: true
               show_docstring_yields: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
+  - javascripts/callable-finder.js
+  - javascripts/table-controls.js
+  - javascripts/engineering-guide-deeplinks.js
+
+extra_css:
+  - stylesheets/breadcrumbs.css
+  - stylesheets/api-chips.css
+  - stylesheets/release-status.css
+  - stylesheets/release-pages.css
+  - stylesheets/layout-wide.css
+  - stylesheets/fabric-theme.css
+  - stylesheets/workflow.css
+  - stylesheets/table-controls.css
+  - stylesheets/image-borders.css

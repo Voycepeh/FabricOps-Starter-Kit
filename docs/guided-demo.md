@@ -2,7 +2,7 @@
 
 **Use the Guided Demo to experience the complete FabricOps operating loop, not just the notebook templates in isolation.**
 
-`00A` and `00B` prepare the Fabric environment and load the demo data. The seven numbered steps then follow the same lifecycle described in [How FabricOps Works](how-fabricops-works.md): Governance establishes context, Engineering builds the real pipeline, Governance turns observed tables into a Data Contract, Engineering validates it, Governance activates it, Production runs it, and consumers use the approved output.
+`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then follow the same lifecycle described in [How FabricOps Works](how-fabricops-works.md): Governance establishes context, Engineering builds the real pipeline, Governance turns observed tables into a Data Contract, Engineering validates it, Governance activates it, Production runs it, and consumers use the approved output.
 
 !!! tip "New to Microsoft Fabric?"
 
@@ -16,10 +16,11 @@
 
 | Setup | What you do | Why it matters |
 | --- | --- | --- |
-| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Create the workspaces, stores, Fabric Environment, notebook copies, schemas, and upload the supplied demo files. | Everything required by the walkthrough exists physically in Fabric. |
-| [0B. Configure the environment and load demo data](guided-demo/00B-run-environment-setup.md) | Configure `00_env_config`, create the metadata tables, then land the baseline managed source tables. | `01_governance` and `02_pipeline` can work against real configured Fabric stores and real managed tables. |
+| [0A. Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md) | Create the workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
+| [0B. Load and configure the Guided Demo assets](guided-demo/00B-run-environment-setup.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create the metadata tables, and upload the packaged demo files to Bronze `Files/Demo`. | Every notebook can resolve the same logical Fabric stores and the raw demo assets are in place. |
+| [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the managed source tables. | `02_pipeline` starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
-The baseline Orders source starts with the 120 rows in `orders.csv`. Keep `orders_incremental.csv` aside as the later **Day 2** arrival used to demonstrate how the same full-read pipeline behaves when source data changes.
+The baseline Orders source starts with the 120 rows in `orders.csv`. `orders_incremental.csv` stays untouched during 0C as the later **Day 2** arrival used to demonstrate how the same full-read pipeline behaves when source data changes.
 
 ## The seven-step FabricOps workflow
 
@@ -37,7 +38,7 @@ The core loop is therefore:
 
 **Governance → Engineering → Governance → Engineering → Governance → Production → Consume**
 
-The notebooks remain only `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`. The seven steps describe how those notebooks are reused through the lifecycle.
+The four reusable lifecycle notebooks remain `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`. `00C_demo_setup` is a Guided Demo setup notebook only: it demonstrates the I/O surface and seeds the demo sources before the lifecycle begins.
 
 ## Why Step 2 is the centrepiece
 
@@ -62,6 +63,8 @@ Use the supplied Orders fixtures as a simple two-run story:
 Day 1
 orders.csv = 120 rows
         ↓
+00C_demo_setup seeds bronze.demo.orders
+        ↓
 02_pipeline full read
         ↓
 multiple transformed targets
@@ -69,7 +72,7 @@ multiple transformed targets
 Day 2
 append orders_incremental.csv = 12 new source rows
         ↓
-source.demo.orders = 132 rows
+bronze.demo.orders = 132 rows
         ↓
 02_pipeline still performs a full read
         ↓
