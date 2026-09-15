@@ -91,6 +91,8 @@ def check_freshness(
     if not enabled:
         result = {"status": "skipped", "can_continue": True, "checks": []}
         print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details disabled explicitly; no observation, contract, rule, or evidence was evaluated")
         return result
     config, env, context = resolve_fabric_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
@@ -140,6 +142,8 @@ def check_freshness(
             "environment_name": env,
         }
         print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
+        if verbose:
+            print("  Details current-run Source Observation found, but no Data Contract is selected; rule evaluation skipped")
         return result
     identity = resolve_catalogue_table_identity(
         config,
@@ -208,6 +212,17 @@ def check_freshness(
             result=result,
         )
     print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        rule_type = str(result.get("rule_type") or freshness_rule.get("rule_type") or "freshness")
+        action = str(freshness_rule.get("action") or "").strip() or "default"
+        max_lag = result.get("freshness_max_lag_days")
+        print("  Details")
+        print("    Contract selected and active Freshness rule resolved")
+        print("    Input current-run Source Observation captured by pipeline_read()")
+        print(f"    Observation change column {change_column}")
+        print(f"    Rule {rule_type} (action {action}, max_lag_days={max_lag})")
+        print("    Evaluation compares the latest observed change value with the governed freshness threshold")
+        print("    Evidence appended to METADATA_GUARDRAIL_RESULTS")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking freshness Guardrail failed for table_id {table_id!r}.")
     return result
