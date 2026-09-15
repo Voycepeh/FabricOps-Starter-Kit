@@ -124,3 +124,21 @@ plugins:
               show_docstring_returns: true
               show_docstring_warns: true
               show_docstring_yields: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
+  - javascripts/callable-finder.js
+  - javascripts/table-controls.js
+  - javascripts/engineering-guide-deeplinks.js
+
+extra_css:
+  - stylesheets/breadcrumbs.css
+  - stylesheets/api-chips.css
+  - stylesheets/release-status.css
+  - stylesheets/release-pages.css
+  - stylesheets/layout-wide.css
+  - stylesheets/fabric-theme.css
+  - stylesheets/workflow.css
+  - stylesheets/table-controls.css
+  - stylesheets/image-borders.css
