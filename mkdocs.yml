@@ -22,22 +22,16 @@ nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
   - Guided Demo:
-      - Learning Path: guided-demo.md
-      - Step 0A - Prepare Fabric Artifacts: guided-demo/00A-setup-fabric-artifacts.md
-      - Step 0B - Set Up Environment: guided-demo/00B-run-environment-setup.md
-      - Step 1 - Create Agreement: guided-demo/01-create-agreement.md
-      - "Module 2 - Engineer and Run a Pipeline":
-          - Overview: guided-demo/02-run-pipeline.md
-          - "Unit 1 - Understand the Template": guided-demo/02-run-pipeline/understand-template.md
-          - "Unit 2 - Run the Baseline Pipeline": guided-demo/02-run-pipeline/run-baseline-etl.md
-          - "Unit 3 - Configure Sources": guided-demo/02-run-pipeline/configure-sources.md
-          - "Unit 4 - Transform and Write": guided-demo/02-run-pipeline/transform-and-load.md
-          - "Unit 5 - Processing and Results": guided-demo/02-run-pipeline/processing-and-results.md
-      - Step 3 - Author and Freeze Data Contract: guided-demo/03-enrich-guardrails.md
-      - Step 4 - Select and Validate Data Contract: guided-demo/04-run-pipeline-with-guardrails.md
-      - Step 5 - Link Data Agreement and Activate: guided-demo/05-create-data-contract.md
-      - Step 6 - Promote and Run Production: guided-demo/06-promote-to-production.md
-      - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
+      - Overview: guided-demo.md
+      - "0A - Prepare Fabric Artifacts": guided-demo/00A-setup-fabric-artifacts.md
+      - "0B - Configure Environment and Load Data": guided-demo/00B-run-environment-setup.md
+      - "Step 1 - Establish Governance Context": guided-demo/01-create-agreement.md
+      - "Step 2 - Build and Run the ETL": guided-demo/02-run-pipeline.md
+      - "Step 3 - Author and Freeze Data Contract": guided-demo/03-enrich-guardrails.md
+      - "Step 4 - Select and Validate Data Contract": guided-demo/04-run-pipeline-with-guardrails.md
+      - "Step 5 - Link Agreement and Activate": guided-demo/05-create-data-contract.md
+      - "Step 6 - Promote and Run Production": guided-demo/06-promote-to-production.md
+      - "Step 7 - Consume Production Data": guided-demo/99-explore.md
   - Resources & Reference:
       - Notebook Templates: notebook-templates.md
       - Function Reference: reference/index.md
@@ -119,21 +113,14 @@ plugins:
             docstring_section_style: table
             docstring_options:
               ignore_init_summary: true
-
-extra_javascript:
-  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
-  - javascripts/mermaid-init.js
-  - javascripts/callable-finder.js
-  - javascripts/table-controls.js
-  - javascripts/engineering-guide-deeplinks.js
-
-extra_css:
-  - stylesheets/breadcrumbs.css
-  - stylesheets/api-chips.css
-  - stylesheets/release-status.css
-  - stylesheets/release-pages.css
-  - stylesheets/layout-wide.css
-  - stylesheets/fabric-theme.css
-  - stylesheets/workflow.css
-  - stylesheets/table-controls.css
-  - stylesheets/image-borders.css
+              merge_init_into_class: true
+              show_docstring_attributes: true
+              show_docstring_description: true
+              show_docstring_examples: true
+              show_docstring_other_parameters: true
+              show_docstring_parameters: true
+              show_docstring_raises: true
+              show_docstring_receives: true
+              show_docstring_returns: true
+              show_docstring_warns: true
+              show_docstring_yields: true

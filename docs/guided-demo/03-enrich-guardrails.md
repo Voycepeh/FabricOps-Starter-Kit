@@ -1,51 +1,58 @@
-# Step 3: Author and Freeze the Data Contract
+# Step 3. Author and freeze the Data Contract
 
-**Return to `01_governance`, select the governed `table_id`, and use one unified editor to author and freeze its Data Contract definition.**
+**Return to `01_governance` and turn the real Engineering evidence from Step 2 into a versioned Data Contract.**
 
-## High-level flow
+This is where FabricOps closes the first Governance to Engineering loop. You are no longer defining rules against an imagined table. `02_pipeline` has already created and profiled the real target, so Governance can author against its canonical `table_id`.
 
-```text
-METADATA_DATA_CATALOGUE + METADATA_DATA_PROFILED
-                         ↓
-                 governed table_id
-                         ↓
-             Data Contract version
-             ├── Enrichment
-             ├── Guardrails
-             └── immutable schema / processing definition
-                         ↓
-                  Review → Freeze
-```
+## Select the governed table
 
-!!! important "The Data Agreement is not linked in this step"
+Use the table selection section in `01_governance` to choose the target produced in Step 2.
 
-    Step 3 is table-centric. It binds descriptive Enrichment and executable Guardrails to one governed `table_id` and freezes that definition. Governance explicitly links the tested version to the required Data Agreement later in Step 5, together with the activation decision.
+Review the available Catalogue and profiling evidence so you understand the physical table before defining its contract.
 
-## Before you begin
+## Open the Data Contract authoring widget
 
-Complete Step 2 so `02_pipeline` has registered the target in `METADATA_DATA_CATALOGUE` and written its latest `METADATA_DATA_PROFILED` snapshot to the metadata target configured by `00_env_config`.
+`widget_author_data_contract()` brings the table-specific Governance definition together in one place.
 
-## What to do
+Author the contract in three parts:
 
-1. Open `01_governance` in the Governance workspace and run `00_env_config`.
-2. Review the Catalogue and Profiled records produced by Engineering, then select the target's canonical `table_id`.
-3. Run `widget_author_data_contract(table_id=TABLE_ID, spark_session=spark)`. The unified editor creates or reopens the agreement-free draft for that table and environment.
-4. In **Enrichment**, author descriptive table and column context and classifications. Enrichment is descriptive metadata only; it does not enforce runtime behavior.
-5. In **Guardrails**, author the enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements that apply to the table.
-6. Open **Review** and confirm the table identity, schema, Enrichment, Guardrails, and processing definition.
-7. Freeze the version. The saved definition is immutable; later revisions require a new version.
+1. **Enrichment**: descriptions, business meaning, classifications, sensitivity context, and other descriptive metadata.
+2. **Guardrails**: enforceable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations.
+3. **Processing**: the target load strategy and any parameters required by that strategy, plus the logical notebook ownership.
 
-`widget_author_data_contract(...)` is the normal authoring UX. Enrichment, Guardrail, DQ-rule, and contract-registration widgets are not separate journeys in the canonical workflow.
+The important concept is that these are not separate disconnected metadata records from the user's point of view. Together they form the governed definition for that table and version.
 
-??? info "Sensitive Data and DQ ownership"
+## Make the Step 2 behaviour governed
 
-    Sensitive Data treatment can tokenize, mask, bucket, or remove an explicitly governed column. Token support mappings remain caller-owned and outside FabricOps metadata; they are not persisted automatically.
+Use the contract to formalise decisions that were only Development proposals in Step 2.
 
-    DQ is authored as a Guardrail. At runtime, `check_dq()` returns row-level failed values as a caller-owned DataFrame, while `METADATA_GUARDRAIL_RESULTS` stores the evaluation summary and continuation decision.
+For example:
+
+- keep `curated_orders` as `overwrite`, or
+- configure a suitable target as `append`, SCD1, or SCD2 with its required keys and parameters,
+- add a Schema Guardrail based on the observed table,
+- add one or two understandable DQ rules,
+- add Freshness and Source Drift expectations where appropriate,
+- add Sensitive Data handling when the demo columns support it.
+
+Do not add rules only to make the screen look busy. The goal is to make it obvious that the Data Contract changes what the same `02_pipeline` will enforce in Step 4.
+
+## Review the complete definition
+
+Before freezing, review the selected `table_id`, Enrichment, Guardrails, Processing, and ownership together.
+
+A user should be able to answer:
+
+> What does this table mean, what must be true about it, and how is it allowed to be published?
+
+## Freeze the version
+
+Freeze the reviewed draft to create an immutable Data Contract version.
+
+Freezing does not activate the version for Production. It creates the exact version Engineering Development can select and test next.
 
 ## Expected result
 
-One frozen Data Contract version binds the reviewed Enrichment and Guardrails to the selected `table_id`. It has **not** been selected for Development, linked to a Data Agreement, activated for Production, or deployed.
+You now have a frozen immutable Data Contract built from the real table evidence produced in Step 2.
 
-**Previous:** [Step 2: Run the Development pipeline](02-run-pipeline.md)
-**Next:** [Step 4: Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)
+**Next:** [Step 4. Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)

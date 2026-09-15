@@ -1,85 +1,184 @@
-# Module 2: Engineer and run a data pipeline
+# Step 2. Build and run the ETL
 
-**Use the pre-wired `02_pipeline` template to run a complete FabricOps pipeline in Engineering Development.**
+**This is the main Engineering walkthrough. Run the current `02_pipeline` in Development before any Data Contract exists so you can see what FabricOps already standardizes, what remains project-owned, and what Governance adds later.**
 
-**Approx. 30 min · 5 units · Engineering Development**
+The template is a **full-read pipeline**. Every governed source is read as the complete persisted table on each run. Target publication is a separate concern: each Write block can use its own Development processing proposal now and its governed Data Contract strategy later.
 
-The goal of this module is not to assemble FabricOps function by function. The `02_pipeline` template already wires the standard pipeline lifecycle around your project-specific Read, Transform, Write, and processing configuration. For this first run, skip its reusable Data Contract selection section; Governance has not created a Data Contract yet.
+## What this step should teach
 
-At the end of this module, you will have run the complete pipeline and written `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` where applicable, and `METADATA_DATA_LINEAGE` records that Governance uses in Step 3.
-
-!!! info "Pipeline stage terminology"
-
-    In `02_pipeline`, **Read**, **Transform**, and **Write** are the user-facing stage names. **Source** and **target** remain technical terms for upstream/downstream datasets, lineage relationships, processing state, and FabricOps configuration/API fields such as `store="source"` or `store="unified"`.
-
-!!! important "Step 2 is contract-free"
-
-    No Guardrails or Data Contract have been created for the demo table yet. That is expected.
-
-    Do not select, validate, or activate a Data Contract in Step 2. Skip the template's reusable Data Contract selection section and run the baseline Read → Transform → Write path. In Step 3, Governance selects the target `table_id`, authors Enrichment and Guardrails in the unified editor, and freezes the first Data Contract version. Step 4 is Engineering's first use of that version in `02_pipeline`. Step 5 explicitly links the tested version to its Data Agreement and activates it. Step 6 promotes and runs the same pipeline in Production against the active contract.
-
-## Learning objectives
-
-By the end of this module, you'll be able to:
-
-- understand what the `02_pipeline` template already handles for you,
-- run a complete Read → Transform → Write flow with demo data,
-- read the two managed Lakehouse tables and the managed Warehouse source prepared in Step 0B,
-- keep project-specific transformation logic visible in the intended notebook section,
-- choose Full Dataset, Incremental Watermark, or Incremental Partition processing when required,
-- review the target plus the `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` records produced by the run.
-
-## Prerequisites
-
-Before starting this module:
-
-- complete [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md),
-- complete [Step 0B: Set up the operating environment](00B-run-environment-setup.md),
-- complete [Step 1: Create data stewards and a data agreement](01-create-agreement.md),
-- confirm Step 0B created `demo.orders` and `demo.products` in the Source Lakehouse and `demo.order_history` in the Product Warehouse.
-
-## Module units
-
-| Unit | What you'll learn |
-| --- | --- |
-| [1. Understand the `02_pipeline` template](02-run-pipeline/understand-template.md) | See what FabricOps wires automatically and what remains project-owned. |
-| [2. Run the baseline pipeline](02-run-pipeline/run-baseline-etl.md) | Execute Read → Transform → Write before any Data Contract or Guardrails exist. |
-| [3. Configure the managed sources](02-run-pipeline/configure-sources.md) | Use the two Lakehouse table Read blocks and the Warehouse query block pre-wired for this walkthrough. |
-| [4. Transform and write](02-run-pipeline/transform-and-load.md) | Add project logic and publish one governed target. |
-| [5. Choose target processing and review results](02-run-pipeline/processing-and-results.md) | Understand target processing and inspect the concrete metadata records handed to Governance. |
-
-## The learning-path story
+By the end of Step 2 you should understand the complete reusable shape:
 
 ```text
-Step 2
-Run the full pipeline
-Write Catalogue / Profiled / Lineage metadata
-        ↓
-Step 3
-Select table_id
-Author Enrichment + Guardrails
-Freeze Data Contract version
-        ↓
-Step 4
-Select the frozen version for table_id
-Run the same pipeline and validate
-        ↓
-Step 5
-Link the tested version to the Data Agreement
-Activate the linked version
-        ↓
-Step 6
-Run the same pipeline in Production
-against the active contract
+00_env_config
+      ↓
+Data Contract context
+      ↓
+READ 1 ─┐
+READ 2 ─┼─→ Transform ─→ WRITE 1
+READ 3 ─┘              └→ WRITE 2
 ```
 
-The important point is that FabricOps does not require a separate basic pipeline, Guardrail pipeline, and Production pipeline. The same engineering template progresses through a governed lifecycle as governance records are added around it.
+This is a genuine many-to-many pattern. A project can clone Read blocks for more sources, create multiple transformed outputs, and clone Write blocks for additional targets. Each target declares the exact source `table_id` values that feed it so Lineage stays target-specific.
 
-## Start the module
+## 0. Environment
 
-[Start Unit 1: Understand the `02_pipeline` template](02-run-pipeline/understand-template.md)
+`02_pipeline` begins with:
 
-Need an exact function signature or parameter instead of the learning path? Use the [Function Reference](../reference/index.md).
+```python
+%run 00_env_config
+```
 
-**Previous:** [Step 1: Create data stewards and a data agreement](01-create-agreement.md)  
-**Next after completing this module:** [Step 3: Author and freeze the Data Contract](03-enrich-guardrails.md)
+The notebook then imports the public FabricOps boundaries and checks used by the template.
+
+## 1. Data Contract context: deliberately empty on the first run
+
+Run the Data Contract selection section, but do not select a contract for the new demo targets because none exists yet.
+
+This is not an error. Development is allowed to build the real pipeline before Governance has authored the first contract.
+
+The important behaviour is that the check functions still run. When there is no selected Data Contract in Development they return a safe skipped result instead of forcing engineers to comment the checks out. For example, governed DQ returns:
+
+```text
+status = skipped
+can_continue = True
+reason = No Data Contract selected; Development only.
+```
+
+That means the notebook shape is stable from the first run onward. You do not create a separate ungoverned pipeline and later replace it with a governed one.
+
+## 2. Full Read: three governed sources
+
+The supplied template demonstrates three independent source reads:
+
+| Read | Store | Table | Role |
+| --- | --- | --- | --- |
+| Orders | Source Lakehouse | `demo.orders` | Current transactional Orders. |
+| Products | Source Lakehouse | `demo.products` | Product reference data. |
+| Order History | Product Warehouse | `demo.order_history` | Historical customer context. |
+
+Each Read block follows the same structure:
+
+1. `pipeline_read()` resolves the configured store, reads the complete table, and returns the canonical `table_id`.
+2. `check_freshness()` runs or safely skips when no contract is selected.
+3. `check_schema()` runs or safely skips.
+4. `check_dq()` runs or safely skips.
+5. `profile_table(table_id=...)` refreshes the canonical profile for the complete physical source.
+
+The orchestration is intentionally visible. FabricOps abstracts repetitive routing and metadata work, but the notebook still shows the lifecycle so it is not a black box.
+
+### Why profiling still matters before the Data Contract
+
+The first Development run gives Governance something real to govern. `profile_table()` records the observed physical table structure and statistics so Step 3 can author Enrichment, Guardrails, and Processing against an actual `table_id` rather than an imagined schema.
+
+## 3. Transform: ordinary PySpark
+
+The template keeps project logic in the middle.
+
+The supplied example combines Orders, Products, and Order History and produces two outputs:
+
+1. `transformed_df`: detailed curated Orders.
+2. `customer_summary_df`: customer-level summary.
+
+FabricOps does not introduce a transformation DSL. Join, filter, aggregate, derive columns, and reshape data with normal PySpark.
+
+This is where the many-to-many shape becomes visible:
+
+```text
+orders ───────┐
+products ─────┼─→ curated_orders
+order_history ┘
+
+curated_orders ─→ customer_summary
+```
+
+## 4. Write: two independent target flows
+
+Each Write block is a complete target publication boundary. The current template demonstrates a Lakehouse target and a Warehouse target so users see that the same FabricOps pattern works across store types.
+
+For every target, the block performs the explicit sequence:
+
+1. `resolve_table_id()` once for the target.
+2. `check_schema()`.
+3. `check_sensitive_data()` and carry its returned DataFrame forward.
+4. `check_source_drift()` for each exact source-to-target relationship.
+5. `check_dq()`.
+6. `check_guardrail_coverage()`.
+7. `pipeline_write()` using the target's Development processing proposal when no contract exists.
+8. `profile_table(table_id=...)` after publication so profiling represents the persisted target.
+
+On the first run, contract-backed checks skip in Development because there is no selected contract. `pipeline_write()` can still use the Development load strategy proposal supplied by the Write block, publish the target, and record the successful technical metadata.
+
+## Show different load strategies instead of only talking about them
+
+Use the two target blocks to make target processing concrete.
+
+A simple first-run configuration is:
+
+| Target | Development strategy | What the user sees |
+| --- | --- | --- |
+| `unified.demo.curated_orders` | `overwrite` | The persisted target always represents the latest complete transformed result. |
+| Product Warehouse customer summary | `overwrite` initially | A clean baseline summary that can later be governed with another strategy if desired. |
+
+Then in Step 3, author the target Processing definition in the Data Contract. One useful demonstration is to keep the curated table as `overwrite` while configuring another suitable target as `append`, SCD1, or SCD2 with the required strategy parameters. The point is not to show every strategy in one notebook. It is to show that **each target has its own governed processing contract** even when both targets come from the same transformation flow.
+
+## Day 1: run the pipeline
+
+At the start of the demo, `source.demo.orders` contains the 120 rows loaded from `orders.csv`.
+
+Run `02_pipeline` from top to bottom and verify:
+
+- all three sources are read in full,
+- checks visibly skip where no Data Contract is selected,
+- source profiles are refreshed,
+- the transformation produces both outputs,
+- both targets are published,
+- each target receives its own canonical `table_id`, Lineage, and post-write profile.
+
+This is the evidence Governance will use in Step 3.
+
+## Day 2: change the source and rerun
+
+Before the later validation run, return to the simple setup notebook from 0B and append `orders_incremental.csv` to `source.demo.orders`.
+
+That adds 12 later Orders rows, moving the managed source from 120 to 132 rows.
+
+On the next `02_pipeline` execution:
+
+- `pipeline_read()` still reads the entire 132-row Orders source,
+- the transformations recompute from the complete current sources,
+- an `overwrite` target is replaced with the newly computed complete result,
+- an `append` target would append its current publication rows,
+- SCD1/SCD2 targets, when governed with the required keys and parameters, apply their respective update/history semantics.
+
+This is the key distinction the demo should leave users with:
+
+**Full read is the source-processing model. Load strategy is the target-publication model.**
+
+## Multiple writes and parallelism
+
+The canonical notebook shows independent Write blocks sequentially because that is easiest to inspect, retry, and debug.
+
+FabricOps keeps those writes independent by requiring each target to provide the exact source `table_id` values that feed it. That independence is what makes wider orchestration possible.
+
+If a project chooses to execute independent target publications concurrently through Fabric orchestration or Spark job scheduling, keep each complete Write block intact. Concurrency is an execution optimisation around the same FabricOps contract, not a separate API or hidden `parallel_write()` feature.
+
+Also distinguish target concurrency from Spark write parallelism. `pipeline_write(..., repartition_by=...)` can control partitioning for a physical write, but that is not the same thing as running two target Write blocks concurrently.
+
+## What FabricOps recorded
+
+After the first run, inspect the technical evidence rather than relying only on printed success messages. You should now have real table identities and refreshed technical metadata such as Catalogue, Profiled/Profiled Frequency where applicable, Lineage, and successful write/source-observation state created by the pipeline functions.
+
+Step 3 uses those real target identities to author Governance.
+
+## Expected result
+
+You have now run a complete FabricOps ETL without a Data Contract and seen that:
+
+- the same notebook shape works before and after Governance,
+- checks safely skip in Development when no contract exists,
+- multiple source tables can feed multiple targets,
+- project transformation remains plain PySpark,
+- each target owns an independent publication flow and load strategy,
+- FabricOps records the technical evidence Governance needs next.
+
+**Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)

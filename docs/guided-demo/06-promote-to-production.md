@@ -1,85 +1,51 @@
-# Step 6: Promote and Run Production
+# Step 6. Promote and run Production
 
-**Promote the validated `02_pipeline` into Engineering Production, then run it so FabricOps resolves the one active Data Contract for each governed table automatically.**
+**Promote the validated `02_pipeline` logic and run the same engineering pattern in Engineering Production.**
 
-The Production runtime behaviour below is implemented but remains **Preview** in the Guided Demo until the complete promotion-to-run path is revalidated end to end in Fabric.
+Production should not receive Development output tables, draft metadata, or a hand-edited copy of the contract. The promoted asset is the validated pipeline logic; Production resolves its own configured stores and the active governed definition.
 
-!!! info "Key concepts for this step"
+## Promote the pipeline
 
-    **Data Contract**, **Enforcement**, **Guardrail Result**, and **Data Quality** explain why Production resolves a saved immutable table-level contract instead of mutable Development authoring.
+Use your organisation's Fabric deployment process to make the validated `02_pipeline` available in Engineering Production.
 
-    Hover over a glossary term for its canonical definition, or open the [Glossary](../glossary.md) for the full entry.
+Keep environment-specific identities in `00_env_config` so promotion does not require rewriting workspace IDs, item IDs, paths, or SQL endpoints inside the pipeline notebook.
 
-## High-level flow
+## Run Production `00_env_config`
 
-```text
-Validated Development 02_pipeline
-→ Promote into Engineering Production
-→ Resolve active Data Contract
-→ Resolve saved immutable Guardrails + processing
-→ Prepare source scope
-→ Validate source
-→ Transform
-→ Validate target
-→ Governed write
-→ Full read-back + profile
+The Production notebook loads its own configured context:
+
+```python
+%run 00_env_config
 ```
 
-## Before you begin
+The same logical names now resolve to Production Fabric items.
 
-Confirm that the governed table has exactly one active Data Contract version, the validated `02_pipeline` has passed Development validation, and the notebook uses the Production `00_env_config` after it is promoted into Engineering Production.
+## Run the same `02_pipeline`
 
-As an operating practice, the version should have been tested in Development and completed any required governance sign-off before activation. FabricOps does not currently enforce those checks as a technical activation gate.
+Production follows the same visible Read → Transform → Write structure used in Development.
 
-??? note "Planned — Promote the validated pipeline"
+The key difference is contract resolution:
 
-    Move the validated `02_pipeline` into Engineering Production using the organisation's approved deployment process.
+- Development can explicitly select an eligible immutable version for testing.
+- Production resolves the active Data Contract automatically for each governed `table_id`.
 
-    FabricOps keeps this promotion action separate from Data Contract activation. Activating a contract does not deploy the notebook. The standardised promotion mechanism is planned and may use Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
+The same Guardrail functions execute the active expectations, and `pipeline_write()` uses the active governed Processing definition for each target.
 
-??? info "Preview — Resolve the active Data Contract automatically"
+## What should feel familiar
 
-    Open the promoted `02_pipeline` in Engineering Production and confirm the source, unified, and product targets resolve to the expected Production Fabric items.
+By this stage there should be no new FabricOps engineering pattern to learn. The user has already seen:
 
-    Run `widget_select_data_contract()`. It uses the same current-notebook Lineage discovery as Development. In Production it is read only and shows the one active Data Contract version for every discovered Source and Target `table_id`; Development overrides are ignored.
+- configured stores in 0B,
+- the same full Read blocks in Steps 2 and 4,
+- the same ordinary PySpark transformation,
+- the same independent Write blocks,
+- the same Guardrail locations,
+- the same target load-strategy boundary.
 
-    Production never falls back to mutable authoring metadata. Runtime uses the active version's saved immutable Guardrails and processing definition.
-
-    ```text
-    physical Production table
-    → canonical Data Catalogue table_id
-    → exactly one active Data Contract
-    → saved immutable Guardrails + target processing
-    ```
-
-    If no active contract exists, or more than one active version exists for the same table, the governed Production run fails.
-
-??? info "Preview — Prepare and validate the Production source"
-
-    Use `pipeline_read()` with the source `table_id` so FabricOps resolves the registered source, delegates the physical source read, and registers source Lineage. Target processing remains separate.
-
-    Read the source through its configured Lakehouse or Warehouse path, then run the source Schema and DQ Guardrails on the resulting DataFrame. Register a source Profile only when that DataFrame represents the complete physical source table; a filtered or aggregated project-owned query must not replace the complete Profile.
-???+ success "Live — Apply the visible transformation"
-
-    Apply the normal project-owned transformation logic. The Production runtime uses the same visible transformation section as Development.
-
-??? info "Preview — Validate and write the Production target"
-
-    Run target Schema and DQ checks before changing the Production target.
-
-    After the explicit target Guardrails allow continuation, use `pipeline_write()` with the target `table_id`. It resolves the active Data Contract and its saved immutable processing definition, publishes through the configured store, and records success metadata only after publication succeeds.
-
-??? info "Preview — Read back and register the complete target"
-
-    Read the persisted target back in full and profile/register the complete persisted target.
-
-    The active Data Contract therefore controls the governed runtime boundary while the physical read, transformation, writer, and persisted target remain visible in `02_pipeline`.
+Production is the validated workflow running under stricter contract resolution, not a separate implementation.
 
 ## Expected result
 
-You should understand the Production path as **promote the validated `02_pipeline` → resolve the active saved Data Contract → run the governed Production pipeline**. Promotion and Data Contract activation are separate actions, and the Production runtime applies the active contract's saved immutable Guardrails and processing definition around the same Read → Transform → Write lifecycle.
+Engineering Production has published governed outputs using the active Data Contract and the Production environment configuration.
 
-**Previous:** [Step 5: Link the Data Agreement and activate](05-create-data-contract.md)
-**Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
-
-See also: [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md), [`pipeline_read()`](../api/reference/pipeline_read.md), [`pipeline_write()`](../api/reference/pipeline_write.md), and [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
+**Next:** [Step 7. Consume approved Production data](99-explore.md)
