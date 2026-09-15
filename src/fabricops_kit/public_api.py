@@ -7,6 +7,7 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
     "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
     "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+    "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
     "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
     "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
     "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
@@ -21,7 +22,6 @@ SUPPORTED_PUBLIC_API = (
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
     "fabricops_kit.access.scan_workspace_access",
-    "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_source_drift",
