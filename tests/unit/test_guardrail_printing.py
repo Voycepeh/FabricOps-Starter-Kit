@@ -6,7 +6,13 @@ import inspect
 
 import pytest
 
-from fabricops_kit import check_dq, check_freshness, check_schema, check_sensitive_data
+from fabricops_kit import (
+    check_dq,
+    check_freshness,
+    check_schema,
+    check_sensitive_data,
+    check_source_drift,
+)
 from fabricops_kit.pipeline.shared import print_guardrail_result
 
 pytestmark = pytest.mark.unit
@@ -54,8 +60,30 @@ def test_guardrail_formatter_verbose_false_suppresses_output(capsys) -> None:
     assert capsys.readouterr().out == ""
 
 
-def test_disabled_freshness_prints_skipped(capsys) -> None:
-    """Disabled public checks return and report SKIPPED without runtime setup."""
-    result = check_freshness("source.demo.orders", enabled=False)
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda: check_schema(table_id="source.demo.orders", enabled=False),
+        lambda: check_dq(object(), table_id="source.demo.orders", enabled=False),
+        lambda: check_freshness("source.demo.orders", enabled=False),
+        lambda: check_source_drift(
+            "source.demo.orders",
+            target_table_id="unified.demo.curated_orders",
+            enabled=False,
+        ),
+        lambda: check_sensitive_data(object(), table_id="unified.demo.curated_orders", enabled=False),
+    ],
+)
+def test_disabled_runtime_checks_explain_that_no_evaluation_ran(capsys, call) -> None:
+    """Disabled checks remain explicit about what FabricOps skipped."""
+    result = call()
+    output = capsys.readouterr().out
     assert result["status"] == "skipped"
-    assert "Result SKIPPED" in capsys.readouterr().out
+    assert "Result SKIPPED" in output
+    assert "Details disabled explicitly" in output
+
+
+def test_disabled_check_verbose_false_stays_quiet(capsys) -> None:
+    """Detail output follows the same verbose switch as the normalized status."""
+    check_freshness("source.demo.orders", enabled=False, verbose=False)
+    assert capsys.readouterr().out == ""
