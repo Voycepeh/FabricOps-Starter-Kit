@@ -240,6 +240,8 @@ def check_sensitive_data(
             "checks": [],
         }
         print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details disabled explicitly; no contract, treatment, transformation, or evidence was evaluated")
         return result
     spark_session = getattr(dataframe, "sparkSession", None)
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
@@ -256,6 +258,8 @@ def check_sensitive_data(
             "reason": "No Data Contract selected; Development only.",
         }
         print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        if verbose:
+            print("  Details no Data Contract selected; Sensitive Data treatments and evidence persistence skipped")
         return result
     identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
     rules = [
@@ -353,6 +357,20 @@ def check_sensitive_data(
         "checks": checks,
     }
     print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+    if verbose:
+        print("  Details")
+        print("    Contract selected; active Sensitive Data rules resolved from the governed contract")
+        print(f"    Treatments evaluated {len(checks)}")
+        for index, check in enumerate(checks, start=1):
+            column_id = str(check.get("column_id") or "column")
+            treatment = str(check.get("treatment") or "unknown")
+            action = str(check.get("action") or "default")
+            check_status = str(check.get("status") or "unknown").upper()
+            print(f"      {index}. {column_id} / {treatment} / {action} / {check_status}")
+        mapping_label = "returned to caller" if support_mapping is not None else "not required"
+        print(f"    Token support mapping {mapping_label}; mappings are never persisted automatically")
+        print("    Evidence one sanitized summary per treatment appended to METADATA_GUARDRAIL_RESULTS")
+        print("    Raw sensitive values are never printed and are excluded from Guardrail result metadata")
     if raise_on_failure and not result["can_continue"]:
         raise RuntimeError(f"A blocking Sensitive Data Guardrail failed for table_id {table_id!r}.")
     return result
