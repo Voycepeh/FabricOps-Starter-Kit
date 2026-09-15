@@ -197,7 +197,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
     assert "# step 5. link the data agreement and activate" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]
-    assert "activation does **not** deploy `02_pipeline`" in step_5
+    assert "activation does **not** deploy `02_pipeline`" in normalized["step_5"]
     assert "active production definition" in normalized["step_5"]
 
     assert "# step 6. promote and run production" in normalized["step_6"]
