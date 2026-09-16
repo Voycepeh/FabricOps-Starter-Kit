@@ -35,3 +35,12 @@ def test_env_config_leaves_metadata_schema_routing_to_framework() -> None:
     assert '"runtime_metadata": RUN_CONTEXT.runtime_metadata' in source
     assert "governance_metadata_schema" in source
     assert "engineering_metadata_schema" in source
+
+
+def test_env_config_optional_dropdowns_use_supported_widget_type() -> None:
+    """Starter custom dropdown fields should render as dropdown controls."""
+    source = _env_config_source()
+
+    assert source.count('"key": "optional_dropdown"') == 2
+    assert source.count('"type": "dropdown"') == 2
+    assert '"type": "select"' not in source
