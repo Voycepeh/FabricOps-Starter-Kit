@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.widgets._notebook_ux import FABRIC_NOTEBOOK_UX_JAVASCRIPT
+from fabricops_kit.widgets import _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
 pytestmark = pytest.mark.unit
 
 
 def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
     """Release focus after completed actions without blurring text fields on click."""
-    script = FABRIC_NOTEBOOK_UX_JAVASCRIPT
+    script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
     assert 'document.addEventListener("change"' in script
     assert 'target.closest(".fabricops-form")' in script
@@ -25,7 +25,7 @@ def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
 
 def test_fabric_form_css_prevents_label_control_overlap():
     """Force Fabric form labels above controls and constrain controls to their cells."""
-    script = FABRIC_NOTEBOOK_UX_JAVASCRIPT
+    script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
     assert ".fabricops-form .widget-inline-hbox" in script
     assert "flex-direction: column !important" in script
