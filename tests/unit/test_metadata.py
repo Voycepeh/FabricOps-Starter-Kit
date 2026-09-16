@@ -27,7 +27,7 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
     assert audit["_workspace_name"] == "FabricOps Test Workspace"
     assert audit["_committed_by"] == "fabricops.test@example.com"
-    assert audit["_metadata_lakehouse_name"] == "metadata"
+    assert audit["_metadata_lakehouse_name"] == "Metadata"
     assert audit["_activity_id"] == "manual-activity"
 
 
@@ -37,7 +37,7 @@ def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     column_key = config_shared.build_column_id(table_key, "Order_ID")
     dq_key = metadata_keys._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
 
-    assert table_key == config_shared.build_table_id("lakehouse", "silver", "DBO", "orders")
+    assert table_key == config_shared.build_table_id("lakehouse", "Silver", "DBO", "orders")
     assert column_key == config_shared.build_column_id(table_key, " order_id ")
     assert table_key == "8aaef3ca85884ac51f0e3467eff843c88367e3cd5d59c8ba16c196570189fbed"
     assert column_key == "0b9d37afaaf22424e6e3697d005a31bee42f3333a7ef6c4bd0d28448e9ad2842"
@@ -53,13 +53,13 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
 
     def write_table(df, table, *, store, context, **kwargs):
         assert context["env"] == "dev"
-        assert store == "metadata"
+        assert store == "Metadata"
         writes.append((table, df.rows, context["env"], store, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
 
     def read_table(table, *, store, context, **kwargs):
-        assert (context["env"], store) == ("dev", "metadata")
+        assert (context["env"], store) == ("dev", "Metadata")
         if table == agreement.DATA_STEWARD_TABLE:
             return steward_rows
         return []
@@ -94,7 +94,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     assert steward["steward_id"]
     assert read_back == [steward]
     assert writes[0][0] == agreement.DATA_STEWARD_TABLE
-    assert writes[0][2:4] == ("dev", "metadata")
+    assert writes[0][2:4] == ("dev", "Metadata")
 
 
 def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
@@ -201,7 +201,7 @@ def test_runtime_audit_fields_support_legacy_runtime_aliases():
     audit = audit_helpers.build_runtime_audit_fields(
         committed_by="user@example.com",
         committed_at="2026-07-08T12:00:00+00:00",
-        metadata_lakehouse_name="metadata",
+        metadata_lakehouse_name="Metadata",
         runtime_context={
             "workspaceId": "workspace-id",
             "workspaceName": "workspace-name",

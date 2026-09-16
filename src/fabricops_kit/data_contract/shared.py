@@ -51,7 +51,7 @@ def contract_lifecycle_id(table_id: str, environment_name: str) -> str:
 
 def create_contract_draft(
     *, table_id: str, config: Any, env: str, spark_session: Any,
-    context: Mapping[str, Any] | None = None, store: str = "metadata",
+    context: Mapping[str, Any] | None = None, store: str = "Metadata",
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Create or reopen the one agreement-free draft for a governed table."""
@@ -312,7 +312,7 @@ def read_contract_records(
     """Read exact-version governance records through the configured metadata target."""
     frame = read_lakehouse_table(
         table_name,
-        store="metadata",
+        store="Metadata",
         schema=metadata_table_physical_schema(config, table_name),
         context={"config": config, "env": env},
         spark_session=spark_session,
@@ -329,7 +329,7 @@ def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[di
     """Read all Enrichment rows in one configured authoring environment."""
     try:
         frame = read_lakehouse_table(
-            ENRICHMENT_TABLE, store="metadata",
+            ENRICHMENT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
             context={"config": config, "env": env}, spark_session=spark_session,
         )
@@ -376,7 +376,7 @@ def get_contract_authoring_state(
     tables = {}
     for table_name in (DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE", ENRICHMENT_TABLE, GUARDRAIL_TABLE):
         tables[table_name] = row_dicts(read_lakehouse_table(
-            table_name, store="metadata",
+            table_name, store="Metadata",
             schema=metadata_table_physical_schema(config, table_name),
             context=context, spark_session=spark_session,
         ))
@@ -454,7 +454,7 @@ def save_enrichment(records: list[dict[str, Any]], *, config: Any, env: str, spa
             spark_session.createDataFrame(
                 [coerce_metadata_row_types(ENRICHMENT_TABLE, row) for row in canonical],
                 schema=metadata_table_schema_registry()[ENRICHMENT_TABLE],
-            ), ENRICHMENT_TABLE, store="metadata",
+            ), ENRICHMENT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
             context={"config": config, "env": env}, mode="append",
         )
@@ -472,7 +472,7 @@ def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spa
     if canonical:
         write_lakehouse_table(
             spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_TABLE, row) for row in canonical]),
-            GUARDRAIL_TABLE, store="metadata",
+            GUARDRAIL_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
             context={"config": config, "env": env}, mode="append",
         )
@@ -648,7 +648,7 @@ def freeze_contract(
     env: str,
     spark_session: Any,
     context: Mapping[str, Any] | None = None,
-    store: str = "metadata",
+    store: str = "Metadata",
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Load, validate, assemble, and freeze one exact authoritative draft version."""
@@ -685,7 +685,7 @@ def freeze_contract(
         DATA_CONTRACT_TABLE,
         (
             metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
-            if store.strip().lower() == "metadata"
+            if store == "Metadata"
             else schema or configured_lakehouse_schema(config, env, store)
         ),
         context=runtime_context,

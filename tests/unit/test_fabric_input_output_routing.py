@@ -54,10 +54,10 @@ def _io_config() -> PathConfig:
     return PathConfig(
         paths={
             "dev": {
-                "bronze": _store("bronze", "lakehouse"),
-                "silver": _store("silver", "lakehouse"),
-                "gold": _store("gold", "lakehouse"),
-                "metadata": _store("metadata", "lakehouse"),
+                "Bronze": _store("bronze", "lakehouse"),
+                "Silver": _store("silver", "lakehouse"),
+                "Gold": _store("gold", "lakehouse"),
+                "Metadata": _store("metadata", "lakehouse"),
                 "warehouse": _store("warehouse", "warehouse"),
             }
         }
@@ -68,9 +68,9 @@ def _schema_io_config() -> PathConfig:
     return PathConfig(
         paths={
             "dev": {
-                "bronze": _store("bronze", "lakehouse", schema_enabled=True, schema="src"),
-                "silver": _store("silver", "lakehouse", schema_enabled=True, schema="dbo"),
-                "metadata": _store("metadata", "lakehouse", schema_enabled=True, schema="meta"),
+                "Bronze": _store("bronze", "lakehouse", schema_enabled=True, schema="src"),
+                "Silver": _store("silver", "lakehouse", schema_enabled=True, schema="dbo"),
+                "Metadata": _store("metadata", "lakehouse", schema_enabled=True, schema="meta"),
             }
         }
     )
@@ -81,18 +81,18 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     config = _io_config()
     context = {"config": config, "env": "dev"}
 
-    for target in ("bronze", "silver", "gold"):
+    for target in ("Bronze", "Silver", "Gold"):
         spark = _Spark()
         io.read_lakehouse_table("orders", store=target, schema=None, spark_session=spark, context=context)
 
         expected_path = (
-            f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
+            f"abfss://dev-{target.lower()}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target.lower()}-item/Tables/orders"
         )
         assert ("format", "delta") in spark.read.calls
         assert ("load", expected_path) in spark.read.calls
 
     metadata_spark = _Spark()
-    io.read_lakehouse_table("orders", store="metadata", schema=None, spark_session=metadata_spark, context=context)
+    io.read_lakehouse_table("orders", store="Metadata", schema=None, spark_session=metadata_spark, context=context)
     metadata_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/orders"
     assert ("format", "delta") in metadata_spark.read.calls
     assert ("load", metadata_path) in metadata_spark.read.calls
@@ -112,7 +112,7 @@ def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
         lambda *_args, **_kwargs: {
             "table_id": "orders-id",
             "store_type": "lakehouse",
-            "store": "silver",
+            "store": "Silver",
             "schema": "dbo",
             "table_name": "orders",
         },
@@ -133,7 +133,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
     io.write_lakehouse_table(
         frame,
         "metadata_orders",
-        store="metadata",
+        store="Metadata",
         schema=None,
         mode="overwrite",
         options={"overwriteSchema": "true"},
@@ -159,7 +159,7 @@ def test_read_lakehouse_table_forwards_delta_reader_options():
 
     io.read_lakehouse_table(
         "orders",
-        store="silver",
+        store="Silver",
         schema=None,
         spark_session=spark,
         context=context,
@@ -180,9 +180,9 @@ def test_lakehouse_file_readers_build_configured_files_paths():
     context = {"config": config, "env": "dev"}
     spark = _Spark()
 
-    io.read_lakehouse_csv("Files/raw/orders.csv", store="bronze", spark_session=spark, context=context)
+    io.read_lakehouse_csv("Files/raw/orders.csv", store="Bronze", spark_session=spark, context=context)
     io.read_lakehouse_parquet(
-        "curated/orders.parquet", store="silver", spark_session=spark, verbose=False, context=context
+        "curated/orders.parquet", store="Silver", spark_session=spark, verbose=False, context=context
     )
 
     assert (
@@ -207,7 +207,7 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
 
     result = read_lakehouse_csv(
         "Files/raw/orders.csv",
-        store="bronze",
+        store="Bronze",
         spark_session=spark,
         header=False,
         context=context,
@@ -245,7 +245,7 @@ def test_read_lakehouse_json_resolves_paths_and_forwards_options(relative_path, 
 
     result = read_lakehouse_json(
         relative_path,
-        store="bronze",
+        store="Bronze",
         spark_session=spark_override,
         context=context,
         multiLine=True,
@@ -284,7 +284,7 @@ def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
 
     io.read_lakehouse_parquet(
         "customers.parquet",
-        store="bronze",
+        store="Bronze",
         spark_session=root_spark,
         verbose=False,
         context=context,
@@ -293,7 +293,7 @@ def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
     )
     io.read_lakehouse_parquet(
         "input/customers.parquet",
-        store="bronze",
+        store="Bronze",
         spark_session=nested_spark,
         verbose=False,
         context=context,
@@ -347,7 +347,7 @@ def test_read_lakehouse_parquet_forwards_options_to_fallback():
 
     result = io.read_lakehouse_parquet(
         "customers.parquet",
-        store="bronze",
+        store="Bronze",
         spark_session=spark,
         verbose=False,
         context=context,
@@ -372,12 +372,12 @@ def test_configured_file_path_resolution_normalizes_files_prefix():
 
     config = _io_config()
     store, normalized, path = resolve_configured_file_path(
-        "bronze",
+        "Bronze",
         "/Files/raw/orders.csv",
         context={"config": config, "env": "dev"},
     )
 
-    assert store.key == "bronze"
+    assert store.key == "Bronze"
     assert normalized == "raw/orders.csv"
     assert path == "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/dev-bronze-item/Files/raw/orders.csv"
 
@@ -545,7 +545,7 @@ def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
         original,
         "dbo",
         "orders",
-        store="gold",
+        store="Gold",
         mode="overwrite",
         repartition_by=repartition_by,
         options={"batchsize": "5000"},
@@ -622,7 +622,7 @@ def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
     spark = _Spark()
 
     io.read_lakehouse_table(
-        "METADATA_GUARDRAIL", store="metadata", schema="METADATA", spark_session=spark, context=context
+        "METADATA_GUARDRAIL", store="Metadata", schema="METADATA", spark_session=spark, context=context
     )
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL"
@@ -639,7 +639,7 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
     io.write_lakehouse_table(
         frame,
         "METADATA_GUARDRAIL",
-        store="metadata",
+        store="Metadata",
         schema="METADATA",
         mode="overwrite",
         options={"overwriteSchema": "true"},
@@ -659,11 +659,11 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_table("orders", store="bronze", schema="src", spark_session=spark, context=context)
+    io.read_lakehouse_table("orders", store="Bronze", schema="src", spark_session=spark, context=context)
     io.write_lakehouse_table(
         frame,
         "METADATA_GUARDRAIL",
-        store="metadata",
+        store="Metadata",
         schema="meta",
         mode="overwrite",
         options={"overwriteSchema": "true"},
@@ -683,7 +683,7 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     """Verify lakehouse schema disabled target routes legacy paths and identifiers."""
     config = _io_config()
-    metadata_store = config.paths["dev"]["metadata"]
+    metadata_store = config.paths["dev"]["Metadata"]
 
     from fabricops_kit.io.shared import resolve_lakehouse_table_location
 
@@ -697,7 +697,7 @@ def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
     with pytest.raises(ValueError):
         io.read_lakehouse_table(
             "TABLE",
-            store="metadata",
+            store="Metadata",
             schema=schema,
             spark_session=_Spark(),
             context={"config": _io_config(), "env": "dev"},
@@ -710,7 +710,7 @@ def test_lakehouse_table_validation_rejects_unsafe_names(table):
     with pytest.raises(ValueError):
         io.read_lakehouse_table(
             table,
-            store="metadata",
+            store="Metadata",
             schema=None,
             spark_session=_Spark(),
             context={"config": _io_config(), "env": "dev"},

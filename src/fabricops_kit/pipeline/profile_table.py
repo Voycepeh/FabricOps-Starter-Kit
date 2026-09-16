@@ -549,7 +549,7 @@ def _replace_frequency_rows(
             "Delta Lake support is required for replacement METADATA_DATA_PROFILED_FREQUENCY writes."
         ) from exc
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "metadata",
+        "Metadata",
         PROFILED_FREQUENCY_TABLE,
         metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
         context={"config": config, "env": env},
@@ -566,7 +566,7 @@ def _replace_frequency_rows(
         write_lakehouse_table(
             frequency_df,
             PROFILED_FREQUENCY_TABLE,
-            store="metadata",
+            store="Metadata",
             schema=metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
             context={"config": config, "env": env},
             mode="append",
@@ -658,7 +658,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
             "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
         ) from exc
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "metadata",
+        "Metadata",
         CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "env": env},
@@ -807,7 +807,7 @@ def profile_table(
 
     Profile a governed complete physical table without knowing its store kind:
 
-    >>> result = profile_table(store="bronze", schema="dbo", table_name="orders")
+    >>> result = profile_table(store="Bronze", schema="dbo", table_name="orders")
 
     Profile a transformed DataFrame against an explicit governed identity:
 
@@ -931,7 +931,7 @@ def profile_table(
     write_lakehouse_table(
         profiled_df,
         PROFILED_TABLE,
-        store="metadata",
+        store="Metadata",
         schema=metadata_table_physical_schema(config, PROFILED_TABLE),
         context={"config": config, "env": env},
         mode="append",

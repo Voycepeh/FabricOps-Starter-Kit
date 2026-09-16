@@ -68,7 +68,7 @@ Read a governed table without knowing whether ``source`` resolves to a
 Lakehouse or Warehouse:
 
 >>> result = pipeline_read(
-...     store="bronze",
+...     store="Bronze",
 ...     schema="demo",
 ...     table_name="orders",
 ... )
@@ -78,7 +78,7 @@ Lakehouse or Warehouse:
 Read a governed Warehouse source through project-owned SQL:
 
 >>> result = pipeline_read(
-...     store="gold",
+...     store="Gold",
 ...     schema="demo",
 ...     table_name="order_history",
 ...     query='''

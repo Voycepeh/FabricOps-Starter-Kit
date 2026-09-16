@@ -30,10 +30,10 @@ def framework_config() -> FrameworkConfig:
         path_config=PathConfig(
             paths={
                 "dev": {
-                    "bronze": store("lakehouse"),
-                    "silver": store("lakehouse"),
-                    "gold": store("warehouse"),
-                    "metadata": FabricStore(
+                    "Bronze": store("lakehouse"),
+                    "Silver": store("lakehouse"),
+                    "Gold": store("warehouse"),
+                    "Metadata": FabricStore(
                         env="dev",
                         workspace_id="dev-workspace",
                         item_id="dev-lakehouse-item",
@@ -53,7 +53,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
     from fabricops_kit.widgets.shared import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 
     return SimpleNamespace(
-        path_config=SimpleNamespace(paths={"dev": {"metadata": store("lakehouse")}}),
+        path_config=SimpleNamespace(paths={"dev": {"Metadata": store("lakehouse")}}),
         data_agreement_config=DataAgreementConfig(
             metadata_tables=metadata_tables
             or {

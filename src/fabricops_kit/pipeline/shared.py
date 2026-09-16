@@ -190,7 +190,7 @@ def persist_lineage_participation(
     spark = get_spark_session()
     frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "metadata",
+        "Metadata",
         _LINEAGE_TABLE,
         metadata_table_physical_schema(config, _LINEAGE_TABLE),
         context=resolved_context,
@@ -653,7 +653,7 @@ def check_source_drift_for_target(
     try:
         history = read_lakehouse_table(
             _SOURCE_OBSERVATION_TABLE,
-            store="metadata",
+            store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
             context=context,
         )
@@ -817,7 +817,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         write_lakehouse_table(
             frame,
             _SOURCE_OBSERVATION_TABLE,
-            store="metadata",
+            store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
             context=context,
             mode="append",
@@ -910,7 +910,7 @@ def write_guardrail_result_row(
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
-        store="metadata",
+        store="Metadata",
         schema=metadata_table_physical_schema(config, results_table),
         context={"config": config, "env": env},
         mode="append",
@@ -1343,7 +1343,7 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     """Resolve the unambiguous active frozen contract for one logical table."""
     try:
         frame = read_lakehouse_table(
-            DATA_CONTRACT_TABLE, store="metadata",
+            DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session, context={"config": config, "env": env},
         )
@@ -1391,7 +1391,7 @@ def _resolve_data_contract_version(
     try:
         frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE,
-            store="metadata",
+            store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             spark_session=spark_session,
             context=context or {"config": config, "env": env},
@@ -1471,7 +1471,7 @@ def resolve_catalogue_table_id(
 ) -> str:
     """Resolve one physical runtime table to its canonical Catalogue identity."""
     frame = read_lakehouse_table(
-        CATALOGUE_TABLE, store="metadata",
+        CATALOGUE_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session, context={"config": config, "env": env},
     )
@@ -1512,7 +1512,7 @@ def resolve_catalogue_table_identity(
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
     frame = read_lakehouse_table(
         CATALOGUE_TABLE,
-        store="metadata",
+        store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session,
         context=context or {"config": config, "env": env},
@@ -2808,7 +2808,7 @@ def check_dq_runtime(
     context = {"config": config, "env": env}
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
-        "METADATA_GUARDRAIL_RESULTS", store="metadata",
+        "METADATA_GUARDRAIL_RESULTS", store="Metadata",
         schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
     )
 

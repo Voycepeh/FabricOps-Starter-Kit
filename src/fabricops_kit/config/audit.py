@@ -77,7 +77,7 @@ def build_runtime_audit_fields(
     Parameters
     ----------
     config : FrameworkConfig | dict, optional
-        Framework config containing ``path_config.paths[env]["metadata"]``.
+        Framework config containing ``path_config.paths[env]["Metadata"]``.
     env : str, optional
         Environment key paired with ``config`` when resolving the metadata
         Lakehouse name.
@@ -117,7 +117,7 @@ def build_runtime_audit_fields(
 
     resolved_metadata_lakehouse = metadata_lakehouse_name
     if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and env is not None:
-        resolved_metadata_lakehouse = get_store(config=config, env=env, store="metadata").key
+        resolved_metadata_lakehouse = get_store(config=config, env=env, store="Metadata").key
 
     values = {
         user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("user_name", "user_id"),

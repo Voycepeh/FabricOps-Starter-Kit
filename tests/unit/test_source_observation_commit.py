@@ -53,7 +53,7 @@ def _audit():
         "_workspace_name": "Development",
         "_notebook_id": "physical-id",
         "_notebook_name": "02_pipeline",
-        "_metadata_lakehouse_name": "metadata",
+        "_metadata_lakehouse_name": "Metadata",
         "_activity_id": "run-1",
     }
 

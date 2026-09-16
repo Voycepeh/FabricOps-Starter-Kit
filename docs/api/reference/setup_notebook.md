@@ -74,7 +74,7 @@ def setup_notebook(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source", "Unified", "metadata"])
+CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source", "Unified", "Metadata"])
 ```
 
 </div>

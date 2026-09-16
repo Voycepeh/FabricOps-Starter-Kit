@@ -78,7 +78,7 @@ Profile an arbitrary DataFrame without persistence:
 
 Profile a governed complete physical table without knowing its store kind:
 
->>> result = profile_table(store="bronze", schema="dbo", table_name="orders")
+>>> result = profile_table(store="Bronze", schema="dbo", table_name="orders")
 
 Profile a transformed DataFrame against an explicit governed identity:
 

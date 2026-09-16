@@ -15,7 +15,7 @@ from .shared import (
 def read_lakehouse_parquet(
     relative_path: str,
     *,
-    store: str = "bronze",
+    store: str = "Bronze",
     verbose: bool = True,
     spark_session=None,
     context: dict[str, Any] | None = None,
@@ -93,9 +93,9 @@ def read_lakehouse_parquet(
     area. Root-level and nested paths are supported. The resolved location is
     conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:
 
-    ``df = read_lakehouse_parquet("customers.parquet", store="bronze")``
+    ``df = read_lakehouse_parquet("customers.parquet", store="Bronze")``
 
-    ``df = read_lakehouse_parquet("incoming/2026/customers.parquet", store="bronze")``
+    ``df = read_lakehouse_parquet("incoming/2026/customers.parquet", store="Bronze")``
 
     Derived ``_tsus`` fallback naming:
 
@@ -135,7 +135,7 @@ def read_lakehouse_parquet(
 
     Compact reader-option example:
 
-    ``df = read_lakehouse_parquet("incoming/events.parquet", store="bronze", mergeSchema=True)``
+    ``df = read_lakehouse_parquet("incoming/events.parquet", store="Bronze", mergeSchema=True)``
 
     This function does not read a managed Delta table, register Parquet data as
     a Lakehouse table, replace or modify the original Parquet file, convert

@@ -155,7 +155,7 @@ def resolve_configured_lakehouse_table(
     """Resolve a logical store key and table through configured lakehouse metadata."""
     config, env, resolved_context = resolve_fabric_context(context=context)
     configured_store, _env = resolve_store(store, "lakehouse", context=resolved_context)
-    if store.strip().lower() == "metadata":
+    if store == "Metadata":
         from fabricops_kit.config.metadata_schemas import METADATA_TABLE_OWNERSHIP, metadata_table_physical_schema
 
         if table_name in METADATA_TABLE_OWNERSHIP:

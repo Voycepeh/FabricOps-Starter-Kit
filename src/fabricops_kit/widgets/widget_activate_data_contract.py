@@ -76,7 +76,7 @@ def _compact_review(payload: dict[str, Any]) -> dict[str, Any]:
 def widget_activate_data_contract(
     *, table_id: str | None = None, contract_id: str | None = None,
     contract_version: int | None = None, agreement_id: str | None = None,
-    agreement_version: str | None = None, store: str = "metadata",
+    agreement_version: str | None = None, store: str = "Metadata",
     schema: str | None = None, spark_session=None, context=None,
 ):
     """Link an exact Data Agreement version and activate a frozen Data Contract.
@@ -93,7 +93,7 @@ def widget_activate_data_contract(
         Initial Data Agreement lifecycle identity selected at activation time.
     agreement_version : str, optional
         Initial exact Data Agreement version selected at activation time.
-    store : str, default="metadata"
+    store : str, default="Metadata"
         Configured metadata Lakehouse store key.
     schema : str, optional
         Metadata Lakehouse schema override.

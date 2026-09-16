@@ -58,7 +58,7 @@ def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any
     from pyspark.sql import functions as F
 
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "metadata",
+        "Metadata",
         _GUARDRAIL_RESULTS_TABLE,
         metadata_table_physical_schema(config, _GUARDRAIL_RESULTS_TABLE),
         context=context,
