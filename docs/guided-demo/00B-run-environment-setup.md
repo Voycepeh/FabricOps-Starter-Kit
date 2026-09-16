@@ -23,13 +23,13 @@ In Fabric, open the target workspace, choose **Import notebook**, and upload the
 
 After importing the notebooks, the two required workspaces should now look like this.
 
-![Governance workspace assets](../assets/00B/Governance_Assets.png)
-
 The Governance workspace contains the `metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
 
-![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
+![Governance workspace assets](../assets/00B/Governance_Assets.png)
 
 The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, and `02_pipeline`.
+
+![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
 
 The Consumer workspace should contain `00_env_config` and `99_explore`. It does not need its own Fabric store for this Guided Demo.
 
@@ -93,9 +93,9 @@ In the Governance workspace, run the metadata setup block in `00_env_config`.
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
-
 This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts.
+
+![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 
 ## 5. Download the demo data
 
