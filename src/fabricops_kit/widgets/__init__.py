@@ -1,11 +1,5 @@
 """Public widget entrypoints for FabricOps notebook workflows."""
 
-from fabricops_kit.widgets._notebook_ux import _install_fabric_notebook_ux
-
-
-_install_fabric_notebook_ux()
-
-
 __all__ = [
     "widget_view_catalogue",
     "widget_activate_data_contract",
@@ -27,3 +21,117 @@ def __getattr__(name: str):
     value = getattr(import_module(_WIDGET_MODULES[name]), name)
     globals()[name] = value
     return value
+
+
+# Microsoft Fabric can restore browser focus to an interacted ipywidget after a
+# value change or button callback. That focus restoration also scrolls the
+# notebook back to the widget, fighting normal user scrolling. Install one
+# form-scoped browser safeguard when the widgets package is imported. The CSS
+# also makes Fabric render long labels above their controls instead of allowing
+# labels and selection boxes to overlap in dense Data Contract forms.
+_FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
+(() => {
+  const STYLE_ID = "fabricops-widget-ux-style";
+  if (!document.getElementById(STYLE_ID)) {
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      .fabricops-form .widget-inline-hbox {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
+      .fabricops-form .widget-inline-hbox > .widget-label,
+      .fabricops-form .widget-label {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        margin: 0 0 6px 0 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+      }
+      .fabricops-form .widget-text,
+      .fabricops-form .widget-textarea,
+      .fabricops-form .widget-dropdown,
+      .fabricops-form .widget-combobox,
+      .fabricops-form .widget-select,
+      .fabricops-form .widget-select-multiple,
+      .fabricops-form .widget-toggle-buttons {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
+      .fabricops-form .widget-text input,
+      .fabricops-form .widget-textarea textarea,
+      .fabricops-form .widget-dropdown select,
+      .fabricops-form .widget-combobox input,
+      .fabricops-form .widget-select select,
+      .fabricops-form .widget-select-multiple select {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .fabricops-form .widget-hbox,
+      .fabricops-form .widget-vbox,
+      .fabricops-form .widget-gridbox {
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (window.__fabricopsFocusReleaseInstalled) {
+    return;
+  }
+  window.__fabricopsFocusReleaseInstalled = true;
+
+  const releaseFocus = (form, delay) => {
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active && form.contains(active) && typeof active.blur === "function") {
+        active.blur();
+      }
+    }, delay);
+  };
+
+  document.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const form = target.closest(".fabricops-form");
+    if (form) {
+      releaseFocus(form, 80);
+    }
+  }, true);
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const button = target.closest("button");
+    const form = button ? button.closest(".fabricops-form") : null;
+    if (form) {
+      releaseFocus(form, 120);
+    }
+  }, true);
+})();
+"""
+
+try:
+    from IPython import get_ipython
+
+    if get_ipython() is not None:
+        from IPython.display import Javascript, display
+
+        display(Javascript(_FABRIC_NOTEBOOK_UX_JAVASCRIPT))
+except (ImportError, ModuleNotFoundError):
+    pass
