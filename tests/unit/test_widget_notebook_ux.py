@@ -10,7 +10,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
-    """Release focus after completed actions without blurring text fields on click."""
+    """Release focus after completed actions without blurring newly focused fields."""
     script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
     assert 'document.addEventListener("change"' in script
@@ -19,7 +19,9 @@ def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
     assert 'target.closest("button")' in script
     assert 'button.closest(".fabricops-form")' in script
     assert "window.__fabricopsFocusReleaseInstalled" in script
-    assert "active.blur()" in script
+    assert "document.activeElement === target" in script
+    assert "target.blur()" in script
+    assert "releaseFocus(form, button, 120)" in script
     assert 'target.closest("input")' not in script
 
 
