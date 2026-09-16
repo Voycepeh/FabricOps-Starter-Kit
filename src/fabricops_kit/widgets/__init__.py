@@ -92,11 +92,14 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
   }
   window.__fabricopsFocusReleaseInstalled = true;
 
-  const releaseFocus = (form, delay) => {
+  const releaseFocus = (form, target, delay) => {
     window.setTimeout(() => {
-      const active = document.activeElement;
-      if (active && form.contains(active) && typeof active.blur === "function") {
-        active.blur();
+      if (
+        document.activeElement === target &&
+        form.contains(target) &&
+        typeof target.blur === "function"
+      ) {
+        target.blur();
       }
     }, delay);
   };
@@ -108,7 +111,7 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     }
     const form = target.closest(".fabricops-form");
     if (form) {
-      releaseFocus(form, 80);
+      releaseFocus(form, target, 80);
     }
   }, true);
 
@@ -120,7 +123,7 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     const button = target.closest("button");
     const form = button ? button.closest(".fabricops-form") : null;
     if (form) {
-      releaseFocus(form, 120);
+      releaseFocus(form, button, 120);
     }
   }, true);
 })();
