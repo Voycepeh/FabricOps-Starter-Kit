@@ -10,18 +10,17 @@ pytestmark = pytest.mark.unit
 
 
 def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
-    """Release focus after actions without blurring text fields while typing."""
+    """Release focus after completed actions without blurring text fields on click."""
     script = FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
+    assert 'document.addEventListener("change"' in script
     assert 'target.closest(".fabricops-form")' in script
+    assert 'document.addEventListener("click"' in script
+    assert 'target.closest("button")' in script
     assert 'button.closest(".fabricops-form")' in script
     assert "window.__fabricopsFocusReleaseInstalled" in script
     assert "active.blur()" in script
-    assert "input[type='checkbox']" in script
-    assert "input[type='radio']" in script
-    assert "input[type='date']" in script
-    assert "input[type='number']" in script
-    assert "input[type='text']" not in script
+    assert 'target.closest("input")' not in script
 
 
 def test_fabric_form_css_prevents_label_control_overlap():
