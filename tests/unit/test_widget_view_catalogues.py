@@ -348,7 +348,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
             {"table_id": "unprofiled-key", "environment_name": "dev", "store_type": "lakehouse", "layer": "curated", "schema_name": "sales", "table_name": "customers", "last_profiled_at": latest_snapshot},
         ],
         role_options=None,
-        store="metadata",
+        store="Metadata",
         schema=None,
         spark_session=object(),
         runtime_context={"env": "dev"},

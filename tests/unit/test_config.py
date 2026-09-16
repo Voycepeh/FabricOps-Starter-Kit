@@ -37,15 +37,44 @@ def test_fabric_store_name_is_derived_only_when_resolved():
     configured = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse")
 
     with pytest.raises(TypeError, match="unexpected keyword argument 'name'"):
-        FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse", name="gold")
+        FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse", name="Gold")
 
-    resolved = get_store(PathConfig(paths={"dev": {"gold": configured}}), "dev", "gold")
-    assert resolved.key == "gold"
+    resolved = get_store(PathConfig(paths={"dev": {"Gold": configured}}), "dev", "Gold")
+    assert resolved.key == "Gold"
     assert not hasattr(configured, "name")
 
     for removed_alias in ("source", "unified", "product"):
         with pytest.raises(ValueError, match=f"Store '{removed_alias}' was not found"):
-            get_store(PathConfig(paths={"dev": {"bronze": configured}}), "dev", removed_alias)
+            get_store(PathConfig(paths={"dev": {"Bronze": configured}}), "dev", removed_alias)
+
+
+def test_get_store_requires_exact_canonical_metadata_case():
+    """Metadata resolves only when callers use the configured exact-case key."""
+    configured = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="lakehouse")
+    config = PathConfig(
+        paths={
+            "dev": {
+                "Bronze": configured,
+                "Gold": configured,
+                "metadata": configured,
+                "Silver": configured,
+            }
+        }
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Store 'Metadata' was not found under environment 'dev'\. "
+            r"Available stores: Bronze, Gold, metadata, Silver\."
+        ),
+    ):
+        get_store(config, "dev", "Metadata")
+
+    canonical = PathConfig(paths={"dev": {"Metadata": configured}})
+    assert get_store(canonical, "dev", "Metadata").key == "Metadata"
+    with pytest.raises(ValueError, match="Store 'metadata' was not found"):
+        get_store(canonical, "dev", "metadata")
 
 
 def test_env_config_uses_physical_item_keys_without_duplicate_names():
@@ -53,7 +82,7 @@ def test_env_config_uses_physical_item_keys_without_duplicate_names():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
-    for key in ("bronze", "silver", "gold", "metadata"):
+    for key in ("Bronze", "Silver", "Gold", "Metadata"):
         assert f'"{key}": FabricStore(' in source
     for removed_alias in ("source", "unified", "product"):
         assert f'"{removed_alias}": FabricStore(' not in source
@@ -213,7 +242,7 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
 
 def test_framework_config_uses_simplified_config_sections():
     """Verify FrameworkConfig only exposes active config sections."""
-    config = FrameworkConfig(path_config=PathConfig(paths={"dev": {"bronze": store()}}))
+    config = FrameworkConfig(path_config=PathConfig(paths={"dev": {"Bronze": store()}}))
 
     assert isinstance(config.governance_config, GovernanceConfig)
     assert isinstance(config.data_agreement_config, DataAgreementConfig)
@@ -227,7 +256,7 @@ def test_dict_framework_config_defaults_simplified_sections_when_omitted():
     """Verify dict framework config defaults simplified sections when omitted."""
     config = validate_framework_config(
         {
-            "path_config": PathConfig(paths={"dev": {"bronze": store(), "silver": store()}}),
+            "path_config": PathConfig(paths={"dev": {"Bronze": store(), "Silver": store()}}),
         }
     )
 
@@ -249,17 +278,17 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
     """Verify setup notebook resolves environment paths and reports invalid targets."""
     config = framework_config()
 
-    required_targets = ["bronze", "silver", "gold", "metadata"]
+    required_targets = ["Bronze", "Silver", "Gold", "Metadata"]
     context = setup_notebook(
         config=config, env="dev", required_targets=required_targets, notebook_name="99_explore_orders"
     )
 
     assert context.environment == "dev"
     assert set(context.paths) == set(required_targets)
-    assert context.paths["bronze"].key == "bronze"
-    assert context.paths["silver"].key == "silver"
-    assert context.paths["gold"].key == "gold"
-    assert context.paths["metadata"].key == "metadata"
+    assert context.paths["Bronze"].key == "Bronze"
+    assert context.paths["Silver"].key == "Silver"
+    assert context.paths["Gold"].key == "Gold"
+    assert context.paths["Metadata"].key == "Metadata"
     assert context.readiness_status in {"ready", "not_ready"}
     with pytest.raises(ValueError, match="Store 'missing' was not found"):
         setup_notebook(config=config, env="dev", required_targets=["missing"])
@@ -269,8 +298,8 @@ def test_setup_notebook_uses_consolidated_governance_name_contract(fake_notebook
     """Accept 01_governance and reject the removed Governance notebook type."""
     config = framework_config()
 
-    governance = setup_notebook(config=config, env="dev", required_targets=["bronze"], notebook_name="01_governance_orders")
-    legacy = setup_notebook(config=config, env="dev", required_targets=["bronze"], notebook_name="03_governance_orders")
+    governance = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="01_governance_orders")
+    legacy = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="03_governance_orders")
 
     governance_check = next(check for check in governance.validation_results if check.name == "notebook_naming")
     legacy_check = next(check for check in legacy.validation_results if check.name == "notebook_naming")
@@ -342,7 +371,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
-        assert store == "metadata"
+        assert store == "Metadata"
         assert schema == ("governance" if table_name in {
             "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
             "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
@@ -355,7 +384,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def write_table(
         df, table_name, *, store, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
     ):
-        assert store == "metadata"
+        assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "overwrite"
         assert options is None
@@ -382,8 +411,8 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
 def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
     """Verify setup rejects an undifferentiated Metadata Lakehouse."""
     cfg = framework_config()
-    metadata_store = cfg.path_config.paths["dev"]["metadata"]
-    cfg.path_config.paths["dev"]["metadata"] = FabricStore(
+    metadata_store = cfg.path_config.paths["dev"]["Metadata"]
+    cfg.path_config.paths["dev"]["Metadata"] = FabricStore(
         env=metadata_store.env,
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,
@@ -483,8 +512,8 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     cfg = framework_config()
-    metadata_store = cfg.path_config.paths["dev"]["metadata"]
-    cfg.path_config.paths["dev"]["metadata"] = FabricStore(
+    metadata_store = cfg.path_config.paths["dev"]["Metadata"]
+    cfg.path_config.paths["dev"]["Metadata"] = FabricStore(
         env=metadata_store.env,
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,

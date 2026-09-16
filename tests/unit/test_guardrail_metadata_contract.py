@@ -84,7 +84,7 @@ def _audit() -> dict[str, object]:
         "_workspace_name": "workspace-name",
         "_notebook_id": "notebook-id",
         "_notebook_name": "02_pipeline",
-        "_metadata_lakehouse_name": "metadata",
+        "_metadata_lakehouse_name": "Metadata",
         "_activity_id": "activity-id",
     }
 

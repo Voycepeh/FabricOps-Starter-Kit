@@ -42,7 +42,7 @@ def widget_view_catalogue(
     mode: str,
     agreement: dict[str, Any] | None=None,
     spark_session=None,
-    store: str='metadata',
+    store: str='Metadata',
     schema: str | None=None,
     context=None,
 ):

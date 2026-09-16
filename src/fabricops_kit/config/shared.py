@@ -689,7 +689,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
     env : str
         Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
     store : str
-        Configured store key and physical Fabric item name, such as ``bronze`` or ``gold``.
+        Configured store key and physical Fabric item name, such as ``Bronze`` or ``Gold``.
     config : FrameworkConfig | PathConfig | None
         Configuration that contains environment-to-store mappings.
 
@@ -705,8 +705,8 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
 
     Examples
     --------
-    >>> get_store(CONFIG, "dev", "gold").key
-    'gold'
+    >>> get_store(CONFIG, "dev", "Gold").key
+    'Gold'
 
     """
     paths = _normalize_path_config(config).paths
@@ -716,7 +716,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
             f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
         )
     if store not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys())) or "<none>"
+        available_targets = ", ".join(sorted(paths[env].keys(), key=str.casefold)) or "<none>"
         raise ValueError(
             f"Store '{store}' was not found under environment '{env}'. Available stores: {available_targets}."
         )

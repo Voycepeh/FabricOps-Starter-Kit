@@ -46,7 +46,7 @@ def resolve_table_id(*, store: str, schema: str | None=None, table_name: str) ->
 <div class="reference-example-usage" markdown="1">
 
 >>> table_id = resolve_table_id(
-...     store="silver", schema="dbo", table_name="curated_orders"
+...     store="Silver", schema="dbo", table_name="curated_orders"
 ... )
 
 </div>

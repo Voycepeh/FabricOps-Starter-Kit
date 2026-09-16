@@ -17,7 +17,7 @@ def write_lakehouse_table(
     df,
     table_name: str,
     *,
-    store: str = "silver",
+    store: str = "Silver",
     schema=None,
     mode="append",
     partition_by=None,

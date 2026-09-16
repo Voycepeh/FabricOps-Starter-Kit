@@ -60,7 +60,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 def read_lakehouse_table(
     table_name: str | None=None,
     table_id: str | None=None,
-    store: str='bronze',
+    store: str='Bronze',
     schema: str | None=None,
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -75,7 +75,7 @@ def read_lakehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="metadata", schema=METADATA_SCHEMA, spark_session=spark)
+catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="Metadata", schema=METADATA_SCHEMA, spark_session=spark)
 ```
 
 </div>
@@ -119,11 +119,11 @@ FabricOps resolves the configured Lakehouse Tables path from
 supplied reader options. Filtering and column selection are applied later
 through normal Spark DataFrame operations. Conceptual examples:
 
-``df = read_lakehouse_table(table_name="orders", store="bronze")``
+``df = read_lakehouse_table(table_name="orders", store="Bronze")``
 
-``df = read_lakehouse_table(table_name="orders", store="bronze", schema="sales")``
+``df = read_lakehouse_table(table_name="orders", store="Bronze", schema="sales")``
 
-``orders_df = read_lakehouse_table(table_name="sales_orders", store="bronze")``
+``orders_df = read_lakehouse_table(table_name="sales_orders", store="Bronze")``
 
 ``recent_orders_df = orders_df.select("order_id", "customer_id", "order_date", "amount").where("order_date >= '2026-01-01'")``
 

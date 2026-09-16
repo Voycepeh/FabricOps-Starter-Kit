@@ -601,7 +601,7 @@ def widget_view_catalogue(
     mode: str,
     agreement: dict[str, Any] | None = None,
     spark_session=None,
-    store: str = "metadata",
+    store: str = "Metadata",
     schema: str | None = None,
     context=None,
 ):
@@ -616,7 +616,7 @@ def widget_view_catalogue(
         only for ``mode="agreement"``.
     spark_session : object, optional
         Spark session override.
-    store : str, default="metadata"
+    store : str, default="Metadata"
         Configured metadata FabricStore key.
     schema : str, optional
         Metadata lakehouse schema override.

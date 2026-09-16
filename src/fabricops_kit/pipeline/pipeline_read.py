@@ -117,7 +117,7 @@ def pipeline_read(
     Lakehouse or Warehouse:
 
     >>> result = pipeline_read(
-    ...     store="bronze",
+    ...     store="Bronze",
     ...     schema="demo",
     ...     table_name="orders",
     ... )
@@ -127,7 +127,7 @@ def pipeline_read(
     Read a governed Warehouse source through project-owned SQL:
 
     >>> result = pipeline_read(
-    ...     store="gold",
+    ...     store="Gold",
     ...     schema="demo",
     ...     table_name="order_history",
     ...     query='''

@@ -40,7 +40,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_excel(
     relative_path: str,
-    store: str='bronze',
+    store: str='Bronze',
     sheet_name=0,
     spark_session=None,
     context: dict[str, Any] | None=None,

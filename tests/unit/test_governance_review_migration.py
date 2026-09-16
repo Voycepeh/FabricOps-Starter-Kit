@@ -18,7 +18,7 @@ pytestmark = pytest.mark.unit
 @pytest.fixture(autouse=True)
 def _canonical_audit(monkeypatch):
     """Provide deterministic canonical audit fields for governance tests."""
-    audit = {"_workspace_id": "workspace-id", "_workspace_name": "workspace", "_notebook_id": "notebook-id", "_notebook_name": "notebook", "_activity_id": "activity-id", "_committed_by": "user", "_committed_at": "2026-01-01T00:00:00+00:00", "_metadata_lakehouse_name": "metadata"}
+    audit = {"_workspace_id": "workspace-id", "_workspace_name": "workspace", "_notebook_id": "notebook-id", "_notebook_name": "notebook", "_activity_id": "activity-id", "_committed_by": "user", "_committed_at": "2026-01-01T00:00:00+00:00", "_metadata_lakehouse_name": "Metadata"}
     monkeypatch.setattr(governance, "build_runtime_audit_fields", lambda **kwargs: dict(audit))
 
 

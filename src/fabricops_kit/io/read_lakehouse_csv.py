@@ -10,7 +10,7 @@ from .shared import get_spark_session, read_csv_path, resolve_configured_file_pa
 def read_lakehouse_csv(
     relative_path: str,
     *,
-    store: str = "bronze",
+    store: str = "Bronze",
     spark_session=None,
     header: bool = True,
     context: dict[str, Any] | None = None,
@@ -73,13 +73,13 @@ def read_lakehouse_csv(
 
     Compact examples:
 
-    ``df = read_lakehouse_csv("incoming/customers.csv", store="bronze")``
+    ``df = read_lakehouse_csv("incoming/customers.csv", store="Bronze")``
 
-    ``df = read_lakehouse_csv("incoming/customers/", store="bronze")``
+    ``df = read_lakehouse_csv("incoming/customers/", store="Bronze")``
 
-    ``df = read_lakehouse_csv("incoming/customers.csv", store="bronze", inferSchema=True)``
+    ``df = read_lakehouse_csv("incoming/customers.csv", store="Bronze", inferSchema=True)``
 
-    ``df = read_lakehouse_csv("incoming/orders.csv", store="bronze", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
+    ``df = read_lakehouse_csv("incoming/orders.csv", store="Bronze", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
 
     When a folder path is supplied, Spark reads compatible CSV files from that
     path into one DataFrame according to Spark CSV reader behavior. FabricOps

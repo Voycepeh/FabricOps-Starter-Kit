@@ -16,7 +16,7 @@ def _audit_fields():
         "_workspace_name": "workspace",
         "_notebook_id": "notebook-id",
         "_notebook_name": "notebook",
-        "_metadata_lakehouse_name": "metadata",
+        "_metadata_lakehouse_name": "Metadata",
         "_activity_id": "activity",
     }
 

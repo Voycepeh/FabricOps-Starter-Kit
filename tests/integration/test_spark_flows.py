@@ -194,7 +194,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
         rule_key="freshness_orders",
     )
 
-    assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
+    assert writes[0][2:4] == ("Metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
     assert written_row["guardrail_rule_id"] == "freshness-rule"
     assert written_row["environment_name"] == "dev"
@@ -246,7 +246,7 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
     )
 
     result = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="bronze", store_type="lakehouse",
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="Bronze", store_type="lakehouse",
         schema_name=None, dataset_name="sales", run_id="run-9", row_identity_columns=["business_id"],
         context={"data_contract_overrides": {table_key: {
             "contract_id": "contract-orders", "contract_version": 1,
@@ -321,7 +321,7 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     )
 
     result = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="bronze", store_type="lakehouse", schema_name=None,
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="Bronze", store_type="lakehouse", schema_name=None,
         context={"data_contract_overrides": {table_key: {
             "contract_id": "contract-orders", "contract_version": 1,
         }}},
@@ -341,7 +341,7 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     assert {row.run_id for row in writes[0][1]} == {"activity-auto-run-1"}
 
     second = guardrails_shared.check_dq_runtime(
-        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="bronze",
+        dataframe, framework_config(), "dev", "orders", table_id=table_key, store="Bronze",
         store_type="lakehouse", schema_name=None,
         context={"data_contract_overrides": {table_key: {
             "contract_id": "contract-orders", "contract_version": 1,
@@ -389,7 +389,7 @@ def test_dq_no_rules_returns_canonical_empty_failed_values(spark_session, monkey
 
     result = shared.check_dq_runtime(
         dataframe, framework_config(), "dev", "orders", table_id="orders",
-        store="bronze", store_type="lakehouse", schema_name=None,
+        store="Bronze", store_type="lakehouse", schema_name=None,
     )
 
     assert result["failed_values"].count() == 0

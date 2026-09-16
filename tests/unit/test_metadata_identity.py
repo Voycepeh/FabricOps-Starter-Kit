@@ -6,14 +6,14 @@ from fabricops_kit.config.shared import build_column_id, build_table_id
 def test_table_id_is_normalized_and_deterministic():
     """Logical table identity is stable across cosmetic input differences."""
     assert build_table_id("Lakehouse", " Silver ", "DBO", " Orders ") == build_table_id(
-        "lakehouse", "silver", "dbo", "orders"
+        "lakehouse", "Silver", "dbo", "orders"
     )
 
 
 def test_environment_is_not_part_of_table_id_contract():
     """The helper accepts only logical asset coordinates, not environment."""
-    development = build_table_id("lakehouse", "silver", "dbo", "orders")
-    production = build_table_id("lakehouse", "silver", "dbo", "orders")
+    development = build_table_id("lakehouse", "Silver", "dbo", "orders")
+    production = build_table_id("lakehouse", "Silver", "dbo", "orders")
 
     assert development == production
 

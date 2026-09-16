@@ -42,7 +42,7 @@ def widget_activate_data_contract(
     contract_version: int | None=None,
     agreement_id: str | None=None,
     agreement_version: str | None=None,
-    store: str='metadata',
+    store: str='Metadata',
     schema: str | None=None,
     spark_session=None,
     context=None,

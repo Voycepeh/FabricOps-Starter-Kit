@@ -148,7 +148,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         for node in ast.walk(tree)
         if isinstance(node, ast.Name)
     }
-    assert 'store="metadata"' in source
+    assert 'store="Metadata"' in source
     assert 'mode="explore"' in source
     assert 'TABLE_ID = table_selection["table_id"]' in source
     assert 'contract_authoring["table_id"] == TABLE_ID' in source
