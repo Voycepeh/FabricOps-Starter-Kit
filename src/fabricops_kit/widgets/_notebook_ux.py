@@ -81,10 +81,7 @@ FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
       return;
     }
     const form = target.closest(".fabricops-form");
-    if (!form) {
-      return;
-    }
-    if (target.matches("select, input[type='checkbox'], input[type='radio'], input[type='date'], input[type='number']")) {
+    if (form) {
       releaseFocus(form, 80);
     }
   }, true);
@@ -108,9 +105,9 @@ def install_fabric_notebook_ux() -> bool:
     """Install Fabric-specific focus and layout safeguards in an active notebook.
 
     The browser listener is scoped to ``.fabricops-form`` so ordinary notebook
-    controls are untouched. Text inputs retain focus while typing; focus is only
-    released after select-like changes and button actions, preventing Microsoft
-    Fabric from snapping the notebook viewport back to an interacted widget.
+    controls are untouched. Text inputs retain focus while typing because click
+    handling is limited to buttons; completed value changes release any remaining
+    widget focus so Microsoft Fabric does not snap the viewport back to the form.
     """
     try:
         from IPython import get_ipython
