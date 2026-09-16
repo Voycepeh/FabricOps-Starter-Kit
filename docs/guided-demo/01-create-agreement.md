@@ -1,46 +1,43 @@
 # Step 1. Establish Governance context
 
-**Use `01_governance` only for the first Governance job: create the accountable Data Stewards and the Data Agreement.**
+**Use `01_governance` for the first Governance task, creating the Data Stewards and the Data Agreement. We put this at the first step but technically there is no depandancy until step 5 promotion so you may skip and revist this later if you prefer to start with the ETL process first**
 
-Do not author Guardrails or a Data Contract yet. Engineering first needs to produce the real tables and profiling evidence that Governance will govern in Step 3.
 
-## Load the shared environment
-
-Run `01_governance` from the top so it loads:
+## 1. Load the shared environment notebook that we set up in 00B
 
 ```python
 %run 00_env_config
 ```
 
-## Create the Data Stewards
+## 2. Import required widgets functions
+- we created widgets with ipywidgets to provide users a simplistic UI to record and capture the data needed , 
+- feel free to swap out to an actual frontend or capture the data into the underlying metdata tables yourself if you want to.
 
-Use the Data Steward widget to create the producer and consumer steward records required by the demo.
+```python
+from fabricops_kit import (
+    widget_render_data_agreement,
+    widget_render_data_steward,
+)
 
-![Steward](../assets/01/Steward.png)
+```
 
-The important outcome is not the widget itself. FabricOps persists the steward metadata into the Governance schema of the metadata Lakehouse.
+## 3. Create the Data Stewards
+
+- Use the widget to create the data producer/consumer of the data
+- The dropdown list are configurable and comes from the 00_env_conig notebook
+- To update a record you simply edit the data and press save again
+- The widget will write into the underlying metdata table for us , as you can see from the example below i created myself as a Data Owner and later updated it as Data Custodian
+  
+![Steward](../assets/01/Widget_Steward.png)
+![Steward2](../assets/01/Widget_Update.png)
+![Steward3](../assets/01/Recorded_Steward.png)
 
 ## Create the Data Agreement
 
-Use the Data Agreement widget to create the relationship between the accountable producer and consumer stewards.
-
-Capture the purpose, scope, permitted use, validity, supporting information, and other governance context required by your organisation.
-
-![Agreement](../assets/01/Agreement.png)
-
-## See what FabricOps actually recorded
-
-With the metadata Lakehouse attached, query the Governance tables directly so the demo makes the persistence model visible:
-
-```python
-stewards_df = spark.sql("SELECT * FROM governance.METADATA_DATA_STEWARD")
-agreements_df = spark.sql("SELECT * FROM governance.METADATA_DATA_AGREEMENT")
-
-display(stewards_df)
-display(agreements_df)
-```
-
-You should be able to identify the records you just created. This is the first important FabricOps idea: the widgets are authoring interfaces, while the governed state is persisted as ordinary Lakehouse metadata that can be inspected and audited.
+- Use the Data Agreement widget to create the relationship between the accountable producer and consumer stewards.
+- Capture the purpose, scope, permitted use, validity, supporting information, and other governance context required by your organisation.
+![Agreement](../assets/01/Widget_Agreement.png)
+![Agreement2](../assets/01/Widget_Agreement_2.png)
 
 ## Stop here
 
@@ -48,9 +45,6 @@ At the end of Step 1 you should have:
 
 - producer and consumer Data Steward records,
 - one Data Agreement between them,
-- visible persisted rows in the Governance metadata tables,
-- no table-specific Data Contract yet.
-
-That is intentional. Step 2 now lets Engineering create the real physical tables and technical evidence.
+- visible persisted rows in the metadata tables,
 
 **Next:** [Step 2. Build and run the ETL](02-run-pipeline.md)
