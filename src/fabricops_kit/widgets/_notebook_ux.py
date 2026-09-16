@@ -101,7 +101,7 @@ FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 """
 
 
-def install_fabric_notebook_ux() -> bool:
+def _install_fabric_notebook_ux() -> bool:
     """Install Fabric-specific focus and layout safeguards in an active notebook.
 
     The browser listener is scoped to ``.fabricops-form`` so ordinary notebook
