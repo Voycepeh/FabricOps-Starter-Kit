@@ -1,9 +1,9 @@
 """Public widget entrypoints for FabricOps notebook workflows."""
 
-from fabricops_kit.widgets._notebook_ux import install_fabric_notebook_ux
+from fabricops_kit.widgets._notebook_ux import _install_fabric_notebook_ux
 
 
-install_fabric_notebook_ux()
+_install_fabric_notebook_ux()
 
 
 __all__ = [
