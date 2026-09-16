@@ -532,7 +532,7 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.',
   'sidebar_group': '3. Data engineer',
   'sidebar_include': True},
- {'module_name': 'Metadata',
+ {'module_name': 'metadata',
   'visibility': 'public',
   'module_summary': 'Owns metadata evidence persistence, stable keys, notebook registry, catalogue '
                     'keys, and runtime audit helpers.',
