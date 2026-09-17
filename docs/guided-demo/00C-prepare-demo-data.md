@@ -1,46 +1,110 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-**Run one Engineering Development notebook that demonstrates the FabricOps I/O helpers and prepares the managed source tables required by `02_pipeline`.**
-
-This is still setup, not one of the seven FabricOps lifecycle steps. Run it in **Engineering Development** after completing 0B.
+**Run a notebook that demonstrates the FabricOps I/O helpers and prepares the tables required by the `02_pipeline` demo flow.**
 
 ## 1. Import the setup notebook
 
-Download and import the Guided Demo notebook from the same DemoData package used in 0B:
+1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
+2. Attach the same Fabric Environment used by the other notebooks.
+3. Run the first two steps in the notebook.
 
-[`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb)
+![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
-Place it in the **Engineering Development** workspace beside `00_env_config` and `02_pipeline`.
+## 2. Read the same Orders dataset from four file formats
 
-Attach the same Engineering Development Fabric Environment used by the other notebooks.
+Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
 
-`00C_demo_setup` is a Guided Demo notebook rather than one of the four reusable FabricOps notebook templates. Its job is to exercise the I/O helpers and seed the demo tables before the seven-step lifecycle begins.
-
-## 2. Run `00C_demo_setup`
-
-The notebook starts with:
+![Read CSV](../assets/00C/Read_csv.png)
 
 ```python
-%run 00_env_config
+# Optional: uncomment to inspect the loaded data
+display(orders_csv_df)
 ```
 
-It then uses the configured logical stores from `00_env_config`; you do not need to paste workspace or item IDs into the notebook itself.
+### Optional: verify all four file formats match
 
-The notebook demonstrates the public FabricOps I/O surface in one runnable story:
+Copy and paste this into an empty code cell.
 
-1. Read the same canonical Orders dataset from CSV, JSON, Parquet, and Excel.
-2. Confirm the four file formats resolve to the same 120-row logical dataset.
-3. Read `products.csv` and `order_history.csv` from the Bronze `Files/Demo` folder.
-4. Write the managed Lakehouse tables `bronze.demo.orders` and `bronze.demo.products`.
-5. Write the managed Warehouse table `gold.demo.order_history`.
-6. Read the Lakehouse tables back with `read_lakehouse_table()`.
-7. Read the Warehouse back with both `read_warehouse_table()` and `read_warehouse_query()` so the difference between a full table read and SQL pushdown is visible.
+Normalize the format-specific inferred schemas, then verify that CSV, JSON, Parquet, and Excel resolve to the same canonical Orders dataset using a checksum comparison.
 
-## 3. What the notebook intentionally does not load
+```python
+from pyspark.sql import functions as F
+
+schema = {
+    "order_id": "string",
+    "customer_id": "string",
+    "order_datetime": "timestamp",
+    "modified_datetime": "timestamp",
+    "product_id": "string",
+    "quantity": "int",
+    "unit_price": "double",
+    "discount": "double",
+    "order_status": "string",
+    "shipping_country": "string",
+}
+
+def normalize(df):
+    return df.select(*[
+        F.col(c).cast(dtype).alias(c)
+        for c, dtype in schema.items()
+    ])
+
+formats = {
+    "CSV": orders_csv_df,
+    "JSON": orders_json_df,
+    "PARQUET": orders_parquet_df,
+    "EXCEL": orders_excel_df,
+}
+
+normalized = {name: normalize(df) for name, df in formats.items()}
+
+def checksum(df):
+    cols = sorted(df.columns)
+    return (
+        df.select(F.sha2(F.concat_ws("||", *[F.coalesce(F.col(c).cast("string"), F.lit("<NULL>")) for c in cols]), 256).alias("hash"))
+        .agg(F.sha2(F.concat_ws("", F.sort_array(F.collect_list("hash"))), 256).alias("hash"))
+        .first()["hash"]
+    )
+
+hashes = [checksum(df) for df in normalized.values()]
+assert len(set(hashes)) == 1, "Orders file variants do not match."
+
+print("✓ CSV = JSON = PARQUET = EXCEL")
+print("✓ 1:1:1:1 data match")
+```
+
+The expected output confirms that all four file formats resolve to equivalent data. This step is only used to demonstrate the FabricOps file I/O capabilities.
+
+```text
+✓ CSV = JSON = PARQUET = EXCEL
+✓ 1:1:1:1 data match
+```
+
+## 3. Read and write the demo data
+
+Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
+
+### Orders
+
+![Orders demo](../assets/00C/Orders_Demo.png)
+
+### Products
+
+![Products demo](../assets/00C/Products_Demo.png)
+
+### Create the Warehouse schema
+
+![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
+
+### Order history
+
+![Orders history demo](../assets/00C/Orders_History_Demo.png)
+
+## What the notebook intentionally does not load
 
 `orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
 
-The partition and watermark fixtures are also left untouched for the later incremental/load-strategy showcase.
+The partition and watermark fixtures are also left untouched for the later incremental and load-strategy showcase.
 
 `orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
 
@@ -56,13 +120,5 @@ bronze Lakehouse
 gold Warehouse
   demo.order_history
 ```
-
-The raw demo files remain under:
-
-```text
-bronze/Files/Demo/
-```
-
-You have now exercised the FabricOps file, Lakehouse, and Warehouse I/O helpers and prepared the data for the seven-step lifecycle.
 
 **Next:** [Step 1. Establish Governance context](01-create-agreement.md)
