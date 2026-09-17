@@ -13,10 +13,16 @@ def test_lakehouse_and_warehouse_writers_print_consistent_destinations(monkeypat
     warehouse = import_module("fabricops_kit.io.write_warehouse_table")
     frame = _Frame()
 
+    lakehouse_store = type("Store", (), {"key": "Bronze"})()
     monkeypatch.setattr(
         lakehouse,
         "resolve_configured_lakehouse_table",
-        lambda *_args, **_kwargs: (object(), "products", "demo", "abfss://workspace/item/Tables/demo/products"),
+        lambda *_args, **_kwargs: (
+            lakehouse_store,
+            "products",
+            "demo",
+            "abfss://workspace/item/Tables/demo/products",
+        ),
     )
     monkeypatch.setattr(lakehouse, "write_delta_path", lambda *_args, **_kwargs: None)
 
@@ -31,6 +37,6 @@ def test_lakehouse_and_warehouse_writers_print_consistent_destinations(monkeypat
     warehouse.write_warehouse_table(frame, "demo", "order_history", store="Gold")
 
     assert capsys.readouterr().out.splitlines() == [
-        "Writing Lakehouse table to abfss://workspace/item/Tables/demo/products",
+        "Writing Lakehouse table to Bronze.demo.products",
         "Writing Warehouse table to Gold.demo.order_history",
     ]
