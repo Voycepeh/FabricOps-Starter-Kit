@@ -9,8 +9,8 @@ from fabricops_kit.widgets import _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 pytestmark = pytest.mark.unit
 
 
-def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
-    """Release focus after completed actions without blurring newly focused fields."""
+def test_focus_release_is_scoped_to_fabricops_forms():
+    """Blur the active FabricOps control after completed value and button actions."""
     script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
     assert 'document.addEventListener("change"' in script
@@ -19,10 +19,12 @@ def test_focus_release_is_scoped_and_keeps_text_entry_focusable():
     assert 'target.closest("button")' in script
     assert 'button.closest(".fabricops-form")' in script
     assert "window.__fabricopsFocusReleaseInstalled" in script
-    assert "document.activeElement === target" in script
-    assert "target.blur()" in script
-    assert "releaseFocus(form, button, 120)" in script
-    assert 'target.closest("input")' not in script
+    assert "const active = document.activeElement" in script
+    assert "form.contains(active)" in script
+    assert "active.blur()" in script
+    assert "document.activeElement === target" not in script
+    assert "releaseFocus(form, 50)" in script
+    assert "releaseFocus(form, 100)" in script
 
 
 def test_fabric_form_css_prevents_label_control_overlap():
