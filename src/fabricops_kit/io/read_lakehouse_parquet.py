@@ -173,6 +173,16 @@ def read_lakehouse_parquet(
             print("SUCCESS: Spark read original path.")
         return df
     except Exception as exc:
+        msg = str(exc)
+        invalid_parquet = (
+            "[CANNOT_READ_FILE_FOOTER]" in msg
+            or "is not a Parquet file" in msg
+            or "Expected magic number at tail" in msg
+        )
+        if invalid_parquet:
+            if verbose:
+                print(f"Original Parquet file is invalid or corrupt. Fallback skipped. Exception: {exc}")
+            raise
         if verbose:
             print(f"Original Parquet read failed. Will try fallback path. Exception: {exc}")
     for try_convert in range(2):
