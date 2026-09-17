@@ -104,9 +104,9 @@ FabricOps provides two Warehouse read helpers:
 * `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
 * `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
 
-Use `read_warehouse_query()` when filtering, aggregating, or selecting a subset of Warehouse data. This allows the SQL work to be pushed down to the Warehouse instead of translating the full table into Spark first.
+Use `read_warehouse_query()` when filtering, selecting columns, joining, or aggregating Warehouse data. This pushes the SQL work down to the Warehouse before the result crosses into PySpark, avoiding translation of more Warehouse data into Spark than necessary.
 
-For more detail, see the [Engineering guide](../engineering/index.md).
+For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
 
 ## What the notebook intentionally does not load
