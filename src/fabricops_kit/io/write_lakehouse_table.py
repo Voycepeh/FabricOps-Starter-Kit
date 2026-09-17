@@ -283,5 +283,6 @@ def write_lakehouse_table(
     normalized_mode = normalize_write_mode(mode)
     df = repartition_dataframe_for_write(df, repartition_by)
     if verbose:
-        print(f"Writing Lakehouse table to {path}")
+        destination = ".".join(part for part in (_store.key, _schema_value, _table_value) if part)
+        print(f"Writing Lakehouse table to {destination}")
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
