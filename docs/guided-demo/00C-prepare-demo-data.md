@@ -84,21 +84,30 @@ The expected output confirms that all four file formats resolve to equivalent da
 
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
 
-### Orders
+### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 
 ![Orders demo](../assets/00C/Orders_Demo.png)
 
-### Products
+### Products (we will ingest the product data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 
 ![Products demo](../assets/00C/Products_Demo.png)
 
-### Create the Warehouse schema
+### Create the Warehouse schema (for warehouses you will need to create schema via sql prior to writing to it)
 
 ![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
 
-### Order history
-
+### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
+
+FabricOps provides two Warehouse read helpers:
+
+* `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
+* `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
+
+Use `read_warehouse_query()` when filtering, aggregating, or selecting a subset of Warehouse data. This allows the SQL work to be pushed down to the Warehouse instead of translating the full table into Spark first.
+
+For more detail, see the [Engineering guide](../engineering/index.md).
+
 
 ## What the notebook intentionally does not load
 
