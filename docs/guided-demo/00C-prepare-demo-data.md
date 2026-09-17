@@ -1,94 +1,133 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-**Run the tested `00C_demo_setup` flow to demonstrate the FabricOps I/O helpers and prepare the tables required by the `02_pipeline` demo.**
+**Run a notebook that demonstrates the FabricOps I/O helpers and prepares the tables required by the `02_pipeline` demo flow.**
 
-## 1. Import and run the setup notebook
+## 1. Import the setup notebook
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 2. Attach the same Fabric Environment used by the other notebooks.
-3. Run the first two steps in the notebook to load `00_env_config` and import the FabricOps I/O helpers.
+3. Run the first two steps in the notebook.
 
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
 ## 2. Read the same Orders dataset from four file formats
 
-The notebook reads the same 120 logical Orders rows through the CSV, JSON, Parquet, and Excel helpers. This demonstrates that the FabricOps file readers use the same configured Bronze Lakehouse while allowing the physical source format to vary.
-
-The paths are relative to the configured Lakehouse `Files` area. For example, `Demo/orders.csv` resolves under `Files/Demo/orders.csv`.
+Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
 
 ![Read CSV](../assets/00C/Read_csv.png)
 
-The four DataFrames created by this section are:
-
 ```python
-orders_csv_df
-orders_json_df
-orders_parquet_df
-orders_excel_df
+# Optional: uncomment to inspect the loaded data
+display(orders_csv_df)
 ```
 
-The `display(...)` calls are intentionally commented out in the notebook. Uncomment any of them when you want to inspect the loaded rows interactively.
+### Optional: verify all four file formats match
 
-## 3. Write and read back the Orders table
+Copy and paste this into an empty code cell.
 
-The CSV DataFrame becomes the managed Orders source used by the later `02_pipeline` walkthrough.
+Normalize the format-specific inferred schemas, then verify that CSV, JSON, Parquet, and Excel resolve to the same canonical Orders dataset using a checksum comparison.
 
-`write_lakehouse_table()` writes the DataFrame to the Bronze Lakehouse as `demo.orders`. The notebook then uses `read_lakehouse_table()` to resolve the same configured store and read the managed table back.
+```python
+from pyspark.sql import functions as F
+
+schema = {
+    "order_id": "string",
+    "customer_id": "string",
+    "order_datetime": "timestamp",
+    "modified_datetime": "timestamp",
+    "product_id": "string",
+    "quantity": "int",
+    "unit_price": "double",
+    "discount": "double",
+    "order_status": "string",
+    "shipping_country": "string",
+}
+
+def normalize(df):
+    return df.select(*[
+        F.col(c).cast(dtype).alias(c)
+        for c, dtype in schema.items()
+    ])
+
+formats = {
+    "CSV": orders_csv_df,
+    "JSON": orders_json_df,
+    "PARQUET": orders_parquet_df,
+    "EXCEL": orders_excel_df,
+}
+
+normalized = {name: normalize(df) for name, df in formats.items()}
+
+def checksum(df):
+    cols = sorted(df.columns)
+    return (
+        df.select(F.sha2(F.concat_ws("||", *[F.coalesce(F.col(c).cast("string"), F.lit("<NULL>")) for c in cols]), 256).alias("hash"))
+        .agg(F.sha2(F.concat_ws("", F.sort_array(F.collect_list("hash"))), 256).alias("hash"))
+        .first()["hash"]
+    )
+
+hashes = [checksum(df) for df in normalized.values()]
+assert len(set(hashes)) == 1, "Orders file variants do not match."
+
+print("✓ CSV = JSON = PARQUET = EXCEL")
+print("✓ 1:1:1:1 data match")
+```
+
+The expected output confirms that all four file formats resolve to equivalent data. This step is only used to demonstrate the FabricOps file I/O capabilities.
+
+```text
+✓ CSV = JSON = PARQUET = EXCEL
+✓ 1:1:1:1 data match
+```
+
+## 3. Read and write the demo data
+
+Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
+
+### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 
 ![Orders demo](../assets/00C/Orders_Demo.png)
 
-The read-back is optional for the walkthrough, but it is useful when you want to confirm that the table was written successfully before continuing.
-
-## 4. Read, write, and read back Products
-
-The notebook reads `Demo/products.csv`, writes it to the Bronze Lakehouse as `demo.products`, and reads the managed table back with `read_lakehouse_table()`.
+### Products (we will ingest the product data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 
 ![Products demo](../assets/00C/Products_Demo.png)
 
-This table becomes the lookup input used by the later pipeline flow.
-
-## 5. Create the Warehouse schema
-
-Before writing `demo.order_history`, create the `demo` schema in the Gold Warehouse if it does not already exist. Warehouse schemas are created through Warehouse SQL rather than by the PySpark write helper.
+### Create the Warehouse schema (for warehouses you will need to create schema via sql prior to writing to it)
 
 ![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
 
-## 6. Read, write, and read back Order history
-
-The notebook reads `Demo/order_history.csv` from the Bronze Lakehouse Files area and writes it to the Gold Warehouse as `demo.order_history`.
-
+### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
 FabricOps provides two Warehouse read helpers:
 
 * `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
-* `read_warehouse_query()` executes SQL in the Warehouse first and returns only the query result to Spark.
+* `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
 
-The notebook demonstrates both approaches. The query example returns only five rows:
+Use `read_warehouse_query()` when filtering, selecting columns, joining, or aggregating Warehouse data. This pushes the SQL work down to the Warehouse before the result crosses into PySpark, avoiding translation of more Warehouse data into Spark than necessary.
 
-```python
-order_history_sample_df = read_warehouse_query(
-    "SELECT TOP 5 * FROM demo.order_history ORDER BY 1",
-    store="Gold",
-    spark_session=spark,
-)
-```
+For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
-Use `read_warehouse_query()` when filtering, selecting columns, joining, or aggregating Warehouse data so that the SQL work is pushed down before the result crosses into PySpark. For the broader engineering guidance, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
-## What the notebook prepares
+## What the notebook intentionally does not load
+
+`orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
+
+The partition and watermark fixtures are also left untouched for the later incremental and load-strategy showcase.
+
+`orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
+
+## Expected result
 
 After the notebook finishes, Engineering Development should contain the managed sources required by `02_pipeline`:
 
 ```text
-Bronze Lakehouse
-  demo.orders
+bronze Lakehouse
+  demo.orders       # canonical Day 1 Orders baseline
   demo.products
 
-Gold Warehouse
+gold Warehouse
   demo.order_history
 ```
-
-The setup notebook deliberately stops here. Later source changes, load-strategy examples, and Guardrail failure fixtures belong to the later Guided Demo steps rather than this initial preparation flow.
 
 **Next:** [Step 1. Establish Governance context](01-create-agreement.md)
