@@ -86,10 +86,8 @@ def check_source_drift(
             print("  Evaluation skipped by caller; no drift comparison or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
-    source = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
-    target = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
     contract = resolve_pipeline_data_contract(
-        config, env, str(source["table_id"]), context=context
+        config, env, str(source_table_id).strip(), context=context
     )
     if contract is None:
         result = {
@@ -97,20 +95,22 @@ def check_source_drift(
             "can_continue": True,
             "checks": [],
             "reason": "No Data Contract selected; Development only.",
-            "source_table_id": str(source["table_id"]),
-            "target_table_id": str(target["table_id"]),
+            "source_table_id": str(source_table_id).strip(),
+            "target_table_id": str(target_table_id).strip(),
             "environment_name": env,
         }
         print_guardrail_result(
             "Source Drift",
             result,
             verbose=verbose,
-            source_table_id=str(source["table_id"]),
-            target_table_id=str(target["table_id"]),
+            source_table_id=str(source_table_id).strip(),
+            target_table_id=str(target_table_id).strip(),
         )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
+    source = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
+    target = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
     source_processing = resolve_table_processing_definition(
         config, env, str(source["table_id"]), context=context
     )

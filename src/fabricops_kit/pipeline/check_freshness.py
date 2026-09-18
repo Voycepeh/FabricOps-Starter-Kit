@@ -95,8 +95,29 @@ def check_freshness(
             print("  Evaluation skipped by caller; no freshness rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     requested_table_id = str(table_id).strip()
+    contract = resolve_pipeline_data_contract(
+        config,
+        env,
+        requested_table_id,
+        context=context,
+    )
+    if contract is None:
+        result = {
+            "status": "skipped",
+            "can_continue": True,
+            "checks": [],
+            "reason": "No Data Contract selected; Development only.",
+            "table_id": requested_table_id,
+            "environment_name": env,
+        }
+        print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
+        if verbose:
+            print(f"  Reason {result['reason']}")
+        return result
+
+
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     observation = get_current_source_observation(
         environment_name=env,
         activity_id=str(audit["_activity_id"]),
@@ -122,29 +143,8 @@ def check_freshness(
             f"observation environment_name {environment_name!r} does not match active environment {env!r}."
         )
     spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
-    requested_table_id = str(table_id).strip()
     if requested_table_id != observed_table_id:
         raise ValueError(f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}.")
-    contract = resolve_pipeline_data_contract(
-        config,
-        env,
-        requested_table_id,
-        spark_session=spark_session,
-        context=context,
-    )
-    if contract is None:
-        result = {
-            "status": "skipped",
-            "can_continue": True,
-            "checks": [],
-            "reason": "No Data Contract selected; Development only.",
-            "table_id": requested_table_id,
-            "environment_name": env,
-        }
-        print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
-        if verbose:
-            print(f"  Reason {result['reason']}")
-        return result
     identity = resolve_catalogue_table_identity(
         config,
         env,

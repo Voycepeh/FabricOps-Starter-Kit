@@ -200,7 +200,7 @@ def pipeline_read(
         print(f"3. Physical read → {reader_name}")
 
     if store_kind == "lakehouse":
-        dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
+        dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), spark_session=spark_session, context=context)
     elif query is not None:
         dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=context)
     else:

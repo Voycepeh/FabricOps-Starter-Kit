@@ -13,6 +13,8 @@ pytestmark = pytest.mark.unit
 io_package = import_module("fabricops_kit.io")
 io_shared = import_module("fabricops_kit.io.shared")
 read_module = import_module("fabricops_kit.pipeline.pipeline_read")
+freshness_module = import_module("fabricops_kit.pipeline.check_freshness")
+source_drift_module = import_module("fabricops_kit.pipeline.check_source_drift")
 shared_module = import_module("fabricops_kit.pipeline.shared")
 write_module = import_module("fabricops_kit.pipeline.pipeline_write")
 lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
@@ -84,6 +86,89 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
     assert f"3. Physical read → {reader_name}" in output
     assert "4. Source Observation → skipped; no selected Data Contract" in output
     assert "checks, profiling, transformations, and writes remain explicit" in output
+
+
+def test_pipeline_read_physical_lakehouse_bootstraps_before_catalogue(monkeypatch):
+    context = {}
+    identity = {
+        "table_id": "lakehouse:Bronze:demo:orders",
+        "store_type": "lakehouse",
+        "store_kind": "lakehouse",
+        "store": "Bronze",
+        "schema": "demo",
+        "table_name": "orders",
+    }
+    spark = object()
+    calls = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: ("config", "dev", context))
+    monkeypatch.setattr(read_module, "resolve_physical_table_identity", lambda *_a, **_k: identity)
+    monkeypatch.setattr(
+        read_module,
+        "resolve_catalogue_table_identity",
+        lambda *_a, **_k: pytest.fail("first physical read must not require Catalogue"),
+    )
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        read_module,
+        "read_lakehouse_table",
+        lambda *a, **k: calls.append((a, k)) or "frame",
+    )
+
+    result = read_module.pipeline_read(
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        spark_session=spark,
+        verbose=False,
+    )
+
+    assert result["table_id"] == identity["table_id"]
+    assert calls == [(("orders",), {
+        "store": "Bronze",
+        "schema": "demo",
+        "spark_session": spark,
+        "context": context,
+    })]
+
+
+def test_freshness_baseline_skips_before_observation_or_catalogue(monkeypatch):
+    monkeypatch.setattr(freshness_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(freshness_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        freshness_module,
+        "get_current_source_observation",
+        lambda **_k: pytest.fail("baseline freshness must not require a source observation"),
+    )
+    monkeypatch.setattr(
+        freshness_module,
+        "resolve_catalogue_table_identity",
+        lambda *_a, **_k: pytest.fail("baseline freshness must not require Catalogue"),
+    )
+
+    result = freshness_module.check_freshness("source-id", verbose=False)
+
+    assert result["status"] == "skipped"
+    assert result["reason"] == "No Data Contract selected; Development only."
+
+
+def test_source_drift_baseline_skips_before_catalogue(monkeypatch):
+    monkeypatch.setattr(source_drift_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(source_drift_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        source_drift_module,
+        "resolve_catalogue_table_identity",
+        lambda *_a, **_k: pytest.fail("baseline Source Drift must not require Catalogue"),
+    )
+
+    result = source_drift_module.check_source_drift(
+        "source-id",
+        target_table_id="target-id",
+        verbose=False,
+    )
+
+    assert result["status"] == "skipped"
+    assert result["source_table_id"] == "source-id"
+    assert result["target_table_id"] == "target-id"
 
 
 def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
