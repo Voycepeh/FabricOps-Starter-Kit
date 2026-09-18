@@ -115,8 +115,8 @@ def check_freshness(
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
-
-
+    # Contract-free Development stops before transient observation lookup.
+    # Contract-backed runs continue with the current-run observation state.
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     observation = get_current_source_observation(
         environment_name=env,
