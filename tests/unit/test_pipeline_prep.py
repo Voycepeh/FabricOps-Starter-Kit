@@ -63,14 +63,16 @@ def _patch_read(monkeypatch, identity):
 def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query, reader_name):
     identity = _identity(store_type=store_type)
     context = _patch_read(monkeypatch, identity)
+    spark = object()
     calls = []
     for name in ("read_lakehouse_table", "read_warehouse_table", "read_warehouse_query"):
-        monkeypatch.setattr(read_module, name, lambda *a, _name=name, **k: calls.append(_name) or "frame")
+        monkeypatch.setattr(read_module, name, lambda *a, _name=name, **k: calls.append((_name, k)) or "frame")
 
-    result = read_module.pipeline_read(table_id=identity["table_id"], query=query)
+    result = read_module.pipeline_read(table_id=identity["table_id"], query=query, spark_session=spark)
 
     assert result["table_id"] == identity["table_id"]
-    assert calls == [reader_name]
+    assert [name for name, _kwargs in calls] == [reader_name]
+    assert calls[0][1]["spark_session"] is spark
     assert "_fabricops_active_profile_registration" not in context
     output = capsys.readouterr().out
     assert "FabricOps Read" in output
@@ -181,6 +183,9 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     monkeypatch, capsys, store_type, strategy, writer
 ):
     identity, context = _patch_write(monkeypatch, store_type=store_type, strategy=strategy)
+    spark = object()
+    persisted = []
+    monkeypatch.setattr(write_module, "_persist_target_processing", lambda **kwargs: persisted.append(kwargs))
     events = []
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: events.append("lakehouse"))
     monkeypatch.setattr(io_package, "write_warehouse_table", lambda *a, **k: events.append("warehouse"))
@@ -193,9 +198,11 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
         schema="dbo",
         table_name="students",
         source_table_ids=["source-a", "source-b"],
+        spark_session=spark,
     )
 
     assert result == {"table_id": identity["table_id"]}
+    assert persisted[0]["spark_session"] is spark
     assert events[0] == writer
     assert events[1][0] == "metadata"
     assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]

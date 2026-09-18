@@ -21,6 +21,7 @@ def pipeline_read(
     table_name: str | None = None,
     table_id: str | None = None,
     query: str | None = None,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict[str, Any]:
     """Read one governed pipeline source through the appropriate Fabric store.
@@ -56,6 +57,8 @@ def pipeline_read(
         arbitrary source identity by parsing SQL. A query may accompany either
         physical coordinates or ``table_id`` when the resolved store is a
         Warehouse.
+    spark_session : object, optional
+        Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``.
     verbose : bool, default=True
         Whether to print one concise orchestration message showing the resolved
         Fabric store type, physical table identity, and selected foundational
@@ -197,14 +200,15 @@ def pipeline_read(
         print(f"3. Physical read → {reader_name}")
 
     if store_kind == "lakehouse":
-        dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+        dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
     elif query is not None:
-        dataframe = read_warehouse_query(query, store=str(identity["store"]), context=context)
+        dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=context)
     else:
         dataframe = read_warehouse_table(
             str(identity["schema"]),
             str(identity["table_name"]),
             store=str(identity["store"]),
+            spark_session=spark_session,
             context=context,
         )
 

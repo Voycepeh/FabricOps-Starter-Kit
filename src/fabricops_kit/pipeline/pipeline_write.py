@@ -32,6 +32,7 @@ def _persist_target_processing(
     config: Any,
     env: str,
     dataframe: Any,
+    spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
     try:
@@ -69,7 +70,7 @@ def _persist_target_processing(
             **audit,
         },
     )
-    spark_session = dataframe.sparkSession
+    spark_session = spark_session or dataframe.sparkSession
     source = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "Metadata",
@@ -184,6 +185,7 @@ def pipeline_write(
     source_table_ids: list[str] | tuple[str, ...] | None = None,
     repartition_by=None,
     options: dict[str, Any] | None = None,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict[str, str]:
     """Publish one governed pipeline table target through its configured Fabric store.
@@ -227,6 +229,8 @@ def pipeline_write(
         Optional Spark repartitioning passed to simple physical writes.
     options : dict, optional
         Additional physical writer options for append or overwrite publication.
+    spark_session : object, optional
+        Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available.
     verbose : bool, default=True
         Whether to print one concise orchestration message showing the resolved
         Fabric store type, physical table identity, governed strategy, and
@@ -451,6 +455,7 @@ def pipeline_write(
         config=config,
         env=env,
         dataframe=df,
+        spark_session=spark_session,
     )
     if verbose:
         print("6. Catalogue → resolved load strategy and parameters persisted")
