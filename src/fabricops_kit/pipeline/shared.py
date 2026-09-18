@@ -222,13 +222,13 @@ def resolve_physical_table_identity(
         raise ValueError("store must be a non-empty string.")
     if not isinstance(table_name, str) or not table_name.strip():
         raise ValueError("table_name must be a non-empty string.")
-    normalized_store = store.strip().lower()
-    configured_store = get_store(config, env, normalized_store)
+    store_key = store.strip()
+    configured_store = get_store(config, env, store_key)
     store_kind = str(getattr(configured_store, "kind", "")).strip().lower()
     if store_kind == "lakehouse":
         if getattr(configured_store, "schema_enabled", False) and schema is None and not getattr(configured_store, "schema", None):
             raise ValueError(
-                f"schema is required for schema-enabled Lakehouse store '{normalized_store}'; "
+                f"schema is required for schema-enabled Lakehouse store '{store_key}'; "
                 "pass schema or configure a default schema."
             )
         normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(
@@ -236,14 +236,14 @@ def resolve_physical_table_identity(
         )
         if getattr(configured_store, "schema_enabled", False) and normalized_schema is None:
             raise ValueError(
-                f"schema is required for schema-enabled Lakehouse store '{normalized_store}'; "
+                f"schema is required for schema-enabled Lakehouse store '{store_key}'; "
                 "pass schema or configure a default schema."
             )
     elif store_kind == "warehouse":
         configured_schema = schema if schema is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
             raise ValueError(
-                f"schema is required for Warehouse store '{normalized_store}'; "
+                f"schema is required for Warehouse store '{store_key}'; "
                 "pass schema or configure a default schema."
             )
         normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
@@ -251,12 +251,12 @@ def resolve_physical_table_identity(
         )
     else:
         raise ValueError(
-            f"Store '{normalized_store}' has unsupported kind {store_kind or '<blank>'!r}; "
+            f"Store '{store_key}' has unsupported kind {store_kind or '<blank>'!r}; "
             "supported kinds are: lakehouse, warehouse."
         )
     return {
-        "table_id": build_table_id(store_kind, normalized_store, normalized_schema, normalized_table),
-        "store": normalized_store,
+        "table_id": build_table_id(store_kind, store_key, normalized_schema, normalized_table),
+        "store": store_key,
         "schema": normalized_schema,
         "table_name": normalized_table,
         "store_kind": store_kind,
