@@ -260,6 +260,7 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
         for fragment in (
             f'READ_NAME = "{read_name}"',
             "source = pipeline_read(",
+            "spark_session=spark",
             'df = source["dataframe"]',
             'table_id = source["table_id"]',
             "check_freshness(",
@@ -319,6 +320,7 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
             'target_dq_failed_values = target_dq_result.get("failed_values")',
             "check_guardrail_coverage(",
             "write_result = pipeline_write(",
+            "spark_session=spark",
             "table_id=target_table_id",
             'source_table_ids=[source["table_id"] for source in write_sources]',
             "writes[WRITE_NAME] = write_result",
