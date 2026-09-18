@@ -230,7 +230,7 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     contracts = _cell_by_id("02_pipeline.ipynb", "contracts-heading").source
     assert "Select the Data Contracts to test with this pipeline." in contracts
     assert "Production automatically uses activated Data Contracts." in contracts
-    assert source.count("widget_select_data_contract()") == 1
+    assert source.count("widget_select_data_contract(spark_session=spark)") == 1
 
 
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
@@ -298,8 +298,8 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
     assert "writes = {}" in setup
 
     expected = (
-        (1, "curated_orders_lakehouse", "transformed_df", "unified", "curated_orders"),
-        (2, "customer_summary_warehouse", "customer_summary_df", "product", "customer_summary"),
+        (1, "curated_orders_lakehouse", "transformed_df", "Silver", "curated_orders"),
+        (2, "customer_summary_warehouse", "customer_summary_df", "Gold", "customer_summary"),
     )
     for index, write_name, dataframe, store, table in expected:
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
