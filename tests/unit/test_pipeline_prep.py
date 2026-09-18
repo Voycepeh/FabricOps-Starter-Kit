@@ -112,6 +112,40 @@ def test_pipeline_read_rejects_identity_conflict():
         read_module.pipeline_read(table_id="id", store="Bronze")
 
 
+def test_resolve_physical_table_identity_preserves_configured_store_case(monkeypatch):
+    calls = []
+
+    class Store:
+        kind = "lakehouse"
+        schema_enabled = True
+        schema = "demo"
+        key = "Bronze"
+
+    def get_store(_config, _env, store):
+        calls.append(store)
+        if store != "Bronze":
+            raise ValueError("store key case changed before lookup")
+        return Store()
+
+    monkeypatch.setattr(shared_module, "get_store", get_store)
+    monkeypatch.setattr(
+        shared_module,
+        "resolve_lakehouse_table_location",
+        lambda _store, table_name, schema: (table_name, schema, "/table/path"),
+    )
+
+    identity = shared_module.resolve_physical_table_identity(
+        object(),
+        "dev",
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+    )
+
+    assert calls == ["Bronze"]
+    assert identity["store"] == "Bronze"
+
+
 def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
     context = context if context is not None else {}
     identity = _identity(f"{store_type}:unified:dbo:students", store_type=store_type)
