@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:175`
+`fabricops_kit/pipeline/pipeline_write.py:176`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L175-L472">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L176-L477">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -58,6 +58,7 @@ def pipeline_write(
     source_table_ids: list[str] | tuple[str, ...] | None=None,
     repartition_by=None,
     options: dict[str, Any] | None=None,
+    spark_session=None,
     verbose: bool=True,
 ) -> dict[str, str]:
 ```
@@ -102,6 +103,7 @@ Development may propose processing, without bypassing contract authority:
 | `source_table_ids` | `list[str] \| tuple[str, ...] \| None` | No | Canonical identities of the exact governed sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame. |
 | `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning passed to simple physical writes. |
 | `options` | `dict[str, Any] \| None` | No | Additional physical writer options for append or overwrite publication. |
+| `spark_session` | `object` | No | Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available. |
 | `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, governed strategy, and selected foundational writer or governed SCD publication path. This explains hidden routing without exposing implementation plumbing. |
 
 ## Returns

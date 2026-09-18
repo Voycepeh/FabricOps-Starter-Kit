@@ -240,8 +240,8 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "source-side incremental reads" in source
     assert "PROFILE_SCOPE" not in source
     assert "PROCESSING_SCOPE" not in source
-    assert source.count("profile_table(table_id=table_id)") == 3
-    assert "profile_table(dataframe=df, table_id=table_id)" not in source
+    assert source.count("profile_table(store=READ_STORE, schema=READ_SCHEMA, table_name=READ_TABLE)") == 3
+    assert "profile_table(table_id=table_id)" not in source
 
 
 def test_02_pipeline_source_dictionary_is_explained():
@@ -268,7 +268,7 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             "check_dq(df,",
             'dq_df = dq_result.get("dataframe", df)',
             'dq_failed_values = dq_result.get("failed_values")',
-            "profile_table(table_id=table_id)",
+            "profile_table(store=READ_STORE, schema=READ_SCHEMA, table_name=READ_TABLE)",
             "sources[READ_NAME] = source",
             "# display(df)",
             '# display(profile_result["profile"])',
@@ -321,7 +321,7 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
             "check_guardrail_coverage(",
             "write_result = pipeline_write(",
             "spark_session=spark",
-            "table_id=target_table_id",
+            "store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE",
             'source_table_ids=[source["table_id"] for source in write_sources]',
             "writes[WRITE_NAME] = write_result",
             'write_profile = profile_table(table_id=write_result["table_id"])',

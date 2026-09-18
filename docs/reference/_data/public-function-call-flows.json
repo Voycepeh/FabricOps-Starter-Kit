@@ -5441,7 +5441,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 228,
+      "source_end_line": 232,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 17,
       "supports_live_contract": false,
@@ -5470,9 +5470,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._delta_literal",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 122,
+      "source_end_line": 123,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 114,
+      "source_start_line": 115,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5499,7 +5499,7 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 111,
+      "source_end_line": 112,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
       "source_start_line": 27,
       "supports_live_contract": false,
@@ -5528,9 +5528,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._replace_where",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 128,
+      "source_end_line": 129,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 125,
+      "source_start_line": 126,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5557,9 +5557,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._source_table_ids",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 150,
+      "source_end_line": 151,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 136,
+      "source_start_line": 137,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5586,9 +5586,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 172,
+      "source_end_line": 173,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 153,
+      "source_start_line": 154,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5615,9 +5615,9 @@
       "qualified_name": "fabricops_kit.pipeline.pipeline_write._write_scope",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 133,
+      "source_end_line": 134,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 131,
+      "source_start_line": 132,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5649,9 +5649,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 472,
+      "source_end_line": 477,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 175,
+      "source_start_line": 176,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -13809,6 +13809,12 @@
           "type": "str | None"
         },
         {
+          "description": "Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
           "description": "Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing.",
           "name": "verbose",
           "required": "No",
@@ -13849,8 +13855,8 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 228,
+      "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 232,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 17,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
@@ -13949,6 +13955,12 @@
           "type": "dict[str, Any] | None"
         },
         {
+          "description": "Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
           "description": "Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, governed strategy, and selected foundational writer or governed SCD publication path. This explains hidden routing without exposing implementation plumbing.",
           "name": "verbose",
           "required": "No",
@@ -13989,10 +14001,10 @@
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def pipeline_write(df, *, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, verbose: bool=True) -> dict[str, str]",
-      "source_end_line": 472,
+      "signature": "def pipeline_write(df, *, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, spark_session=None, verbose: bool=True) -> dict[str, str]",
+      "source_end_line": 477,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
-      "source_start_line": 175,
+      "source_start_line": 176,
       "summary": "Publish one governed pipeline table target through its configured Fabric store.",
       "transitive_function_count": 72,
       "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Select the physical Lakehouse or Warehouse publication implementation.\n9. Perform append/overwrite or dedicated SCD processing.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, commit target Lineage and\n    accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, Source Drift, or profiling. These remain\nexplicit notebook engineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
