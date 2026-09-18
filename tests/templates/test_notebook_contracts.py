@@ -350,8 +350,8 @@ def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
         assert hidden not in source
 
 
-def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
-    """Development inspection helpers stay opt-in and do not add default Spark actions or support writes."""
+def test_02_pipeline_optional_inspection_is_opt_in_and_support_writes_are_not_in_template():
+    """Development inspection stays opt-in and project-owned support persistence stays outside the template."""
     notebook_path = NOTEBOOK_DIR / "02_pipeline.ipynb"
     active_calls: set[str] = set()
     for cell_index, source in _code_cells(notebook_path):
@@ -364,9 +364,11 @@ def test_02_pipeline_optional_inspection_and_support_writes_are_not_active():
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         )
 
-    assert {"display", "write_lakehouse_table", "write_warehouse_table"}.isdisjoint(active_calls)
+    assert "display" not in active_calls
 
     source = _notebook_source("02_pipeline.ipynb")
+    assert "write_lakehouse_table" not in source
+    assert "write_warehouse_table" not in source
     for optional in (
         "# display(df)",
         '# display(profile_result["profile"])',
