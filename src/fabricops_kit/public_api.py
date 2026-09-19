@@ -27,6 +27,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_source_drift",
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
+    "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
     "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
     "fabricops_kit.pipeline.pipeline_write.pipeline_write",
