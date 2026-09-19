@@ -459,3 +459,5 @@ def test_03_incremental_pipeline_uses_independent_governed_publications():
     assert "whole-table overwrite" in source
     assert "not yet been manually validated in Microsoft Fabric" in source
     assert "physical target is new or empty" in source
+    assert "removed source partition is still work" in source
+    assert "empty replacement scope to clear stale target rows" in source

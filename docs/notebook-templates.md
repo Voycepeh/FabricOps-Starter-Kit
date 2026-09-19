@@ -46,6 +46,8 @@ Committed progress is source → target specific and advances only after that ta
 
 The starter flow deliberately uses one incremental driving source with full supporting sources per target. Every source still receives target-specific Source Drift checks. An incremental append bootstrap requires a new or empty target; a populated target without committed source → target state fails safely instead of appending a duplicate complete source.
 
+SCD1 and SCD2 bootstrap through their keyed idempotent merge paths. Removed partitions are processed only through governed partition-scoped overwrite, which can clear a now-empty target partition; incompatible strategies fail without committing the removal.
+
 [Open `03_incremental_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb){ .md-button }
 
 </div>

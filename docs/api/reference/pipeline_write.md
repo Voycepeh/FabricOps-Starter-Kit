@@ -25,7 +25,7 @@ Lineage and Source Observation metadata only after publication succeeds.
 
 `fabricops_kit/pipeline/pipeline_write.py:211`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L211-L545">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L211-L579">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -150,7 +150,15 @@ keeps multiple target writes in one activity exact and independent.
 A first incremental append has no committed baseline and therefore reads a
 complete bootstrap scope. FabricOps permits that bootstrap only for a new
 or empty physical target. A populated target fails before publication so
-missing metadata cannot silently duplicate all source rows.
+missing metadata cannot silently duplicate all source rows. SCD1 and SCD2
+bootstraps continue through their existing keyed, idempotent merge paths.
+
+A removed source partition is actionable incremental work even though its
+input DataFrame contains no rows for that partition. FabricOps permits the
+removal only when governed partition-scoped overwrite can include the
+removed value in ``replaceWhere`` and clear stale target rows. Other target
+strategies, or mismatched source and target partition columns, fail before
+publication and therefore do not commit the removal baseline.
 
 With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
 ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.

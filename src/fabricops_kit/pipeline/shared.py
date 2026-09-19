@@ -768,12 +768,19 @@ def resolve_incremental_source_scope(
                 for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
             )
         ]
+        removed_values = [
+            row["partition_value"]
+            for value, row in previous_by.items()
+            if row.get("is_present", True) and value not in current_by
+        ]
+        affected_values = [*changed_values, *removed_values]
         scope = {
             "type": "partitions",
             "first_run": False,
-            "has_data": bool(changed_values),
+            "has_data": bool(affected_values),
             "column": partition_column,
-            "values": changed_values,
+            "values": affected_values,
+            "removed_values": removed_values,
         }
     _INCREMENTAL_SOURCE_SCOPES[key] = scope
     return scope

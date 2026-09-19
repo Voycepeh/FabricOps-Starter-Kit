@@ -124,7 +124,8 @@ def pipeline_read(
         - ``has_data`` and ``should_process``: whether this read contributes
           unconsumed work. Full reads return ``True`` without triggering a count.
         - ``scope``: a compact summary of the resolved full, bootstrap,
-          watermark, or partition scope; no metadata rows are exposed.
+          watermark, or partition scope. Partition scope includes removed
+          values that require target reconciliation; no metadata rows are exposed.
 
     Raises
     ------
@@ -342,6 +343,16 @@ def pipeline_read(
         "scope": {
             name: value
             for name, value in scope.items()
-            if name in {"type", "first_run", "has_data", "column", "after", "through", "values"}
+            if name
+            in {
+                "type",
+                "first_run",
+                "has_data",
+                "column",
+                "after",
+                "through",
+                "values",
+                "removed_values",
+            }
         },
     }

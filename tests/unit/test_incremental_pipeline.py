@@ -181,3 +181,50 @@ def test_partition_scope_selects_only_changed_partitions(monkeypatch):
     )
     assert result["type"] == "partitions"
     assert result["values"] == ["2026-01-01"]
+
+
+def test_partition_scope_includes_removed_partition_as_work(monkeypatch):
+    """A removal-only observation remains actionable incremental work."""
+    history = [
+        {
+            **_row(target="target-a", maximum="18"),
+            "partition_value": "2026-09-18",
+            "content_fingerprint": "removed",
+        },
+        {
+            **_row(target="target-a", maximum="19"),
+            "partition_value": "2026-09-19",
+            "content_fingerprint": "unchanged",
+        },
+    ]
+    _configure_scope(monkeypatch, history)
+    monkeypatch.setattr(
+        shared,
+        "resolve_source_drift_observation_columns",
+        lambda rule: ("business_date", "changed_at"),
+    )
+    current = Frame([
+        {**history[1], "target_table_id": "", "observation_status": "observed"}
+    ])
+
+    result = shared.resolve_incremental_source_scope(
+        source_table_id="source-orders",
+        target_table_id="target-a",
+        observation=current,
+    )
+
+    assert result == {
+        "type": "partitions",
+        "first_run": False,
+        "has_data": True,
+        "column": "business_date",
+        "values": ["2026-09-18"],
+        "removed_values": ["2026-09-18"],
+    }
+    pending = shared._PENDING_SOURCE_OBSERVATIONS[
+        ("dev", "run-1", "source-orders", "target-a")
+    ]
+    assert any(
+        row["partition_value"] == "2026-09-18" and row["is_present"] is False
+        for row in pending
+    )

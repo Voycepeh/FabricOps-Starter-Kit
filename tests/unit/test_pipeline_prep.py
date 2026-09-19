@@ -371,6 +371,128 @@ def test_incremental_append_bootstrap_requires_new_or_empty_target(
         assert len(writes) == 1
 
 
+@pytest.mark.parametrize("strategy", ["scd1", "scd2"])
+def test_incremental_merge_bootstrap_uses_idempotent_processing(
+    monkeypatch, spark_session, strategy
+):
+    """SCD bootstrap relies on the existing idempotent keyed merge semantics."""
+    _patch_write(monkeypatch, strategy=strategy)
+    processing = {"load_strategy": strategy, "key_columns": ["id"]}
+    if strategy == "scd2":
+        processing["effective_column"] = "effective_at"
+    monkeypatch.setattr(
+        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+    )
+    monkeypatch.setattr(
+        write_module,
+        "incremental_publication_scopes",
+        lambda **kwargs: {"source-a": {"first_run": True, "type": "full"}},
+    )
+    monkeypatch.setattr(
+        write_module,
+        "_target_has_rows",
+        lambda **kwargs: pytest.fail("SCD bootstrap must use its keyed merge, not append safety"),
+    )
+    governed = []
+    monkeypatch.setattr(
+        shared_module,
+        "execute_lakehouse_processing",
+        lambda *args, **kwargs: governed.append(kwargs),
+    )
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+
+    frame = spark_session.createDataFrame(
+        [(1, "2026-09-19")], "id long, effective_at string"
+    )
+
+    write_module.pipeline_write(
+        frame, table_id="target", source_table_ids=["source-a"], verbose=False
+    )
+
+    assert governed[0]["processing"] is processing
+
+
+def test_removed_partition_is_cleared_by_empty_partition_overwrite(
+    monkeypatch, spark_session
+):
+    """Removal-only work publishes an empty replaceWhere scope before committing."""
+    identity, _context = _patch_write(monkeypatch, strategy="overwrite")
+    processing = {"load_strategy": "overwrite", "partition_column": "business_date"}
+    monkeypatch.setattr(
+        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+    )
+    monkeypatch.setattr(
+        write_module,
+        "incremental_publication_scopes",
+        lambda **kwargs: {
+            "source-a": {
+                "type": "partitions",
+                "first_run": False,
+                "column": "business_date",
+                "values": ["2026-09-18"],
+                "removed_values": ["2026-09-18"],
+            }
+        },
+    )
+    writes = []
+    commits = []
+    monkeypatch.setattr(
+        io_package,
+        "write_lakehouse_table",
+        lambda frame, *args, **kwargs: writes.append((frame, kwargs)),
+    )
+    monkeypatch.setattr(
+        shared_module, "commit_pipeline_write_success", lambda value: commits.append(value)
+    )
+    frame = spark_session.createDataFrame([], "business_date string, order_id long")
+
+    write_module.pipeline_write(
+        frame,
+        table_id=identity["table_id"],
+        source_table_ids=["source-a"],
+        verbose=False,
+    )
+
+    assert writes[0][0].count() == 0
+    assert writes[0][1]["mode"] == "overwrite"
+    assert writes[0][1]["options"] == {
+        "replaceWhere": "`_partition_bucket` IN ('2026-09-18')"
+    }
+    assert commits[0]["source_table_ids"] == ["source-a"]
+
+
+def test_removed_partition_rejects_non_reconciling_strategy(monkeypatch):
+    """A strategy that cannot clear stale rows must not accept removal progress."""
+    _patch_write(monkeypatch, strategy="append")
+    monkeypatch.setattr(
+        write_module,
+        "incremental_publication_scopes",
+        lambda **kwargs: {
+            "source-a": {
+                "type": "partitions",
+                "first_run": False,
+                "column": "business_date",
+                "removed_values": ["2026-09-18"],
+            }
+        },
+    )
+    monkeypatch.setattr(
+        io_package,
+        "write_lakehouse_table",
+        lambda *args, **kwargs: pytest.fail("unsafe removal must not publish"),
+    )
+    monkeypatch.setattr(
+        shared_module,
+        "commit_pipeline_write_success",
+        lambda value: pytest.fail("unsafe removal must not commit progress"),
+    )
+
+    with pytest.raises(ValueError, match="require governed partition-scoped overwrite"):
+        write_module.pipeline_write(
+            object(), table_id="target", source_table_ids=["source-a"]
+        )
+
+
 def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):
     """Persist the resolved processing definition after the physical target succeeds."""
     identity, _context = _patch_write(monkeypatch, strategy="scd1")
