@@ -36,9 +36,10 @@ profiled without creating an identity or writing metadata.
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
+<span class="reference-chip">03_incremental_pipeline</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `99_explore`
+**Used in notebooks:** `02_pipeline`, `99_explore`, `03_incremental_pipeline`
 
 ## Usage notes
 

@@ -85,6 +85,7 @@ _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
+_INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 
 
 def print_guardrail_result(
@@ -632,6 +633,173 @@ def _previous_source_target_observation(
     return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
+def _latest_source_target_observation(
+    history: Any,
+    *,
+    source_table_id: str,
+    target_table_id: str,
+    environment_name: str,
+) -> list[dict[str, Any]]:
+    """Return the latest committed baseline for one source-to-target relationship."""
+    candidates = [
+        row
+        for row in observation_rows(history)
+        if str(row.get("source_table_id") or "") == source_table_id
+        and str(row.get("target_table_id") or "") == target_table_id
+        and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("observation_status") or "") == "committed"
+    ]
+    latest_at = max((row.get("_committed_at") for row in candidates), default=None)
+    return [row for row in candidates if row.get("_committed_at") == latest_at]
+
+
+def _progress_key(value: Any) -> tuple[int, Any]:
+    """Return a stable ordering key for serialized numeric or temporal progress."""
+    text = str(value)
+    try:
+        return (0, Decimal(text))
+    except InvalidOperation:
+        return (1, text)
+
+
+def resolve_incremental_source_scope(
+    *,
+    source_table_id: str,
+    target_table_id: str,
+    observation: Any,
+) -> dict[str, Any]:
+    """Resolve and stage the unconsumed scope for one source-to-target relationship."""
+    config, env, context = resolve_fabric_context()
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    activity_id = str(audit["_activity_id"])
+    current = observation_rows(observation)
+    if not current:
+        raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
+    try:
+        history = read_lakehouse_table(
+            _SOURCE_OBSERVATION_TABLE,
+            store="Metadata",
+            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            context=context,
+        )
+        previous = _latest_source_target_observation(
+            history,
+            source_table_id=source_table_id,
+            target_table_id=target_table_id,
+            environment_name=env,
+        )
+    except Exception as exc:
+        if not is_table_not_found_error(exc):
+            raise RuntimeError(
+                f"Unable to load Source Observation history for {source_table_id!r}: {exc}"
+            ) from exc
+        previous = []
+
+    rules_df = load_table_guardrail_rules(
+        config, env, table_id=source_table_id, context=context
+    )
+    rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="source_drift",
+        table_id=source_table_id,
+        environment_name=env,
+    )
+    if rule is None:
+        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
+    partition_column, change_column = resolve_source_drift_observation_columns(rule)
+
+    current_by = {str(row["partition_value"]): row for row in current}
+    previous_by = {str(row["partition_value"]): row for row in previous}
+    pending = [dict(row) for row in current]
+    pending.extend(
+        {
+            **current[0],
+            "partition_value": row["partition_value"],
+            "row_count": 0,
+            "min_change_value": None,
+            "max_change_value": None,
+            "content_fingerprint": None,
+            "is_present": False,
+        }
+        for key, row in previous_by.items()
+        if row.get("is_present", True) and key not in current_by
+    )
+    key = (env, activity_id, source_table_id, target_table_id)
+    _PENDING_SOURCE_OBSERVATIONS[key] = pending
+
+    if not previous:
+        scope = {
+            "type": "full",
+            "first_run": True,
+            "has_data": True,
+            "partition_column": partition_column,
+            "change_column": change_column,
+        }
+    elif partition_column == change_column:
+        previous_values = [
+            str(row["max_change_value"])
+            for row in previous
+            if row.get("max_change_value") is not None
+        ]
+        current_values = [
+            str(row["max_change_value"])
+            for row in current
+            if row.get("max_change_value") is not None
+        ]
+        baseline = max(previous_values, key=_progress_key, default=None)
+        current_max = max(current_values, key=_progress_key, default=None)
+        scope = {
+            "type": "watermark",
+            "first_run": False,
+            "has_data": baseline is None
+            or (current_max is not None and _progress_key(current_max) > _progress_key(baseline)),
+            "column": change_column,
+            "after": baseline,
+            "through": current_max,
+        }
+    else:
+        changed_values = [
+            row["partition_value"]
+            for value, row in current_by.items()
+            if value not in previous_by
+            or not previous_by[value].get("is_present", True)
+            or any(
+                previous_by[value].get(field) != row.get(field)
+                for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
+            )
+        ]
+        removed_values = [
+            row["partition_value"]
+            for value, row in previous_by.items()
+            if row.get("is_present", True) and value not in current_by
+        ]
+        affected_values = [*changed_values, *removed_values]
+        scope = {
+            "type": "partitions",
+            "first_run": False,
+            "has_data": bool(affected_values),
+            "column": partition_column,
+            "values": affected_values,
+            "removed_values": removed_values,
+        }
+    _INCREMENTAL_SOURCE_SCOPES[key] = scope
+    return scope
+
+
+def incremental_publication_scopes(
+    *, environment_name: str, activity_id: str, target_table_id: str, source_table_ids: list[str]
+) -> dict[str, dict[str, Any]]:
+    """Return staged incremental scopes for one exact publication boundary."""
+    return {
+        source_table_id: _INCREMENTAL_SOURCE_SCOPES[
+            (environment_name, activity_id, source_table_id, target_table_id)
+        ]
+        for source_table_id in source_table_ids
+        if (environment_name, activity_id, source_table_id, target_table_id)
+        in _INCREMENTAL_SOURCE_SCOPES
+    }
+
+
 def check_source_drift_for_target(
     *,
     source_table_id: str,
@@ -826,6 +994,9 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         _PENDING_SOURCE_OBSERVATIONS.pop(
             (env, activity_id, source_table_id, target_table_id), None
         )
+        _INCREMENTAL_SOURCE_SCOPES.pop(
+            (env, activity_id, source_table_id, target_table_id), None
+        )
     return records
 
 
@@ -854,7 +1025,7 @@ import re
 
 from datetime import date, datetime, timedelta
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 
 from fabricops_kit.config.shared import is_table_not_found_error

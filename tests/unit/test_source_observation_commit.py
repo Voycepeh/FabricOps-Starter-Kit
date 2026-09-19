@@ -116,3 +116,22 @@ def test_physical_notebook_id_is_diagnostic_only(monkeypatch):
     context = {**_context(sources=("source-a",)), "notebook_id": "production-physical-id"}
     shared.commit_pipeline_write_success(context)
     assert written[0]["observation_status"] == "committed"
+
+
+def test_partial_multi_target_failure_commits_only_successful_boundary(monkeypatch):
+    """One successful target must not advance a failed sibling target."""
+    observation = _observation("source-a")
+    written, _ = _configure_commit(monkeypatch, [observation])
+    failed_target_key = ("dev", "run-1", "source-a", "target-b")
+    shared._PENDING_SOURCE_OBSERVATIONS[failed_target_key] = [observation]
+
+    records = shared.commit_pipeline_write_success(
+        _context(target="target-x", sources=("source-a",))
+    )
+
+    assert [(row["target_table_id"], row["max_change_value"]) for row in records] == [
+        ("target-x", "2026-09-11")
+    ]
+    assert written == records
+    assert failed_target_key in shared._PENDING_SOURCE_OBSERVATIONS
+    assert not any(row["target_table_id"] == "target-b" for row in written)
