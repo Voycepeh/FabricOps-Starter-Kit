@@ -779,16 +779,18 @@ def resolve_incremental_source_scope(
     return scope
 
 
-def incremental_publication_sources(
+def incremental_publication_scopes(
     *, environment_name: str, activity_id: str, target_table_id: str, source_table_ids: list[str]
-) -> list[str]:
-    """Return incremental sources staged for one exact publication boundary."""
-    return [
-        source_table_id
+) -> dict[str, dict[str, Any]]:
+    """Return staged incremental scopes for one exact publication boundary."""
+    return {
+        source_table_id: _INCREMENTAL_SOURCE_SCOPES[
+            (environment_name, activity_id, source_table_id, target_table_id)
+        ]
         for source_table_id in source_table_ids
         if (environment_name, activity_id, source_table_id, target_table_id)
         in _INCREMENTAL_SOURCE_SCOPES
-    ]
+    }
 
 
 def check_source_drift_for_target(

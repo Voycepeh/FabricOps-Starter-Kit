@@ -10,12 +10,12 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
-    incremental_publication_sources,
+    incremental_publication_scopes,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -135,6 +135,40 @@ def _write_scope() -> dict[str, Any]:
     return {"type": "full_dataset"}
 
 
+def _target_has_rows(
+    *, identity: dict[str, Any], context: dict[str, Any], spark_session=None
+) -> bool:
+    """Return whether an existing physical target contains at least one row."""
+    from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+
+    store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
+    try:
+        if store_kind == "lakehouse":
+            frame = read_lakehouse_table(
+                str(identity["table_name"]),
+                store=str(identity["store"]),
+                schema=identity.get("schema"),
+                spark_session=spark_session,
+                context=context,
+            )
+        elif store_kind == "warehouse":
+            schema = str(identity["schema"]).replace("]", "]]")
+            table = str(identity["table_name"]).replace("]", "]]")
+            frame = read_warehouse_query(
+                f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}]",
+                store=str(identity["store"]),
+                spark_session=spark_session,
+                context=context,
+            )
+        else:
+            raise ValueError(f"Configured target has unsupported store kind {store_kind or '<blank>'!r}.")
+        return frame.limit(1).count() > 0
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return False
+        raise
+
+
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     """Return unique canonical source identities explicitly owned by this target."""
     if not isinstance(values, list | tuple) or not values:
@@ -250,7 +284,9 @@ def pipeline_write(
     ValueError
         If identity inputs conflict or are incomplete, ``source_table_ids`` is
         missing or invalid, governed processing is invalid, ownership does not
-        match, or the target store is unsupported.
+        match, the target store is unsupported, incremental input is paired
+        with whole-table overwrite, or an incremental append bootstrap finds
+        an already-populated target without committed source-to-target state.
 
     Notes
     -----
@@ -277,6 +313,11 @@ def pipeline_write(
     provide only the canonical identities of the sources that actually feed
     this target, rather than internal read or preparation dictionaries. This
     keeps multiple target writes in one activity exact and independent.
+
+    A first incremental append has no committed baseline and therefore reads a
+    complete bootstrap scope. FabricOps permits that bootstrap only for a new
+    or empty physical target. A populated target fails before publication so
+    missing metadata cannot silently duplicate all source rows.
 
     With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
     ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
@@ -366,16 +407,31 @@ def pipeline_write(
         physical_options["replaceWhere"] = _replace_where("_partition_bucket", values)
 
     audit = resolve_target_audit_fields(context)
-    incremental_sources = incremental_publication_sources(
+    incremental_scopes = incremental_publication_scopes(
         environment_name=env,
         activity_id=str(audit["_activity_id"]),
         target_table_id=str(identity["table_id"]),
         source_table_ids=publication_source_ids,
     )
-    if incremental_sources and strategy == "overwrite" and not partition_column:
+    if incremental_scopes and strategy == "overwrite" and not partition_column:
         raise ValueError(
             "Incremental source data cannot be published with whole-table overwrite. "
             "Use append, SCD1, SCD2, or governed partition-scoped overwrite."
+        )
+    bootstrap_sources = [
+        source_table_id
+        for source_table_id, incremental_scope in incremental_scopes.items()
+        if incremental_scope.get("first_run")
+    ]
+    if (
+        strategy == "append"
+        and bootstrap_sources
+        and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
+    ):
+        raise ValueError(
+            "Incremental append bootstrap requires a new or empty target. "
+            "The target already contains rows but no committed source-to-target baseline exists; "
+            "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
         )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
     prepared_df = add_target_audit_fields(df, audit)

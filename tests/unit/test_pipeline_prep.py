@@ -250,7 +250,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
         write_module, "resolve_table_processing_definition", lambda *_a, **_k: {"load_strategy": strategy}
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
-    monkeypatch.setattr(write_module, "incremental_publication_sources", lambda **kwargs: [])
+    monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {})
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     return identity, context
@@ -325,8 +325,8 @@ def test_pipeline_write_rejects_incremental_whole_table_overwrite(monkeypatch):
     _patch_write(monkeypatch, strategy="overwrite")
     monkeypatch.setattr(
         write_module,
-        "incremental_publication_sources",
-        lambda **kwargs: ["source-a"],
+        "incremental_publication_scopes",
+        lambda **kwargs: {"source-a": {"first_run": False}},
     )
     monkeypatch.setattr(
         io_package,
@@ -338,6 +338,37 @@ def test_pipeline_write_rejects_incremental_whole_table_overwrite(monkeypatch):
         write_module.pipeline_write(
             object(), table_id="target", source_table_ids=["source-a"]
         )
+
+
+@pytest.mark.parametrize("target_has_rows", [False, True])
+def test_incremental_append_bootstrap_requires_new_or_empty_target(
+    monkeypatch, target_has_rows
+):
+    """Append bootstrap fails safely when an existing target already has data."""
+    _patch_write(monkeypatch, strategy="append")
+    monkeypatch.setattr(
+        write_module,
+        "incremental_publication_scopes",
+        lambda **kwargs: {"source-a": {"first_run": True, "type": "full"}},
+    )
+    monkeypatch.setattr(write_module, "_target_has_rows", lambda **kwargs: target_has_rows)
+    writes = []
+    monkeypatch.setattr(
+        io_package, "write_lakehouse_table", lambda *args, **kwargs: writes.append(kwargs)
+    )
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+
+    if target_has_rows:
+        with pytest.raises(ValueError, match="requires a new or empty target"):
+            write_module.pipeline_write(
+                object(), table_id="target", source_table_ids=["source-a"]
+            )
+        assert writes == []
+    else:
+        write_module.pipeline_write(
+            object(), table_id="target", source_table_ids=["source-a"], verbose=False
+        )
+        assert len(writes) == 1
 
 
 def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):

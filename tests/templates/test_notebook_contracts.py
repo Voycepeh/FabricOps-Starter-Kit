@@ -425,6 +425,7 @@ def test_03_incremental_pipeline_is_target_aware_and_mixed_mode():
     assert source.count("target_table_id=target_1_table_id") >= 2
     assert "orders_1[\"should_process\"]" in source
     assert "orders_2[\"should_process\"]" in source
+    assert "one incremental driving source plus full supporting sources per target" in source
     assert "METADATA_SOURCE_OBSERVATION" not in source
     assert "spark.sql(" not in source
 
@@ -447,9 +448,14 @@ def test_03_incremental_pipeline_uses_independent_governed_publications():
     source = _notebook_source("03_incremental_pipeline.ipynb")
     assert source.count("target_1_write = pipeline_write(") == 1
     assert source.count("target_2_write = pipeline_write(") == 1
-    assert source.count("check_source_drift(") == 2
+    assert source.count("check_source_drift(") == 4
     assert source.count("check_guardrail_coverage(") == 2
+    assert 'target_table_id=target_1_table_id,\n        source_table_ids=[orders_1["table_id"], products_1["table_id"]]' in source
+    assert 'target_table_id=target_2_table_id,\n        source_table_ids=[orders_2["table_id"], customers_2["table_id"]]' in source
+    assert 'products_1["table_id"],\n    target_table_id=target_1_table_id' in source
+    assert 'customers_2["table_id"],\n    target_table_id=target_2_table_id' in source
     assert "independent publication boundary" in source
     assert "cross-target atomicity" in source
     assert "whole-table overwrite" in source
     assert "not yet been manually validated in Microsoft Fabric" in source
+    assert "physical target is new or empty" in source

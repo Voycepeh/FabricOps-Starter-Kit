@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:177`
+`fabricops_kit/pipeline/pipeline_write.py:211`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L177-L489">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L211-L545">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -115,7 +115,9 @@ A small result containing the canonical target table_id.
 ValueError
     If identity inputs conflict or are incomplete, ``source_table_ids`` is
     missing or invalid, governed processing is invalid, ownership does not
-    match, or the target store is unsupported.
+    match, the target store is unsupported, incremental input is paired
+    with whole-table overwrite, or an incremental append bootstrap finds
+    an already-populated target without committed source-to-target state.
 
 ## Notes
 
@@ -144,6 +146,11 @@ context, or manually commit Lineage or Source Observation metadata. Callers
 provide only the canonical identities of the sources that actually feed
 this target, rather than internal read or preparation dictionaries. This
 keeps multiple target writes in one activity exact and independent.
+
+A first incremental append has no committed baseline and therefore reads a
+complete bootstrap scope. FabricOps permits that bootstrap only for a new
+or empty physical target. A populated target fails before publication so
+missing metadata cannot silently duplicate all source rows.
 
 With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
 ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.

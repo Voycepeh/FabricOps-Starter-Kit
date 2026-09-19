@@ -152,12 +152,12 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
         source_table_id="source-payments", target_table_id="target-a", observation=current_payments
     )
     assert set(
-        shared.incremental_publication_sources(
+        shared.incremental_publication_scopes(
             environment_name="dev",
             activity_id="run-1",
             target_table_id="target-a",
             source_table_ids=["source-orders", "source-payments", "source-products"],
-        )
+        ).keys()
     ) == {"source-orders", "source-payments"}
 
 
