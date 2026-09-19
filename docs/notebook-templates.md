@@ -1,6 +1,6 @@
 # Notebook Templates
 
-FabricOps provides four editable Microsoft Fabric notebook templates. Open a template to see its workflow, configuration, and usage directly in the notebook.
+FabricOps provides five editable Microsoft Fabric notebook templates. Open a template to see its workflow, configuration, and usage directly in the notebook.
 
 [Open all notebook templates on GitHub](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks){ .md-button .md-button--primary }
 
@@ -30,9 +30,21 @@ Author and manage FabricOps Governance metadata and Data Contracts.
 
 ## `02_pipeline`
 
-Build, validate, and run the governed Engineering pipeline.
+**Full Read Pipeline Template.** Read complete governed sources, transform them, and publish one or more governed targets. Use it when rereading each complete source is acceptable.
 
 [Open `02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb){ .md-button }
+
+</div>
+
+<div class="template-card" markdown="1">
+
+## `03_incremental_pipeline`
+
+**Target-Aware Incremental Pipeline Template.** Define a target, resolve the unconsumed scope of each incremental source for that target, mix in full source reads, transform, and publish through `pipeline_write()`.
+
+Committed progress is source → target specific and advances only after that target publishes successfully. Multiple targets are supported as independent publication boundaries; FabricOps does not provide cross-target atomicity.
+
+[Open `03_incremental_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb){ .md-button }
 
 </div>
 

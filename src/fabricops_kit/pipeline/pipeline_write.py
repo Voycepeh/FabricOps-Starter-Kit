@@ -15,6 +15,7 @@ from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
+    incremental_publication_sources,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -365,6 +366,17 @@ def pipeline_write(
         physical_options["replaceWhere"] = _replace_where("_partition_bucket", values)
 
     audit = resolve_target_audit_fields(context)
+    incremental_sources = incremental_publication_sources(
+        environment_name=env,
+        activity_id=str(audit["_activity_id"]),
+        target_table_id=str(identity["table_id"]),
+        source_table_ids=publication_source_ids,
+    )
+    if incremental_sources and strategy == "overwrite" and not partition_column:
+        raise ValueError(
+            "Incremental source data cannot be published with whole-table overwrite. "
+            "Use append, SCD1, SCD2, or governed partition-scoped overwrite."
+        )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":

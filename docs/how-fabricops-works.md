@@ -31,13 +31,14 @@ The FabricOps overview video introduces the story. This page goes deeper into ho
 
 Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
-FabricOps packages that operating pattern around four reusable notebooks:
+FabricOps packages that operating pattern around five reusable notebooks:
 
 | Notebook | Role |
 | --- | --- |
 | [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | Defines the active environment and configured Fabric stores. |
 | [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb) | Authors the governance context and versioned Data Contracts. |
-| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Performs project-specific engineering, records technical metadata, and enforces governed expectations. |
+| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Provides the canonical Full Read Pipeline Template for complete-source engineering. |
+| [`03_incremental_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb) | Provides target-aware incremental target flows for large or changing sources. |
 | [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific workspaces consume approved Production data without recreating the Production engineering workflow. |
 
 The notebooks are supported by the FabricOps package: reusable public functions and widgets provide the repeatable pieces, while the project keeps its own transformation logic.
@@ -71,6 +72,8 @@ The difficulty starts when the pipeline needs **two or more Fabric stores**, whi
 FabricOps uses [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) to solve that wiring problem. Each Fabric store gets a stable logical name such as `source`, `unified`, or `product`. `02_pipeline` refers to those logical names, while FabricOps resolves the physical resource for the current environment.
 
 `02_pipeline` is deliberately a **full-read pipeline template**. Each governed source is read and canonically profiled as the complete persisted table on every run rather than as an incremental source batch. The target can still use its governed write strategy such as append, overwrite, partition overwrite, SCD1, or SCD2; full-read describes the source-processing model, not the target write mode.
+
+`03_incremental_pipeline` is the separate **target-aware incremental pipeline template**. Each target is defined before its sources so `pipeline_read()` can resolve the watermark or changed partitions last committed for that exact source → target relationship. A first run bootstraps with the complete source; later no-new-data runs can skip publication explicitly. Full lookup sources may be mixed with incremental transactional sources, and only complete full sources or complete persisted targets receive canonical Profiles. When one notebook publishes multiple targets, every target write is an independent publication boundary—there is no cross-target atomicity.
 
 That lets the notebook itself stay deliberately simple:
 

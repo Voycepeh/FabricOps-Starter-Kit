@@ -250,6 +250,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
         write_module, "resolve_table_processing_definition", lambda *_a, **_k: {"load_strategy": strategy}
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
+    monkeypatch.setattr(write_module, "incremental_publication_sources", lambda **kwargs: [])
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     return identity, context
@@ -317,6 +318,26 @@ def test_pipeline_write_does_not_run_source_drift(monkeypatch):
 
     assert not hasattr(write_module, "check_source_drift_for_target")
     assert not hasattr(write_module, "check_source_drift")
+
+
+def test_pipeline_write_rejects_incremental_whole_table_overwrite(monkeypatch):
+    """A partial incremental source cannot destructively replace a whole target."""
+    _patch_write(monkeypatch, strategy="overwrite")
+    monkeypatch.setattr(
+        write_module,
+        "incremental_publication_sources",
+        lambda **kwargs: ["source-a"],
+    )
+    monkeypatch.setattr(
+        io_package,
+        "write_lakehouse_table",
+        lambda *args, **kwargs: pytest.fail("unsafe write must be rejected before publication"),
+    )
+
+    with pytest.raises(ValueError, match="whole-table overwrite"):
+        write_module.pipeline_write(
+            object(), table_id="target", source_table_ids=["source-a"]
+        )
 
 
 def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_session):

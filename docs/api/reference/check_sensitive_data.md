@@ -19,10 +19,10 @@ Apply explicit Sensitive Data treatment before a governed write.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">03_incremental_pipeline</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `03_incremental_pipeline`
 
 ## Usage notes
 

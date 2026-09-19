@@ -123,7 +123,13 @@ def _notebook_source(notebook_name: str) -> str:
 def test_official_governance_workflow_inventory():
     """The active templates expose one persistent Governance entry point."""
     names = {path.name for path in NOTEBOOKS}
-    assert {"00_env_config.ipynb", "01_governance.ipynb", "02_pipeline.ipynb", "99_explore.ipynb"} <= names
+    assert {
+        "00_env_config.ipynb",
+        "01_governance.ipynb",
+        "02_pipeline.ipynb",
+        "03_incremental_pipeline.ipynb",
+        "99_explore.ipynb",
+    } <= names
     assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
 
 
@@ -405,3 +411,45 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
         assert cell.execution_count is None
         assert not cell.outputs
         ast.parse(cell.source)
+
+
+def test_03_incremental_pipeline_is_target_aware_and_mixed_mode():
+    """Incremental target flows resolve identity first and mix explicit read modes."""
+    source = _notebook_source("03_incremental_pipeline.ipynb")
+    assert "Target-Aware Incremental Pipeline Template" in source
+    assert source.index("target_1_table_id = resolve_table_id(") < source.index(
+        'read_mode="incremental"'
+    )
+    assert source.count('read_mode="incremental"') >= 2
+    assert source.count('read_mode="full"') >= 2
+    assert source.count("target_table_id=target_1_table_id") >= 2
+    assert "orders_1[\"should_process\"]" in source
+    assert "orders_2[\"should_process\"]" in source
+    assert "METADATA_SOURCE_OBSERVATION" not in source
+    assert "spark.sql(" not in source
+
+
+def test_03_incremental_pipeline_profiles_only_full_sources_and_persisted_targets():
+    """Partial batches never masquerade as canonical full-table profiles."""
+    source = _notebook_source("03_incremental_pipeline.ipynb")
+    assert 'profile_table(store="Bronze", schema="demo", table_name="orders")' not in source
+    assert 'profile_table(store="Bronze", schema="demo", table_name="products")' in source
+    assert 'profile_table(store="Bronze", schema="demo", table_name="customers")' in source
+    assert 'profile_table(table_id=target_1_write["table_id"])' in source
+    assert 'profile_table(table_id=target_2_write["table_id"])' in source
+    assert source.index("target_1_write = pipeline_write(") < source.index(
+        'target_1_profile = profile_table(table_id=target_1_write["table_id"])'
+    )
+
+
+def test_03_incremental_pipeline_uses_independent_governed_publications():
+    """Each target flow owns checks, publication, and post-write profiling."""
+    source = _notebook_source("03_incremental_pipeline.ipynb")
+    assert source.count("target_1_write = pipeline_write(") == 1
+    assert source.count("target_2_write = pipeline_write(") == 1
+    assert source.count("check_source_drift(") == 2
+    assert source.count("check_guardrail_coverage(") == 2
+    assert "independent publication boundary" in source
+    assert "cross-target atomicity" in source
+    assert "whole-table overwrite" in source
+    assert "not yet been manually validated in Microsoft Fabric" in source
