@@ -25,6 +25,7 @@ def check_schema(
     table_id: str,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Check a persisted or supplied schema against configured schema intent.
@@ -41,6 +42,8 @@ def check_schema(
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking schema result cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
 
@@ -79,7 +82,7 @@ def check_schema(
             print("  Evaluation skipped by caller; no schema rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
-    spark = get_spark_session()
+    spark = get_spark_session(spark_session)
     contract = resolve_pipeline_data_contract(
         config,
         env,
