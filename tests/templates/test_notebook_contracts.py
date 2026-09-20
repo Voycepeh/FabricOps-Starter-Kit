@@ -355,8 +355,11 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
             "store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE",
             'source_table_ids=[source["table_id"] for source in write_sources]',
             "writes[WRITE_NAME] = write_result",
-            'write_profile = profile_table(table_id=write_result["table_id"])',
-            '# display(write_profile["profile"])',
+            'write_profile = profile_table(',
+            'table_id=write_result["table_id"]',
+            "spark_session=spark",
+            'display(write_profile["profile"])',
+            'display(write_profile["frequency_profile"])',
         ):
             assert fragment in block
         stages = (
@@ -399,7 +402,8 @@ def test_02_pipeline_profile_inspection_and_support_writes_are_explicit():
         "# display(transformed_df)",
         "# display(target_dq_failed_values)",
         "# display(support_mapping_df)",
-        '# display(write_profile["profile"])',
+        'display(write_profile["profile"])',
+        'display(write_profile["frequency_profile"])',
     ):
         assert optional in source
 
