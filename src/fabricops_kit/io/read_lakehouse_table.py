@@ -114,7 +114,7 @@ def read_lakehouse_table(
     if resolved_table_id is not None:
         dataframe._fabricops_table_id = str(resolved_table_id)
     if not (context or {}).get("_fabricops_suppress_io_log"):
-        parts = [f"Object: Lakehouse", f"Store: {_store.key}"]
+        parts = ["Object: Lakehouse", f"Store: {_store.key}"]
         if _schema_value:
             parts.append(f"Schema: {_schema_value}")
         parts.append(f"Table: {_table_value}")
