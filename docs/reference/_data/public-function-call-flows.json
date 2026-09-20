@@ -602,7 +602,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 394,
+      "source_end_line": 401,
       "source_path": "src/fabricops_kit/access/scan_workspace_access.py",
       "source_start_line": 290,
       "supports_live_contract": false,
@@ -15404,7 +15404,7 @@
           "type": "str | list[str] | tuple[str, ...]"
         },
         {
-          "description": "Metadata environment to scan. Defaults to the active FabricOps environment.",
+          "description": "FabricOps configuration environment used for target resolution, catalogue filtering, and environment-labelled access rows. Defaults to the active FabricOps environment. Fabric authentication and execution identity continue to come from the active runtime.",
           "name": "environment_name",
           "required": "No",
           "type": "str | None"
@@ -15447,7 +15447,7 @@
       "scope": 29,
       "signals": [],
       "signature": "def scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...]='warehouse', environment_name: str | None=None, access_snapshot_id: str | None=None, spark_session=None, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 394,
+      "source_end_line": 401,
       "source_path": "src/fabricops_kit/access/scan_workspace_access.py",
       "source_start_line": 290,
       "summary": "Scan observable SQL permissions for registered governed physical tables.",
