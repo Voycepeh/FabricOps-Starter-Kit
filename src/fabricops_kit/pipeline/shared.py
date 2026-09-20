@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from functools import reduce
 from uuid import uuid4
 from typing import Any, Mapping
