@@ -1,6 +1,7 @@
 """Public governed data-quality runtime check."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     check_dq_runtime,
     resolve_catalogue_table_identity,
@@ -18,6 +19,7 @@ def check_dq(
     row_identity_columns: list[str] | None = None,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Evaluate active governed DQ rules and persist runtime evidence.
@@ -42,6 +44,9 @@ def check_dq(
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking DQ result cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps uses the supplied
+        DataFrame session or resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
 
@@ -94,7 +99,9 @@ def check_dq(
             print("  Evaluation skipped by caller; no rules evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
-    spark_session = getattr(dataframe, "sparkSession", None)
+    if spark_session is None:
+        spark_session = getattr(dataframe, "sparkSession", None)
+    spark_session = get_spark_session(spark_session)
     contract = resolve_pipeline_data_contract(
         config,
         env,
