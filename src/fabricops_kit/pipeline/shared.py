@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from functools import reduce
 from uuid import uuid4
 from typing import Any, Mapping
@@ -529,97 +532,6 @@ def _result_reason(result: Mapping[str, Any] | None) -> str:
         or result.get("stability_message")
         or ""
     )
-
-
-
-def _schema_reason(result: Mapping[str, Any]) -> str:
-    missing = result.get("missing_columns") or []
-    unexpected = result.get("unexpected_columns") or []
-    mismatches = result.get("datatype_mismatches") or []
-    parts = []
-    if missing:
-        parts.append("missing column " + ", ".join(map(str, missing)))
-    if unexpected:
-        parts.append("unexpected column " + ", ".join(map(str, unexpected)))
-    if mismatches:
-        parts.append(f"{len(mismatches)} datatype mismatch(es)")
-    return "Schema failed: " + "; ".join(parts) + "." if parts else "Schema failed."
-
-
-def _freshness_reason(result: Mapping[str, Any]) -> str:
-    column = result.get("freshness_column") or "freshness column"
-    if _result_status(result) == "failed":
-        return f"Freshness failed: latest {column} is older than allowed lag."
-    return _result_reason(result) or "Freshness check passed."
-
-
-def _profile_behavior_reason(result: Mapping[str, Any]) -> str:
-    status = _result_status(result)
-    if status == "baseline_created":
-        return "Profile behavior baseline created."
-    differences = result.get("differences") or []
-    if not differences and result.get("stability_difference_summary"):
-        try:
-            differences = json.loads(str(result.get("stability_difference_summary") or "[]"))
-        except json.JSONDecodeError:
-            differences = []
-    if status == "failed" or differences:
-        for diff in differences:
-            diff_type = str(diff.get("difference_type") or "")
-            watermark = str(diff.get("watermark_value") or "")
-            if diff_type == "missing_watermark_value":
-                return f"Profile behavior failed: previous watermark group {watermark} disappeared."
-            if diff_type == "profile_changed" and watermark and watermark != "__FULL_TABLE__":
-                return f"Profile behavior failed: previous watermark group {watermark} changed."
-            if diff_type == "profile_changed":
-                return "Profile behavior failed: static data changed from accepted baseline."
-        return "Profile behavior failed: static data changed from accepted baseline."
-    new_groups = result.get("new_watermark_values") or []
-    if new_groups:
-        return "Profile behavior passed: new watermark accepted."
-    return _result_reason(result) or "Profile behavior guardrail passed."
-
-
-def _dq_reason(result: Mapping[str, Any]) -> str:
-    checks = result.get("checks") or []
-    blocking = [
-        check
-        for check in checks
-        if str(check.get("status") or "").lower() in {"failed", "error"}
-        and str(check.get("severity") or "warning").lower() in {"error", "blocking"}
-    ]
-    warnings = [
-        check
-        for check in checks
-        if str(check.get("status") or "").lower() in {"failed", "error", "warning"}
-        and str(check.get("severity") or "warning").lower() not in {"error", "blocking"}
-    ]
-    if blocking:
-        return f"DQ failed: {len(blocking)} blocking DQ rule(s) failed."
-    if warnings:
-        return f"DQ warning: {len(warnings)} warning DQ rule(s) failed."
-    return _result_reason(result) or "DQ guardrail passed."
-
-
-
-
-SOURCE_OBSERVATION_COLUMNS = frozenset(
-    {
-        "observation_id",
-        "source_table_id",
-        "target_table_id",
-        "environment_name",
-        "partition_value",
-        "row_count",
-        "min_change_value",
-        "max_change_value",
-        "content_fingerprint",
-        "is_present",
-        "observation_status",
-    }
-)
-
-
 def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     """Return canonical observation rows as dictionaries."""
     values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
@@ -1146,37 +1058,6 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
                 }))
     _merge_source_observation_records(records, config=config, context=context)
     return records
-
-
-def guardrail_compatibility_observation(
-    observation: Any, *, table_id: str, change_column: str
-) -> Any:
-    """Add the resolved observation change column for freshness evaluation."""
-    if hasattr(observation, "withColumn"):
-        from pyspark.sql import functions as F
-
-        return observation.withColumn("table_id", F.lit(table_id)).withColumn(
-            "change_column", F.lit(change_column)
-        )
-    return [
-        {**row, "table_id": table_id, "change_column": change_column}
-        for row in observation_rows(observation)
-    ]
-
-
-# ---------------------------------------------------------------------------
-# Guardrail shared implementation
-# ---------------------------------------------------------------------------
-
-
-import re
-
-from datetime import date, datetime, timedelta
-
-from decimal import Decimal, InvalidOperation
-
-
-
 def write_guardrail_result_row(
     *,
     spark_session: Any,
