@@ -243,7 +243,21 @@ def _build_catalogue_widget(
 
         _role, table_id = option_context.get(str(dataset.value or ""), (None, ""))
         catalogue_raw = source_frames["catalogue"].filter(F.col("table_id") == table_id)
-        profile_for_table = source_frames["profile"].filter(F.col("table_id") == table_id)
+        completed = (
+            catalogue_raw.filter(F.col("metadata_level") == "table")
+            .select("last_profiled_at", "_activity_id")
+            .limit(1)
+            .collect()
+        )
+        completed_activity_id = (
+            str(completed[0]["_activity_id"] or "")
+            if completed and completed[0]["last_profiled_at"] is not None
+            else ""
+        )
+        profile_for_table = source_frames["profile"].filter(
+            (F.col("table_id") == table_id)
+            & (F.col("_activity_id") == completed_activity_id)
+        )
         latest = (
             profile_for_table.filter(F.col("profiled_at").isNotNull())
             .select("profile_snapshot_id", "profiled_at")

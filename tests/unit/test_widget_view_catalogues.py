@@ -292,14 +292,14 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     catalogue_schema = (
         "metadata_level string, table_id string, column_id string, environment_name string, store_type string, "
         "layer string, schema_name string, table_name string, column_name string, data_type string, first_profiled_at timestamp, "
-        "last_profiled_at timestamp, is_active boolean, _committed_at timestamp"
+        "last_profiled_at timestamp, is_active boolean, _committed_at timestamp, _activity_id string"
     )
     profile_schema = (
         "profile_id string, profile_snapshot_id string, table_id string, column_id string, environment_name string, "
         "data_type string, row_count long, non_null_count long, null_count long, null_percent double, "
         "distinct_count long, distinct_percent double, mean_value double, stddev_value double, min_value string, "
         "percentile_25_value double, median_value double, percentile_75_value double, max_value string, "
-        "profiled_at timestamp, _committed_at timestamp"
+        "profiled_at timestamp, _committed_at timestamp, _activity_id string"
     )
     frequency_schema = (
         "frequency_id string, profile_id string, profile_snapshot_id string, value string, frequency_count long, "
@@ -308,16 +308,17 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     )
     tables = {
         "METADATA_DATA_CATALOGUE": spark_session.createDataFrame([
-            ("table", "dataset-key", None, "dev", "lakehouse", "raw", "sales", "orders", None, None, old_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "dataset-key", "column-country", "dev", "lakehouse", "raw", "sales", "orders", "Country", "string", old_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "dataset-key", "column-comment", "dev", "lakehouse", "raw", "sales", "orders", "Comment", "string", old_snapshot, latest_snapshot, False, latest_snapshot),
-            ("table", "unprofiled-key", None, "dev", "lakehouse", "curated", "sales", "customers", None, None, latest_snapshot, latest_snapshot, True, latest_snapshot),
-            ("column", "unprofiled-key", "column-customer", "dev", "lakehouse", "curated", "sales", "customers", "customer_id", "bigint", latest_snapshot, latest_snapshot, True, latest_snapshot),
+            ("table", "dataset-key", None, "dev", "lakehouse", "raw", "sales", "orders", None, None, old_snapshot, latest_snapshot, True, latest_snapshot, "activity-latest"),
+            ("column", "dataset-key", "column-country", "dev", "lakehouse", "raw", "sales", "orders", "Country", "string", old_snapshot, latest_snapshot, True, latest_snapshot, "activity-latest"),
+            ("column", "dataset-key", "column-comment", "dev", "lakehouse", "raw", "sales", "orders", "Comment", "string", old_snapshot, latest_snapshot, False, latest_snapshot, "activity-latest"),
+            ("table", "unprofiled-key", None, "dev", "lakehouse", "curated", "sales", "customers", None, None, latest_snapshot, latest_snapshot, True, latest_snapshot, "customer-activity"),
+            ("column", "unprofiled-key", "column-customer", "dev", "lakehouse", "curated", "sales", "customers", "customer_id", "bigint", latest_snapshot, latest_snapshot, True, latest_snapshot, "customer-activity"),
         ], catalogue_schema),
         "METADATA_DATA_PROFILED": spark_session.createDataFrame([
-            ("old-country", "snapshot-old", "dataset-key", "column-country", "dev", "string", 4, 4, 0, 0.0, 2, 50.0, None, None, "DE", None, None, None, "SG", old_snapshot, old_snapshot),
-            ("profile-country", "snapshot-latest", "dataset-key", "column-country", "dev", "string", 5, 5, 0, 0.0, 2, 40.0, None, None, "DE", None, None, None, "SG", latest_snapshot, latest_snapshot),
-            ("profile-comment", "snapshot-latest", "dataset-key", "column-comment", "dev", "string", 5, 4, 1, 20.0, 4, 80.0, None, None, "a", None, None, None, "z", latest_snapshot, latest_snapshot),
+            ("old-country", "snapshot-old", "dataset-key", "column-country", "dev", "string", 4, 4, 0, 0.0, 2, 50.0, None, None, "DE", None, None, None, "SG", old_snapshot, old_snapshot, "activity-old"),
+            ("profile-country", "snapshot-latest", "dataset-key", "column-country", "dev", "string", 5, 5, 0, 0.0, 2, 40.0, None, None, "DE", None, None, None, "SG", latest_snapshot, latest_snapshot, "activity-latest"),
+            ("profile-comment", "snapshot-latest", "dataset-key", "column-comment", "dev", "string", 5, 4, 1, 20.0, 4, 80.0, None, None, "a", None, None, None, "z", latest_snapshot, latest_snapshot, "activity-latest"),
+            ("profile-incomplete", "snapshot-incomplete", "dataset-key", "column-country", "dev", "string", 6, 6, 0, 0.0, 2, 33.3, None, None, "DE", None, None, None, "SG", later_snapshot, later_snapshot, "activity-incomplete"),
         ], profile_schema),
         "METADATA_DATA_PROFILED_FREQUENCY": spark_session.createDataFrame([
             ("freq-old", "old-country", "snapshot-old", "old", 1, 25.0, 1, 4, 4, old_snapshot, old_snapshot),

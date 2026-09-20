@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:772`
+`fabricops_kit/pipeline/profile_table.py:799`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L772-L1029">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1070">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -142,9 +142,13 @@ The orchestration performs these mechanical steps:
 
 A retry in the same Fabric activity reuses the snapshot and row identities
 and replaces that snapshot rather than appending duplicates. Catalogue is
-updated only after both profile components succeed. If a later stage
-fails, the uncommitted profile snapshot is removed before the error is
-raised; a later activity receives a distinct snapshot identity.
+updated only after both profile components succeed; its table-level
+``_activity_id`` and non-null ``last_profiled_at`` identify the completed
+snapshot for readers. A same-activity retry first clears that completion
+marker. If a later stage fails, snapshot removal is best-effort hygiene:
+Catalogue remains authoritative even if cleanup also fails, and the
+original profiling error is preserved. A later activity receives a
+distinct snapshot identity.
 
 </div>
 
@@ -165,7 +169,7 @@ raised; a later activity receives a distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 63 |
+| Live-critical dependencies | 64 |
 
 ### Release history
 
@@ -224,6 +228,7 @@ raised; a later activity receives a distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.profile_table._selected_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._sql_identifier</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._sql_string</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._stage_catalogue_profile_retry</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>

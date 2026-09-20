@@ -1233,10 +1233,15 @@ def load_guardrail_authoring_targets(
         and str(row.get("table_id") or "").strip()
     }
     profile_table_ids = {
-        str(row.get("table_id") or "")
-        for row in profiles
-        if str(row.get("environment_name") or env) == env
-        and str(row.get("table_id") or "").strip()
+        table_id
+        for table_id, table in table_rows.items()
+        if table.get("last_profiled_at") is not None
+        and any(
+            str(row.get("environment_name") or env) == env
+            and str(row.get("table_id") or "") == table_id
+            and str(row.get("_activity_id") or "") == str(table.get("_activity_id") or "")
+            for row in profiles
+        )
     }
     selectable_ids = sorted(set(table_rows) & profile_table_ids)
     latest_contracts: dict[str, dict[str, Any]] = {}
@@ -1281,6 +1286,8 @@ def load_guardrail_authoring_targets(
             for row in profiles
             if str(row.get("environment_name") or env) == env
             and str(row.get("table_id") or "") == table_id
+            and table.get("last_profiled_at") is not None
+            and str(row.get("_activity_id") or "") == str(table.get("_activity_id") or "")
         ]
         latest = max(
             table_profiles,

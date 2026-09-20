@@ -620,6 +620,33 @@ def _delete_profile_snapshot(
          .whenMatchedDelete().execute())
 
 
+def _stage_catalogue_profile_retry(
+    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Hide a previously completed same-activity snapshot before replacing it."""
+    from delta.tables import DeltaTable
+
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    activities = profiled_df.select(
+        "environment_name", "table_id", "_activity_id"
+    ).dropDuplicates()
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(
+            activities.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.table_id = source.table_id "
+            "AND target._activity_id = source._activity_id",
+        )
+        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
+        .execute()
+    )
+
+
 def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
     """Return the stable snapshot identity for one table and Fabric activity."""
     activity_id = build_runtime_audit_fields(
@@ -855,9 +882,13 @@ def profile_table(
 
     A retry in the same Fabric activity reuses the snapshot and row identities
     and replaces that snapshot rather than appending duplicates. Catalogue is
-    updated only after both profile components succeed. If a later stage
-    fails, the uncommitted profile snapshot is removed before the error is
-    raised; a later activity receives a distinct snapshot identity.
+    updated only after both profile components succeed; its table-level
+    ``_activity_id`` and non-null ``last_profiled_at`` identify the completed
+    snapshot for readers. A same-activity retry first clears that completion
+    marker. If a later stage fails, snapshot removal is best-effort hygiene:
+    Catalogue remains authoritative even if cleanup also fails, and the
+    original profiling error is preserved. A later activity receives a
+    distinct snapshot identity.
 
     Examples
     --------
@@ -994,6 +1025,9 @@ def profile_table(
         )
     summary_persisted = False
     try:
+        _stage_catalogue_profile_retry(
+            profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+        )
         _replace_snapshot_rows(
             dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
             config=config, env=env, spark_session=spark_session,
@@ -1017,9 +1051,16 @@ def profile_table(
         )
     except Exception:
         if summary_persisted:
-            _delete_profile_snapshot(
-                profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
-            )
+            try:
+                _delete_profile_snapshot(
+                    profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+                )
+            except Exception as cleanup_error:
+                print(
+                    "Warning: incomplete profiling snapshot cleanup failed; "
+                    "Catalogue completion state remains authoritative. "
+                    f"Cleanup error: {cleanup_error}"
+                )
         raise
     print(
         f"7. {CATALOGUE_TABLE} → table/column identities and observed schema upserted; "
