@@ -8,7 +8,8 @@ from typing import Any
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
@@ -57,14 +58,14 @@ def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
 def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any, activity_id: str) -> list[dict[str, Any]]:
     from pyspark.sql import functions as F
 
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        _GUARDRAIL_RESULTS_TABLE,
-        metadata_table_physical_schema(config, _GUARDRAIL_RESULTS_TABLE),
-        context=context,
-    )
     return _rows(
-        spark.read.format("delta").load(path).where(
+        read_lakehouse_table(
+            _GUARDRAIL_RESULTS_TABLE,
+            store="Metadata",
+            schema=metadata_table_physical_schema(config, _GUARDRAIL_RESULTS_TABLE),
+            spark_session=spark,
+            context=context,
+        ).where(
             (F.col("environment_name") == F.lit(env)) & (F.col("_activity_id") == F.lit(activity_id))
         )
     )
