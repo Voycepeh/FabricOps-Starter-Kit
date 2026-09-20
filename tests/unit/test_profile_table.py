@@ -22,7 +22,8 @@ def test_profile_table_public_signature_and_removed_symbols():
     assert str(inspect.signature(profile_table)) == (
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, frequency_columns=None, "
-        "frequency_top_n: 'int | None' = None, frequency_max_distinct_percent: 'float | None' = 80.0)"
+        "frequency_top_n: 'int | None' = None, frequency_max_distinct_percent: 'float | None' = 80.0, "
+        "spark_session=None)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
         assert not hasattr(fabricops_kit, name)
