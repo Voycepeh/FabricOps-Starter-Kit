@@ -360,28 +360,6 @@ def read_warehouse_synapsesql(
     return reader.synapsesql(synapsesql_target)
 
 
-def read_sql_endpoint_query_core(
-    query: str,
-    *,
-    store: str,
-    spark_session=None,
-    context: dict[str, Any] | None = None,
-    options: dict[str, Any] | None = None,
-):
-    """Execute a validated query against a configured Warehouse or Lakehouse SQL endpoint."""
-    config, env, _resolved_context = resolve_fabric_context(context=context)
-    configured_store = get_store(config, env, store)
-    if configured_store.kind not in {"warehouse", "lakehouse"}:
-        raise ValueError(
-            f"Store '{env}/{store}' cannot expose the supported SQL permission catalogue views; "
-            "expected a warehouse or lakehouse store."
-        )
-    sql = validate_select_query(query)
-    return read_warehouse_synapsesql(
-        get_spark_session(spark_session), configured_store, sql, database_name=store, options=options
-    )
-
-
 def write_warehouse_synapsesql(
     df, store: FabricStore, synapsesql_target: str, *, mode: str, options: dict[str, Any] | None = None
 ) -> None:
