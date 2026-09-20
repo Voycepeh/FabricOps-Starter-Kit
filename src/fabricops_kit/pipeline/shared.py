@@ -790,7 +790,6 @@ def resolve_incremental_source_scope(
             _SOURCE_OBSERVATION_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
-            spark_session=spark_session,
             context=context,
         )
         history = _recover_completed_source_observations(
