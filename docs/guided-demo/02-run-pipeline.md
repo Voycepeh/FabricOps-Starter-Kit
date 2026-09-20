@@ -190,7 +190,7 @@ WRITE_LOAD_STRATEGY = "overwrite"
 - Their `table_id` values are reused for Source Drift, Guardrail coverage, and Lineage.
 - `resolve_table_id()` resolves the canonical FabricOps `table_id` for the target once and reuses it throughout the WRITE block.
 
-**Run Guardrail checks**
+#### Run Guardrail checks
 
 - The checks resolve the selected Data Contract for the target from `METADATA_DATA_CONTRACT`.
 - `check_schema()` validates the output columns and data types.
@@ -222,7 +222,7 @@ WRITE_LOAD_STRATEGY = "overwrite"
 - `writes[WRITE_NAME]` stores the `pipeline_write()` result.
 - Later cells can reuse the published target's canonical `table_id`.
 
-**Optional**
+#### Optional
 
 - Uncomment the `display()` lines only when you want to inspect the prepared DataFrame, failed DQ values, Sensitive Data support mappings, or persisted target profile.
 
