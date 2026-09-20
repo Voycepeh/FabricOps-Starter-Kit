@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
     metadata_table_physical_schema,
@@ -33,6 +34,7 @@ def _persist_target_processing(
     config: Any,
     env: str,
     dataframe: Any,
+    context: dict[str, Any] | None = None,
     spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
@@ -48,6 +50,20 @@ def _persist_target_processing(
         "tracked_columns",
     }
     parameters = {name: processing[name] for name in parameter_names if name in processing}
+    runtime_context = {
+        **dict(context or {}),
+        "activity_id": audit["_activity_id"],
+        "workspace_id": audit["_workspace_id"],
+        "notebook_id": audit["_notebook_id"],
+        "notebook_name": audit["_notebook_name"],
+    }
+    metadata_audit = build_runtime_audit_fields(
+        config=config,
+        env=env,
+        committed_by=audit["_committed_by"],
+        committed_at=audit["_committed_at"],
+        runtime_context=runtime_context,
+    )
     row = coerce_metadata_row_types(
         CATALOGUE_TABLE,
         {
@@ -68,7 +84,7 @@ def _persist_target_processing(
             "first_profiled_at": None,
             "last_profiled_at": None,
             "is_active": True,
-            **audit,
+            **metadata_audit,
         },
     )
     spark_session = spark_session or dataframe.sparkSession
@@ -642,6 +658,7 @@ def pipeline_write(
         config=config,
         env=env,
         dataframe=df,
+        context=context,
         spark_session=spark_session,
     )
     if verbose:

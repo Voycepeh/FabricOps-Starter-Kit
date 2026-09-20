@@ -588,6 +588,21 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
     monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
     monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    metadata_audit = {
+        "_committed_by": "engineer",
+        "_committed_at": "2026-08-22T00:00:00Z",
+        "_workspace_id": "workspace",
+        "_workspace_name": "Workspace",
+        "_notebook_id": "notebook",
+        "_notebook_name": "02_pipeline",
+        "_metadata_lakehouse_name": "Metadata",
+        "_activity_id": "activity",
+    }
+    monkeypatch.setattr(
+        write_module,
+        "build_runtime_audit_fields",
+        lambda **_kwargs: metadata_audit,
+    )
     monkeypatch.setattr(write_module, "coerce_metadata_row_types", lambda _table, row: row)
     monkeypatch.setattr(
         write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"}
@@ -610,10 +625,13 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         config={},
         env="dev",
         dataframe=DataFrame(),
+        context={"workspace_name": "Workspace"},
     )
 
     assert rows[0]["metadata_level"] == "table"
     assert rows[0]["load_strategy"] == "scd2"
+    assert rows[0]["_workspace_name"] == "Workspace"
+    assert rows[0]["_metadata_lakehouse_name"] == "Metadata"
     assert json.loads(rows[0]["load_strategy_parameters_json"]) == {
         "effective_column": "effective_at",
         "key_columns": ["id"],
