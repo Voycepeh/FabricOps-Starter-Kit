@@ -22,7 +22,7 @@ def read_lakehouse_excel(
     ----------
     relative_path : str
         Excel file path resolved by the Fabric resolver.
-    store : str, default="source"
+    store : str, default="Bronze"
         Logical Lakehouse store key from ``00_env_config``.
     sheet_name : str or int, default=0
         Worksheet name or index to read.

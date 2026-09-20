@@ -86,7 +86,7 @@ Small lookup table without explicit repartitioning:
 >>> write_lakehouse_table(
 ...     small_lookup_df,
 ...     "COUNTRY_REGION_MAPPING",
-...     store="data",
+...     store="Silver",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ... )
@@ -100,7 +100,7 @@ Integer repartitioning for a large dataset:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     store="data",
+...     store="Silver",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=32,
@@ -115,7 +115,7 @@ Column-based repartitioning:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     store="data",
+...     store="Silver",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=["academic_year", "semester"],
@@ -126,7 +126,7 @@ Combined Spark repartitioning and physical Delta partitioning:
 >>> write_lakehouse_table(
 ...     large_df,
 ...     "STUDENT_ENROLMENT_CURATED",
-...     store="data",
+...     store="Silver",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=32,
@@ -143,7 +143,7 @@ Large historical dataset pattern:
 >>> write_lakehouse_table(
 ...     enrolment_df,
 ...     "STUDENT_ENROLMENT_HISTORY",
-...     store="data",
+...     store="Silver",
 ...     schema=DATA_SCHEMA,
 ...     mode="overwrite",
 ...     repartition_by=48,

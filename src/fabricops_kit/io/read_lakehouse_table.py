@@ -29,10 +29,10 @@ def read_lakehouse_table(
 
     Lakehouse Delta is the preferred source for repeated PySpark
     transformations in FabricOps. Use this callable for managed Lakehouse
-    tables, data already stored in OneLake Delta format, and source or
-    unified data processing inside Fabric notebooks. When source data starts in
+    tables, data already stored in OneLake Delta format, and Bronze or
+    Silver data processing inside Fabric notebooks. When source data starts in
     a Fabric Warehouse, save large or repeatedly used data into the
-    Source Lakehouse as Delta first, then read it with this callable.
+    Bronze Lakehouse as Delta first, then read it with this callable.
 
     Parameters
     ----------
@@ -91,7 +91,7 @@ def read_lakehouse_table(
     resolved_table_id = table_id
     if table_id is not None:
         if table_name is not None or store != "Bronze" or schema is not None:
-            raise ValueError("table_id cannot be combined with table_name, target, or schema.")
+            raise ValueError("table_id cannot be combined with table_name, store, or schema.")
         from fabricops_kit.config.shared import resolve_fabric_context
         from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
 
