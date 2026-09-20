@@ -102,8 +102,8 @@ When breaking cleanup is authorized, do not add compatibility layers unless requ
 - Internal functions use non-underscore names and are architecture-visible implementation units.
 - Private helpers use leading underscores and remain hidden implementation details.
 - New architecture-visible internal functions must not use leading underscores.
-- Public functions must not call other public functions.
-- Internal functions must not call public functions.
+- Public and internal functions must not call unrelated public workflow functions.
+- Public and internal functions may call foundational FabricOps I/O functions for ordinary physical reads and writes. This narrow exception does not permit arbitrary public-to-public orchestration.
 - Public and internal functions may call their own private helpers.
 - Cross-file imports or calls of underscore-prefixed private helpers are architecture violations.
 - Classes, dataclasses, enums, constants, protocols, config objects, and external libraries are supporting objects, not architecture layers.
@@ -123,6 +123,15 @@ Do not add `public.py`, `models.py`, `classes.py`, adapter or resolver files, or
 ### Fabric IO callable file pattern
 
 For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusable IO helpers live in `src/fabricops_kit/io/shared.py`. Avoid wrapper-on-wrapper layers and remove obsolete compatibility code after migration.
+
+## Fabric I/O routing
+
+- Ordinary reusable Fabric table and file reads/writes must use the appropriate foundational function under `src/fabricops_kit/io/` instead of calling low-level Spark, Fabric connector, or path helpers directly from a workflow.
+- When no existing foundational reader/writer represents a reusable physical operation, add the smallest owner function rather than duplicating transport/routing logic in a domain module.
+- Domain-specific mutations such as contract activation, profiling replacement/upsert, Source Observation commits, Catalogue upserts, and SCD processing may remain private to their owning domain and may use native Spark/Delta code when that keeps the domain behaviour clearer.
+- Domain-specific mutation code must reuse configured Fabric routing, store, schema, path, and session helpers rather than rebuilding infrastructure rules ad hoc.
+- Do not introduce a generic mutation API merely to hide `DeltaTable.merge()`; centralize only genuinely reusable infrastructure.
+- Foundational I/O functions own their physical read/write completion output and must not expose ABFSS/OneLake implementation paths in normal user-facing logging.
 
 ## Public call-flow architecture contract
 
@@ -287,7 +296,7 @@ Choose verification proportional to the change:
 Before opening a PR, review the diff and confirm:
 
 - no unintended public contract change
-- no new public-to-public or internal-to-public calls
+- no new unrelated public-to-public or internal-to-public calls outside the narrow foundational-I/O exception
 - no private helper surfaced as Internal
 - no unrelated generated files, dashboard output, release files, or notebook templates
 - intentional breaking changes are clearly documented
