@@ -790,6 +790,7 @@ def resolve_incremental_source_scope(
             _SOURCE_OBSERVATION_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            spark_session=spark_session,
             context=context,
         )
         history = _recover_completed_source_observations(
@@ -916,6 +917,7 @@ def check_source_drift_for_target(
     source_table_id: str,
     target_table_id: str,
     source_processing: Mapping[str, Any],
+    spark_session=None,
     raise_on_failure: bool = True,
 ) -> dict[str, Any]:
     """Evaluate source-governed drift against a target-specific baseline."""
@@ -923,7 +925,11 @@ def check_source_drift_for_target(
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = str(audit["_activity_id"])
     rules_df = load_table_guardrail_rules(
-        config, env, table_id=source_table_id, context=context
+        config,
+        env,
+        spark_session=spark_session,
+        table_id=source_table_id,
+        context=context,
     )
     selected_rule = select_table_guardrail_rule(
         rules_df,
