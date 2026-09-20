@@ -12,7 +12,7 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_schema_registry,
 )
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io.shared import upsert_lakehouse_table
+from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
@@ -38,6 +38,11 @@ def _persist_target_processing(
     spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
+
     parameter_names = {
         "partition_column",
         "key_columns",
@@ -84,36 +89,43 @@ def _persist_target_processing(
     )
     spark_session = spark_session or dataframe.sparkSession
     source = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    upsert_lakehouse_table(
-        source,
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata",
         CATALOGUE_TABLE,
-        store="Metadata",
-        schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        match_condition=(
+        metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(
+            source.alias("source"),
             "target.environment_name = source.environment_name "
             "AND target.metadata_level = 'table' "
             "AND target.table_id = source.table_id "
-            "AND target.column_id IS NULL"
-        ),
-        matched_updates={
-            "store_type": "source.store_type",
-            "layer": "source.layer",
-            "schema_name": "source.schema_name",
-            "table_name": "source.table_name",
-            "load_strategy": "source.load_strategy",
-            "load_strategy_parameters_json": "source.load_strategy_parameters_json",
-            "is_active": "true",
-            "_committed_by": "source._committed_by",
-            "_committed_at": "source._committed_at",
-            "_workspace_id": "source._workspace_id",
-            "_workspace_name": "source._workspace_name",
-            "_notebook_id": "source._notebook_id",
-            "_notebook_name": "source._notebook_name",
-            "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
-            "_activity_id": "source._activity_id",
-        },
-        context={"config": config, "env": env},
-        spark_session=spark_session,
+            "AND target.column_id IS NULL",
+        )
+        .whenMatchedUpdate(
+            set={
+                "store_type": "source.store_type",
+                "layer": "source.layer",
+                "schema_name": "source.schema_name",
+                "table_name": "source.table_name",
+                "load_strategy": "source.load_strategy",
+                "load_strategy_parameters_json": "source.load_strategy_parameters_json",
+                "is_active": "true",
+                "_committed_by": "source._committed_by",
+                "_committed_at": "source._committed_at",
+                "_workspace_id": "source._workspace_id",
+                "_workspace_name": "source._workspace_name",
+                "_notebook_id": "source._notebook_id",
+                "_notebook_name": "source._notebook_name",
+                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
+                "_activity_id": "source._activity_id",
+            }
+        )
+        .whenNotMatchedInsertAll()
+        .execute()
     )
 
 
