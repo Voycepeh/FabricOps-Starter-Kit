@@ -8,7 +8,7 @@ from uuid import uuid4
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.config.shared import build_table_id, get_store, resolve_fabric_context
-from fabricops_kit.io.shared import read_sql_endpoint_query_core
+from fabricops_kit.io import read_sql_endpoint_query
 
 
 ACCESS_TABLE = "METADATA_DATA_ACCESS"
@@ -109,7 +109,7 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
 
     frames = []
     for store in targets:
-        frame = read_sql_endpoint_query_core(
+        frame = read_sql_endpoint_query(
             SQL_ACCESS_QUERY,
             store=store,
             spark_session=spark_session,
