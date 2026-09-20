@@ -284,7 +284,7 @@ def write_lakehouse_table(
     df = repartition_dataframe_for_write(df, repartition_by)
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
     if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
-        parts = [f"Object: Lakehouse", f"Store: {_store.key}"]
+        parts = ["Object: Lakehouse", f"Store: {_store.key}"]
         if _schema_value:
             parts.append(f"Schema: {_schema_value}")
         parts.append(f"Table: {_table_value}")
