@@ -51,5 +51,5 @@ def read_lakehouse_excel(
         get_spark_session(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
-        print(f"Read from → Object: Lakehouse | Store: {_store.key} | Area: Files | Path: {_relative_path}")
+        print(f"Read from → Object: Lakehouse | Store: {store} | Area: Files | Path: {_relative_path}")
     return dataframe
