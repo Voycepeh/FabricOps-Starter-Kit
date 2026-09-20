@@ -82,6 +82,7 @@ def read_warehouse_query(
 
     """
     database_name = store
+    store_name = str(store)
     store = resolve_configured_warehouse_query_store(store, context=context)
     sql = validate_select_query(query)
     dataframe = read_warehouse_synapsesql(
@@ -92,5 +93,5 @@ def read_warehouse_query(
         options=options,
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
-        print(f"Read from → Object: Warehouse | Store: {store.key} | Query: custom SQL")
+        print(f"Read from → Object: Warehouse | Store: {store_name} | Query: custom SQL")
     return dataframe
