@@ -779,6 +779,7 @@
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
         "fabricops_kit.pipeline.profile_table._audit_literal_columns",
+        "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
         "fabricops_kit.pipeline.shared.capture_source_observation",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.check_source_drift_for_target",
@@ -803,6 +804,7 @@
         "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
         "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
         "fabricops_kit.pipeline.profile_table._audit_literal_columns",
+        "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
         "fabricops_kit.pipeline.profile_table::<module>",
         "fabricops_kit.pipeline.shared.capture_source_observation",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
@@ -1119,10 +1121,9 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "contract_display": "Live-critical internal",
-      "direct_live_dependent_count": 2,
+      "direct_live_dependent_count": 1,
       "direct_live_dependents": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-        "fabricops_kit.pipeline.profile_table.profile_table"
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
       ],
       "discontinued_in": null,
       "function_name": "metadata_table_physical_schema",
@@ -1139,9 +1140,10 @@
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results",
         "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
-        "fabricops_kit.pipeline.profile_table.profile_table",
         "fabricops_kit.pipeline.shared._resolve_data_contract_version",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.check_source_drift_for_target",
@@ -1175,9 +1177,10 @@
         "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
         "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.pipeline_write::<module>",
+        "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
-        "fabricops_kit.pipeline.profile_table.profile_table",
         "fabricops_kit.pipeline.profile_table::<module>",
         "fabricops_kit.pipeline.shared._resolve_data_contract_version",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
@@ -1212,10 +1215,11 @@
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "source_start_line": 49,
       "supports_live_contract": true,
-      "transitive_live_dependent_count": 2,
+      "transitive_live_dependent_count": 3,
       "transitive_live_dependents": [
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-        "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
+        "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+        "fabricops_kit.pipeline.profile_table.profile_table"
       ]
     },
     {
@@ -4355,7 +4359,9 @@
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results",
         "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
+        "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
         "fabricops_kit.pipeline.shared.persist_lineage_participation",
@@ -4371,7 +4377,9 @@
         "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
         "fabricops_kit.pipeline.pipeline_write._persist_target_processing",
         "fabricops_kit.pipeline.pipeline_write::<module>",
+        "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
         "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
         "fabricops_kit.pipeline.profile_table::<module>",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
@@ -4817,8 +4825,6 @@
         "fabricops_kit.data_contract.shared.save_enrichment",
         "fabricops_kit.data_contract.shared.save_guardrails",
         "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-        "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
-        "fabricops_kit.pipeline.profile_table.profile_table",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
@@ -4831,8 +4837,6 @@
         "fabricops_kit.data_contract.shared.save_enrichment",
         "fabricops_kit.data_contract.shared.save_guardrails",
         "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-        "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
-        "fabricops_kit.pipeline.profile_table.profile_table",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
         "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
@@ -5843,7 +5847,7 @@
       "qualified_name": "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 503,
+      "source_end_line": 507,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 449,
       "supports_live_contract": true,
@@ -5874,9 +5878,40 @@
       "qualified_name": "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 649,
+      "source_end_line": 704,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 576,
+      "source_start_line": 631,
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
+      "direct_live_dependent_count": 1,
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "discontinued_in": null,
+      "function_name": "_delete_profile_snapshot",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "direct_live_dependency",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 620,
+      "source_path": "src/fabricops_kit/pipeline/profile_table.py",
+      "source_start_line": 606,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5905,9 +5940,9 @@
       "qualified_name": "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 538,
+      "source_end_line": 546,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 506,
+      "source_start_line": 510,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -5975,6 +6010,37 @@
         "fabricops_kit.pipeline.profile_table.profile_table"
       ],
       "discontinued_in": null,
+      "function_name": "_profile_snapshot_id",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "direct_live_dependency",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 628,
+      "source_path": "src/fabricops_kit/pipeline/profile_table.py",
+      "source_start_line": 623,
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
+      "direct_live_dependent_count": 1,
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "discontinued_in": null,
       "function_name": "_replace_frequency_rows",
       "function_type": "private_function",
       "inbound_callers": [
@@ -5990,9 +6056,42 @@
       "qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 573,
+      "source_end_line": 603,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 541,
+      "source_start_line": 578,
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
+      "direct_live_dependent_count": 1,
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "discontinued_in": null,
+      "function_name": "_replace_snapshot_rows",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "direct_live_dependency",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 575,
+      "source_path": "src/fabricops_kit/pipeline/profile_table.py",
+      "source_start_line": 549,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6180,9 +6279,9 @@
       "qualified_name": "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 714,
+      "source_end_line": 769,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 652,
+      "source_start_line": 707,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -6475,9 +6574,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 973,
+      "source_end_line": 1029,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 717,
+      "source_start_line": 772,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14407,7 +14506,7 @@
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "contract_risk": "live",
       "depth": 6,
-      "direct_call_count": 16,
+      "direct_call_count": 17,
       "discontinued_in": null,
       "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(store=\"Bronze\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)",
       "files_touched": [
@@ -14417,7 +14516,6 @@
         "src/fabricops_kit/io/read_lakehouse_table.py",
         "src/fabricops_kit/io/read_warehouse_query.py",
         "src/fabricops_kit/io/shared.py",
-        "src/fabricops_kit/io/write_lakehouse_table.py",
         "src/fabricops_kit/pipeline/profile_table.py",
         "src/fabricops_kit/pipeline/shared.py"
       ],
@@ -14465,8 +14563,11 @@
         "fabricops_kit.pipeline.profile_table._automatic_frequency_columns",
         "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
         "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
+        "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
         "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
+        "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
         "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+        "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
         "fabricops_kit.pipeline.profile_table._scalar_frequency_columns",
         "fabricops_kit.pipeline.profile_table._selected_frequency_columns",
         "fabricops_kit.pipeline.profile_table._sql_identifier",
@@ -14487,7 +14588,7 @@
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
         "fabricops_kit.pipeline.shared.resolve_profiled_columns"
       ],
-      "live_critical_dependency_count": 60,
+      "live_critical_dependency_count": 63,
       "live_since": "0.2.0",
       "max_depth": 6,
       "parameters": [
@@ -14551,7 +14652,7 @@
           "evidence": [
             {
               "depth": 6,
-              "width": 16
+              "width": 17
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -14570,18 +14671,18 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
-      "scope": 63,
+      "scope": 65,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0)",
-      "source_end_line": 973,
+      "source_end_line": 1029,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 717,
+      "source_start_line": 772,
       "summary": "Profile a Spark DataFrame or a complete governed physical table.",
-      "transitive_function_count": 63,
-      "usage_notes": "The orchestration performs these mechanical steps:\n\n1. Validate and resolve the optional canonical governed identity.\n2. Use the supplied DataFrame exactly, read a physical Lakehouse table into\n   Spark, or keep physical Warehouse aggregation in Warehouse SQL.\n3. Calculate canonical statistical metrics with the selected backend.\n4. Select eligible frequency columns and calculate exact grouped counts,\n   including null as a frequency value.\n5. When governed, create stable table and column identities, append\n   ``METADATA_DATA_PROFILED``, replace the current snapshot rows in\n   ``METADATA_DATA_PROFILED_FREQUENCY``, and update\n   ``METADATA_DATA_CATALOGUE``.\n6. Return both profiling outputs. DataFrame-only mode performs no metadata\n   writes and never invents a ``table_id``.",
-      "width": 16
+      "transitive_function_count": 65,
+      "usage_notes": "The orchestration performs these mechanical steps:\n\n1. Validate and resolve the optional canonical governed identity.\n2. Use the supplied DataFrame exactly, read a physical Lakehouse table into\n   Spark, or keep physical Warehouse aggregation in Warehouse SQL.\n3. Calculate canonical statistical metrics with the selected backend.\n4. Select eligible frequency columns and calculate exact grouped counts,\n   including null as a frequency value.\n5. When governed, create stable table and column identities, replace rows\n   in ``METADATA_DATA_PROFILED`` and\n   ``METADATA_DATA_PROFILED_FREQUENCY`` idempotently for the current\n   Fabric activity, then update\n   ``METADATA_DATA_CATALOGUE``.\n6. Return both profiling outputs. DataFrame-only mode performs no metadata\n   writes and never invents a ``table_id``.\n\nA retry in the same Fabric activity reuses the snapshot and row identities\nand replaces that snapshot rather than appending duplicates. Catalogue is\nupdated only after both profile components succeed. If a later stage\nfails, the uncommitted profile snapshot is removed before the error is\nraised; a later activity receives a distinct snapshot identity.",
+      "width": 17
     },
     {
       "architecture_classification": "foundation_io",
@@ -20129,6 +20230,28 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.shared.build_column_id",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
       "violation_details": [],
@@ -20184,6 +20307,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
       "violation_details": [],
@@ -20201,22 +20335,35 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [
-        "Calls foundational Fabric I/O."
-      ],
-      "architecture_signal_types": [
-        "Type 0"
-      ],
-      "architecture_signals": [
-        {
-          "detail": "Calls foundational Fabric I/O.",
-          "type": "Type 0"
-        }
-      ],
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+      "callee_qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
       "violation_details": [],
       "violation_types": []
     },
@@ -20431,17 +20578,6 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
-      "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
       "violation_details": [],
@@ -20479,26 +20615,6 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [
-        "Calls foundational Fabric I/O."
-      ],
-      "architecture_signal_types": [
-        "Type 0"
-      ],
-      "architecture_signals": [
-        {
-          "detail": "Calls foundational Fabric I/O.",
-          "type": "Type 0"
-        }
-      ],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
-      "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
       "architecture_signal_details": [],
       "architecture_signal_types": [],
       "architecture_signals": [],
@@ -20526,6 +20642,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
       "violation_details": [],
@@ -20537,7 +20664,29 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+      "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
       "caller_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
       "violation_details": [],
       "violation_types": []
@@ -25749,7 +25898,7 @@
   "release_contract": {
     "discontinued_public_function_count": 0,
     "latest_release_version": "0.2.0",
-    "live_critical_internal_count": 90,
+    "live_critical_internal_count": 93,
     "live_public_function_count": 12,
     "preview_public_function_count": 16,
     "release_versions": [
@@ -25800,13 +25949,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 32,
-    "defined_function_count": 399,
+    "defined_function_count": 402,
     "detached_function_count": 41,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
-    "relationship_count": 803,
+    "relationship_count": 809,
     "source_referenced_function_count": 39,
-    "used_function_count": 326
+    "used_function_count": 329
   },
   "used_functions": [
     "fabricops_kit.access.scan_workspace_access._access_rows",
@@ -25954,8 +26103,11 @@
     "fabricops_kit.pipeline.profile_table._automatic_frequency_columns",
     "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
     "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
+    "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
     "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
+    "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
     "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
+    "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
     "fabricops_kit.pipeline.profile_table._scalar_frequency_columns",
     "fabricops_kit.pipeline.profile_table._selected_frequency_columns",
     "fabricops_kit.pipeline.profile_table._sql_identifier",
