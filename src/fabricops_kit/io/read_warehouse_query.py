@@ -84,10 +84,13 @@ def read_warehouse_query(
     database_name = store
     store = resolve_configured_warehouse_query_store(store, context=context)
     sql = validate_select_query(query)
-    return read_warehouse_synapsesql(
+    dataframe = read_warehouse_synapsesql(
         get_spark_session(spark_session),
         store,
         sql,
         database_name=database_name,
         options=options,
     )
+    if not (context or {}).get("_fabricops_suppress_io_log"):
+        print(f"Read from → Object: Warehouse | Store: {store.key} | Query: custom SQL")
+    return dataframe
