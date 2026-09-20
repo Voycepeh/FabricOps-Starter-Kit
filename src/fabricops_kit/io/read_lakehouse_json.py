@@ -65,4 +65,7 @@ def read_lakehouse_json(
 
     """
     _store, _relative_path, path = resolve_configured_file_path(store, relative_path, context=context)
-    return read_json_path(get_spark_session(spark_session), path, options=options)
+    dataframe = read_json_path(get_spark_session(spark_session), path, options=options)
+    if not (context or {}).get("_fabricops_suppress_io_log"):
+        print(f"Read from → Object: Lakehouse | Store: {_store.key} | Area: Files | Path: {_relative_path}")
+    return dataframe
