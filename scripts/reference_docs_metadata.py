@@ -1323,7 +1323,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
                      'check the intended write mode before calling.',
   'preferred_example': 'write_warehouse_table(serving_df, '
-                       'store="Warehouse", schema="dbo", table="orders_serving", mode="append")',
+                       'store="Warehouse", schema="dbo", table_name="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
