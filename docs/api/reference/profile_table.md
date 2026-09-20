@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:799`
+`fabricops_kit/pipeline/profile_table.py:811`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1077">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L811-L1101">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
