@@ -30,8 +30,8 @@ The current call-flow JSON is normalized rather than storing a duplicated expand
 
 1. Classify the callable as Live, Preview, Discontinued, Internal, or Private.
 2. Identify the smallest valid owner-file seam and reuse existing shared helpers.
-3. Inspect the observable contract and current call flow. Find the callable by `qualified_name`, then inspect direct relationships and recurse only when the downstream scope is relevant.
-4. Implement only the required source change.
+3. Inspect the observable contract and current call flow. Find the callable by `qualified_name`, then inspect direct relationships and recurse only when the downstream scope is relevant. Check whether ordinary reusable Fabric reads/writes bypass an existing foundational I/O function.
+4. Implement only the required source change. Route ordinary reusable physical reads/writes through foundational I/O owner functions; keep domain-specific mutations with their owning domain when native Spark/Delta code is the clearer implementation.
 5. Update exports, docstrings, reference metadata, and tests only when affected.
 6. For a new or modified Live callable, compare the docstring with the implementation and cover behaviour, side effects, return interpretation, failure behaviour, runtime assumptions, and a valid example. Preview callable documentation may remain lighter unless the callable is being promoted.
 7. Regenerate `docs/reference/_data/public-function-call-flows.json` only when the committed architecture contract changes. If the contract changes, retain both the changed call-flow JSON and the corresponding `public_function_call_flows_json` timestamp entry in `docs/reference/_data/generated-artifacts.json`. If the contract does not change, restore timestamp-only noise unless the task explicitly requests a timestamp refresh.
