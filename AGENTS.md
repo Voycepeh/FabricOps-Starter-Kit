@@ -102,8 +102,9 @@ When breaking cleanup is authorized, do not add compatibility layers unless requ
 - Internal functions use non-underscore names and are architecture-visible implementation units.
 - Private helpers use leading underscores and remain hidden implementation details.
 - New architecture-visible internal functions must not use leading underscores.
-- Public functions must not call other public functions.
-- Internal functions must not call public functions.
+- Public and internal functions must not call unrelated public workflow functions. They may call approved
+  foundational FabricOps I/O functions for physical Fabric reads or writes; this narrow exception does not
+  permit arbitrary public-to-public orchestration.
 - Public and internal functions may call their own private helpers.
 - Cross-file imports or calls of underscore-prefixed private helpers are architecture violations.
 - Classes, dataclasses, enums, constants, protocols, config objects, and external libraries are supporting objects, not architecture layers.
@@ -123,6 +124,15 @@ Do not add `public.py`, `models.py`, `classes.py`, adapter or resolver files, or
 ### Fabric IO callable file pattern
 
 For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusable IO helpers live in `src/fabricops_kit/io/shared.py`. Avoid wrapper-on-wrapper layers and remove obsolete compatibility code after migration.
+
+## Foundational Fabric I/O boundary
+
+- Any physical Fabric table or file read or write outside `src/fabricops_kit/io/` must use a FabricOps foundational I/O owner function.
+- Non-I/O modules must not directly use `DeltaTable.forPath`, raw `spark.read.format(...).load(...)` calls for Fabric persistence, physical `DataFrameWriter` writes, `synapsesql`, ABFSS/OneLake persistence-path construction, `resolve_configured_*` helpers solely to perform physical I/O, or transport/persistence primitives from `fabricops_kit.io.shared`.
+- `fabricops_kit.io.shared` is implementation-only for the I/O layer. Foundational I/O owner functions under `src/fabricops_kit/io/` may use it; package code outside that directory must call an owner function instead.
+- Domain modules may transform DataFrames normally. Pipeline, governance, profiling, access, and widget code retain domain decisions while the I/O layer owns physical transport and persistence mechanics.
+- Do not duplicate store-kind branching, Fabric connector setup, configured routing, physical path resolution, or physical destination reporting outside the I/O layer.
+- Every foundational I/O owner function must respect `FabricStore` and `00_env_config` routing.
 
 ## Public call-flow architecture contract
 

@@ -29,6 +29,7 @@ Do not use this skill for package implementation changes unless the notebook tas
 1. Define Context, Task, Constraints, Expected output, and Verification.
 2. Treat templates as applications of FabricOps, not release-frozen package artifacts.
 3. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers.
+   When FabricOps supplies the operation, use its public foundational I/O API rather than raw physical Spark, Delta, Fabric connector, or OneLake table/file I/O in the notebook.
 4. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
 5. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
 6. Avoid duplicating long explanations already maintained in guided demos or the template implementation guide; link to canonical docs when useful.

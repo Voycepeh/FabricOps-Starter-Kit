@@ -1,7 +1,7 @@
 """Public Source Drift Guardrail check for a source-to-target relationship."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.get_spark_session import get_spark_session
 from fabricops_kit.pipeline.shared import (
     check_source_drift_for_target,
     resolve_catalogue_table_identity,

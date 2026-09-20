@@ -15,10 +15,8 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import (
-    get_spark_session,
-    resolve_configured_lakehouse_table,
-)
+from fabricops_kit.io.get_spark_session import get_spark_session
+from fabricops_kit.io.merge_lakehouse_table import merge_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     build_frequency_distribution_dataframe,
     build_profile_dataframe,
@@ -550,28 +548,17 @@ def _replace_snapshot_rows(
     *, dataframe: Any, table_name: str, row_id: str, config: Any, env: str, spark_session: Any
 ) -> None:
     """Atomically replace one snapshot's rows using their deterministic row identities."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(f"Delta Lake support is required for replacement {table_name} writes.") from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata", table_name, metadata_table_physical_schema(config, table_name),
-        context={"config": config, "env": env},
-    )
     snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
     if snapshot is None:
         return
     snapshot_id = str(snapshot["profile_snapshot_id"]).replace("'", "''")
-    (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
-        .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .whenNotMatchedBySourceDelete(
-            condition=f"target.profile_snapshot_id = '{snapshot_id}'"
-        )
-        .execute()
+    merge_lakehouse_table(
+        dataframe, table_name, store="Metadata", schema=metadata_table_physical_schema(config, table_name),
+        context={"config": config, "env": env}, spark_session=spark_session,
+        condition=f"target.{row_id} = source.{row_id}",
+        actions=[{"action": "matched_update_all"}, {"action": "not_matched_insert_all"},
+                 {"action": "not_matched_by_source_delete",
+                  "condition": f"target.profile_snapshot_id = '{snapshot_id}'"}],
     )
 
 
@@ -585,65 +572,46 @@ def _replace_frequency_rows(
             row_id="frequency_id", config=config, env=env, spark_session=spark_session,
         )
         return
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(
-            "Delta Lake support is required for replacement METADATA_DATA_PROFILED_FREQUENCY writes."
-        ) from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        PROFILED_FREQUENCY_TABLE,
-        metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
-        context={"config": config, "env": env},
-    )
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
-    (DeltaTable.forPath(spark_session, path).alias("target")
-     .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
-     .whenMatchedDelete().execute())
+    merge_lakehouse_table(
+        snapshots, PROFILED_FREQUENCY_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
+        context={"config": config, "env": env}, spark_session=spark_session,
+        condition="target.profile_snapshot_id = source.profile_snapshot_id",
+        actions=[{"action": "matched_delete"}],
+    )
 
 
 def _delete_profile_snapshot(
     *, profiled_df: Any, config: Any, env: str, spark_session: Any
 ) -> None:
     """Remove an uncommitted snapshot, deleting summary rows before orphan frequencies."""
-    from delta.tables import DeltaTable
-
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
     for table_name in (PROFILED_TABLE, PROFILED_FREQUENCY_TABLE):
-        _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-            "Metadata", table_name, metadata_table_physical_schema(config, table_name),
-            context={"config": config, "env": env},
+        merge_lakehouse_table(
+            snapshots, table_name, store="Metadata", schema=metadata_table_physical_schema(config, table_name),
+            context={"config": config, "env": env}, spark_session=spark_session,
+            condition="target.profile_snapshot_id = source.profile_snapshot_id",
+            actions=[{"action": "matched_delete"}],
         )
-        (DeltaTable.forPath(spark_session, path).alias("target")
-         .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
-         .whenMatchedDelete().execute())
 
 
 def _stage_catalogue_profile_retry(
     *, profiled_df: Any, config: Any, env: str, spark_session: Any
 ) -> None:
     """Hide a previously completed same-activity snapshot before replacing it."""
-    from delta.tables import DeltaTable
-
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env},
-    )
     activities = profiled_df.select(
         "environment_name", "table_id", "_activity_id"
     ).dropDuplicates()
-    (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
-        .merge(
-            activities.alias("source"),
+    merge_lakehouse_table(
+        activities, CATALOGUE_TABLE, store="Metadata", schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env}, spark_session=spark_session,
+        condition=(
             "target.environment_name = source.environment_name "
             "AND target.table_id = source.table_id "
-            "AND target._activity_id = source._activity_id",
-        )
-        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
-        .execute()
+            "AND target._activity_id = source._activity_id"
+        ),
+        actions=[{"action": "matched_update", "values": {"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}}],
     )
 
 
@@ -733,35 +701,22 @@ def _catalogue_dataframe_from_profiled(
 
 def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
     """Upsert Catalogue rows by environment-aware asset grain and deactivate missing columns."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(
-            "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
-        ) from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env},
-    )
     first = catalogue_df.select("environment_name", "table_id").first()
     if first is None:
         return
     environment_name = str(first["environment_name"]).replace("'", "''")
     table_id = str(first["table_id"]).replace("'", "''")
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        target.alias("target")
-        .merge(
-            catalogue_df.alias("source"),
+    merge_lakehouse_table(
+        catalogue_df, CATALOGUE_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env}, spark_session=spark_session,
+        condition=(
             "target.environment_name = source.environment_name "
             "AND target.metadata_level = source.metadata_level "
             "AND target.table_id = source.table_id "
-            "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
-        )
-        .whenMatchedUpdate(
-            set={
+            "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')"
+        ),
+        actions=[{"action": "matched_update", "values": {
                 "store_type": "source.store_type",
                 "layer": "source.layer",
                 "schema_name": "source.schema_name",
@@ -782,17 +737,11 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "_notebook_name": "source._notebook_name",
                 "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
                 "_activity_id": "source._activity_id",
-            }
-        )
-        .whenNotMatchedInsertAll()
-        .whenNotMatchedBySourceUpdate(
-            condition=(
+            }}, {"action": "not_matched_insert_all"},
+            {"action": "not_matched_by_source_update", "condition": (
                 f"target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
                 "AND target.metadata_level = 'column' AND target.is_active = true"
-            ),
-            set={"is_active": "false"},
-        )
-        .execute()
+            ), "values": {"is_active": "false"}}],
     )
 
 

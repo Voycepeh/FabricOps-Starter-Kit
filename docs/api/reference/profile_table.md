@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:799`
+`fabricops_kit/pipeline/profile_table.py:748`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1070">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L748-L1026">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -62,6 +62,7 @@ def profile_table(
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
+    spark_session=None,
 ):
 ```
 
@@ -99,6 +100,7 @@ Profile a transformed DataFrame against an explicit governed identity:
 | `frequency_columns` | `sequence of str` | No | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 
 ## Returns
 
@@ -169,7 +171,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 64 |
+| Live-critical dependencies | 65 |
 
 ### Release history
 
@@ -202,6 +204,8 @@ distinct snapshot identity.
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.io.get_spark_session.get_spark_session</code></li>
+<li><code>fabricops_kit.io.merge_lakehouse_table.merge_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
@@ -210,7 +214,6 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>

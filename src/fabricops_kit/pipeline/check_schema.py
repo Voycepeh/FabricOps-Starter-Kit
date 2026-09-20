@@ -3,8 +3,8 @@
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
 
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
-from fabricops_kit.io.shared import (
-    get_spark_session,
+from fabricops_kit.io.get_spark_session import get_spark_session
+from fabricops_kit.io.resolve_table_identity import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )

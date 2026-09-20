@@ -14,10 +14,7 @@ from typing import Any, Iterable, Mapping
 import uuid
 
 from fabricops_kit.config import shared as config_shared
-from fabricops_kit.io.shared import (
-    configured_lakehouse_schema,
-    resolve_configured_lakehouse_table,
-)
+from fabricops_kit.io.merge_lakehouse_table import merge_lakehouse_table
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
 from fabricops_kit.config.metadata_schemas import (
@@ -202,29 +199,17 @@ def activate_contract_version(
     )
     if not changes:
         return {"changed": False, "contract_id": contract_id, "contract_version": int(contract_version), "changes": []}
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric runtime dependency
-        raise RuntimeError("Delta Lake support is required to activate a Data Contract.") from exc
     source = spark_session.createDataFrame(changes)
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        store, DATA_CONTRACT_TABLE,
-        (
-            metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
-            if store == "Metadata"
-            else schema or configured_lakehouse_schema(config, env, store)
-        ),
-        context=context,
-    )
-    (
-        DeltaTable.forPath(spark_session, path).alias("target")
-        .merge(source.alias("source"), "target.contract_id = source.contract_id AND target.contract_version = source.contract_version")
-        .whenMatchedUpdate(set={
+    merge_lakehouse_table(
+        source, DATA_CONTRACT_TABLE, store=store,
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE) if store == "Metadata" else schema,
+        context=context, spark_session=spark_session,
+        condition="target.contract_id = source.contract_id AND target.contract_version = source.contract_version",
+        actions=[{"action": "matched_update", "values": {
             "status": "source.status", "is_active": "source.is_active",
             "agreement_id": "coalesce(source.agreement_id, target.agreement_id)",
             "agreement_version": "coalesce(source.agreement_version, target.agreement_version)",
-        })
-        .execute()
+        }}],
     )
     return {"changed": True, "contract_id": contract_id, "contract_version": int(contract_version), "changes": changes}
 

@@ -652,9 +652,7 @@ def freeze_contract(
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Load, validate, assemble, and freeze one exact authoritative draft version."""
-    from delta.tables import DeltaTable
-
-    from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
+    from fabricops_kit.io.merge_lakehouse_table import merge_lakehouse_table
 
     runtime_context = {"config": config, "env": env, **dict(context or {})}
     tables = {
@@ -680,25 +678,11 @@ def freeze_contract(
     frame = spark_session.createDataFrame(
         [frozen], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]
     )
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        store,
-        DATA_CONTRACT_TABLE,
-        (
-            metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
-            if store == "Metadata"
-            else schema or configured_lakehouse_schema(config, env, store)
-        ),
-        context=runtime_context,
-    )
-    (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
-        .merge(
-            frame.alias("source"),
-            "target.contract_id = source.contract_id AND "
-            "target.contract_version = source.contract_version",
-        )
-        .whenMatchedUpdateAll()
-        .execute()
+    merge_lakehouse_table(
+        frame, DATA_CONTRACT_TABLE, store=store,
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE) if store == "Metadata" else schema,
+        context=runtime_context, spark_session=spark_session,
+        condition="target.contract_id = source.contract_id AND target.contract_version = source.contract_version",
+        actions=[{"action": "matched_update_all"}],
     )
     return {"contract": frozen, "payload": payload, "warnings": warnings}

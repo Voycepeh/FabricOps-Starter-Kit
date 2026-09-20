@@ -23,6 +23,7 @@ Start with the existing generated function reference system. Do not replace it w
 
 - Respect `00_env_config`; it owns environment setup and configured runtime targets.
 - Use configured metadata targets rather than assuming an attached/default lakehouse.
+- Route every physical Fabric table or file read/write through a foundational owner under `src/fabricops_kit/io/`; inspect existing foundational I/O before using raw Spark, Delta, Fabric connector, or OneLake persistence mechanics. `fabricops_kit.io.shared` is implementation-only for that I/O layer.
 - Prefer existing helpers before creating wrappers or new workflow steps.
 - Do not hardcode Fabric workspace IDs or item IDs unless explicitly provided by the user.
 - Do not bypass governed metadata evidence when agreement, review, enforcement, lineage, or handover workflows require it.

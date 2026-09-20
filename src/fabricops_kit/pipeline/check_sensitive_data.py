@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.get_spark_session import get_spark_session
 from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,

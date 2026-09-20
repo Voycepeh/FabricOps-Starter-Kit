@@ -13,7 +13,7 @@ from fabricops_kit.config.shared import (
     is_table_not_found_error,
     resolve_fabric_context,
 )
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.get_spark_session import get_spark_session
 from fabricops_kit.pipeline.shared import resolve_active_data_contract
 from fabricops_kit.widgets.shared import (
     form_page,

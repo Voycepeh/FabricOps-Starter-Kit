@@ -20,9 +20,9 @@ the source table's governed load behaviour.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_drift.py:13`
+`fabricops_kit/pipeline/check_source_drift.py:14`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L13-L151">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L14-L169">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,6 +50,7 @@ def check_source_drift(
     target_table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    spark_session=None,
     verbose: bool=True,
 ) -> dict:
 ```
@@ -77,6 +78,7 @@ True
 | `target_table_id` | `str` | Yes | Canonical governed target identity used to select the last successfully consumed Source Observation baseline. |
 | `enabled` | `bool` | No | Explicitly skip the check when ``False``. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking result cannot continue. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps resolves the active session. |
 | `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns

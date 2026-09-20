@@ -18,9 +18,9 @@ from fabricops_kit.config.shared import (
     resolve_fabric_context,
 )
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
-from ..io.shared import (
-    get_spark_session,
-    resolve_configured_lakehouse_table,
+from fabricops_kit.io.merge_lakehouse_table import lakehouse_table_exists, merge_lakehouse_table
+from fabricops_kit.io.get_spark_session import get_spark_session
+from fabricops_kit.io.resolve_table_identity import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
@@ -202,28 +202,14 @@ def persist_lineage_participation(
         },
     )
     from ..config.metadata_schemas import metadata_table_schema_registry
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
     spark = get_spark_session()
     frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        _LINEAGE_TABLE,
-        metadata_table_physical_schema(config, _LINEAGE_TABLE),
-        context=resolved_context,
-    )
-    (
-        DeltaTable.forPath(spark, path)
-        .alias("target")
-        .merge(
-            frame.alias("source"),
-            "target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
-        )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .execute()
+    merge_lakehouse_table(
+        frame, _LINEAGE_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, _LINEAGE_TABLE), context=resolved_context,
+        spark_session=spark,
+        condition="target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
+        actions=[{"action": "matched_update_all"}, {"action": "not_matched_insert_all"}],
     )
     return identifier
 
@@ -624,30 +610,22 @@ def _merge_source_observation_records(
     """Idempotently merge target-specific Source Observation records."""
     if not records:
         return
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-        raise RuntimeError(
-            "Delta Lake merge support is required for idempotent Source Observation commits."
-        ) from exc
     spark = get_spark_session()
     frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata", _SOURCE_OBSERVATION_TABLE,
-        metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
-    )
-    (
-        DeltaTable.forPath(spark, path).alias("target")
-        .merge(
-            frame.alias("source"),
+    merge_lakehouse_table(
+        frame, _SOURCE_OBSERVATION_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
+        spark_session=spark,
+        condition=(
             "target.environment_name = source.environment_name "
             "AND target._activity_id = source._activity_id "
             "AND target.source_table_id = source.source_table_id "
             "AND target.target_table_id = source.target_table_id "
             "AND target.observation_id = source.observation_id "
             "AND target.partition_value <=> source.partition_value "
-            "AND target.observation_status = source.observation_status",
-        ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+            "AND target.observation_status = source.observation_status"
+        ),
+        actions=[{"action": "matched_update_all"}, {"action": "not_matched_insert_all"}],
     )
 
 
@@ -2055,18 +2033,17 @@ def execute_lakehouse_processing(
         )
         return
 
-    from delta.tables import DeltaTable
     from pyspark.sql import functions as F
 
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(store, table_name, schema, context=context)
     keys = list(processing["key_columns"])
     duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
-    if not DeltaTable.isDeltaTable(df.sparkSession, path):
+    if not lakehouse_table_exists(
+        table_name, store=store, schema=schema, spark_session=df.sparkSession, context=context,
+    ):
         write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
         return
-    delta = DeltaTable.forPath(df.sparkSession, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
     if strategy == "scd1":
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
@@ -2074,16 +2051,22 @@ def execute_lakehouse_processing(
         technical_updates = {
             name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS
         }
-        merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
+        actions = [{"action": "matched_update_all", "condition": change}]
         if technical_updates:
-            merge = merge.whenMatchedUpdate(set=technical_updates)
-        merge.whenNotMatchedInsertAll().execute()
+            actions.append({"action": "matched_update", "values": technical_updates})
+        actions.append({"action": "not_matched_insert_all"})
+        merge_lakehouse_table(
+            persisted_df, table_name, store=store, schema=schema, condition=condition,
+            actions=actions, context=context, spark_session=df.sparkSession,
+        )
         return
 
     effective = str(processing["effective_column"])
     tracked = resolve_scd2_tracked_columns(list(df.columns), processing)
     current_column, end_column = "_is_current", "_effective_to"
-    current_rows = delta.toDF().where(F.col(current_column))
+    current_rows = read_lakehouse_table(
+        table_name, store=store, schema=schema, spark_session=df.sparkSession, context=context,
+    ).where(F.col(current_column))
     if current_rows.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
         raise RuntimeError("SCD2 target contains multiple current records for one or more business keys.")
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
@@ -2119,15 +2102,16 @@ def execute_lakehouse_processing(
         f"target.`{key}` <=> source.`{merge_key}`"
         for key, merge_key in zip(keys, merge_keys, strict=True)
     ) + f" AND target.`{current_column}` = TRUE"
-    merge = (
-        delta.alias("target").merge(staged.alias("source"), merge_condition)
-        .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
-    )
+    actions = [{"action": "matched_update", "condition": change,
+                "values": {current_column: "false", end_column: f"source.`{effective}`"}}]
     if technical_updates:
-        merge = merge.whenMatchedUpdate(condition=f"NOT ({change})", set=technical_updates)
-    merge.whenNotMatchedInsert(
-        values={name: f"source.`{name}`" for name in persisted_df.columns}
-    ).execute()
+        actions.append({"action": "matched_update", "condition": f"NOT ({change})", "values": technical_updates})
+    actions.append({"action": "not_matched_insert",
+                    "values": {name: f"source.`{name}`" for name in persisted_df.columns}})
+    merge_lakehouse_table(
+        staged, table_name, store=store, schema=schema, condition=merge_condition,
+        actions=actions, context=context, spark_session=df.sparkSession,
+    )
 
 
 def load_table_guardrail_rules(

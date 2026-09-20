@@ -102,7 +102,7 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
         calls.append((query, store, context))
         return _observations(spark_session)
 
-    monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
+    monkeypatch.setattr(module, "read_sql_endpoint_query", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
@@ -164,7 +164,7 @@ def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_sessi
         calls.append(store)
         return empty
 
-    monkeypatch.setattr(module, "read_sql_endpoint_query_core", fake_read)
+    monkeypatch.setattr(module, "read_sql_endpoint_query", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",

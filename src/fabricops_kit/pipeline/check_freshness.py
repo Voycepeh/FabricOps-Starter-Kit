@@ -2,7 +2,7 @@
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.get_spark_session import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     get_current_freshness_evidence,

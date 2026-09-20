@@ -11,7 +11,7 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_schema_registry,
 )
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+from fabricops_kit.io.merge_lakehouse_table import merge_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
@@ -36,11 +36,6 @@ def _persist_target_processing(
     spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
-
     parameter_names = {
         "partition_column",
         "key_columns",
@@ -73,24 +68,20 @@ def _persist_target_processing(
     )
     spark_session = spark_session or dataframe.sparkSession
     source = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
+    merge_lakehouse_table(
+        source,
         CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        store="Metadata",
+        schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "env": env},
-    )
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        target.alias("target")
-        .merge(
-            source.alias("source"),
+        spark_session=spark_session,
+        condition=(
             "target.environment_name = source.environment_name "
             "AND target.metadata_level = 'table' "
             "AND target.table_id = source.table_id "
-            "AND target.column_id IS NULL",
-        )
-        .whenMatchedUpdate(
-            set={
+            "AND target.column_id IS NULL"
+        ),
+        actions=[{"action": "matched_update", "values": {
                 "store_type": "source.store_type",
                 "layer": "source.layer",
                 "schema_name": "source.schema_name",
@@ -106,10 +97,7 @@ def _persist_target_processing(
                 "_notebook_name": "source._notebook_name",
                 "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
                 "_activity_id": "source._activity_id",
-            }
-        )
-        .whenNotMatchedInsertAll()
-        .execute()
+            }}, {"action": "not_matched_insert_all"}],
     )
 
 
@@ -421,7 +409,7 @@ def pipeline_write(
 
     """
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
-    from fabricops_kit.io.shared import execute_warehouse_processing
+    from fabricops_kit.io.execute_warehouse_processing import execute_warehouse_processing
     from fabricops_kit.pipeline.shared import (
         commit_pipeline_write_success,
         execute_lakehouse_processing,
