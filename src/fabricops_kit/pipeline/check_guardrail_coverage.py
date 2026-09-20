@@ -84,6 +84,7 @@ def check_guardrail_coverage(
     *,
     target_table_id: str,
     source_table_ids: list[str] | tuple[str, ...],
+    spark_session=None,
     verbose: bool = True,
 ) -> dict[str, Any]:
     """Verify that the governed pipeline is ready to publish its target.
@@ -106,7 +107,7 @@ def check_guardrail_coverage(
         raise ValueError("source_table_ids must contain at least one non-empty canonical table_id.")
 
     config, env, context = resolve_fabric_context()
-    spark = get_spark_session()
+    spark = get_spark_session(spark_session)
     is_production = str(env).strip().lower() in {"prod", "production"}
 
     participants: list[dict[str, Any]] = []
