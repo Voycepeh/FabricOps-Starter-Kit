@@ -248,9 +248,9 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "PROCESSING_SCOPE" not in source
     assert source.count("profile_table(") >= 5
     assert source.count("dataframe=df") == 3
-    assert source.count("store=READ_STORE") == 3
-    assert source.count("schema=READ_SCHEMA") == 3
-    assert source.count("table_name=READ_TABLE") == 3
+    assert source.count("store=READ_STORE") == 6
+    assert source.count("schema=READ_SCHEMA") == 6
+    assert source.count("table_name=READ_TABLE") == 6
     assert source.count("spark_session=spark") >= 5
     assert "profile_table(table_id=table_id)" not in source
 
