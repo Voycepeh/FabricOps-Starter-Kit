@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import read_sql_endpoint_query_core
+from .shared import (
+    get_spark_session,
+    read_warehouse_synapsesql,
+    resolve_configured_sql_endpoint_store,
+    validate_select_query,
+)
 
 
 def read_sql_endpoint_query(
@@ -61,14 +66,16 @@ def read_sql_endpoint_query(
     ... )
 
     """
-    store_name = str(store)
-    dataframe = read_sql_endpoint_query_core(
-        query,
-        store=store,
-        spark_session=spark_session,
-        context=context,
+    configured_store, _env = resolve_configured_sql_endpoint_store(store, context=context)
+    sql = validate_select_query(query)
+    dataframe = read_warehouse_synapsesql(
+        get_spark_session(spark_session),
+        configured_store,
+        sql,
+        database_name=store,
         options=options,
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
-        print(f"Read from → Object: SQL Endpoint | Store: {store_name} | Query: custom SQL")
+        object_name = "Warehouse" if configured_store.kind == "warehouse" else "Lakehouse"
+        print(f"Read from → Object: {object_name} | Store: {store} | Query: custom SQL")
     return dataframe
