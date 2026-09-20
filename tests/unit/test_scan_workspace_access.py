@@ -199,14 +199,24 @@ def test_scan_workspace_access_uses_environment_override_for_targets_and_catalog
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: (config, "active-env", {"config": config, "env": "active-env"}),
+        lambda **kwargs: (
+            config,
+            "active-env",
+            {"config": config, "env": "active-env", "user_name": "runtime-user"},
+        ),
     )
+
     def fake_target_store_kinds(resolved_config, environment, targets):
         calls["target_resolution"] = (resolved_config, environment, targets)
         return {"warehouse": "warehouse"}
 
     monkeypatch.setattr(module, "_target_store_kinds", fake_target_store_kinds)
-    monkeypatch.setattr(module, "_scan_targets", lambda **kwargs: "observations")
+
+    def fake_scan_targets(**kwargs):
+        calls["scan"] = kwargs
+        return "observations"
+
+    monkeypatch.setattr(module, "_scan_targets", fake_scan_targets)
 
     def fake_catalogue_tables(frame, *, environment_name, target_store_kinds):
         calls["catalogue"] = (frame, environment_name, target_store_kinds)
@@ -214,8 +224,17 @@ def test_scan_workspace_access_uses_environment_override_for_targets_and_catalog
 
     monkeypatch.setattr(module, "_catalogue_tables", fake_catalogue_tables)
     monkeypatch.setattr(module, "_map_to_catalogue", lambda *args: "mapped")
-    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: {})
-    monkeypatch.setattr(module, "_access_rows", lambda *args, **kwargs: "access_df")
+    def fake_audit_fields(**kwargs):
+        calls["audit"] = kwargs
+        return {}
+
+    monkeypatch.setattr(module, "build_runtime_audit_fields", fake_audit_fields)
+
+    def fake_access_rows(*args, **kwargs):
+        calls["access"] = kwargs
+        return "access_df"
+
+    monkeypatch.setattr(module, "_access_rows", fake_access_rows)
     monkeypatch.setattr(module, "_unmatched_rows", lambda *args: "unmatched_df")
 
     result = module.scan_workspace_access(
@@ -231,7 +250,88 @@ def test_scan_workspace_access_uses_environment_override_for_targets_and_catalog
         "requested-env",
         {"warehouse": "warehouse"},
     )
+    expected_context = {
+        "config": config,
+        "env": "requested-env",
+        "user_name": "runtime-user",
+    }
+    assert calls["scan"]["context"] == expected_context
+    assert calls["audit"] == {
+        "config": config,
+        "env": "requested-env",
+        "runtime_context": expected_context,
+    }
+    assert calls["access"]["environment_name"] == "requested-env"
     assert result == {"access": "access_df", "unmatched": "unmatched_df"}
+
+
+def test_scan_workspace_access_uses_active_environment_when_override_is_omitted(monkeypatch):
+    """Use the active environment throughout when no override is supplied."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
+    config = object()
+    calls = {}
+
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda **kwargs: (
+            config,
+            "dev",
+            {"config": config, "env": "dev", "user_name": "runtime-user"},
+        ),
+    )
+    monkeypatch.setattr(
+        module,
+        "_target_store_kinds",
+        lambda resolved_config, environment, targets: (
+            calls.update(target_resolution=(resolved_config, environment, targets))
+            or {"warehouse": "warehouse"}
+        ),
+    )
+    monkeypatch.setattr(
+        module,
+        "_scan_targets",
+        lambda **kwargs: calls.update(scan=kwargs) or "observations",
+    )
+    monkeypatch.setattr(module, "_catalogue_tables", lambda *args, **kwargs: "catalogue_tables")
+    monkeypatch.setattr(module, "_map_to_catalogue", lambda *args: "mapped")
+    monkeypatch.setattr(
+        module,
+        "build_runtime_audit_fields",
+        lambda **kwargs: calls.update(audit=kwargs) or {},
+    )
+    monkeypatch.setattr(module, "_access_rows", lambda *args, **kwargs: "access_df")
+    monkeypatch.setattr(module, "_unmatched_rows", lambda *args: "unmatched_df")
+
+    module.scan_workspace_access(object(), access_snapshot_id="snapshot")
+
+    expected_context = {
+        "config": config,
+        "env": "dev",
+        "user_name": "runtime-user",
+    }
+    assert calls["target_resolution"] == (config, "dev", ["warehouse"])
+    assert calls["scan"]["context"] == expected_context
+    assert calls["audit"] == {
+        "config": config,
+        "env": "dev",
+        "runtime_context": expected_context,
+    }
+
+
+def test_scan_workspace_access_rejects_unknown_requested_environment(monkeypatch):
+    """Fail clearly instead of reverting to the active environment."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
+    config = SimpleNamespace(paths={"dev": {}})
+
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda **kwargs: (config, "dev", {"config": config, "env": "dev"}),
+    )
+
+    with pytest.raises(ValueError, match="Environment 'prod' was not found"):
+        module.scan_workspace_access(object(), environment_name="prod")
 
 
 def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_session):

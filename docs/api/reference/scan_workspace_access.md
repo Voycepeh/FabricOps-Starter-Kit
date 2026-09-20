@@ -34,7 +34,7 @@ physical item identifier.
 
 `fabricops_kit/access/scan_workspace_access.py:290`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L290-L394">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L290-L401">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -90,7 +90,7 @@ def scan_workspace_access(
 | --- | --- | --- | --- |
 | `catalogue_df` | `pyspark.sql.DataFrame` | Yes | ``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to canonical FabricOps ``table_id`` values. |
 | `targets` | `str \| list[str] \| tuple[str, ...]` | No | One or more configured Warehouse or Lakehouse target keys from ``00_env_config`` whose SQL endpoints expose the supported catalogue views. |
-| `environment_name` | `str \| None` | No | Metadata environment to scan. Defaults to the active FabricOps environment. |
+| `environment_name` | `str \| None` | No | FabricOps configuration environment used for target resolution, catalogue filtering, and environment-labelled access rows. Defaults to the active FabricOps environment. Fabric authentication and execution identity continue to come from the active runtime. |
 | `access_snapshot_id` | `str \| None` | No | Identifier shared by all rows in this scan. A UUID is generated when omitted. |
 | `spark_session` | `object` | No | Spark session override used by the Fabric SQL connector. |
 | `context` | `dict[str, Any] \| None` | No | Active FabricOps context override. |

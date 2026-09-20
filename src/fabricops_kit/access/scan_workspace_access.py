@@ -324,8 +324,10 @@ def scan_workspace_access(
         ``00_env_config`` whose SQL endpoints expose the supported catalogue
         views.
     environment_name : str, optional
-        Metadata environment to scan. Defaults to the active FabricOps
-        environment.
+        FabricOps configuration environment used for target resolution,
+        catalogue filtering, and environment-labelled access rows. Defaults to
+        the active FabricOps environment. Fabric authentication and execution
+        identity continue to come from the active runtime.
     access_snapshot_id : str, optional
         Identifier shared by all rows in this scan. A UUID is generated when
         omitted.
@@ -360,8 +362,13 @@ def scan_workspace_access(
     >>> result["unmatched"].display()
 
     """
-    config, active_env, resolved_context = resolve_fabric_context(context=context)
-    resolved_environment = str(environment_name or active_env)
+    config, active_env, runtime_context = resolve_fabric_context(context=context)
+    resolved_environment = str(active_env if environment_name is None else environment_name)
+    scan_context = {
+        **runtime_context,
+        "config": config,
+        "env": resolved_environment,
+    }
     resolved_targets = _normalise_targets(targets)
     target_store_kinds = _target_store_kinds(config, resolved_environment, resolved_targets)
     snapshot_id = str(access_snapshot_id or uuid4())
@@ -369,7 +376,7 @@ def scan_workspace_access(
     observations = _scan_targets(
         targets=resolved_targets,
         spark_session=spark_session,
-        context=resolved_context,
+        context=scan_context,
     )
     catalogue_tables = _catalogue_tables(
         catalogue_df,
@@ -379,8 +386,8 @@ def scan_workspace_access(
     mapped = _map_to_catalogue(observations, catalogue_tables)
     audit_fields = build_runtime_audit_fields(
         config=config,
-        env=active_env,
-        runtime_context=resolved_context,
+        env=resolved_environment,
+        runtime_context=scan_context,
     )
 
     return {
