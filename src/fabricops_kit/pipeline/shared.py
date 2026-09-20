@@ -84,7 +84,9 @@ _TARGET_TECHNICAL_COLUMNS = {
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
+_CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
+_PENDING_SOURCE_DRIFT_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 
 
@@ -138,6 +140,18 @@ def get_current_source_observation(
             f"No current source observation exists for {table_id!r}; call pipeline_read() first."
         )
     return _CURRENT_SOURCE_OBSERVATIONS[key]
+
+
+def get_current_freshness_evidence(
+    *, environment_name: str, activity_id: str, table_id: str
+) -> dict[str, Any]:
+    """Return current-run freshness evidence for one governed table."""
+    key = (environment_name, activity_id, table_id)
+    if key not in _CURRENT_FRESHNESS_EVIDENCE:
+        raise ValueError(
+            f"No current freshness evidence exists for {table_id!r}; call pipeline_read() first."
+        )
+    return _CURRENT_FRESHNESS_EVIDENCE[key]
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -626,7 +640,7 @@ def _previous_source_target_observation(
         if str(row.get("source_table_id") or "") == source_table_id
         and str(row.get("target_table_id") or "") == target_table_id
         and str(row.get("environment_name") or "") == environment_name
-        and str(row.get("observation_status") or "") == "committed"
+        and str(row.get("observation_status") or "") == "drift_committed"
         and row.get("_committed_at") < committed_at
     ]
     previous_at = max((row["_committed_at"] for row in candidates), default=None)
@@ -695,18 +709,11 @@ def resolve_incremental_source_scope(
             ) from exc
         previous = []
 
-    rules_df = load_table_guardrail_rules(
-        config, env, table_id=source_table_id, context=context
-    )
-    rule = select_table_guardrail_rule(
-        rules_df,
-        guardrail_type="source_drift",
-        table_id=source_table_id,
-        environment_name=env,
-    )
-    if rule is None:
-        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
-    partition_column, change_column = resolve_source_drift_observation_columns(rule)
+    first = current[0]
+    partition_column = str(first.get("partition_column") or "").strip()
+    change_column = str(first.get("change_column") or "").strip()
+    if not partition_column or not change_column:
+        raise ValueError("Incremental Source Observation is missing its processing columns.")
 
     current_by = {str(row["partition_value"]): row for row in current}
     previous_by = {str(row["partition_value"]): row for row in previous}
@@ -811,6 +818,17 @@ def check_source_drift_for_target(
     config, env, context = resolve_fabric_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = str(audit["_activity_id"])
+    rules_df = load_table_guardrail_rules(
+        config, env, table_id=source_table_id, context=context
+    )
+    selected_rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="source_drift",
+        table_id=source_table_id,
+        environment_name=env,
+    )
+    if selected_rule is None:
+        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
     observation = get_current_source_observation(
         environment_name=env, activity_id=activity_id, table_id=source_table_id
     )
@@ -871,19 +889,10 @@ def check_source_drift_for_target(
         }
         for value in removed
     )
-    _PENDING_SOURCE_OBSERVATIONS[(env, activity_id, source_table_id, target_table_id)] = pending
+    _PENDING_SOURCE_DRIFT_OBSERVATIONS[
+        (env, activity_id, source_table_id, target_table_id)
+    ] = pending
 
-    rules_df = load_table_guardrail_rules(
-        config, env, table_id=source_table_id, context=context
-    )
-    selected_rule = select_table_guardrail_rule(
-        rules_df,
-        guardrail_type="source_drift",
-        table_id=source_table_id,
-        environment_name=env,
-    )
-    if selected_rule is None:
-        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
     first_observation = not previous
     has_changes = first_observation or bool(new or changed or removed or reappeared)
@@ -949,22 +958,29 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
         pending_key = (env, activity_id, source_table_id, target_table_id)
-        current = _PENDING_SOURCE_OBSERVATIONS.get(pending_key, [])
-        for row in current:
-            records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
-                **{
-                    name: row.get(name)
-                    for name in (
-                        "observation_id", "source_table_id",
-                        "environment_name", "partition_value", "row_count",
-                        "min_change_value", "max_change_value", "content_fingerprint",
-                        "is_present",
-                    )
-                },
-                "target_table_id": target_table_id,
-                "observation_status": "committed",
-                **audit,
-            }))
+        pending_groups = (
+            (_PENDING_SOURCE_OBSERVATIONS.get(pending_key, []), "committed"),
+            (
+                _PENDING_SOURCE_DRIFT_OBSERVATIONS.get(pending_key, []),
+                "drift_committed",
+            ),
+        )
+        for current, observation_status in pending_groups:
+            for row in current:
+                records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
+                    **{
+                        name: row.get(name)
+                        for name in (
+                            "observation_id", "source_table_id",
+                            "environment_name", "partition_value", "row_count",
+                            "min_change_value", "max_change_value", "content_fingerprint",
+                            "is_present",
+                        )
+                    },
+                    "target_table_id": target_table_id,
+                    "observation_status": observation_status,
+                    **audit,
+                }))
     for source_table_id in source_table_ids:
         persist_lineage_participation(
             table_id=source_table_id,
@@ -992,6 +1008,9 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         )
     for source_table_id in source_table_ids:
         _PENDING_SOURCE_OBSERVATIONS.pop(
+            (env, activity_id, source_table_id, target_table_id), None
+        )
+        _PENDING_SOURCE_DRIFT_OBSERVATIONS.pop(
             (env, activity_id, source_table_id, target_table_id), None
         )
         _INCREMENTAL_SOURCE_SCOPES.pop(
@@ -1812,11 +1831,11 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         raise ValueError("Processing definition has an invalid load_strategy.")
     definition = {**processing, "load_strategy": strategy}
     allowed = {
-        "overwrite": {"load_strategy", "partition_column", "source", "contract_id", "contract_version"},
-        "append": {"load_strategy", "source", "contract_id", "contract_version"},
-        "scd1": {"load_strategy", "key_columns", "source", "contract_id", "contract_version"},
+        "overwrite": {"load_strategy", "partition_column", "watermark_column", "source", "contract_id", "contract_version"},
+        "append": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
+        "scd1": {"load_strategy", "key_columns", "watermark_column", "source", "contract_id", "contract_version"},
         "scd2": {
-            "load_strategy", "key_columns", "effective_column", "tracked_columns",
+            "load_strategy", "key_columns", "effective_column", "tracked_columns", "watermark_column",
             "source", "contract_id", "contract_version",
         },
     }[strategy]
@@ -1834,7 +1853,7 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         definition[name] = [value.strip() for value in values]
     if strategy in {"scd1", "scd2"} and "key_columns" not in definition:
         raise ValueError(f"Processing definition for {strategy} requires key_columns.")
-    for name in ("partition_column", "effective_column"):
+    for name in ("partition_column", "effective_column", "watermark_column"):
         if name in definition and (not isinstance(definition[name], str) or not definition[name].strip()):
             raise ValueError(f"Processing definition {name} must be a non-empty column name.")
         if name in definition:
@@ -2108,6 +2127,49 @@ def resolve_source_drift_observation_columns(rule: dict) -> tuple[str, str]:
             raise ValueError(f"Active Source Drift rule is invalid: {name} must be a simple identifier.")
         resolved.append(value)
     return resolved[0], resolved[1]
+
+
+def resolve_freshness_observation_column(rule: dict) -> str:
+    """Return the validated date-time column from an active Freshness rule."""
+    parameters = _parse_rule_parameters(rule)
+    value = str(
+        parameters.get("freshness_column")
+        or parameters.get("column_name")
+        or _catalogue_value(rule, "column_name")
+        or ""
+    ).strip()
+    if not value:
+        raise ValueError("Active Freshness rule is invalid: freshness_column is missing.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError(
+            "Active Freshness rule is invalid: freshness_column must be a simple identifier."
+        )
+    return value
+
+
+def resolve_incremental_observation_columns(
+    identity: Mapping[str, Any], contract: Mapping[str, Any] | None
+) -> tuple[str, str]:
+    """Resolve incremental observation columns from governed processing."""
+    if contract is not None:
+        payload = contract.get("contract_payload") or _contract_payload(dict(contract))
+        processing = (payload.get("table") or {}).get("processing") or {}
+    else:
+        processing = catalogue_authored_processing(identity)
+    partition_column = str(processing.get("partition_column") or "").strip()
+    watermark_column = str(
+        processing.get("watermark_column")
+        or processing.get("effective_column")
+        or ""
+    ).strip()
+    if watermark_column:
+        return partition_column or watermark_column, watermark_column
+    if partition_column:
+        return partition_column, partition_column
+    raise ValueError(
+        "Incremental processing requires a watermark_column, effective_column, "
+        "or partition_column in the governed processing definition."
+    )
 
 def evaluate_source_drift_guardrail(
     result: dict,
@@ -3463,8 +3525,13 @@ def _observe_dataframe(
     return _compact_rows(observed)
 
 
-def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
-    """Capture one governed source observation in internal current-run state."""
+def capture_source_observation(
+    *,
+    table_id: str,
+    dataframe: Any = None,
+    incremental_columns: tuple[str, str] | None = None,
+) -> Any:
+    """Capture independently configured current-run source Guardrail evidence."""
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     governed_source = resolve_catalogue_table_identity(
@@ -3506,63 +3573,114 @@ def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
         table_id=governed_table_id,
         context=context,
     )
-    rule = select_table_guardrail_rule(
+    drift_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="source_drift",
         table_id=governed_table_id,
         environment_name=env,
     )
-    if rule is None:
-        raise ValueError(
-            f"No active approved Source Drift rule exists for {governed_table_id!r}; "
-            "Governance must author and activate one before source observation can run."
-        )
-    partition_value, change_value = resolve_source_drift_observation_columns(rule)
-    observation_columns = {partition_value, change_value}
-    if dataframe is not None and observation_columns <= set(getattr(dataframe, "columns", ())):
-        current = _observe_dataframe(dataframe, partition_value, change_value)
-    elif source_type == "warehouse":
-        query = _warehouse_observation_query(
-            schema_value,
-            table_value,
-            partition_value,
-            change_value,  # type: ignore[arg-type]
-        )
-        current = _compact_rows(
-            read_warehouse_query(
-                query,
-                store=store_key,
+    freshness_rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="freshness",
+        table_id=governed_table_id,
+        environment_name=env,
+    )
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+
+    if freshness_rule is not None:
+        freshness_column = resolve_freshness_observation_column(freshness_rule)
+        freshness_frame = dataframe
+        if freshness_frame is None and source_type == "warehouse":
+            query = (
+                f"SELECT MAX([{freshness_column}]) AS latest_value "
+                f"FROM [{schema_value}].[{table_value}]"
+            )
+            latest_value = _max_column_value(
+                read_warehouse_query(
+                    query, store=store_key, spark_session=spark, context=context
+                ),
+                "latest_value",
+            )
+        else:
+            if freshness_frame is None:
+                freshness_frame = read_lakehouse_table(
+                    table_value,
+                    store=store_key,
+                    schema=schema_value,
+                    spark_session=spark,
+                    context=context,
+                )
+            latest_value = _max_column_value(freshness_frame, freshness_column)
+        _CURRENT_FRESHNESS_EVIDENCE[
+            (env, str(audit["_activity_id"]), governed_table_id)
+        ] = {
+            "source_table_id": governed_table_id,
+            "environment_name": env,
+            "freshness_column": freshness_column,
+            "latest_value": latest_value,
+            "_activity_id": str(audit["_activity_id"]),
+        }
+
+    def capture_columns(partition_column: str, change_column: str) -> Any:
+        observation_columns = {partition_column, change_column}
+        if dataframe is not None and observation_columns <= set(
+            getattr(dataframe, "columns", ())
+        ):
+            current = _observe_dataframe(dataframe, partition_column, change_column)
+        elif source_type == "warehouse":
+            current = _compact_rows(
+                read_warehouse_query(
+                    _warehouse_observation_query(
+                        schema_value, table_value, partition_column, change_column
+                    ),
+                    store=store_key,
+                    spark_session=spark,
+                    context=context,
+                )
+            )
+        else:
+            current = _observe_lakehouse(
+                table_value,
+                store_key,
+                schema_value,
+                partition_column,
+                change_column,
                 spark_session=spark,
                 context=context,
             )
-        )
-    else:
-        current = _observe_lakehouse(
-            table_value,
-            store_key,
-            schema_value,
-            partition_value,
-            change_value,
-            spark_session=spark,
-            context=context,
-        )
+        observation_id = str(uuid4())
+        values = [
+            {
+                **coerce_metadata_row_types(
+                    OBSERVATION_TABLE,
+                    {
+                        **row,
+                        "observation_id": observation_id,
+                        "source_table_id": governed_table_id,
+                        "target_table_id": "",
+                        "environment_name": env,
+                        "observation_status": "observed",
+                        **audit,
+                    },
+                ),
+                "partition_column": partition_column,
+                "change_column": change_column,
+            }
+            for row in current
+        ]
+        return spark.createDataFrame(values)
 
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    observation_id = str(uuid4())
-    values = [coerce_metadata_row_types(OBSERVATION_TABLE, {
-        **row,
-        "observation_id": observation_id,
-        "source_table_id": governed_table_id,
-        "target_table_id": "",
-        "environment_name": env,
-        "observation_status": "observed",
-        **audit,
-    }) for row in current]
-    observation = spark.createDataFrame(values)
-    set_current_source_observation(
-        environment_name=env,
-        activity_id=str(audit["_activity_id"]),
-        table_id=governed_table_id,
-        observation=observation,
-    )
-    return observation
+    drift_observation = None
+    if drift_rule is not None:
+        drift_observation = capture_columns(
+            *resolve_source_drift_observation_columns(drift_rule)
+        )
+        set_current_source_observation(
+            environment_name=env,
+            activity_id=str(audit["_activity_id"]),
+            table_id=governed_table_id,
+            observation=drift_observation,
+        )
+    if incremental_columns is not None:
+        return capture_columns(*incremental_columns)
+    return drift_observation

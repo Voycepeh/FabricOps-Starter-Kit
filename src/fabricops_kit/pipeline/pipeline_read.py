@@ -10,6 +10,7 @@ from fabricops_kit.pipeline.shared import (
     capture_source_observation,
     resolve_catalogue_table_identity,
     resolve_incremental_source_scope,
+    resolve_incremental_observation_columns,
     resolve_pipeline_data_contract,
     resolve_physical_table_identity,
 )
@@ -256,9 +257,15 @@ def pipeline_read(
 
     canonical_target_id = str(target_table_id).strip() if target_table_id is not None else None
 
-    has_contract = resolve_pipeline_data_contract(
+    contract = resolve_pipeline_data_contract(
         config, env, str(identity["table_id"]), context=context
-    ) is not None
+    )
+    has_contract = contract is not None
+    incremental_columns = (
+        resolve_incremental_observation_columns(identity, contract)
+        if read_mode == "incremental"
+        else None
+    )
     physical_identity = ".".join(
         str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
     )
@@ -283,7 +290,9 @@ def pipeline_read(
         complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), spark_session=spark_session, context=context)
         if read_mode == "incremental":
             observation = capture_source_observation(
-                table_id=str(identity["table_id"]), dataframe=complete_dataframe
+                table_id=str(identity["table_id"]),
+                dataframe=complete_dataframe,
+                incremental_columns=incremental_columns,
             )
             scope = resolve_incremental_source_scope(
                 source_table_id=str(identity["table_id"]),
@@ -296,7 +305,10 @@ def pipeline_read(
     elif query is not None:
         dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=context)
     elif read_mode == "incremental":
-        observation = capture_source_observation(table_id=str(identity["table_id"]))
+        observation = capture_source_observation(
+            table_id=str(identity["table_id"]),
+            incremental_columns=incremental_columns,
+        )
         scope = resolve_incremental_source_scope(
             source_table_id=str(identity["table_id"]),
             target_table_id=str(canonical_target_id),
@@ -318,10 +330,14 @@ def pipeline_read(
         )
 
     if has_contract and observation is None:
-        capture_source_observation(
+        observation = capture_source_observation(
             table_id=str(identity["table_id"]), dataframe=dataframe
         )
-        observation_label = "captured current-run state"
+        observation_label = (
+            "captured current-run state"
+            if observation is not None
+            else "no Source Drift observation configured"
+        )
     elif observation is not None:
         scope_label = "bootstrap full read" if scope.get("first_run") else scope["type"]
         observation_label = f"captured; target-specific {scope_label} scope resolved"
