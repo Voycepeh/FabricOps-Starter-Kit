@@ -255,6 +255,21 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "profile_table(table_id=table_id)" not in source
 
 
+def test_02_pipeline_warehouse_example_uses_sql_pushdown():
+    """Order History demonstrates project-owned Warehouse SQL pushdown with the real demo schema."""
+    block = _cell_by_id("02_pipeline.ipynb", "read-3").source
+    assert 'READ_STORE = "Gold"' in block
+    assert 'READ_TABLE = "order_history"' in block
+    assert "SELECT" in block
+    assert "historical_order_id" in block
+    assert "customer_id" in block
+    assert "order_datetime" in block
+    assert "net_amount" in block
+    assert "FROM demo.order_history" in block
+    assert "WHERE order_datetime >= '2025-01-01'" in block
+    assert "query=READ_QUERY" in block
+
+
 def test_02_pipeline_source_dictionary_is_explained():
     """The notebook tells engineers exactly what the multi-source dictionary contains."""
     setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
@@ -279,10 +294,15 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             "check_dq(df,",
             'dq_df = dq_result.get("dataframe", df)',
             'dq_failed_values = dq_result.get("failed_values")',
-            "profile_table(store=READ_STORE, schema=READ_SCHEMA, table_name=READ_TABLE)",
+            "profile_table(",
+            "dataframe=df",
+            "store=READ_STORE",
+            "schema=READ_SCHEMA",
+            "table_name=READ_TABLE",
             "sources[READ_NAME] = source",
             "# display(df)",
-            '# display(profile_result["profile"])',
+            'display(profile_result["profile"])',
+            'display(profile_result["frequency_profile"])',
             "# display(dq_df)",
             "# display(dq_failed_values)",
         ):
@@ -363,28 +383,17 @@ def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
         assert hidden not in source
 
 
-def test_02_pipeline_optional_inspection_is_opt_in_and_support_writes_are_not_in_template():
-    """Development inspection stays opt-in and project-owned support persistence stays outside the template."""
-    notebook_path = NOTEBOOK_DIR / "02_pipeline.ipynb"
-    active_calls: set[str] = set()
-    for cell_index, source in _code_cells(notebook_path):
-        tree = _parse_code_cell(notebook_path, cell_index, source)
-        if tree is None:
-            continue
-        active_calls.update(
-            node.func.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        )
-
-    assert "display" not in active_calls
-
+def test_02_pipeline_profile_inspection_and_support_writes_are_explicit():
+    """Source profile outputs are visible while project-owned support persistence stays outside the template."""
     source = _notebook_source("02_pipeline.ipynb")
+    assert source.count('display(profile_result["profile"])') == 3
+    assert source.count('display(profile_result["frequency_profile"])') == 3
     assert "write_lakehouse_table" not in source
     assert "write_warehouse_table" not in source
     for optional in (
         "# display(df)",
-        '# display(profile_result["profile"])',
+        'display(profile_result["profile"])',
+        'display(profile_result["frequency_profile"])',
         "# display(dq_df)",
         "# display(dq_failed_values)",
         "# display(transformed_df)",
