@@ -84,7 +84,7 @@ def read_warehouse_table(
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
         print(
-            f"Read from → Object: Warehouse | Store: {store.key} | "
+            f"Read from → Object: Warehouse | Store: {store_name} | "
             f"Schema: {schema_value} | Table: {table_value}"
         )
     return dataframe
