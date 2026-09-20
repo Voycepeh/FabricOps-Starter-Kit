@@ -102,7 +102,7 @@ def test_scan_workspace_access_maps_table_schema_and_database_scopes(monkeypatch
         calls.append((query, store, context))
         return _observations(spark_session)
 
-    monkeypatch.setattr(module, "read_sql_endpoint_query", fake_read)
+    monkeypatch.setattr(module, "_read_sql_endpoint_query", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
@@ -164,7 +164,7 @@ def test_scan_workspace_access_scans_each_unique_target(monkeypatch, spark_sessi
         calls.append(store)
         return empty
 
-    monkeypatch.setattr(module, "read_sql_endpoint_query", fake_read)
+    monkeypatch.setattr(module, "_read_sql_endpoint_query", fake_read)
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
@@ -373,18 +373,15 @@ def test_catalogue_relates_mixed_targets_by_canonical_physical_identity(spark_se
     ("kind", "object_name"),
     [("warehouse", "Warehouse"), ("lakehouse", "Lakehouse")],
 )
-def test_sql_endpoint_reader_supports_configured_physical_data_items(
+def test_private_sql_endpoint_reader_supports_access_scan_targets(
     monkeypatch, capsys, kind, object_name
 ):
-    """Address Warehouse and Lakehouse SQL analytics endpoints from configuration."""
-    module = importlib.import_module("fabricops_kit.io.read_sql_endpoint_query")
+    """Read supported access-scan SQL endpoints without adding a public API."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
     store = SimpleNamespace(kind=kind)
     calls = []
-    monkeypatch.setattr(
-        module,
-        "resolve_configured_sql_endpoint_store",
-        lambda target, **_kwargs: (store, "dev"),
-    )
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
     monkeypatch.setattr(module, "validate_select_query", lambda query: query)
     monkeypatch.setattr(module, "get_spark_session", lambda spark_session: "spark")
     monkeypatch.setattr(
@@ -395,18 +392,20 @@ def test_sql_endpoint_reader_supports_configured_physical_data_items(
         ) or "frame",
     )
 
-    assert module.read_sql_endpoint_query("SELECT 1", store="item") == "frame"
-    assert calls == [("spark", store, "SELECT 1", "item", {})]
+    assert module._read_sql_endpoint_query(
+        "SELECT 1", store="item", context={}
+    ) == "frame"
+    assert calls == [("spark", store, "SELECT 1", "item", None)]
     assert capsys.readouterr().out.strip() == (
-        f"Read from → Object: {object_name} | Store: item | Query: custom SQL"
+        f"Read from → Object: {object_name} | Store: item | Query: access permissions"
     )
 
 
-def test_sql_endpoint_reader_rejects_unsupported_target_configuration(monkeypatch):
-    """Reject configured targets that cannot expose a supported SQL endpoint."""
-    module = importlib.import_module("fabricops_kit.io.shared")
+def test_private_sql_endpoint_reader_rejects_unsupported_target(monkeypatch):
+    """Reject configured targets that cannot expose the access catalogue views."""
+    module = importlib.import_module("fabricops_kit.access.scan_workspace_access")
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
     monkeypatch.setattr(module, "get_store", lambda config, env, target: SimpleNamespace(kind="files"))
 
     with pytest.raises(ValueError, match="expected a warehouse or lakehouse store"):
-        module.resolve_configured_sql_endpoint_store("unsupported")
+        module._read_sql_endpoint_query("SELECT 1", store="unsupported", context={})
