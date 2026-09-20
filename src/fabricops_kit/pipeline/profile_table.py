@@ -978,7 +978,8 @@ def profile_table(
 
     if spark_session is None and dataframe is not None:
         spark_session = dataframe.sparkSession
-    spark_session = get_spark_session(spark_session)
+    if spark_session is None:
+        spark_session = get_spark_session()
     if warehouse_physical:
         statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
             identity, spark_session=spark_session, context=context,
