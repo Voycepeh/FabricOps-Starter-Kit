@@ -76,6 +76,7 @@ def read_warehouse_table(
 
     """
     database_name = store
+    store_name = str(store)
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
     )
