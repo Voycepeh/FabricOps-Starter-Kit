@@ -47,7 +47,7 @@ def rule():
 
 def configure(monkeypatch, history):
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
-    shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     shared.set_current_source_observation(
         environment_name="dev", activity_id="run", table_id="source", observation=[row()]
     )
@@ -61,8 +61,8 @@ def configure(monkeypatch, history):
 
 def test_target_baselines_are_independent_under_one_source_rule(monkeypatch):
     history = [
-        row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed"),
-        row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="committed"),
+        row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="drift_committed"),
+        row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="drift_committed"),
     ]
     configure(monkeypatch, history)
     with pytest.raises(RuntimeError, match="append"):
@@ -83,7 +83,7 @@ def test_source_overwrite_rule_allows_drift_even_for_append_named_target(monkeyp
     """The source strategy, not any target strategy, controls compatibility."""
     configure(
         monkeypatch,
-        [row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed")],
+        [row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="drift_committed")],
     )
     result = shared.check_source_drift_for_target(
         source_table_id="source",
@@ -99,8 +99,8 @@ def test_success_for_one_target_does_not_advance_another(monkeypatch):
         source_table_id="source", target_table_id="target-a",
         source_processing={"load_strategy": "append"},
     )
-    assert ("dev", "run", "source", "target-a") in shared._PENDING_SOURCE_OBSERVATIONS
-    assert ("dev", "run", "source", "target-b") not in shared._PENDING_SOURCE_OBSERVATIONS
+    assert ("dev", "run", "source", "target-a") in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
+    assert ("dev", "run", "source", "target-b") not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
 
 
 def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
@@ -116,4 +116,4 @@ def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
     assert shared.get_current_source_observation(
         environment_name="dev", activity_id="run", table_id="source"
     ) is first
-    assert {key[-1] for key in shared._PENDING_SOURCE_OBSERVATIONS} == {"target-a", "target-b"}
+    assert {key[-1] for key in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS} == {"target-a", "target-b"}
