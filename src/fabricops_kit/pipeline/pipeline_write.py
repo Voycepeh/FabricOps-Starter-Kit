@@ -16,8 +16,6 @@ from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
     incremental_publication_scopes,
-    load_target_publication,
-    persist_target_publication,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -337,16 +335,14 @@ def pipeline_write(
     5. Resolve processing scope.
     6. Apply FabricOps target audit fields.
     7. Validate target notebook ownership.
-    8. Load the deterministic target publication state for the current
-       environment, activity, and target.
+    8. Detect whether this activity already produced target rows.
     9. Perform append/overwrite or dedicated SCD processing only when the
-       physical publication has not already succeeded.
-    10. Persist physical success before resumable metadata finalization.
-    11. Persist the resolved target load strategy and parameters on the
+       activity is not already represented in the physical target.
+    10. Persist the resolved target load strategy and parameters on the
         table-level ``METADATA_DATA_CATALOGUE`` row.
-    12. Only after physical and Catalogue success, commit target Lineage and
-        accepted Source Observation/write-success metadata.
-    13. Mark the publication finalized and return a small result.
+    11. Only after physical and Catalogue success, idempotently commit target
+        Lineage and accepted Source Observation/write-success metadata.
+    12. Return a small publication result with no hidden profiling state.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
@@ -354,6 +350,15 @@ def pipeline_write(
     provide only the canonical identities of the sources that actually feed
     this target, rather than internal read or preparation dictionaries. This
     keeps multiple target writes in one activity exact and independent.
+
+    Same-activity retries use the target's persisted ``_activity_id`` audit
+    field to detect a row-producing publication and skip its physical mutation.
+    Catalogue processing, Lineage, and accepted Source Observation metadata are
+    idempotent and replayed on every retry. Empty append, empty overwrite,
+    partition-removal-only overwrite, and true SCD no-op operations may leave
+    no activity marker; repeating those operations is safe. Changing the
+    participating source set represents a different logical publication and
+    therefore requires a new activity rather than reuse of the current one.
 
     A first incremental append has no committed baseline and therefore reads a
     complete bootstrap scope. FabricOps permits that bootstrap only for a new
@@ -434,37 +439,13 @@ def pipeline_write(
     audit = resolve_target_audit_fields(context)
     activity_id = str(audit["_activity_id"])
     target_table_id = str(identity["table_id"])
-    publication = load_target_publication(
-        environment_name=env,
-        activity_id=activity_id,
-        target_table_id=target_table_id,
-        context=context,
-    )
     strategy = str(processing.get("load_strategy") or "")
-    if publication:
-        recorded_sources = json.loads(str(publication.get("source_table_ids_json") or "[]"))
-        if sorted(publication_source_ids) != sorted(recorded_sources) or strategy != str(
-            publication.get("load_strategy") or ""
-        ):
-            raise ValueError(
-                "The existing publication identity was created with different sources or processing; "
-                "use a new activity for a new logical publication."
-            )
-        if publication.get("publication_status") == "finalized":
-            if verbose:
-                print("FabricOps Write → publication already finalized; no physical or metadata write required")
-            return {"table_id": target_table_id}
-    resume_finalization = bool(publication and publication.get("publication_status") == "physical_succeeded")
-    recovered_physical_publication = not publication and _target_has_activity(
+    physical_already_applied = _target_has_activity(
         identity=identity,
         activity_id=activity_id,
         context=context,
         spark_session=spark_session,
     )
-    if recovered_physical_publication:
-        # The physical target's audit marker closes the process-failure window
-        # between target commit and publication-state persistence.
-        resume_finalization = True
     incremental_scopes = incremental_publication_scopes(
         environment_name=env,
         activity_id=activity_id,
@@ -533,7 +514,7 @@ def pipeline_write(
     if (
         strategy == "append"
         and bootstrap_sources
-        and not resume_finalization
+        and not physical_already_applied
         and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
     ):
         raise ValueError(
@@ -542,16 +523,6 @@ def pipeline_write(
             "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
         )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
-    if recovered_physical_publication:
-        persist_target_publication(
-            environment_name=env,
-            activity_id=activity_id,
-            target_table_id=target_table_id,
-            source_table_ids=publication_source_ids,
-            load_strategy=strategy,
-            publication_status="physical_succeeded",
-            context=context,
-        )
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
         from pyspark.sql import functions as F
@@ -582,7 +553,7 @@ def pipeline_write(
         print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
         print(f"5. Physical publication → {publication_path}")
 
-    if resume_finalization:
+    if physical_already_applied:
         if verbose:
             print("5. Physical publication → already succeeded; resuming metadata finalization")
     elif store_kind == "lakehouse":
@@ -637,17 +608,6 @@ def pipeline_write(
     else:
         raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
 
-    if not resume_finalization:
-        persist_target_publication(
-            environment_name=env,
-            activity_id=activity_id,
-            target_table_id=target_table_id,
-            source_table_ids=publication_source_ids,
-            load_strategy=strategy,
-            publication_status="physical_succeeded",
-            context=context,
-        )
-
     _persist_target_processing(
         identity=identity,
         processing=processing,
@@ -669,15 +629,6 @@ def pipeline_write(
             "notebook_id": audit["_notebook_id"],
             "context": context,
         }
-    )
-    persist_target_publication(
-        environment_name=env,
-        activity_id=activity_id,
-        target_table_id=target_table_id,
-        source_table_ids=publication_source_ids,
-        load_strategy=strategy,
-        publication_status="finalized",
-        context=context,
     )
     if verbose:
         print("7. Success metadata → Lineage and accepted Source Observation state committed")

@@ -83,7 +83,6 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
-_TARGET_PUBLICATION_TABLE = "METADATA_TARGET_PUBLICATION"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
@@ -170,111 +169,6 @@ def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
     return hashlib.sha256(
         json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
     ).hexdigest()
-
-
-def publication_id(*, environment_name: str, activity_id: str, target_table_id: str) -> str:
-    """Return the deterministic identity for one target publication boundary."""
-    values = {
-        "environment_name": str(environment_name or "").strip(),
-        "activity_id": str(activity_id or "").strip(),
-        "target_table_id": str(target_table_id or "").strip(),
-    }
-    if not all(values.values()):
-        raise ValueError("environment_name, activity_id, and target_table_id must be non-empty strings.")
-    return hashlib.sha256(
-        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
-
-
-def load_target_publication(
-    *, environment_name: str, activity_id: str, target_table_id: str, context: dict[str, Any]
-) -> dict[str, Any] | None:
-    """Load the durable state for one target publication, when it exists."""
-    config, _env, resolved_context = resolve_fabric_context(context=context)
-    identifier = publication_id(
-        environment_name=environment_name,
-        activity_id=activity_id,
-        target_table_id=target_table_id,
-    )
-    try:
-        frame = read_lakehouse_table(
-            _TARGET_PUBLICATION_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, _TARGET_PUBLICATION_TABLE),
-            context=resolved_context,
-        )
-        rows = observation_rows(
-            frame.filter(frame.publication_id == identifier)
-            if hasattr(frame, "filter") and hasattr(frame, "publication_id")
-            else frame
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            return None
-        raise RuntimeError(f"Unable to load target publication state: {exc}") from exc
-    return next((row for row in rows if str(row.get("publication_id") or "") == identifier), None)
-
-
-def persist_target_publication(
-    *,
-    environment_name: str,
-    activity_id: str,
-    target_table_id: str,
-    source_table_ids: list[str],
-    load_strategy: str,
-    publication_status: str,
-    context: dict[str, Any],
-) -> str:
-    """Atomically upsert physical or finalized state for one target publication."""
-    if publication_status not in {"physical_succeeded", "finalized"}:
-        raise ValueError("publication_status must be physical_succeeded or finalized.")
-    config, env, resolved_context = resolve_fabric_context(context=context)
-    if env != environment_name:
-        raise ValueError("Publication environment does not match the configured runtime environment.")
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
-    audit["_activity_id"] = activity_id
-    identifier = publication_id(
-        environment_name=environment_name,
-        activity_id=activity_id,
-        target_table_id=target_table_id,
-    )
-    row = coerce_metadata_row_types(
-        _TARGET_PUBLICATION_TABLE,
-        {
-            "publication_id": identifier,
-            "environment_name": environment_name,
-            "target_table_id": target_table_id,
-            "source_table_ids_json": json.dumps(sorted(source_table_ids), separators=(",", ":")),
-            "load_strategy": load_strategy,
-            "publication_status": publication_status,
-            **audit,
-        },
-    )
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-        raise RuntimeError("Delta Lake merge support is required for target publication state.") from exc
-    spark = get_spark_session()
-    frame = spark.createDataFrame([row], schema=metadata_table_schema_registry()[_TARGET_PUBLICATION_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        _TARGET_PUBLICATION_TABLE,
-        metadata_table_physical_schema(config, _TARGET_PUBLICATION_TABLE),
-        context=resolved_context,
-    )
-    (
-        DeltaTable.forPath(spark, path)
-        .alias("target")
-        .merge(
-            frame.alias("source"),
-            "target.environment_name = source.environment_name "
-            "AND target.publication_id = source.publication_id",
-        )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .execute()
-    )
-    return identifier
 
 
 def persist_lineage_participation(

@@ -270,8 +270,6 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {})
-    monkeypatch.setattr(write_module, "load_target_publication", lambda **kwargs: None)
-    monkeypatch.setattr(write_module, "persist_target_publication", lambda **kwargs: None)
     monkeypatch.setattr(write_module, "_target_has_activity", lambda **kwargs: False)
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
@@ -474,13 +472,21 @@ def test_removed_partition_is_cleared_by_empty_partition_overwrite(
         source_table_ids=["source-a"],
         verbose=False,
     )
+    write_module.pipeline_write(
+        frame,
+        table_id=identity["table_id"],
+        source_table_ids=["source-a"],
+        verbose=False,
+    )
 
+    assert len(writes) == 2
     assert writes[0][0].count() == 0
     assert writes[0][1]["mode"] == "overwrite"
     assert writes[0][1]["options"] == {
         "replaceWhere": "`_partition_bucket` IN ('2026-09-18')"
     }
     assert commits[0]["source_table_ids"] == ["source-a"]
+    assert len(commits) == 2
 
 
 def test_removed_partition_rejects_non_reconciling_strategy(monkeypatch):
@@ -689,10 +695,10 @@ def test_pipeline_write_failure_does_not_commit_or_establish_profile(monkeypatch
 
 
 @pytest.mark.parametrize("strategy", ["append", "overwrite", "scd1", "scd2"])
-def test_pipeline_write_retry_resumes_metadata_without_republishing(
+def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     monkeypatch, spark_session, strategy
 ):
-    """Post-write metadata failure resumes once for every governed strategy."""
+    """Row-producing retries skip physical work and replay metadata safely."""
     identity, context = _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy}
     if strategy in {"scd1", "scd2"}:
@@ -702,32 +708,27 @@ def test_pipeline_write_retry_resumes_metadata_without_republishing(
     monkeypatch.setattr(
         write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
     )
-    state = {}
+    marker = {"present": False}
     physical = []
-    finalized = []
-
-    monkeypatch.setattr(write_module, "load_target_publication", lambda **_kwargs: state or None)
-
-    def persist_state(**kwargs):
-        state.update(
-            publication_status=kwargs["publication_status"],
-            source_table_ids_json='["source-a"]',
-            load_strategy=strategy,
-        )
-
-    monkeypatch.setattr(write_module, "persist_target_publication", persist_state)
+    finalizations = []
+    catalogue = []
     monkeypatch.setattr(
-        io_package, "write_lakehouse_table", lambda *_args, **_kwargs: physical.append(strategy)
+        write_module, "_target_has_activity", lambda **_kwargs: marker["present"]
     )
+
+    def publish(*_args, **_kwargs):
+        physical.append(strategy)
+        marker["present"] = True
+
+    monkeypatch.setattr(io_package, "write_lakehouse_table", publish)
+    monkeypatch.setattr(shared_module, "execute_lakehouse_processing", publish)
     monkeypatch.setattr(
-        shared_module,
-        "execute_lakehouse_processing",
-        lambda *_args, **_kwargs: physical.append(strategy),
+        write_module, "_persist_target_processing", lambda **_kwargs: catalogue.append(strategy)
     )
 
     def finalize(_value):
-        finalized.append(strategy)
-        if len(finalized) == 1:
+        finalizations.append(strategy)
+        if len(finalizations) == 1:
             raise RuntimeError("injected metadata failure")
 
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", finalize)
@@ -737,8 +738,6 @@ def test_pipeline_write_retry_resumes_metadata_without_republishing(
         write_module.pipeline_write(
             frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
         )
-    assert state["publication_status"] == "physical_succeeded"
-
     write_module.pipeline_write(
         frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
     )
@@ -747,70 +746,60 @@ def test_pipeline_write_retry_resumes_metadata_without_republishing(
     )
 
     assert physical == [strategy]
-    assert finalized == [strategy, strategy]
-    assert state["publication_status"] == "finalized"
+    assert catalogue == [strategy, strategy, strategy]
+    assert finalizations == [strategy, strategy, strategy]
     assert "_fabricops_active_profile_registration" not in context
 
 
-def test_failed_physical_publication_never_records_success(monkeypatch):
+@pytest.mark.parametrize("strategy", ["append", "overwrite", "scd1", "scd2"])
+def test_no_marker_publication_can_be_safely_reevaluated(monkeypatch, spark_session, strategy):
+    """Empty or no-op publications may repeat because they have no duplicate side effect."""
+    identity, _context = _patch_write(monkeypatch, strategy=strategy)
+    processing = {"load_strategy": strategy}
+    if strategy in {"scd1", "scd2"}:
+        processing["key_columns"] = ["id"]
+    if strategy == "scd2":
+        processing["effective_column"] = "effective_at"
+    monkeypatch.setattr(
+        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+    )
+    monkeypatch.setattr(write_module, "_target_has_activity", lambda **_kwargs: False)
+    physical = []
+    monkeypatch.setattr(
+        io_package, "write_lakehouse_table", lambda *_args, **_kwargs: physical.append(strategy)
+    )
+    monkeypatch.setattr(
+        shared_module, "execute_lakehouse_processing", lambda *_args, **_kwargs: physical.append(strategy)
+    )
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda _value: None)
+    frame = spark_session.createDataFrame([], "id long, effective_at string")
+
+    write_module.pipeline_write(
+        frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
+    )
+    write_module.pipeline_write(
+        frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
+    )
+
+    assert physical == [strategy, strategy]
+
+
+def test_failed_physical_publication_does_not_finalize_metadata(monkeypatch):
     _patch_write(monkeypatch, strategy="append")
-    states = []
-    monkeypatch.setattr(write_module, "persist_target_publication", lambda **kwargs: states.append(kwargs))
+    finalizations = []
     monkeypatch.setattr(
         io_package,
         "write_lakehouse_table",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("physical failure")),
     )
+    monkeypatch.setattr(
+        shared_module, "commit_pipeline_write_success", lambda value: finalizations.append(value)
+    )
 
     with pytest.raises(RuntimeError, match="physical failure"):
         write_module.pipeline_write(object(), table_id="target", source_table_ids=["source-a"])
 
-    assert states == []
-
-
-def test_retry_recovers_when_process_fails_before_physical_state_persists(monkeypatch):
-    """The target audit marker closes the write-to-state process-failure gap."""
-    identity, _context = _patch_write(monkeypatch, strategy="append")
-    target_marker = {"present": False}
-    writes = []
-    state = {}
-    marker_attempts = 0
-
-    monkeypatch.setattr(write_module, "load_target_publication", lambda **_kwargs: state or None)
-    monkeypatch.setattr(
-        write_module, "_target_has_activity", lambda **_kwargs: target_marker["present"]
-    )
-
-    def write(*_args, **_kwargs):
-        writes.append("append")
-        target_marker["present"] = True
-
-    def persist(**kwargs):
-        nonlocal marker_attempts
-        marker_attempts += 1
-        if marker_attempts == 1:
-            raise RuntimeError("state store unavailable")
-        state.update(
-            publication_status=kwargs["publication_status"],
-            source_table_ids_json='["source-a"]',
-            load_strategy="append",
-        )
-
-    monkeypatch.setattr(io_package, "write_lakehouse_table", write)
-    monkeypatch.setattr(write_module, "persist_target_publication", persist)
-    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda _value: None)
-
-    with pytest.raises(RuntimeError, match="state store unavailable"):
-        write_module.pipeline_write(
-            object(), table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
-        )
-    write_module.pipeline_write(
-        object(), table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
-    )
-
-    assert writes == ["append"]
-    assert state["publication_status"] == "finalized"
-
+    assert finalizations == []
 
 def test_pipeline_write_requires_explicit_sources(monkeypatch):
     _patch_write(monkeypatch)
@@ -821,7 +810,13 @@ def test_pipeline_write_requires_explicit_sources(monkeypatch):
 def test_two_targets_commit_only_their_exact_source_subsets(monkeypatch):
     _identity_value, _context = _patch_write(monkeypatch)
     commits = []
-    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: None)
+    writes = []
+    monkeypatch.setattr(
+        write_module,
+        "_target_has_activity",
+        lambda **kwargs: kwargs["identity"]["table_id"] == "target-1",
+    )
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: writes.append(a))
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: commits.append(value))
 
     write_module.pipeline_write(object(), table_id="target-1", source_table_ids=["source-a", "source-b"])
@@ -829,6 +824,7 @@ def test_two_targets_commit_only_their_exact_source_subsets(monkeypatch):
 
     assert [value["source_table_ids"] for value in commits] == [["source-a", "source-b"], ["source-b"]]
     assert [value["target_table_id"] for value in commits] == ["target-1", "target-2"]
+    assert len(writes) == 1
 
 
 def test_repeated_writes_do_not_inherit_prior_sources(monkeypatch):

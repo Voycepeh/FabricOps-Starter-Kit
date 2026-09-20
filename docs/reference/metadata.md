@@ -186,12 +186,6 @@ The cards below show the current implemented metadata tables and relationships.
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_TARGET_PUBLICATION</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
         <code>METADATA_ENRICHMENT</code>
       </span>
     </span>
@@ -312,33 +306,6 @@ The cards below show the current implemented metadata tables and relationships.
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
     <span><code>lineage_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
-<a class="metadata-table-card metadata-table-card--engineering" href="metadata_target_publication/" aria-label="Open METADATA_TARGET_PUBLICATION schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_TARGET_PUBLICATION</span>
-      <span class="metadata-table-card__schema">engineering</span>
-    </span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Record whether one environment, activity, and governed target publication has physically succeeded or completed metadata finalization so retries do not repeat target mutations.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One deterministic target publication boundary for one activity and environment.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>publication_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>

@@ -211,15 +211,6 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
-    "METADATA_TARGET_PUBLICATION": {
-        "purpose": "Record whether one environment, activity, and governed target publication has physically succeeded or completed metadata finalization so retries do not repeat target mutations.",
-        "grain": "One deterministic target publication boundary for one activity and environment.",
-        "primary_key": ["publication_id"],
-        "foreign_keys": [
-            {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many activity-specific publications can target the same governed Catalogue table."},
-        ],
-        "relationships": [],
-    },
     "METADATA_ENRICHMENT": {
         "purpose": "Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.",
         "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
@@ -273,7 +264,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
-    "METADATA_TARGET_PUBLICATION",
     "METADATA_ENRICHMENT",
     "METADATA_DATA_ACCESS",
     "METADATA_GUARDRAIL",
@@ -495,10 +485,6 @@ METADATA_COLUMN_OWNERS = {
         ],
         "target_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "observation_status": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-    },
-    "METADATA_TARGET_PUBLICATION": {
-        "__default__": ["fabricops_kit.pipeline.shared.persist_target_publication"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
 }
 
