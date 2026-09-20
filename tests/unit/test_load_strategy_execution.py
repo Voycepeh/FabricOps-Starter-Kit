@@ -449,7 +449,22 @@ def test_scd2_atomic_merge_failure_cannot_leave_partial_activity_marker(monkeypa
             return Merge()
 
         def toDF(self):
-            return spark_session.createDataFrame(history)
+            return spark_session.createDataFrame(
+                [
+                    (
+                        row["student_id"],
+                        row["status"],
+                        row["effective_at"],
+                        row["_effective_from"],
+                        row["_effective_to"],
+                        row["_is_current"],
+                        row["_activity_id"],
+                    )
+                    for row in history
+                ],
+                "student_id long, status string, effective_at string, _effective_from string, "
+                "_effective_to string, _is_current boolean, _activity_id string",
+            )
 
     _install_delta(monkeypatch, ExistingDelta)
     monkeypatch.setattr(
