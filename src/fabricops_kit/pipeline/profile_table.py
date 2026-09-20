@@ -806,6 +806,7 @@ def profile_table(
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
+    spark_session=None,
 ):
     """Profile a Spark DataFrame or a complete governed physical table.
 
@@ -843,6 +844,9 @@ def profile_table(
     frequency_max_distinct_percent : float or None, default=80.0
         Maximum distinct-per-non-null percentage for automatically selected
         columns. ``None`` disables the cardinality filter.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps uses the supplied
+        DataFrame session or resolves the active session.
 
     Returns
     -------
@@ -972,7 +976,10 @@ def profile_table(
         print("1. Identity → DataFrame only; no governed table_id")
         print("2. Profiling backend → PySpark")
 
-    spark_session = dataframe.sparkSession if dataframe is not None else get_spark_session()
+    if spark_session is None and dataframe is not None:
+        spark_session = dataframe.sparkSession
+    if spark_session is None:
+        spark_session = get_spark_session()
     if warehouse_physical:
         statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
             identity, spark_session=spark_session, context=context,

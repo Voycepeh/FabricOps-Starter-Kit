@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
 from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
@@ -167,6 +168,7 @@ def check_sensitive_data(
     existing_mapping=None,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Apply exact-contract Sensitive Data Guardrails before a governed write.
@@ -186,6 +188,9 @@ def check_sensitive_data(
         Explicitly skip the check and return the supplied DataFrame when ``False``.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking treatment cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps uses the supplied
+        DataFrame session or resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
 
@@ -249,8 +254,11 @@ def check_sensitive_data(
         if verbose:
             print("  Evaluation skipped by caller; no treatment applied or evidence written.")
         return result
-    spark_session = getattr(dataframe, "sparkSession", None)
-    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
+    if spark_session is None:
+        spark_session = getattr(dataframe, "sparkSession", None)
+    if spark_session is None:
+        spark_session = get_spark_session()
+    if not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_sensitive_data requires a Spark DataFrame in the active Microsoft Fabric runtime.")
     config, env, context = resolve_fabric_context()
     contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark_session, context=context)

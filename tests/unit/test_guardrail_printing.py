@@ -16,7 +16,7 @@ def test_dataframe_guardrail_public_signatures_are_consistent() -> None:
     """DataFrame checks use a DataFrame-first interface and shared controls."""
     assert str(inspect.signature(check_schema)) == (
         "(dataframe=None, *, table_id: str, enabled: bool = True, "
-        "raise_on_failure: bool = False, verbose: bool = True) -> dict"
+        "raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
     )
     assert "dataframe" == next(iter(inspect.signature(check_dq).parameters))
     assert "dataframe" == next(iter(inspect.signature(check_sensitive_data).parameters))

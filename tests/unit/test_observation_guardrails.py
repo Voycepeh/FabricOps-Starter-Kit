@@ -17,10 +17,10 @@ from fabricops_kit.pipeline import shared
 
 def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
     assert str(inspect.signature(check_freshness)) == (
-        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
+        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
     )
     assert str(inspect.signature(check_source_drift)) == (
-        "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, verbose: bool = True) -> dict"
+        "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
     )
 
 
@@ -47,13 +47,16 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         "check_source_drift_for_target",
         lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
     )
-    result = check_source_drift("source-a", target_table_id="target-a", verbose=False)
+    result = check_source_drift(
+        "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+    )
     assert result["can_continue"] is True
     assert calls == [
         {
             "source_table_id": "canonical-source-a",
             "target_table_id": "canonical-target-a",
             "source_processing": {"load_strategy": "append"},
+            "spark_session": "spark",
             "raise_on_failure": False,
         }
     ]

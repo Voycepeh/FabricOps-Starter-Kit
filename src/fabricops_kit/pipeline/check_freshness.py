@@ -22,6 +22,7 @@ def check_freshness(
     *,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Check whether a source satisfies configured freshness intent.
@@ -35,6 +36,8 @@ def check_freshness(
         FabricOps enforces the resolved pipeline Data Contract automatically.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking freshness result cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
     
@@ -91,7 +94,7 @@ def check_freshness(
             print(f"  Reason {result['reason']}")
         return result
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    spark_session = get_spark_session()
+    spark_session = get_spark_session() if spark_session is None else spark_session
     identity = resolve_catalogue_table_identity(
         config,
         env,

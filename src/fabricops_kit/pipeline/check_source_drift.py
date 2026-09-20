@@ -1,6 +1,7 @@
 """Public Source Drift Guardrail check for a source-to-target relationship."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     check_source_drift_for_target,
     resolve_catalogue_table_identity,
@@ -16,6 +17,7 @@ def check_source_drift(
     target_table_id: str,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Detect governed source drift against one target consumption baseline.
@@ -35,6 +37,8 @@ def check_source_drift(
         Explicitly skip the check when ``False``.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking result cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
 
@@ -86,8 +90,13 @@ def check_source_drift(
             print("  Evaluation skipped by caller; no drift comparison or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
+    spark_session = get_spark_session() if spark_session is None else spark_session
     contract = resolve_pipeline_data_contract(
-        config, env, str(source_table_id).strip(), context=context
+        config,
+        env,
+        str(source_table_id).strip(),
+        spark_session=spark_session,
+        context=context,
     )
     if contract is None:
         result = {
@@ -109,15 +118,24 @@ def check_source_drift(
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
-    source = resolve_catalogue_table_identity(config, env, source_table_id, context=context)
-    target = resolve_catalogue_table_identity(config, env, target_table_id, context=context)
+    source = resolve_catalogue_table_identity(
+        config, env, source_table_id, spark_session=spark_session, context=context
+    )
+    target = resolve_catalogue_table_identity(
+        config, env, target_table_id, spark_session=spark_session, context=context
+    )
     source_processing = resolve_table_processing_definition(
-        config, env, str(source["table_id"]), context=context
+        config,
+        env,
+        str(source["table_id"]),
+        spark_session=spark_session,
+        context=context,
     )
     result = check_source_drift_for_target(
         source_table_id=str(source["table_id"]),
         target_table_id=str(target["table_id"]),
         source_processing=source_processing,
+        spark_session=spark_session,
         raise_on_failure=False,
     )
     print_guardrail_result(
