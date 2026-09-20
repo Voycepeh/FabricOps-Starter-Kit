@@ -150,6 +150,48 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
     assert {"stop_if_failed", "write_catalogue_evidence"}.isdisjoint(root_exports)
 
 
+def test_guardrail_coverage_is_public_and_stop_if_failed_is_internal() -> None:
+    """Keep workflow coverage public without exposing the shared stop helper."""
+    import fabricops_kit
+    from fabricops_kit import pipeline
+    from fabricops_kit.public_api import PREVIEW_PUBLIC_API
+
+    coverage_qualified_name = (
+        "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
+    )
+    assert coverage_qualified_name in PREVIEW_PUBLIC_API
+    assert "check_guardrail_coverage" in fabricops_kit.__all__
+    assert "check_guardrail_coverage" in pipeline.__all__
+    assert fabricops_kit.check_guardrail_coverage is pipeline.check_guardrail_coverage
+
+    assert "stop_if_failed" not in fabricops_kit.__all__
+    assert "stop_if_failed" not in pipeline.__all__
+    assert not hasattr(pipeline, "stop_if_failed")
+
+
+def test_guardrail_coverage_preview_lifecycle_matches_generated_contract() -> None:
+    """Keep the Preview registry aligned with the generated public inventory."""
+    data = json.loads(
+        (ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    public_by_name = {row["function_name"]: row for row in data["public_functions"]}
+
+    assert public_by_name["check_guardrail_coverage"]["lifecycle_status"] == "preview"
+    assert "stop_if_failed" not in public_by_name
+
+
+def test_sensitive_data_reference_uses_public_failure_behavior() -> None:
+    """Keep the public example independent of the internal stop helper."""
+    page = (ROOT / "docs" / "api" / "reference" / "check_sensitive_data.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "raise_on_failure=True" in page
+    assert "stop_if_failed" not in page
+
+
 def test_retired_function_taxonomy_audit_is_removed() -> None:
     """Verify the old taxonomy audit artifact is no longer generated."""
     assert not (ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json").exists()

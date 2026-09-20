@@ -14,7 +14,7 @@ Apply explicit Sensitive Data treatment before a governed write.
 
 `fabricops_kit/pipeline/check_sensitive_data.py:162`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L162-L372">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L162-L378">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -53,9 +53,15 @@ def check_sensitive_data(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_sensitive_data(transformed_df, table_id=TARGET_TABLE_ID)
->>> stop_if_failed(result)
->>> write_result = pipeline_write(result["dataframe"], table_id=TARGET_TABLE_ID)
+>>> result = check_sensitive_data(
+...     transformed_df,
+...     table_id=TARGET_TABLE_ID,
+...     raise_on_failure=True,
+... )
+>>> write_result = pipeline_write(
+...     result["dataframe"],
+...     table_id=TARGET_TABLE_ID,
+... )
 
 </div>
 

@@ -10,7 +10,6 @@ from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_cove
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
-from fabricops_kit.pipeline.shared import stop_if_failed
 
 __all__ = [
     "check_schema",
@@ -22,6 +21,5 @@ __all__ = [
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",
-    "stop_if_failed",
     "profile_table",
 ]

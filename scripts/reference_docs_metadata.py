@@ -857,8 +857,31 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'DataFrame, canonical table_id, optional run identity, and optional caller-supplied existing mapping.',
   'returns': 'Treated DataFrame, optional caller-owned token mapping, sanitized checks, and continuation decision.',
   'side_effects': 'Appends sanitized Guardrail summaries; never persists token mappings or raw sensitive values.',
-  'preferred_example': 'sensitive_result = check_sensitive_data(transformed_df, table_id=table_id)',
-  'related_functions': ['check_dq', 'pipeline_write', 'write_pii_token_map', 'stop_if_failed']},
+  'preferred_example': 'sensitive_result = check_sensitive_data(transformed_df, table_id=table_id, raise_on_failure=True)',
+  'related_functions': ['check_dq', 'pipeline_write', 'write_pii_token_map']},
+ {'kind': 'function',
+  'module': 'pipeline.check_guardrail_coverage',
+  'function_type': 'callable',
+  'summary_override': 'Verify that every governed pipeline participant and configured Guardrail is ready before publication.',
+  'symbol_name': 'check_guardrail_coverage',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Pre-write Guardrail coverage',
+  'use_when': 'Use after source and target Guardrails run and immediately before publishing a governed target.',
+  'do_not_use_when': 'Do not use to author Guardrails, execute individual checks, or replace pipeline_write.',
+  'parameters': 'Canonical target_table_id, participating source_table_ids, and optional verbose output.',
+  'returns': 'Readiness, evaluated coverage, missing evaluations, issues, and the publication continuation decision.',
+  'raises': 'Raises ValueError for missing canonical identities or missing Fabric activity identity.',
+  'side_effects': 'Reads selected Data Contracts, active Guardrails, and current METADATA_GUARDRAIL_RESULTS; it does not write data or metadata.',
+  'fabric_context': 'Requires 00_env_config and the current Fabric activity identity when governed contracts are selected.',
+  'ai_verification': 'Confirm every source that participates in the target is included and inspect can_continue before publication.',
+  'preferred_example': 'coverage = check_guardrail_coverage(target_table_id=target_table_id, source_table_ids=source_table_ids)',
+  'related_functions': ['check_schema', 'check_freshness', 'check_source_drift', 'check_dq', 'check_sensitive_data', 'pipeline_write'],
+  'expanded_purpose': 'Provides the final pre-publication check that selected Data Contracts have applicable active Guardrails and that every applicable rule produced a result for the current activity.',
+  'when_to_use': 'Use as the final governed workflow gate after the applicable source and target checks have produced METADATA_GUARDRAIL_RESULTS.',
+  'glossary_terms': ['Data Contract', 'Guardrail', 'Guardrail Results', 'source table', 'target table'],
+  'return_interpretation': 'can_continue is true only when contract readiness and current-activity Guardrail coverage permit publication; Development can explicitly skip a contract-free baseline run.',
+  'common_failure_causes': ['A participating table has no selected Data Contract.', 'A selected contract has no applicable active Guardrail.', 'An applicable Guardrail has no result for the current activity.', 'The current Fabric activity identity is unavailable.'],
+  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline.pipeline_read',
   'function_type': 'callable',
@@ -1301,7 +1324,7 @@ PUBLIC_SYMBOL_DOCS = [
                      'check the intended write mode before calling.',
   'preferred_example': 'write_warehouse_table(serving_df, '
                        'store="Warehouse", schema="dbo", table="orders_serving", mode="append")',
-  'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
+  'related_functions': ['read_warehouse_table', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
                  'warehouse table.',
@@ -1364,9 +1387,8 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify freshness_column and freshness_max_lag_days come from the table '
                      'config and that blocking severity stops writes when can_continue is false.',
   'preferred_example': 'freshness_result = enforce_freshness(df, "business_date", 1, '
-                       'severity="blocking")\n'
-                       'stop_if_failed(freshness_result)',
-  'related_functions': ['enforce_profile_behavior', 'stop_if_failed'],
+                       'severity="blocking")',
+  'related_functions': ['enforce_profile_behavior'],
   'expanded_purpose': 'Checks whether the latest value in a freshness column is recent enough for '
                       'the configured maximum lag before pipeline writes continue.',
   'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or '
@@ -1454,7 +1476,7 @@ PUBLIC_SYMBOL_DOCS = [
   'fabric_context': 'Requires profile metadata routed through the configured 00_env_config '
                     'metadata target and a valid source/target stage.',
   'ai_verification': 'Verify baseline selection, status, and can_continue before allowing '
-                     'downstream writes or calling stop_if_failed.',
+                     'downstream writes.',
   'preferred_example': 'stability_result = enforce_profile_behavior(\n'
                        '    spark=spark,\n'
                        '    dataframe=df,\n'
@@ -1465,54 +1487,13 @@ PUBLIC_SYMBOL_DOCS = [
                        '    run_id=run_id,\n'
                        '    profile_mode="changing_data",\n'
                        '    watermark_column="business_date",\n'
-                       ')\n'
-                       'stop_if_failed(stability_result)',
+                       ')',
   'related_functions': ['profile_table',
-                        'enforce_freshness',
-                        'stop_if_failed'],
+                        'enforce_freshness'],
   'related_guides': [{'title': 'Pipeline Execution',
                       'path': '../../guided-demo/02-run-pipeline.md'},
                      {'title': 'Governance Review',
                       'path': '../../guided-demo/03-enrich-guardrails.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Stop a notebook only when a schema, freshness, profile behavior, or DQ '
-                      'guardrail result blocks continuation.',
-  'symbol_name': 'stop_if_failed',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the '
-              'notebook when can_continue is false.',
-  'do_not_use_when': 'Do not use for informational warnings that should not block execution, or '
-                     'before a guardrail result exists.',
-  'parameters': 'guardrail result dictionary and optional message/runtime controls.',
-  'returns': 'None when execution may continue; otherwise raises or exits according to runtime '
-             'behavior.',
-  'raises': 'Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail '
-            'must stop execution.',
-  'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
-                  'exception.',
-  'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, '
-                    'or enforce_profile_behavior and before write helpers.',
-  'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
-                     'before passing it to stop_if_failed.',
-  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\n'
-                       'stop_if_failed(guardrail_result)',
-  'related_functions': ['enforce_freshness', 'enforce_profile_behavior'],
-  'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not '
-                      'continue into unsafe downstream writes.',
-  'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail '
-                 'helpers when can_continue controls whether the pipeline should proceed.',
-  'glossary_terms': ['guardrails', 'can_continue'],
-  'return_interpretation': 'No return value means execution may continue. A blocking result raises '
-                           'or exits according to runtime settings.',
-  'common_failure_causes': ['The guardrail result is missing can_continue or status fields.',
-                            'A blocking guardrail returned can_continue as false.',
-                            'Notebook exit behavior is not supported in the current runtime.',
-                            'The caller passed a warning result that should not stop execution.'],
-  'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -2015,23 +1996,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'or unsupported.',
                                                         'The accepted evidence is stale or '
                                                         'incomplete.']},
- 'stop_if_failed': {'expanded_purpose': 'Stops or raises for a blocking guardrail result so a '
-                                        'notebook does not continue into unsafe downstream writes.',
-                    'when_to_use': 'Use immediately after schema, freshness, profile behavior, or '
-                                   'DQ guardrail helpers when can_continue controls whether the '
-                                   'pipeline should proceed.',
-                    'glossary_terms': ['guardrails', 'can_continue'],
-                    'return_interpretation': 'No return value means execution may continue. A '
-                                             'blocking result raises or exits according to runtime '
-                                             'settings.',
-                    'common_failure_causes': ['The guardrail result is missing can_continue or '
-                                              'status fields.',
-                                              'A blocking guardrail returned can_continue as '
-                                              'false.',
-                                              'Notebook exit behavior is not supported in the '
-                                              'current runtime.',
-                                              'The caller passed a warning result that should not '
-                                              'stop execution.']},
  'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime evidence rows '
                                                   'generated by pipeline guardrails to the '
                                                   'configured metadata target.',
@@ -2112,8 +2076,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                'path': '../../guided-demo/02-run-pipeline.md'},
                               {'title': 'Governance Review',
                                'path': '../../guided-demo/03-enrich-guardrails.md'}],
- 'stop_if_failed': [{'title': 'Pipeline Execution',
-                     'path': '../../guided-demo/02-run-pipeline.md'}],
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
                                'path': '../../guided-demo/02-run-pipeline.md'},
                               {'title': 'Metadata Tables',

@@ -75,6 +75,7 @@ PIPELINE_EXPORTS = (
     "check_source_drift",
     "check_dq",
     "check_sensitive_data",
+    "check_guardrail_coverage",
     "profile_table",
     "pipeline_read",
     "resolve_table_id",
