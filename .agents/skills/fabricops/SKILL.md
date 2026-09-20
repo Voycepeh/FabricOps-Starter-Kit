@@ -23,6 +23,8 @@ Start with the existing generated function reference system. Do not replace it w
 
 - Respect `00_env_config`; it owns environment setup and configured runtime targets.
 - Use configured metadata targets rather than assuming an attached/default lakehouse.
+- Route ordinary reusable Fabric table/file reads and writes through the appropriate foundational I/O function under `src/fabricops_kit/io/`; do not duplicate low-level Spark, connector, or physical-path transport in workflow code.
+- Keep domain-specific mutations private to their owning domain when native Spark/Delta code is clearer, while reusing central Fabric routing/config helpers rather than inventing a generic mutation API.
 - Prefer existing helpers before creating wrappers or new workflow steps.
 - Do not hardcode Fabric workspace IDs or item IDs unless explicitly provided by the user.
 - Do not bypass governed metadata evidence when agreement, review, enforcement, lineage, or handover workflows require it.
