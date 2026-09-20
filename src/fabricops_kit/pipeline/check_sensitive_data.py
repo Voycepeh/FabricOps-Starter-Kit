@@ -256,7 +256,8 @@ def check_sensitive_data(
         return result
     if spark_session is None:
         spark_session = getattr(dataframe, "sparkSession", None)
-    spark_session = get_spark_session(spark_session)
+    if spark_session is None:
+        spark_session = get_spark_session()
     if not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_sensitive_data requires a Spark DataFrame in the active Microsoft Fabric runtime.")
     config, env, context = resolve_fabric_context()
