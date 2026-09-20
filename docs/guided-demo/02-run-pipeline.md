@@ -78,10 +78,10 @@ READ_QUERY = None
 ```
 ### What the whole READ block does
 
-**Define the source**
-   - `READ_NAME` gives the source a reusable name in the notebook.
-   - `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify `Bronze.demo.orders`.
-   - `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
+#### Define the source
+- `READ_NAME` gives the source a reusable name in the notebook.
+- `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify `Bronze.demo.orders`.
+- `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
 
 !!! tip "Warehouse SQL pushdown"
     `READ_QUERY = None` reads the full table.
@@ -90,36 +90,36 @@ READ_QUERY = None
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
-**Read the input tables with `pipeline_read()`**
-   - Resolves the canonical FabricOps `table_id` and the configured physical store.
-   - Detects whether the source is a **Lakehouse** or **Warehouse**.
-   - Routes automatically to the correct FabricOps reader:
-     - Lakehouse table → `read_lakehouse_table()`
-     - Warehouse table → `read_warehouse_table()`
-     - Warehouse with `READ_QUERY` supplied → `read_warehouse_query()`
-   - For a Warehouse query, the SQL is pushed down to the Warehouse before the result is returned to Spark.
-   - Returns the Spark DataFrame together with the resolved `table_id` and small source metadata in the `source` result.
+#### Read the input tables with `pipeline_read()`
+- Resolves the canonical FabricOps `table_id` and the configured physical store.
+- Detects whether the source is a **Lakehouse** or **Warehouse**.
+- Routes automatically to the correct FabricOps reader:
+  - Lakehouse table → `read_lakehouse_table()`
+  - Warehouse table → `read_warehouse_table()`
+  - Warehouse with `READ_QUERY` supplied → `read_warehouse_query()`
+- For a Warehouse query, the SQL is pushed down to the Warehouse before the result is returned to Spark.
+- Returns the Spark DataFrame together with the resolved `table_id` and small source metadata in the `source` result.
 
-**Run Guardrail checks**
-   - The checks resolve the selected Data Contract for this `table_id` from `METADATA_DATA_CONTRACT`.
-   - `check_freshness()` checks whether the source is recent enough based on the contract's Freshness rule.
-   - `check_schema()` checks whether the columns and data types match the contract's Schema rule.
-   - `check_dq()` runs the Data Quality rules defined in the contract.
-   - Each check records its runtime outcome in `METADATA_GUARDRAIL_RESULTS`.
+#### Run Guardrail checks
+- The checks resolve the selected Data Contract for this `table_id` from `METADATA_DATA_CONTRACT`.
+- `check_freshness()` checks whether the source is recent enough based on the contract's Freshness rule.
+- `check_schema()` checks whether the columns and data types match the contract's Schema rule.
+- `check_dq()` runs the Data Quality rules defined in the contract.
+- Each check records its runtime outcome in `METADATA_GUARDRAIL_RESULTS`.
 
    In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
 
-**Profile the source**
-   - `profile_table()` refreshes the saved profile for the complete source table.
-   - Profiling results are saved to `METADATA_DATA_PROFILED`.
-   - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
+#### Profile the source
+- `profile_table()` refreshes the saved profile for the complete source table.
+- Profiling results are saved to `METADATA_DATA_PROFILED`.
+- Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
-**Keep the source for later steps**
-   - `sources["orders"]` stores the read result.
-   - The Transform and Write sections can later reuse both the DataFrame and its `table_id`.
+#### Keep the source for later steps
+- `sources["orders"]` stores the read result.
+- The Transform and Write sections can later reuse both the DataFrame and its `table_id`.
 
-**Optional**
-   - Uncomment the `display()` lines only when you want to inspect the source data, profile, or failed DQ spark dataframes.
+#### Optional
+- Uncomment the `display()` lines only when you want to inspect the source data, profile, or failed DQ spark dataframes.
 
 ## 4. Transformation
 
@@ -159,13 +159,13 @@ WRITE_LOAD_STRATEGY = "overwrite"
 
 ### What the whole WRITE block does
 
-**Define the target**
+#### Define the target
 
-   * `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
-   * `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
-   * `WRITE_LOAD_STRATEGY` controls how the target is written, such as `overwrite`, `append`, `SCD1`, or `SCD2`.
-   * `WRITE_REPARTITION_BY` optionally controls Spark write parallelism before publication.
-   * `WRITE_SOURCE_NAMES` identifies the exact source reads that produced this target.
+- `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
+- `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
+- `WRITE_LOAD_STRATEGY` controls how the target is written, such as `overwrite`, `append`, `SCD1`, or `SCD2`.
+- `WRITE_REPARTITION_BY` optionally controls Spark write parallelism before publication.
+- `WRITE_SOURCE_NAMES` identifies the exact source reads that produced this target.
 
 !!! tip "Load strategy"
     `WRITE_LOAD_STRATEGY` controls how FabricOps applies incoming data to the target.
@@ -184,47 +184,47 @@ WRITE_LOAD_STRATEGY = "overwrite"
     - Above ~10 million rows → write parallelism is more likely to help.
 
 
-**Resolve the target and its sources**
+#### Resolve the target and its sources
 
-   * `write_sources` selects only the source reads used by this target.
-   * Their `table_id` values are reused for Source Drift, Guardrail coverage, and Lineage.
-   * `resolve_table_id()` resolves the canonical FabricOps `table_id` for the target once and reuses it throughout the WRITE block.
+- `write_sources` selects only the source reads used by this target.
+- Their `table_id` values are reused for Source Drift, Guardrail coverage, and Lineage.
+- `resolve_table_id()` resolves the canonical FabricOps `table_id` for the target once and reuses it throughout the WRITE block.
 
 **Run Guardrail checks**
 
-   * The checks resolve the selected Data Contract for the target from `METADATA_DATA_CONTRACT`.
-   * `check_schema()` validates the output columns and data types.
-   * `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization before writing.
-   * `check_source_drift()` checks each source against the last successfully accepted state for this target.
-   * `check_dq()` runs the target Data Quality rules.
-   * `check_guardrail_coverage()` confirms that all required Guardrails for the publication were evaluated.
-   * Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
+- The checks resolve the selected Data Contract for the target from `METADATA_DATA_CONTRACT`.
+- `check_schema()` validates the output columns and data types.
+- `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization before writing.
+- `check_source_drift()` checks each source against the last successfully accepted state for this target.
+- `check_dq()` runs the target Data Quality rules.
+- `check_guardrail_coverage()` confirms that all required Guardrails for the publication were evaluated.
+- Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
 
    In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
 
-**Write the target with `pipeline_write()`**
+#### Write the target with `pipeline_write()`
 
-   * Resolves whether the target is a **Lakehouse** or **Warehouse** and routes automatically to the correct Fabric write path.
-   * Applies `WRITE_LOAD_STRATEGY` to control how data is published.
-   * When `WRITE_REPARTITION_BY` is set, repartitions the DataFrame so Spark can distribute the write across multiple tasks.
-   * Persists the target processing definition to `METADATA_DATA_CATALOGUE`.
-   * After the physical write succeeds, records the source and target `table_id` values in `METADATA_DATA_LINEAGE`.
-   * Successful source observation state is then committed to `METADATA_SOURCE_OBSERVATION`.
+- Resolves whether the target is a **Lakehouse** or **Warehouse** and routes automatically to the correct Fabric write path.
+- Applies `WRITE_LOAD_STRATEGY` to control how data is published.
+- When `WRITE_REPARTITION_BY` is set, repartitions the DataFrame so Spark can distribute the write across multiple tasks.
+- Persists the target processing definition to `METADATA_DATA_CATALOGUE`.
+- After the physical write succeeds, records the source and target `table_id` values in `METADATA_DATA_LINEAGE`.
+- Successful source observation state is then committed to `METADATA_SOURCE_OBSERVATION`.
 
-**Profile the persisted target**
+#### Profile the persisted target
 
-   * `profile_table()` refreshes the profile from the table that was actually written.
-   * Profiling results are saved to `METADATA_DATA_PROFILED`.
-   * Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
+- `profile_table()` refreshes the profile from the table that was actually written.
+- Profiling results are saved to `METADATA_DATA_PROFILED`.
+- Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
-**Keep the write result**
+#### Keep the write result
 
-   * `writes[WRITE_NAME]` stores the `pipeline_write()` result.
-   * Later cells can reuse the published target's canonical `table_id`.
+- `writes[WRITE_NAME]` stores the `pipeline_write()` result.
+- Later cells can reuse the published target's canonical `table_id`.
 
 **Optional**
 
-   * Uncomment the `display()` lines only when you want to inspect the prepared DataFrame, failed DQ values, Sensitive Data support mappings, or persisted target profile.
+- Uncomment the `display()` lines only when you want to inspect the prepared DataFrame, failed DQ values, Sensitive Data support mappings, or persisted target profile.
 
 
 **Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)
