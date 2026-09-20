@@ -29,7 +29,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:799`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1070">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1077">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -62,6 +62,7 @@ def profile_table(
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
+    spark_session=None,
 ):
 ```
 
@@ -99,6 +100,7 @@ Profile a transformed DataFrame against an explicit governed identity:
 | `frequency_columns` | `sequence of str` | No | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 
 ## Returns
 

@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L203">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L206">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -42,6 +42,7 @@ def check_schema(
     table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    spark_session=None,
     verbose: bool=True,
 ) -> dict:
 ```
@@ -66,6 +67,7 @@ True
 | `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
 | `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking schema result cannot continue. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps resolves the active session. |
 | `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns

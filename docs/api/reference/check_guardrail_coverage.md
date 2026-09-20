@@ -28,7 +28,7 @@ the Guardrails appropriate to each table; Schema is a common minimal choice.
 
 `fabricops_kit/pipeline/check_guardrail_coverage.py:83`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L83-L287">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L83-L288">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -53,6 +53,7 @@ For profiling-related pipeline functions, the output captures the important deta
 def check_guardrail_coverage(
     target_table_id: str,
     source_table_ids: list[str] | tuple[str, ...],
+    spark_session=None,
     verbose: bool=True,
 ) -> dict[str, Any]:
 ```
@@ -75,6 +76,7 @@ coverage = check_guardrail_coverage(target_table_id=target_table_id, source_tabl
 | --- | --- | --- | --- |
 | `target_table_id` | `str` | Yes | Not documented yet |
 | `source_table_ids` | `list[str] \| tuple[str, ...]` | Yes | Not documented yet |
+| `spark_session` | `—` | No | Not documented yet |
 | `verbose` | `bool` | No | Not documented yet |
 
 ## Returns
