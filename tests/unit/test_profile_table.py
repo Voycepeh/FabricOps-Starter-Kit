@@ -86,10 +86,13 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not reread"))
     monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
     monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: None)
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: None)
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
     monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
 
@@ -99,7 +102,7 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     output = capsys.readouterr().out
     assert f"1. Identity → {identity['table_id']} → supplied DataFrame for governed table" in output
     assert "2. Profiling backend → PySpark" in output
-    assert "5. METADATA_DATA_PROFILED → appended current profiling snapshot" in output
+    assert "5. METADATA_DATA_PROFILED → replaced current profiling snapshot" in output
     assert "7. METADATA_DATA_CATALOGUE → table/column identities and observed schema upserted" in output
     assert "existing load strategy and parameters preserved" in output
 
@@ -141,10 +144,13 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     monkeypatch.setattr(module, "read_warehouse_query", execute)
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not use Spark table reader"))
     monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
     monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: None)
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: None)
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
     monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
 
@@ -173,9 +179,12 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_warehouse_query", lambda *a, **k: pytest.fail("must profile supplied batch in Spark"))
     monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: None)
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: None)
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
+    monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
     monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
 
@@ -238,3 +247,123 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     assert updates[0]["load_strategy_parameters_json"] == (
         "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
     )
+
+
+def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_activities(monkeypatch):
+    """Use the existing Fabric activity identity as the retry boundary."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    activity = {"value": "activity-1"}
+    monkeypatch.setattr(
+        module,
+        "build_runtime_audit_fields",
+        lambda **_kwargs: {"_activity_id": activity["value"]},
+    )
+
+    first = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
+    retry = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
+    activity["value"] = "activity-2"
+    later = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
+    other_table = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-2")
+
+    assert retry == first
+    assert later != first
+    assert other_table != later
+
+
+def test_same_activity_retry_clears_catalogue_completion_before_replacement(monkeypatch):
+    """Make Catalogue non-complete before replacing an already completed snapshot."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    updates = []
+
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, _source, condition):
+            assert "target._activity_id = source._activity_id" in condition
+            return self
+
+        def whenMatchedUpdate(self, *, set):
+            updates.append(set)
+            return self
+
+        def execute(self):
+            return None
+
+    class Profile:
+        def select(self, *_columns):
+            return self
+
+        def dropDuplicates(self):
+            return self
+
+        def alias(self, _name):
+            return self
+
+    import sys
+    import types
+
+    delta_module = types.ModuleType("delta")
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/catalogue"))
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
+
+    module._stage_catalogue_profile_retry(
+        profiled_df=Profile(), config={}, env="dev", spark_session=object()
+    )
+
+    assert updates == [{"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}]
+
+
+@pytest.mark.parametrize(
+    ("failure_stage", "cleanup_fails"),
+    [("frequency", False), ("catalogue", False), ("frequency", True)],
+)
+def test_failed_governed_profile_removes_uncommitted_snapshot(
+    spark_session, monkeypatch, capsys, failure_stage, cleanup_fails
+):
+    """Do not leave summary rows that could expose a partially persisted snapshot."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    source = spark_session.createDataFrame([(1,)], ["value"])
+    identity = {
+        "table_id": "lakehouse||source||dbo||orders", "store": "source",
+        "schema": "dbo", "table_name": "orders", "store_kind": "lakehouse",
+    }
+    events = []
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
+    monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
+    monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
+    monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
+    monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: events.append("summary"))
+    monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: events.append("stage"))
+    monkeypatch.setattr(
+        module,
+        "_replace_frequency_rows",
+        lambda **k: (_ for _ in ()).throw(RuntimeError("frequency failed"))
+        if failure_stage == "frequency" else events.append("frequency"),
+    )
+    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
+    monkeypatch.setattr(
+        module,
+        "_upsert_catalogue_identities",
+        lambda **k: (_ for _ in ()).throw(RuntimeError("catalogue failed"))
+        if failure_stage == "catalogue" else events.append("catalogue"),
+    )
+    def cleanup(**_kwargs):
+        events.append("cleanup")
+        if cleanup_fails:
+            raise RuntimeError("cleanup failed")
+
+    monkeypatch.setattr(module, "_delete_profile_snapshot", cleanup)
+
+    with pytest.raises(RuntimeError, match=failure_stage):
+        profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=["value"])
+
+    assert events[-1] == "cleanup"
+    assert "summary" in events
+    assert ("frequency" in events) is (failure_stage == "catalogue")
+    assert ("cleanup failed" in capsys.readouterr().out) is cleanup_fails

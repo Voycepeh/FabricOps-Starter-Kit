@@ -9,7 +9,7 @@ from fabricops_kit.io import read_lakehouse_table
 import json
 import math
 from typing import Any, Mapping, Sequence
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid5
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import build_column_id
@@ -461,6 +461,10 @@ def _canonical_profiled_dataframe(
     from pyspark.sql import types as T
 
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
+    profile_id_udf = F.udf(
+        lambda column_name: str(uuid5(NAMESPACE_URL, f"{profile_snapshot_id}|{build_column_id(table_id, column_name)}")),
+        T.StringType(),
+    )
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
     base = profile_df.select(
         F.col("COLUMN_NAME").alias("_column_name"),
@@ -480,7 +484,7 @@ def _canonical_profiled_dataframe(
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
     return base.select(
-        F.expr("uuid()").cast("string").alias("profile_id"),
+        profile_id_udf(F.col("_column_name")).alias("profile_id"),
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
@@ -524,8 +528,12 @@ def _frequency_metadata_dataframe(
         "inner",
     )
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    frequency_id_udf = F.udf(
+        lambda profile_id, rank: str(uuid5(NAMESPACE_URL, f"{profile_id}|{rank}")),
+        T.StringType(),
+    )
     return joined.select(
-        F.expr("uuid()").cast("string").alias("frequency_id"),
+        frequency_id_udf(identities.profile_id, F.col("FREQUENCY_RANK")).alias("frequency_id"),
         identities.profile_id.cast("string").alias("profile_id"),
         identities.profile_snapshot_id.cast("string").alias("profile_snapshot_id"),
         F.col("VALUE").cast("string").alias("value"),
@@ -538,10 +546,45 @@ def _frequency_metadata_dataframe(
     ).select(*PROFILED_FREQUENCY_COLUMNS)
 
 
+def _replace_snapshot_rows(
+    *, dataframe: Any, table_name: str, row_id: str, config: Any, env: str, spark_session: Any
+) -> None:
+    """Atomically replace one snapshot's rows using their deterministic row identities."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(f"Delta Lake support is required for replacement {table_name} writes.") from exc
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata", table_name, metadata_table_physical_schema(config, table_name),
+        context={"config": config, "env": env},
+    )
+    snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
+    if snapshot is None:
+        return
+    snapshot_id = str(snapshot["profile_snapshot_id"]).replace("'", "''")
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .whenNotMatchedBySourceDelete(
+            condition=f"target.profile_snapshot_id = '{snapshot_id}'"
+        )
+        .execute()
+    )
+
+
 def _replace_frequency_rows(
     *, frequency_df: Any | None, profiled_df: Any, config: Any, env: str, spark_session: Any
 ) -> None:
     """Replace flattened Frequency rows only for the current profiling snapshot."""
+    if frequency_df is not None:
+        _replace_snapshot_rows(
+            dataframe=frequency_df, table_name=PROFILED_FREQUENCY_TABLE,
+            row_id="frequency_id", config=config, env=env, spark_session=spark_session,
+        )
+        return
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
@@ -555,22 +598,61 @@ def _replace_frequency_rows(
         context={"config": config, "env": env},
     )
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
+    (DeltaTable.forPath(spark_session, path).alias("target")
+     .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
+     .whenMatchedDelete().execute())
+
+
+def _delete_profile_snapshot(
+    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Remove an uncommitted snapshot, deleting summary rows before orphan frequencies."""
+    from delta.tables import DeltaTable
+
+    snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
+    for table_name in (PROFILED_TABLE, PROFILED_FREQUENCY_TABLE):
+        _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+            "Metadata", table_name, metadata_table_physical_schema(config, table_name),
+            context={"config": config, "env": env},
+        )
+        (DeltaTable.forPath(spark_session, path).alias("target")
+         .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
+         .whenMatchedDelete().execute())
+
+
+def _stage_catalogue_profile_retry(
+    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Hide a previously completed same-activity snapshot before replacing it."""
+    from delta.tables import DeltaTable
+
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    activities = profiled_df.select(
+        "environment_name", "table_id", "_activity_id"
+    ).dropDuplicates()
     (
         DeltaTable.forPath(spark_session, path)
         .alias("target")
-        .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
-        .whenMatchedDelete()
+        .merge(
+            activities.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.table_id = source.table_id "
+            "AND target._activity_id = source._activity_id",
+        )
+        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
         .execute()
     )
-    if frequency_df is not None:
-        write_lakehouse_table(
-            frequency_df,
-            PROFILED_FREQUENCY_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
-            context={"config": config, "env": env},
-            mode="append",
-        )
+
+
+def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
+    """Return the stable snapshot identity for one table and Fabric activity."""
+    activity_id = build_runtime_audit_fields(
+        config=config, env=env, runtime_context=context
+    )["_activity_id"]
+    return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{env}|{table_id}|{activity_id}"))
 
 
 def _catalogue_dataframe_from_profiled(
@@ -790,12 +872,23 @@ def profile_table(
     3. Calculate canonical statistical metrics with the selected backend.
     4. Select eligible frequency columns and calculate exact grouped counts,
        including null as a frequency value.
-    5. When governed, create stable table and column identities, append
-       ``METADATA_DATA_PROFILED``, replace the current snapshot rows in
-       ``METADATA_DATA_PROFILED_FREQUENCY``, and update
+    5. When governed, create stable table and column identities, replace rows
+       in ``METADATA_DATA_PROFILED`` and
+       ``METADATA_DATA_PROFILED_FREQUENCY`` idempotently for the current
+       Fabric activity, then update
        ``METADATA_DATA_CATALOGUE``.
     6. Return both profiling outputs. DataFrame-only mode performs no metadata
        writes and never invents a ``table_id``.
+
+    A retry in the same Fabric activity reuses the snapshot and row identities
+    and replaces that snapshot rather than appending duplicates. Catalogue is
+    updated only after both profile components succeed; its table-level
+    ``_activity_id`` and non-null ``last_profiled_at`` identify the completed
+    snapshot for readers. A same-activity retry first clears that completion
+    marker. If a later stage fails, snapshot removal is best-effort hygiene:
+    Catalogue remains authoritative even if cleanup also fails, and the
+    original profiling error is preserved. A later activity receives a
+    distinct snapshot identity.
 
     Examples
     --------
@@ -907,7 +1000,9 @@ def profile_table(
         print("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         return {"profile": statistical_profile, "frequency_profile": frequency_profile}
 
-    profile_snapshot_id = str(uuid4())
+    profile_snapshot_id = _profile_snapshot_id(
+        config=config, env=env, context=context, table_id=identity["table_id"]
+    )
     profiled_df = _canonical_profiled_dataframe(
         statistical_profile,
         config=config,
@@ -928,43 +1023,45 @@ def profile_table(
             env=env,
             runtime_context=context,
         )
-    write_lakehouse_table(
-        profiled_df,
-        PROFILED_TABLE,
-        store="Metadata",
-        schema=metadata_table_physical_schema(config, PROFILED_TABLE),
-        context={"config": config, "env": env},
-        mode="append",
-    )
-    print(f"5. {PROFILED_TABLE} → appended current profiling snapshot")
-
-    _replace_frequency_rows(
-        frequency_df=frequency_metadata_df,
-        profiled_df=profiled_df,
-        config=config,
-        env=env,
-        spark_session=spark_session,
-    )
-    frequency_persist_label = "replaced current snapshot rows" if frequency_metadata_df is not None else "cleared current snapshot rows; no frequencies selected"
-    print(f"6. {PROFILED_FREQUENCY_TABLE} → {frequency_persist_label}")
-
-    catalogue_df = _catalogue_dataframe_from_profiled(
-        profiled_df,
-        source_df=dataframe,
-        store_type=identity["store_kind"],
-        layer=identity["store"],
-        schema_name=identity["schema"],
-        table_name=identity["table_name"],
-        load_strategy=None,
-        load_strategy_parameters_json=None,
-        source_fields=warehouse_fields,
-    )
-    _upsert_catalogue_identities(
-        catalogue_df=catalogue_df,
-        config=config,
-        env=env,
-        spark_session=spark_session,
-    )
+    summary_persisted = False
+    try:
+        _stage_catalogue_profile_retry(
+            profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+        )
+        _replace_snapshot_rows(
+            dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
+            config=config, env=env, spark_session=spark_session,
+        )
+        summary_persisted = True
+        print(f"5. {PROFILED_TABLE} → replaced current profiling snapshot")
+        _replace_frequency_rows(
+            frequency_df=frequency_metadata_df, profiled_df=profiled_df,
+            config=config, env=env, spark_session=spark_session,
+        )
+        frequency_persist_label = "replaced current snapshot rows" if frequency_metadata_df is not None else "cleared current snapshot rows; no frequencies selected"
+        print(f"6. {PROFILED_FREQUENCY_TABLE} → {frequency_persist_label}")
+        catalogue_df = _catalogue_dataframe_from_profiled(
+            profiled_df, source_df=dataframe, store_type=identity["store_kind"],
+            layer=identity["store"], schema_name=identity["schema"],
+            table_name=identity["table_name"], load_strategy=None,
+            load_strategy_parameters_json=None, source_fields=warehouse_fields,
+        )
+        _upsert_catalogue_identities(
+            catalogue_df=catalogue_df, config=config, env=env, spark_session=spark_session,
+        )
+    except Exception:
+        if summary_persisted:
+            try:
+                _delete_profile_snapshot(
+                    profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+                )
+            except Exception as cleanup_error:
+                print(
+                    "Warning: incomplete profiling snapshot cleanup failed; "
+                    "Catalogue completion state remains authoritative. "
+                    f"Cleanup error: {cleanup_error}"
+                )
+        raise
     print(
         f"7. {CATALOGUE_TABLE} → table/column identities and observed schema upserted; "
         "existing load strategy and parameters preserved"

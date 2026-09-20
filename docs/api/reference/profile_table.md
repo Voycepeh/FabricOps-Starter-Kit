@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:717`
+`fabricops_kit/pipeline/profile_table.py:799`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L717-L973">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L799-L1070">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -132,12 +132,23 @@ The orchestration performs these mechanical steps:
 3. Calculate canonical statistical metrics with the selected backend.
 4. Select eligible frequency columns and calculate exact grouped counts,
    including null as a frequency value.
-5. When governed, create stable table and column identities, append
-   ``METADATA_DATA_PROFILED``, replace the current snapshot rows in
-   ``METADATA_DATA_PROFILED_FREQUENCY``, and update
+5. When governed, create stable table and column identities, replace rows
+   in ``METADATA_DATA_PROFILED`` and
+   ``METADATA_DATA_PROFILED_FREQUENCY`` idempotently for the current
+   Fabric activity, then update
    ``METADATA_DATA_CATALOGUE``.
 6. Return both profiling outputs. DataFrame-only mode performs no metadata
    writes and never invents a ``table_id``.
+
+A retry in the same Fabric activity reuses the snapshot and row identities
+and replaces that snapshot rather than appending duplicates. Catalogue is
+updated only after both profile components succeed; its table-level
+``_activity_id`` and non-null ``last_profiled_at`` identify the completed
+snapshot for readers. A same-activity retry first clears that completion
+marker. If a later stage fails, snapshot removal is best-effort hygiene:
+Catalogue remains authoritative even if cleanup also fails, and the
+original profiling error is preserved. A later activity receives a
+distinct snapshot identity.
 
 </div>
 
@@ -158,7 +169,7 @@ The orchestration performs these mechanical steps:
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 60 |
+| Live-critical dependencies | 64 |
 
 ### Release history
 
@@ -208,12 +219,16 @@ The orchestration performs these mechanical steps:
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._delete_profile_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._replace_frequency_rows</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._selected_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._sql_identifier</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._sql_string</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._stage_catalogue_profile_retry</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>
