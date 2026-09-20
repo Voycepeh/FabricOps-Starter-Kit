@@ -8,7 +8,7 @@ from uuid import uuid4
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.config.shared import build_table_id, get_store, resolve_fabric_context
-from fabricops_kit.io import read_sql_endpoint_query
+from fabricops_kit.io.shared import get_spark_session, read_warehouse_synapsesql, validate_select_query
 
 
 ACCESS_TABLE = "METADATA_DATA_ACCESS"
@@ -104,12 +104,38 @@ def _normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
     return normalised
 
 
+def _read_sql_endpoint_query(
+    query: str,
+    *,
+    store: str,
+    spark_session=None,
+    context: dict[str, Any],
+):
+    """Read one configured Warehouse or Lakehouse SQL endpoint for access scanning."""
+    config, env, _runtime_context = resolve_fabric_context(context=context)
+    configured_store = get_store(config, env, store)
+    if configured_store.kind not in {"warehouse", "lakehouse"}:
+        raise ValueError(
+            f"Store '{env}/{store}' cannot expose the supported SQL permission catalogue views; "
+            "expected a warehouse or lakehouse store."
+        )
+    dataframe = read_warehouse_synapsesql(
+        get_spark_session(spark_session),
+        configured_store,
+        validate_select_query(query),
+        database_name=store,
+    )
+    object_name = "Warehouse" if configured_store.kind == "warehouse" else "Lakehouse"
+    print(f"Read from → Object: {object_name} | Store: {store} | Query: access permissions")
+    return dataframe
+
+
 def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any]):
     from pyspark.sql import functions as F
 
     frames = []
     for store in targets:
-        frame = read_sql_endpoint_query(
+        frame = _read_sql_endpoint_query(
             SQL_ACCESS_QUERY,
             store=store,
             spark_session=spark_session,
