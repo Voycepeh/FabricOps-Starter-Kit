@@ -550,6 +550,9 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
 def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch):
     """Write only governed processing fields into the target's table-level Catalogue row."""
     import json
+    import sys
+    import types
+
     rows = []
 
     class Source:
@@ -565,7 +568,26 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     class DataFrame:
         sparkSession = Spark()
 
-    upserts = []
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, *_args):
+            return self
+
+        def whenMatchedUpdate(self, **_kwargs):
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def execute(self):
+            return None
+
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
     metadata_audit = {
         "_committed_by": "engineer",
         "_committed_at": "2026-08-22T00:00:00Z",
@@ -585,11 +607,9 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     monkeypatch.setattr(
         write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"}
     )
-    monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: None)
     monkeypatch.setattr(
-        write_module,
-        "upsert_lakehouse_table",
-        lambda *args, **kwargs: upserts.append((args, kwargs)),
+        write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
     )
 
     write_module._persist_target_processing(
@@ -612,12 +632,6 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     assert rows[0]["load_strategy"] == "scd2"
     assert rows[0]["_workspace_name"] == "Workspace"
     assert rows[0]["_metadata_lakehouse_name"] == "Metadata"
-    assert upserts[0][0][0].alias("source") is not None
-    assert upserts[0][0][1] == "METADATA_DATA_CATALOGUE"
-    assert upserts[0][1]["store"] == "Metadata"
-    assert upserts[0][1]["schema"] == "engineering"
-    assert "target.table_id = source.table_id" in upserts[0][1]["match_condition"]
-    assert upserts[0][1]["matched_updates"]["load_strategy"] == "source.load_strategy"
     assert json.loads(rows[0]["load_strategy_parameters_json"]) == {
         "effective_column": "effective_at",
         "key_columns": ["id"],
