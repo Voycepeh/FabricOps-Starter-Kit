@@ -78,9 +78,11 @@ READ_QUERY = None
 ```
 ### What the whole READ block does
 
+Each Read block is intentionally split into **READ → CHECK → PROFILE → KEEP** so you can see exactly where the data becomes available and where FabricOps governance begins.
+
 #### Define the source
 - `READ_NAME` gives the source a reusable name in the notebook.
-- `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify `Bronze.demo.orders`.
+- `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify the physical source.
 - `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
 
 !!! tip "Warehouse SQL pushdown"
@@ -90,36 +92,58 @@ READ_QUERY = None
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
-#### Read the input tables with `pipeline_read()`
-- Resolves the canonical FabricOps `table_id` and the configured physical store.
-- Detects whether the source is a **Lakehouse** or **Warehouse**.
-- Routes automatically to the correct FabricOps reader:
-  - Lakehouse table → `read_lakehouse_table()`
-  - Warehouse table → `read_warehouse_table()`
-  - Warehouse with `READ_QUERY` supplied → `read_warehouse_query()`
-- For a Warehouse query, the SQL is pushed down to the Warehouse before the result is returned to Spark.
-- Returns the Spark DataFrame together with the resolved `table_id` and small source metadata in the `source` result.
+#### READ — get the DataFrame
 
-#### Run Guardrail checks
-- The checks resolve the selected Data Contract for this `table_id` from `METADATA_DATA_CONTRACT`.
-- `check_freshness()` checks whether the source is recent enough based on the contract's Freshness rule.
-- `check_schema()` checks whether the columns and data types match the contract's Schema rule.
-- `check_dq()` runs the Data Quality rules defined in the contract.
-- Each check records its runtime outcome in `METADATA_GUARDRAIL_RESULTS`.
+`pipeline_read()` resolves the source and returns its Spark DataFrame together with the canonical FabricOps `table_id`.
 
-   In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
+```python
+source = pipeline_read(
+    store=READ_STORE,
+    schema=READ_SCHEMA,
+    table_name=READ_TABLE,
+    query=READ_QUERY,
+    spark_session=spark,
+)
 
-#### Profile the source
-- `profile_table()` refreshes the saved profile for the complete source table.
+df = source["dataframe"]
+table_id = source["table_id"]
+```
+
+**You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark or displayed:
+
+```python
+# display(df)
+```
+
+The later CHECK, PROFILE, and KEEP stages are separate FabricOps pipeline steps. A failure in one of those later stages does not mean that `pipeline_read()` failed.
+
+#### CHECK — run Guardrails
+- `check_freshness()` checks whether the source is recent enough based on the selected Data Contract.
+- `check_schema()` checks whether the columns and data types match the contract.
+- `check_dq()` runs the configured Data Quality rules.
+- These checks run after the DataFrame has already been read.
+- In the first Development run, when no Data Contract is selected yet, contract-backed checks safely return `skipped`.
+
+Optional check outputs can be inspected with:
+
+```python
+# display(dq_df)
+# display(dq_failed_values)
+```
+
+#### PROFILE — refresh the saved source profile
+- `profile_table()` profiles the complete persisted source table.
 - Profiling results are saved to `METADATA_DATA_PROFILED`.
 - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
-#### Keep the source for later steps
-- `sources["orders"]` stores the read result.
-- The Transform and Write sections can later reuse both the DataFrame and its `table_id`.
+```python
+# display(profile_result["profile"])
+```
 
-#### Optional
-- Uncomment the `display()` lines only when you want to inspect the source data, profile, or failed DQ spark dataframes.
+#### KEEP — make the source available downstream
+- `sources[READ_NAME] = source` adds the completed source flow to the `sources` dictionary.
+- The Transform and Write sections can then reuse both its DataFrame and `table_id`.
+- This happens after the checks so a source that fails a required Guardrail is not silently treated as an approved downstream input.
 
 ## 4. Transformation
 
@@ -159,8 +183,9 @@ WRITE_LOAD_STRATEGY = "overwrite"
 
 ### What the whole WRITE block does
 
-#### Define the target
+Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEEP** so the physical publication boundary is obvious.
 
+#### Define the target
 - `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
 - `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
 - `WRITE_LOAD_STRATEGY` controls how the target is written, such as `overwrite`, `append`, `SCD1`, or `SCD2`.
@@ -183,48 +208,66 @@ WRITE_LOAD_STRATEGY = "overwrite"
     - Around 1–10 million rows → consider repartitioning if the write is slow.
     - Above ~10 million rows → write parallelism is more likely to help.
 
-
-#### Resolve the target and its sources
-
+#### PREPARE — resolve the target and source lineage
 - `write_sources` selects only the source reads used by this target.
-- Their `table_id` values are reused for Source Drift, Guardrail coverage, and Lineage.
-- `resolve_table_id()` resolves the canonical FabricOps `table_id` for the target once and reuses it throughout the WRITE block.
+- `resolve_table_id()` resolves the canonical target `table_id`.
+- The target DataFrame already exists before anything is written.
 
-#### Run Guardrail checks
+You can inspect the outgoing DataFrame here without publishing the target:
 
-- The checks resolve the selected Data Contract for the target from `METADATA_DATA_CONTRACT`.
+```python
+# display(WRITE_DATAFRAME)
+```
+
+#### CHECK — validate before publication
 - `check_schema()` validates the output columns and data types.
-- `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization before writing.
+- `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization and returns `prepared_df`.
 - `check_source_drift()` checks each source against the last successfully accepted state for this target.
 - `check_dq()` runs the target Data Quality rules.
 - `check_guardrail_coverage()` confirms that all required Guardrails for the publication were evaluated.
-- Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
+- In the first Development run, when no Data Contract is selected yet, contract-backed checks safely return `skipped`.
 
-   In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
+Optional check outputs can be inspected before publication:
 
-#### Write the target with `pipeline_write()`
+```python
+# display(prepared_df)
+# display(target_dq_df)
+# display(target_dq_failed_values)
+# display(support_mapping_df)
+```
 
-- Resolves whether the target is a **Lakehouse** or **Warehouse** and routes automatically to the correct Fabric write path.
-- Applies `WRITE_LOAD_STRATEGY` to control how data is published.
-- When `WRITE_REPARTITION_BY` is set, repartitions the DataFrame so Spark can distribute the write across multiple tasks.
-- Persists the target processing definition to `METADATA_DATA_CATALOGUE`.
-- After the physical write succeeds, records the source and target `table_id` values in `METADATA_DATA_LINEAGE`.
-- Successful source observation state is then committed to `METADATA_SOURCE_OBSERVATION`.
+#### WRITE — physical publication boundary
 
-#### Profile the persisted target
+**Nothing above this point writes the target table.**
 
-- `profile_table()` refreshes the profile from the table that was actually written.
-- Profiling results are saved to `METADATA_DATA_PROFILED`.
-- Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
+The physical Lakehouse or Warehouse publication starts only when `pipeline_write()` runs:
 
-#### Keep the write result
+```python
+write_result = pipeline_write(
+    prepared_df,
+    store=WRITE_STORE,
+    schema=WRITE_SCHEMA,
+    table_name=WRITE_TABLE,
+    load_strategy=WRITE_LOAD_STRATEGY,
+    source_table_ids=[source["table_id"] for source in write_sources],
+    repartition_by=WRITE_REPARTITION_BY,
+    spark_session=spark,
+)
+```
 
-- `writes[WRITE_NAME]` stores the `pipeline_write()` result.
-- Later cells can reuse the published target's canonical `table_id`.
+After this succeeds, the target has been physically written and FabricOps records the associated catalogue, lineage, and source observation state handled by the publication flow.
 
-#### Optional
+#### PROFILE — profile what was actually written
+- `profile_table()` reads the persisted target and refreshes its saved profile.
+- This is intentionally after `pipeline_write()` so the profile represents the published table.
 
-- Uncomment the `display()` lines only when you want to inspect the prepared DataFrame, failed DQ values, Sensitive Data support mappings, or persisted target profile.
+```python
+# display(write_profile["profile"])
+```
+
+#### KEEP — retain the completed write result
+- `writes[WRITE_NAME] = write_result` stores the completed publication result for later notebook use.
+- It is kept after publication and profiling succeed so the `writes` dictionary represents completed target flows.
 
 
 **Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)
