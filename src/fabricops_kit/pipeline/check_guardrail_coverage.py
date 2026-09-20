@@ -107,7 +107,7 @@ def check_guardrail_coverage(
         raise ValueError("source_table_ids must contain at least one non-empty canonical table_id.")
 
     config, env, context = resolve_fabric_context()
-    spark = get_spark_session(spark_session)
+    spark = get_spark_session() if spark_session is None else spark_session
     is_production = str(env).strip().lower() in {"prod", "production"}
 
     participants: list[dict[str, Any]] = []
