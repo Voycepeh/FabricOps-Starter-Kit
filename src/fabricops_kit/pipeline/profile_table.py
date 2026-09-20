@@ -622,8 +622,8 @@ def _delete_profile_snapshot(
 
 def _stage_catalogue_profile_retry(
     *, profiled_df: Any, config: Any, env: str, spark_session: Any
-) -> None:
-    """Hide a previously completed same-activity snapshot before replacing it."""
+) -> bool:
+    """Return whether this activity is a retry and hide its prior completion marker."""
     from delta.tables import DeltaTable
 
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
@@ -633,9 +633,20 @@ def _stage_catalogue_profile_retry(
     activities = profiled_df.select(
         "environment_name", "table_id", "_activity_id"
     ).dropDuplicates()
+    target = DeltaTable.forPath(spark_session, path)
+    same_activity_retry = bool(
+        target.toDF()
+        .select("environment_name", "table_id", "_activity_id")
+        .join(
+            activities,
+            on=["environment_name", "table_id", "_activity_id"],
+            how="inner",
+        )
+        .limit(1)
+        .count()
+    )
     (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
+        target.alias("target")
         .merge(
             activities.alias("source"),
             "target.environment_name = source.environment_name "
@@ -645,6 +656,7 @@ def _stage_catalogue_profile_retry(
         .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
         .execute()
     )
+    return same_activity_retry
 
 
 def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
@@ -960,16 +972,17 @@ def profile_table(
         if dataframe is None:
             if store_kind == "lakehouse":
                 dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
-                profile_input_label = f"governed Lakehouse table '{physical_identity}'"
+                profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True
                 backend_label = "Warehouse SQL pushdown"
-                profile_input_label = f"governed Warehouse table '{physical_identity}'"
+                profile_input_label = "complete persisted Warehouse table"
         else:
-            profile_input_label = f"supplied DataFrame for governed table '{identity['table_id']}'"
+            profile_input_label = "supplied DataFrame"
 
         print("FabricOps Profile")
-        print(f"1. Identity → {identity['table_id']} → {profile_input_label}")
+        print(f"1. Table → {physical_identity}")
+        print(f"   Input → {profile_input_label}")
         print(f"2. Profiling backend → {backend_label}")
     else:
         print("FabricOps Profile")
@@ -1032,7 +1045,7 @@ def profile_table(
         )
     summary_persisted = False
     try:
-        _stage_catalogue_profile_retry(
+        same_activity_retry = _stage_catalogue_profile_retry(
             profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
         )
         _replace_snapshot_rows(
@@ -1040,13 +1053,23 @@ def profile_table(
             config=config, env=env, spark_session=spark_session,
         )
         summary_persisted = True
-        print(f"5. {PROFILED_TABLE} → replaced current profiling snapshot")
+        profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
+        print(f"5. Profile snapshot → {profile_action}")
         _replace_frequency_rows(
             frequency_df=frequency_metadata_df, profiled_df=profiled_df,
             config=config, env=env, spark_session=spark_session,
         )
-        frequency_persist_label = "replaced current snapshot rows" if frequency_metadata_df is not None else "cleared current snapshot rows; no frequencies selected"
-        print(f"6. {PROFILED_FREQUENCY_TABLE} → {frequency_persist_label}")
+        if frequency_metadata_df is not None:
+            frequency_action = (
+                "refreshed existing activity rows"
+                if same_activity_retry
+                else "created new activity rows"
+            )
+        elif same_activity_retry:
+            frequency_action = "cleared existing activity rows; no frequency profile generated"
+        else:
+            frequency_action = "skipped; no frequency profile generated"
+        print(f"6. Frequency profile metadata → {frequency_action}")
         catalogue_df = _catalogue_dataframe_from_profiled(
             profiled_df, source_df=dataframe, store_type=identity["store_kind"],
             layer=identity["store"], schema_name=identity["schema"],
@@ -1069,9 +1092,10 @@ def profile_table(
                     f"Cleanup error: {cleanup_error}"
                 )
         raise
+    catalogue_action = "updated" if same_activity_retry else "registered or updated"
     print(
-        f"7. {CATALOGUE_TABLE} → table/column identities and observed schema upserted; "
+        f"7. Catalogue → {catalogue_action} table and column metadata; "
         "existing load strategy and parameters preserved"
     )
-    print("Result → governed profile returned and profiling metadata persisted.")
+    print("Result → Profile completed and metadata saved.")
     return {"profile": profiled_df, "frequency_profile": frequency_profile}

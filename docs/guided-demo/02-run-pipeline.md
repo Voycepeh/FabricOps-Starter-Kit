@@ -89,7 +89,21 @@ Each Read block is intentionally split into **READ → CHECK → PROFILE → KEE
 !!! tip "Warehouse SQL pushdown"
     `READ_QUERY = None` reads the full table.
 
-    To filter, join, aggregate, or otherwise shape the data in the Warehouse before it reaches Spark, pass a SQL query through `READ_QUERY`.
+    The Order History example deliberately supplies SQL so projection and filtering happen in the Warehouse before the result reaches Spark:
+
+    ```python
+    READ_QUERY = """
+    SELECT
+        historical_order_id,
+        customer_id,
+        order_datetime,
+        net_amount
+    FROM demo.order_history
+    WHERE order_datetime >= '2025-01-01'
+    """
+    ```
+
+    The demo predicate preserves the canonical `order_history` fixture while still showing the pushdown path.
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
@@ -134,12 +148,22 @@ Optional check outputs can be inspected with:
 ```
 
 #### Read 4. PROFILE — refresh the saved source profile
-- `profile_table()` profiles the complete persisted source table.
+- `profile_table()` profiles the DataFrame that was already read above, so FabricOps does not read the same source table a second time.
+- The physical source coordinates are supplied so the first Development run can register the table in the Catalogue even when no Catalogue row exists yet.
 - Profiling results are saved to `METADATA_DATA_PROFILED`.
 - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
 ```python
-# display(profile_result["profile"])
+profile_result = profile_table(
+    dataframe=df,
+    store=READ_STORE,
+    schema=READ_SCHEMA,
+    table_name=READ_TABLE,
+    spark_session=spark,
+)
+
+display(profile_result["profile"])
+display(profile_result["frequency_profile"])
 ```
 
 #### Read 5. KEEP — make the source available downstream
@@ -168,7 +192,7 @@ The template contains two independent Write blocks.
 | Write | Store | Schema | Table | Load strategy |
 | --- | --- | --- | --- | --- |
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
-| Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
+| Customer Summary | `Gold` | `demo` | `customer_summary` | `append` |
 
 ### **Each Write Code Block is designed to be clonable** 
 You can just clone the whole block and edit the variables to point to a different source
@@ -200,15 +224,18 @@ Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEE
     Supported strategies include `overwrite`, `append`, `SCD1`, and `SCD2`.
 
 !!! tip "Spark write parallelism"
-    `WRITE_REPARTITION_BY` optionally repartitions the DataFrame before writing.
+    `WRITE_REPARTITION_BY` optionally repartitions the DataFrame before writing and works for both Lakehouse and Warehouse targets.
 
-    For example, `64` allows up to 64 write tasks, subject to the Spark capacity available to the session.
+    The first write leaves it as `None`. The Warehouse example uses `WRITE_REPARTITION_BY = 4` to demonstrate parallel Spark write tasks.
+
+    `4` means four Spark partitions/tasks are prepared for the write. It does not create four physical Warehouse table partitions, and actual concurrency still depends on the Spark capacity available to the session.
 
     Rule of thumb:
     - Leave it as `None` for small or normal writes.
     - Under ~1 million rows → usually leave as `None`.
     - Around 1–10 million rows → consider repartitioning if the write is slow.
     - Above ~10 million rows → write parallelism is more likely to help.
+
 
 #### Write 2. PREPARE — resolve the target and source lineage
 - `write_sources` selects only the source reads used by this target.
@@ -263,7 +290,13 @@ After this succeeds, the target has been physically written and FabricOps record
 - This is intentionally after `pipeline_write()` so the profile represents the published table.
 
 ```python
-# display(write_profile["profile"])
+write_profile = profile_table(
+    table_id=write_result["table_id"],
+    spark_session=spark,
+)
+
+display(write_profile["profile"])
+display(write_profile["frequency_profile"])
 ```
 
 #### Write 6. KEEP — retain the completed write result

@@ -101,10 +101,12 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
 
     assert result["profile"].count() == 1
     output = capsys.readouterr().out
-    assert f"1. Identity → {identity['table_id']} → supplied DataFrame for governed table" in output
+    assert "1. Table → source.dbo.orders" in output
+    assert "   Input → supplied DataFrame" in output
     assert "2. Profiling backend → PySpark" in output
-    assert "5. METADATA_DATA_PROFILED → replaced current profiling snapshot" in output
-    assert "7. METADATA_DATA_CATALOGUE → table/column identities and observed schema upserted" in output
+    assert "5. Profile snapshot → created new activity snapshot" in output
+    assert "6. Frequency profile metadata → skipped; no frequency profile generated" in output
+    assert "7. Catalogue → registered or updated table and column metadata" in output
     assert "existing load strategy and parameters preserved" in output
 
 
@@ -271,12 +273,25 @@ def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_a
     assert other_table != later
 
 
-def test_same_activity_retry_clears_catalogue_completion_before_replacement(monkeypatch):
-    """Make Catalogue non-complete before replacing an already completed snapshot."""
+def test_same_activity_retry_clears_catalogue_completion_before_replacement(
+    spark_session, monkeypatch
+):
+    """Detect a same-activity retry before clearing its Catalogue completion marker."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     updates = []
+    activities = spark_session.createDataFrame(
+        [("dev", "table-1", "activity-1")],
+        ["environment_name", "table_id", "_activity_id"],
+    )
+    catalogue = spark_session.createDataFrame(
+        [("dev", "table-1", "activity-1")],
+        ["environment_name", "table_id", "_activity_id"],
+    )
 
     class Merge:
+        def toDF(self):
+            return catalogue
+
         def alias(self, _name):
             return self
 
@@ -291,15 +306,52 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(monk
         def execute(self):
             return None
 
-    class Profile:
-        def select(self, *_columns):
-            return self
+    import sys
+    import types
 
-        def dropDuplicates(self):
-            return self
+    delta_module = types.ModuleType("delta")
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/catalogue"))
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
+
+    is_retry = module._stage_catalogue_profile_retry(
+        profiled_df=activities, config={}, env="dev", spark_session=spark_session
+    )
+
+    assert is_retry is True
+    assert updates == [{"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}]
+
+
+def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch):
+    """Distinguish a new profiling activity from an idempotent same-activity retry."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    activities = spark_session.createDataFrame(
+        [("dev", "table-1", "activity-2")],
+        ["environment_name", "table_id", "_activity_id"],
+    )
+    catalogue = spark_session.createDataFrame(
+        [("dev", "table-1", "activity-1")],
+        ["environment_name", "table_id", "_activity_id"],
+    )
+
+    class Merge:
+        def toDF(self):
+            return catalogue
 
         def alias(self, _name):
             return self
+
+        def merge(self, *_args):
+            return self
+
+        def whenMatchedUpdate(self, **_kwargs):
+            return self
+
+        def execute(self):
+            return None
 
     import sys
     import types
@@ -312,11 +364,12 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(monk
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
-    module._stage_catalogue_profile_retry(
-        profiled_df=Profile(), config={}, env="dev", spark_session=object()
+    is_retry = module._stage_catalogue_profile_retry(
+        profiled_df=activities, config={}, env="dev", spark_session=spark_session
     )
 
-    assert updates == [{"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}]
+    assert is_retry is False
+
 
 
 @pytest.mark.parametrize(
