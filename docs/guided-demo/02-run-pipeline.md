@@ -78,7 +78,7 @@ READ_QUERY = None
 ```
 ### What the whole READ block does
 
-1. **Define the source**
+**Define the source**
    - `READ_NAME` gives the source a reusable name in the notebook.
    - `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify `Bronze.demo.orders`.
    - `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
@@ -90,7 +90,7 @@ READ_QUERY = None
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
-2. **Read the input tables with `pipeline_read()`**
+**Read the input tables with `pipeline_read()`**
    - Resolves the canonical FabricOps `table_id` and the configured physical store.
    - Detects whether the source is a **Lakehouse** or **Warehouse**.
    - Routes automatically to the correct FabricOps reader:
@@ -100,7 +100,7 @@ READ_QUERY = None
    - For a Warehouse query, the SQL is pushed down to the Warehouse before the result is returned to Spark.
    - Returns the Spark DataFrame together with the resolved `table_id` and small source metadata in the `source` result.
 
-3. **Run Guardrail checks**
+**Run Guardrail checks**
    - The checks resolve the selected Data Contract for this `table_id` from `METADATA_DATA_CONTRACT`.
    - `check_freshness()` checks whether the source is recent enough based on the contract's Freshness rule.
    - `check_schema()` checks whether the columns and data types match the contract's Schema rule.
@@ -109,16 +109,16 @@ READ_QUERY = None
 
    In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
 
-4. **Profile the source**
+**Profile the source**
    - `profile_table()` refreshes the saved profile for the complete source table.
    - Profiling results are saved to `METADATA_DATA_PROFILED`.
    - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
-5. **Keep the source for later steps**
+**Keep the source for later steps**
    - `sources["orders"]` stores the read result.
    - The Transform and Write sections can later reuse both the DataFrame and its `table_id`.
 
-6. **Optional**
+**Optional**
    - Uncomment the `display()` lines only when you want to inspect the source data, profile, or failed DQ spark dataframes.
 
 ## 4. Transformation
@@ -159,7 +159,7 @@ WRITE_LOAD_STRATEGY = "overwrite"
 
 ### What the whole WRITE block does
 
-1. **Define the target**
+**Define the target**
 
    * `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
    * `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
@@ -184,13 +184,13 @@ WRITE_LOAD_STRATEGY = "overwrite"
     - Above ~10 million rows → write parallelism is more likely to help.
 
 
-2. **Resolve the target and its sources**
+**Resolve the target and its sources**
 
    * `write_sources` selects only the source reads used by this target.
    * Their `table_id` values are reused for Source Drift, Guardrail coverage, and Lineage.
    * `resolve_table_id()` resolves the canonical FabricOps `table_id` for the target once and reuses it throughout the WRITE block.
 
-3. **Run Guardrail checks**
+**Run Guardrail checks**
 
    * The checks resolve the selected Data Contract for the target from `METADATA_DATA_CONTRACT`.
    * `check_schema()` validates the output columns and data types.
@@ -202,7 +202,7 @@ WRITE_LOAD_STRATEGY = "overwrite"
 
    In this first Development run, there is no selected Data Contract yet, so contract-backed checks safely return `skipped`.
 
-4. **Write the target with `pipeline_write()`**
+**Write the target with `pipeline_write()`**
 
    * Resolves whether the target is a **Lakehouse** or **Warehouse** and routes automatically to the correct Fabric write path.
    * Applies `WRITE_LOAD_STRATEGY` to control how data is published.
@@ -211,18 +211,18 @@ WRITE_LOAD_STRATEGY = "overwrite"
    * After the physical write succeeds, records the source and target `table_id` values in `METADATA_DATA_LINEAGE`.
    * Successful source observation state is then committed to `METADATA_SOURCE_OBSERVATION`.
 
-5. **Profile the persisted target**
+**Profile the persisted target**
 
    * `profile_table()` refreshes the profile from the table that was actually written.
    * Profiling results are saved to `METADATA_DATA_PROFILED`.
    * Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
-6. **Keep the write result**
+**Keep the write result**
 
    * `writes[WRITE_NAME]` stores the `pipeline_write()` result.
    * Later cells can reuse the published target's canonical `table_id`.
 
-7. **Optional**
+**Optional**
 
    * Uncomment the `display()` lines only when you want to inspect the prepared DataFrame, failed DQ values, Sensitive Data support mappings, or persisted target profile.
 
