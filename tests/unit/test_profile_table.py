@@ -101,7 +101,8 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
 
     assert result["profile"].count() == 1
     output = capsys.readouterr().out
-    assert f"1. Identity → {identity['table_id']} → supplied DataFrame for governed table" in output
+    assert "1. Table → source.dbo.orders" in output
+    assert "   Input → supplied DataFrame" in output
     assert "2. Profiling backend → PySpark" in output
     assert "5. Profile snapshot → created new activity snapshot" in output
     assert "6. Frequency profile metadata → skipped; no frequency profile generated" in output
