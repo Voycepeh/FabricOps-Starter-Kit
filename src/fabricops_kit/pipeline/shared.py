@@ -11,6 +11,7 @@ from typing import Any, Mapping
 from fabricops_kit.config.shared import (
     get_audit_timezone,
     get_current_audit_timestamp,
+    is_table_not_found_error,
     resolve_fabric_context,
 )
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
@@ -82,6 +83,7 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
+_TARGET_PUBLICATION_TABLE = "METADATA_TARGET_PUBLICATION"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
@@ -168,6 +170,111 @@ def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
     return hashlib.sha256(
         json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
     ).hexdigest()
+
+
+def publication_id(*, environment_name: str, activity_id: str, target_table_id: str) -> str:
+    """Return the deterministic identity for one target publication boundary."""
+    values = {
+        "environment_name": str(environment_name or "").strip(),
+        "activity_id": str(activity_id or "").strip(),
+        "target_table_id": str(target_table_id or "").strip(),
+    }
+    if not all(values.values()):
+        raise ValueError("environment_name, activity_id, and target_table_id must be non-empty strings.")
+    return hashlib.sha256(
+        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def load_target_publication(
+    *, environment_name: str, activity_id: str, target_table_id: str, context: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Load the durable state for one target publication, when it exists."""
+    config, _env, resolved_context = resolve_fabric_context(context=context)
+    identifier = publication_id(
+        environment_name=environment_name,
+        activity_id=activity_id,
+        target_table_id=target_table_id,
+    )
+    try:
+        frame = read_lakehouse_table(
+            _TARGET_PUBLICATION_TABLE,
+            store="Metadata",
+            schema=metadata_table_physical_schema(config, _TARGET_PUBLICATION_TABLE),
+            context=resolved_context,
+        )
+        rows = observation_rows(
+            frame.filter(frame.publication_id == identifier)
+            if hasattr(frame, "filter") and hasattr(frame, "publication_id")
+            else frame
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return None
+        raise RuntimeError(f"Unable to load target publication state: {exc}") from exc
+    return next((row for row in rows if str(row.get("publication_id") or "") == identifier), None)
+
+
+def persist_target_publication(
+    *,
+    environment_name: str,
+    activity_id: str,
+    target_table_id: str,
+    source_table_ids: list[str],
+    load_strategy: str,
+    publication_status: str,
+    context: dict[str, Any],
+) -> str:
+    """Atomically upsert physical or finalized state for one target publication."""
+    if publication_status not in {"physical_succeeded", "finalized"}:
+        raise ValueError("publication_status must be physical_succeeded or finalized.")
+    config, env, resolved_context = resolve_fabric_context(context=context)
+    if env != environment_name:
+        raise ValueError("Publication environment does not match the configured runtime environment.")
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
+    audit["_activity_id"] = activity_id
+    identifier = publication_id(
+        environment_name=environment_name,
+        activity_id=activity_id,
+        target_table_id=target_table_id,
+    )
+    row = coerce_metadata_row_types(
+        _TARGET_PUBLICATION_TABLE,
+        {
+            "publication_id": identifier,
+            "environment_name": environment_name,
+            "target_table_id": target_table_id,
+            "source_table_ids_json": json.dumps(sorted(source_table_ids), separators=(",", ":")),
+            "load_strategy": load_strategy,
+            "publication_status": publication_status,
+            **audit,
+        },
+    )
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
+        raise RuntimeError("Delta Lake merge support is required for target publication state.") from exc
+    spark = get_spark_session()
+    frame = spark.createDataFrame([row], schema=metadata_table_schema_registry()[_TARGET_PUBLICATION_TABLE])
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "Metadata",
+        _TARGET_PUBLICATION_TABLE,
+        metadata_table_physical_schema(config, _TARGET_PUBLICATION_TABLE),
+        context=resolved_context,
+    )
+    (
+        DeltaTable.forPath(spark, path)
+        .alias("target")
+        .merge(
+            frame.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.publication_id = source.publication_id",
+        )
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
+    return identifier
 
 
 def persist_lineage_participation(
@@ -998,13 +1105,34 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         frame = get_spark_session().createDataFrame(
             records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
         )
-        write_lakehouse_table(
-            frame,
+        try:
+            from delta.tables import DeltaTable
+        except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
+            raise RuntimeError(
+                "Delta Lake merge support is required for idempotent Source Observation commits."
+            ) from exc
+        _store, _table, _schema, path = resolve_configured_lakehouse_table(
+            "Metadata",
             _SOURCE_OBSERVATION_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
             context=context,
-            mode="append",
+        )
+        (
+            DeltaTable.forPath(get_spark_session(), path)
+            .alias("target")
+            .merge(
+                frame.alias("source"),
+                "target.environment_name = source.environment_name "
+                "AND target._activity_id = source._activity_id "
+                "AND target.source_table_id = source.source_table_id "
+                "AND target.target_table_id = source.target_table_id "
+                "AND target.observation_id = source.observation_id "
+                "AND target.partition_value <=> source.partition_value "
+                "AND target.observation_status = source.observation_status",
+            )
+            .whenMatchedUpdateAll()
+            .whenNotMatchedInsertAll()
+            .execute()
         )
     for source_table_id in source_table_ids:
         _PENDING_SOURCE_OBSERVATIONS.pop(
@@ -1047,7 +1175,6 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 
-from fabricops_kit.config.shared import is_table_not_found_error
 
 def write_guardrail_result_row(
     *,

@@ -27,6 +27,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
         "METADATA_DATA_LINEAGE": "engineering",
+        "METADATA_TARGET_PUBLICATION": "engineering",
         "METADATA_DATA_ACCESS": "engineering",
         "METADATA_ENRICHMENT": "governance",
         "METADATA_GUARDRAIL": "governance",

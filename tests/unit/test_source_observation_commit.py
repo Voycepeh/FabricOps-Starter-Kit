@@ -2,6 +2,8 @@
 # ruff: noqa: D102, D103, D107
 
 from datetime import UTC, datetime
+import sys
+import types
 
 import pytest
 
@@ -17,6 +19,9 @@ class Frame:
 
     def collect(self):
         return self.rows
+
+    def alias(self, _name):
+        return self
 
 
 class Spark:
@@ -82,7 +87,32 @@ def _configure_commit(monkeypatch, observations=None):
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(shared, "get_spark_session", Spark)
-    monkeypatch.setattr(shared, "write_lakehouse_table", lambda frame, *args, **kwargs: written.extend(frame.collect()))
+    class Merge:
+        def alias(self, _name):
+            return self
+
+        def merge(self, source, _predicate):
+            self.source = source
+            return self
+
+        def whenMatchedUpdateAll(self):
+            return self
+
+        def whenNotMatchedInsertAll(self):
+            return self
+
+        def execute(self):
+            written.extend(self.source.collect())
+
+    tables_module = types.ModuleType("delta.tables")
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
+    monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
+    monkeypatch.setattr(
+        shared,
+        "resolve_configured_lakehouse_table",
+        lambda *_args, **_kwargs: (None, None, None, "/metadata/source-observation"),
+    )
     monkeypatch.setattr(shared, "persist_lineage_participation", lambda **kwargs: lineage.append(kwargs))
     return written, lineage
 

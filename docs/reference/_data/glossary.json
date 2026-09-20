@@ -498,5 +498,18 @@
     "long_definition": "Slowly Changing Dimensions are data-modelling patterns for handling changes to descriptive records. Common approaches include SCD Type 1, which replaces the previous value, and SCD Type 2, which preserves history by creating versioned records.",
     "preferred_usage": "Use slowly changing dimensions when discussing SCD patterns; introduce SCD before using the abbreviation alone.",
     "avoid_usage": "incremental load when the history-management pattern is meant"
+  },
+  {
+    "id": "target-publication",
+    "term": "target publication",
+    "aliases": [
+      "publication boundary",
+      "target publication boundary"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "One governed physical target mutation and its required metadata finalization for a specific environment, activity, and target table.",
+    "long_definition": "A Target Publication is the independent pipeline_write boundary identified by environment, _activity_id, and target table_id. METADATA_TARGET_PUBLICATION distinguishes physical_succeeded from finalized so retries complete Catalogue, Lineage, and accepted Source Observation metadata without repeating append, overwrite, SCD1, or SCD2 target mutations.",
+    "preferred_usage": "Use target publication for one independently retryable pipeline_write operation against one governed target.",
+    "avoid_usage": "transaction when cross-target atomicity is meant"
   }
 ]

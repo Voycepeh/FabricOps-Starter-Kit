@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:211`
+`fabricops_kit/pipeline/pipeline_write.py:249`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L211-L579">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L249-L686">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -132,13 +132,16 @@ The governed orchestration performs these mechanical steps:
 5. Resolve processing scope.
 6. Apply FabricOps target audit fields.
 7. Validate target notebook ownership.
-8. Select the physical Lakehouse or Warehouse publication implementation.
-9. Perform append/overwrite or dedicated SCD processing.
-10. Persist the resolved target load strategy and parameters on the
+8. Load the deterministic target publication state for the current
+   environment, activity, and target.
+9. Perform append/overwrite or dedicated SCD processing only when the
+   physical publication has not already succeeded.
+10. Persist physical success before resumable metadata finalization.
+11. Persist the resolved target load strategy and parameters on the
     table-level ``METADATA_DATA_CATALOGUE`` row.
-11. Only after physical and Catalogue success, commit target Lineage and
+12. Only after physical and Catalogue success, commit target Lineage and
     accepted Source Observation/write-success metadata.
-12. Return a small publication result with no hidden profiling state.
+13. Mark the publication finalized and return a small result.
 
 Callers do not provide a store type, manually resolve ``table_id``, choose
 a Lakehouse versus Warehouse writer, construct processing scope or success

@@ -33,6 +33,7 @@ GLOSSARY_GROUPS = [
             "load-strategy",
             "source-drift",
             "writer-ownership",
+            "target-publication",
         ],
     ),
     (
@@ -101,6 +102,7 @@ DISPLAY_NAMES = {
     "guardrails": "Guardrails",
     "enforcement": "Enforcement",
     "guardrail-result": "Guardrail Result",
+    "target-publication": "Target Publication",
     "governance-as-code": "Governance as Code",
     "configuration-driven-engineering": "Configuration-driven Engineering",
     "read-transform-write": "Read / Transform / Write",

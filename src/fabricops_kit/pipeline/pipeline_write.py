@@ -16,6 +16,8 @@ from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     catalogue_authored_processing,
     incremental_publication_scopes,
+    load_target_publication,
+    persist_target_publication,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -169,6 +171,42 @@ def _target_has_rows(
         raise
 
 
+def _target_has_activity(
+    *, identity: dict[str, Any], activity_id: str, context: dict[str, Any], spark_session=None
+) -> bool:
+    """Return whether the physical target records the deterministic activity marker."""
+    from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+
+    store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
+    escaped_activity = activity_id.replace("'", "''")
+    try:
+        if store_kind == "lakehouse":
+            frame = read_lakehouse_table(
+                str(identity["table_name"]),
+                store=str(identity["store"]),
+                schema=identity.get("schema"),
+                spark_session=spark_session,
+                context=context,
+            ).filter(f"`_activity_id` = '{escaped_activity}'")
+        elif store_kind == "warehouse":
+            schema = str(identity["schema"]).replace("]", "]]")
+            table = str(identity["table_name"]).replace("]", "]]")
+            frame = read_warehouse_query(
+                f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}] "
+                f"WHERE [_activity_id] = '{escaped_activity}'",
+                store=str(identity["store"]),
+                spark_session=spark_session,
+                context=context,
+            )
+        else:
+            return False
+        return frame.limit(1).count() > 0
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return False
+        raise
+
+
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     """Return unique canonical source identities explicitly owned by this target."""
     if not isinstance(values, list | tuple) or not values:
@@ -299,13 +337,16 @@ def pipeline_write(
     5. Resolve processing scope.
     6. Apply FabricOps target audit fields.
     7. Validate target notebook ownership.
-    8. Select the physical Lakehouse or Warehouse publication implementation.
-    9. Perform append/overwrite or dedicated SCD processing.
-    10. Persist the resolved target load strategy and parameters on the
+    8. Load the deterministic target publication state for the current
+       environment, activity, and target.
+    9. Perform append/overwrite or dedicated SCD processing only when the
+       physical publication has not already succeeded.
+    10. Persist physical success before resumable metadata finalization.
+    11. Persist the resolved target load strategy and parameters on the
         table-level ``METADATA_DATA_CATALOGUE`` row.
-    11. Only after physical and Catalogue success, commit target Lineage and
+    12. Only after physical and Catalogue success, commit target Lineage and
         accepted Source Observation/write-success metadata.
-    12. Return a small publication result with no hidden profiling state.
+    13. Mark the publication finalized and return a small result.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
@@ -391,14 +432,46 @@ def pipeline_write(
     )
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
+    activity_id = str(audit["_activity_id"])
+    target_table_id = str(identity["table_id"])
+    publication = load_target_publication(
+        environment_name=env,
+        activity_id=activity_id,
+        target_table_id=target_table_id,
+        context=context,
+    )
+    strategy = str(processing.get("load_strategy") or "")
+    if publication:
+        recorded_sources = json.loads(str(publication.get("source_table_ids_json") or "[]"))
+        if sorted(publication_source_ids) != sorted(recorded_sources) or strategy != str(
+            publication.get("load_strategy") or ""
+        ):
+            raise ValueError(
+                "The existing publication identity was created with different sources or processing; "
+                "use a new activity for a new logical publication."
+            )
+        if publication.get("publication_status") == "finalized":
+            if verbose:
+                print("FabricOps Write → publication already finalized; no physical or metadata write required")
+            return {"table_id": target_table_id}
+    resume_finalization = bool(publication and publication.get("publication_status") == "physical_succeeded")
+    recovered_physical_publication = not publication and _target_has_activity(
+        identity=identity,
+        activity_id=activity_id,
+        context=context,
+        spark_session=spark_session,
+    )
+    if recovered_physical_publication:
+        # The physical target's audit marker closes the process-failure window
+        # between target commit and publication-state persistence.
+        resume_finalization = True
     incremental_scopes = incremental_publication_scopes(
         environment_name=env,
-        activity_id=str(audit["_activity_id"]),
-        target_table_id=str(identity["table_id"]),
+        activity_id=activity_id,
+        target_table_id=target_table_id,
         source_table_ids=publication_source_ids,
     )
     scope = _write_scope()
-    strategy = str(processing.get("load_strategy") or "")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     physical_identity = ".".join(
         str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
@@ -460,6 +533,7 @@ def pipeline_write(
     if (
         strategy == "append"
         and bootstrap_sources
+        and not resume_finalization
         and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
     ):
         raise ValueError(
@@ -468,6 +542,16 @@ def pipeline_write(
             "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
         )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
+    if recovered_physical_publication:
+        persist_target_publication(
+            environment_name=env,
+            activity_id=activity_id,
+            target_table_id=target_table_id,
+            source_table_ids=publication_source_ids,
+            load_strategy=strategy,
+            publication_status="physical_succeeded",
+            context=context,
+        )
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
         from pyspark.sql import functions as F
@@ -498,7 +582,10 @@ def pipeline_write(
         print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
         print(f"5. Physical publication → {publication_path}")
 
-    if store_kind == "lakehouse":
+    if resume_finalization:
+        if verbose:
+            print("5. Physical publication → already succeeded; resuming metadata finalization")
+    elif store_kind == "lakehouse":
         if strategy in {"append", "overwrite"}:
             write_lakehouse_table(
                 prepared_df,
@@ -550,6 +637,17 @@ def pipeline_write(
     else:
         raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
 
+    if not resume_finalization:
+        persist_target_publication(
+            environment_name=env,
+            activity_id=activity_id,
+            target_table_id=target_table_id,
+            source_table_ids=publication_source_ids,
+            load_strategy=strategy,
+            publication_status="physical_succeeded",
+            context=context,
+        )
+
     _persist_target_processing(
         identity=identity,
         processing=processing,
@@ -571,6 +669,15 @@ def pipeline_write(
             "notebook_id": audit["_notebook_id"],
             "context": context,
         }
+    )
+    persist_target_publication(
+        environment_name=env,
+        activity_id=activity_id,
+        target_table_id=target_table_id,
+        source_table_ids=publication_source_ids,
+        load_strategy=strategy,
+        publication_status="finalized",
+        context=context,
     )
     if verbose:
         print("7. Success metadata → Lineage and accepted Source Observation state committed")

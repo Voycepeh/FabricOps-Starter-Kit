@@ -92,6 +92,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> single writer</p>
 </details>
 
+<details id="target-publication">
+<summary><strong>Target Publication</strong> — One governed physical target mutation and its required metadata finalization for a specific environment, activity, and target table.</summary>
+<p>A Target Publication is the independent pipeline_write boundary identified by environment, _activity_id, and target table_id. METADATA_TARGET_PUBLICATION distinguishes physical_succeeded from finalized so retries complete Catalogue, Lineage, and accepted Source Observation metadata without repeating append, overwrite, SCD1, or SCD2 target mutations.</p>
+<p><strong>Also known as:</strong> publication boundary, target publication boundary</p>
+</details>
+
 </details>
 
 <details>
