@@ -192,7 +192,7 @@ The template contains two independent Write blocks.
 | Write | Store | Schema | Table | Load strategy |
 | --- | --- | --- | --- | --- |
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
-| Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
+| Customer Summary | `Gold` | `demo` | `customer_summary` | `append` |
 
 ### **Each Write Code Block is designed to be clonable** 
 You can just clone the whole block and edit the variables to point to a different source
@@ -224,15 +224,18 @@ Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEE
     Supported strategies include `overwrite`, `append`, `SCD1`, and `SCD2`.
 
 !!! tip "Spark write parallelism"
-    `WRITE_REPARTITION_BY` optionally repartitions the DataFrame before writing.
+    `WRITE_REPARTITION_BY` optionally repartitions the DataFrame before writing and works for both Lakehouse and Warehouse targets.
 
-    For example, `64` allows up to 64 write tasks, subject to the Spark capacity available to the session.
+    The first write leaves it as `None`. The Warehouse example uses `WRITE_REPARTITION_BY = 4` to demonstrate parallel Spark write tasks.
+
+    `4` means four Spark partitions/tasks are prepared for the write. It does not create four physical Warehouse table partitions, and actual concurrency still depends on the Spark capacity available to the session.
 
     Rule of thumb:
     - Leave it as `None` for small or normal writes.
     - Under ~1 million rows → usually leave as `None`.
     - Around 1–10 million rows → consider repartitioning if the write is slow.
     - Above ~10 million rows → write parallelism is more likely to help.
+
 
 #### Write 2. PREPARE — resolve the target and source lineage
 - `write_sources` selects only the source reads used by this target.
