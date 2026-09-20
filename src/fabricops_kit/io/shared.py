@@ -360,20 +360,6 @@ def read_warehouse_synapsesql(
     return reader.synapsesql(synapsesql_target)
 
 
-def resolve_configured_sql_endpoint_store(
-    store: str, *, context: dict[str, Any] | None = None
-) -> tuple[FabricStore, str]:
-    """Resolve a configured Warehouse or Lakehouse that exposes a SQL endpoint."""
-    config, env, _resolved_context = resolve_fabric_context(context=context)
-    configured_store = get_store(config, env, store)
-    if configured_store.kind not in {"warehouse", "lakehouse"}:
-        raise ValueError(
-            f"Store '{env}/{store}' cannot expose a supported Fabric SQL endpoint; "
-            "expected a warehouse or lakehouse store."
-        )
-    return configured_store, env
-
-
 def write_warehouse_synapsesql(
     df, store: FabricStore, synapsesql_target: str, *, mode: str, options: dict[str, Any] | None = None
 ) -> None:
