@@ -243,6 +243,6 @@ def write_warehouse_table(
     write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
     if not (context or {}).get("_fabricops_suppress_io_log"):
         print(
-            f"Written to → Object: Warehouse | Store: {store.key} | "
+            f"Written to → Object: Warehouse | Store: {store_name} | "
             f"Schema: {_schema_value} | Table: {_table_value}"
         )
