@@ -58,7 +58,7 @@ In Development, when no Data Contract is selected, guardrail checks return skipp
 
 This means the same 02_pipeline notebook can be used both before and after Governance is introduced.
 
-## 3. Read the tables
+## 3. Read these tables
 
 The template contains three independent Read blocks.
 
@@ -67,6 +67,7 @@ The template contains three independent Read blocks.
 | Orders | `Bronze` Lakehouse | `demo` | `orders` |
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
+
 ### **Each Read Code Block is designed to be clonable** 
 You can just clone the whole block and edit the variables to point to a different source
 ```python
@@ -76,11 +77,11 @@ READ_SCHEMA = "demo"
 READ_TABLE = "orders"
 READ_QUERY = None
 ```
-### What the whole READ block does
 
+### What the whole READ block does
 Each Read block is intentionally split into **READ → CHECK → PROFILE → KEEP** so you can see exactly where the data becomes available and where FabricOps governance begins.
 
-#### Define the source
+#### Read.1 :  Define the source
 - `READ_NAME` gives the source a reusable name in the notebook.
 - `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify the physical source.
 - `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
@@ -92,9 +93,10 @@ Each Read block is intentionally split into **READ → CHECK → PROFILE → KEE
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
-#### READ — get the DataFrame
+#### Read.2 The actual READ to get the DataFrame
 
-`pipeline_read()` resolves the source and returns its Spark DataFrame together with the canonical FabricOps `table_id`.
+`pipeline_read()` is an orchestration function that resolves whether the requested source is a Lakehouse or Warehouse, reads it through the appropriate FabricOps I/O function, and returns the Spark DataFrame together with its canonical FabricOps `table_id`.
+
 
 ```python
 source = pipeline_read(
@@ -117,7 +119,7 @@ table_id = source["table_id"]
 
 The later CHECK, PROFILE, and KEEP stages are separate FabricOps pipeline steps. A failure in one of those later stages does not mean that `pipeline_read()` failed.
 
-#### CHECK — run Guardrails
+#### Read 3. CHECK — run Guardrails
 - `check_freshness()` checks whether the source is recent enough based on the selected Data Contract.
 - `check_schema()` checks whether the columns and data types match the contract.
 - `check_dq()` runs the configured Data Quality rules.
@@ -131,7 +133,7 @@ Optional check outputs can be inspected with:
 # display(dq_failed_values)
 ```
 
-#### PROFILE — refresh the saved source profile
+#### Read 4. PROFILE — refresh the saved source profile
 - `profile_table()` profiles the complete persisted source table.
 - Profiling results are saved to `METADATA_DATA_PROFILED`.
 - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
@@ -140,7 +142,7 @@ Optional check outputs can be inspected with:
 # display(profile_result["profile"])
 ```
 
-#### KEEP — make the source available downstream
+#### Read 5. KEEP — make the source available downstream
 - `sources[READ_NAME] = source` adds the completed source flow to the `sources` dictionary.
 - The Transform and Write sections can then reuse both its DataFrame and `table_id`.
 - This happens after the checks so a source that fails a required Guardrail is not silently treated as an approved downstream input.
@@ -185,7 +187,7 @@ WRITE_LOAD_STRATEGY = "overwrite"
 
 Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEEP** so the physical publication boundary is obvious.
 
-#### Define the target
+#### Write 1. Define the target
 - `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
 - `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
 - `WRITE_LOAD_STRATEGY` controls how the target is written, such as `overwrite`, `append`, `SCD1`, or `SCD2`.
@@ -208,7 +210,7 @@ Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEE
     - Around 1–10 million rows → consider repartitioning if the write is slow.
     - Above ~10 million rows → write parallelism is more likely to help.
 
-#### PREPARE — resolve the target and source lineage
+#### Write 2. PREPARE — resolve the target and source lineage
 - `write_sources` selects only the source reads used by this target.
 - `resolve_table_id()` resolves the canonical target `table_id`.
 - The target DataFrame already exists before anything is written.
@@ -219,7 +221,7 @@ You can inspect the outgoing DataFrame here without publishing the target:
 # display(WRITE_DATAFRAME)
 ```
 
-#### CHECK — validate before publication
+#### Write 3. CHECK — validate before publication
 - `check_schema()` validates the output columns and data types.
 - `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization and returns `prepared_df`.
 - `check_source_drift()` checks each source against the last successfully accepted state for this target.
@@ -236,11 +238,10 @@ Optional check outputs can be inspected before publication:
 # display(support_mapping_df)
 ```
 
-#### WRITE — physical publication boundary
+#### Write 4. The actual Write of the Dataframe
 
-**Nothing above this point writes the target table.**
+`pipeline_write()` is the orchestration function that resolves whether the target is a Lakehouse or Warehouse and performs the physical publication through the appropriate FabricOps I/O function.
 
-The physical Lakehouse or Warehouse publication starts only when `pipeline_write()` runs:
 
 ```python
 write_result = pipeline_write(
@@ -257,7 +258,7 @@ write_result = pipeline_write(
 
 After this succeeds, the target has been physically written and FabricOps records the associated catalogue, lineage, and source observation state handled by the publication flow.
 
-#### PROFILE — profile what was actually written
+#### Write 5. PROFILE — profile what was actually written
 - `profile_table()` reads the persisted target and refreshes its saved profile.
 - This is intentionally after `pipeline_write()` so the profile represents the published table.
 
@@ -265,7 +266,7 @@ After this succeeds, the target has been physically written and FabricOps record
 # display(write_profile["profile"])
 ```
 
-#### KEEP — retain the completed write result
+#### Write 6. KEEP — retain the completed write result
 - `writes[WRITE_NAME] = write_result` stores the completed publication result for later notebook use.
 - It is kept after publication and profiling succeed so the `writes` dictionary represents completed target flows.
 
