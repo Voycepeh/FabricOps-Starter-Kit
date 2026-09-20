@@ -318,10 +318,14 @@ def pipeline_read(
         )
 
     if has_contract and observation is None:
-        capture_source_observation(
+        observation = capture_source_observation(
             table_id=str(identity["table_id"]), dataframe=dataframe
         )
-        observation_label = "captured current-run state"
+        observation_label = (
+            "captured current-run state"
+            if observation is not None
+            else "no Source Drift observation configured"
+        )
     elif observation is not None:
         scope_label = "bootstrap full read" if scope.get("first_run") else scope["type"]
         observation_label = f"captured; target-specific {scope_label} scope resolved"

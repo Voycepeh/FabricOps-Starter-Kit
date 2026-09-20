@@ -5,41 +5,16 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
+    get_current_freshness_evidence,
     load_table_guardrail_rules,
-    resolve_source_drift_observation_columns,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
     select_table_guardrail_rule,
 )
 from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import (
-    guardrail_compatibility_observation,
-    observation_rows,
-    get_current_source_observation,
     print_guardrail_result,
 )
-
-_OBSERVATION_COLUMNS = {
-    "observation_id",
-    "source_table_id",
-    "target_table_id",
-    "environment_name",
-    "partition_value",
-    "row_count",
-    "min_change_value",
-    "max_change_value",
-    "is_present",
-    "observation_status",
-    "_committed_at",
-    "_activity_id",
-}
-
-
-def _is_source_observation(observation) -> bool:
-    columns = set(getattr(observation, "columns", ()))
-    if not columns and isinstance(observation, (list, tuple)) and observation:
-        columns = set(dict(observation[0]))
-    return _OBSERVATION_COLUMNS <= columns
 
 
 def check_freshness(
@@ -115,36 +90,8 @@ def check_freshness(
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
-    # Contract-free Development stops before transient observation lookup.
-    # Contract-backed runs continue with the current-run observation state.
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    observation = get_current_source_observation(
-        environment_name=env,
-        activity_id=str(audit["_activity_id"]),
-        table_id=requested_table_id,
-    )
-    if not _is_source_observation(observation):
-        raise ValueError("pipeline_read() captured invalid source observation state")
-    rows = observation_rows(observation)
-    if not rows:
-        raise ValueError("observation must contain at least one canonical evidence row")
-    first = rows[0]
-    observed_table_id = str(first.get("source_table_id") or "")
-    environment_name = str(first.get("environment_name") or "")
-    if not observed_table_id or not environment_name:
-        raise ValueError("observation must contain source_table_id and environment_name")
-    if any(str(row.get("source_table_id") or "") != observed_table_id for row in rows):
-        raise ValueError("observation dataframe must contain one shared source_table_id")
-    if any(str(row.get("environment_name") or "") != environment_name for row in rows):
-        raise ValueError("observation dataframe must contain one shared environment_name")
-
-    if environment_name != env:
-        raise ValueError(
-            f"observation environment_name {environment_name!r} does not match active environment {env!r}."
-        )
-    spark_session = getattr(observation, "sparkSession", None) or get_spark_session()
-    if requested_table_id != observed_table_id:
-        raise ValueError(f"table_id {requested_table_id!r} does not match observation table_id {observed_table_id!r}.")
+    spark_session = get_spark_session()
     identity = resolve_catalogue_table_identity(
         config,
         env,
@@ -168,25 +115,14 @@ def check_freshness(
     )
     if freshness_rule is None:
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
-    change_rule = select_table_guardrail_rule(
-        rules_df,
-        guardrail_type="source_drift",
-        table_id=table_id,
+    evidence = get_current_freshness_evidence(
         environment_name=env,
-    )
-    if change_rule is None:
-        raise ValueError(
-            f"No active approved Source Drift rule exists for {table_id!r}; "
-            "the observation change column cannot be resolved."
-        )
-    _partition_column, change_column = resolve_source_drift_observation_columns(change_rule)
-    compatibility_observation = guardrail_compatibility_observation(
-        observation,
+        activity_id=str(audit["_activity_id"]),
         table_id=table_id,
-        change_column=change_column,
     )
+    freshness_column = str(evidence["freshness_column"])
     result = freshness_check_core(
-        compatibility_observation,
+        [{freshness_column: evidence.get("latest_value")}],
         rules_df=rules_df,
         environment_name=env,
         table_id=table_id,
@@ -201,7 +137,7 @@ def check_freshness(
             spark_session=spark_session,
             config=config,
             env=env,
-            run_id=str(first.get("_activity_id") or ""),
+            run_id=str(evidence.get("_activity_id") or ""),
             dataset_name="",
             table_name="",
             store_type="",
@@ -216,7 +152,7 @@ def check_freshness(
         print(
             f"  Rule {result.get('guardrail_rule_id', '')} v{result.get('guardrail_version', 1)} from the selected Data Contract."
         )
-        print(f"  Observation change column {change_column} from current-run Source Observation state.")
+        print(f"  Freshness column {freshness_column} from the active Freshness rule.")
         print(
             f"  Expected max lag {result.get('freshness_max_lag_days')} day(s); "
             f"latest observed={result.get('latest_value')}, required minimum={result.get('required_min_value')}."

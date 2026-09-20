@@ -84,6 +84,7 @@ _TARGET_TECHNICAL_COLUMNS = {
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
+_CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 
@@ -138,6 +139,18 @@ def get_current_source_observation(
             f"No current source observation exists for {table_id!r}; call pipeline_read() first."
         )
     return _CURRENT_SOURCE_OBSERVATIONS[key]
+
+
+def get_current_freshness_evidence(
+    *, environment_name: str, activity_id: str, table_id: str
+) -> dict[str, Any]:
+    """Return current-run freshness evidence for one governed table."""
+    key = (environment_name, activity_id, table_id)
+    if key not in _CURRENT_FRESHNESS_EVIDENCE:
+        raise ValueError(
+            f"No current freshness evidence exists for {table_id!r}; call pipeline_read() first."
+        )
+    return _CURRENT_FRESHNESS_EVIDENCE[key]
 
 
 def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
@@ -2109,6 +2122,24 @@ def resolve_source_drift_observation_columns(rule: dict) -> tuple[str, str]:
         resolved.append(value)
     return resolved[0], resolved[1]
 
+
+def resolve_freshness_observation_column(rule: dict) -> str:
+    """Return the validated date-time column from an active Freshness rule."""
+    parameters = _parse_rule_parameters(rule)
+    value = str(
+        parameters.get("freshness_column")
+        or parameters.get("column_name")
+        or _catalogue_value(rule, "column_name")
+        or ""
+    ).strip()
+    if not value:
+        raise ValueError("Active Freshness rule is invalid: freshness_column is missing.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+        raise ValueError(
+            "Active Freshness rule is invalid: freshness_column must be a simple identifier."
+        )
+    return value
+
 def evaluate_source_drift_guardrail(
     result: dict,
     *,
@@ -3464,7 +3495,7 @@ def _observe_dataframe(
 
 
 def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
-    """Capture one governed source observation in internal current-run state."""
+    """Capture independently configured current-run source Guardrail evidence."""
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
     governed_source = resolve_catalogue_table_identity(
@@ -3506,18 +3537,58 @@ def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
         table_id=governed_table_id,
         context=context,
     )
-    rule = select_table_guardrail_rule(
+    drift_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="source_drift",
         table_id=governed_table_id,
         environment_name=env,
     )
-    if rule is None:
-        raise ValueError(
-            f"No active approved Source Drift rule exists for {governed_table_id!r}; "
-            "Governance must author and activate one before source observation can run."
-        )
-    partition_value, change_value = resolve_source_drift_observation_columns(rule)
+    freshness_rule = select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="freshness",
+        table_id=governed_table_id,
+        environment_name=env,
+    )
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+
+    if freshness_rule is not None:
+        freshness_column = resolve_freshness_observation_column(freshness_rule)
+        freshness_frame = dataframe
+        if freshness_frame is None and source_type == "warehouse":
+            query = (
+                f"SELECT MAX([{freshness_column}]) AS latest_value "
+                f"FROM [{schema_value}].[{table_value}]"
+            )
+            latest_value = _max_column_value(
+                read_warehouse_query(
+                    query, store=store_key, spark_session=spark, context=context
+                ),
+                "latest_value",
+            )
+        else:
+            if freshness_frame is None:
+                freshness_frame = read_lakehouse_table(
+                    table_value,
+                    store=store_key,
+                    schema=schema_value,
+                    spark_session=spark,
+                    context=context,
+                )
+            latest_value = _max_column_value(freshness_frame, freshness_column)
+        _CURRENT_FRESHNESS_EVIDENCE[
+            (env, str(audit["_activity_id"]), governed_table_id)
+        ] = {
+            "source_table_id": governed_table_id,
+            "environment_name": env,
+            "freshness_column": freshness_column,
+            "latest_value": latest_value,
+            "_activity_id": str(audit["_activity_id"]),
+        }
+
+    if drift_rule is None:
+        return None
+
+    partition_value, change_value = resolve_source_drift_observation_columns(drift_rule)
     observation_columns = {partition_value, change_value}
     if dataframe is not None and observation_columns <= set(getattr(dataframe, "columns", ())):
         current = _observe_dataframe(dataframe, partition_value, change_value)
@@ -3547,7 +3618,6 @@ def capture_source_observation(*, table_id: str, dataframe: Any = None) -> Any:
             context=context,
         )
 
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     observation_id = str(uuid4())
     values = [coerce_metadata_row_types(OBSERVATION_TABLE, {
         **row,

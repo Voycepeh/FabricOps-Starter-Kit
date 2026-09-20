@@ -136,8 +136,8 @@ def test_freshness_baseline_skips_before_observation_or_catalogue(monkeypatch):
     monkeypatch.setattr(freshness_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
     monkeypatch.setattr(
         freshness_module,
-        "get_current_source_observation",
-        lambda **_k: pytest.fail("baseline freshness must not require a source observation"),
+        "get_current_freshness_evidence",
+        lambda **_k: pytest.fail("baseline freshness must not require current-run evidence"),
     )
     monkeypatch.setattr(
         freshness_module,
@@ -190,6 +190,25 @@ def test_pipeline_read_captures_transient_observation_for_governed_source(monkey
     monkeypatch.setattr(read_module, "capture_source_observation", lambda **kwargs: captured.append(kwargs))
     read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
     assert captured == [{"table_id": identity["table_id"], "dataframe": "frame"}]
+
+
+@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "data_quality"])
+def test_pipeline_read_does_not_require_source_drift(monkeypatch, guardrail_type):
+    """A selected contract does not make Source Drift an implicit prerequisite."""
+    identity = _identity(store_type="lakehouse")
+    _patch_read(monkeypatch, identity)
+    monkeypatch.setattr(
+        read_module,
+        "resolve_pipeline_data_contract",
+        lambda *_a, **_k: {"guardrails": [{"guardrail_type": guardrail_type}]},
+    )
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
+    monkeypatch.setattr(read_module, "capture_source_observation", lambda **_k: None)
+
+    result = read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
+
+    assert result["dataframe"] == "frame"
+    assert result["has_contract"] is True
 
 
 def test_pipeline_read_rejects_identity_conflict():
