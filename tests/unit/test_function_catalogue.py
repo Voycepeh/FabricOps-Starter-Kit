@@ -182,6 +182,16 @@ def test_guardrail_coverage_preview_lifecycle_matches_generated_contract() -> No
     assert "stop_if_failed" not in public_by_name
 
 
+def test_sensitive_data_reference_uses_public_failure_behavior() -> None:
+    """Keep the public example independent of the internal stop helper."""
+    page = (ROOT / "docs" / "api" / "reference" / "check_sensitive_data.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "raise_on_failure=True" in page
+    assert "stop_if_failed" not in page
+
+
 def test_retired_function_taxonomy_audit_is_removed() -> None:
     """Verify the old taxonomy audit artifact is no longer generated."""
     assert not (ROOT / "docs" / "reference" / "_data" / "function-taxonomy-audit.json").exists()

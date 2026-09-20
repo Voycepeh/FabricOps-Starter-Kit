@@ -222,13 +222,19 @@ def check_sensitive_data(
 
     Examples
     --------
-    >>> result = check_sensitive_data(transformed_df, table_id=TARGET_TABLE_ID)
-    >>> stop_if_failed(result)
-    >>> write_result = pipeline_write(result["dataframe"], table_id=TARGET_TABLE_ID)
+    >>> result = check_sensitive_data(
+    ...     transformed_df,
+    ...     table_id=TARGET_TABLE_ID,
+    ...     raise_on_failure=True,
+    ... )
+    >>> write_result = pipeline_write(
+    ...     result["dataframe"],
+    ...     table_id=TARGET_TABLE_ID,
+    ... )
 
     See Also
     --------
-    pipeline_write, write_lakehouse_table, write_warehouse_table, stop_if_failed
+    pipeline_write, write_lakehouse_table, write_warehouse_table
 
     """
     if not enabled:
