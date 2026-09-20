@@ -37,6 +37,6 @@ def test_lakehouse_and_warehouse_writers_print_consistent_destinations(monkeypat
     warehouse.write_warehouse_table(frame, "demo", "order_history", store="Gold")
 
     assert capsys.readouterr().out.splitlines() == [
-        "Writing Lakehouse table to Bronze.demo.products",
-        "Writing Warehouse table to Gold.demo.order_history",
+        "Written to → Object: Lakehouse | Store: Bronze | Schema: demo | Table: products",
+        "Written to → Object: Warehouse | Store: Gold | Schema: demo | Table: order_history",
     ]
