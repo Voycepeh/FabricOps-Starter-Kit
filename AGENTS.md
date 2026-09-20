@@ -126,8 +126,8 @@ For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusab
 
 ## Fabric I/O routing
 
-- Ordinary reusable Fabric table and file reads/writes must use the appropriate foundational function under `src/fabricops_kit/io/` instead of calling low-level Spark, Fabric connector, or path helpers directly from a workflow.
-- When no existing foundational reader/writer represents a reusable physical operation, add the smallest owner function rather than duplicating transport/routing logic in a domain module.
+- Ordinary reusable Fabric table and file reads/writes that are useful beyond one workflow should use the appropriate foundational function under `src/fabricops_kit/io/` instead of duplicating low-level transport logic.
+- A workflow-specific physical read/write that has no credible direct notebook/user use may remain a private helper in its owning domain. Reuse central Fabric store, connector, path, and session helpers rather than promoting a niche operation into a public foundational API.
 - Domain-specific mutations such as contract activation, profiling replacement/upsert, Source Observation commits, Catalogue upserts, and SCD processing may remain private to their owning domain and may use native Spark/Delta code when that keeps the domain behaviour clearer.
 - Domain-specific mutation code must reuse configured Fabric routing, store, schema, path, and session helpers rather than rebuilding infrastructure rules ad hoc.
 - Do not introduce a generic mutation API merely to hide `DeltaTable.merge()`; centralize only genuinely reusable infrastructure.
