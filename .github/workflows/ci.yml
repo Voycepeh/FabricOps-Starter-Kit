@@ -4,18 +4,23 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  regenerate:
+  validate:
     runs-on: ubuntu-latest
+    env:
+      DISABLE_MKDOCS_2_WARNING: "true"
     steps:
-      - name: Checkout PR branch
+      - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Install uv
@@ -29,51 +34,80 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Regenerate owned artifacts twice
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Normalize guided-demo links
+        run: uv run python scripts/normalize_guided_demo_links.py
+
+      - name: Run full test suite
+        run: uv run pytest
+
+      - name: Validate release navigation
+        run: uv run python scripts/release_navigation.py --check
+
+      - name: Validate owned generated artifacts
         shell: bash
         run: |
           set -euo pipefail
           source .venv/bin/activate
-          export PYTHONPATH=src
+          python scripts/validate_generated_artifact_ownership.py
 
-          python scripts/generate_public_function_call_flows_json.py
-          callflow_hash_1="$(sha256sum docs/reference/_data/public-function-call-flows.json | cut -d' ' -f1)"
-          python scripts/generate_public_function_call_flows_json.py
-          callflow_hash_2="$(sha256sum docs/reference/_data/public-function-call-flows.json | cut -d' ' -f1)"
-          test "$callflow_hash_1" = "$callflow_hash_2"
+      - name: Build strict documentation
+        env:
+          FABRICOPS_GIT_SHA: ${{ github.sha }}
+        run: uv run mkdocs build --strict
 
-          python scripts/generate_individual_function_reference_pages.py
-          find docs/api/reference -type f -name '*.md' -print0 | sort -z | xargs -0 sha256sum > /tmp/refs-run1.sha
-          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/refs-run1.sha
+      - name: Build distributions
+        run: uv build
 
-          python scripts/generate_individual_function_reference_pages.py
-          find docs/api/reference -type f -name '*.md' -print0 | sort -z | xargs -0 sha256sum > /tmp/refs-run2.sha
-          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/refs-run2.sha
-          diff -u /tmp/refs-run1.sha /tmp/refs-run2.sha
+      - name: Check distributions
+        run: uvx twine check dist/*
 
-          mkdir -p /tmp/generated
-          git diff --name-only origin/main --             docs/reference/_data/public-function-call-flows.json             docs/reference/_data/generated-artifacts.json             docs/api/reference             docs/reference/index.md             docs/reference/function-call-graph.md > /tmp/generated-files.txt
+      - name: Install wheel and smoke-test public imports
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
+          test -n "${wheel_path}"
+          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
+          source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
+          python -m pip install --upgrade pip
+          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
+          python - <<'PY'
+          from importlib.metadata import version
+          import fabricops_kit as kit
 
-          while IFS= read -r path; do
-            test -z "$path" && continue
-            mkdir -p "/tmp/generated/$(dirname "$path")"
-            cp "$path" "/tmp/generated/$path"
-          done < /tmp/generated-files.txt
+          assert kit.__version__ == version("fabricops-kit")
+          for public_name in kit.__all__:
+              getattr(kit, public_name)
+          print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
+          PY
 
-          echo "Generated files:"
-          cat /tmp/generated-files.txt
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
 
-          git checkout origin/main -- .github/workflows/ci.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/ci.yml docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
-          git diff --cached --quiet && exit 0
-          git commit -m "Regenerate stale generated artifacts"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
-
-      - name: Upload regenerated files
-        uses: actions/upload-artifact@v4
+      - name: Upload validated GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: regenerated-generated-artifacts
-          path: /tmp/generated
-          if-no-files-found: error
+          path: site
+
+  deploy-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy validated documentation to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

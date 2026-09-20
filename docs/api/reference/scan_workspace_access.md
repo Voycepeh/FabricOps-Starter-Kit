@@ -32,9 +32,9 @@ physical item identifier.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access/scan_workspace_access.py:290`
+`fabricops_kit/access/scan_workspace_access.py:316`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L290-L401">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access/scan_workspace_access.py#L316-L427">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
