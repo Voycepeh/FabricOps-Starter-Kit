@@ -12,9 +12,9 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_dq.py:12`
+`fabricops_kit/pipeline/check_dq.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L12-L149">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L157">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,6 +45,7 @@ def check_dq(
     row_identity_columns: list[str] | None=None,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    spark_session=None,
     verbose: bool=True,
 ) -> dict:
 ```
@@ -73,6 +74,7 @@ True
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
 | `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking DQ result cannot continue. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 | `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
