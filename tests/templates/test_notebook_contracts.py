@@ -301,8 +301,8 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
             "table_name=READ_TABLE",
             "sources[READ_NAME] = source",
             "# display(df)",
-            'display(profile_result["profile"])',
-            'display(profile_result["frequency_profile"])',
+            '# display(profile_result["profile"])',
+            '# display(profile_result["frequency_profile"])',
             "# display(dq_df)",
             "# display(dq_failed_values)",
         ):
@@ -398,16 +398,16 @@ def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
 
 
 def test_02_pipeline_profile_inspection_and_support_writes_are_explicit():
-    """Source profile outputs are visible while project-owned support persistence stays outside the template."""
+    """Source profile outputs stay available as optional inspection while support persistence stays outside the template."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count('display(profile_result["profile"])') == 3
-    assert source.count('display(profile_result["frequency_profile"])') == 3
+    assert source.count('# display(profile_result["profile"])') == 3
+    assert source.count('# display(profile_result["frequency_profile"])') == 3
     assert "write_lakehouse_table" not in source
     assert "write_warehouse_table" not in source
     for optional in (
         "# display(df)",
-        'display(profile_result["profile"])',
-        'display(profile_result["frequency_profile"])',
+        '# display(profile_result["profile"])',
+        '# display(profile_result["frequency_profile"])',
         "# display(dq_df)",
         "# display(dq_failed_values)",
         "# display(transformed_df)",
