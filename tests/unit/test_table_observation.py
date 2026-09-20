@@ -50,7 +50,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
     monkeypatch.setattr(shared, "get_store", lambda *args, **kwargs: type("Store", (), {"schema_enabled": False})())
     monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
     monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
-    monkeypatch.setattr(shared, "select_table_guardrail_rule", lambda *args, **kwargs: object())
+    monkeypatch.setattr(\n        shared,\n        "select_table_guardrail_rule",\n        lambda *args, **kwargs: object()\n        if kwargs.get("guardrail_type") == "source_drift"\n        else None,\n    )
     monkeypatch.setattr(shared, "resolve_source_drift_observation_columns", lambda rule: ("partition", "changed"))
     monkeypatch.setattr(shared, "_observe_dataframe", lambda frame, *args: [{
         "partition_value": "p", "row_count": 1, "min_change_value": "1",
