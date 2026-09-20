@@ -82,7 +82,7 @@ def check_schema(
             print("  Evaluation skipped by caller; no schema rule evaluated or evidence written.")
         return result
     config, env, context = resolve_fabric_context()
-    spark = get_spark_session() if spark_session is None else get_spark_session(spark_session)
+    spark = get_spark_session() if spark_session is None else spark_session
     contract = resolve_pipeline_data_contract(
         config,
         env,
