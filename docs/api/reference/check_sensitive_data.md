@@ -12,9 +12,9 @@ Apply explicit Sensitive Data treatment before a governed write.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_sensitive_data.py:162`
+`fabricops_kit/pipeline/check_sensitive_data.py:163`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L162-L378">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L163-L386">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -43,6 +43,7 @@ def check_sensitive_data(
     existing_mapping=None,
     enabled: bool=True,
     raise_on_failure: bool=False,
+    spark_session=None,
     verbose: bool=True,
 ) -> dict:
 ```
@@ -75,6 +76,7 @@ def check_sensitive_data(
 | `existing_mapping` | `pyspark.sql.DataFrame` | No | Previously persisted mappings to reuse. Rows are scoped by ``table_id`` and ``column_id``; established original-to-token assignments are preserved. |
 | `enabled` | `bool` | No | Explicitly skip the check and return the supplied DataFrame when ``False``. |
 | `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking treatment cannot continue. |
+| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 | `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
 
 ## Returns
