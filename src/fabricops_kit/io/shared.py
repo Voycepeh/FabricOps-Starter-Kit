@@ -334,36 +334,6 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
     writer.save(path)
 
 
-def upsert_lakehouse_table(
-    df,
-    table_name: str,
-    *,
-    store: str,
-    schema: str | None,
-    match_condition: str,
-    matched_updates: Mapping[str, str] | None = None,
-    context: dict[str, Any] | None = None,
-    spark_session=None,
-) -> None:
-    """Upsert a DataFrame into a configured Lakehouse table through Delta MERGE."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required for Lakehouse upserts.") from exc
-
-    spark_obj = spark_session or getattr(df, "sparkSession", None)
-    spark_obj = get_spark_session(spark_obj)
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        store, table_name, schema, context=context
-    )
-    merge = DeltaTable.forPath(spark_obj, path).alias("target").merge(df.alias("source"), match_condition)
-    if matched_updates is None:
-        merge = merge.whenMatchedUpdateAll()
-    else:
-        merge = merge.whenMatchedUpdate(set=dict(matched_updates))
-    merge.whenNotMatchedInsertAll().execute()
-
-
 def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None:
     """Return the configured schema for a schema-enabled Lakehouse store."""
     try:
