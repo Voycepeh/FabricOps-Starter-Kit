@@ -236,6 +236,7 @@ def write_warehouse_table(
 
     """
     validate_dataframe_writer(df)
+    store_name = str(store)
     df = repartition_dataframe_for_write(df, repartition_by)
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
