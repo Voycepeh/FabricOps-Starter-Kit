@@ -307,10 +307,10 @@ def _processing_definition(
     else:
         parameters = dict(load_strategy_parameters)
     allowed = {
-        "overwrite": {"partition_column"},
-        "append": set(),
-        "scd1": {"key_columns"},
-        "scd2": {"key_columns", "effective_column", "tracked_columns"},
+        "overwrite": {"partition_column", "watermark_column"},
+        "append": {"watermark_column"},
+        "scd1": {"key_columns", "watermark_column"},
+        "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
     }[strategy]
     unexpected = sorted(set(parameters) - allowed)
     if unexpected:
@@ -321,7 +321,7 @@ def _processing_definition(
             if not isinstance(values, (list, tuple)) or not values:
                 raise ValueError(f"{name} must be a non-empty sequence of column names.")
             parameters[name] = [_require_non_empty_string(value, name) for value in values]
-    for name in ("partition_column", "effective_column"):
+    for name in ("partition_column", "effective_column", "watermark_column"):
         if name in parameters:
             parameters[name] = _require_non_empty_string(parameters[name], name)
     if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
@@ -338,7 +338,7 @@ def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
     parameters = json.loads(parameters_json)
     available = {str(field.name) for field in df.schema.fields}
     referenced = []
-    for name in ("partition_column", "effective_column"):
+    for name in ("partition_column", "effective_column", "watermark_column"):
         if parameters.get(name):
             referenced.append(str(parameters[name]))
     for name in ("key_columns", "tracked_columns"):

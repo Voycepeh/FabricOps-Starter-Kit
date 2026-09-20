@@ -7,6 +7,8 @@ import importlib
 import inspect
 from datetime import UTC, datetime
 
+import pytest
+
 freshness = importlib.import_module("fabricops_kit.pipeline.check_freshness")
 drift = importlib.import_module("fabricops_kit.pipeline.check_source_drift")
 from fabricops_kit import check_freshness, check_source_drift
@@ -56,6 +58,23 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         }
     ]
     assert processing_table_ids == ["canonical-source-a"]
+
+
+def test_explicit_source_drift_check_still_requires_its_rule(monkeypatch) -> None:
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(
+        shared,
+        "build_runtime_audit_fields",
+        lambda **kwargs: {"_activity_id": "run-1"},
+    )
+    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **k: [])
+
+    with pytest.raises(ValueError, match="No active approved Source Drift rule"):
+        shared.check_source_drift_for_target(
+            source_table_id="source-a",
+            target_table_id="target-a",
+            source_processing={"load_strategy": "append"},
+        )
 
 
 def _freshness_rule(column: str) -> dict:

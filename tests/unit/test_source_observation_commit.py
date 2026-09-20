@@ -75,6 +75,7 @@ def _configure_commit(monkeypatch, observations=None):
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     for observation in observations:
         shared.set_current_source_observation(environment_name="dev", activity_id="run-1", table_id=observation["source_table_id"], observation=Frame([observation]))
         shared._PENDING_SOURCE_OBSERVATIONS[("dev", "run-1", observation["source_table_id"], "target-x")] = [observation]
@@ -109,6 +110,24 @@ def test_write_without_source_drift_still_commits_lineage(monkeypatch):
         ("source-b", "source"),
         ("target-x", "target"),
     ]
+
+
+def test_successful_write_commits_progress_and_source_drift_independently(monkeypatch):
+    observation = _observation("source-a")
+    written, _ = _configure_commit(monkeypatch, [observation])
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[
+        ("dev", "run-1", "source-a", "target-x")
+    ] = [{**observation, "partition_value": "drift-partition"}]
+
+    records = shared.commit_pipeline_write_success(
+        _context(sources=("source-a",))
+    )
+
+    assert [row["observation_status"] for row in records] == [
+        "committed",
+        "drift_committed",
+    ]
+    assert written == records
 
 
 def test_physical_notebook_id_is_diagnostic_only(monkeypatch):

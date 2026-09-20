@@ -41,7 +41,12 @@ def _row(*, target: str, maximum: str, committed_at: int = 1):
 
 
 def _current(maximum: str):
-    return Frame([{**_row(target="", maximum=maximum), "observation_status": "observed"}])
+    return Frame([{
+        **_row(target="", maximum=maximum),
+        "observation_status": "observed",
+        "partition_column": "watermark",
+        "change_column": "watermark",
+    }])
 
 
 def _configure_scope(monkeypatch, history):
@@ -55,13 +60,6 @@ def _configure_scope(monkeypatch, history):
     )
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: "engineering")
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: Frame(history))
-    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
-    monkeypatch.setattr(shared, "select_table_guardrail_rule", lambda *args, **kwargs: object())
-    monkeypatch.setattr(
-        shared,
-        "resolve_source_drift_observation_columns",
-        lambda rule: ("watermark", "watermark"),
-    )
 
 
 def test_incremental_read_requires_target_before_context_resolution(monkeypatch):
@@ -93,6 +91,44 @@ def test_full_read_keeps_complete_read_contract(monkeypatch):
     assert result["scope"] == {"type": "full", "first_run": False}
 
 
+def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypatch):
+    identity = {
+        "table_id": "source-orders",
+        "store_type": "lakehouse",
+        "store": "Bronze",
+        "schema": "demo",
+        "table_name": "orders",
+        "load_strategy": "append",
+        "load_strategy_parameters_json": '{"watermark_column":"processed_at"}',
+    }
+    captured = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(read_module, "resolve_catalogue_table_identity", lambda *a, **k: identity)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *a, **k: {"contract_payload": {"table": {"processing": {"load_strategy": "append", "watermark_column": "processed_at"}}}})
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "complete-frame")
+    monkeypatch.setattr(
+        read_module,
+        "capture_source_observation",
+        lambda **kwargs: captured.append(kwargs) or "progress-observation",
+    )
+    monkeypatch.setattr(
+        read_module,
+        "resolve_incremental_source_scope",
+        lambda **kwargs: {"type": "watermark", "first_run": False, "has_data": False},
+    )
+    monkeypatch.setattr(read_module, "_filter_lakehouse_incremental", lambda frame, scope: "empty-frame")
+
+    result = read_module.pipeline_read(
+        table_id="source-orders",
+        read_mode="incremental",
+        target_table_id="target-orders",
+        verbose=False,
+    )
+
+    assert captured[0]["incremental_columns"] == ("processed_at", "processed_at")
+    assert result["dataframe"] == "empty-frame"
+
+
 def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
     _configure_scope(monkeypatch, [])
     result = shared.resolve_incremental_source_scope(
@@ -103,6 +139,42 @@ def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
     assert result["type"] == "full"
     assert result["first_run"] is True
     assert result["has_data"] is True
+
+
+def test_incremental_columns_come_from_processing_without_source_drift():
+    identity = {
+        "load_strategy": "append",
+        "load_strategy_parameters_json": '{"watermark_column":"processed_at"}',
+    }
+
+    assert shared.resolve_incremental_observation_columns(identity, None) == (
+        "processed_at",
+        "processed_at",
+    )
+
+
+def test_incremental_processing_column_can_differ_from_source_drift():
+    contract = {
+        "contract_payload": {
+            "table": {
+                "processing": {
+                    "load_strategy": "append",
+                    "watermark_column": "processed_at",
+                }
+            },
+            "guardrails": [
+                {
+                    "guardrail_type": "source_drift",
+                    "rule_parameters": {"change_column": "updated_at"},
+                }
+            ],
+        }
+    }
+
+    assert shared.resolve_incremental_observation_columns({}, contract) == (
+        "processed_at",
+        "processed_at",
+    )
 
 
 def test_same_source_resolves_isolated_target_watermarks(monkeypatch):
@@ -146,7 +218,13 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
         source_table_id="source-orders", target_table_id="target-a", observation=_current("120")
     )
     current_payments = Frame([
-        {**_row(target="", maximum="55"), "source_table_id": "source-payments", "observation_status": "observed"}
+        {
+            **_row(target="", maximum="55"),
+            "source_table_id": "source-payments",
+            "observation_status": "observed",
+            "partition_column": "watermark",
+            "change_column": "watermark",
+        }
     ])
     shared.resolve_incremental_source_scope(
         source_table_id="source-payments", target_table_id="target-a", observation=current_payments
@@ -167,14 +245,22 @@ def test_partition_scope_selects_only_changed_partitions(monkeypatch):
         {**_row(target="target-a", maximum="20"), "partition_value": "2026-01-02", "content_fingerprint": "same"},
     ]
     _configure_scope(monkeypatch, history)
-    monkeypatch.setattr(
-        shared,
-        "resolve_source_drift_observation_columns",
-        lambda rule: ("business_date", "changed_at"),
-    )
     current = Frame([
-        {**history[0], "target_table_id": "", "observation_status": "observed", "content_fingerprint": "new"},
-        {**history[1], "target_table_id": "", "observation_status": "observed"},
+        {
+            **history[0],
+            "target_table_id": "",
+            "observation_status": "observed",
+            "content_fingerprint": "new",
+            "partition_column": "business_date",
+            "change_column": "changed_at",
+        },
+        {
+            **history[1],
+            "target_table_id": "",
+            "observation_status": "observed",
+            "partition_column": "business_date",
+            "change_column": "changed_at",
+        },
     ])
     result = shared.resolve_incremental_source_scope(
         source_table_id="source-orders", target_table_id="target-a", observation=current
@@ -198,13 +284,14 @@ def test_partition_scope_includes_removed_partition_as_work(monkeypatch):
         },
     ]
     _configure_scope(monkeypatch, history)
-    monkeypatch.setattr(
-        shared,
-        "resolve_source_drift_observation_columns",
-        lambda rule: ("business_date", "changed_at"),
-    )
     current = Frame([
-        {**history[1], "target_table_id": "", "observation_status": "observed"}
+        {
+            **history[1],
+            "target_table_id": "",
+            "observation_status": "observed",
+            "partition_column": "business_date",
+            "change_column": "changed_at",
+        }
     ])
 
     result = shared.resolve_incremental_source_scope(
