@@ -150,6 +150,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
             'check_source_drift',
             'check_dq',
             'check_sensitive_data',
+            'check_guardrail_coverage',
         'profile_table',
         'pipeline_read',
         'resolve_table_id',
