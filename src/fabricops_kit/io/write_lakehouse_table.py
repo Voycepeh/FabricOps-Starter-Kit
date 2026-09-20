@@ -282,7 +282,10 @@ def write_lakehouse_table(
     )
     normalized_mode = normalize_write_mode(mode)
     df = repartition_dataframe_for_write(df, repartition_by)
-    if verbose:
-        destination = ".".join(part for part in (_store.key, _schema_value, _table_value) if part)
-        print(f"Writing Lakehouse table to {destination}")
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
+    if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
+        parts = ["Object: Lakehouse", f"Store: {store}"]
+        if _schema_value:
+            parts.append(f"Schema: {_schema_value}")
+        parts.append(f"Table: {_table_value}")
+        print("Written to → " + " | ".join(parts))

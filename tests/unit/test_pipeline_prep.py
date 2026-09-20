@@ -79,9 +79,10 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
     output = capsys.readouterr().out
     assert "FabricOps Read" in output
     assert (
-        f"1. Identity → {identity['table_id']} → {store_type.title()} table 'source.dbo.student_source'"
+        f"1. Source → Object: {store_type.title()} | Store: source | Schema: dbo | Table: student_source"
         in output
     )
+    assert f"   Identity → {identity['table_id']}" in output
     assert "2. Data Contract → none" in output
     assert f"3. Physical read → {reader_name}" in output
     assert "4. Source Observation → skipped; no selected Data Contract" in output
@@ -127,7 +128,7 @@ def test_pipeline_read_physical_lakehouse_bootstraps_before_catalogue(monkeypatc
         "store": "Bronze",
         "schema": "demo",
         "spark_session": spark,
-        "context": context,
+        "context": {**context, "_fabricops_suppress_io_log": True},
     })]
 
 
@@ -318,9 +319,10 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     output = capsys.readouterr().out
     assert "FabricOps Write" in output
     assert (
-        f"1. Identity → {identity['table_id']} → {store_type.title()} table 'unified.dbo.students'"
+        f"1. Target → Object: {store_type.title()} | Store: unified | Schema: dbo | Table: students"
         in output
     )
+    assert f"   Identity → {identity['table_id']}" in output
     assert f"2. Processing → {strategy.upper()} from resolved processing" in output
     assert "3. Scope → full dataset" in output
     assert "4. Audit + ownership → runtime audit fields applied; writer ownership validated" in output

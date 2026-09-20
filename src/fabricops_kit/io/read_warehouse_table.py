@@ -76,9 +76,16 @@ def read_warehouse_table(
 
     """
     database_name = store
+    store_name = str(store)
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
     )
-    return read_warehouse_synapsesql(
+    dataframe = read_warehouse_synapsesql(
         get_spark_session(spark_session), store, object_name, database_name=database_name, options=options
     )
+    if not (context or {}).get("_fabricops_suppress_io_log"):
+        print(
+            f"Read from → Object: Warehouse | Store: {store_name} | "
+            f"Schema: {schema_value} | Table: {table_value}"
+        )
+    return dataframe

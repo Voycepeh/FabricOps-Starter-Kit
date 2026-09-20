@@ -47,6 +47,9 @@ def read_lakehouse_excel(
 
     """
     _store, _relative_path, lakehouse_path = resolve_configured_file_path(store, relative_path, context=context)
-    return read_excel_file(
+    dataframe = read_excel_file(
         get_spark_session(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs
     )
+    if not (context or {}).get("_fabricops_suppress_io_log"):
+        print(f"Read from → Object: Lakehouse | Store: {store} | Area: Files | Path: {_relative_path}")
+    return dataframe

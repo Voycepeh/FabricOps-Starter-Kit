@@ -146,6 +146,7 @@ def read_lakehouse_parquet(
     DataFrame, or automatically cache or persist the returned DataFrame.
 
     """
+    store_name = str(store)
     store, normalized_relative_path, orig_spark_path = resolve_configured_file_path(
         store, relative_path, context=context
     )
@@ -161,16 +162,17 @@ def read_lakehouse_parquet(
     tsus_spark_path = resolve_lakehouse_file_path(store, tsus_relative_path)
     orig_local_path = f"/lakehouse/default/Files/{normalized_relative_path}"
     tsus_local_path = f"/lakehouse/default/Files/{tsus_relative_path}"
-    if verbose:
-        print(f"Try Spark read: {orig_spark_path}")
     try:
         reader = spark_obj.read
         for key, value in options.items():
             reader = reader.option(key, value)
         df = reader.parquet(orig_spark_path)
         _ = df.limit(1).collect()
-        if verbose:
-            print("SUCCESS: Spark read original path.")
+        if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
+            print(
+                f"Read from → Object: Lakehouse | Store: {store_name} | "
+                f"Area: Files | Path: {normalized_relative_path}"
+            )
         return df
     except Exception as exc:
         msg = str(exc)
@@ -181,21 +183,22 @@ def read_lakehouse_parquet(
         )
         if invalid_parquet:
             if verbose:
-                print(f"Original Parquet file is invalid or corrupt. Fallback skipped. Exception: {exc}")
+                print("Parquet read failed: source file is invalid or corrupt.")
             raise
         if verbose:
-            print(f"Original Parquet read failed. Will try fallback path. Exception: {exc}")
+            print("Parquet read failed; trying compatibility fallback.")
     for try_convert in range(2):
-        if verbose:
-            print(f"Try Spark read: {tsus_spark_path}{' after single-file convert' if try_convert else ''}")
         try:
             reader = spark_obj.read
             for key, value in options.items():
                 reader = reader.option(key, value)
             df = reader.parquet(tsus_spark_path)
             _ = df.limit(1).collect()
-            if verbose:
-                print("SUCCESS: Spark read _tsus path.")
+            if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
+                print(
+                    f"Read from → Object: Lakehouse | Store: {store_name} | "
+                    f"Area: Files | Path: {tsus_relative_path}"
+                )
             return df
         except Exception as exc:
             msg = str(exc)
@@ -204,7 +207,7 @@ def read_lakehouse_parquet(
             )
             if try_convert == 0 and path_not_found:
                 if verbose:
-                    print("PATH NOT FOUND for _tsus parquet. Will convert one file and retry.")
+                    print("Parquet compatibility fallback → converting timestamp precision.")
                 try:
                     if tsus_dir:
                         mssparkutils.fs.mkdirs(resolve_lakehouse_file_path(store, "/".join(tsus_dir)))
@@ -214,7 +217,5 @@ def read_lakehouse_parquet(
                     local_in_path=orig_local_path, local_out_path=tsus_local_path, verbose=verbose
                 )
             else:
-                if verbose:
-                    print(f"FAILED: Spark read _tsus path. Exception: {exc}")
                 break
     raise RuntimeError("Failed to read from both original and _tsus Parquet paths.")
