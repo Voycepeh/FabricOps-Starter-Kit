@@ -89,7 +89,21 @@ Each Read block is intentionally split into **READ → CHECK → PROFILE → KEE
 !!! tip "Warehouse SQL pushdown"
     `READ_QUERY = None` reads the full table.
 
-    To filter, join, aggregate, or otherwise shape the data in the Warehouse before it reaches Spark, pass a SQL query through `READ_QUERY`.
+    The Order History example deliberately supplies SQL so projection and filtering happen in the Warehouse before the result reaches Spark:
+
+    ```python
+    READ_QUERY = """
+    SELECT
+        historical_order_id,
+        customer_id,
+        order_datetime,
+        net_amount
+    FROM demo.order_history
+    WHERE order_datetime >= '2025-01-01'
+    """
+    ```
+
+    The demo predicate preserves the canonical `order_history` fixture while still showing the pushdown path.
 
     When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
 
@@ -148,7 +162,8 @@ profile_result = profile_table(
     spark_session=spark,
 )
 
-# display(profile_result["profile"])
+display(profile_result["profile"])
+display(profile_result["frequency_profile"])
 ```
 
 #### Read 5. KEEP — make the source available downstream
