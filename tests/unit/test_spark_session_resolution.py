@@ -21,6 +21,7 @@ from fabricops_kit.io import shared
 
 
 def test_get_spark_session_prefers_explicit_session(monkeypatch):
+    """Prefer an explicitly supplied Spark session."""
     explicit = object()
     monkeypatch.setattr(
         shared,
@@ -32,6 +33,7 @@ def test_get_spark_session_prefers_explicit_session(monkeypatch):
 
 
 def test_get_spark_session_uses_active_pyspark_session(monkeypatch):
+    """Fall back to PySpark's active session when needed."""
     active = object()
 
     class SparkSession:
@@ -50,6 +52,7 @@ def test_get_spark_session_uses_active_pyspark_session(monkeypatch):
 
 
 def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
+    """Raise clearly when neither explicit nor active Spark exists."""
     class SparkSession:
         @staticmethod
         def getActiveSession():
@@ -82,4 +85,5 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
     ],
 )
 def test_public_spark_dependent_orchestration_accepts_explicit_session(function):
+    """Require explicit Spark injection across public Spark orchestration."""
     assert "spark_session" in inspect.signature(function).parameters
