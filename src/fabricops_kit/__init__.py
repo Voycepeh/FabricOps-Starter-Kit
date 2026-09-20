@@ -23,6 +23,7 @@ from .io import (
     read_lakehouse_json,
     read_lakehouse_parquet,
     read_lakehouse_table,
+    read_sql_endpoint_query,
     read_warehouse_query,
     read_warehouse_table,
     write_lakehouse_table,
@@ -59,6 +60,7 @@ CONFIG_EXPORTS = (
 
 IO_EXPORTS = (
     "read_lakehouse_table",
+    "read_sql_endpoint_query",
     "write_lakehouse_table",
     "read_lakehouse_csv",
     "read_lakehouse_json",
