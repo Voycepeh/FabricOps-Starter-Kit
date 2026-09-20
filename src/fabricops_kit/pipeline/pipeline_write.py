@@ -149,7 +149,7 @@ def _target_has_rows(
                 store=str(identity["store"]),
                 schema=identity.get("schema"),
                 spark_session=spark_session,
-                context=context,
+                context=io_context,
             )
         elif store_kind == "warehouse":
             schema = str(identity["schema"]).replace("]", "]]")
@@ -469,9 +469,11 @@ def pipeline_write(
     )
     scope = _write_scope()
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
-    physical_identity = ".".join(
-        str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
-    )
+    target_parts = [f"Object: {'Lakehouse' if store_kind == 'lakehouse' else 'Warehouse'}", f"Store: {identity['store']}"]
+    if identity.get("schema"):
+        target_parts.append(f"Schema: {identity['schema']}")
+    target_parts.append(f"Table: {identity['table_name']}")
+    io_context = {**context, "_fabricops_suppress_io_log": True}
     physical_options = dict(options or {})
     partition_column = str(processing.get("partition_column") or "")
     removed_partition_values = list(
@@ -571,7 +573,8 @@ def pipeline_write(
 
     if verbose:
         print("FabricOps Write")
-        print(f"1. Identity → {identity['table_id']} → {store_label} table '{physical_identity}'")
+        print(f"1. Target → {' | '.join(target_parts)}")
+        print(f"   Identity → {identity['table_id']}")
         print(f"2. Processing → {strategy.upper()} from {processing_source}")
         print(f"3. Scope → {scope_label}")
         print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
@@ -615,7 +618,7 @@ def pipeline_write(
                 mode=strategy,
                 repartition_by=repartition_by,
                 options=physical_options,
-                context=context,
+                context=io_context,
             )
         elif strategy in {"scd1", "scd2"}:
             execute_warehouse_processing(
