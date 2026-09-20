@@ -169,6 +169,42 @@ def _target_has_rows(
         raise
 
 
+def _target_has_activity(
+    *, identity: dict[str, Any], activity_id: str, context: dict[str, Any], spark_session=None
+) -> bool:
+    """Return whether the physical target records the deterministic activity marker."""
+    from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+
+    store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
+    escaped_activity = activity_id.replace("'", "''")
+    try:
+        if store_kind == "lakehouse":
+            frame = read_lakehouse_table(
+                str(identity["table_name"]),
+                store=str(identity["store"]),
+                schema=identity.get("schema"),
+                spark_session=spark_session,
+                context=context,
+            ).filter(f"`_activity_id` = '{escaped_activity}'")
+        elif store_kind == "warehouse":
+            schema = str(identity["schema"]).replace("]", "]]")
+            table = str(identity["table_name"]).replace("]", "]]")
+            frame = read_warehouse_query(
+                f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}] "
+                f"WHERE [_activity_id] = '{escaped_activity}'",
+                store=str(identity["store"]),
+                spark_session=spark_session,
+                context=context,
+            )
+        else:
+            return False
+        return frame.limit(1).count() > 0
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return False
+        raise
+
+
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     """Return unique canonical source identities explicitly owned by this target."""
     if not isinstance(values, list | tuple) or not values:
@@ -299,12 +335,13 @@ def pipeline_write(
     5. Resolve processing scope.
     6. Apply FabricOps target audit fields.
     7. Validate target notebook ownership.
-    8. Select the physical Lakehouse or Warehouse publication implementation.
-    9. Perform append/overwrite or dedicated SCD processing.
+    8. Detect whether this activity already produced target rows.
+    9. Perform append/overwrite or dedicated SCD processing only when the
+       activity is not already represented in the physical target.
     10. Persist the resolved target load strategy and parameters on the
         table-level ``METADATA_DATA_CATALOGUE`` row.
-    11. Only after physical and Catalogue success, commit target Lineage and
-        accepted Source Observation/write-success metadata.
+    11. Only after physical and Catalogue success, idempotently commit target
+        Lineage and accepted Source Observation/write-success metadata.
     12. Return a small publication result with no hidden profiling state.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
@@ -313,6 +350,26 @@ def pipeline_write(
     provide only the canonical identities of the sources that actually feed
     this target, rather than internal read or preparation dictionaries. This
     keeps multiple target writes in one activity exact and independent.
+
+    Same-activity retries use the target's persisted ``_activity_id`` audit
+    field to detect a row-producing publication and skip its physical mutation.
+    Catalogue processing, Lineage, and accepted Source Observation metadata are
+    idempotent and replayed on every retry. Empty append, empty overwrite,
+    partition-removal-only overwrite, and true SCD no-op operations may leave
+    no activity marker; repeating those operations is safe. Changing the
+    participating source set represents a different logical publication and
+    therefore requires a new activity rather than reuse of the current one.
+    Lakehouse SCD2 closes changed rows and inserts their replacement current
+    versions in one Delta ``MERGE`` so an activity marker cannot represent a
+    partially applied two-step history mutation. Warehouse SCD2 retains its
+    existing SQL transaction boundary.
+
+    Before physical publication, target-specific Source Observation evidence
+    is durably staged with ``observation_status='observed'``. If a scheduled
+    activity terminates after target rows materialize but before finalization,
+    the next activity verifies the prior target ``_activity_id``, promotes that
+    staged evidence idempotently, and calculates incremental work from the
+    recovered committed baseline. Evidence for another target is not promoted.
 
     A first incremental append has no committed baseline and therefore reads a
     complete bootstrap scope. FabricOps permits that bootstrap only for a new
@@ -365,7 +422,11 @@ def pipeline_write(
     """
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
     from fabricops_kit.io.shared import execute_warehouse_processing
-    from fabricops_kit.pipeline.shared import commit_pipeline_write_success, execute_lakehouse_processing
+    from fabricops_kit.pipeline.shared import (
+        commit_pipeline_write_success,
+        execute_lakehouse_processing,
+        stage_pipeline_write_observations,
+    )
 
     config, env, context = resolve_fabric_context()
     coordinates = (store, schema, table_name)
@@ -391,14 +452,22 @@ def pipeline_write(
     )
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
+    activity_id = str(audit["_activity_id"])
+    target_table_id = str(identity["table_id"])
+    strategy = str(processing.get("load_strategy") or "")
+    physical_already_applied = _target_has_activity(
+        identity=identity,
+        activity_id=activity_id,
+        context=context,
+        spark_session=spark_session,
+    )
     incremental_scopes = incremental_publication_scopes(
         environment_name=env,
-        activity_id=str(audit["_activity_id"]),
-        target_table_id=str(identity["table_id"]),
+        activity_id=activity_id,
+        target_table_id=target_table_id,
         source_table_ids=publication_source_ids,
     )
     scope = _write_scope()
-    strategy = str(processing.get("load_strategy") or "")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     physical_identity = ".".join(
         str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
@@ -460,6 +529,7 @@ def pipeline_write(
     if (
         strategy == "append"
         and bootstrap_sources
+        and not physical_already_applied
         and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
     ):
         raise ValueError(
@@ -468,6 +538,15 @@ def pipeline_write(
             "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
         )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
+    success_context = {
+        "target_table_id": target_table_id,
+        "source_table_ids": publication_source_ids,
+        "activity_id": activity_id,
+        "notebook_name": audit["_notebook_name"],
+        "notebook_id": audit["_notebook_id"],
+        "context": context,
+    }
+    stage_pipeline_write_observations(success_context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
         from pyspark.sql import functions as F
@@ -498,7 +577,10 @@ def pipeline_write(
         print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
         print(f"5. Physical publication → {publication_path}")
 
-    if store_kind == "lakehouse":
+    if physical_already_applied:
+        if verbose:
+            print("5. Physical publication → already succeeded; resuming metadata finalization")
+    elif store_kind == "lakehouse":
         if strategy in {"append", "overwrite"}:
             write_lakehouse_table(
                 prepared_df,
@@ -562,16 +644,7 @@ def pipeline_write(
     if verbose:
         print("6. Catalogue → resolved load strategy and parameters persisted")
 
-    commit_pipeline_write_success(
-        {
-            "target_table_id": str(identity["table_id"]),
-            "source_table_ids": publication_source_ids,
-            "activity_id": audit["_activity_id"],
-            "notebook_name": audit["_notebook_name"],
-            "notebook_id": audit["_notebook_id"],
-            "context": context,
-        }
-    )
+    commit_pipeline_write_success(success_context)
     if verbose:
         print("7. Success metadata → Lineage and accepted Source Observation state committed")
         print("Result → target published; checks and profiling remain explicit notebook steps.")

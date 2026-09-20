@@ -192,6 +192,58 @@ def test_same_source_resolves_isolated_target_watermarks(monkeypatch):
     assert target_b["has_data"] is True
 
 
+def test_next_activity_recovers_staged_progress_from_materialized_target(monkeypatch):
+    """A new scheduled activity accepts durable prior evidence before scoping."""
+    staged_a = {
+        **_row(target="target-a", maximum="120"),
+        "observation_status": "observed",
+        "_activity_id": "run-a",
+    }
+    staged_b = {
+        **_row(target="target-b", maximum="90"),
+        "observation_status": "observed",
+        "_activity_id": "run-a",
+    }
+    history = [staged_a, staged_b]
+    _configure_scope(monkeypatch, history)
+    monkeypatch.setattr(
+        shared, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "run-b"}
+    )
+    monkeypatch.setattr(
+        shared,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **_kwargs: {"table_id": table_id},
+    )
+    monkeypatch.setattr(
+        shared,
+        "_physical_target_has_activity",
+        lambda identity, activity_id, **_kwargs: identity["table_id"] == "target-a" and activity_id == "run-a",
+    )
+    merged = []
+    monkeypatch.setattr(
+        shared,
+        "_merge_source_observation_records",
+        lambda records, **_kwargs: merged.extend(records),
+    )
+    shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
+    shared._INCREMENTAL_SOURCE_SCOPES.clear()
+
+    scope_a = shared.resolve_incremental_source_scope(
+        source_table_id="source-orders", target_table_id="target-a", observation=_current("130")
+    )
+    scope_b = shared.resolve_incremental_source_scope(
+        source_table_id="source-orders", target_table_id="target-b", observation=_current("130")
+    )
+
+    assert scope_a["after"] == "120"
+    assert scope_a["through"] == "130"
+    assert scope_b["first_run"] is True
+    assert {(row["target_table_id"], row["observation_status"]) for row in merged} == {
+        ("target-a", "committed")
+    }
+
+
 def test_numeric_watermarks_are_ordered_numerically(monkeypatch):
     _configure_scope(monkeypatch, [_row(target="target-a", maximum="9")])
     result = shared.resolve_incremental_source_scope(

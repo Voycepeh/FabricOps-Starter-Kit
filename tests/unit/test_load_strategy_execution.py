@@ -256,6 +256,10 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
             recorded.setdefault("updates", []).append((condition, set))
             return self
 
+        def whenNotMatchedInsert(self, *, values):
+            recorded["insert_values"] = values
+            return self
+
         def execute(self):
             recorded["executed"] = True
 
@@ -308,6 +312,7 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
     assert expire[0] == "NOT (target.`status` <=> source.`status`)"
     assert technical[0] == "NOT (NOT (target.`status` <=> source.`status`))"
     assert technical[1]["_watermark_value"] == "source.`_watermark_value`"
+    assert recorded["insert_values"]["student_id"] == "source.`student_id`"
     assert recorded["appends"] == 0
 
 
@@ -330,14 +335,26 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
         def whenMatchedUpdate(self, *, condition, set):
             return self
 
+        def whenNotMatchedInsert(self, *, values):
+            return self
+
         def execute(self):
-            source = source_rows[-1]
-            current = next(row for row in history if row["student_id"] == source["student_id"] and row["_is_current"])
-            if current["status"] != source["status"]:
-                current["_is_current"] = False
-                current["_effective_to"] = source["effective_at"]
-            else:
-                current["_watermark_value"] = source["_watermark_value"]
+            for source in source_rows[-1]:
+                merge_key = source["_fabricops_merge_key_0"]
+                current = next(
+                    (
+                        row for row in history
+                        if row["student_id"] == merge_key and row["_is_current"]
+                    ),
+                    None,
+                )
+                if current is None:
+                    history.append({key: value for key, value in source.items() if not key.startswith("_fabricops_merge_key_")})
+                elif current["status"] != source["status"]:
+                    current["_is_current"] = False
+                    current["_effective_to"] = source["effective_at"]
+                else:
+                    current["_watermark_value"] = source["_watermark_value"]
 
     class StatefulDelta:
         @staticmethod
@@ -352,17 +369,18 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
             return self
 
         def merge(self, source, _condition):
-            source_rows.append(source.collect()[0].asDict())
+            source_rows.append([row.asDict() for row in source.collect()])
             return Merge()
 
         def toDF(self):
             return spark_session.createDataFrame(history)
 
-    def append_version(frame, *_args, **_kwargs):
-        history.extend(row.asDict() for row in frame.collect())
-
     _install_delta(monkeypatch, StatefulDelta)
-    monkeypatch.setattr(shared, "write_lakehouse_table", append_version)
+    monkeypatch.setattr(
+        shared,
+        "write_lakehouse_table",
+        lambda *_args, **_kwargs: pytest.fail("existing Lakehouse SCD2 must use one atomic Delta merge"),
+    )
     incoming = (
         spark_session.createDataFrame(
             [(1, "new", "2026-08-22", 200)],
@@ -387,3 +405,99 @@ def test_scd2_business_change_replay_creates_exactly_one_new_version(monkeypatch
     assert len(history) == 2
     assert sum(bool(row["_is_current"]) for row in history) == 1
     assert [row["status"] for row in history if row["_is_current"]] == ["new"]
+
+
+def test_scd2_atomic_merge_failure_cannot_leave_partial_activity_marker(monkeypatch, spark_session):
+    """A failed SCD2 completion boundary leaves the prior current row untouched."""
+    from pyspark.sql import functions as F
+
+    history = [{
+        "student_id": 1,
+        "status": "old",
+        "effective_at": "2026-08-21",
+        "_effective_from": "2026-08-21",
+        "_effective_to": None,
+        "_is_current": True,
+        "_activity_id": "run-before",
+    }]
+    executions = []
+
+    class Merge:
+        def whenMatchedUpdate(self, **_kwargs):
+            return self
+
+        def whenNotMatchedInsert(self, **_kwargs):
+            return self
+
+        def execute(self):
+            executions.append("atomic-merge")
+            raise RuntimeError("injected Delta transaction failure")
+
+    class ExistingDelta:
+        @staticmethod
+        def isDeltaTable(_spark, _path):
+            return True
+
+        @staticmethod
+        def forPath(_spark, _path):
+            return ExistingDelta()
+
+        def alias(self, _name):
+            return self
+
+        def merge(self, _source, _condition):
+            return Merge()
+
+        def toDF(self):
+            return spark_session.createDataFrame(
+                [
+                    (
+                        row["student_id"],
+                        row["status"],
+                        row["effective_at"],
+                        row["_effective_from"],
+                        row["_effective_to"],
+                        row["_is_current"],
+                        row["_activity_id"],
+                    )
+                    for row in history
+                ],
+                "student_id long, status string, effective_at string, _effective_from string, "
+                "_effective_to string, _is_current boolean, _activity_id string",
+            )
+
+    _install_delta(monkeypatch, ExistingDelta)
+    monkeypatch.setattr(
+        shared,
+        "write_lakehouse_table",
+        lambda *_args, **_kwargs: pytest.fail("SCD2 must not use a second append"),
+    )
+    incoming = (
+        spark_session.createDataFrame(
+            [(1, "new", "2026-08-22")],
+            ["student_id", "status", "effective_at"],
+        )
+        .withColumn("_effective_from", F.col("effective_at"))
+        .withColumn("_effective_to", F.lit(None).cast("string"))
+        .withColumn("_is_current", F.lit(True))
+        .withColumn("_activity_id", F.lit("run-a"))
+    )
+
+    with pytest.raises(RuntimeError, match="transaction failure"):
+        shared.execute_lakehouse_processing(
+            incoming,
+            table_name="students",
+            store="Silver",
+            schema="dbo",
+            processing={
+                "load_strategy": "scd2",
+                "key_columns": ["student_id"],
+                "effective_column": "effective_at",
+            },
+            scope={"type": "full_dataset"},
+            context={},
+        )
+
+    assert executions == ["atomic-merge"]
+    assert history[0]["_is_current"] is True
+    assert history[0]["_activity_id"] == "run-before"
