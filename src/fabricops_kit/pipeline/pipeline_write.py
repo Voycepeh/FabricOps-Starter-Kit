@@ -469,7 +469,8 @@ def pipeline_write(
     )
     scope = _write_scope()
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
-    target_parts = [f"Object: {'Lakehouse' if store_kind == 'lakehouse' else 'Warehouse'}", f"Store: {identity['store']}"]
+    object_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
+    target_parts = [f"Object: {object_label}", f"Store: {identity['store']}"]
     if identity.get("schema"):
         target_parts.append(f"Schema: {identity['schema']}")
     target_parts.append(f"Table: {identity['table_name']}")
@@ -561,7 +562,6 @@ def pipeline_write(
             .withColumn("_is_current", F.lit(True))
         )
 
-    store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
     if strategy in {"scd1", "scd2"}:
         publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
     else:
@@ -594,7 +594,7 @@ def pipeline_write(
                 repartition_by=repartition_by,
                 options=physical_options,
                 verbose=False,
-                context=context,
+                context=io_context,
             )
         elif strategy in {"scd1", "scd2"}:
             execute_lakehouse_processing(
