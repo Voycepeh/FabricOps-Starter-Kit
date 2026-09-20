@@ -25,7 +25,7 @@ Lineage and Source Observation metadata only after publication succeeds.
 
 `fabricops_kit/pipeline/pipeline_write.py:247`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L247-L637">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L247-L648">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -156,6 +156,13 @@ partition-removal-only overwrite, and true SCD no-op operations may leave
 no activity marker; repeating those operations is safe. Changing the
 participating source set represents a different logical publication and
 therefore requires a new activity rather than reuse of the current one.
+
+Before physical publication, target-specific Source Observation evidence
+is durably staged with ``observation_status='observed'``. If a scheduled
+activity terminates after target rows materialize but before finalization,
+the next activity verifies the prior target ``_activity_id``, promotes that
+staged evidence idempotently, and calculates incremental work from the
+recovered committed baseline. Evidence for another target is not promoted.
 
 A first incremental append has no committed baseline and therefore reads a
 complete bootstrap scope. FabricOps permits that bootstrap only for a new

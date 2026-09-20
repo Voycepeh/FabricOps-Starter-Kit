@@ -677,6 +677,101 @@ def _progress_key(value: Any) -> tuple[int, Any]:
         return (1, text)
 
 
+def _physical_target_has_activity(
+    identity: Mapping[str, Any], activity_id: str, *, context: Mapping[str, Any]
+) -> bool:
+    """Return whether a governed physical target contains an activity marker."""
+    store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
+    escaped = activity_id.replace("'", "''")
+    try:
+        if store_kind == "lakehouse":
+            frame = read_lakehouse_table(
+                str(identity["table_name"]), store=str(identity["store"]),
+                schema=identity.get("schema"), context=context,
+            ).filter(f"`_activity_id` = '{escaped}'")
+        elif store_kind == "warehouse":
+            schema = str(identity["schema"]).replace("]", "]]")
+            table = str(identity["table_name"]).replace("]", "]]")
+            frame = read_warehouse_query(
+                f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}] "
+                f"WHERE [_activity_id] = '{escaped}'",
+                store=str(identity["store"]), context=context,
+            )
+        else:
+            return False
+        return frame.limit(1).count() > 0
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return False
+        raise
+
+
+def _merge_source_observation_records(
+    records: list[dict[str, Any]], *, config: Any, context: Mapping[str, Any]
+) -> None:
+    """Idempotently merge target-specific Source Observation records."""
+    if not records:
+        return
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
+        raise RuntimeError(
+            "Delta Lake merge support is required for idempotent Source Observation commits."
+        ) from exc
+    spark = get_spark_session()
+    frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE])
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "Metadata", _SOURCE_OBSERVATION_TABLE,
+        metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
+    )
+    (
+        DeltaTable.forPath(spark, path).alias("target")
+        .merge(
+            frame.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target._activity_id = source._activity_id "
+            "AND target.source_table_id = source.source_table_id "
+            "AND target.target_table_id = source.target_table_id "
+            "AND target.observation_id = source.observation_id "
+            "AND target.partition_value <=> source.partition_value "
+            "AND target.observation_status = source.observation_status",
+        ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+    )
+
+
+def _recover_completed_source_observations(
+    history: Any, *, config: Any, env: str, context: Mapping[str, Any],
+    source_table_id: str, target_table_id: str,
+) -> list[dict[str, Any]]:
+    """Promote durable staged evidence when its prior target write materialized."""
+    rows = observation_rows(history)
+    staged = [
+        row for row in rows
+        if str(row.get("environment_name") or "") == env
+        and str(row.get("source_table_id") or "") == source_table_id
+        and str(row.get("target_table_id") or "") == target_table_id
+        and str(row.get("observation_status") or "") in {"observed", "drift_observed"}
+    ]
+    if not staged:
+        return rows
+    identity = resolve_catalogue_table_identity(config, env, target_table_id, context=dict(context))
+    recovered: list[dict[str, Any]] = []
+    for activity_id in dict.fromkeys(str(row.get("_activity_id") or "") for row in staged):
+        if activity_id and _physical_target_has_activity(identity, activity_id, context=context):
+            for row in staged:
+                if str(row.get("_activity_id") or "") == activity_id:
+                    recovered.append({
+                        **row,
+                        "observation_status": (
+                            "drift_committed"
+                            if row.get("observation_status") == "drift_observed"
+                            else "committed"
+                        ),
+                    })
+    _merge_source_observation_records(recovered, config=config, context=context)
+    return [*rows, *recovered]
+
+
 def resolve_incremental_source_scope(
     *,
     source_table_id: str,
@@ -696,6 +791,14 @@ def resolve_incremental_source_scope(
             store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
             context=context,
+        )
+        history = _recover_completed_source_observations(
+            history,
+            config=config,
+            env=env,
+            context=context,
+            source_table_id=source_table_id,
+            target_table_id=target_table_id,
         )
         previous = _latest_source_target_observation(
             history,
@@ -995,39 +1098,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         activity_id=activity_id,
         context=context,
     )
-    if records:
-        frame = get_spark_session().createDataFrame(
-            records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE]
-        )
-        try:
-            from delta.tables import DeltaTable
-        except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-            raise RuntimeError(
-                "Delta Lake merge support is required for idempotent Source Observation commits."
-            ) from exc
-        _store, _table, _schema, path = resolve_configured_lakehouse_table(
-            "Metadata",
-            _SOURCE_OBSERVATION_TABLE,
-            metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
-            context=context,
-        )
-        (
-            DeltaTable.forPath(get_spark_session(), path)
-            .alias("target")
-            .merge(
-                frame.alias("source"),
-                "target.environment_name = source.environment_name "
-                "AND target._activity_id = source._activity_id "
-                "AND target.source_table_id = source.source_table_id "
-                "AND target.target_table_id = source.target_table_id "
-                "AND target.observation_id = source.observation_id "
-                "AND target.partition_value <=> source.partition_value "
-                "AND target.observation_status = source.observation_status",
-            )
-            .whenMatchedUpdateAll()
-            .whenNotMatchedInsertAll()
-            .execute()
-        )
+    _merge_source_observation_records(records, config=config, context=context)
     for source_table_id in source_table_ids:
         _PENDING_SOURCE_OBSERVATIONS.pop(
             (env, activity_id, source_table_id, target_table_id), None
@@ -1038,6 +1109,42 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         _INCREMENTAL_SOURCE_SCOPES.pop(
             (env, activity_id, source_table_id, target_table_id), None
         )
+    return records
+
+
+def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Durably stage target-specific observations before physical publication."""
+    target_table_id = str(success_context.get("target_table_id") or "").strip()
+    source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
+    activity_id = str(success_context.get("activity_id") or "").strip()
+    notebook_name = str(success_context.get("notebook_name") or "").strip()
+    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+    config, env, context = resolve_fabric_context(context=success_context.get("context"))
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit["_activity_id"] = activity_id
+    records: list[dict[str, Any]] = []
+    for source_table_id in source_table_ids:
+        pending_key = (env, activity_id, source_table_id, target_table_id)
+        for current, observation_status in (
+            (_PENDING_SOURCE_OBSERVATIONS.get(pending_key, []), "observed"),
+            (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(pending_key, []), "drift_observed"),
+        ):
+            for row in current:
+                records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
+                    **{
+                        name: row.get(name)
+                        for name in (
+                            "observation_id", "source_table_id", "environment_name",
+                            "partition_value", "row_count", "min_change_value",
+                            "max_change_value", "content_fingerprint", "is_present",
+                        )
+                    },
+                    "target_table_id": target_table_id,
+                    "observation_status": observation_status,
+                    **audit,
+                }))
+    _merge_source_observation_records(records, config=config, context=context)
     return records
 
 

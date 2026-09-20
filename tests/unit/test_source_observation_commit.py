@@ -131,6 +131,20 @@ def test_successful_write_commits_one_observation_per_source(monkeypatch):
     ]
 
 
+def test_write_stages_target_specific_observation_before_publication(monkeypatch):
+    written, lineage = _configure_commit(monkeypatch, [_observation("source-a")])
+
+    records = shared.stage_pipeline_write_observations(
+        _context(sources=("source-a",))
+    )
+
+    assert lineage == []
+    assert written == records
+    assert records[0]["target_table_id"] == "target-x"
+    assert records[0]["observation_status"] == "observed"
+    assert records[0]["_activity_id"] == "run-1"
+
+
 def test_write_without_source_drift_still_commits_lineage(monkeypatch):
     written, lineage = _configure_commit(monkeypatch, [_observation("source-a")])
     records = shared.commit_pipeline_write_success(_context(sources=("source-b",)))

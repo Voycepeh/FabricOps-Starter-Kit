@@ -360,6 +360,13 @@ def pipeline_write(
     participating source set represents a different logical publication and
     therefore requires a new activity rather than reuse of the current one.
 
+    Before physical publication, target-specific Source Observation evidence
+    is durably staged with ``observation_status='observed'``. If a scheduled
+    activity terminates after target rows materialize but before finalization,
+    the next activity verifies the prior target ``_activity_id``, promotes that
+    staged evidence idempotently, and calculates incremental work from the
+    recovered committed baseline. Evidence for another target is not promoted.
+
     A first incremental append has no committed baseline and therefore reads a
     complete bootstrap scope. FabricOps permits that bootstrap only for a new
     or empty physical target. A populated target fails before publication so
@@ -411,7 +418,11 @@ def pipeline_write(
     """
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
     from fabricops_kit.io.shared import execute_warehouse_processing
-    from fabricops_kit.pipeline.shared import commit_pipeline_write_success, execute_lakehouse_processing
+    from fabricops_kit.pipeline.shared import (
+        commit_pipeline_write_success,
+        execute_lakehouse_processing,
+        stage_pipeline_write_observations,
+    )
 
     config, env, context = resolve_fabric_context()
     coordinates = (store, schema, table_name)
@@ -523,6 +534,15 @@ def pipeline_write(
             "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
         )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
+    success_context = {
+        "target_table_id": target_table_id,
+        "source_table_ids": publication_source_ids,
+        "activity_id": activity_id,
+        "notebook_name": audit["_notebook_name"],
+        "notebook_id": audit["_notebook_id"],
+        "context": context,
+    }
+    stage_pipeline_write_observations(success_context)
     prepared_df = add_target_audit_fields(df, audit)
     if strategy == "scd2":
         from pyspark.sql import functions as F
@@ -620,16 +640,7 @@ def pipeline_write(
     if verbose:
         print("6. Catalogue → resolved load strategy and parameters persisted")
 
-    commit_pipeline_write_success(
-        {
-            "target_table_id": str(identity["table_id"]),
-            "source_table_ids": publication_source_ids,
-            "activity_id": audit["_activity_id"],
-            "notebook_name": audit["_notebook_name"],
-            "notebook_id": audit["_notebook_id"],
-            "context": context,
-        }
-    )
+    commit_pipeline_write_success(success_context)
     if verbose:
         print("7. Success metadata → Lineage and accepted Source Observation state committed")
         print("Result → target published; checks and profiling remain explicit notebook steps.")

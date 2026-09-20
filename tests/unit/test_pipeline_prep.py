@@ -271,6 +271,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {})
     monkeypatch.setattr(write_module, "_target_has_activity", lambda **kwargs: False)
+    monkeypatch.setattr(shared_module, "stage_pipeline_write_observations", lambda value: [])
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     return identity, context
