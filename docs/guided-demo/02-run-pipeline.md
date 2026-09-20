@@ -162,8 +162,8 @@ profile_result = profile_table(
     spark_session=spark,
 )
 
-display(profile_result["profile"])
-display(profile_result["frequency_profile"])
+# display(profile_result["profile"])
+# display(profile_result["frequency_profile"])
 ```
 
 #### Read 5. KEEP — make the source available downstream
