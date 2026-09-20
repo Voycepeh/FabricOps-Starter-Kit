@@ -25,7 +25,7 @@ Lineage and Source Observation metadata only after publication succeeds.
 
 `fabricops_kit/pipeline/pipeline_write.py:247`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L247-L648">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L247-L652">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -156,6 +156,10 @@ partition-removal-only overwrite, and true SCD no-op operations may leave
 no activity marker; repeating those operations is safe. Changing the
 participating source set represents a different logical publication and
 therefore requires a new activity rather than reuse of the current one.
+Lakehouse SCD2 closes changed rows and inserts their replacement current
+versions in one Delta ``MERGE`` so an activity marker cannot represent a
+partially applied two-step history mutation. Warehouse SCD2 retains its
+existing SQL transaction boundary.
 
 Before physical publication, target-specific Source Observation evidence
 is durably staged with ``observation_status='observed'``. If a scheduled

@@ -2204,17 +2204,43 @@ def execute_lakehouse_processing(
         name: f"source.`{name}`" for name in persisted_df.columns
         if name in _TARGET_TECHNICAL_COLUMNS and name not in _SCD2_LIFECYCLE_COLUMNS
     }
+    merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
+    reserved = sorted(set(merge_keys) & set(persisted_df.columns))
+    if reserved:
+        raise ValueError(f"Incoming target scope uses reserved SCD2 columns: {', '.join(reserved)}.")
+    current_for_change = current_rows.select(
+        *[F.col(name) for name in keys],
+        *[F.col(name).alias(f"_fabricops_current_{index}") for index, name in enumerate(tracked)],
+    )
+    joined = persisted_df.alias("incoming").join(current_for_change.alias("current"), on=keys, how="inner")
+    changed_expression = reduce(
+        lambda left, right: left | right,
+        [
+            ~F.col(f"incoming.`{name}`").eqNullSafe(F.col(f"current.`_fabricops_current_{index}`"))
+            for index, name in enumerate(tracked)
+        ],
+        F.lit(False),
+    )
+    changed_existing = joined.where(changed_expression).select("incoming.*")
+    keyed = persisted_df
+    inserts = changed_existing
+    for merge_key, key in zip(merge_keys, keys, strict=True):
+        keyed = keyed.withColumn(merge_key, F.col(key))
+        inserts = inserts.withColumn(merge_key, F.lit(None).cast(persisted_df.schema[key].dataType))
+    staged = keyed.unionByName(inserts)
+    merge_condition = " AND ".join(
+        f"target.`{key}` <=> source.`{merge_key}`"
+        for key, merge_key in zip(keys, merge_keys, strict=True)
+    ) + f" AND target.`{current_column}` = TRUE"
     merge = (
-        delta.alias("target").merge(persisted_df.alias("source"), condition + f" AND target.`{current_column}` = TRUE")
+        delta.alias("target").merge(staged.alias("source"), merge_condition)
         .whenMatchedUpdate(condition=change, set={current_column: "false", end_column: f"source.`{effective}`"})
     )
     if technical_updates:
         merge = merge.whenMatchedUpdate(condition=f"NOT ({change})", set=technical_updates)
-    merge.execute()
-    current = delta.toDF().where(F.col(current_column)).select(*keys, *tracked)
-    incoming = persisted_df.join(current, on=keys, how="left_anti")
-    if incoming.limit(1).count():
-        write_lakehouse_table(incoming, table_name, store=store, schema=schema, mode="append", context=context)
+    merge.whenNotMatchedInsert(
+        values={name: f"source.`{name}`" for name in persisted_df.columns}
+    ).execute()
 
 
 def load_table_guardrail_rules(

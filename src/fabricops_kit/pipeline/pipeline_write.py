@@ -359,6 +359,10 @@ def pipeline_write(
     no activity marker; repeating those operations is safe. Changing the
     participating source set represents a different logical publication and
     therefore requires a new activity rather than reuse of the current one.
+    Lakehouse SCD2 closes changed rows and inserts their replacement current
+    versions in one Delta ``MERGE`` so an activity marker cannot represent a
+    partially applied two-step history mutation. Warehouse SCD2 retains its
+    existing SQL transaction boundary.
 
     Before physical publication, target-specific Source Observation evidence
     is durably staged with ``observation_status='observed'``. If a scheduled
