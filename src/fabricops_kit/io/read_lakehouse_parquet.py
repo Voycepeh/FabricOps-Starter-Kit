@@ -146,6 +146,7 @@ def read_lakehouse_parquet(
     DataFrame, or automatically cache or persist the returned DataFrame.
 
     """
+    store_name = str(store)
     store, normalized_relative_path, orig_spark_path = resolve_configured_file_path(
         store, relative_path, context=context
     )
@@ -169,7 +170,7 @@ def read_lakehouse_parquet(
         _ = df.limit(1).collect()
         if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
             print(
-                f"Read from → Object: Lakehouse | Store: {store.key} | "
+                f"Read from → Object: Lakehouse | Store: {store_name} | "
                 f"Area: Files | Path: {normalized_relative_path}"
             )
         return df
@@ -195,7 +196,7 @@ def read_lakehouse_parquet(
             _ = df.limit(1).collect()
             if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
                 print(
-                    f"Read from → Object: Lakehouse | Store: {store.key} | "
+                    f"Read from → Object: Lakehouse | Store: {store_name} | "
                     f"Area: Files | Path: {tsus_relative_path}"
                 )
             return df
