@@ -287,7 +287,13 @@ After this succeeds, the target has been physically written and FabricOps record
 - This is intentionally after `pipeline_write()` so the profile represents the published table.
 
 ```python
-# display(write_profile["profile"])
+write_profile = profile_table(
+    table_id=write_result["table_id"],
+    spark_session=spark,
+)
+
+display(write_profile["profile"])
+display(write_profile["frequency_profile"])
 ```
 
 #### Write 6. KEEP — retain the completed write result
