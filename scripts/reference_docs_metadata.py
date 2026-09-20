@@ -954,7 +954,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify the returned context is ready before generating downstream notebook '
                      'code and confirm required targets resolve for the selected env.',
   'preferred_example': 'context = setup_notebook(CONFIG, env="Sandbox", '
-                       'required_targets=["Source", "Unified"], notebook_name="00_env_config")',
+                       'required_targets=["Bronze", "Silver", "Gold", "Metadata"], notebook_name="00_env_config")',
   'related_functions': ['setup_metadata_tables'],
   'expanded_purpose': 'Validates the selected FabricOps environment, resolves configured runtime '
                       'targets, and returns the notebook context that downstream helpers depend '
@@ -1073,7 +1073,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading managed Delta tables from configured Lakehouse Tables storage.',
   'do_not_use_when': 'Do not use for lakehouse Files paths or warehouse SQL serving-engine reads.',
-  'parameters': 'table_name, target, optional schema, optional spark_session, optional context, and Spark Delta reader options.',
+  'parameters': 'table_name, store, optional schema, optional spark_session, optional context, and Spark Delta reader options.',
   'returns': 'Spark DataFrame loaded from the configured Lakehouse Delta table path.',
   'raises': 'Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError when Spark is unavailable.',
   'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
@@ -1097,7 +1097,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when publishing Spark DataFrames to configured Lakehouse Tables storage.',
   'do_not_use_when': 'Do not use for warehouse publishing or metadata mutation outside configured metadata routing.',
-  'parameters': 'df, table_name, target, optional schema, mode, partitioning/repartitioning options, writer options, verbose, and context.',
+  'parameters': 'df, table_name, store, optional schema, mode, partitioning/repartitioning options, writer options, verbose, and context.',
   'returns': 'None; the DataFrame is written to the configured Lakehouse Delta table path.',
   'raises': 'Raises ValueError for unsafe names, invalid write modes, or non-lakehouse targets.',
   'side_effects': 'Writes data to the configured Lakehouse Delta table path.',
@@ -1122,7 +1122,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when reading a CSV file from a configured Fabric-resolved path.',
   'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL '
                      'tables.',
-  'parameters': 'relative_path, target, optional spark_session, optional context, header flag, and Spark CSV reader options.',
+  'parameters': 'relative_path, store, optional spark_session, optional context, header flag, and Spark CSV reader options.',
   'returns': 'Spark DataFrame loaded from the Fabric-resolved CSV path.',
   'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the file '
             'cannot be read.',
@@ -1155,7 +1155,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading JSON files or folders from a configured Lakehouse Files path.',
   'do_not_use_when': 'Do not use for managed Delta tables, CSV files, Excel files, Parquet files, or warehouse SQL tables.',
-  'parameters': 'relative_path, target, optional spark_session, optional context, and Spark JSON reader options.',
+  'parameters': 'relative_path, store, optional spark_session, optional context, and Spark JSON reader options.',
   'returns': 'Lazy Spark DataFrame backed by the Fabric-resolved JSON path.',
   'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the path cannot be read.',
   'side_effects': 'Constructs a Spark JSON read plan; it does not write metadata, tables, or files.',
@@ -1180,7 +1180,7 @@ PUBLIC_SYMBOL_DOCS = [
               'path.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Excel files, or warehouse SQL '
                      'tables.',
-  'parameters': 'relative_path, target, verbose flag, optional spark_session, optional context, and Spark Parquet reader options.',
+  'parameters': 'relative_path, store, verbose flag, optional spark_session, optional context, and Spark Parquet reader options.',
   'returns': 'Spark DataFrame loaded from the original Parquet path or timestamp-converted '
              'fallback path.',
   'raises': 'Raises ValueError for invalid relative paths and Spark/read errors when the Parquet '
@@ -1218,7 +1218,7 @@ PUBLIC_SYMBOL_DOCS = [
               'inputs.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL '
                      'tables.',
-  'parameters': 'config, env, target, relative_path, optional sheet_name, optional spark_session, '
+  'parameters': 'config, env, store, relative_path, optional sheet_name, optional spark_session, '
                 'and pandas read_excel keyword arguments.',
   'returns': 'Spark DataFrame converted from the selected Excel worksheet.',
   'raises': 'Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when '
@@ -1255,7 +1255,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when reading a table from a configured Fabric warehouse target.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or '
                      'Excel paths.',
-  'parameters': 'schema, table_name, target, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
+  'parameters': 'schema, table_name, store, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
   'returns': 'Spark DataFrame loaded from the configured warehouse table.',
   'raises': 'Raises configuration, Spark SQL, or warehouse-read errors when the target/table '
             'cannot be resolved/read.',
@@ -1288,7 +1288,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when projection or filtering should run in the Fabric Warehouse SQL serving engine before Spark receives rows.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.',
-  'parameters': 'query, target, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
+  'parameters': 'query, store, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
   'returns': 'Spark DataFrame returned by the Fabric warehouse connector.',
   'raises': 'Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric connector is unavailable.',
   'side_effects': 'Reads warehouse rows only; it does not execute mutations or write metadata.',
@@ -1313,7 +1313,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric warehouse table.',
   'do_not_use_when': 'Do not use for lakehouse table writes, lakehouse Files writes, or metadata '
                      'evidence writes.',
-  'parameters': 'df, schema, table_name, target, write mode, optional Spark repartition_by value, optional connector writer options, and optional context.',
+  'parameters': 'df, schema, table_name, store, write mode, optional Spark repartition_by value, optional connector writer options, and optional context.',
   'returns': 'None; the DataFrame is written to the configured warehouse table.',
   'raises': 'Raises configuration, Spark connector, or warehouse write errors when the '
             'target/table cannot be written.',
@@ -1643,12 +1643,12 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "side_effects": "Validates configuration and runtime context only. It does not read or write business data, create Fabric resources, or persist metadata.",
         "return_interpretation": "A ready context means required targets resolved and startup checks did not fail. Review validation_results when readiness_status is not ready before running downstream notebook cells.",
         "common_failure_causes": ["Missing required configuration sections or target names.", "No active Spark session, which is reported as a warning for local fallback mode.", "Fabric notebook runtime utilities are unavailable outside Fabric.", "Workspace, lakehouse, warehouse, or notebook context cannot be resolved.", "Invalid target names or required store identity fields.", "Explicit notebook_name or local_fallback_name is needed when automatic Fabric context is not available."],
-        "preferred_example": 'CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source", "Unified", "Metadata"])',
+        "preferred_example": 'CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])',
     },
     "read_lakehouse_csv": {
         "expanded_purpose": "Reads one CSV file or a compatible collection of CSV files from a Fabric lakehouse Files location into a Spark DataFrame using FabricOps target and path resolution. It does not profile, register, display, cache, or write the data automatically.",
         "when_to_use": "Use when source data is stored as CSV under a lakehouse Files path. Use read_lakehouse_table for registered Delta tables, read_lakehouse_parquet for Parquet files, and read_lakehouse_excel for Excel workbooks.",
-        "parameters": "relative_path is the file, folder, or wildcard-style Lakehouse Files path resolved under target; target is the logical lakehouse target; header controls first-row column names; spark_session overrides notebook global spark; context can provide resolved FabricOps config/env; additional keyword options are passed to Spark CSV reader, including inferSchema, sep, encoding, schema-related options, recursiveFileLookup, and malformed-row handling.",
+        "parameters": "relative_path is the file, folder, or wildcard-style Lakehouse Files path resolved under the store; store is the logical Lakehouse store; header controls first-row column names; spark_session overrides notebook global spark; context can provide resolved FabricOps config/env; additional keyword options are passed to Spark CSV reader, including inferSchema, sep, encoding, schema-related options, recursiveFileLookup, and malformed-row handling.",
         "returns": "Spark DataFrame representing rows parsed from the selected CSV file or files. Columns and data types depend on the supplied schema and CSV reader options.",
         "side_effects": "Constructs a Spark CSV read plan only; it does not write files, tables, or metadata.",
         "return_interpretation": "The returned DataFrame is a normal lazy Spark DataFrame until an action such as count, display, collect, or write is executed.",
@@ -1666,7 +1666,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_lakehouse_table": {
         "expanded_purpose": "Loads a registered lakehouse Delta table into a Spark DataFrame using FabricOps target, schema, and table-name resolution so notebooks do not hardcode fully qualified table paths.",
         "when_to_use": "Use for Delta tables registered in a Fabric lakehouse. Use file readers for CSV, Parquet, or Excel files, and read_warehouse_table for Fabric Warehouse tables.",
-        "parameters": "table_name is the logical table name, not a qualified schema.table string; target selects the configured lakehouse; schema optionally qualifies schema-enabled lakehouses; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; reader options are passed to Spark Delta reader.",
+        "parameters": "table_name is the logical table name, not a qualified schema.table string; store selects the configured Lakehouse; schema optionally qualifies schema-enabled lakehouses; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; reader options are passed to Spark Delta reader.",
         "returns": "Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.",
         "common_failure_causes": ["The target cannot be resolved or is not a lakehouse.", "The table is not found, exists under another lakehouse or schema, or the schema argument is incorrect.", "The caller lacks read permissions or no Spark session is available.", "Spark Delta read failures may be deferred until an action evaluates the DataFrame."],
         "preferred_example": 'catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="Metadata", schema=METADATA_SCHEMA, spark_session=spark)',
@@ -1674,7 +1674,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_warehouse_query": {
         "expanded_purpose": "Executes caller-supplied read-only SQL against a Fabric Warehouse and returns the result as a Spark DataFrame. Filtering, joins, grouping, and projection run in the Warehouse before rows are transferred to Spark.",
         "when_to_use": "Use when the Warehouse dataset is best expressed as SQL, especially when joins, filters, aggregations, or projections should execute before transfer. Use read_warehouse_table for a straightforward full-table read.",
-        "parameters": "query is a read-only SELECT statement or WITH CTE ending in SELECT; target resolves the configured Warehouse connection; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; options are passed to the Fabric Warehouse Spark connector. Parameter binding is not implemented, so do not interpolate untrusted values.",
+        "parameters": "query is a read-only SELECT statement or WITH CTE ending in SELECT; store resolves the configured Warehouse connection; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; options are passed to the Fabric Warehouse Spark connector. Parameter binding is not implemented, so do not interpolate untrusted values.",
         "returns": "Spark DataFrame containing the rows and columns produced by the Warehouse query. The output schema is determined by the SQL projection and Warehouse result types.",
         "common_failure_causes": ["Invalid, blank, or non-read-only SQL.", "Unknown tables or columns, unresolved Warehouse connection, or permission failure.", "Unsupported Warehouse-to-Spark type conversion.", "Very large result transfers can be slow or fail; empty result sets are successful DataFrames with zero rows."],
         "usage_notes": "Apply selective filters, projections, joins, and aggregations in the SQL query where practical so the Warehouse processes them before rows are transferred into Spark. Avoid SELECT * for very large tables when only a subset of fields is required.",
@@ -1683,7 +1683,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_warehouse_table": {
         "expanded_purpose": "Reads a complete Fabric Warehouse table into a Spark DataFrame using the configured Warehouse connection, schema, and table identity. The table remains owned by the Warehouse and is not copied, profiled, registered, or modified.",
         "when_to_use": "Use for a straightforward read of one Warehouse table. Use read_warehouse_query when columns, rows, joins, or aggregations should be reduced in the Warehouse before transfer to Spark.",
-        "parameters": "schema is the physical Warehouse schema; table_name is the physical table; target resolves the configured Warehouse; spark_session overrides notebook global spark; context supplies FabricOps config/env; options are passed to the Fabric Warehouse Spark connector.",
+        "parameters": "schema is the physical Warehouse schema; table_name is the physical table; store resolves the configured Warehouse; spark_session overrides notebook global spark; context supplies FabricOps config/env; options are passed to the Fabric Warehouse Spark connector.",
         "returns": "Spark DataFrame containing the rows and columns of the resolved Warehouse table.",
         "common_failure_causes": ["The Warehouse connection cannot be resolved.", "The schema or table is not found, the caller lacks permission, or identifiers are invalid.", "The table contains unsupported data types for transfer to Spark.", "Complete-table reads may transfer large datasets; an empty table returns a valid zero-row DataFrame."],
         "usage_notes": "A complete-table read may transfer a large dataset from the Warehouse into Spark. Use read_warehouse_query when the workload can be reduced through SQL projection, filtering, joins, or aggregation.",
@@ -1692,16 +1692,16 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "write_lakehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric lakehouse table using the configured FabricOps target, schema, table name, and write settings. Spark-side repartitioning can be applied before the physical Delta write so large datasets can be processed by multiple Spark tasks concurrently; physical Delta partitioning is separate and only occurs when partition_by is supplied.",
         "when_to_use": "Use after a pipeline DataFrame has been prepared and passed required validation or guardrail checks. Small datasets usually need the default write path; large datasets may use repartition_by for additional Spark write parallelism. Use partition_by only for persisted Delta layout based on stable, commonly filtered columns.",
-        "parameters": "df is the Spark DataFrame to write and is not mutated; table_name is the unqualified Lakehouse table; target resolves the lakehouse; schema optionally qualifies schema-enabled lakehouses; mode controls append/overwrite/errorifexists/ignore behavior; partition_by physically partitions Delta files and folders; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before writing; options are forwarded to the Delta writer; verbose prints the resolved path; context supplies FabricOps config/env.",
+        "parameters": "df is the Spark DataFrame to write and is not mutated; table_name is the unqualified Lakehouse table; store resolves the Lakehouse; schema optionally qualifies schema-enabled lakehouses; mode controls append/overwrite/errorifexists/ignore behavior; partition_by physically partitions Delta files and folders; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before writing; options are forwarded to the Delta writer; verbose prints the resolved path; context supplies FabricOps config/env.",
         "returns": "None. The function validates routing and write settings, optionally repartitions the DataFrame, performs the Spark Delta write, and returns after the write completes or Spark raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.", "Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.", "Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure."],
         "usage_notes": "Parallel processing is Spark distributed execution over DataFrame partitions, not Python threading, multiprocessing, parallel submission of separate tables, or a separate orchestration helper. repartition_by changes Spark execution partitions for the current write; partition_by changes the persisted Delta layout.",
-        "preferred_example": 'write_lakehouse_table(enrolment_df, "STUDENT_ENROLMENT_HISTORY", store="data", schema=DATA_SCHEMA, mode="overwrite", repartition_by=48, partition_by=["academic_year"])',
+        "preferred_example": 'write_lakehouse_table(enrolment_df, "STUDENT_ENROLMENT_HISTORY", store="Silver", schema=DATA_SCHEMA, mode="overwrite", repartition_by=48, partition_by=["academic_year"])',
     },
     "write_warehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric Warehouse table through the configured Warehouse write path. Spark-side repartitioning can be applied before connector transfer so large datasets can use multiple Spark tasks concurrently; it does not create physical Warehouse table partitions.",
         "when_to_use": "Use when a prepared and validated Spark DataFrame must be stored in a Fabric Warehouse. Small datasets normally use the default write path; large datasets may use repartition_by when the DataFrame has too few partitions or needs more balanced Spark-side write concurrency. Use write_lakehouse_table for Delta lakehouse targets or physical Delta partitioning.",
-        "parameters": "df is the Spark DataFrame to transfer and is not mutated; schema is the Warehouse schema such as dbo; table_name is the Warehouse table; target resolves the Warehouse connection; mode is passed to the connector; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before connector transfer; options are forwarded to the connector after required identity options; context supplies FabricOps config/env. No partition_by parameter exists for Warehouse writes.",
+        "parameters": "df is the Spark DataFrame to transfer and is not mutated; schema is the Warehouse schema such as dbo; table_name is the Warehouse table; store resolves the Warehouse connection; mode is passed to the connector; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before connector transfer; options are forwarded to the connector after required identity options; context supplies FabricOps config/env. No partition_by parameter exists for Warehouse writes.",
         "returns": "None. The function validates repartitioning, optionally writes a repartitioned DataFrame through the Warehouse connector, and returns after connector execution completes or raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, empty lists/tuples, or non-string column values after any leading partition count.", "Schema or table not found, unsupported write mode, authentication or connector failure, Warehouse permission failure, or unsupported Spark-to-Warehouse type conversion.", "Connector-managed transfer or staging failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one."],
         "usage_notes": "Parallel Spark tasks within one write_warehouse_table call are not the same as several notebooks or jobs writing to the same Warehouse table concurrently. The function does not coordinate independent writers or guarantee safe simultaneous overwrite operations, and it must not be documented with lakehouse-style partition_by behaviour.",

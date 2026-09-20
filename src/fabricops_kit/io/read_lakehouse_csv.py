@@ -35,7 +35,7 @@ def read_lakehouse_csv(
     relative_path : str
         Relative CSV file or folder path resolved underneath the configured
         Lakehouse ``Files`` area.
-    store : str, default="source"
+    store : str, default="Bronze"
         Logical Lakehouse store key from ``00_env_config``. It is not necessarily
         the literal physical Lakehouse name.
     spark_session : object, optional

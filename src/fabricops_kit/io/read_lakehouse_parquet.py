@@ -43,7 +43,7 @@ def read_lakehouse_parquet(
         ``Files`` area. Root-level files such as ``customers.parquet`` and
         nested paths such as ``incoming/2026/customers.parquet`` are
         supported.
-    store : str, default="source"
+    store : str, default="Bronze"
         Logical Lakehouse store key from ``00_env_config``.
     verbose : bool, default=True
         Whether to print operational progress for original path attempts,

@@ -52,7 +52,8 @@ def setup_notebook(
         Environment section selected for target resolution.
     required_targets : list[str] | None, optional
         Logical Fabric target names the notebook requires before execution can
-        proceed. Defaults to ``["Source", "Unified"]``.
+        proceed. When omitted, all stores configured for the selected
+        environment are required.
     notebook_name : str | None, optional
         Explicit notebook name override used for runtime metadata and naming
         validation.
@@ -90,8 +91,8 @@ def setup_notebook(
     1. Validate the supplied FabricOps framework configuration.
     2. Resolve the selected environment.
     3. Resolve every target listed in ``required_targets``.
-    4. Default ``required_targets`` to ``["Source", "Unified"]`` when
-       omitted.
+    4. Default ``required_targets`` to all stores configured for the selected
+       environment when omitted.
     5. Collect Fabric notebook runtime information when available.
     6. Generate a fallback run ID when the Fabric runtime does not provide one.
     7. Check whether a Spark session is available.
@@ -112,11 +113,11 @@ def setup_notebook(
     ``setup.paths`` maps each requested target name to its resolved Fabric
     store configuration. Conceptual example:
 
-    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified", "Warehouse"])``
+    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver", "Gold", "Metadata"])``
 
-    ``source_store = setup.paths["Source"]``
+    ``bronze_store = setup.paths["Bronze"]``
 
-    ``warehouse_store = setup.paths["Warehouse"]``
+    ``gold_store = setup.paths["Gold"]``
 
     ``readiness_status`` is ``"ready"`` when every check is ``pass``,
     ``warn``, or ``skipped``, and ``"not_ready"`` when any check fails. The
@@ -125,7 +126,7 @@ def setup_notebook(
     enforcement is optional but recommended for delivery notebooks. Conceptual
     pattern:
 
-    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified"])``
+    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver"])``
 
     ``if setup.readiness_status != "ready": raise RuntimeError("FabricOps notebook setup is not ready.")``
 

@@ -35,7 +35,7 @@ automatically inject configuration into every downstream function.
 
 `fabricops_kit/config/setup_notebook.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L224">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L225">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -74,7 +74,7 @@ def setup_notebook(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source", "Unified", "Metadata"])
+CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])
 ```
 
 </div>
@@ -85,7 +85,7 @@ CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source
 | --- | --- | --- | --- |
 | `config` | `FrameworkConfig \| dict[str, Any]` | Yes | Full FabricOps framework configuration used to resolve environments and target stores. |
 | `env` | `str` | No | Environment section selected for target resolution. |
-| `required_targets` | `list[str] \| None` | No | Logical Fabric target names the notebook requires before execution can proceed. Defaults to ``["Source", "Unified"]``. |
+| `required_targets` | `list[str] \| None` | No | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
 | `notebook_name` | `str \| None` | No | Explicit notebook name override used for runtime metadata and naming validation. |
 | `run_id_prefix` | `str` | No | Prefix used only when no Fabric runtime run identifier is available. |
 | `local_fallback_name` | `str \| None` | No | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
@@ -120,8 +120,8 @@ Startup flow:
 1. Validate the supplied FabricOps framework configuration.
 2. Resolve the selected environment.
 3. Resolve every target listed in ``required_targets``.
-4. Default ``required_targets`` to ``["Source", "Unified"]`` when
-   omitted.
+4. Default ``required_targets`` to all stores configured for the selected
+   environment when omitted.
 5. Collect Fabric notebook runtime information when available.
 6. Generate a fallback run ID when the Fabric runtime does not provide one.
 7. Check whether a Spark session is available.
@@ -142,11 +142,11 @@ store name, store kind, and derived path information where applicable.
 ``setup.paths`` maps each requested target name to its resolved Fabric
 store configuration. Conceptual example:
 
-``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified", "Warehouse"])``
+``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver", "Gold", "Metadata"])``
 
-``source_store = setup.paths["Source"]``
+``bronze_store = setup.paths["Bronze"]``
 
-``warehouse_store = setup.paths["Warehouse"]``
+``gold_store = setup.paths["Gold"]``
 
 ``readiness_status`` is ``"ready"`` when every check is ``pass``,
 ``warn``, or ``skipped``, and ``"not_ready"`` when any check fails. The
@@ -155,7 +155,7 @@ notebook execution merely because readiness is ``"not_ready"``. Caller-side
 enforcement is optional but recommended for delivery notebooks. Conceptual
 pattern:
 
-``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified"])``
+``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver"])``
 
 ``if setup.readiness_status != "ready": raise RuntimeError("FabricOps notebook setup is not ready.")``
 

@@ -27,7 +27,7 @@ def read_lakehouse_json(
     relative_path : str
         JSON file or folder path underneath the configured Lakehouse ``Files``
         area. Root-level and nested paths are supported.
-    store : str, default="source"
+    store : str, default="Bronze"
         Logical Lakehouse store key configured by ``00_env_config``.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.

@@ -22,10 +22,10 @@ column pruning and predicate pushdown during execution.
 
 Lakehouse Delta is the preferred source for repeated PySpark
 transformations in FabricOps. Use this callable for managed Lakehouse
-tables, data already stored in OneLake Delta format, and source or
-unified data processing inside Fabric notebooks. When source data starts in
+tables, data already stored in OneLake Delta format, and Bronze or
+Silver data processing inside Fabric notebooks. When source data starts in
 a Fabric Warehouse, save large or repeatedly used data into the
-Source Lakehouse as Delta first, then read it with this callable.
+Bronze Lakehouse as Delta first, then read it with this callable.
 
 </div>
 

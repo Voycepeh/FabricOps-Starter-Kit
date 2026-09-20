@@ -57,7 +57,7 @@ def write_lakehouse_table(
         Lakehouse table name. Supply ``schema`` and ``table_name`` separately;
         do not pass a qualified name such as ``schema.table`` through
         ``table_name``.
-    store : str, default="unified"
+    store : str, default="Silver"
         Logical Lakehouse store key from ``00_env_config``. FabricOps resolves
         the selected environment, workspace, Lakehouse item, optional schema,
         table name, and OneLake Delta path under the Lakehouse ``Tables``
@@ -208,7 +208,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     small_lookup_df,
     ...     "COUNTRY_REGION_MAPPING",
-    ...     store="data",
+    ...     store="Silver",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ... )
@@ -222,7 +222,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     store="data",
+    ...     store="Silver",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=32,
@@ -237,7 +237,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     store="data",
+    ...     store="Silver",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=["academic_year", "semester"],
@@ -248,7 +248,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     large_df,
     ...     "STUDENT_ENROLMENT_CURATED",
-    ...     store="data",
+    ...     store="Silver",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=32,
@@ -265,7 +265,7 @@ def write_lakehouse_table(
     >>> write_lakehouse_table(
     ...     enrolment_df,
     ...     "STUDENT_ENROLMENT_HISTORY",
-    ...     store="data",
+    ...     store="Silver",
     ...     schema=DATA_SCHEMA,
     ...     mode="overwrite",
     ...     repartition_by=48,
