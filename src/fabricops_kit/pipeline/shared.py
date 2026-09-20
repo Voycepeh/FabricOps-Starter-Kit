@@ -950,6 +950,7 @@ def check_source_drift_for_target(
             _SOURCE_OBSERVATION_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            spark_session=spark_session,
             context=context,
         )
         previous = _previous_source_target_observation(
