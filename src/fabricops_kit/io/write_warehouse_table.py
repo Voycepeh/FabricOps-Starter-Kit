@@ -240,5 +240,9 @@ def write_warehouse_table(
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
     )
-    print(f"Writing Warehouse table to {object_name}")
     write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)
+    if not (context or {}).get("_fabricops_suppress_io_log"):
+        print(
+            f"Written to → Object: Warehouse | Store: {store.key} | "
+            f"Schema: {_schema_value} | Table: {_table_value}"
+        )
