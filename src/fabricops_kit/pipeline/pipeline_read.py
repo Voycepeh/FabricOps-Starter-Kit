@@ -238,7 +238,7 @@ def pipeline_read(
 
     config, env, context = resolve_fabric_context()
     if table_id:
-        identity = resolve_catalogue_table_identity(config, env, table_id, context=io_context)
+        identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
     else:
         identity = resolve_physical_table_identity(
             config, env, store=store, schema=schema, table_name=table_name
