@@ -40,6 +40,35 @@ jobs:
       - name: Normalize guided-demo links
         run: uv run python scripts/normalize_guided_demo_links.py
 
+      - name: Diagnose generated artifact freshness
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          export PYTHONPATH=src
+
+          echo "=== call-flow generator: run 1 ==="
+          python scripts/generate_public_function_call_flows_json.py
+          cp docs/reference/_data/public-function-call-flows.json /tmp/callflows-run1.json
+          cp docs/reference/_data/generated-artifacts.json /tmp/generated-artifacts-run1.json
+
+          echo "=== call-flow generator: run 2 ==="
+          python scripts/generate_public_function_call_flows_json.py
+          cmp -s /tmp/callflows-run1.json docs/reference/_data/public-function-call-flows.json || { echo "ERROR: call-flow output changed on second run"; exit 2; }
+
+          echo "=== function reference generator: run 1 ==="
+          python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/generated.diff
+
+          echo "=== function reference generator: run 2 ==="
+          python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/generated-run2.diff
+
+          echo "=== FINAL GENERATED DIFF ==="
+          cat /tmp/generated-run2.diff
+          echo "=== END GENERATED DIFF ==="
+          exit 1
+
       - name: Run full test suite
         run: uv run pytest
 
