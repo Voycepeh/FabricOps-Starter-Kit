@@ -16,6 +16,7 @@ def check_source_drift(
     target_table_id: str,
     enabled: bool = True,
     raise_on_failure: bool = False,
+    spark_session=None,
     verbose: bool = True,
 ) -> dict:
     """Detect governed source drift against one target consumption baseline.
@@ -35,6 +36,8 @@ def check_source_drift(
         Explicitly skip the check when ``False``.
     raise_on_failure : bool, default=False
         Raise ``RuntimeError`` when a blocking result cannot continue.
+    spark_session : object, optional
+        Spark session to use. When omitted, FabricOps resolves the active session.
     verbose : bool, default=True
         Print the concise normalized check outcome when ``True``.
 
