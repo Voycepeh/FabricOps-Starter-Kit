@@ -134,11 +134,20 @@ Optional check outputs can be inspected with:
 ```
 
 #### Read 4. PROFILE — refresh the saved source profile
-- `profile_table()` profiles the complete persisted source table.
+- `profile_table()` profiles the DataFrame that was already read above, so FabricOps does not read the same source table a second time.
+- The physical source coordinates are supplied so the first Development run can register the table in the Catalogue even when no Catalogue row exists yet.
 - Profiling results are saved to `METADATA_DATA_PROFILED`.
 - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
 
 ```python
+profile_result = profile_table(
+    dataframe=df,
+    store=READ_STORE,
+    schema=READ_SCHEMA,
+    table_name=READ_TABLE,
+    spark_session=spark,
+)
+
 # display(profile_result["profile"])
 ```
 
