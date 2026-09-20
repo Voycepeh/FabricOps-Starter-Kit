@@ -101,7 +101,8 @@ def check_dq(
     config, env, context = resolve_fabric_context()
     if spark_session is None:
         spark_session = getattr(dataframe, "sparkSession", None)
-    spark_session = get_spark_session(spark_session)
+    if spark_session is None:
+        spark_session = get_spark_session()
     contract = resolve_pipeline_data_contract(
         config,
         env,
