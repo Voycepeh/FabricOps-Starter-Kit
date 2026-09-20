@@ -238,7 +238,7 @@ def pipeline_read(
 
     config, env, context = resolve_fabric_context()
     if table_id:
-        identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+        identity = resolve_catalogue_table_identity(config, env, table_id, context=io_context)
     else:
         identity = resolve_physical_table_identity(
             config, env, store=store, schema=schema, table_name=table_name
@@ -266,10 +266,12 @@ def pipeline_read(
         if read_mode == "incremental"
         else None
     )
-    physical_identity = ".".join(
-        str(value) for value in (identity.get("store"), identity.get("schema"), identity.get("table_name")) if value
-    )
     store_label = "Lakehouse" if store_kind == "lakehouse" else "Warehouse"
+    source_parts = [f"Object: {store_label}", f"Store: {identity['store']}"]
+    if identity.get("schema"):
+        source_parts.append(f"Schema: {identity['schema']}")
+    source_parts.append(f"Table: {identity['table_name']}")
+    io_context = {**context, "_fabricops_suppress_io_log": True}
     if store_kind == "lakehouse":
         reader_name = "read_lakehouse_table"
     elif query is not None or read_mode == "incremental":
@@ -280,14 +282,15 @@ def pipeline_read(
     if verbose:
         contract_label = "selected" if has_contract else "none"
         print("FabricOps Read")
-        print(f"1. Identity → {identity['table_id']} → {store_label} table '{physical_identity}'")
+        print(f"1. Source → {' | '.join(source_parts)}")
+        print(f"   Identity → {identity['table_id']}")
         print(f"2. Data Contract → {contract_label}")
         print(f"3. Physical read → {reader_name}")
 
     observation = None
     scope: dict[str, Any] = {"type": "full", "first_run": False}
     if store_kind == "lakehouse":
-        complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), spark_session=spark_session, context=context)
+        complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), spark_session=spark_session, context=io_context)
         if read_mode == "incremental":
             observation = capture_source_observation(
                 table_id=str(identity["table_id"]),
@@ -303,7 +306,7 @@ def pipeline_read(
         else:
             dataframe = complete_dataframe
     elif query is not None:
-        dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=context)
+        dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=io_context)
     elif read_mode == "incremental":
         observation = capture_source_observation(
             table_id=str(identity["table_id"]),
@@ -318,7 +321,7 @@ def pipeline_read(
             _warehouse_incremental_query(identity, scope),
             store=str(identity["store"]),
             spark_session=spark_session,
-            context=context,
+            context=io_context,
         )
     else:
         dataframe = read_warehouse_table(
@@ -326,7 +329,7 @@ def pipeline_read(
             str(identity["table_name"]),
             store=str(identity["store"]),
             spark_session=spark_session,
-            context=context,
+            context=io_context,
         )
 
     if has_contract and observation is None:
