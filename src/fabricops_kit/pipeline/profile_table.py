@@ -972,16 +972,17 @@ def profile_table(
         if dataframe is None:
             if store_kind == "lakehouse":
                 dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
-                profile_input_label = f"governed Lakehouse table '{physical_identity}'"
+                profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True
                 backend_label = "Warehouse SQL pushdown"
-                profile_input_label = f"governed Warehouse table '{physical_identity}'"
+                profile_input_label = "complete persisted Warehouse table"
         else:
-            profile_input_label = f"supplied DataFrame for governed table '{identity['table_id']}'"
+            profile_input_label = "supplied DataFrame"
 
         print("FabricOps Profile")
-        print(f"1. Identity → {identity['table_id']} → {profile_input_label}")
+        print(f"1. Table → {physical_identity}")
+        print(f"   Input → {profile_input_label}")
         print(f"2. Profiling backend → {backend_label}")
     else:
         print("FabricOps Profile")
