@@ -31,7 +31,7 @@ class _Frame:
     def collect(self): return self.rows
 
 
-def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=None):
+def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=None, catalogue_rows=None):
     context = {
         "config": object(), "env": env, "notebook_id": "notebook-1",
         "workspace_id": "workspace-1", "data_contract_overrides": dict(overrides or {}),
@@ -44,7 +44,12 @@ def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=
         [("Source", "table-a"), ("Target", "table-b")] if pairs is None else pairs,
         {"notebook_id": "notebook-1", "workspace_id": "workspace-1", "environment_name": env},
     ))
-    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: _Frame(rows))
+    def _read(table_name, *_args, **_kwargs):
+        if table_name == "METADATA_DATA_CATALOGUE":
+            return _Frame(catalogue_rows or [])
+        return _Frame(rows)
+
+    monkeypatch.setattr(module, "read_lakehouse_table", _read)
     monkeypatch.setattr(module, "resolve_active_data_contract", lambda _c, _e, tid, **_kwargs: (active or {})[tid])
     monkeypatch.setattr(module, "get_default_fabric_context", lambda: context_obj)
     monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
@@ -68,12 +73,24 @@ def test_contract_review_uses_only_frozen_payload():
 def test_selector_resolves_multiple_lineage_tables_and_preserves_roles(monkeypatch):
     """Discover and independently select every notebook Lineage table."""
     rows = [_row(3), _row(2, table_id="table-b")]
-    context, state = _render(monkeypatch, rows)
+    catalogue_rows = [
+        {
+            "environment_name": "dev", "metadata_level": "table", "is_active": True,
+            "table_id": "table-a", "layer": "Bronze", "schema_name": "demo", "table_name": "orders",
+        },
+        {
+            "environment_name": "dev", "metadata_level": "table", "is_active": True,
+            "table_id": "table-b", "layer": "Silver", "schema_name": "demo", "table_name": "curated_orders",
+        },
+    ]
+    context, state = _render(monkeypatch, rows, catalogue_rows=catalogue_rows)
     assert state["notebook"]["notebook_id"] == "notebook-1"
     assert state["lineage_tables"] == [
         {"pipeline_role": "Source", "table_id": "table-a"},
         {"pipeline_role": "Target", "table_id": "table-b"},
     ]
+    assert state["tables"]["table-a"]["display_name"] == "Bronze / demo / orders"
+    assert state["tables"]["table-b"]["display_name"] == "Silver / demo / curated_orders"
     state["select"]("table-a", "contract-table-a", 3)
     state["select"]("table-b", "contract-table-b", 2)
     assert context["data_contract_overrides"] == {
