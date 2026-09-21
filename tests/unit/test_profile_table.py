@@ -119,13 +119,17 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
         ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE"],
     )
     profile_rows = spark_session.createDataFrame(
-        [(3, 2, 2, 2.0, 1.414, "1", "3", 1.0, 2.0, 3.0, 2, 1, 0.0, 0.0, "A", "A")],
+        [(3, 2, 2, 2.0, 1.414, "1", "3", 2, 1, 0.0, 0.0, "A", "A")],
         [
             "ROW_COUNT", "C0_NON_NULL_COUNT", "C0_DISTINCT_COUNT", "C0_MEAN", "C0_STDDEV",
-            "C0_MIN_VALUE", "C0_MAX_VALUE", "C0_P25", "C0_P50", "C0_P75",
+            "C0_MIN_VALUE", "C0_MAX_VALUE",
             "C1_NON_NULL_COUNT", "C1_DISTINCT_COUNT", "C1_MEAN", "C1_STDDEV",
             "C1_MIN_VALUE", "C1_MAX_VALUE",
         ],
+    )
+    percentile_rows = spark_session.createDataFrame(
+        [(1.0, 2.0, 3.0)],
+        ["C0_P25", "C0_P50", "C0_P75"],
     )
     frequency_rows = spark_session.createDataFrame(
         [("status", "string", "A", 2, 66.667, 1, 3, 2), ("status", "string", None, 1, 33.333, 2, 3, 2)],
@@ -139,6 +143,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
             return schema_rows
         if "FREQUENCY_RANK" in query:
             return frequency_rows
+        if "PERCENTILE_CONT" in query:
+            return percentile_rows
         return profile_rows
 
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
@@ -161,22 +167,45 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
 
     assert _rows(result["profile"])["amount"]["NULL_COUNT"] == 1
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
-    assert len(queries) == 3
+    assert len(queries) == 4
     assert all("SELECT *" not in query.upper() for query in queries)
     assert "ORDINAL_POSITION" not in queries[0]
     assert "ORDER BY" not in queries[0].upper()
-    assert "PERCENTILE_CONT(0.5)" in queries[1]
-    assert queries[1].count("FROM [dbo].[orders]") == 2
-    assert "UNION ALL" not in queries[1]
-    assert "FREQUENCY_RANK <= 2" in queries[2]
+    assert "PERCENTILE_CONT" not in queries[1]
+    assert "PERCENTILE_CONT(0.5)" in queries[2]
+    assert queries[2].count("FROM [dbo].[orders]") == 1
+    assert "UNION ALL" not in queries[2]
+    assert "FREQUENCY_RANK <= 2" in queries[3]
     assert "NVARCHAR" not in queries[1].upper()
     assert "NVARCHAR" not in queries[2].upper()
+    assert "NVARCHAR" not in queries[3].upper()
     assert "CONVERT(VARCHAR(MAX)" in queries[1].upper()
-    assert "CONVERT(VARCHAR(MAX)" in queries[2].upper()
+    assert "CONVERT(VARCHAR(MAX)" in queries[3].upper()
     output = capsys.readouterr().out
     assert "2. Profiling backend → Warehouse SQL pushdown" in output
     assert "3. Statistical profile → calculated" in output
     assert "4. Frequency profile → calculated" in output
+
+
+def test_warehouse_percentile_query_isolated_per_numeric_column():
+    """Keep each ordered percentile scope isolated for Fabric Warehouse compatibility."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    identity = {"store": "Gold", "schema": "demo", "table_name": "customer_summary"}
+
+    query = module._warehouse_percentile_query(
+        identity,
+        column_name="total_order_net_amount",
+        prefix="C2",
+    )
+
+    assert query.count("PERCENTILE_CONT") == 3
+    assert query.count("ORDER BY CONVERT(float, [total_order_net_amount])") == 3
+    assert "SELECT TOP (1)" in query
+    assert "C2_P25" in query
+    assert "C2_P50" in query
+    assert "C2_P75" in query
+    assert "CROSS JOIN" not in query
+    assert "FROM [demo].[customer_summary]" in query
 
 
 def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metrics(spark_session):
@@ -213,6 +242,7 @@ def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metri
             warehouse_wide,
             [("amount", "int", "int"), ("status", "string", "varchar")],
             spark_session=spark_session,
+            percentile_values={"C0_P25": 1.75, "C0_P50": 2.5, "C0_P75": 3.25},
         ).collect()
     }
 
