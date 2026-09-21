@@ -59,7 +59,7 @@ In Development, when no Data Contract is selected, guardrail checks return skipp
 
 This means the same 02_pipeline notebook can be used both before and after Governance is introduced.
 
-## 3. Read these tables
+## 3. Read
 
 The template contains three independent Read blocks.
 
@@ -69,9 +69,10 @@ The template contains three independent Read blocks.
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
 
-### Configure one Read block
+### Configure the Read block
 
 Each Read block is designed to be cloned. Copy the block and change only the source variables:
+
 ```python
 READ_NAME = "orders"
 READ_STORE = "Bronze"
@@ -80,66 +81,9 @@ READ_TABLE = "orders"
 READ_QUERY = None
 ```
 
-### Run the read
+### Run the Read block
 
 `pipeline_read()` resolves whether the source is a Lakehouse or Warehouse, reads it through the appropriate FabricOps I/O function, and returns the Spark DataFrame together with its canonical FabricOps `table_id`.
-
-??? info "How the full Read block works"
-    Each Read block is intentionally split into **READ → CHECK → PROFILE → KEEP** so you can see exactly where the data becomes available and where FabricOps governance begins.
-
-    **1. Define the source**
-
-    - `READ_NAME` gives the source a reusable name in the notebook.
-    - `READ_STORE`, `READ_SCHEMA`, and `READ_TABLE` identify the physical source.
-    - `READ_QUERY` optionally supplies a SQL query for Warehouse reads.
-
-    **2. READ — get the DataFrame**
-
-    `pipeline_read()` is an orchestration function that resolves whether the requested source is a Lakehouse or Warehouse, reads it through the appropriate FabricOps I/O function, and returns the Spark DataFrame together with its canonical FabricOps `table_id`.
-
-    **3. CHECK — run Guardrails**
-
-    - `check_freshness()` checks whether the source is recent enough based on the selected Data Contract.
-    - `check_schema()` checks whether the columns and data types match the contract.
-    - `check_dq()` runs the configured Data Quality rules.
-    - These checks run after the DataFrame has already been read.
-    - In the first Development run, when no Data Contract is selected yet, contract-backed checks safely return `skipped`.
-
-    **4. PROFILE — refresh the saved source profile**
-
-    - `profile_table()` profiles the DataFrame that was already read above, so FabricOps does not read the same source table a second time.
-    - The physical source coordinates are supplied so the first Development run can register the table in the Catalogue even when no Catalogue row exists yet.
-    - Profiling results are saved to `METADATA_DATA_PROFILED`.
-    - Frequency profiling, when generated, is saved to `METADATA_DATA_PROFILED_FREQUENCY`.
-
-    **5. KEEP — make the source available downstream**
-
-    - `sources[READ_NAME] = source` adds the completed source flow to the `sources` dictionary.
-    - The Transform and Write sections can then reuse both its DataFrame and `table_id`.
-    - This happens after the checks so a source that fails a required Guardrail is not silently treated as an approved downstream input.
-
-??? tip "Warehouse SQL pushdown"
-    `READ_QUERY = None` reads the full table.
-
-    The Order History example deliberately supplies SQL so projection and filtering happen in the Warehouse before the result reaches Spark:
-
-    ```python
-    READ_QUERY = """
-    SELECT
-        historical_order_id,
-        customer_id,
-        order_datetime,
-        net_amount
-    FROM demo.order_history
-    WHERE order_datetime >= '2025-01-01'
-    """
-    ```
-
-    The demo predicate preserves the canonical `order_history` fixture while still showing the pushdown path.
-
-    When `READ_QUERY` is supplied, `pipeline_read()` routes the request to `read_warehouse_query()` and pushes the SQL down to the underlying Warehouse.
-
-
 
 ```python
 source = pipeline_read(
@@ -156,14 +100,37 @@ table_id = source["table_id"]
 
 **You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
 
-??? example "Optional Read inspection"
+??? info "Read block details"
+    The full Read block follows **READ → CHECK → PROFILE → KEEP**.
+
+    **READ**
+
+    `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
+
+    For a Warehouse source, `READ_QUERY` can instead contain SQL so projection and filtering happen before the result reaches Spark:
+
     ```python
-    # display(df)
-    # display(dq_df)
-    # display(dq_failed_values)
+    READ_QUERY = """
+    SELECT
+        historical_order_id,
+        customer_id,
+        order_datetime,
+        net_amount
+    FROM demo.order_history
+    WHERE order_datetime >= '2025-01-01'
+    """
     ```
 
-??? info "Source profiling call"
+    When `READ_QUERY` is supplied, FabricOps routes the request through `read_warehouse_query()` and pushes the SQL down to the Warehouse.
+
+    **CHECK**
+
+    FabricOps then runs the configured source Guardrails such as freshness, schema, and Data Quality checks. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
+
+    **PROFILE**
+
+    `profile_table()` profiles the complete table. For a full source read, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+
     ```python
     profile_result = profile_table(
         dataframe=df,
@@ -172,21 +139,24 @@ table_id = source["table_id"]
         table_name=READ_TABLE,
         spark_session=spark,
     )
-    
+
     # display(profile_result["profile"])
     # display(profile_result["frequency_profile"])
     ```
 
-??? tip "Profiling behaviour"
-    FabricOps always profiles the complete table.
-    
-    For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
-    
-    For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
-    
-    For Lakehouse tables, FabricOps profiles the complete table with PySpark. 
-    
-    For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
+    For a partial read, FabricOps reads the complete persisted table again before profiling it. Lakehouse tables are profiled with PySpark. Warehouse tables use Warehouse SQL pushdown.
+
+    **KEEP**
+
+    `sources[READ_NAME] = source` keeps the completed source flow available for downstream Transform and Write blocks.
+
+    Optional inspection remains available when you need it:
+
+    ```python
+    # display(df)
+    # display(dq_df)
+    # display(dq_failed_values)
+    ```
 
 ??? example "Show complete Read block output"
     ![Read block output](../assets/02/Read_Block_Output.png)
@@ -209,7 +179,7 @@ For common examples, see the [PySpark transformation cheat sheet](../reference/e
 
 You can also use Copilot, ChatGPT, Claude, or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data before writing.
 
-## 5. Write the tables
+## 5. Write
 
 The template contains two independent Write blocks.
 
@@ -218,7 +188,7 @@ The template contains two independent Write blocks.
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
 | Customer Summary | `Gold` | `demo` | `customer_summary` | `append` |
 
-### Configure one Write block
+### Configure the Write block
 
 Each Write block is designed to be cloned. Copy the block and change only the target variables:
 
@@ -232,11 +202,9 @@ WRITE_TABLE = "curated_orders"
 WRITE_LOAD_STRATEGY = "overwrite"
 ```
 
-### Run the write
+### Run the Write block
 
 `pipeline_write()` resolves whether the target is a Lakehouse or Warehouse and performs the physical publication through the appropriate FabricOps I/O function.
-
-
 
 ```python
 write_result = pipeline_write(
@@ -251,48 +219,47 @@ write_result = pipeline_write(
 )
 ```
 
-After this succeeds, the target has been physically written and FabricOps records the associated catalogue, lineage, and source observation state handled by the publication flow.
+After this succeeds, the target has been physically written and FabricOps records the associated Catalogue, lineage, and source observation state handled by the publication flow.
 
-??? info "How the full Write block works"
-    Each Write block is split into **PREPARE → CHECK → WRITE → PROFILE → KEEP** so the physical publication boundary is obvious.
+??? info "Write block details"
+    The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.
 
-    **1. Define the target**
+    **PREPARE**
 
-    - `WRITE_DATAFRAME` identifies the transformed DataFrame to publish.
-    - `WRITE_STORE`, `WRITE_SCHEMA`, and `WRITE_TABLE` identify the destination.
-    - `WRITE_LOAD_STRATEGY` controls how the target is written, such as `overwrite`, `append`, `SCD1`, or `SCD2`.
-    - `WRITE_REPARTITION_BY` optionally controls Spark write parallelism before publication.
-    - `WRITE_SOURCE_NAMES` identifies the exact source reads that produced this target.
+    FabricOps resolves the target `table_id`, the source lineage, the load strategy, and any optional `WRITE_REPARTITION_BY` setting.
 
-    **2. PREPARE — resolve the target and source lineage**
+    **CHECK**
 
-    - `write_sources` selects only the source reads used by this target.
-    - `resolve_table_id()` resolves the canonical target `table_id`.
-    - The target DataFrame already exists before anything is written.
+    FabricOps validates the target schema, applies configured sensitive data handling, checks source drift, runs Data Quality rules, and confirms Guardrail coverage. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
 
-    **3. CHECK — validate before publication**
+    **WRITE**
 
-    - `check_schema()` validates the output columns and data types.
-    - `check_sensitive_data()` applies configured masking, redaction, hashing, or tokenization and returns `prepared_df`.
-    - `check_source_drift()` checks each source against the last successfully accepted state for this target.
-    - `check_dq()` runs the target Data Quality rules.
-    - `check_guardrail_coverage()` confirms that all required Guardrails for the publication were evaluated.
-    - In the first Development run, when no Data Contract is selected yet, contract-backed checks safely return `skipped`.
+    `pipeline_write()` is the physical publication boundary. `WRITE_LOAD_STRATEGY` supports `overwrite`, `append`, `SCD1`, and `SCD2`.
 
-    **4. WRITE — publish the target**
+    `WRITE_REPARTITION_BY` optionally controls Spark write parallelism. Leave it as `None` for small or normal writes and increase it only when write scale or performance justifies the extra parallelism.
 
-    `pipeline_write()` is the publication boundary.
+    **PROFILE**
 
-    **5. PROFILE — profile what was actually written**
+    FabricOps profiles the complete persisted target after publication.
 
-    `profile_table()` reads the persisted target and refreshes its saved profile after publication.
+    ```python
+    write_profile = profile_table(
+        table_id=write_result["table_id"],
+        spark_session=spark,
+    )
 
-    **6. KEEP — retain the completed write result**
+    # display(write_profile["profile"])
+    # display(write_profile["frequency_profile"])
+    ```
 
-    - `writes[WRITE_NAME] = write_result` stores the completed publication result for later notebook use.
-    - It is kept after publication and profiling succeed so the `writes` dictionary represents completed target flows.
+    For `overwrite`, the complete DataFrame is already available and can be profiled directly. For `append`, `SCD1`, or `SCD2`, FabricOps re-reads the complete persisted target before profiling it.
 
-??? example "Optional Write inspection"
+    **KEEP**
+
+    `writes[WRITE_NAME] = write_result` keeps the completed publication result available for later notebook use.
+
+    Optional inspection remains available when you need it:
+
     ```python
     # display(WRITE_DATAFRAME)
     # display(prepared_df)
@@ -300,47 +267,6 @@ After this succeeds, the target has been physically written and FabricOps record
     # display(target_dq_failed_values)
     # display(support_mapping_df)
     ```
-
-??? tip "Load strategy"
-    `WRITE_LOAD_STRATEGY` controls how FabricOps applies incoming data to the target.
-
-    Supported strategies include `overwrite`, `append`, `SCD1`, and `SCD2`.
-
-??? tip "Spark write parallelism"
-    `WRITE_REPARTITION_BY` optionally repartitions the DataFrame before writing and works for both Lakehouse and Warehouse targets.
-
-    The first write leaves it as `None`. The Warehouse example uses `WRITE_REPARTITION_BY = 4` to demonstrate parallel Spark write tasks.
-
-    `4` means four Spark partitions/tasks are prepared for the write. It does not create four physical Warehouse table partitions, and actual concurrency still depends on the Spark capacity available to the session.
-
-    Rule of thumb:
-
-    - Leave it as `None` for small or normal writes.
-    - Under ~1 million rows → usually leave as `None`.
-    - Around 1–10 million rows → consider repartitioning if the write is slow.
-    - Above ~10 million rows → write parallelism is more likely to help.
-
-??? info "Target profiling call"
-    ```python
-    write_profile = profile_table(
-        table_id=write_result["table_id"],
-        spark_session=spark,
-    )
-    
-    #display(write_profile["profile"])
-    #display(write_profile["frequency_profile"])
-    ```
-
-??? tip "Profiling behaviour"
-    FabricOps always profiles the complete table.
-
-    For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
-
-    For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
-
-    For Lakehouse tables, FabricOps profiles the complete table with PySpark.
-
-    For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
 
 ??? example "Show complete Write block outputs"
     ![Write 1 block output](../assets/02/Write_Block_Output.png)
