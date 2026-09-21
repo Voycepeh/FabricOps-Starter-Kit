@@ -169,6 +169,10 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert queries[1].count("FROM [dbo].[orders]") == 2
     assert "UNION ALL" not in queries[1]
     assert "FREQUENCY_RANK <= 2" in queries[2]
+    assert "NVARCHAR" not in queries[1].upper()
+    assert "NVARCHAR" not in queries[2].upper()
+    assert "CONVERT(VARCHAR(MAX)" in queries[1].upper()
+    assert "CONVERT(VARCHAR(MAX)" in queries[2].upper()
     output = capsys.readouterr().out
     assert "2. Profiling backend → Warehouse SQL pushdown" in output
     assert "3. Statistical profile → calculated" in output
