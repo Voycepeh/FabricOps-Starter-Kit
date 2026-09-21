@@ -83,9 +83,9 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
     schema = _sql_string(str(identity["schema"]))
     table = _sql_string(str(identity["table_name"]))
     query = (
-        "SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE, ORDINAL_POSITION "
+        "SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE "
         "FROM INFORMATION_SCHEMA.COLUMNS "
-        f"WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {table} ORDER BY ORDINAL_POSITION"
+        f"WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {table}"
     )
     rows = []
     for row in read_warehouse_query(
