@@ -115,8 +115,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     schema_rows = spark_session.createDataFrame(
-        [("amount", "int", 10, 0, 1), ("status", "varchar", None, None, 2)],
-        ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE", "ORDINAL_POSITION"],
+        [("amount", "int", 10, 0), ("status", "varchar", None, None)],
+        ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE"],
     )
     profile_rows = spark_session.createDataFrame(
         [(3, 2, 2, 2.0, 1.414, "1", "3", 1.0, 2.0, 3.0, 2, 1, 0.0, 0.0, "A", "A")],
@@ -163,6 +163,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
     assert len(queries) == 3
     assert all("SELECT *" not in query.upper() for query in queries)
+    assert "ORDINAL_POSITION" not in queries[0]
+    assert "ORDER BY" not in queries[0].upper()
     assert "PERCENTILE_CONT(0.5)" in queries[1]
     assert queries[1].count("FROM [dbo].[orders]") == 2
     assert "UNION ALL" not in queries[1]
@@ -171,6 +173,56 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert "2. Profiling backend → Warehouse SQL pushdown" in output
     assert "3. Statistical profile → calculated" in output
     assert "4. Frequency profile → calculated" in output
+
+
+def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metrics(spark_session):
+    """Keep canonical profile values equivalent across Spark and Warehouse SQL backends."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [(1, "A"), (2, "A"), (3, "B"), (4, "C"), (None, None)],
+        "amount int, status string",
+    )
+
+    spark_profile = {
+        row["COLUMN_NAME"]: row.asDict()
+        for row in shared.build_profile_dataframe(source).collect()
+    }
+
+    warehouse_wide = spark_session.createDataFrame(
+        [(
+            5,
+            4, 4, 2.5, 1.2909944487358056, "1", "4", 1.75, 2.5, 3.25,
+            4, 3, None, None, "A", "C",
+        )],
+        (
+            "ROW_COUNT long, "
+            "C0_NON_NULL_COUNT long, C0_DISTINCT_COUNT long, C0_MEAN double, C0_STDDEV double, "
+            "C0_MIN_VALUE string, C0_MAX_VALUE string, C0_P25 double, C0_P50 double, C0_P75 double, "
+            "C1_NON_NULL_COUNT long, C1_DISTINCT_COUNT long, C1_MEAN double, C1_STDDEV double, "
+            "C1_MIN_VALUE string, C1_MAX_VALUE string"
+        ),
+    )
+    warehouse_profile = {
+        row["COLUMN_NAME"]: row.asDict()
+        for row in module._warehouse_statistical_dataframe(
+            warehouse_wide,
+            [("amount", "int", "int"), ("status", "string", "varchar")],
+            spark_session=spark_session,
+        ).collect()
+    }
+
+    assert set(spark_profile) == set(warehouse_profile)
+    for column_name in spark_profile:
+        spark_row = spark_profile[column_name]
+        warehouse_row = warehouse_profile[column_name]
+        assert spark_row.keys() == warehouse_row.keys()
+        for metric, spark_value in spark_row.items():
+            warehouse_value = warehouse_row[metric]
+            if isinstance(spark_value, float) and spark_value is not None:
+                assert warehouse_value == pytest.approx(spark_value)
+            else:
+                assert warehouse_value == spark_value
 
 
 def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session, monkeypatch):

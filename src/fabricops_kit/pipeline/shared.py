@@ -447,7 +447,7 @@ def build_profile_dataframe(df, *, exclude_columns=None):
                 F.avg(col).cast("double").alias(f"{prefix}MEAN"),
                 F.stddev_samp(col).cast("double").alias(f"{prefix}STDDEV"),
                 F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
-                F.percentile_approx(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
+                F.percentile(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
                 F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
             ])
         elif isinstance(data_type, DateType | TimestampType | StringType):
@@ -1760,7 +1760,7 @@ def resolve_catalogue_table_identity(
         **row,
         "table_id": canonical_id,
         "store_type": store_type,
-        "store": str(row["layer"]).strip().lower(),
+        "store": str(row["layer"]).strip(),
         "schema": str(row.get("schema_name") or "").strip() or None,
         "table_name": str(row["table_name"]).strip(),
     }
