@@ -111,7 +111,7 @@ def print_guardrail_result(
     if not verbose:
         return
 
-    def display_label(value: str | None) -> str | None:
+    def _display_label(value: str | None) -> str | None:
         if not value:
             return None
         raw_value = str(value)
@@ -143,11 +143,11 @@ def print_guardrail_result(
     }.get(raw_status, raw_status.upper())
     print(f"FabricOps Check → {name}")
     if table_id:
-        print(f"  Table  {display_label(table_id)}")
+        print(f"  Table  {_display_label(table_id)}")
     if source_table_id:
-        print(f"  Source {display_label(source_table_id)}")
+        print(f"  Source {_display_label(source_table_id)}")
     if target_table_id:
-        print(f"  Target {display_label(target_table_id)}")
+        print(f"  Target {_display_label(target_table_id)}")
     print(f"  Result {status}")
 
 
