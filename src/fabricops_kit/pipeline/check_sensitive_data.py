@@ -271,7 +271,16 @@ def check_sensitive_data(
             "checks": [],
             "reason": "No Data Contract selected; Development only.",
         }
-        print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+        print_guardrail_result(
+            "Sensitive Data",
+            result,
+            verbose=verbose,
+            table_id=table_id,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
+        )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
@@ -370,7 +379,16 @@ def check_sensitive_data(
         "support_mapping": support_mapping,
         "checks": checks,
     }
-    print_guardrail_result("Sensitive Data", result, verbose=verbose, table_id=table_id)
+    print_guardrail_result(
+        "Sensitive Data",
+        result,
+        verbose=verbose,
+        table_id=table_id,
+        config=config,
+        env=env,
+        spark_session=spark_session,
+        context=context,
+    )
     if verbose:
         treatments = [str(check.get("treatment") or "unknown") for check in checks]
         print(f"  Contract selected; evaluated {len(checks)} active Sensitive Data rule(s).")
