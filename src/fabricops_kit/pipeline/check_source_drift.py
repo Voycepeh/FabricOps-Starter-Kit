@@ -114,6 +114,10 @@ def check_source_drift(
             verbose=verbose,
             source_table_id=str(source_table_id).strip(),
             target_table_id=str(target_table_id).strip(),
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
         )
         if verbose:
             print(f"  Reason {result['reason']}")
@@ -144,6 +148,10 @@ def check_source_drift(
         verbose=verbose,
         source_table_id=source_table_id,
         target_table_id=str(target["table_id"]),
+        config=config,
+        env=env,
+        spark_session=spark_session,
+        context=context,
     )
     if verbose:
         print(

@@ -99,7 +99,16 @@ def check_schema(
             "table_id": table_id,
             "environment_name": env,
         }
-        print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+        print_guardrail_result(
+            "Schema",
+            result,
+            verbose=verbose,
+            table_id=table_id,
+            config=config,
+            env=env,
+            spark_session=spark,
+            context=context,
+        )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
@@ -189,7 +198,16 @@ def check_schema(
             rule_type=str(result.get("rule_type")),
             result=result,
         )
-    print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
+    print_guardrail_result(
+        "Schema",
+        result,
+        verbose=verbose,
+        table_id=table_id,
+        config=config,
+        env=env,
+        spark_session=spark,
+        context=context,
+    )
     if verbose:
         print(
             f"  Rule {result['guardrail_rule_id']} v{result['guardrail_version']} from the selected Data Contract."
