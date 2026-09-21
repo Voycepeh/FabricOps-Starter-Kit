@@ -6,7 +6,7 @@ We are building of the foundation of [Step 00C. Prepare the demo data](00C-prepa
 
 For simplicity, this walkthrough **reads the full source tables into DataFrames** before transformation and writes.
 
-For watermark-based incremental reads, incremental writes, partition-aware processing, and related advanced patterns, see the **Advanced Incremental Read and Write Guide**.
+For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2A. Run an incremental pipeline](02A-run-incremental-pipeline.md).
 
 
 By the end of this step, you will:
