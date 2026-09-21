@@ -95,6 +95,37 @@ _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 _CURRENT_TABLE_IDENTITIES: dict[str, dict[str, str | None]] = {}
 
 
+def _display_table_identity(
+    table_id: str,
+    *,
+    config: Any | None = None,
+    env: str | None = None,
+    spark_session=None,
+    context=None,
+) -> str:
+    """Return a readable table label without forcing Catalogue registration."""
+    raw_value = str(table_id or "").strip()
+    if not raw_value:
+        return raw_value
+    identity = _CURRENT_TABLE_IDENTITIES.get(raw_value)
+    if identity is None and config is not None and env is not None:
+        try:
+            identity = resolve_catalogue_table_identity(
+                config,
+                env,
+                raw_value,
+                spark_session=spark_session,
+                context=context,
+            )
+        except Exception:
+            identity = None
+    if identity is None:
+        return raw_value
+    parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
+    label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
+    return label or raw_value
+
+
 def print_guardrail_result(
     name: str,
     result: Mapping[str, Any],
@@ -115,24 +146,13 @@ def print_guardrail_result(
     def _display_label(value: str | None) -> str | None:
         if not value:
             return None
-        raw_value = str(value)
-        identity = _CURRENT_TABLE_IDENTITIES.get(raw_value)
-        if identity is None and config is not None and env is not None:
-            try:
-                identity = resolve_catalogue_table_identity(
-                    config,
-                    env,
-                    raw_value,
-                    spark_session=spark_session,
-                    context=context,
-                )
-            except Exception:
-                identity = None
-        if identity is None:
-            return raw_value
-        parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
-        label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
-        return label or raw_value
+        return _display_table_identity(
+            value,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
+        )
     raw_status = str(result.get("status") or "skipped").strip().lower()
     status = {
         "passed": "PASS",
@@ -1749,7 +1769,10 @@ def resolve_catalogue_table_identity(
         store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         spark_session=spark_session,
-        context=context or {"config": config, "env": env},
+        context={
+            **(dict(context) if context is not None else {"config": config, "env": env}),
+            "_fabricops_suppress_io_log": True,
+        },
     )
     matches = []
     for raw in frame.collect():
