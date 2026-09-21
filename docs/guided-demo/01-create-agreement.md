@@ -39,7 +39,7 @@ from fabricops_kit import (
 ![Agreement](../assets/01/Widget_Agreement.png)
 ![Agreement2](../assets/01/Widget_Agreement_2.png)
 
-## Stop here
+## Expected result
 
 At the end of Step 1 you should have:
 
