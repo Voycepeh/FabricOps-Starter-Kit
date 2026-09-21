@@ -319,15 +319,15 @@ write_profile = profile_table(
 
 !!! tip "Profiling"
 
-FabricOps always profiles the complete table.
+    FabricOps always profiles the complete table.
 
-For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+    For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
 
-For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
+    For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
 
-For Lakehouse tables, FabricOps profiles the complete table with PySpark. 
+    For Lakehouse tables, FabricOps profiles the complete table with PySpark. 
 
-For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
+    For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
 
 
 #### Write 6. KEEP — retain the completed write result
