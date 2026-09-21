@@ -92,6 +92,7 @@ _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _PENDING_SOURCE_DRIFT_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+_CURRENT_TABLE_IDENTITIES: dict[str, dict[str, str | None]] = {}
 
 
 def print_guardrail_result(
@@ -115,17 +116,19 @@ def print_guardrail_result(
         if not value:
             return None
         raw_value = str(value)
-        if config is None or env is None:
-            return raw_value
-        try:
-            identity = resolve_catalogue_table_identity(
-                config,
-                env,
-                raw_value,
-                spark_session=spark_session,
-                context=context,
-            )
-        except Exception:
+        identity = _CURRENT_TABLE_IDENTITIES.get(raw_value)
+        if identity is None and config is not None and env is not None:
+            try:
+                identity = resolve_catalogue_table_identity(
+                    config,
+                    env,
+                    raw_value,
+                    spark_session=spark_session,
+                    context=context,
+                )
+            except Exception:
+                identity = None
+        if identity is None:
             return raw_value
         parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
         label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
@@ -297,13 +300,15 @@ def resolve_physical_table_identity(
             f"Store '{store_key}' has unsupported kind {store_kind or '<blank>'!r}; "
             "supported kinds are: lakehouse, warehouse."
         )
-    return {
+    identity = {
         "table_id": build_table_id(store_kind, store_key, normalized_schema, normalized_table),
         "store": store_key,
         "schema": normalized_schema,
         "table_name": normalized_table,
         "store_kind": store_kind,
     }
+    _CURRENT_TABLE_IDENTITIES[str(identity["table_id"])] = identity
+    return identity
 
 
 def resolve_profiled_columns(df, exclude_columns: list[str] | set[str] | None = None) -> list[str]:
