@@ -219,7 +219,8 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
     """Calculate compact canonical profile outputs in Fabric Warehouse."""
     from fabricops_kit.pipeline.shared import FREQUENCY_PROFILE_COLUMNS, PROFILE_DATAFRAME_COLUMNS
 
-    all_columns = _warehouse_columns(identity, spark_session=spark_session, context=context)
+    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    all_columns = _warehouse_columns(identity, spark_session=spark_session, context=io_context)
     profile_columns = [
         column for column in all_columns
         if column[0] not in _PROFILE_EXCLUDED_NAMES
@@ -229,7 +230,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
     wide_profile = read_warehouse_query(
         _warehouse_statistical_query(identity, profile_columns),
-        store=str(identity["store"]), spark_session=spark_session, context=context,
+        store=str(identity["store"]), spark_session=spark_session, context=io_context,
     )
     percentile_values = {}
     for index, (name, _canonical_type, sql_type) in enumerate(profile_columns):
@@ -237,7 +238,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
             continue
         percentile_rows = read_warehouse_query(
             _warehouse_percentile_query(identity, column_name=name, prefix=f"C{index}"),
-            store=str(identity["store"]), spark_session=spark_session, context=context,
+            store=str(identity["store"]), spark_session=spark_session, context=io_context,
         ).collect()
         if percentile_rows:
             row = percentile_rows[0]
@@ -266,7 +267,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         selected_metadata = [column for column in all_columns if column[0] in selected_set]
         frequency = read_warehouse_query(
             _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
-            store=str(identity["store"]), spark_session=spark_session, context=context,
+            store=str(identity["store"]), spark_session=spark_session, context=io_context,
         ).select(*FREQUENCY_PROFILE_COLUMNS)
     return profile, frequency, all_columns
 

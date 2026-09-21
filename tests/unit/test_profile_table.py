@@ -136,9 +136,11 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
         ["COLUMN_NAME", "DATA_TYPE", "VALUE", "FREQUENCY_COUNT", "FREQUENCY_PERCENT", "FREQUENCY_RANK", "PROFILED_ROW_COUNT", "PROFILED_NON_NULL_COUNT"],
     )
     queries = []
+    query_contexts = []
 
-    def execute(query, **_kwargs):
+    def execute(query, **kwargs):
         queries.append(query)
+        query_contexts.append(kwargs.get("context"))
         if "INFORMATION_SCHEMA.COLUMNS" in query:
             return schema_rows
         if "FREQUENCY_RANK" in query:
@@ -168,6 +170,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert _rows(result["profile"])["amount"]["NULL_COUNT"] == 1
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
     assert len(queries) == 4
+    assert all(context and context.get("_fabricops_suppress_io_log") is True for context in query_contexts)
     assert all("SELECT *" not in query.upper() for query in queries)
     assert "ORDINAL_POSITION" not in queries[0]
     assert "ORDER BY" not in queries[0].upper()
