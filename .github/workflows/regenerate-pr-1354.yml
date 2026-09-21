@@ -41,6 +41,7 @@ jobs:
           python scripts/generate_individual_function_reference_pages.py
           git diff --binary > /tmp/first-generation.diff
 
+          export FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1
           python scripts/generate_public_function_call_flows_json.py
           python scripts/generate_individual_function_reference_pages.py
           git diff --binary > /tmp/second-generation.diff
