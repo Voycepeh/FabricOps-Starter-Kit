@@ -122,12 +122,12 @@ def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[
                     if numeric else f"CAST(NULL AS float) AS {prefix}_STDDEV"
                 ),
                 (
-                    f"CONVERT(nvarchar(max), MIN({column})) AS {prefix}_MIN_VALUE"
-                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MIN_VALUE"
+                    f"CONVERT(varchar(max), MIN({column})) AS {prefix}_MIN_VALUE"
+                    if min_max else f"CAST(NULL AS varchar(max)) AS {prefix}_MIN_VALUE"
                 ),
                 (
-                    f"CONVERT(nvarchar(max), MAX({column})) AS {prefix}_MAX_VALUE"
-                    if min_max else f"CAST(NULL AS nvarchar(max)) AS {prefix}_MAX_VALUE"
+                    f"CONVERT(varchar(max), MAX({column})) AS {prefix}_MAX_VALUE"
+                    if min_max else f"CAST(NULL AS varchar(max)) AS {prefix}_MAX_VALUE"
                 ),
             ]
         )
@@ -218,9 +218,9 @@ def _warehouse_frequency_query(
         branches.append(
             "SELECT COLUMN_NAME, DATA_TYPE, VALUE, FREQUENCY_COUNT, FREQUENCY_PERCENT, FREQUENCY_RANK, "
             f"PROFILED_ROW_COUNT, PROFILED_NON_NULL_COUNT FROM (SELECT {_sql_string(name)} AS COLUMN_NAME, "
-            f"{_sql_string(canonical_type)} AS DATA_TYPE, CONVERT(nvarchar(max), {column}) AS VALUE, COUNT_BIG(*) AS FREQUENCY_COUNT, "
+            f"{_sql_string(canonical_type)} AS DATA_TYPE, CONVERT(varchar(max), {column}) AS VALUE, COUNT_BIG(*) AS FREQUENCY_COUNT, "
             f"CAST(ROUND(100.0 * COUNT_BIG(*) / NULLIF(SUM(COUNT_BIG(*)) OVER (), 0), 3) AS float) AS FREQUENCY_PERCENT, "
-            f"ROW_NUMBER() OVER (ORDER BY COUNT_BIG(*) DESC, CASE WHEN {column} IS NULL THEN 0 ELSE 1 END, CONVERT(nvarchar(max), {column})) AS FREQUENCY_RANK, "
+            f"ROW_NUMBER() OVER (ORDER BY COUNT_BIG(*) DESC, CASE WHEN {column} IS NULL THEN 0 ELSE 1 END, CONVERT(varchar(max), {column})) AS FREQUENCY_RANK, "
             f"SUM(COUNT_BIG(*)) OVER () AS PROFILED_ROW_COUNT, SUM(COUNT_BIG({column})) OVER () AS PROFILED_NON_NULL_COUNT "
             f"FROM {source} GROUP BY {column}) AS ranked {limit}"
         )
