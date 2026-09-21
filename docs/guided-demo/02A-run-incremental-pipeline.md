@@ -82,12 +82,11 @@ To inspect only the current incremental batch:
 ```python
 batch_profile = profile_table(
     dataframe=orders_df,
-    table_id=orders["table_id"],
     spark_session=spark,
 )
 ```
 
-That profile describes only the DataFrame returned for this run. It should not replace the meaning of a canonical complete-source profile.
+That profile describes only the DataFrame returned for this run. Because no governed identity is supplied, FabricOps keeps this batch profile in memory and does not persist it as the canonical governed table profile.
 
 To profile the complete persisted source instead:
 
