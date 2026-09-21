@@ -13393,7 +13393,7 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 330,
+      "source_end_line": 367,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
       "source_start_line": 116,
       "supports_live_contract": false,
@@ -16471,7 +16471,7 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_select_data_contract(*, spark_session=None, context=None)",
-      "source_end_line": 330,
+      "source_end_line": 367,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
       "source_start_line": 116,
       "summary": "Select immutable Data Contracts for every table linked to this notebook.",
