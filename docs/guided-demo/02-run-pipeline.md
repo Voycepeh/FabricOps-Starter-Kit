@@ -2,7 +2,7 @@
 
 Run the `02_pipeline` template in the Engineering Development Workspace.
 
-This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data.md) and and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
+This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
 
 For simplicity, this walkthrough **reads the full source tables into DataFrames** before transformation and writes.
 
@@ -207,7 +207,7 @@ For common examples, see the [PySpark transformation cheat sheet](../reference/e
 ??? example "Show Copilot example"
     ![Copilot](../assets/02/Copilot.png)
 
-You can also use Copilot, ChatGPT, Claude , or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data before writing.
+You can also use Copilot, ChatGPT, Claude, or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data before writing.
 
 ## 5. Write the tables
 
