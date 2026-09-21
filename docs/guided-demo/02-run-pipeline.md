@@ -338,4 +338,14 @@ write_profile = profile_table(
 ![Write 1 block output](../assets/02/Write_Block_Output.png)
 ![Write 2 block output](../assets/02/Write_Block_Output_2.png)
 
+## Expected result
+
+At the end of Step 2 you should have:
+
+- three source tables read through FabricOps into Spark DataFrames,
+- `demo.curated_orders` written to the Silver Lakehouse and `demo.customer_summary` written to the Gold Warehouse,
+- Catalogue, profile, lineage, and source observation metadata recorded for the pipeline,
+- contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
+
+
 **Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)
