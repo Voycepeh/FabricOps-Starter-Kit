@@ -166,6 +166,18 @@ profile_result = profile_table(
 # display(profile_result["frequency_profile"])
 ```
 
+!!! tip "Profiling"
+
+FabricOps always profiles the complete table.
+
+For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+
+For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
+
+For Lakehouse tables, FabricOps profiles the complete table with PySpark. 
+
+For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
+
 #### Read 5. KEEP — make the source available downstream
 - `sources[READ_NAME] = source` adds the completed source flow to the `sources` dictionary.
 - The Transform and Write sections can then reuse both its DataFrame and `table_id`.
@@ -301,13 +313,29 @@ write_profile = profile_table(
     spark_session=spark,
 )
 
-display(write_profile["profile"])
-display(write_profile["frequency_profile"])
+#display(write_profile["profile"])
+#display(write_profile["frequency_profile"])
 ```
+
+!!! tip "Profiling"
+
+FabricOps always profiles the complete table.
+
+For a full source read or full overwrite, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+
+For partial reads or writes such as `append`, `SCD1`, or `SCD2`, the available Spark DataFrame contains only the changed or incoming data. FabricOps therefore reads the complete persisted table again before profiling it.
+
+For Lakehouse tables, FabricOps profiles the complete table with PySpark. 
+
+For Warehouse tables, FabricOps uses Warehouse SQL pushdown to profile the complete persisted table efficiently.
+
 
 #### Write 6. KEEP — retain the completed write result
 - `writes[WRITE_NAME] = write_result` stores the completed publication result for later notebook use.
 - It is kept after publication and profiling succeed so the `writes` dictionary represents completed target flows.
 
+#### Output of a complete write block
+![Write 1 block output](../assets/02/Write_Block_Output.png)
+![Write 2 block output](../assets/02/Write_Block_Output_2.png)
 
 **Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)
