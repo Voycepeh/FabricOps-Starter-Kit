@@ -53,6 +53,28 @@ def test_catalogue_resolver_isolates_canonical_table_id(monkeypatch):
     assert shared.catalogue_authored_processing(identity)["load_strategy"] == "append"
 
 
+def test_catalogue_resolver_suppresses_internal_io_log(monkeypatch):
+    """Internal Catalogue identity lookups do not emit foundational read noise."""
+    rows = [catalogue_row("table-a", "orders")]
+    captured = {}
+    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
+
+    def _read(*args, **kwargs):
+        captured["context"] = kwargs["context"]
+        return Frame(rows)
+
+    monkeypatch.setattr(shared, "read_lakehouse_table", _read)
+
+    shared.resolve_catalogue_table_identity(
+        object(),
+        "dev",
+        "table-a",
+        context={"config": "config", "env": "dev"},
+    )
+
+    assert captured["context"]["_fabricops_suppress_io_log"] is True
+
+
 @pytest.mark.parametrize("table_id", ["", "   "])
 def test_catalogue_resolver_rejects_blank_table_id(table_id):
     """Reject blank canonical identities before metadata IO."""
