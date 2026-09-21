@@ -27,9 +27,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:811`
+`fabricops_kit/pipeline/profile_table.py:814`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L811-L1101">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L814-L1104">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -171,7 +171,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 64 |
+| Live-critical dependencies | 65 |
 
 ### Release history
 
@@ -234,6 +234,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.profile_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._warehouse_percentile_query</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_profile_dataframes</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
