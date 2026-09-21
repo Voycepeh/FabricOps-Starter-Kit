@@ -31,8 +31,8 @@ jobs:
           python scripts/generate_public_function_call_flows_json.py
           python scripts/generate_individual_function_reference_pages.py
           git diff > /tmp/first.diff
-          python scripts/generate_public_function_call_flows_json.py
-          python scripts/generate_individual_function_reference_pages.py
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 python scripts/generate_public_function_call_flows_json.py
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 python scripts/generate_individual_function_reference_pages.py
           git diff > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
       - name: Commit generated artifacts
