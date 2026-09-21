@@ -73,6 +73,36 @@ def test_guardrail_formatter_resolves_catalogue_labels(monkeypatch, capsys) -> N
     )
 
 
+def test_guardrail_formatter_uses_current_run_identity_before_catalogue(monkeypatch, capsys) -> None:
+    """First-run checks stay readable before profile_table registers the Catalogue row."""
+    table_id = "first-run-table-id"
+    monkeypatch.setitem(
+        shared_module._CURRENT_TABLE_IDENTITIES,
+        table_id,
+        {"store": "Bronze", "schema": "demo", "table_name": "orders"},
+    )
+    monkeypatch.setattr(
+        shared_module,
+        "resolve_catalogue_table_identity",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("not registered yet")),
+    )
+
+    print_guardrail_result(
+        "Freshness",
+        {"status": "skipped", "can_continue": True},
+        verbose=True,
+        table_id=table_id,
+        config=object(),
+        env="dev",
+    )
+
+    assert capsys.readouterr().out == (
+        "FabricOps Check → Freshness\n"
+        "  Table  Bronze.demo.orders\n"
+        "  Result SKIPPED\n"
+    )
+
+
 def test_guardrail_formatter_verbose_false_suppresses_output(capsys) -> None:
     """Quiet checks do not emit partial headings or status lines."""
     print_guardrail_result(
