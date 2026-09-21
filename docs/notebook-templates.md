@@ -48,7 +48,7 @@ The starter flow deliberately uses one incremental driving source with full supp
 
 SCD1 and SCD2 bootstrap through their keyed idempotent merge paths. Removed partitions are processed only through governed partition-scoped overwrite, which can clear a now-empty target partition; incompatible strategies fail without committing the removal.
 
-[Open `03_incremental_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb){ .md-button }
+[Open `03_incremental_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb){ .md-button }\n\n[Follow the incremental Guided Demo](guided-demo/02A-run-incremental-pipeline.md)
 
 </div>
 
