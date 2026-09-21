@@ -98,18 +98,15 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
 
 
 def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]]) -> str:
-    """Build one wide aggregate pass and one wide numeric-percentile pass."""
+    """Build one wide aggregate pass for exact Warehouse statistics."""
     source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
-    aggregate_expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
-    aggregate_outputs = ["metrics.ROW_COUNT"]
-    percentile_expressions = []
-    percentile_outputs = []
+    expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
     for index, (name, _canonical_type, sql_type) in enumerate(columns):
         column = _sql_identifier(name)
         numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
         min_max = sql_type in _WAREHOUSE_MIN_MAX_TYPES
         prefix = f"C{index}"
-        aggregate_expressions.extend(
+        expressions.extend(
             [
                 f"COUNT_BIG({column}) AS {prefix}_NON_NULL_COUNT",
                 f"COUNT_BIG(DISTINCT {column}) AS {prefix}_DISTINCT_COUNT",
@@ -131,37 +128,26 @@ def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[
                 ),
             ]
         )
-        aggregate_outputs.extend(
-            f"metrics.{prefix}_{suffix}"
-            for suffix in ("NON_NULL_COUNT", "DISTINCT_COUNT", "MEAN", "STDDEV", "MIN_VALUE", "MAX_VALUE")
-        )
-        if numeric:
-            percentile_expressions.extend(
-                [
-                    f"PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P25",
-                    f"PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P50",
-                    f"PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P75",
-                ]
-            )
-            percentile_outputs.extend(
-                [
-                    f"MAX({prefix}_P25) AS {prefix}_P25",
-                    f"MAX({prefix}_P50) AS {prefix}_P50",
-                    f"MAX({prefix}_P75) AS {prefix}_P75",
-                ]
-            )
-    metrics = "metrics AS (SELECT\n  " + ",\n  ".join(aggregate_expressions) + f"\nFROM {source})"
-    if not percentile_expressions:
-        return f"WITH {metrics}\nSELECT " + ", ".join(aggregate_outputs) + " FROM metrics"
-    percentile_rows = (
-        "percentile_rows AS (SELECT\n  " + ",\n  ".join(percentile_expressions) + f"\nFROM {source})"
+    return "SELECT\n  " + ",\n  ".join(expressions) + f"\nFROM {source}"
+
+
+def _warehouse_percentile_query(identity: Mapping[str, Any], *, column_name: str, prefix: str) -> str:
+    """Build one compact exact percentile query for one Warehouse numeric column."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    column = _sql_identifier(column_name)
+    return (
+        "SELECT TOP (1)\n"
+        f"  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P25,\n"
+        f"  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P50,\n"
+        f"  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P75\n"
+        f"FROM {source}"
     )
-    percentiles = "percentiles AS (SELECT\n  " + ",\n  ".join(percentile_outputs) + "\nFROM percentile_rows)"
-    return f"WITH {metrics},\n{percentile_rows},\n{percentiles}\nSELECT metrics.*, percentiles.* FROM metrics CROSS JOIN percentiles"
 
 
-def _warehouse_statistical_dataframe(wide_frame: Any, columns, *, spark_session: Any):
-    """Reshape one compact wide Warehouse result into canonical profile rows."""
+def _warehouse_statistical_dataframe(
+    wide_frame: Any, columns, *, spark_session: Any, percentile_values: Mapping[str, Any] | None = None
+):
+    """Reshape compact Warehouse aggregates and percentiles into canonical profile rows."""
     from pyspark.sql import types as T
 
     collected = wide_frame.collect()
@@ -169,6 +155,8 @@ def _warehouse_statistical_dataframe(wide_frame: Any, columns, *, spark_session:
         raise RuntimeError("Warehouse statistical profiling must return exactly one compact aggregate row.")
     raw = collected[0].asDict(recursive=True) if hasattr(collected[0], "asDict") else dict(collected[0])
     values = {str(key).upper(): value for key, value in raw.items()}
+    if percentile_values:
+        values.update({str(key).upper(): value for key, value in percentile_values.items()})
     row_count = int(values.get("ROW_COUNT") or 0)
 
     def percent(numerator: int) -> float:
@@ -243,8 +231,23 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         _warehouse_statistical_query(identity, profile_columns),
         store=str(identity["store"]), spark_session=spark_session, context=context,
     )
+    percentile_values = {}
+    for index, (name, _canonical_type, sql_type) in enumerate(profile_columns):
+        if sql_type not in _WAREHOUSE_NUMERIC_TYPES:
+            continue
+        percentile_rows = read_warehouse_query(
+            _warehouse_percentile_query(identity, column_name=name, prefix=f"C{index}"),
+            store=str(identity["store"]), spark_session=spark_session, context=context,
+        ).collect()
+        if percentile_rows:
+            row = percentile_rows[0]
+            values = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+            percentile_values.update(values)
     profile = _warehouse_statistical_dataframe(
-        wide_profile, profile_columns, spark_session=spark_session
+        wide_profile,
+        profile_columns,
+        spark_session=spark_session,
+        percentile_values=percentile_values,
     ).select(*PROFILE_DATAFRAME_COLUMNS)
     if frequency_columns is None:
         scalar = {name for name, _canonical, sql_type in profile_columns if sql_type not in _WAREHOUSE_NON_SCALAR_TYPES}
