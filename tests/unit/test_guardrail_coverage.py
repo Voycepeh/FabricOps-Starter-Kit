@@ -48,6 +48,54 @@ def _patch_runtime(monkeypatch, *, contracts, rules, evidence=None, env="dev"):
     )
 
 
+def test_coverage_uses_readable_store_schema_table_labels(monkeypatch, capsys):
+    monkeypatch.setattr(coverage_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
+    monkeypatch.setattr(coverage_module, "get_spark_session", lambda: "spark")
+    identities = {
+        "source": {"store": "Bronze", "schema": "demo", "table_name": "orders"},
+        "target": {"store": "Silver", "schema": "demo", "table_name": "curated_orders"},
+    }
+    monkeypatch.setattr(
+        coverage_module,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **_kwargs: identities[table_id],
+    )
+    monkeypatch.setattr(
+        coverage_module,
+        "resolve_pipeline_data_contract",
+        lambda _config, _env, table_id, **_kwargs: {"contract_id": f"{table_id}-contract"},
+    )
+    monkeypatch.setattr(
+        coverage_module,
+        "load_table_guardrail_rules",
+        lambda _config, _env, *, table_id, **_kwargs: [_rule(f"{table_id}-schema", "schema")],
+    )
+    monkeypatch.setattr(
+        coverage_module,
+        "build_runtime_audit_fields",
+        lambda **_kwargs: {"_activity_id": "activity-1"},
+    )
+    monkeypatch.setattr(
+        coverage_module,
+        "_current_activity_results",
+        lambda **_kwargs: [
+            {"guardrail_rule_id": "source-schema"},
+            {"guardrail_rule_id": "target-schema"},
+        ],
+    )
+
+    result = coverage_module.check_guardrail_coverage(
+        target_table_id="target",
+        source_table_ids=["source"],
+        verbose=True,
+    )
+
+    assert result["status"] == "passed"
+    output = capsys.readouterr().out
+    assert "Bronze.demo.orders" in output
+    assert "Silver.demo.curated_orders" in output
+
+
 def test_development_baseline_skips_when_no_contracts_are_selected(monkeypatch):
     _patch_runtime(monkeypatch, contracts={}, rules={})
 
