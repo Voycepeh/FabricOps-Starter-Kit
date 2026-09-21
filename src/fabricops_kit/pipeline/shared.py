@@ -102,10 +102,34 @@ def print_guardrail_result(
     table_id: str | None = None,
     source_table_id: str | None = None,
     target_table_id: str | None = None,
+    config: Any | None = None,
+    env: str | None = None,
+    spark_session=None,
+    context=None,
 ) -> None:
     """Print one concise, normalized public Guardrail outcome."""
     if not verbose:
         return
+
+    def _display_label(value: str | None) -> str | None:
+        if not value:
+            return None
+        raw_value = str(value)
+        if config is None or env is None:
+            return raw_value
+        try:
+            identity = resolve_catalogue_table_identity(
+                config,
+                env,
+                raw_value,
+                spark_session=spark_session,
+                context=context,
+            )
+        except Exception:
+            return raw_value
+        parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
+        label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
+        return label or raw_value
     raw_status = str(result.get("status") or "skipped").strip().lower()
     status = {
         "passed": "PASS",
@@ -119,11 +143,11 @@ def print_guardrail_result(
     }.get(raw_status, raw_status.upper())
     print(f"FabricOps Check → {name}")
     if table_id:
-        print(f"  Table  {table_id}")
+        print(f"  Table  {_display_label(table_id)}")
     if source_table_id:
-        print(f"  Source {source_table_id}")
+        print(f"  Source {_display_label(source_table_id)}")
     if target_table_id:
-        print(f"  Target {target_table_id}")
+        print(f"  Target {_display_label(target_table_id)}")
     print(f"  Result {status}")
 
 

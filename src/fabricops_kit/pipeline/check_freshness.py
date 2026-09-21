@@ -89,7 +89,16 @@ def check_freshness(
             "table_id": requested_table_id,
             "environment_name": env,
         }
-        print_guardrail_result("Freshness", result, verbose=verbose, table_id=requested_table_id)
+        print_guardrail_result(
+            "Freshness",
+            result,
+            verbose=verbose,
+            table_id=requested_table_id,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
+        )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
@@ -150,7 +159,16 @@ def check_freshness(
             rule_type=str(result.get("rule_type") or ""),
             result=result,
         )
-    print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
+    print_guardrail_result(
+        "Freshness",
+        result,
+        verbose=verbose,
+        table_id=table_id,
+        config=config,
+        env=env,
+        spark_session=spark_session,
+        context=context,
+    )
     if verbose:
         print(
             f"  Rule {result.get('guardrail_rule_id', '')} v{result.get('guardrail_version', 1)} from the selected Data Contract."

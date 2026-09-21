@@ -52,7 +52,9 @@ def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
         identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark, context=context)
     except Exception:
         return table_id
-    return str(identity.get("table_name") or table_id)
+    parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
+    label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
+    return label or table_id
 
 
 def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any, activity_id: str) -> list[dict[str, Any]]:
