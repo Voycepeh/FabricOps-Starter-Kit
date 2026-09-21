@@ -278,6 +278,48 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     return identity, context
 
 
+@pytest.mark.parametrize("probe", ["activity", "rows"])
+def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch, probe):
+    """Missing Warehouse targets must not be queried before their first publication."""
+    identity = _identity("warehouse:unified:demo:customer_summary", store_type="warehouse")
+    identity["store"] = "Gold"
+    identity["schema"] = "demo"
+    identity["table_name"] = "customer_summary"
+    queries = []
+
+    class Frame:
+        def collect(self):
+            return [{"fabricops_target_exists": 0}]
+
+    def read_query(query, **kwargs):
+        queries.append((query, kwargs))
+        return Frame()
+
+    monkeypatch.setattr(io_package, "read_warehouse_query", read_query)
+
+    if probe == "activity":
+        result = write_module._target_has_activity(
+            identity=identity,
+            activity_id="activity-1",
+            context={},
+            spark_session="spark",
+        )
+    else:
+        result = write_module._target_has_rows(
+            identity=identity,
+            context={},
+            spark_session="spark",
+        )
+
+    assert result is False
+    assert len(queries) == 1
+    assert "INFORMATION_SCHEMA.TABLES" in queries[0][0]
+    assert "demo" in queries[0][0]
+    assert "customer_summary" in queries[0][0]
+    assert queries[0][1]["store"] == "Gold"
+    assert queries[0][1]["spark_session"] == "spark"
+
+
 @pytest.mark.parametrize(
     ("store_type", "strategy", "writer"),
     [
