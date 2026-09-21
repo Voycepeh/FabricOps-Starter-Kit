@@ -174,6 +174,8 @@ def widget_select_data_contract(*, spark_session=None, context=None):
         "environment": env, "tables": {}, "resolved_contracts": {}, "message": "", "_controls": {},
     }
 
+    catalogue_labels = {}
+
     # Initialization always starts Development unselected and Production ignores overrides.
     _clear_overrides(selection_context)
     if env == "prod":
@@ -192,13 +194,38 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                     f"Production environment {env!r} cannot resolve Data Contract for lineage-linked "
                     f"table {table_id!r} (table_id={table_id!r}): {exc}"
                 ) from exc
-            state["tables"][table_id] = {"versions": [], "selected": contract, "review": _contract_review(contract)}
+            review = _contract_review(contract)
+            state["tables"][table_id] = {
+                "versions": [], "selected": contract, "review": review,
+                "display_name": catalogue_labels.get(table_id) or review["table"].get("table_name") or table_id,
+            }
             state["resolved_contracts"][table_id] = {
                 "contract_id": str(contract["contract_id"]),
                 "contract_version": int(contract["contract_version"]),
             }
         state["message"] = f"Resolved {len(table_ids)} active Production Data Contract(s)."
     else:
+        try:
+            catalogue_rows = [_row_dict(row) for row in read_lakehouse_table(
+                "METADATA_DATA_CATALOGUE", store="Metadata",
+                schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+                spark_session=spark, context=runtime_context,
+            ).collect()]
+        except Exception as exc:
+            if not is_table_not_found_error(exc):
+                raise
+            catalogue_rows = []
+        for row in catalogue_rows:
+            if (
+                str(row.get("environment_name") or "") == env
+                and str(row.get("metadata_level") or "").lower() == "table"
+                and bool(row.get("is_active"))
+                and str(row.get("table_id") or "") in table_ids
+            ):
+                parts = (row.get("layer"), row.get("schema_name"), row.get("table_name"))
+                label = " / ".join(str(part).strip() for part in parts if str(part or "").strip())
+                if label:
+                    catalogue_labels[str(row["table_id"])] = label
         try:
             contracts = [_row_dict(row) for row in read_lakehouse_table(
                 CONTRACT_TABLE, store="Metadata",
@@ -211,7 +238,13 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             contracts = []
         for table_id in table_ids:
             versions = _contract_options(contracts, table_id)
-            state["tables"][table_id] = {"versions": versions, "selected": None, "review": None}
+            contract_table_name = None
+            if versions:
+                contract_table_name = parse_data_contract_payload(versions[0])["table"].get("table_name")
+            state["tables"][table_id] = {
+                "versions": versions, "selected": None, "review": None,
+                "display_name": catalogue_labels.get(table_id) or contract_table_name or table_id,
+            }
         state["message"] = (
             "Development only · running unvalidated until immutable Data Contract versions are explicitly selected."
         )
@@ -262,11 +295,13 @@ def widget_select_data_contract(*, spark_session=None, context=None):
         for role, table_id in pairs:
             resolved_contract = state["resolved_contracts"][table_id]
             review = state["tables"][table_id]["review"]
-            table_name = review["table"].get("table_name") or table_id
-            sections.append(widgets.HTML(value=html.escape(
-                f"{'Read' if role.lower() == 'source' else 'Write'}  {table_name} · table_id {table_id} · "
+            table_name = state["tables"][table_id]["display_name"]
+            short_table_id = f"{table_id[:8]}…{table_id[-6:]}" if len(table_id) > 18 else table_id
+            sections.append(widgets.HTML(value=(
+                f"<b>{'Read' if role.lower() == 'source' else 'Write'} · {html.escape(str(table_name))}</b><br>"
+                f"<span>table_id: <code title=\"{html.escape(table_id)}\">{html.escape(short_table_id)}</code> · "
                 f"Data Contract v{resolved_contract['contract_version']} · Active · "
-                f"{review['contract_date'] or 'date unavailable'}"
+                f"{html.escape(str(review['contract_date'] or 'date unavailable'))}</span>"
             )))
         page = form_page(
             widgets, title="Production Data Contracts",
@@ -284,7 +319,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                 options=[("No Data Contract · Development only", ""), *[
                     (f"Data Contract v{row['contract_version']} · {row.get('status')}",
                      f"{row['contract_id']}\n{row['contract_version']}") for row in versions
-                ]], **widget_common(widgets, f"{role} · {table_id}"),
+                ]], **widget_common(widgets, role),
             )
             preview = widgets.HTML(value="")
 
@@ -311,18 +346,20 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             control.observe(render, names="value")
             controls[table_id] = control
             role_label = "Read" if role.lower() == "source" else "Write"
-            table_name = table_id
-            if versions:
-                table_name = str(parse_data_contract_payload(versions[0])["table"].get("table_name") or table_id)
+            table_name = state["tables"][table_id]["display_name"]
+            short_table_id = f"{table_id[:8]}…{table_id[-6:]}" if len(table_id) > 18 else table_id
             sections.extend([
-                widgets.HTML(value=html.escape(f"{role_label}  {table_name} · table_id {table_id}")),
+                widgets.HTML(value=(
+                    f"<b>{role_label} · {html.escape(str(table_name))}</b><br>"
+                    f"<span>table_id: <code title=\"{html.escape(table_id)}\">{html.escape(short_table_id)}</code></span>"
+                )),
                 control, preview,
             ])
         page = form_page(
             widgets, title="Development Data Contracts",
             description=(f"Environment: {env} · Notebook: {notebook_scope.get('notebook_name') or notebook_scope.get('notebook_id')} · "
                          "Unselected tables run unvalidated in Development only."),
-            children=[form_section(widgets, title="Lineage-linked tables", children=sections), status],
+            children=[form_section(widgets, title="Pipeline tables", children=sections), status],
         )
         state["_controls"] = {"selections": controls, "status": status, "page": page}
     from IPython import display as ip
