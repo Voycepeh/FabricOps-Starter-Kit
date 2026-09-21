@@ -151,6 +151,31 @@ def _write_scope() -> dict[str, Any]:
     return {"type": "full_dataset"}
 
 
+def _warehouse_target_exists(
+    *, identity: dict[str, Any], context: dict[str, Any], spark_session=None
+) -> bool:
+    """Return whether the configured Warehouse target table already exists."""
+    from fabricops_kit.io import read_warehouse_query
+
+    schema = str(identity["schema"]).replace("'", "''")
+    table = str(identity["table_name"]).replace("'", "''")
+    frame = read_warehouse_query(
+        "SELECT CASE WHEN EXISTS ("
+        "SELECT 1 FROM INFORMATION_SCHEMA.TABLES "
+        f"WHERE TABLE_SCHEMA = N'{schema}' AND TABLE_NAME = N'{table}' AND TABLE_TYPE = 'BASE TABLE'"
+        ") THEN 1 ELSE 0 END AS fabricops_target_exists",
+        store=str(identity["store"]),
+        spark_session=spark_session,
+        context=context,
+    )
+    rows = frame.collect()
+    if not rows:
+        return False
+    row = rows[0]
+    value = row["fabricops_target_exists"] if hasattr(row, "__getitem__") else None
+    return bool(value)
+
+
 def _target_has_rows(
     *, identity: dict[str, Any], context: dict[str, Any], spark_session=None
 ) -> bool:
@@ -168,6 +193,12 @@ def _target_has_rows(
                 context=io_context,
             )
         elif store_kind == "warehouse":
+            if not _warehouse_target_exists(
+                identity=identity,
+                context=context,
+                spark_session=spark_session,
+            ):
+                return False
             schema = str(identity["schema"]).replace("]", "]]")
             table = str(identity["table_name"]).replace("]", "]]")
             frame = read_warehouse_query(
@@ -203,6 +234,12 @@ def _target_has_activity(
                 context=context,
             ).filter(f"`_activity_id` = '{escaped_activity}'")
         elif store_kind == "warehouse":
+            if not _warehouse_target_exists(
+                identity=identity,
+                context=context,
+                spark_session=spark_session,
+            ):
+                return False
             schema = str(identity["schema"]).replace("]", "]]")
             table = str(identity["table_name"]).replace("]", "]]")
             frame = read_warehouse_query(
