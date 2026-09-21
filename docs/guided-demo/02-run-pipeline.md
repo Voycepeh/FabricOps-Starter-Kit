@@ -171,6 +171,10 @@ profile_result = profile_table(
 - The Transform and Write sections can then reuse both its DataFrame and `table_id`.
 - This happens after the checks so a source that fails a required Guardrail is not silently treated as an approved downstream input.
 
+#### Output of a complete read block
+![Read block output](../assets/02/Read_Block_Output.png)
+
+
 ## 4. Transformation
 
 After reading the data from the Lakehouse or Warehouse into PySpark DataFrames, use normal PySpark in this section to perform your project-specific transformation logic, such as:
@@ -182,6 +186,8 @@ After reading the data from the Lakehouse or Warehouse into PySpark DataFrames, 
 - reshaping or selecting the final output structure.
 
 For common examples, see the [PySpark transformation cheat sheet](../reference/engineering-cheat-sheet.md#pyspark-transformation-cheat-sheet).
+
+![Copilot](../assets/02/Copilot.png)
 
 You can also use Copilot, ChatGPT, Calude , or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data before writing.
 
