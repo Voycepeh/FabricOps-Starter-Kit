@@ -1760,7 +1760,7 @@ def resolve_catalogue_table_identity(
         **row,
         "table_id": canonical_id,
         "store_type": store_type,
-        "store": str(row["layer"]).strip().lower(),
+        "store": str(row["layer"]).strip(),
         "schema": str(row.get("schema_name") or "").strip() or None,
         "table_name": str(row["table_name"]).strip(),
     }
