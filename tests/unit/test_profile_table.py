@@ -115,8 +115,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     schema_rows = spark_session.createDataFrame(
-        [("amount", "int", 10, 0, 1), ("status", "varchar", None, None, 2)],
-        ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE", "ORDINAL_POSITION"],
+        [("amount", "int", 10, 0), ("status", "varchar", None, None)],
+        ["COLUMN_NAME", "DATA_TYPE", "NUMERIC_PRECISION", "NUMERIC_SCALE"],
     )
     profile_rows = spark_session.createDataFrame(
         [(3, 2, 2, 2.0, 1.414, "1", "3", 1.0, 2.0, 3.0, 2, 1, 0.0, 0.0, "A", "A")],
@@ -163,6 +163,8 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
     assert len(queries) == 3
     assert all("SELECT *" not in query.upper() for query in queries)
+    assert "ORDINAL_POSITION" not in queries[0]
+    assert "ORDER BY" not in queries[0].upper()
     assert "PERCENTILE_CONT(0.5)" in queries[1]
     assert queries[1].count("FROM [dbo].[orders]") == 2
     assert "UNION ALL" not in queries[1]
