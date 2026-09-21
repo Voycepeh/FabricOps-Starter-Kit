@@ -71,7 +71,14 @@ The template contains three independent Read blocks.
 
 ### Configure the Read block
 
-Each Read block is designed to be cloned. Copy the block and change only the source variables:
+!!! important "This is the part you edit"
+    Each Read block is designed to be cloned. For a normal pipeline, **these are the only Read settings you need to change**:
+
+    - `READ_NAME` → a short notebook name used to reference this source later.
+    - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
+    - `READ_SCHEMA` → the source schema.
+    - `READ_TABLE` → the source table.
+    - `READ_QUERY` → leave as `None` for a full table read, or supply SQL for a Warehouse pushdown read.
 
 ```python
 READ_NAME = "orders"
@@ -80,6 +87,8 @@ READ_SCHEMA = "demo"
 READ_TABLE = "orders"
 READ_QUERY = None
 ```
+
+Everything below uses those settings. You normally do not need to edit the FabricOps orchestration, checks, profiling, or registration logic.
 
 ### Run the Read block
 
@@ -190,7 +199,17 @@ The template contains two independent Write blocks.
 
 ### Configure the Write block
 
-Each Write block is designed to be cloned. Copy the block and change only the target variables:
+!!! important "This is the part you edit"
+    Each Write block is designed to be cloned. For a normal pipeline, **these are the only Write settings you need to change**:
+
+    - `WRITE_NAME` → a short notebook name used to reference this output later.
+    - `WRITE_DATAFRAME` → the transformed Spark DataFrame you want to publish.
+    - `WRITE_SOURCE_NAMES` → the Read blocks that contributed to this output, used for lineage.
+    - `WRITE_STORE` → the FabricOps destination store defined in `00_env_config`.
+    - `WRITE_SCHEMA` → the target schema.
+    - `WRITE_TABLE` → the target table.
+    - `WRITE_LOAD_STRATEGY` → how the incoming DataFrame is applied: `overwrite`, `append`, `SCD1`, or `SCD2`.
+    - `WRITE_REPARTITION_BY` → optional Spark write parallelism; leave as `None` unless you have a reason to tune it.
 
 ```python
 WRITE_NAME = "curated_orders_lakehouse"
@@ -200,7 +219,10 @@ WRITE_STORE = "Silver"
 WRITE_SCHEMA = "demo"
 WRITE_TABLE = "curated_orders"
 WRITE_LOAD_STRATEGY = "overwrite"
+WRITE_REPARTITION_BY = None
 ```
+
+Everything below uses those settings. You normally do not need to edit the FabricOps preparation, Guardrails, publication, profiling, or registration logic.
 
 ### Run the Write block
 
