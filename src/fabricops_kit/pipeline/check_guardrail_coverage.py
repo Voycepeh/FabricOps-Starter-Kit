@@ -11,8 +11,8 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
+    _display_table_identity,
     load_table_guardrail_rules,
-    resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
 )
 
@@ -48,13 +48,13 @@ def _payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
-    try:
-        identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark, context=context)
-    except Exception:
-        return table_id
-    parts = (identity.get("store"), identity.get("schema"), identity.get("table_name"))
-    label = ".".join(str(part).strip() for part in parts if str(part or "").strip())
-    return label or table_id
+    return _display_table_identity(
+        table_id,
+        config=config,
+        env=env,
+        spark_session=spark,
+        context=context,
+    )
 
 
 def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any, activity_id: str) -> list[dict[str, Any]]:
