@@ -175,6 +175,56 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert "4. Frequency profile → calculated" in output
 
 
+def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metrics(spark_session):
+    """Keep canonical profile values equivalent across Spark and Warehouse SQL backends."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [(1, "A"), (2, "A"), (3, "B"), (4, "C"), (None, None)],
+        "amount int, status string",
+    )
+
+    spark_profile = {
+        row["COLUMN_NAME"]: row.asDict()
+        for row in shared.build_profile_dataframe(source).collect()
+    }
+
+    warehouse_wide = spark_session.createDataFrame(
+        [(
+            5,
+            4, 4, 2.5, 1.2909944487358056, "1", "4", 1.75, 2.5, 3.25,
+            4, 3, None, None, "A", "C",
+        )],
+        (
+            "ROW_COUNT long, "
+            "C0_NON_NULL_COUNT long, C0_DISTINCT_COUNT long, C0_MEAN double, C0_STDDEV double, "
+            "C0_MIN_VALUE string, C0_MAX_VALUE string, C0_P25 double, C0_P50 double, C0_P75 double, "
+            "C1_NON_NULL_COUNT long, C1_DISTINCT_COUNT long, C1_MEAN double, C1_STDDEV double, "
+            "C1_MIN_VALUE string, C1_MAX_VALUE string"
+        ),
+    )
+    warehouse_profile = {
+        row["COLUMN_NAME"]: row.asDict()
+        for row in module._warehouse_statistical_dataframe(
+            warehouse_wide,
+            [("amount", "int", "int"), ("status", "string", "varchar")],
+            spark_session=spark_session,
+        ).collect()
+    }
+
+    assert set(spark_profile) == set(warehouse_profile)
+    for column_name in spark_profile:
+        spark_row = spark_profile[column_name]
+        warehouse_row = warehouse_profile[column_name]
+        assert spark_row.keys() == warehouse_row.keys()
+        for metric, spark_value in spark_row.items():
+            warehouse_value = warehouse_row[metric]
+            if isinstance(spark_value, float) and spark_value is not None:
+                assert warehouse_value == pytest.approx(spark_value)
+            else:
+                assert warehouse_value == spark_value
+
+
 def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session, monkeypatch):
     """Treat a custom or incremental Warehouse query result as the exact supplied Spark batch."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
