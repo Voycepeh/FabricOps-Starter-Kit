@@ -26,9 +26,9 @@ the Guardrails appropriate to each table; Schema is a common minimal choice.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_guardrail_coverage.py:84`
+`fabricops_kit/pipeline/check_guardrail_coverage.py:86`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L84-L289">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L86-L291">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

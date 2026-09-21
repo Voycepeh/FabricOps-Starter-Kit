@@ -119,7 +119,16 @@ def check_dq(
             "table_id": table_id,
             "environment_name": env,
         }
-        print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+        print_guardrail_result(
+            "Data Quality",
+            result,
+            verbose=verbose,
+            table_id=table_id,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
+        )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
@@ -144,7 +153,16 @@ def check_dq(
         row_identity_columns=row_identity_columns,
         context=context,
     )
-    print_guardrail_result("Data Quality", result, verbose=verbose, table_id=table_id)
+    print_guardrail_result(
+        "Data Quality",
+        result,
+        verbose=verbose,
+        table_id=table_id,
+        config=config,
+        env=env,
+        spark_session=spark_session,
+        context=context,
+    )
     if verbose:
         checks = list(result.get("checks") or [])
         failed = [check for check in checks if str(check.get("status") or "").lower() not in {"passed", "pass"}]

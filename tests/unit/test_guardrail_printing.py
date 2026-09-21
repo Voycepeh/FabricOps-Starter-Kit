@@ -7,6 +7,7 @@ import inspect
 import pytest
 
 from fabricops_kit import check_dq, check_freshness, check_schema, check_sensitive_data
+from fabricops_kit.pipeline import shared as shared_module
 from fabricops_kit.pipeline.shared import print_guardrail_result
 
 pytestmark = pytest.mark.unit
@@ -40,6 +41,36 @@ def test_guardrail_formatter_preserves_public_statuses(capsys, result, expected)
     """The shared formatter reports the actual normalized result only."""
     print_guardrail_result("Schema", result, verbose=True, table_id="source.demo.orders")
     assert capsys.readouterr().out == (f"FabricOps Check → Schema\n  Table  source.demo.orders\n  Result {expected}\n")
+
+
+def test_guardrail_formatter_resolves_catalogue_labels(monkeypatch, capsys) -> None:
+    """Canonical hashes print as readable store.schema.table labels when context is available."""
+    identities = {
+        "source-id": {"store": "Bronze", "schema": "demo", "table_name": "orders"},
+        "target-id": {"store": "Silver", "schema": "demo", "table_name": "curated_orders"},
+    }
+
+    def _resolve(_config, _env, table_id, **_kwargs):
+        return identities[table_id]
+
+    monkeypatch.setattr(shared_module, "resolve_catalogue_table_identity", _resolve)
+    print_guardrail_result(
+        "Source Drift",
+        {"status": "skipped", "can_continue": True},
+        verbose=True,
+        source_table_id="source-id",
+        target_table_id="target-id",
+        config=object(),
+        env="dev",
+        spark_session=object(),
+        context={},
+    )
+    assert capsys.readouterr().out == (
+        "FabricOps Check → Source Drift\n"
+        "  Source Bronze.demo.orders\n"
+        "  Target Silver.demo.curated_orders\n"
+        "  Result SKIPPED\n"
+    )
 
 
 def test_guardrail_formatter_verbose_false_suppresses_output(capsys) -> None:
