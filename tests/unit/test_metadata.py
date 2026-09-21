@@ -31,6 +31,23 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     assert audit["_activity_id"] == "manual-activity"
 
 
+def test_runtime_audit_fields_preserve_configured_local_wall_clock(monkeypatch, fake_notebookutils):
+    """Configured audit timezone must persist its local wall-clock value."""
+    monkeypatch.setattr(
+        audit_helpers,
+        "get_current_audit_timestamp",
+        lambda **_kwargs: "2026-09-21T15:34:44.879518+08:00",
+    )
+
+    audit = audit_helpers.build_runtime_audit_fields(
+        config=framework_config(),
+        env="dev",
+    )
+
+    assert audit["_committed_at"].isoformat() == "2026-09-21T15:34:44.879518"
+    assert audit["_committed_at"].tzinfo is None
+
+
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     """Verify metadata key builders are stable for governance and dq rules."""
     table_key = config_shared.build_table_id(" Lakehouse ", "Silver", "dbo", "Orders")
@@ -193,7 +210,8 @@ def test_runtime_audit_fields_support_explicit_non_fabric_context():
         "_metadata_lakehouse_name",
         "_activity_id",
     ]
-    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00+08:00"
+    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00"
+    assert audit["_committed_at"].tzinfo is None
     assert audit["_metadata_lakehouse_name"] == "test_metadata"
 
 
