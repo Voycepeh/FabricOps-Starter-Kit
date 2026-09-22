@@ -72,6 +72,12 @@ Use the relevant workflow skill:
 
 `AGENTS.md` is the repository-wide contract. Skills provide focused procedures and must not override it.
 
+### Release-note presentation
+
+For release changelogs and GitHub Release notes, include only sections that contain meaningful content for that release. Do not emit empty headings such as `Deprecated`, `Removed`, `Fixed`, `Security`, `Documentation`, `Breaking changes`, `Notebook templates`, or `Skills` when there is nothing to report.
+
+Release notes describe the formal package release contract first. Notebook templates, skills, samples, guided demos, DQ assets, and environment resources are independently maintained and must not receive dedicated release-note sections merely because they exist in the repository. Mention them only when a release-specific note materially affects users, for example to restate that they remain outside the formal package release contract.
+
 ## Backward compatibility and public contracts
 
 Backward compatibility applies to supported public callables and externally consumed data contracts. It does not require preserving private or shared implementation structure.
