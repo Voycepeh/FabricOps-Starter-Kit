@@ -245,7 +245,7 @@ def test_release_contract_pages_render_live_manifest_snapshot():
     assert ri.ROOT / "docs" / "releases" / "index.md" in paths
     assert ri.ROOT / "docs" / "releases" / version / "index.md" in paths
     assert (ri.ROOT / "docs" / "releases" / version).exists()
-    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-08-07 |" in content
+    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-09-22 |" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
 
 
@@ -363,7 +363,7 @@ def test_release_overview_lists_live_release_with_inventory():
     assert "## Release history" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
     assert "## In preparation" not in content
-    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-08-07 |" in content
+    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-09-22 |" in content
     assert "functions/read_lakehouse_table.md" not in content
 
 
