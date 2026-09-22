@@ -5,7 +5,7 @@ source_ref: main
 source_ref_note: Preparing replacement v0.2.0 release contract against latest main.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
-release_motivation: FabricOps 0.2.0 is being revalidated and prepared for republication. The replacement release will define a narrower supported engineering and metadata foundation, with later governance and guardrail capabilities remaining Preview until separately validated.
+release_motivation: FabricOps 0.2.0 establishes the supported engineering foundation and the tested Steward and Agreement governance entry points, while Data Contracts, Guardrails, access scanning, and related governance capabilities remain Preview.
 functions:
   - name: check_dq
     qualified_name: fabricops_kit.pipeline.check_dq.check_dq
@@ -49,13 +49,17 @@ functions:
     qualified_name: fabricops_kit.pipeline.pipeline_read.pipeline_read
     source_path: src/fabricops_kit/pipeline/pipeline_read.py
     documentation_path: docs/api/reference/pipeline_read.md
-    status: preview
+    status: live
+    live_since: 0.2.0
+    rationale: Stable governed read orchestrator exercised in the Fabric 00-02 acceptance flow.
     introduced_in: 0.2.0
   - name: pipeline_write
     qualified_name: fabricops_kit.pipeline.pipeline_write.pipeline_write
     source_path: src/fabricops_kit/pipeline/pipeline_write.py
     documentation_path: docs/api/reference/pipeline_write.md
-    status: preview
+    status: live
+    live_since: 0.2.0
+    rationale: Stable governed write orchestrator contract; later strategy defects are maintained as bug fixes within the Live API.
     introduced_in: 0.2.0
   - name: prepare_pipeline_table_configs
     qualified_name: fabricops_kit.pipeline.prepare_pipeline_table_configs
@@ -132,7 +136,9 @@ functions:
     qualified_name: fabricops_kit.pipeline.resolve_table_id.resolve_table_id
     source_path: src/fabricops_kit/pipeline/resolve_table_id.py
     documentation_path: docs/api/reference/resolve_table_id.md
-    status: preview
+    status: live
+    live_since: 0.2.0
+    rationale: Stable central table identity resolver used by the governed pipeline flow.
     introduced_in: 0.2.0
   - name: run_table_guardrails
     qualified_name: fabricops_kit.pipeline.run_table_guardrails
@@ -236,15 +242,17 @@ functions:
     qualified_name: fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement
     source_path: src/fabricops_kit/widgets/widget_render_data_agreement.py
     documentation_path: docs/api/reference/widget_render_data_agreement.md
-    status: preview
-    rationale: governance workflow still being validated
+    status: live
+    live_since: 0.2.0
+    rationale: Stable Data Agreement widget exercised in the Fabric governance flow.
     introduced_in: 0.1.0
   - name: widget_render_data_steward
     qualified_name: fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward
     source_path: src/fabricops_kit/widgets/widget_render_data_steward.py
     documentation_path: docs/api/reference/widget_render_data_steward.md
-    status: preview
-    rationale: governance workflow still being validated
+    status: live
+    live_since: 0.2.0
+    rationale: Stable Data Steward widget exercised in the Fabric governance flow.
     introduced_in: 0.1.0
   - name: widget_review_guardrail_governance
     qualified_name: fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance
@@ -342,10 +350,11 @@ metadata_tables:
   - name: METADATA_DATA_AGREEMENT
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_agreement.md
-    status: preview
+    status: live
+    live_since: 0.2.0
     schema_since: 0.2.0
     schema_fingerprint: 66ca457ae90a4134f94c9cd708d114b061f53f1b1d61484fd7e45d9369f76736
-    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    rationale: Stable Data Agreement metadata contract exercised in the Fabric governance flow.
     introduced_in: 0.1.0
   - name: METADATA_DATA_AGREEMENT_EVIDENCE
     source_path: src/fabricops_kit/config/metadata_schemas.py
@@ -411,10 +420,11 @@ metadata_tables:
   - name: METADATA_DATA_STEWARD
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_steward.md
-    status: preview
+    status: live
+    live_since: 0.2.0
     schema_since: 0.2.0
     schema_fingerprint: 08311069057dcfc5eee75ddb18d561bd024799bd2ed93a2510b53e0b1cb947c1
-    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    rationale: Stable Data Steward metadata contract exercised in the Fabric governance flow.
     introduced_in: 0.1.0
   - name: METADATA_ENRICHMENT
     source_path: src/fabricops_kit/config/metadata_schemas.py
