@@ -99,7 +99,7 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
 ### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
-!!! FabricOps provides two Warehouse read helpers:
+!!! tip "FabricOps provides two Warehouse read helpers"
 
     * `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
     * `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
@@ -109,7 +109,7 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
     For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
 
-???  What the notebook intentionally does not load
+??? info "What the notebook intentionally does not load"
 
     `orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
 
