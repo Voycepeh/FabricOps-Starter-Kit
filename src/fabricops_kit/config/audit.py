@@ -9,8 +9,8 @@ from .shared import get_current_audit_timestamp, get_store, resolve_runtime_cont
 
 
 def _audit_timestamp_value(config: Any = None) -> datetime:
-    """Return a datetime audit value using FABRICOPS_AUDIT_TIMEZONE."""
-    return datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False)).replace(tzinfo=None)
+    """Return a timezone-aware datetime using FABRICOPS_AUDIT_TIMEZONE."""
+    return datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
 
 
 def _context_get(context: Any, *keys: str) -> Any:
@@ -109,11 +109,11 @@ def build_runtime_audit_fields(
         return None
 
     if committed_at is None:
-        timestamp_value = datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False)).replace(tzinfo=None)
+        timestamp_value = _audit_timestamp_value(config=config)
     elif isinstance(committed_at, datetime):
-        timestamp_value = committed_at.replace(tzinfo=None)
+        timestamp_value = committed_at
     else:
-        timestamp_value = datetime.fromisoformat(str(committed_at)).replace(tzinfo=None)
+        timestamp_value = datetime.fromisoformat(str(committed_at))
 
     resolved_metadata_lakehouse = metadata_lakehouse_name
     if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and env is not None:
