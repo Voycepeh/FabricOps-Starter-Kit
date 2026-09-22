@@ -61,7 +61,7 @@ markers = [
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["templates/notebooks"]
+extend-exclude = ["templates/notebooks", "docs/maintainer/UI_Testing_DataContract_SelfContained_updated_v38.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "D", "DOC"]
