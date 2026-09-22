@@ -1,0 +1,39 @@
+name: Temporary 0.2.0 final release preflight
+
+on:
+  push:
+    branches:
+      - release/0.2.0-finalize
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: release/0.2.0-finalize
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: uv sync --frozen --extra docs --extra dev
+      - name: Validate release inventory
+        run: PYTHONPATH=src uv run python scripts/generate_release_inventory.py --check
+      - name: Regenerate release contract pages
+        run: PYTHONPATH=src uv run python scripts/generate_release_contract_pages.py
+      - name: Validate tag alignment
+        run: PYTHONPATH=src uv run python scripts/check_release_ready.py v0.2.0
+      - name: Commit generated release docs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-0.2.0-final-release.yml
+          git add CHANGELOG.md docs/releases
+          git commit -m "Regenerate final 0.2.0 release documentation"
+          git push origin HEAD:release/0.2.0-finalize
