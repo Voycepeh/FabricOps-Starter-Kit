@@ -29,18 +29,27 @@ jobs:
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/first-pass.diff
+      - name: Verify second pass is stable
+        shell: bash
+        env:
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/index.md
+          git diff --cached > /tmp/generated.diff
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/second-pass.diff
-          diff -u /tmp/first-pass.diff /tmp/second-pass.diff
+          git diff --cached > /tmp/generated-second.diff
+          diff -u /tmp/generated.diff /tmp/generated-second.diff
+          git diff --exit-code
       - name: Commit generated artifacts
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/index.md
           if git diff --cached --quiet; then
             echo "No generated changes"
             exit 0
