@@ -321,14 +321,14 @@ def test_02_pipeline_transform_is_plain_pyspark():
     assert "pipeline_transform" not in transform
 
 
-def test_02_pipeline_demonstrates_overwrite_append_and_parallel_write():
-    """The full pipeline demo shows two simple load strategies and one parallel Warehouse write."""
+def test_02_pipeline_demonstrates_full_refresh_writes_and_parallel_warehouse_write():
+    """The full pipeline demo uses overwrite for both outputs and one parallel Warehouse write."""
     write_1 = _cell_by_id("02_pipeline.ipynb", "write-1").source
     write_2 = _cell_by_id("02_pipeline.ipynb", "write-2").source
 
     assert 'WRITE_LOAD_STRATEGY = "overwrite"' in write_1
     assert "WRITE_REPARTITION_BY = None" in write_1
-    assert 'WRITE_LOAD_STRATEGY = "append"' in write_2
+    assert 'WRITE_LOAD_STRATEGY = "overwrite"' in write_2
     assert "WRITE_REPARTITION_BY = 4" in write_2
 
 
