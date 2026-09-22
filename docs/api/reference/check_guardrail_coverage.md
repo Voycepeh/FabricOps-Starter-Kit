@@ -117,5 +117,11 @@ Raises ValueError for missing canonical identities or missing Fabric activity id
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.0 |
+
 
 </details>

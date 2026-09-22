@@ -337,11 +337,11 @@ def test_release_manifest_lifecycle_counts_match_v020_release():
     """Verify maintainer-owned lifecycle classifications match the v0.2.0 release."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 12
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 17
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 6
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
@@ -456,7 +456,7 @@ def test_metadata_manifest_records_schema_since_and_fingerprint():
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
-    assert agreement["status"] == "preview"
+    assert agreement["status"] == "live"
     assert agreement["schema_since"] == "0.2.0"
     assert len(agreement["schema_fingerprint"]) == 64
 

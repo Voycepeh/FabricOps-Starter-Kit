@@ -15,6 +15,11 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
     "fabricops_kit.pipeline.profile_table.profile_table",
+    "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+    "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+    "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+    "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+    "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
 )
 
 # Preview public functions remain importable for evaluation, but are not part of
@@ -28,11 +33,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
-    "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-    "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-    "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-    "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-    "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
     "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
     "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",

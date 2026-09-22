@@ -49,6 +49,11 @@ EXPECTED_LIVE_V020_CALLABLES = LIVE_V010_CALLABLES | {
     "setup_metadata_tables",
     "profile_table",
     "read_lakehouse_json",
+    "pipeline_read",
+    "pipeline_write",
+    "resolve_table_id",
+    "widget_render_data_agreement",
+    "widget_render_data_steward",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -136,12 +141,12 @@ def test_supported_public_api_contract_has_release_count_and_stable_names():
     """Verify the v0.2.0 Live public API contract includes approved promotions."""
     message = (
         "The supported public API surface for v0.2.0 must contain the approved "
-        "metadata setup and profiling promotions plus the v0.1.0 Live functions. Update SUPPORTED_PUBLIC_API "
+        "approved engineering and governance promotions plus the v0.1.0 Live functions. Update SUPPORTED_PUBLIC_API "
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 12, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 12
+    assert len(SUPPORTED_PUBLIC_API) == 17, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 17
     assert APPROVED_V1_CALLABLES == EXPECTED_LIVE_V020_CALLABLES
 
 

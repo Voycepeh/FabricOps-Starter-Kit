@@ -1,11 +1,12 @@
 # `pipeline_read`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
 <span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Read one governed pipeline source through its configured Fabric store.
 
@@ -191,18 +192,96 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.2.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 73 |
 
 ### Release history
 
 | Status | Version |
 | --- | --- |
-| Preview | 0.2.0 |
+| Live | 0.2.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
+<li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._compact_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._identifier</code></li>
+<li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared._latest_source_target_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared._max_column_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
+<li><code>fabricops_kit.pipeline.shared._observe_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._observe_lakehouse</code></li>
+<li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared._physical_target_has_activity</code></li>
+<li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
+<li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared._resolve_data_contract_version</code></li>
+<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
+<li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
+<li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared._string_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_observation_query</code></li>
+<li><code>fabricops_kit.pipeline.shared.capture_source_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_freshness_observation_column</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_incremental_observation_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_source_drift_observation_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
+</ul>
 
 
 </details>

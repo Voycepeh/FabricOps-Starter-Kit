@@ -1,11 +1,12 @@
 # `resolve_table_id`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
 <span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Resolve deterministic target identity before its first Development write.
 
@@ -80,18 +81,38 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.2.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 15 |
 
 ### Release history
 
 | Status | Version |
 | --- | --- |
-| Preview | 0.2.0 |
+| Live | 0.2.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+</ul>
 
 
 </details>
