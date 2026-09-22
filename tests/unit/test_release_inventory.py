@@ -322,7 +322,7 @@ def test_release_notes_are_sourced_from_changelog():
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
     assert "Promoted `setup_metadata_tables()` to the supported Live public API." in notes
-    assert "normalized frequency, and profiling-lineage metadata schemas to Live" in notes
+    assert "Promoted Steward, Agreement, Catalogue, Profiled, Profiled Frequency, and Lineage metadata schemas to Live." in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
