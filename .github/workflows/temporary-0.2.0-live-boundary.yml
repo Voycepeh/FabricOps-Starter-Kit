@@ -1,0 +1,53 @@
+name: Temporary 0.2.0 Live boundary preparation
+
+on:
+  push:
+    branches:
+      - release/0.2.0-live-boundary-v2
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: release/0.2.0-live-boundary-v2
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: uv sync --frozen --extra docs --extra dev
+      - name: Regenerate release inventory
+        run: PYTHONPATH=src uv run python scripts/generate_release_inventory.py
+      - name: Regenerate public call-flow contract
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+      - name: Regenerate individual references twice
+        shell: bash
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          find docs/api/reference -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/ref-first.sha
+          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/ref-first.sha
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          find docs/api/reference -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/ref-second.sha
+          sha256sum docs/reference/index.md docs/reference/function-call-graph.md >> /tmp/ref-second.sha
+          cmp /tmp/ref-first.sha /tmp/ref-second.sha
+      - name: Regenerate release contract pages
+        run: PYTHONPATH=src uv run python scripts/generate_release_contract_pages.py
+      - name: Validate release inventory
+        run: PYTHONPATH=src uv run python scripts/generate_release_inventory.py --check
+      - name: Run focused lifecycle validation
+        run: uv run pytest tests/contract/test_public_contract.py tests/unit/test_release_inventory.py tests/unit/test_public_function_call_flows.py tests/unit/test_agreements.py tests/unit/test_widget_data_agreement_layout.py tests/unit/test_widget_ui_layout.py
+      - name: Commit generated lifecycle outputs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-0.2.0-live-boundary.yml
+          git add CHANGELOG.md src/fabricops_kit/public_api.py docs/releases docs/api/reference docs/reference tests/contract/test_public_contract.py tests/unit/test_release_inventory.py
+          git commit -m "Regenerate 0.2.0 Live lifecycle artifacts"
+          git push origin HEAD:release/0.2.0-live-boundary-v2
