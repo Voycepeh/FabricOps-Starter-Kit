@@ -610,31 +610,36 @@
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "internal_function",
-      "contract_display": "Internal",
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
       "function_name": "_audit_timestamp_value",
       "function_type": "private_function",
-      "inbound_callers": [],
+      "inbound_callers": [
+        "fabricops_kit.config.audit.build_runtime_audit_fields"
+      ],
       "inbound_source_references": [
+        "fabricops_kit.config.audit.build_runtime_audit_fields",
         "fabricops_kit.pipeline.shared::<module>",
         "fabricops_kit.widgets.shared::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "none",
+      "live_impact_level": "transitive_live_dependency",
       "live_since": null,
-      "public_flow_reachable": false,
+      "public_flow_reachable": true,
       "qualified_name": "fabricops_kit.config.audit._audit_timestamp_value",
       "release_history": [],
       "release_versions": [],
       "source_end_line": 13,
       "source_path": "src/fabricops_kit/config/audit.py",
       "source_start_line": 11,
-      "supports_live_contract": false,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 1,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ]
     },
     {
       "architecture_classification": "internal",
@@ -1797,14 +1802,12 @@
       "function_type": "shared_function",
       "inbound_callers": [
         "fabricops_kit.config.audit._audit_timestamp_value",
-        "fabricops_kit.config.audit.build_runtime_audit_fields",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.widgets.shared._audit_date"
       ],
       "inbound_source_references": [
         "fabricops_kit.config.audit._audit_timestamp_value",
-        "fabricops_kit.config.audit.build_runtime_audit_fields",
         "fabricops_kit.config.audit::<module>",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.config.setup_notebook::<module>",
@@ -13668,7 +13671,6 @@
   "detached_functions": [
     "fabricops_kit.__getattr__",
     "fabricops_kit._load_package_version",
-    "fabricops_kit.config.audit._audit_timestamp_value",
     "fabricops_kit.config.audit._resolve_action_by",
     "fabricops_kit.config.metadata_keys._build_dq_rule_key",
     "fabricops_kit.config.shared._normalize_widget_config",
@@ -13860,7 +13862,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    Overall ``status`` and ``can_continue`` decision, concise ``summary``,\n    one check per evaluated rule, the original DataFrame with DQ status columns,\n    and a normalized ``failed_values`` DataFrame. Failure detail has one\n    row per failed rule, involved column, and source record, with a shared\n    ``failure_event_id``, row and rule identities, action, column role,\n    string ``raw_value``, original ``raw_value_type``, and reason. It does\n    not copy unrelated source columns. Evaluated rules also include the\n    resolved ``run_id``.",
-      "scope": 48,
+      "scope": 49,
       "signals": [
         "large_width_or_depth"
       ],
@@ -13869,7 +13871,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_dq.py",
       "source_start_line": 13,
       "summary": "Evaluate active governed DQ rules and persist runtime evidence.",
-      "transitive_function_count": 48,
+      "transitive_function_count": 49,
       "usage_notes": "Production evaluates frozen DQ rules from the active Data Contract.\nDevelopment uses an explicitly selected immutable version, or safely skips\nwhen no contract is selected.\nEvery evaluated rule/run is appended to ``METADATA_GUARDRAIL_RESULTS``.\nFailed values are returned to the caller and are never persisted automatically.\nBlock failures prevent continuation while Warn failures do not.",
       "width": 6
     },
@@ -13879,7 +13881,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 5,
+      "depth": 6,
       "direct_call_count": 11,
       "discontinued_in": null,
       "examples": ">>> result = check_freshness(source_result[\"table_id\"])",
@@ -13900,7 +13902,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 5,
+      "max_depth": 6,
       "parameters": [
         {
           "description": "Canonical governed source identity returned by :func:`pipeline_read`.",
@@ -13943,7 +13945,7 @@
         {
           "evidence": [
             {
-              "depth": 5,
+              "depth": 6,
               "width": 11
             }
           ],
@@ -13963,7 +13965,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    Structured freshness evidence and continuation decision. Governed\n    observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.",
-      "scope": 48,
+      "scope": 49,
       "signals": [
         "large_width_or_depth"
       ],
@@ -13972,7 +13974,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_freshness.py",
       "source_start_line": 20,
       "summary": "Check whether a source satisfies configured freshness intent.",
-      "transitive_function_count": 48,
+      "transitive_function_count": 49,
       "usage_notes": "Production resolves expectations from the active Data Contract. Development\nuses an explicitly selected immutable version, or safely skips when none is\nselected.",
       "width": 11
     },
@@ -14075,7 +14077,7 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "Not documented yet",
-      "scope": 32,
+      "scope": 33,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
@@ -14085,7 +14087,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
       "source_start_line": 86,
       "summary": "Verify that the governed pipeline is ready to publish its target.",
-      "transitive_function_count": 32,
+      "transitive_function_count": 33,
       "usage_notes": "",
       "width": 8
     },
@@ -14186,7 +14188,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    Structured guardrail status, continuation decision, checks, and schema\n    differences. Governed configured-table checks append the outcome to\n    ``METADATA_GUARDRAIL_RESULTS``.",
-      "scope": 57,
+      "scope": 58,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14195,7 +14197,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
       "source_start_line": 22,
       "summary": "Check a persisted or supplied schema against configured schema intent.",
-      "transitive_function_count": 57,
+      "transitive_function_count": 58,
       "usage_notes": "Production uses the active Data Contract. Development uses an explicitly\nselected immutable version, or safely skips when no contract is selected.",
       "width": 14
     },
@@ -14205,7 +14207,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 5,
+      "depth": 6,
       "direct_call_count": 13,
       "discontinued_in": null,
       "examples": ">>> result = check_sensitive_data(\n...     transformed_df,\n...     table_id=TARGET_TABLE_ID,\n...     raise_on_failure=True,\n... )\n>>> write_result = pipeline_write(\n...     result[\"dataframe\"],\n...     table_id=TARGET_TABLE_ID,\n... )",
@@ -14227,7 +14229,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 5,
+      "max_depth": 6,
       "parameters": [
         {
           "description": "Prepared business rows whose governed sensitive columns must be treated.",
@@ -14288,7 +14290,7 @@
         {
           "evidence": [
             {
-              "depth": 5,
+              "depth": 6,
               "width": 13
             }
           ],
@@ -14308,7 +14310,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    ``dataframe`` contains every successfully applied treatment;\n    ``support_mapping`` contains caller-owned token mappings, or ``None``;\n    ``checks`` contains sanitized outcomes; and ``can_continue`` is false\n    only when a Block treatment fails. No mapping is persisted automatically.",
-      "scope": 40,
+      "scope": 41,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14317,7 +14319,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
       "source_start_line": 163,
       "summary": "Apply exact-contract Sensitive Data Guardrails before a governed write.",
-      "transitive_function_count": 40,
+      "transitive_function_count": 41,
       "usage_notes": "Only active ``sensitive_data`` Guardrails from the exact applicable Data\nContract version are processed. Classification Enrichment is never read and\nnever triggers a transformation. ``tokenize`` creates opaque UUID tokens\nthat are consistent within the returned mapping/run and preserves nulls;\nsupplying ``existing_mapping`` preserves established assignments. Cross-run\nstability otherwise requires the project to persist and supply the mapping.\n``mask`` preserves configured leading and trailing characters and replaces\neach hidden character. ``bucket`` replaces numeric values with row-preserving\nlabels: values below the first bin use the first label, each later bin is an\ninclusive lower boundary, and values at or above the final bin use the final\nlabel. Bucket does not aggregate rows. ``remove`` drops the governed column.\nWarn failures leave the input unchanged\nfor that rule and permit continuation, while Block failures require callers\nto stop before writing. Raw values exist only in the returned support mapping\nand are excluded from ``METADATA_GUARDRAIL_RESULTS``.",
       "width": 13
     },
@@ -14327,7 +14329,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 6,
+      "depth": 7,
       "direct_call_count": 7,
       "discontinued_in": null,
       "examples": ">>> result = check_source_drift(\n...     source_result[\"table_id\"],\n...     target_table_id=target_table_id,\n... )\n>>> result[\"target_table_id\"] == target_table_id\nTrue",
@@ -14348,7 +14350,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 6,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Canonical governed source identity returned by :func:`pipeline_read`.",
@@ -14397,7 +14399,7 @@
         {
           "evidence": [
             {
-              "depth": 6,
+              "depth": 7,
               "width": 7
             }
           ],
@@ -14417,7 +14419,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    Source Drift evidence for the source-to-target relationship and its\n    compatibility with the source's governed load behaviour.",
-      "scope": 48,
+      "scope": 49,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14426,7 +14428,7 @@
       "source_path": "src/fabricops_kit/pipeline/check_source_drift.py",
       "source_start_line": 14,
       "summary": "Detect governed source drift against one target consumption baseline.",
-      "transitive_function_count": 48,
+      "transitive_function_count": 49,
       "usage_notes": "Notebook orchestration calls this function explicitly for every governed\nsource before :func:`pipeline_write`. A successful write then commits the\naccepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.",
       "width": 7
     },
@@ -14545,7 +14547,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom Warehouse query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an environment-selected immutable Data\n      Contract applies. The contract record itself is not exposed.\n    - ``read_mode``: the explicit source read mode.\n    - ``has_data`` and ``should_process``: whether this read contributes\n      unconsumed work. Full reads return ``True`` without triggering a count.\n    - ``scope``: a compact summary of the resolved full, bootstrap,\n      watermark, or partition scope. Partition scope includes removed\n      values that require target reconciliation; no metadata rows are exposed.",
-      "scope": 75,
+      "scope": 76,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14554,7 +14556,7 @@
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 51,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
-      "transitive_function_count": 75,
+      "transitive_function_count": 76,
       "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. For incremental reads, observe the complete physical source, resolve the\n   last committed state for the exact target, and derive watermark or\n   changed-partition scope. A missing baseline deterministically bootstraps\n   with a complete read.\n5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   framework-owned ``read_warehouse_query`` pushdown.\n6. Capture transient current-run Source Observation state without advancing\n   accepted progress. Only successful target publication commits it.\n7. Return the DataFrame, explicit ``table_id``, and small source metadata\n   required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse\nFiles do not have a canonical ``table_id`` and should continue to use the\nfoundational CSV, Excel, JSON, or Parquet readers directly.\n\nIncremental Warehouse reads reject caller-owned ``query`` SQL because\nFabricOps cannot safely compose arbitrary SQL with its target-specific\nprogress predicate. Source Drift remains a separate compatibility check;\nincremental scope answers only what this target has not consumed.\n\nThis function does not execute Freshness, Source Drift, Schema, DQ, or\nSensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline`` and\n``03_incremental_pipeline``.\n\nWith ``verbose=True``, a Warehouse table read reports a line such as\n``FabricOps Read \u2192 Warehouse table 'product.demo.orders' \u2192 read_warehouse_table``.",
       "width": 12
     },
@@ -14564,7 +14566,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 6,
+      "depth": 7,
       "direct_call_count": 21,
       "discontinued_in": null,
       "examples": "Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:\n\n>>> result = pipeline_write(\n...     prepared_df, store=\"Silver\", schema=\"demo\",\n...     table_name=\"curated_orders\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )\n>>> result[\"table_id\"]\n'lakehouse:unified:demo:curated_orders'\n\nDevelopment may propose processing, without bypassing contract authority:\n\n>>> pipeline_write(\n...     prepared_df, store=\"Silver\", schema=\"demo\",\n...     table_name=\"curated_orders\", load_strategy=\"overwrite\",\n...     source_table_ids=[orders_result[\"table_id\"]],\n... )",
@@ -14587,7 +14589,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 6,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Prepared target DataFrame after explicit target checks have passed.",
@@ -14672,7 +14674,7 @@
         {
           "evidence": [
             {
-              "depth": 6,
+              "depth": 7,
               "width": 21
             }
           ],
@@ -14692,7 +14694,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    A deliberately small result containing only the canonical ``table_id``.\n    Profile the persisted target through an explicit read-back rather than\n    treating the input DataFrame as persisted state.",
-      "scope": 79,
+      "scope": 80,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14701,7 +14703,7 @@
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
       "source_start_line": 300,
       "summary": "Publish one governed pipeline table target through its configured Fabric store.",
-      "transitive_function_count": 79,
+      "transitive_function_count": 80,
       "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Detect whether this activity already produced target rows.\n9. Perform append/overwrite or dedicated SCD processing only when the\n   activity is not already represented in the physical target.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, idempotently commit target\n    Lineage and accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nSame-activity retries use the target's persisted ``_activity_id`` audit\nfield to detect a row-producing publication and skip its physical mutation.\nCatalogue processing, Lineage, and accepted Source Observation metadata are\nidempotent and replayed on every retry. Empty append, empty overwrite,\npartition-removal-only overwrite, and true SCD no-op operations may leave\nno activity marker; repeating those operations is safe. Changing the\nparticipating source set represents a different logical publication and\ntherefore requires a new activity rather than reuse of the current one.\nLakehouse SCD2 closes changed rows and inserts their replacement current\nversions in one Delta ``MERGE`` so an activity marker cannot represent a\npartially applied two-step history mutation. Warehouse SCD2 retains its\nexisting SQL transaction boundary.\n\nBefore physical publication, target-specific Source Observation evidence\nis durably staged with ``observation_status='observed'``. If a scheduled\nactivity terminates after target rows materialize but before finalization,\nthe next activity verifies the prior target ``_activity_id``, promotes that\nstaged evidence idempotently, and calculates incremental work from the\nrecovered committed baseline. Evidence for another target is not promoted.\n\nA first incremental append has no committed baseline and therefore reads a\ncomplete bootstrap scope. FabricOps permits that bootstrap only for a new\nor empty physical target. A populated target fails before publication so\nmissing metadata cannot silently duplicate all source rows. SCD1 and SCD2\nbootstraps continue through their existing keyed, idempotent merge paths.\n\nA removed source partition is actionable incremental work even though its\ninput DataFrame contains no rows for that partition. FabricOps permits the\nremoval only when governed partition-scoped overwrite can include the\nremoved value in ``replaceWhere`` and clear stale target rows. Other target\nstrategies, or mismatched source and target partition columns, fail before\npublication and therefore do not commit the removal baseline.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, Source Drift, or profiling. These remain\nexplicit notebook engineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
       "width": 21
     },
@@ -14711,7 +14713,7 @@
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "contract_risk": "live",
-      "depth": 6,
+      "depth": 7,
       "direct_call_count": 18,
       "discontinued_in": null,
       "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(store=\"Bronze\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)",
@@ -14730,6 +14732,7 @@
       "has_large_width_or_depth": true,
       "lifecycle_status": "live",
       "live_critical_dependencies": [
+        "fabricops_kit.config.audit._audit_timestamp_value",
         "fabricops_kit.config.audit._context_get",
         "fabricops_kit.config.audit._require_audit_values",
         "fabricops_kit.config.audit._valid_audit_value",
@@ -14796,9 +14799,9 @@
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
         "fabricops_kit.pipeline.shared.resolve_profiled_columns"
       ],
-      "live_critical_dependency_count": 65,
+      "live_critical_dependency_count": 66,
       "live_since": "0.2.0",
-      "max_depth": 6,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Exact Spark DataFrame to profile. If a governed identity is also supplied, FabricOps does not re-read the physical table.",
@@ -14865,7 +14868,7 @@
         {
           "evidence": [
             {
-              "depth": 6,
+              "depth": 7,
               "width": 18
             }
           ],
@@ -14885,7 +14888,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
-      "scope": 67,
+      "scope": 68,
       "signals": [
         "large_width_or_depth"
       ],
@@ -14894,7 +14897,7 @@
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 839,
       "summary": "Profile a Spark DataFrame or a complete governed physical table.",
-      "transitive_function_count": 67,
+      "transitive_function_count": 68,
       "usage_notes": "The orchestration performs these mechanical steps:\n\n1. Validate and resolve the optional canonical governed identity.\n2. Use the supplied DataFrame exactly, read a physical Lakehouse table into\n   Spark, or keep physical Warehouse aggregation in Warehouse SQL.\n3. Calculate canonical statistical metrics with the selected backend.\n4. Select eligible frequency columns and calculate exact grouped counts,\n   including null as a frequency value.\n5. When governed, create stable table and column identities, replace rows\n   in ``METADATA_DATA_PROFILED`` and\n   ``METADATA_DATA_PROFILED_FREQUENCY`` idempotently for the current\n   Fabric activity, then update\n   ``METADATA_DATA_CATALOGUE``.\n6. Return both profiling outputs. DataFrame-only mode performs no metadata\n   writes and never invents a ``table_id``.\n\nA retry in the same Fabric activity reuses the snapshot and row identities\nand replaces that snapshot rather than appending duplicates. Catalogue is\nupdated only after both profile components succeed; its table-level\n``_activity_id`` and non-null ``last_profiled_at`` identify the completed\nsnapshot for readers. A same-activity retry first clears that completion\nmarker. If a later stage fails, snapshot removal is best-effort hygiene:\nCatalogue remains authoritative even if cleanup also fails, and the\noriginal profiling error is preserved. A later activity receives a\ndistinct snapshot identity.",
       "width": 18
     },
@@ -15686,7 +15689,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 4,
+      "depth": 5,
       "direct_call_count": 9,
       "discontinued_in": null,
       "examples": ">>> result = scan_workspace_access(\n...     catalogue_df,\n...     targets=[\"warehouse\", \"curated_lakehouse\"],\n...     spark_session=spark,\n... )\n>>> result[\"access\"].display()\n>>> result[\"unmatched\"].display()",
@@ -15704,7 +15707,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 4,
+      "max_depth": 5,
       "parameters": [
         {
           "description": "``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to canonical FabricOps ``table_id`` values.",
@@ -15759,14 +15762,14 @@
         "0.2.0"
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``access`` contains rows aligned to ``METADATA_DATA_ACCESS`` and ready\n    for persistence. ``unmatched`` contains observed permissions that could\n    not be linked to an active registered physical table, so observations\n    are never silently discarded.",
-      "scope": 29,
+      "scope": 30,
       "signals": [],
       "signature": "def scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...]='warehouse', environment_name: str | None=None, access_snapshot_id: str | None=None, spark_session=None, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 427,
       "source_path": "src/fabricops_kit/access/scan_workspace_access.py",
       "source_start_line": 316,
       "summary": "Scan observable SQL permissions for registered governed physical tables.",
-      "transitive_function_count": 29,
+      "transitive_function_count": 30,
       "usage_notes": "This scans observable SQL permissions only; it is not a complete workspace\nsecurity inventory. Workspace roles, item sharing, OneLake Security, and\nPower BI security are outside this scanner's scope. The function returns\nDataFrames and never persists or changes permissions.",
       "width": 9
     },
@@ -16130,7 +16133,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 6,
+      "depth": 7,
       "direct_call_count": 18,
       "discontinued_in": null,
       "examples": ">>> form = widget_author_data_contract(table_id=\"table-orders\", spark_session=spark)\n>>> render_review = form[\"render_section\"]\n>>> render_review(\"Review\")",
@@ -16153,7 +16156,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 6,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Canonical governed table identity. The widget creates or reopens its one agreement-free draft in the active environment.",
@@ -16184,7 +16187,7 @@
         {
           "evidence": [
             {
-              "depth": 6,
+              "depth": 7,
               "width": 18
             }
           ],
@@ -16204,7 +16207,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict[str, Any]\n    Table-owned exact-version state, compact controls, displayed UI, and callable\n    ``render_section``, ``validate``, and ``freeze`` actions.",
-      "scope": 69,
+      "scope": 70,
       "signals": [
         "large_width_or_depth"
       ],
@@ -16213,7 +16216,7 @@
       "source_path": "src/fabricops_kit/widgets/widget_author_data_contract.py",
       "source_start_line": 72,
       "summary": "Open one exact Data Contract version in a unified authoring experience.",
-      "transitive_function_count": 69,
+      "transitive_function_count": 70,
       "usage_notes": "This is the primary contract-centric authoring UX. Passive headers, summaries,\ntables, badges, and previews are aggregated HTML; ipywidgets are reserved for\ninteraction and only the current section/subtype editor is mounted. Governance\nvalidation and persistence remain in the Data Contract authoring service layer.",
       "width": 18
     },
@@ -16223,7 +16226,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 5,
+      "depth": 6,
       "direct_call_count": 23,
       "discontinued_in": null,
       "examples": "Not documented yet",
@@ -16243,7 +16246,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 5,
+      "max_depth": 6,
       "parameters": [
         {
           "description": "Fabric Spark session used for initial metadata reads, explicit steward refreshes, and the final append-only write.",
@@ -16268,7 +16271,7 @@
         {
           "evidence": [
             {
-              "depth": 5,
+              "depth": 6,
               "width": 23
             }
           ],
@@ -16293,7 +16296,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
-      "scope": 61,
+      "scope": 62,
       "signals": [
         "large_width_or_depth"
       ],
@@ -16302,7 +16305,7 @@
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
       "source_start_line": 42,
       "summary": "Render a wide, single-flow data-agreement editor.",
-      "transitive_function_count": 61,
+      "transitive_function_count": 62,
       "usage_notes": "",
       "width": 23
     },
@@ -16312,7 +16315,7 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 5,
+      "depth": 6,
       "direct_call_count": 17,
       "discontinued_in": null,
       "examples": "Not documented yet",
@@ -16332,7 +16335,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 5,
+      "max_depth": 6,
       "parameters": [
         {
           "description": "Fabric Spark session used for metadata reads and append-only writes.",
@@ -16357,7 +16360,7 @@
         {
           "evidence": [
             {
-              "depth": 5,
+              "depth": 6,
               "width": 17
             }
           ],
@@ -16382,7 +16385,7 @@
         "0.2.0"
       ],
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
-      "scope": 46,
+      "scope": 47,
       "signals": [
         "large_width_or_depth"
       ],
@@ -16391,7 +16394,7 @@
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 35,
       "summary": "Render append-only data steward create/update maintenance.",
-      "transitive_function_count": 46,
+      "transitive_function_count": 47,
       "usage_notes": "",
       "width": 17
     },
@@ -17079,6 +17082,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.audit._audit_timestamp_value",
+      "caller_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.audit._context_get",
       "caller_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "violation_details": [],
@@ -17102,17 +17116,6 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.audit._valid_audit_value",
-      "caller_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
       "caller_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "violation_details": [],
       "violation_types": []
@@ -26452,7 +26455,7 @@
   "release_contract": {
     "discontinued_public_function_count": 0,
     "latest_release_version": "0.2.0",
-    "live_critical_internal_count": 95,
+    "live_critical_internal_count": 96,
     "live_public_function_count": 12,
     "preview_public_function_count": 16,
     "release_versions": [
@@ -26462,7 +26465,6 @@
   },
   "source_referenced_functions": [
     "fabricops_kit._load_package_version",
-    "fabricops_kit.config.audit._audit_timestamp_value",
     "fabricops_kit.config.audit._resolve_action_by",
     "fabricops_kit.config.metadata_keys._build_dq_rule_key",
     "fabricops_kit.config.shared._normalize_widget_config",
@@ -26502,12 +26504,12 @@
   "summary": {
     "defined_but_not_used_count": 29,
     "defined_function_count": 406,
-    "detached_function_count": 39,
+    "detached_function_count": 38,
     "implicit_runtime_hook_count": 2,
     "public_function_count": 28,
     "relationship_count": 835,
-    "source_referenced_function_count": 37,
-    "used_function_count": 338
+    "source_referenced_function_count": 36,
+    "used_function_count": 339
   },
   "used_functions": [
     "fabricops_kit.access.scan_workspace_access._access_rows",
@@ -26519,6 +26521,7 @@
     "fabricops_kit.access.scan_workspace_access._target_store_kinds",
     "fabricops_kit.access.scan_workspace_access._unmatched_rows",
     "fabricops_kit.access.scan_workspace_access.scan_workspace_access",
+    "fabricops_kit.config.audit._audit_timestamp_value",
     "fabricops_kit.config.audit._context_get",
     "fabricops_kit.config.audit._require_audit_values",
     "fabricops_kit.config.audit._valid_audit_value",
