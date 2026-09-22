@@ -852,8 +852,10 @@ def profile_table(
 
     FabricOps calculates the canonical statistical profile and applicable
     frequency distribution close to the data. Supplied DataFrames and physical
-    Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
-    An identity may be supplied as a
+    Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
+    the calculations while normalizing reported ``DATA_TYPE`` values to the
+    canonical PySpark schema vocabulary used by downstream schema and Guardrail
+    checks. An identity may be supplied as a
     canonical ``table_id`` or as ``store``, optional ``schema``, and
     ``table_name``. When an identity is present, FabricOps associates the
     result with that governed table and persists Catalogue, profile, and
