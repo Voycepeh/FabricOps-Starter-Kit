@@ -19,6 +19,11 @@ functions:
     documentation_path: docs/api/reference/check_freshness.md
     status: preview
     introduced_in: 0.2.0
+  - name: check_guardrail_coverage
+    qualified_name: fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage
+    source_path: src/fabricops_kit/pipeline/check_guardrail_coverage.py
+    documentation_path: docs/api/reference/check_guardrail_coverage.md
+    status: preview
   - name: check_schema
     qualified_name: fabricops_kit.pipeline.check_schema
     source_path: src/fabricops_kit/pipeline/check_schema.py

@@ -12,4 +12,4 @@
 
 | Release | Status | Description |
 | --- | --- | --- |
-| FabricOps Starter Kit 0.2.0 | Preparing | FabricOps 0.2.0 is being revalidated and prepared for republication. |
+| FabricOps Starter Kit 0.2.0 | Preparing | FabricOps 0.2.0 establishes the supported engineering foundation and the tested Steward and Agreement governance entry points, while Data Contracts, Guardrails, access scanning, and related governance capabilities remain Preview. |
