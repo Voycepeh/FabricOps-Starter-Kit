@@ -324,11 +324,16 @@ Recommended process:
 
 1. Review merged PRs and release inventory evidence.
 2. Draft entries under `Unreleased`.
-3. Classify entries under `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, and `Security`.
-4. Include upgrade instructions and breaking changes where applicable.
-5. Move approved entries to `## [X.Y.Z] - YYYY-MM-DD`.
+3. Use only the changelog sections that contain meaningful release content, such as `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, `Metadata model`, `Documentation`, `Breaking changes`, `Known limitations`, and `Upgrade instructions`.
+4. Omit empty headings entirely. Do not keep placeholder sections merely to preserve a template shape.
+5. Do not create dedicated `Notebook templates`, `Skills`, `Samples`, `Guided demos`, `DQ assets`, or `Environment resources` sections unless that release has a material user-facing note about those independently maintained assets. Their existence alone is not release-note content and does not make them part of the formal package release contract.
+6. Include upgrade instructions and breaking changes only when applicable.
+7. Move approved entries to `## [X.Y.Z] - YYYY-MM-DD`.
+8. Before tagging, read the final release section exactly as the GitHub Release workflow will publish it and remove empty, duplicate, stale, or misleading sections.
 
 An LLM may draft changelog entries, release summaries, migration notes, rationale, descriptions, and likely New/Updated explanations from deterministic diffs. The maintainer must approve final wording. The LLM must not invent changes, decide semantic version impact, promote Preview assets to Live, or accept a breaking change.
+
+The tag workflow publishes the matching `CHANGELOG.md` section verbatim as the GitHub Release body. Therefore changelog presentation quality is release presentation quality: empty headings in the changelog become empty headings on GitHub and must be removed before tagging.
 
 ## 10. Run generators
 
