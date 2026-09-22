@@ -262,6 +262,42 @@ def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metri
                 assert warehouse_value == spark_value
 
 
+@pytest.mark.parametrize(
+    ("sql_type", "precision", "scale", "expected"),
+    [
+        ("bit", None, None, "boolean"),
+        ("smallint", None, None, "smallint"),
+        ("int", None, None, "int"),
+        ("bigint", None, None, "bigint"),
+        ("tinyint", None, None, "smallint"),
+        ("real", None, None, "float"),
+        ("float", None, None, "double"),
+        ("decimal", 18, 2, "decimal(18,2)"),
+        ("numeric", 38, 10, "decimal(38,10)"),
+        ("date", None, None, "date"),
+        ("datetime2", None, None, "timestamp"),
+        ("datetimeoffset", None, None, "timestamp"),
+        ("varchar", None, None, "string"),
+        ("nvarchar", None, None, "string"),
+        ("time", None, None, "string"),
+        ("varbinary", None, None, "binary"),
+        ("uniqueidentifier", None, None, "binary"),
+    ],
+)
+def test_warehouse_type_name_uses_pyspark_canonical_types(
+    sql_type, precision, scale, expected
+):
+    """Normalize Warehouse physical types to the PySpark schema vocabulary."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    row = {
+        "DATA_TYPE": sql_type,
+        "NUMERIC_PRECISION": precision,
+        "NUMERIC_SCALE": scale,
+    }
+
+    assert module._warehouse_type_name(row) == expected
+
+
 def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session, monkeypatch):
     """Treat a custom or incremental Warehouse query result as the exact supplied Spark batch."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
