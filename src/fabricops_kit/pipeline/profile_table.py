@@ -66,20 +66,44 @@ def _sql_string(value: str) -> str:
 
 
 def _warehouse_type_name(row: Mapping[str, Any]) -> str:
-    """Return the canonical Spark-style type name for Warehouse metadata."""
+    """Return the canonical PySpark type name for Warehouse metadata.
+
+    Warehouse profiling may calculate statistics with SQL pushdown, but FabricOps
+    stores schema metadata in the same type vocabulary produced by PySpark
+    DataFrame schemas because downstream schema and Guardrail checks run in
+    PySpark.
+    """
     name = str(row["DATA_TYPE"]).lower()
     if name in {"decimal", "numeric", "money", "smallmoney"}:
         return f"decimal({int(row['NUMERIC_PRECISION'])},{int(row['NUMERIC_SCALE'])})"
     return {
-        "bigint": "bigint", "bit": "boolean", "float": "double", "int": "int",
-        "real": "float", "smallint": "smallint", "tinyint": "tinyint",
-        "date": "date", "datetime": "timestamp", "datetime2": "timestamp",
+        "bigint": "bigint",
+        "binary": "binary",
+        "bit": "boolean",
+        "char": "string",
+        "date": "date",
+        "datetime": "timestamp",
+        "datetime2": "timestamp",
+        "datetimeoffset": "timestamp",
+        "float": "double",
+        "image": "binary",
+        "int": "int",
+        "nchar": "string",
+        "nvarchar": "string",
+        "real": "float",
         "smalldatetime": "timestamp",
+        "smallint": "smallint",
+        "time": "string",
+        "tinyint": "smallint",
+        "uniqueidentifier": "binary",
+        "varbinary": "binary",
+        "varchar": "string",
+        "xml": "string",
     }.get(name, "string")
 
 
 def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any]):
-    """Read compact Warehouse column metadata without reading business rows."""
+    """Read Warehouse columns and normalize their types to PySpark names."""
     schema = _sql_string(str(identity["schema"]))
     table = _sql_string(str(identity["table_name"]))
     query = (
@@ -828,8 +852,10 @@ def profile_table(
 
     FabricOps calculates the canonical statistical profile and applicable
     frequency distribution close to the data. Supplied DataFrames and physical
-    Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
-    An identity may be supplied as a
+    Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
+    the calculations while normalizing reported ``DATA_TYPE`` values to the
+    canonical PySpark schema vocabulary used by downstream schema and Guardrail
+    checks. An identity may be supplied as a
     canonical ``table_id`` or as ``store``, optional ``schema``, and
     ``table_name``. When an identity is present, FabricOps associates the
     result with that governed table and persists Catalogue, profile, and
