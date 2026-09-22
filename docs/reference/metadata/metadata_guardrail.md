@@ -4,7 +4,7 @@ Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Dat
 
 ## Writer functions
 
-* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
+* [`widget_data_contract`](../../api/reference/widget_data_contract.md)
 
 ## Used in Workflow Template
 

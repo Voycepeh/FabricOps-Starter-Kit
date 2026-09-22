@@ -186,7 +186,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 **The Data Contract is the versioned governance definition for a governed table, not passive documentation beside the pipeline.**
 
-Governance authors it through [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
+Governance authors it through [`widget_data_contract()`](api/reference/widget_data_contract.md) in `01_governance`. The widget works from the selected `table_id` and brings together:
 
 - **Enrichment** for descriptive table and column metadata and information classification
 - **Guardrails** for enforceable expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements
@@ -205,7 +205,7 @@ The selected or active Data Contract is then **enforced in Engineering through t
 
 ```mermaid
 flowchart LR
-    GOV["01_governance"] --> AUTHOR["widget_author_data_contract()"]
+    GOV["01_governance"] --> AUTHOR["widget_data_contract()"]
     AUTHOR --> CONTRACT["Data Contract"]
     CONTRACT --> SELECT["widget_select_data_contract()"]
     SELECT --> SCHEMA["check_schema()"]
@@ -221,9 +221,9 @@ That is the core **Governance as Code** idea in FabricOps: Governance authors th
 
     ```mermaid
     flowchart LR
-        TABLE["table_id"] --> AUTHOR["widget_author_data_contract()"]
+        TABLE["table_id"] --> AUTHOR["widget_data_contract()"]
         AUTHOR --> CONTRACT["Data Contract version<br/>Enrichment · Guardrails · Processing"]
-        CONTRACT --> ACTIVATE["widget_activate_data_contract()"]
+        CONTRACT --> ACTIVATE["widget_data_contract()"]
         AGREEMENT["Data Agreement version"] --> ACTIVATE
         ACTIVATE --> ACTIVE["ACTIVE for Production"]
     ```
@@ -250,12 +250,12 @@ Read the seven stages as one lifecycle:
 
 1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
 2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
-3. **Governance authors the Data Contract for that `table_id`.** [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
+3. **Governance authors the Data Contract for that `table_id`.** [`widget_data_contract()`](api/reference/widget_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
 4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
 
     **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
 
-5. **Governance activates the tested definition.** [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) links the exact Data Agreement version and makes the selected Data Contract the one active version for that `table_id`. Development stays flexible: it can select any eligible immutable version, including frozen, active, or superseded versions. Draft and rejected versions are not selectable. Production is strict: it must resolve exactly one active version for each linked `table_id`.
+5. **Governance activates the tested definition.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and makes the selected Data Contract the one active version for that `table_id`. Development stays flexible: it can select any eligible immutable version, including frozen, active, or superseded versions. Draft and rejected versions are not selectable. Production is strict: it must resolve exactly one active version for each linked `table_id`.
 6. **Engineering promotes and runs the same pipeline in Production.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state.
 7. **Project teams consume the approved Production result.** `99_explore` provides the reusable read-only exploration entry point without recreating the Production ETL in every consumer workspace.
 
@@ -279,8 +279,8 @@ The main public functions line up with the metadata model like this:
 | Register and profile real tables | [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY` |
 | Register pipeline participation | [`pipeline_read()`](api/reference/pipeline_read.md), [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_DATA_LINEAGE` |
 | Commit source observation state after successful publication | successful [`pipeline_write()`](api/reference/pipeline_write.md) | `METADATA_SOURCE_OBSERVATION` |
-| Author the governed definition | [`widget_author_data_contract()`](api/reference/widget_author_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
-| Activate the Production definition | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
+| Author the governed definition | [`widget_data_contract()`](api/reference/widget_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
+| Activate the Production definition | [`widget_data_contract()`](api/reference/widget_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
 | Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_drift()`](api/reference/check_source_drift.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
 | Optional access observation | `scan_workspace_access()` | `METADATA_DATA_ACCESS` when persistence is used |
 

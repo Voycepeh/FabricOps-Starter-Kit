@@ -219,17 +219,17 @@ SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
 }
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
-    "METADATA_DATA_CONTRACT": ["widget_author_data_contract", "widget_activate_data_contract"],
-    "METADATA_DATA_CATALOGUE": ["profile_table", "widget_author_data_contract"],
+    "METADATA_DATA_CONTRACT": ["widget_data_contract"],
+    "METADATA_DATA_CATALOGUE": ["profile_table", "widget_data_contract"],
     "METADATA_DATA_PROFILED": ["profile_table"],
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
-    "METADATA_ENRICHMENT": ["widget_author_data_contract"],
+    "METADATA_ENRICHMENT": ["widget_data_contract"],
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "check_source_drift", "check_dq",
     ],
     "METADATA_SOURCE_OBSERVATION": ["pipeline_read"],
-    "METADATA_GUARDRAIL": ["widget_author_data_contract"],
+    "METADATA_GUARDRAIL": ["widget_data_contract"],
 }
 
 

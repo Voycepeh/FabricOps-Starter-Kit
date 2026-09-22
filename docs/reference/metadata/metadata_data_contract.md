@@ -4,12 +4,10 @@ Author and freeze one table-centric schema, processing, Enrichment, and Guardrai
 
 ## Writer functions
 
-* [`widget_activate_data_contract`](../../api/reference/widget_activate_data_contract.md)
-* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
+* [`widget_data_contract`](../../api/reference/widget_data_contract.md)
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Contract activation
 * [`01_governance`](../../notebook-templates.md) — Data Contract authoring
 
 ## Model

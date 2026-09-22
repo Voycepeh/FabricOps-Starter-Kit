@@ -401,6 +401,212 @@ def get_contract_authoring_state(
     return state
 
 
+def list_contract_governance_state(
+    *, config: Any, env: str, spark_session: Any
+) -> dict[str, list[dict[str, Any]]]:
+    """Return governed tables and Data Contract versions for the authoring selector."""
+    context = {"config": config, "env": env}
+    catalogue = row_dicts(read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        context=context, spark_session=spark_session,
+    ))
+    contracts = row_dicts(read_lakehouse_table(
+        DATA_CONTRACT_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        context=context, spark_session=spark_session,
+    ))
+    tables = _latest([
+        row for row in catalogue
+        if str(row.get("environment_name") or "") == env
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+    ], ("table_id",))
+    versions = sorted(
+        [row for row in contracts if str(row.get("environment_name") or "") == env],
+        key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)),
+    )
+    return {"tables": tables, "contracts": versions}
+
+
+def get_contract_review_state(
+    *, config: Any, env: str, spark_session: Any, contract_id: str, contract_version: int
+) -> dict[str, Any]:
+    """Load an exact draft or immutable Data Contract version for governance review."""
+    identity, version = validate_contract_identity(contract_id, contract_version)
+    rows = row_dicts(read_lakehouse_table(
+        DATA_CONTRACT_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        context={"config": config, "env": env}, spark_session=spark_session,
+    ))
+    matches = [row for row in rows if str(row.get("contract_id") or "") == identity
+               and int(row.get("contract_version") or 0) == version
+               and str(row.get("environment_name") or "") == env]
+    if not matches:
+        raise ValueError("The exact Data Contract version does not exist.")
+    contract = matches[0]
+    if str(contract.get("status") or "").lower() == "draft":
+        return get_contract_authoring_state(
+            config=config, env=env, spark_session=spark_session,
+            contract_id=identity, contract_version=version,
+        )
+    payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default=None)
+    if not isinstance(payload, dict):
+        raise ValueError("Immutable Data Contract version has no valid canonical payload.")
+    return {
+        "contract": contract, "contract_id": identity, "contract_version": version,
+        "table_id": str(contract.get("table_id") or ""), "environment_name": env,
+        "payload": payload, "catalogue_rows": [], "available_columns": payload.get("table", {}).get("columns", []),
+        "enrichment": [*payload.get("enrichment", {}).get("table", []), *payload.get("enrichment", {}).get("columns", [])],
+        "guardrails": payload.get("guardrails", []),
+    }
+
+
+def build_contract_manifest(
+    *, draft: Mapping[str, Any], config: Any, env: str, spark_session: Any
+) -> tuple[dict[str, Any], list[str]]:
+    """Build the exact canonical payload used by :func:`freeze_contract` without persisting it."""
+    tables = {
+        name: row_dicts(read_lakehouse_table(
+            name, store="Metadata", schema=metadata_table_physical_schema(config, name),
+            spark_session=spark_session, context={"config": config, "env": env},
+        )) for name in CONTRACT_SOURCE_TABLES
+    }
+    validate_contract_draft(
+        draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
+        enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
+        environment_name=env,
+    )
+    return assemble_contract_payload(draft=draft, tables=tables, environment_name=env)
+
+
+def get_column_profile_context(
+    *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
+) -> dict[str, Any]:
+    """Return top frequency values or a range from the latest completed profile snapshot."""
+    context = {"config": config, "env": env}
+    profiled = row_dicts(read_lakehouse_table(
+        "METADATA_DATA_PROFILED", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
+        context=context, spark_session=spark_session,
+    ))
+    candidates = [row for row in profiled
+                  if str(row.get("table_id") or "") == str(table_id)
+                  and str(row.get("column_id") or "") == str(column_id)
+                  and str(row.get("environment_name") or env) == env
+                  and str(row.get("status") or "completed").lower() == "completed"]
+    if not candidates:
+        return {"kind": "unavailable", "message": "No profile values available."}
+    latest = max(candidates, key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""))
+    snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
+    try:
+        frequency = row_dicts(read_lakehouse_table(
+            "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
+            context=context, spark_session=spark_session,
+        ))
+    except Exception as exc:
+        if not any(marker in str(exc).lower() for marker in ("not found", "does not exist", "path does not exist")):
+            raise
+        frequency = []
+    values = [row for row in frequency
+              if str(row.get("table_id") or table_id) == str(table_id)
+              and str(row.get("column_id") or "") == str(column_id)
+              and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)]
+    values.sort(key=lambda row: int(row.get("frequency") or row.get("count") or 0), reverse=True)
+    if values:
+        return {"kind": "values", "values": [
+            {"value": row.get("value", row.get("observed_value")), "count": row.get("frequency", row.get("count"))}
+            for row in values[:3]
+        ], "profile": latest}
+    if latest.get("min_value") is not None or latest.get("max_value") is not None:
+        return {"kind": "range", "min": latest.get("min_value"), "max": latest.get("max_value"), "profile": latest}
+    return {"kind": "unavailable", "message": "No profile values available.", "profile": latest}
+
+
+def _contract_activation_changes(
+    rows: list[dict[str, Any]], selected: dict[str, Any], *, agreement_id: str, agreement_version: str
+) -> list[dict[str, Any]]:
+    """Build lifecycle-only updates for an atomic activation."""
+    changes = [
+        {"contract_id": row["contract_id"], "contract_version": int(row["contract_version"]),
+         "status": "superseded", "is_active": False}
+        for row in rows if str(row.get("table_id") or "") == str(selected.get("table_id") or "")
+        and row.get("is_active") is True
+        and (str(row.get("contract_id")), int(row.get("contract_version") or 0))
+        != (str(selected.get("contract_id")), int(selected.get("contract_version") or 0))
+    ]
+    if selected.get("is_active") is not True or str(selected.get("status") or "").lower() != "active":
+        changes.append({
+            "contract_id": selected["contract_id"], "contract_version": int(selected["contract_version"]),
+            "status": "active", "is_active": True,
+            "agreement_id": agreement_id, "agreement_version": agreement_version,
+        })
+    return changes
+
+
+def activate_contract_version(
+    *, config: Any, env: str, table_id: str, contract_id: str, contract_version: int,
+    agreement_id: str, agreement_version: str, store: str = "Metadata",
+    schema: str | None = None, spark_session: Any = None, context: Any = None,
+) -> dict[str, Any]:
+    """Atomically activate an exact frozen contract and supersede the prior active version."""
+    from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
+
+    agreement_id, agreement_version = str(agreement_id or "").strip(), str(agreement_version or "").strip()
+    if not agreement_id or not agreement_version:
+        raise ValueError("Select an exact Data Agreement version before activation.")
+    rows = row_dicts(read_lakehouse_table(
+        DATA_CONTRACT_TABLE, store=store, schema=schema, spark_session=spark_session, context=context,
+    ))
+    selected = [row for row in rows if str(row.get("contract_id") or "") == contract_id
+                and int(row.get("contract_version") or 0) == int(contract_version)]
+    if not selected:
+        raise ValueError("Selected Data Contract version does not exist.")
+    row = selected[0]
+    if str(row.get("table_id") or "") != table_id:
+        raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
+    if str(row.get("status") or "").lower() not in {"frozen", "active", "superseded"}:
+        raise ValueError("Only a frozen Data Contract version can be activated.")
+    payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default=None)
+    if not isinstance(payload, dict) or payload.get("contract", {}).get("contract_id") != contract_id:
+        raise ValueError("Selected Data Contract payload identity is invalid.")
+    current = (str(row.get("agreement_id") or ""), str(row.get("agreement_version") or ""))
+    if row.get("is_active") is True and current != (agreement_id, agreement_version):
+        raise ValueError("An active Data Contract cannot be relinked to a different Data Agreement.")
+    agreements = row_dicts(read_lakehouse_table(
+        "METADATA_DATA_AGREEMENT", store=store,
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_AGREEMENT"),
+        spark_session=spark_session, context=context,
+    ))
+    if not any(str(item.get("agreement_id") or "") == agreement_id
+               and str(item.get("agreement_version") or "") == agreement_version for item in agreements):
+        raise ValueError("Selected Data Agreement version does not exist.")
+    if len([item for item in rows if item.get("table_id") == table_id and item.get("is_active") is True]) > 1:
+        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
+    changes = _contract_activation_changes(rows, row, agreement_id=agreement_id, agreement_version=agreement_version)
+    if not changes:
+        return {"changed": False, "contract_id": contract_id, "contract_version": int(contract_version), "changes": []}
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric dependency
+        raise RuntimeError("Delta Lake support is required to activate a Data Contract.") from exc
+    source = spark_session.createDataFrame(changes)
+    _, _, _, path = resolve_configured_lakehouse_table(
+        store, DATA_CONTRACT_TABLE,
+        metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
+        if store == "Metadata" else schema or configured_lakehouse_schema(config, env, store),
+        context=context,
+    )
+    (DeltaTable.forPath(spark_session, path).alias("target")
+     .merge(source.alias("source"), "target.contract_id = source.contract_id AND target.contract_version = source.contract_version")
+     .whenMatchedUpdate(set={"status": "source.status", "is_active": "source.is_active",
+                             "agreement_id": "coalesce(source.agreement_id, target.agreement_id)",
+                             "agreement_version": "coalesce(source.agreement_version, target.agreement_version)"})
+     .execute())
+    return {"changed": True, "contract_id": contract_id, "contract_version": int(contract_version), "changes": changes}
+
+
 def build_enrichment_records(
     records: Iterable[Mapping[str, Any]], *, config: Any = None, env: str
 ) -> list[dict[str, Any]]:

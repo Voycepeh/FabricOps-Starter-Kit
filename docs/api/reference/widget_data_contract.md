@@ -1,4 +1,4 @@
-# `widget_author_data_contract`
+# `widget_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -12,9 +12,9 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_data_contract.py:72`
+`fabricops_kit/widgets/widget_data_contract.py:86`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_data_contract.py#L72-L355">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L86-L345">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,10 +36,11 @@ They help users write values into the correct underlying metadata tables without
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_author_data_contract(
-    table_id: str,
-    spark_session: Any,
-    context: dict[str, Any] | None=None,
+def widget_data_contract(
+    table_id: str | None=None,
+    contract_version: int | None=None,
+    spark_session: Any=None,
+    context: Any=None,
 ) -> dict[str, Any]:
 ```
 
@@ -49,9 +50,8 @@ def widget_author_data_contract(
 
 <div class="reference-example-usage" markdown="1">
 
->>> form = widget_author_data_contract(table_id="table-orders", spark_session=spark)
->>> render_review = form["render_section"]
->>> render_review("Review")
+>>> state = widget_data_contract(table_id="table-orders", spark_session=spark)
+>>> state["refresh_manifest"]()
 
 </div>
 
@@ -59,9 +59,10 @@ def widget_author_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical governed table identity. The widget creates or reopens its one agreement-free draft in the active environment. |
-| `spark_session` | `Any` | Yes | Active Microsoft Fabric Spark session used by the authoring services. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the ``FABRIC_CONTEXT`` created by ``00_env_config``. |
+| `table_id` | `str \| None` | No | Initial canonical governed table identity. If omitted, select it in the widget. |
+| `contract_version` | `int \| None` | No | Initial exact lifecycle version. If omitted, the newest version is selected. |
+| `spark_session` | `Any` | No | Active Microsoft Fabric Spark session. The configured session is used when omitted. |
+| `context` | `Any` | No | FabricOps runtime context normally established by ``00_env_config``. |
 
 ## Returns
 
@@ -85,10 +86,12 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 <div class="reference-docstring-notes" markdown="1">
 
-This is the primary contract-centric authoring UX. Passive headers, summaries,
-tables, badges, and previews are aggregated HTML; ipywidgets are reserved for
-interaction and only the current section/subtype editor is mounted. Governance
-validation and persistence remain in the Data Contract authoring service layer.
+The Environment and configured FabricStore are inherited from ``00_env_config``.
+Profile context is read from ``METADATA_DATA_PROFILED`` and
+``METADATA_DATA_PROFILED_FREQUENCY`` and is never included in the canonical payload.
+Refresh frequency is intentionally omitted because it is not a canonical persisted
+Data Contract field. Immutable versions are review-only. Activation requires an exact
+Data Agreement version and delegates its atomic mutation to the Data Contract service.
 
 </div>
 
@@ -110,12 +113,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.2.0 |
 
 
 </details>

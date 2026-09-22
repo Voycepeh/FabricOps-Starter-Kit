@@ -12,7 +12,7 @@ Review the available Catalogue and profiling evidence so you understand the phys
 
 ## Open the Data Contract authoring widget
 
-`widget_author_data_contract()` brings the table-specific Governance definition together in one place.
+`widget_data_contract()` brings the table-specific Governance definition together in one place.
 
 Author the contract in three parts:
 

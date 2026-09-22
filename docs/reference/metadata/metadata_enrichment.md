@@ -4,7 +4,7 @@ Store descriptive Description and Classification metadata for one exact Data Con
 
 ## Writer functions
 
-* [`widget_author_data_contract`](../../api/reference/widget_author_data_contract.md)
+* [`widget_data_contract`](../../api/reference/widget_data_contract.md)
 
 ## Used in Workflow Template
 

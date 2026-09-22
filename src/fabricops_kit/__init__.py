@@ -83,11 +83,10 @@ PIPELINE_EXPORTS = (
 )
 
 WIDGET_EXPORTS = (
-    "widget_author_data_contract",
+    "widget_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_view_catalogue",
-    "widget_activate_data_contract",
     "widget_select_data_contract",
 )
 
