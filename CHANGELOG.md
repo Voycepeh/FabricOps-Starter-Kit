@@ -43,6 +43,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Promoted `setup_metadata_tables()` to the supported Live public API.
 - Promoted `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()` to Live.
 - Promoted `read_lakehouse_json()` to the supported Live public API.
+- Promoted `pipeline_read()`, `pipeline_write()`, and `resolve_table_id()` to the supported Live public API after Fabric validation of the current governed pipeline flow.
+- Promoted `widget_render_data_steward()` and `widget_render_data_agreement()` to the supported Live public API after Fabric validation of the governance setup flow.
 - Promoted the catalogue, profile, normalized frequency, and profiling-lineage metadata schemas to Live.
 
 ### Deprecated
@@ -59,8 +61,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Metadata model
 
-- `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` are Live in v0.2.0.
-- All other metadata schemas remain Preview.
+- `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` are Live in v0.2.0.
+- Data Contract, access, enrichment, guardrail, guardrail-results, and source-observation metadata schemas remain Preview.
 
 ### Documentation
 
@@ -68,11 +70,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Known limitations
 
-- Steward, agreement, contract, access, enrichment, guardrail, and guardrail-results schemas remain Preview.
-- Governance, authoring, review, and guardrail widgets remain Preview.
+- Data Contract, access, enrichment, guardrail, guardrail-results, and source-observation schemas remain Preview.
+- Data Contract authoring/selection/activation, catalogue exploration, access scanning, and Guardrail check surfaces remain Preview.
 - Notebook templates, skills, samples, guided demos, DQ assets, and environment resources remain independently maintained outside the formal package release contract.
 - `setup_metadata_tables()` does not automatically migrate, overwrite, or delete incompatible existing metadata tables.
 - Existing metadata environments using the legacy `frequency_json` design may require recreation or an explicit migration before using the normalized frequency schema.
+
+- Incremental pipeline scenarios have not yet completed manual Fabric acceptance testing; defects found in supported Live APIs will be handled as compatible bug fixes.
 
 ### Upgrade instructions
 
