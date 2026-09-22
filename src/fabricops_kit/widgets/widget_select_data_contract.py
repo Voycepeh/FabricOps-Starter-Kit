@@ -154,7 +154,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
 
     See Also
     --------
-    widget_author_data_contract, widget_activate_data_contract
+    widget_data_contract
 
     """
     config, env, resolved = resolve_fabric_context(context=context)

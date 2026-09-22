@@ -215,11 +215,10 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'pipeline_read',
         'resolve_table_id',
         'pipeline_write',
-        'widget_author_data_contract',
+        'widget_data_contract',
         'widget_render_data_steward',
         'widget_render_data_agreement',
         'widget_view_catalogue',
-            'widget_activate_data_contract',
             'widget_select_data_contract',
     ]
     assert fabricops_kit.__all__ == expected_public_callables

@@ -63,11 +63,10 @@ EXPECTED_V1_CALLABLES = [
     'pipeline_read',
     'resolve_table_id',
     'pipeline_write',
-    'widget_author_data_contract',
+    'widget_data_contract',
     'widget_render_data_steward',
     'widget_render_data_agreement',
     'widget_view_catalogue',
-    'widget_activate_data_contract',
     'widget_select_data_contract',
 ]
 
@@ -83,9 +82,8 @@ def test_widget_public_callables_live_under_widgets_package():
     import fabricops_kit.widgets as widgets
 
     widget_names = {
-        'widget_author_data_contract',
+        'widget_data_contract',
         'widget_view_catalogue',
-        'widget_activate_data_contract',
         'widget_select_data_contract',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -106,9 +104,9 @@ def test_widget_modules_do_not_call_public_widget_functions():
     root = Path(__file__).parents[2]
     widgets_dir = root / "src" / "fabricops_kit" / "widgets"
     public_widget_names = {
-        'widget_author_data_contract',
+        'widget_data_contract',
         'widget_view_catalogue',
-        'widget_activate_data_contract',
+        'widget_data_contract',
         'widget_select_data_contract',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -390,12 +388,12 @@ def test_99_explore_uses_metadata_catalogue_widget():
 def test_root_public_governance_and_widget_imports_still_work():
     """Verify supported root governance and widget imports remain available."""
     for name in [
-        "widget_author_data_contract",
+        "widget_data_contract",
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_view_catalogue",
         "widget_select_data_contract",
-        "widget_activate_data_contract",
+        "widget_data_contract",
     ]:
         assert callable(getattr(fabricops_kit, name))
 

@@ -37,10 +37,9 @@ def _install_fake_notebook_widgets(monkeypatch):
 
 
 LIVE_WIDGETS = {
-    "widget_author_data_contract",
+    "widget_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_activate_data_contract",
     "widget_select_data_contract",
     "widget_view_catalogue",
 }

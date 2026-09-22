@@ -140,8 +140,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_view_catalogue",
-        "widget_author_data_contract",
-        "widget_activate_data_contract",
+        "widget_data_contract",
     }
 
     assert required_functions <= {
@@ -170,8 +169,9 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         assert f"fabricops_kit.widgets.{demoted_widget}" not in source
     authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
     assert "widget_select_data_contract" not in authoring_cell
-    assert "widget_activate_data_contract" not in authoring_cell
-    assert "widget_activate_data_contract(" in _cell_by_id("01_governance.ipynb", "activation-widget").source
+    assert "widget_data_contract(" in authoring_cell
+    assert "widget_select_data_contract" not in source
+    assert "widget_data_contract(" not in _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "METADATA_SCHEMA" not in source
 
 
@@ -192,7 +192,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     }
 
     assert "# step 3. author and freeze the data contract" in normalized["step_3"]
-    assert "widget_author_data_contract" in step_3
+    assert "widget_data_contract" in step_3
     assert "freezing does not activate" in normalized["step_3"]
     assert "immutable data contract" in normalized["step_3"]
 
