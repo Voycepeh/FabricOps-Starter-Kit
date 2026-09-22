@@ -981,6 +981,9 @@ def test_env_config_template_exposes_audit_timezone_setting():
     assert "FABRICOPS_AUDIT_TIMEZONE" in source
     assert "_validate_audit_timezone" in source or "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
+    assert 'spark.conf.set("spark.sql.session.timeZone", CONFIG.audit_timezone)' in source
+    assert source.index("CONFIG = FrameworkConfig(") < source.index('spark.conf.set("spark.sql.session.timeZone"')
+    assert "spark.conf.get('spark.sql.session.timeZone')" in source
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():

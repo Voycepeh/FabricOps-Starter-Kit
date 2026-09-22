@@ -233,17 +233,30 @@ def test_repository_imported_helpers_are_not_false_unused_candidates() -> None:
     records = {row["qualified_name"]: row for row in payload["defined_functions"]}
     expected_references = {
         "fabricops_kit.config.audit._audit_timestamp_value": {
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
             "fabricops_kit.pipeline.shared::<module>",
             "fabricops_kit.widgets.shared::<module>",
         },
         "fabricops_kit.config.audit._resolve_action_by": {"fabricops_kit.widgets.shared::<module>"},
         "fabricops_kit.config.metadata_keys._build_dq_rule_key": {"fabricops_kit.widgets.shared::<module>"},
     }
+    expected_callers = {
+        "fabricops_kit.config.audit._audit_timestamp_value": [
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "fabricops_kit.config.audit._resolve_action_by": [],
+        "fabricops_kit.config.metadata_keys._build_dq_rule_key": [],
+    }
+    expected_public_flow_reachable = {
+        "fabricops_kit.config.audit._audit_timestamp_value": True,
+        "fabricops_kit.config.audit._resolve_action_by": False,
+        "fabricops_kit.config.metadata_keys._build_dq_rule_key": False,
+    }
     for qualified_name, references in expected_references.items():
         assert qualified_name not in unused
         assert set(records[qualified_name]["inbound_source_references"]) == references
-        assert records[qualified_name]["inbound_callers"] == []
-        assert records[qualified_name]["public_flow_reachable"] is False
+        assert records[qualified_name]["inbound_callers"] == expected_callers[qualified_name]
+        assert records[qualified_name]["public_flow_reachable"] is expected_public_flow_reachable[qualified_name]
 
 
 def test_release_lifecycle_and_live_impact_contract(tmp_path: Path) -> None:
