@@ -60,11 +60,11 @@
 ### Changed
 
 - Promoted `setup_metadata_tables()` to the supported Live public API.
-- Promoted `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()` to Live.
+- Promoted `profile_table()` to the supported Live public API as the consolidated profiling entry point for ad hoc and governed table workflows.
 - Promoted `read_lakehouse_json()` to the supported Live public API.
 - Promoted `pipeline_read()`, `pipeline_write()`, and `resolve_table_id()` to the supported Live public API after Fabric validation of the current governed pipeline flow.
 - Promoted `widget_render_data_steward()` and `widget_render_data_agreement()` to the supported Live public API after Fabric validation of the governance setup flow.
-- Promoted the catalogue, profile, normalized frequency, and profiling-lineage metadata schemas to Live.
+- Promoted Steward, Agreement, Catalogue, Profiled, Profiled Frequency, and Lineage metadata schemas to Live.
 
 ### Deprecated
 
@@ -95,7 +95,7 @@
 - `setup_metadata_tables()` does not automatically migrate, overwrite, or delete incompatible existing metadata tables.
 - Existing metadata environments using the legacy `frequency_json` design may require recreation or an explicit migration before using the normalized frequency schema.
 
-- Incremental pipeline scenarios have not yet completed manual Fabric acceptance testing; defects found in supported Live APIs will be handled as compatible bug fixes.
+- Append pipeline behavior has been manually validated in Fabric. Other incremental strategies remain subject to compatible bug fixes within the supported `pipeline_write()` contract.
 
 ### Upgrade instructions
 
