@@ -1,8 +1,8 @@
 release_version: 0.2.0
-release_status: preparing
-release_date: null
-source_ref: main
-source_ref_note: Preparing replacement v0.2.0 release contract against latest main.
+release_status: live
+release_date: 2026-09-22
+source_ref: v0.2.0
+source_ref_note: Frozen release source is the annotated v0.2.0 tag.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
 release_motivation: FabricOps 0.2.0 establishes the supported engineering foundation and the tested Steward and Agreement governance entry points, while Data Contracts, Guardrails, access scanning, and related governance capabilities remain Preview.
