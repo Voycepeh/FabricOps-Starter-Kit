@@ -14,8 +14,10 @@ Profile a Spark DataFrame or complete governed table with one PySpark API.
 
 FabricOps calculates the canonical statistical profile and applicable
 frequency distribution close to the data. Supplied DataFrames and physical
-Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown.
-An identity may be supplied as a
+Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
+the calculations while normalizing reported ``DATA_TYPE`` values to the
+canonical PySpark schema vocabulary used by downstream schema and Guardrail
+checks. An identity may be supplied as a
 canonical ``table_id`` or as ``store``, optional ``schema``, and
 ``table_name``. When an identity is present, FabricOps associates the
 result with that governed table and persists Catalogue, profile, and
@@ -27,9 +29,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:815`
+`fabricops_kit/pipeline/profile_table.py:839`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L815-L1105">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L839-L1131">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
