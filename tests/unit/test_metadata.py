@@ -31,8 +31,8 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     assert audit["_activity_id"] == "manual-activity"
 
 
-def test_runtime_audit_fields_preserve_configured_local_wall_clock(monkeypatch, fake_notebookutils):
-    """Configured audit timezone must persist its local wall-clock value."""
+def test_runtime_audit_fields_preserve_configured_timezone(monkeypatch, fake_notebookutils):
+    """Configured audit timezone must preserve local wall-clock value and offset."""
     monkeypatch.setattr(
         audit_helpers,
         "get_current_audit_timestamp",
@@ -44,8 +44,51 @@ def test_runtime_audit_fields_preserve_configured_local_wall_clock(monkeypatch, 
         env="dev",
     )
 
-    assert audit["_committed_at"].isoformat() == "2026-09-21T15:34:44.879518"
-    assert audit["_committed_at"].tzinfo is None
+    assert audit["_committed_at"].isoformat() == "2026-09-21T15:34:44.879518+08:00"
+    assert audit["_committed_at"].utcoffset().total_seconds() == 8 * 60 * 60
+
+
+def test_data_steward_widget_save_preserves_configured_timezone(monkeypatch, fake_notebookutils):
+    """Widget save must carry the configured timezone through to the metadata row."""
+    writes = []
+
+    monkeypatch.setattr(
+        audit_helpers,
+        "get_current_audit_timestamp",
+        lambda **_kwargs: "2026-09-22T17:17:00.123456+08:00",
+    )
+
+    def write_table(df, table, **kwargs):
+        writes.append((table, df.rows, kwargs))
+
+    monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+
+    row = steward_widget._create_or_update_data_steward(
+        spark=FakeSpark(),
+        config=config_shared.FrameworkConfig(
+            **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
+        ),
+        env="dev",
+        values={
+            "steward_name": "Timezone Steward",
+            "steward_role": "Data Owner",
+            "contact": "timezone@example.com",
+            "effective_from": "2026-09-22",
+            "is_active": "true",
+        },
+        runtime_context={
+            "currentWorkspaceId": "workspace-id",
+            "currentWorkspaceName": "Workspace",
+            "currentNotebookId": "notebook-id",
+            "currentNotebookName": "01_governance",
+            "activityId": "activity-id",
+            "userName": "timezone@example.com",
+        },
+    )
+
+    assert row["_committed_at"].isoformat() == "2026-09-22T17:17:00.123456+08:00"
+    assert row["_committed_at"].utcoffset().total_seconds() == 8 * 60 * 60
+    assert writes[0][1][0]["_committed_at"].isoformat() == "2026-09-22T17:17:00.123456+08:00"
 
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
@@ -210,8 +253,8 @@ def test_runtime_audit_fields_support_explicit_non_fabric_context():
         "_metadata_lakehouse_name",
         "_activity_id",
     ]
-    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00"
-    assert audit["_committed_at"].tzinfo is None
+    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00+08:00"
+    assert audit["_committed_at"].utcoffset().total_seconds() == 8 * 60 * 60
     assert audit["_metadata_lakehouse_name"] == "test_metadata"
 
 
