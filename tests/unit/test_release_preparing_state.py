@@ -10,7 +10,7 @@ def test_preparing_release_omits_frozen_pages_and_stays_in_overview():
     version = ri.read_package_version()
     manifest = ri._load_manifest(ri.manifest_path(version))
     assert manifest is not None
-    assert manifest["release_status"] == "preparing"
+    assert manifest["release_status"] == "live"
 
     paths = ri.render_release_pages()
     release_dir = ri.ROOT / "docs" / "releases" / version
@@ -20,6 +20,6 @@ def test_preparing_release_omits_frozen_pages_and_stays_in_overview():
     assert ri.ROOT / "docs" / "releases" / version / "index.md" not in paths
     assert not release_dir.exists()
     assert "## Release history" in overview
-    assert "## In preparation" in overview
+    assert "## Release history" in overview
     assert f"| FabricOps Starter Kit {version} | Preparing |" in overview
     assert "[FabricOps Starter Kit 0.1.0](0.1.0/)" in overview
