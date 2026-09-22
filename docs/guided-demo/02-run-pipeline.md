@@ -293,6 +293,12 @@ After this succeeds, the target has been physically written and FabricOps record
 ??? example "Show complete Write block outputs"
     ![Write 1 block output](../assets/02/Write_Block_Output.png)
     ![Write 2 block output](../assets/02/Write_Block_Output_2.png)
+    Written to lakehouse
+    ![Write 3 block output](../assets/02/Silver_Table_LH.png)
+    Written to warehouse 
+    ![Write 4 block output](../assets/02/Gold_Table_WH.png)
+    Metadata is captured
+    ![Write 5 block output](../assets/02/Metadat_Captured.png)
 
 ## Expected result
 

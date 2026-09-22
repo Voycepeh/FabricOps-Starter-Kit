@@ -99,23 +99,23 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
 ### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
-FabricOps provides two Warehouse read helpers:
+!!! FabricOps provides two Warehouse read helpers:
 
-* `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
-* `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
+    * `read_warehouse_table()` reads the full Warehouse table into a Spark DataFrame.
+    * `read_warehouse_query()` executes SQL in the Warehouse first, then returns only the query result to Spark.
 
-Use `read_warehouse_query()` when filtering, selecting columns, joining, or aggregating Warehouse data. This pushes the SQL work down to the Warehouse before the result crosses into PySpark, avoiding translation of more Warehouse data into Spark than necessary.
+    Use `read_warehouse_query()` when filtering, selecting columns, joining, or aggregating Warehouse data. This pushes the SQL work down to the Warehouse before the result crosses into PySpark, avoiding translation of more Warehouse data into Spark than necessary.
 
-For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
+    For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
 
-## What the notebook intentionally does not load
+???  What the notebook intentionally does not load
 
-`orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
+    `orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
 
-The partition and watermark fixtures are also left untouched for the later incremental and load-strategy showcase.
+    The partition and watermark fixtures are also left untouched for the later incremental and load-strategy showcase.
 
-`orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
+    `orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
 
 ## Expected result
 
