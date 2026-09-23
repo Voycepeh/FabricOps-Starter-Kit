@@ -118,8 +118,8 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": "{}", "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": "{}", "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "missing_values", "rule_parameters_json": '{"columns":["column_0"],"maximum_null_percent":0}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare_columns", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
@@ -199,6 +199,7 @@ def widget_runtime(monkeypatch):
     return {
         "open": lambda: module.widget_data_contract(table_id="orders", contract_version=1),
         "calls": calls, "contract": contract, "catalogue": catalogue,
+        "guardrails": guardrails,
     }
 
 
@@ -259,6 +260,36 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert controls["tabs"].children[1].children[0].layout.grid_template_columns
 
 
+def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widget_runtime):
+    """Selecting an unconfigured column must not retain another column's DQ values."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["dq_type"].value == "missing_values"
+    assert controls["dq_parameter"].value == "0"
+    assert controls["dq_action"].value == "Block"
+
+    controls["column_select"].value = "col-1"
+
+    assert controls["dq_type"].value == "missing_values"
+    assert controls["dq_parameter"].value == ""
+    assert controls["dq_action"].value == "Warn"
+
+
+def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime):
+    """Per-column drafts live in widget state rather than one disposable render closure."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["column_description"].value = "Unsaved local description"
+    controls["column_select"].value = "col-0"
+
+    controls["table_description"].value = "Saved table description"
+    controls["table_save"].click()
+    state["_controls"]["column_select"].value = "col-1"
+
+    assert state["_controls"]["column_description"].value == "Unsaved local description"
+
+
 def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
     """Table, column, and required-state actions persist and refresh their controls."""
     state = widget_runtime["open"]()
@@ -283,9 +314,17 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     state = widget_runtime["open"]()
     state["_controls"]["table_guardrails"]["freshness"]["block"].value = False
     state["_controls"]["table_guardrails"]["freshness"]["save"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "freshness"
+    freshness = widget_runtime["calls"]["guardrails"][-1][0]
+    assert freshness["guardrail_type"] == "freshness"
+    assert module._parameters(freshness) == {
+        "freshness_column": "column_1", "maximum_age": 2.0, "maximum_age_unit": "days",
+    }
     state["_controls"]["table_guardrails"]["source_drift"]["save"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "source_drift"
+    drift = widget_runtime["calls"]["guardrails"][-1][0]
+    assert drift["guardrail_type"] == "source_drift"
+    assert module._parameters(drift) == {
+        "partition_column": "column_0", "change_column": "column_1",
+    }
     state["_controls"]["sensitive_enabled"].value = True
     state["_controls"]["sensitive_treatment"].value = "tokenize"
     state["_controls"]["save_sensitive"].click()
@@ -297,6 +336,54 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
     state["_controls"]["advanced_save"].click()
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
+
+
+def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
+    """New Freshness and Source Drift rules cannot be persisted with empty parameters."""
+    widget_runtime["guardrails"][:] = [
+        rule for rule in widget_runtime["guardrails"]
+        if rule["guardrail_type"] not in {"freshness", "source_drift"}
+    ]
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    freshness["enabled"].value = True
+    before = len(widget_runtime["calls"]["guardrails"])
+    freshness["save"].click()
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    assert "could not convert string to float" in state["message"]
+
+    freshness["parameters"][0].value = "column_1"
+    freshness["parameters"][1].value = "6"
+    freshness["parameters"][2].value = "hours"
+    freshness["save"].click()
+    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert module._parameters(saved) == {
+        "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
+    }
+
+    drift = state["_controls"]["table_guardrails"]["source_drift"]
+    drift["enabled"].value = True
+    drift["parameters"][0].value = "column_0"
+    drift["parameters"][1].value = "column_1"
+    drift["save"].click()
+    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0]) == {
+        "partition_column": "column_0", "change_column": "column_1",
+    }
+
+
+def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
+    """Parameter conversion failures remain inside the widget error boundary."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    before = len(widget_runtime["calls"]["guardrails"])
+    controls["dq_type"].value = "missing_values"
+    controls["dq_parameter"].value = "not-a-number"
+
+    controls["save_dq"].click()
+
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    assert "could not convert string to float" in state["message"]
+    assert "#a4262c" in controls["status"].value
 
 
 def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):

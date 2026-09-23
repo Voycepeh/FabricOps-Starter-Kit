@@ -232,6 +232,7 @@ def widget_data_contract(
         "environment_name": env, "table_id": table_id, "contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
+        "_column_drafts": {},
     }
 
     widgets = shared.require_ipywidgets()
@@ -463,22 +464,76 @@ def widget_data_contract(
         table_rules: dict[str, Any] = {}
         for kind, title in (("freshness", "Freshness"), ("source_drift", "Source Drift")):
             existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == kind), {})
+            existing_parameters = _parameters(existing)
             enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
             block = widgets.Checkbox(value=str(existing.get("action") or "Warn") == "Block", description="Block on failure", disabled=not editable)
+            column_names = [str(column.get("column_name") or "") for column in columns]
+            parameter_controls: list[Any] = []
+            if kind == "freshness":
+                freshness_column = widgets.Dropdown(
+                    options=column_names,
+                    value=str(existing_parameters.get("freshness_column") or "") or None,
+                    disabled=not editable,
+                    **shared.widget_common(widgets, "Freshness column"),
+                )
+                maximum_age = widgets.Text(
+                    value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
+                    **shared.widget_common(widgets, "Maximum age"),
+                )
+                maximum_age_unit = widgets.Dropdown(
+                    options=("minutes", "hours", "days"),
+                    value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
+                    **shared.widget_common(widgets, "Age unit"),
+                )
+                parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
+            else:
+                partition_column = widgets.Dropdown(
+                    options=column_names,
+                    value=str(existing_parameters.get("partition_column") or "") or None,
+                    disabled=not editable,
+                    **shared.widget_common(widgets, "Partition column"),
+                )
+                change_column = widgets.Dropdown(
+                    options=column_names,
+                    value=str(existing_parameters.get("change_column") or "") or None,
+                    disabled=not editable,
+                    **shared.widget_common(widgets, "Change column"),
+                )
+                parameter_controls = [partition_column, change_column]
             save = widgets.Button(description=f"Save {title}", disabled=not editable)
 
             def save_table_rule(_button: Any, *, rule_kind: str = kind, old: dict[str, Any] = existing,
-                                enabled_control: Any = enabled, block_control: Any = block) -> None:
+                                enabled_control: Any = enabled, block_control: Any = block,
+                                controls: list[Any] = parameter_controls, rule_title: str = title) -> None:
                 try:
+                    if not enabled_control.value:
+                        parameters = _parameters(old)
+                    elif rule_kind == "freshness":
+                        raw_age = str(controls[1].value or "").strip()
+                        parameters = {
+                            "freshness_column": str(controls[0].value or "").strip(),
+                            "maximum_age": float(raw_age),
+                            "maximum_age_unit": str(controls[2].value or "days"),
+                        }
+                    else:
+                        parameters = {
+                            "partition_column": str(controls[0].value or "").strip(),
+                            "change_column": str(controls[1].value or "").strip(),
+                        }
+                    if enabled_control.value and any(value in {"", None} for value in parameters.values()):
+                        raise ValueError(f"{rule_title} requires all governed configuration fields.")
                     save_guardrails([guardrail_record(
-                        rule_kind, rule_kind, _parameters(old), existing=old,
+                        rule_kind, rule_kind, parameters, existing=old,
                         action="Block" if block_control.value else "Warn", active=enabled_control.value,
                     )])
-                except (ValueError, RuntimeError) as exc:
+                except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
             save.on_click(save_table_rule)
-            table_rules[kind] = {"enabled": enabled, "block": block, "save": save}
+            table_rules[kind] = {
+                "enabled": enabled, "parameters": parameter_controls,
+                "block": block, "save": save,
+            }
         identity = widgets.HTML(
             "<p><b>{}</b><br>Contract v{} · {}<br>Environment: {}<br>Store: {} · {}</p>".format(
                 html.escape(f"{table.get('schema_name') or ''}.{table.get('table_name') or state['table_id']}"),
@@ -495,8 +550,16 @@ def widget_data_contract(
             ]),
             shared.form_section(widgets, title="Table Guardrails", children=[
                 shared.form_grid(widgets, [
-                    shared.form_section(widgets, title="Freshness", children=list(table_rules["freshness"].values())),
-                    shared.form_section(widgets, title="Source Drift", children=list(table_rules["source_drift"].values())),
+                    shared.form_section(widgets, title="Freshness", children=[
+                        table_rules["freshness"]["enabled"],
+                        *table_rules["freshness"]["parameters"],
+                        table_rules["freshness"]["block"], table_rules["freshness"]["save"],
+                    ]),
+                    shared.form_section(widgets, title="Source Drift", children=[
+                        table_rules["source_drift"]["enabled"],
+                        *table_rules["source_drift"]["parameters"],
+                        table_rules["source_drift"]["block"], table_rules["source_drift"]["save"],
+                    ]),
                 ])
             ]),
         )
@@ -531,7 +594,10 @@ def widget_data_contract(
         save_required = widgets.Button(description="Save required state", disabled=not editable)
         save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
         save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
-        unsaved_columns: dict[str, dict[str, Any]] = {}
+        draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
+        unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
+            draft_scope, {}
+        )
 
         def selected_column() -> dict[str, Any]:
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
@@ -556,6 +622,9 @@ def widget_data_contract(
             mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
             bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
             bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
+            dq_type.value = _COLUMN_DQ_TYPES[0]
+            dq_parameter.value = ""
+            dq_action.value = "Warn"
             current_dq = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == column_id and str(r.get("rule_type") or "") in _COLUMN_DQ_TYPES), {})
             if current_dq:
                 dq_type.value = str(current_dq.get("rule_type"))
@@ -683,26 +752,33 @@ def widget_data_contract(
                 set_status(str(exc), error=True)
 
         def save_dq_clicked(_button: Any) -> None:
-            cid = str(column_select.value or "")
-            selected = selected_column()
-            kind = str(dq_type.value)
-            params: dict[str, Any] = {"columns": [str(selected.get("column_name") or cid)]}
-            raw = dq_parameter.value.strip()
-            if kind == "missing_values":
-                params["maximum_null_percent"] = float(raw)
-            elif kind in {"allowed_values", "blocked_values"}:
-                params[kind] = [item.strip() for item in raw.split(",") if item.strip()]
-            elif kind == "value_range":
-                params.update({"minimum": raw, "minimum_inclusive": True})
-            elif kind == "text_pattern":
-                params["pattern"] = raw
-            existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
             try:
+                cid = str(column_select.value or "")
+                selected = selected_column()
+                kind = str(dq_type.value)
+                params: dict[str, Any] = {"columns": [str(selected.get("column_name") or cid)]}
+                raw = dq_parameter.value.strip()
+                if kind == "missing_values":
+                    params["maximum_null_percent"] = float(raw)
+                elif kind in {"allowed_values", "blocked_values"}:
+                    values = [item.strip() for item in raw.split(",") if item.strip()]
+                    if not values:
+                        raise ValueError(f"{kind} requires at least one configured value.")
+                    params[kind] = values
+                elif kind == "value_range":
+                    if not raw:
+                        raise ValueError("value_range requires a minimum value.")
+                    params.update({"minimum": raw, "minimum_inclusive": True})
+                elif kind == "text_pattern":
+                    if not raw:
+                        raise ValueError("text_pattern requires a pattern.")
+                    params["pattern"] = raw
+                existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
                 save_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
                     action=str(dq_action.value), existing=existing,
                 )])
-            except (ValueError, RuntimeError) as exc:
+            except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
         save_column_enrichment.on_click(save_column_enrichment_clicked)
@@ -864,7 +940,8 @@ def widget_data_contract(
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
             "save_sensitive": save_sensitive,
-            "dq_type": dq_type, "dq_parameter": dq_parameter, "save_dq": save_dq,
+            "dq_type": dq_type, "dq_parameter": dq_parameter,
+            "dq_action": dq_action, "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_save": advanced_save,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
