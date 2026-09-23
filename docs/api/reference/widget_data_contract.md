@@ -12,9 +12,9 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:86`
+`fabricops_kit/widgets/widget_data_contract.py:178`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L86-L345">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L178-L913">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -86,12 +86,9 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 <div class="reference-docstring-notes" markdown="1">
 
-The Environment and configured FabricStore are inherited from ``00_env_config``.
-Profile context is read from ``METADATA_DATA_PROFILED`` and
-``METADATA_DATA_PROFILED_FREQUENCY`` and is never included in the canonical payload.
-Refresh frequency is intentionally omitted because it is not a canonical persisted
-Data Contract field. Immutable versions are review-only. Activation requires an exact
-Data Agreement version and delegates its atomic mutation to the Data Contract service.
+Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
+contract version and manifest. Profile context remains read-only and is never added
+to the canonical payload. Immutable versions are review-only.
 
 </div>
 
