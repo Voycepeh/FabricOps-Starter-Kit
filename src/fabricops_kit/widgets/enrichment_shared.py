@@ -19,6 +19,8 @@ _PROFILE_CONTEXT_FIELDS = (
     "row_count", "non_null_count", "null_count", "null_percent",
     "distinct_count", "distinct_percent", "min_value", "max_value",
 )
+PII_TYPES = frozenset({"direct", "indirect", "none"})
+PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
 
 
 def build_ai_enrichment_context(
@@ -105,9 +107,15 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
             "profile_evidence": {
                 name: row.get(name) for name in fields if row.get(name) is not None
             },
+            "frequency_evidence": list(row.get("frequency_evidence") or [])[:3],
         })
     return {
         "table_id": str(state.get("table_id") or ""),
+        "table_name": str(state.get("table_name") or ""),
+        "schema_name": str(state.get("schema_name") or ""),
+        "layer": str(state.get("layer") or ""),
+        "table_description": str(state.get("table_description") or ""),
+        "table_classification": str(state.get("table_classification") or ""),
         "contract_id": str(state.get("contract_id") or ""),
         "contract_version": int(state.get("contract_version") or 0),
         "columns": columns,
@@ -127,7 +135,10 @@ def suggest_sensitive_data(
     }
     instruction = (
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
-        "Return JSON only as a list of objects with column, treatment, action, and parameters. "
+        "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
+        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, and parameters. "
+        "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
+        "and parameters must be an empty object. "
         "Allowed treatments: tokenize, mask, bucket, remove. Allowed actions: Warn, Block. "
         "Classification is only an input signal, not an automatic rule. Do not include raw values.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
@@ -145,9 +156,35 @@ def suggest_sensitive_data(
     seen = set()
     for candidate in candidates:
         if not isinstance(candidate, dict):
-            continue
+            raise ValueError("Each AI Sensitive Data suggestion must be a JSON object.")
         column_name = str(candidate.get("column") or "").strip()
-        if column_name not in allowed_columns or column_name in seen:
+        if column_name not in allowed_columns:
+            raise ValueError(f"AI Sensitive Data suggestion referenced unknown column {column_name!r}.")
+        if column_name in seen:
+            continue
+        pii_type = str(candidate.get("pii_type") or "").strip().lower()
+        if pii_type not in PII_TYPES:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} has an invalid pii_type.")
+        reason = str(candidate.get("reason") or "").strip()
+        if not reason:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires a reason.")
+        if pii_type == "none":
+            if candidate.get("treatment") not in (None, "") or candidate.get("action") not in (None, ""):
+                raise ValueError("Not PII suggestions cannot include a treatment or action.")
+            if candidate.get("parameters") not in (None, {}):
+                raise ValueError("Not PII suggestions cannot include treatment parameters.")
+            suggestions.append({
+                "column_name": column_name,
+                "column_id": allowed_columns[column_name],
+                "pii_type": pii_type,
+                "pii_label": PII_LABELS[pii_type],
+                "reason": reason,
+                "treatment": None,
+                "action": None,
+                "parameters": {},
+                "is_active": False,
+            })
+            seen.add(column_name)
             continue
         try:
             parameters = validate_sensitive_data_parameters({
@@ -156,11 +193,16 @@ def suggest_sensitive_data(
                 **dict(candidate.get("parameters") or {}),
             })
             action = normalize_guardrail_action(candidate.get("action"))
-        except (TypeError, ValueError):
-            continue
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"AI Sensitive Data suggestion for {column_name!r} is invalid: {exc}"
+            ) from exc
         suggestions.append({
             "column_name": column_name,
             "column_id": allowed_columns[column_name],
+            "pii_type": pii_type,
+            "pii_label": PII_LABELS[pii_type],
+            "reason": reason,
             "treatment": parameters.pop("treatment"),
             "action": action,
             "parameters": {key: value for key, value in parameters.items() if key != "scope"},
@@ -342,4 +384,6 @@ __all__ = [
     "suggest_enrichment",
     "build_ai_sensitive_data_context",
     "suggest_sensitive_data",
+    "PII_LABELS",
+    "PII_TYPES",
 ]

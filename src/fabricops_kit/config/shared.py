@@ -349,10 +349,11 @@ DEFAULT_AI_ENRICHMENT = {
     "description_prompt": "Write a concise business description using only the supplied metadata context. Return only the proposed description.",
     "classification_prompt": "Choose the best information classification using only the configured labels and supplied metadata context. Return only the label.",
     "sensitive_data_prompt": (
-        "Use only the supplied metadata and profile context to suggest advisory Sensitive Data rules "
-        "for active canonical columns. Use only tokenize, mask, bucket, or remove and return JSON. "
-        "Treat Classification as an input signal only, never include raw values, keep Bucket parameters "
-        "explicit, and leave final approval to Governance."
+        "Assess every active canonical column as Direct PII, Indirect PII, or Not PII using only the "
+        "supplied metadata, Enrichment, and profile evidence. Briefly explain each assessment. For "
+        "Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, explicit parameters, "
+        "and a Warn or Block action. Classification is an input signal, not a PII decision. Never "
+        "request or return raw values. Return structured JSON only; final review belongs to Governance."
     ),
 }
 
