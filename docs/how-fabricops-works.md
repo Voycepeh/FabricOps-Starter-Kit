@@ -282,7 +282,7 @@ The main public functions line up with the metadata model like this:
 | Author the governed definition | [`widget_data_contract()`](api/reference/widget_data_contract.md) | `METADATA_DATA_CONTRACT`, `METADATA_ENRICHMENT`, `METADATA_GUARDRAIL` |
 | Activate the Production definition | [`widget_data_contract()`](api/reference/widget_data_contract.md) | lifecycle and Data Agreement linkage in `METADATA_DATA_CONTRACT` |
 | Enforce Guardrails at runtime | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_drift()`](api/reference/check_source_drift.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | `METADATA_GUARDRAIL_RESULTS` |
-| Optional access observation | `scan_workspace_access()` | `METADATA_DATA_ACCESS` when persistence is used |
+| Optional access observation | `scan_workspace_access()`, `scan_onelake_access()`, `scan_sql_access()` | append-only snapshots in `METADATA_DATA_ACCESS` |
 
 The purple Governance area therefore stores authored definitions. The blue Engineering area stores what the pipeline discovers, profiles, observes, and enforces while it runs. `table_id` is the bridge between the real physical table and both sides of that metadata model.
 
