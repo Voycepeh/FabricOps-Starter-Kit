@@ -27,7 +27,7 @@
 | Step | Notebook | What you do |
 | --- | --- | --- |
 | [1. Establish Governance context](guided-demo/01-create-agreement.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
-| [2. Build and run the ETL](guided-demo/02-run-pipeline.md) | `02_pipeline` / `03_incremental_pipeline` | Choose the pipeline pattern for the workload: [Full Read Pipeline](guided-demo/02-run-pipeline.md) for complete-source reads, or [Incremental Pipeline](guided-demo/02A-run-incremental-pipeline.md) for target-aware incremental processing. Both follow the same Read → Transform → Write lifecycle and profile the complete persisted target after publication. |
+| [2. Build and run the ETL](guided-demo/02-run-pipeline.md) | `02_pipeline` / `02B_incremental_append_pipeline` | Choose the pipeline pattern for the workload: [Full Read Pipeline](guided-demo/02-run-pipeline.md) for complete-source reads, or [Incremental Append Pipeline](guided-demo/02B-run-incremental-append-pipeline.md) for target-aware incremental processing. Both follow the same Read → Transform → Write lifecycle and profile the complete persisted target after publication. |
 | [3. Author and freeze the Data Contract](guided-demo/03-enrich-guardrails.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Select and validate the Data Contract](guided-demo/04-run-pipeline-with-guardrails.md) | `02_pipeline` | Select the frozen contract and rerun the pipeline with its checks enforced. |
 | [5. Link the Data Agreement and activate](guided-demo/05-create-data-contract.md) | `01_governance` | Link the tested contract version to the Data Agreement version and activate it for Production. |

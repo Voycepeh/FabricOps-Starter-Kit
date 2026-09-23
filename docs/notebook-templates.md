@@ -38,17 +38,13 @@ Author and manage FabricOps Governance metadata and Data Contracts.
 
 <div class="template-card" markdown="1">
 
-## `03_incremental_pipeline`
+## `02B_incremental_append_pipeline`
 
-**Target-Aware Incremental Pipeline Template.** Define a target, resolve the unconsumed scope of each incremental source for that target, mix in full source reads, transform, and publish through `pipeline_write()`.
+**Incremental Append Pipeline Variant.** Start from the canonical `02_pipeline` shape, switch the driving source to `read_mode="incremental"`, keep supporting sources explicit, and append the processed scope to the target.
 
-Committed progress is source → target specific and advances only after that target publishes successfully. Multiple targets are supported as independent publication boundaries; FabricOps does not provide cross-target atomicity.
+Committed progress is source → target specific and advances only after the append target publishes successfully. The starter flow deliberately uses one incremental driving source with one full supporting source. An initial append bootstrap requires a new or empty target; a populated target without committed source → target state fails safely instead of appending a duplicate complete source. Future `02C` and `02D` variants can own the SCD patterns separately.
 
-The starter flow deliberately uses one incremental driving source with full supporting sources per target. Every source still receives target-specific Source Drift checks. An incremental append bootstrap requires a new or empty target; a populated target without committed source → target state fails safely instead of appending a duplicate complete source.
-
-SCD1 and SCD2 bootstrap through their keyed idempotent merge paths. Removed partitions are processed only through governed partition-scoped overwrite, which can clear a now-empty target partition; incompatible strategies fail without committing the removal.
-
-[Open `03_incremental_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_incremental_pipeline.ipynb){ .md-button }\n\n[Follow the incremental Guided Demo](guided-demo/02A-run-incremental-pipeline.md)
+[Open `02B_incremental_append_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02B_incremental_append_pipeline.ipynb){ .md-button }\n\n[Follow the incremental append Guided Demo](guided-demo/02B-run-incremental-append-pipeline.md)
 
 </div>
 

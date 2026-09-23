@@ -127,7 +127,7 @@ def test_official_governance_workflow_inventory():
         "00_env_config.ipynb",
         "01_governance.ipynb",
         "02_pipeline.ipynb",
-        "03_incremental_pipeline.ipynb",
+        "02B_incremental_append_pipeline.ipynb",
         "99_explore.ipynb",
     } <= names
     assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
@@ -244,7 +244,8 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     source = _notebook_source("02_pipeline.ipynb")
     assert "full refresh pipeline template" in source.lower()
     assert "full read → transform → full overwrite" in source
-    assert "source-side incremental reads" in source
+    assert source.count('READ_MODE = "full"') == 3
+    assert source.count("read_mode=READ_MODE") == 3
     assert "PROFILE_SCOPE" not in source
     assert "PROCESSING_SCOPE" not in source
     assert source.count("profile_table(") >= 5
@@ -286,7 +287,9 @@ def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
         for fragment in (
             f'READ_NAME = "{read_name}"',
+            'READ_MODE = "full"',
             "source = pipeline_read(",
+            "read_mode=READ_MODE",
             "spark_session=spark",
             'df = source["dataframe"]',
             'table_id = source["table_id"]',
@@ -443,51 +446,43 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
         ast.parse(cell.source)
 
 
-def test_03_incremental_pipeline_is_target_aware_and_mixed_mode():
-    """Incremental target flows resolve identity first and mix explicit read modes."""
-    source = _notebook_source("03_incremental_pipeline.ipynb")
-    assert "Target-Aware Incremental Pipeline Template" in source
+def test_02B_incremental_append_pipeline_is_target_aware_and_mixed_mode():
+    """The 02B variant keeps one incremental driver and one full supporting source."""
+    source = _notebook_source("02B_incremental_append_pipeline.ipynb")
+    assert "# 02B Incremental Append Pipeline" in source
     assert source.index("target_1_table_id = resolve_table_id(") < source.index(
         'read_mode="incremental"'
     )
-    assert source.count('read_mode="incremental"') >= 2
-    assert source.count('read_mode="full"') >= 2
+    assert source.count('read_mode="incremental"') == 1
+    assert source.count('read_mode="full"') == 1
     assert source.count("target_table_id=target_1_table_id") >= 2
-    assert "orders_1[\"should_process\"]" in source
-    assert "orders_2[\"should_process\"]" in source
-    assert "one incremental driving source plus full supporting sources per target" in source
+    assert 'orders_1["should_process"]' in source
+    assert "incremental driving source + full supporting source → append target" in source
+    assert "target_2" not in source
     assert "METADATA_SOURCE_OBSERVATION" not in source
     assert "spark.sql(" not in source
 
 
-def test_03_incremental_pipeline_profiles_only_full_sources_and_persisted_targets():
-    """Partial batches never masquerade as canonical full-table profiles."""
-    source = _notebook_source("03_incremental_pipeline.ipynb")
+def test_02B_incremental_append_pipeline_profiles_only_full_source_and_persisted_target():
+    """The partial incremental batch never masquerades as a canonical full-table profile."""
+    source = _notebook_source("02B_incremental_append_pipeline.ipynb")
     assert 'profile_table(store="Bronze", schema="demo", table_name="orders")' not in source
     assert 'profile_table(store="Bronze", schema="demo", table_name="products")' in source
-    assert 'profile_table(store="Bronze", schema="demo", table_name="customers")' in source
     assert 'profile_table(table_id=target_1_write["table_id"])' in source
-    assert 'profile_table(table_id=target_2_write["table_id"])' in source
     assert source.index("target_1_write = pipeline_write(") < source.index(
         'target_1_profile = profile_table(table_id=target_1_write["table_id"])'
     )
 
 
-def test_03_incremental_pipeline_uses_independent_governed_publications():
-    """Each target flow owns checks, publication, and post-write profiling."""
-    source = _notebook_source("03_incremental_pipeline.ipynb")
+def test_02B_incremental_append_pipeline_is_one_append_publication_pattern():
+    """The 02B variant demonstrates only incremental-read to append publication."""
+    source = _notebook_source("02B_incremental_append_pipeline.ipynb")
     assert source.count("target_1_write = pipeline_write(") == 1
-    assert source.count("target_2_write = pipeline_write(") == 1
-    assert source.count("check_source_drift(") == 4
-    assert source.count("check_guardrail_coverage(") == 2
-    assert 'target_table_id=target_1_table_id,\n        source_table_ids=[orders_1["table_id"], products_1["table_id"]]' in source
-    assert 'target_table_id=target_2_table_id,\n        source_table_ids=[orders_2["table_id"], customers_2["table_id"]]' in source
-    assert 'products_1["table_id"],\n    target_table_id=target_1_table_id' in source
-    assert 'customers_2["table_id"],\n    target_table_id=target_2_table_id' in source
-    assert "independent publication boundary" in source
-    assert "cross-target atomicity" in source
-    assert "whole-table overwrite" in source
+    assert source.count("check_source_drift(") == 2
+    assert source.count("check_guardrail_coverage(") == 1
+    assert 'TARGET_1_LOAD_STRATEGY = "append"' in source
+    assert "TARGET_2_LOAD_STRATEGY" not in source
+    assert '"scd1"' not in source
+    assert '"scd2"' not in source
+    assert "separate `02C` or `02D` pipeline variant" in source
     assert "not yet been manually validated in Microsoft Fabric" in source
-    assert "physical target is new or empty" in source
-    assert "removed source partition is still work" in source
-    assert "empty replacement scope to clear stale target rows" in source
