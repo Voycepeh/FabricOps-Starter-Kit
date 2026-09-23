@@ -133,10 +133,9 @@ def check_source_drift(
     source_load_strategy = str(source.get("load_strategy") or "").strip().lower()
     processing_origin = "FabricOps Catalogue"
     if source_load_strategy:
-        authored_processing = {
-            "load_strategy": source_load_strategy,
-            **json.loads(str(source.get("load_strategy_parameters_json") or "{}")),
-        }
+        raw_parameters = source.get("load_strategy_parameters_json") or "{}"
+        parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
+        authored_processing = {"load_strategy": source_load_strategy, **parameters}
         source_processing = resolve_table_processing_definition(
             config,
             env,
