@@ -364,7 +364,7 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     drift = widget_runtime["calls"]["guardrails"][-1][0]
     assert drift["guardrail_type"] == "source_drift"
     assert module._parameters(drift) == {
-        "partition_column": "column_0", "change_column": "column_1",
+        "partition_column": "column_0", "change_column": "column_1", "load_strategy": "append",
     }
     state["_controls"]["sensitive_enabled"].value = True
     state["_controls"]["sensitive_treatment"].value = "tokenize"
@@ -408,7 +408,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     drift["parameters"][1].value = "column_1"
     drift["save"].click()
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0]) == {
-        "partition_column": "column_0", "change_column": "column_1",
+        "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
     }
 
 
