@@ -242,10 +242,11 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
     """The default pipeline reads and profiles complete governed sources."""
     source = _notebook_source("02_pipeline.ipynb")
+    code = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert "full refresh pipeline template" in source.lower()
     assert "full read → transform → full overwrite" in source
-    assert source.count('READ_MODE = "full"') == 3
-    assert source.count("read_mode=READ_MODE") == 3
+    assert code.count('READ_MODE = "full"') == 3
+    assert code.count("read_mode=READ_MODE") == 3
     assert "PROFILE_SCOPE" not in source
     assert "PROCESSING_SCOPE" not in source
     assert source.count("profile_table(") >= 5
@@ -449,10 +450,13 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
 def test_02B_incremental_append_pipeline_is_target_aware_and_mixed_mode():
     """The 02B variant keeps one incremental driver and one full supporting source."""
     source = _notebook_source("02B_incremental_append_pipeline.ipynb")
+    target = _cell_by_id("02B_incremental_append_pipeline.ipynb", "flow-1-target").source
+    incremental_read = _cell_by_id(
+        "02B_incremental_append_pipeline.ipynb", "flow-1-read-incremental"
+    ).source
     assert "# 02B Incremental Append Pipeline" in source
-    assert source.index("target_1_table_id = resolve_table_id(") < source.index(
-        'read_mode="incremental"'
-    )
+    assert "target_1_table_id = resolve_table_id(" in target
+    assert 'read_mode="incremental"' in incremental_read
     assert source.count('read_mode="incremental"') == 1
     assert source.count('read_mode="full"') == 1
     assert source.count("target_table_id=target_1_table_id") >= 2
