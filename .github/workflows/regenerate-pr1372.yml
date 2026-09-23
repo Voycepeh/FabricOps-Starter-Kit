@@ -35,7 +35,7 @@ jobs:
           set -euo pipefail
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           git diff > /tmp/first.diff
-          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1 PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           git diff > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
 
