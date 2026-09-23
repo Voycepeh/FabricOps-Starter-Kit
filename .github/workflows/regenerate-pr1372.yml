@@ -1,0 +1,55 @@
+name: Regenerate PR 1372 function references
+
+on:
+  push:
+    branches:
+      - fix/source-drift-external-strategy
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.event.head_commit.message != 'Regenerate affected function references'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Generate function references
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/first.diff
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+
+      - name: Commit generated artifacts and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/regenerate-pr1372.yml
+          git add docs/api/reference docs/reference
+          if git diff --cached --quiet; then
+            echo "No generated artifact changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Regenerate affected function references"
+          git push
