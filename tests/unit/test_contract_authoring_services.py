@@ -273,3 +273,35 @@ def test_sensitive_data_guardrail_rejects_invalid_scope_or_treatment(monkeypatch
                 "rule_type": "tokenize", "rule_parameters_json": parameters, "action": "Block",
             }, config=None, env="dev",
         )
+
+
+def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
+    """Operational schedule metadata sits beside processing without raw Fabric fields."""
+    draft = {
+        "contract_id": "contract-orders", "contract_version": 1,
+        "table_id": "orders", "environment_name": "dev", "status": "draft",
+    }
+    tables = {
+        "METADATA_DATA_CATALOGUE": [{
+            "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
+            "schema_name": "sales", "table_name": "orders", "load_strategy": "append",
+            "load_strategy_parameters_json": "{}", "is_active": True,
+        }],
+        service.ENRICHMENT_TABLE: [],
+        service.GUARDRAIL_TABLE: [],
+    }
+    schedule = {
+        "status": "configured",
+        "schedules": [{
+            "enabled": True, "frequency": "daily", "times": ["08:00"],
+            "timezone": "Asia/Singapore",
+        }],
+    }
+
+    payload, _warnings = service.assemble_contract_payload(
+        draft=draft, tables=tables, environment_name="dev",
+        scheduled_refresh=schedule,
+    )
+
+    assert payload["table"]["processing"]["load_strategy"] == "append"
+    assert payload["table"]["scheduled_refresh"] == schedule

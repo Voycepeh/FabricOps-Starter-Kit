@@ -17,6 +17,7 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "is_active": True,
+        "_workspace_id": "workspace-id", "_notebook_id": "writer-notebook-id",
     }]
     for index in range(count):
         rows.append({
@@ -125,6 +126,10 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare_columns", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
     calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    schedule = {
+        "status": "unavailable", "schedules": [],
+        "message": "Scheduled Refresh discovery is unavailable for this notebook.",
+    }
 
     def review(**_kwargs):
         if contract["status"] == "draft":
@@ -182,6 +187,7 @@ def widget_runtime(monkeypatch):
 
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
+    monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
@@ -199,7 +205,7 @@ def widget_runtime(monkeypatch):
     return {
         "open": lambda: module.widget_data_contract(table_id="orders", contract_version=1),
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "guardrails": guardrails,
+        "guardrails": guardrails, "schedule": schedule,
     }
 
 
@@ -244,6 +250,40 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "missing_values"
     assert controls["advanced_type"].value == "unique_combination"
+    assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
+    assert "read-only" in controls["pipeline_refresh"].value
+
+
+def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
+    """Operational context shows every read-only schedule without adding an editor."""
+    widget_runtime["schedule"].update({
+        "status": "configured",
+        "schedules": [
+            {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "Asia/Singapore"},
+            {"enabled": False, "frequency": "weekly", "times": ["09:30"], "timezone": "UTC"},
+        ],
+    })
+
+    state = widget_runtime["open"]()
+    rendered = state["_controls"]["pipeline_refresh"].value
+
+    assert "Daily · 08:00 · Asia/Singapore" in rendered
+    assert "Weekly · 09:30 · UTC · Disabled" in rendered
+    assert "Discovered from Fabric · read-only" in rendered
+    assert not hasattr(state["_controls"]["pipeline_refresh"], "on_submit")
+
+
+def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
+    """No Fabric schedule remains non-fatal and canonical save records stay unchanged."""
+    widget_runtime["schedule"].update({"status": "not_configured", "schedules": []})
+    state = widget_runtime["open"]()
+    assert "No schedule configured" in state["_controls"]["pipeline_refresh"].value
+
+    state["_controls"]["table_description"].value = "Still governed"
+    state["_controls"]["table_save"].click()
+
+    saved = widget_runtime["calls"]["enrichment"][-1]
+    assert all("scheduled_refresh" not in record for record in saved)
 
 
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):

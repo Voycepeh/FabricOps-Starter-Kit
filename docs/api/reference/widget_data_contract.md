@@ -12,9 +12,9 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:178`
+`fabricops_kit/widgets/widget_data_contract.py:208`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L178-L990">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L208-L1070">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -88,7 +88,9 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
 contract version and manifest. Profile context remains read-only and is never added
-to the canonical payload. Immutable versions are review-only.
+to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
+Fabric and remains independent of the authored Freshness expectation. Immutable
+versions are review-only.
 
 </div>
 

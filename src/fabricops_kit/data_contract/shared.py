@@ -20,6 +20,7 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
+from fabricops_kit.data_contract.scheduled_refresh import canonical_scheduled_refresh
 from fabricops_kit.pipeline.shared import validated_processing
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -463,7 +464,8 @@ def get_contract_review_state(
 
 
 def build_contract_manifest(
-    *, draft: Mapping[str, Any], config: Any, env: str, spark_session: Any
+    *, draft: Mapping[str, Any], config: Any, env: str, spark_session: Any,
+    scheduled_refresh: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     """Build the exact canonical payload used by :func:`freeze_contract` without persisting it."""
     tables = {
@@ -477,7 +479,10 @@ def build_contract_manifest(
         enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
         environment_name=env,
     )
-    return assemble_contract_payload(draft=draft, tables=tables, environment_name=env)
+    return assemble_contract_payload(
+        draft=draft, tables=tables, environment_name=env,
+        scheduled_refresh=scheduled_refresh,
+    )
 
 
 def get_column_profile_context(
@@ -735,6 +740,7 @@ def assemble_contract_payload(
     draft: Mapping[str, Any],
     tables: Mapping[str, Any],
     environment_name: str,
+    scheduled_refresh: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     """Assemble the canonical immutable payload for one exact Data Contract draft."""
     contract_id, contract_version = validate_contract_identity(
@@ -825,6 +831,7 @@ def assemble_contract_payload(
             **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
             "columns": column_docs,
             "processing": processing,
+            **({"scheduled_refresh": canonical_scheduled_refresh(scheduled_refresh)} if scheduled_refresh is not None else {}),
             "writer": {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
@@ -856,6 +863,7 @@ def freeze_contract(
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
     schema: str | None = None,
+    scheduled_refresh: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Load, validate, assemble, and freeze one exact authoritative draft version."""
     from delta.tables import DeltaTable
@@ -877,6 +885,7 @@ def freeze_contract(
     )
     payload, warnings = assemble_contract_payload(
         draft=draft, tables=tables, environment_name=env,
+        scheduled_refresh=scheduled_refresh,
     )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(

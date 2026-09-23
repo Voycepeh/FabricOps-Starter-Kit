@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract import shared as contracts
+from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 
@@ -132,9 +133,11 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
             f"<p>Contract v{html.escape(str(contract.get('contract_version') or ''))} · "
             f"{html.escape(str(contract.get('status') or '').upper())}</p>"
         ),
-        "Table & processing": "<h3>Table &amp; processing</h3><pre>" + html.escape(
-            json.dumps(table.get("processing", {}), indent=2, default=str)
-        ) + "</pre>",
+        "Table & processing": (
+            "<h3>Table &amp; processing</h3><p><b>Load strategy:</b> "
+            f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}</p>"
+            + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
+        ),
         "Columns": (
             "<h3>Columns</h3><table><thead><tr><th>Column</th><th>Datatype</th>"
             f"<th>Required</th><th>Description</th></tr></thead><tbody>{column_rows}</tbody></table>"
@@ -175,6 +178,33 @@ def _profile_html(profile: dict[str, Any]) -> str:
     return "<p>No profile values available.</p>"
 
 
+def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
+    """Render normalized Scheduled Refresh discovery without exposing API details."""
+    status = str(discovery.get("status") or "unavailable")
+    schedules = discovery.get("schedules") or []
+    if status == "not_configured":
+        detail = "<span>No schedule configured</span>"
+    elif status != "configured" or not schedules:
+        detail = "<span>Schedule discovery unavailable</span>"
+    else:
+        rows = []
+        for schedule in schedules:
+            frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
+            times = ", ".join(str(value) for value in schedule.get("times") or []) or "Time not provided"
+            timezone = str(schedule.get("timezone") or "UTC")
+            enabled = "" if schedule.get("enabled", True) else " · Disabled"
+            rows.append(
+                "<li>{} · {} · {}{}</li>".format(
+                    html.escape(frequency), html.escape(times), html.escape(timezone), enabled,
+                )
+            )
+        detail = "<ul style=\"margin:4px 0 0 18px;\">" + "".join(rows) + "</ul>"
+    return (
+        "<div><b>Scheduled refresh</b><br>"
+        f"{detail}<br><span style=\"color:#666;font-size:12px;\">Discovered from Fabric · read-only</span></div>"
+    )
+
+
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
     spark_session: Any = None, context: Any = None,
@@ -208,7 +238,9 @@ def widget_data_contract(
     -----
     Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
     contract version and manifest. Profile context remains read-only and is never added
-    to the canonical payload. Immutable versions are review-only.
+    to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
+    Fabric and remains independent of the authored Freshness expectation. Immutable
+    versions are review-only.
 
     Examples
     --------
@@ -234,6 +266,39 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {},
     }
+    scheduled_refresh: dict[str, Any] = {
+        "status": "unavailable", "schedules": [],
+        "message": "Scheduled Refresh discovery requires a governed writer notebook identity.",
+    }
+    state["scheduled_refresh"] = scheduled_refresh
+    contract_schedule = {
+        "status": str(scheduled_refresh.get("status") or "unavailable"),
+        "schedules": list(scheduled_refresh.get("schedules") or []),
+    }
+
+    def refresh_scheduled_refresh(selected_table: str) -> None:
+        table_row = next(
+            (item for item in table_rows if str(item.get("table_id") or "") == selected_table), {}
+        )
+        writer_item_id = str(table_row.get("_notebook_id") or "").strip()
+        if writer_item_id:
+            discovered = discover_scheduled_refresh(
+                context=dict(resolved or {}),
+                workspace_id=str(table_row.get("_workspace_id") or "") or None,
+                item_id=writer_item_id,
+            )
+        else:
+            discovered = {
+                "status": "unavailable", "schedules": [],
+                "message": "The governed writer notebook identity is unavailable.",
+            }
+        scheduled_refresh.clear()
+        scheduled_refresh.update(discovered)
+        contract_schedule.clear()
+        contract_schedule.update({
+            "status": str(discovered.get("status") or "unavailable"),
+            "schedules": list(discovered.get("schedules") or []),
+        })
 
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
@@ -254,6 +319,7 @@ def widget_data_contract(
         if str(current["contract"].get("status") or "").lower() == "draft":
             payload, warnings = contracts.build_contract_manifest(
                 draft=current["contract"], config=config, env=env, spark_session=spark,
+                scheduled_refresh=contract_schedule,
             )
             state["manifest_warnings"] = warnings
         else:
@@ -281,6 +347,7 @@ def widget_data_contract(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
+        refresh_scheduled_refresh(str(state["table_id"] or ""))
         refresh_manifest()
         return state["current"]
 
@@ -336,7 +403,7 @@ def widget_data_contract(
             raise ValueError("Only a draft Data Contract version can be frozen.")
         result = contracts.freeze_contract(
             draft=current["contract"], config=config, env=env,
-            spark_session=spark, context=resolved,
+            spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
         )
         select(str(state["table_id"]), int(state["contract_version"]))
         return result
@@ -542,8 +609,16 @@ def widget_data_contract(
                 html.escape(str(table.get("layer") or "")),
             )
         )
+        processing = (state.get("manifest") or {}).get("table", {}).get("processing", {})
+        load_strategy = str(processing.get("load_strategy") or table.get("load_strategy") or "Not configured").upper()
+        pipeline_refresh = widgets.HTML(
+            "<div><b>Load strategy</b><br>"
+            f"{html.escape(load_strategy)}</div><br>"
+            + _scheduled_refresh_html(scheduled_refresh)
+        )
         panes[0].children = (
             shared.form_section(widgets, title="Table identity & context", children=[identity]),
+            shared.form_section(widgets, title="Pipeline / Refresh", children=[pipeline_refresh]),
             shared.form_section(widgets, title="Table Enrichment", children=[
                 table_description, widgets.Button(description="Suggest", disabled=True),
                 table_classification, widgets.Button(description="Suggest", disabled=True), table_save,
@@ -551,6 +626,10 @@ def widget_data_contract(
             shared.form_section(widgets, title="Table Guardrails", children=[
                 shared.form_grid(widgets, [
                     shared.form_section(widgets, title="Freshness", children=[
+                        widgets.HTML(
+                            "<p>Freshness is the expected source-data arrival SLA; it is independent "
+                            "of when Fabric schedules this notebook to run.</p>"
+                        ),
                         table_rules["freshness"]["enabled"],
                         *table_rules["freshness"]["parameters"],
                         table_rules["freshness"]["block"], table_rules["freshness"]["save"],
@@ -931,6 +1010,7 @@ def widget_data_contract(
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
             "table_save": table_save, "table_guardrails": table_rules,
+            "pipeline_refresh": pipeline_refresh,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
