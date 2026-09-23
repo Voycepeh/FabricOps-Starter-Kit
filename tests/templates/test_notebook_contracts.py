@@ -256,13 +256,18 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "profile_table(table_id=table_id)" not in source
 
 
-def test_02_pipeline_warehouse_example_is_full_read():
-    """Order History stays a full Warehouse read in the full-refresh template."""
+def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filter():
+    """Order History demonstrates Warehouse SQL projection while keeping a full row scope."""
     block = _cell_by_id("02_pipeline.ipynb", "read-3").source
     assert 'READ_STORE = "Gold"' in block
     assert 'READ_TABLE = "order_history"' in block
-    assert "READ_QUERY = None" in block
-    assert "SELECT" not in block
+    assert "SELECT" in block
+    assert "historical_order_id" in block
+    assert "customer_id" in block
+    assert "order_datetime" in block
+    assert "net_amount" in block
+    assert "FROM demo.order_history" in block
+    assert "WHERE" not in block
     assert "query=READ_QUERY" in block
 
 
