@@ -15,7 +15,7 @@ from fabricops_kit import (
     pipeline_read,
     pipeline_write,
     profile_table,
-    scan_workspace_access,
+    scan_sql_access,
 )
 from fabricops_kit.io import shared
 
@@ -81,7 +81,7 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
         profile_table,
         pipeline_read,
         pipeline_write,
-        scan_workspace_access,
+        scan_sql_access,
     ],
 )
 def test_public_spark_dependent_orchestration_accepts_explicit_session(function):

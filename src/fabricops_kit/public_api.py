@@ -26,7 +26,9 @@ SUPPORTED_PUBLIC_API = (
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
-    "fabricops_kit.access.scan_workspace_access",
+    "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+    "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+    "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_source_drift",

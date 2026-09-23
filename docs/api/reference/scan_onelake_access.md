@@ -1,4 +1,4 @@
-# `scan_workspace_access`
+# `scan_onelake_access`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,27 +7,27 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Scan Fabric workspace role assignments and expand them across registered governed tables.
+Scan OneLake Security roles and map Lakehouse table access to canonical FabricOps table identities.
 
 <div class="reference-docstring-intro" markdown="1">
 
-The scanner reads Fabric workspace role assignments for the workspaces that
-contain the configured targets. Each unique workspace is scanned once.
-Viewer is normalized to READ, while Admin, Member, and Contributor are
-normalized to READWRITE. The original workspace role is retained in
-role_name.
+The scanner reads the Fabric dataAccessRoles REST endpoint for each configured
+Lakehouse target. Explicit Entra members are preserved by object ID. Automatic
+Fabric item membership used by roles such as DefaultReader is preserved as a
+selector instead of being misrepresented as an individual user.
 
-Rows are appended to METADATA_DATA_ACCESS by default. Pass persist=False to
-inspect the result without writing metadata.
+Normalized access rows are appended to METADATA_DATA_ACCESS by default.
+Pass persist=False for an inspection-only scan. The scanner never changes
+OneLake permissions.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_workspace_access.py:194`
+`fabricops_kit/access_scanner/scan_onelake_access.py:248`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L194-L276">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L248-L329">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,11 +39,11 @@ inspect the result without writing metadata.
 
 ## Usage notes
 
-Use for repeatable workspace-role access inventory snapshots.
+Use for repeatable OneLake Security access inventory snapshots.
 
-Do not use as an effective-access resolver; OneLake and SQL access are scanned separately.
+Do not use for Warehouse targets or as a full effective-access resolver.
 
-Scans each unique configured workspace once, preserves the original workspace role, normalizes Viewer to READ and Admin/Member/Contributor to READWRITE, and expands that access across active registered tables in scanned items.
+Preserves explicit Entra members and automatic item-access selectors, expands supported OneLake table and schema paths to registered table_id values, and keeps unmatched Files or unknown paths visible.
 
 
 ## Signature
@@ -51,7 +51,7 @@ Scans each unique configured workspace once, preserves the original workspace ro
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def scan_workspace_access(
+def scan_onelake_access(
     catalogue_df,
     targets: str | list[str] | tuple[str, ...],
     environment_name: str | None=None,
@@ -69,7 +69,7 @@ def scan_workspace_access(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = scan_workspace_access(catalogue_df, targets=["Silver", "Gold"])
+result = scan_onelake_access(catalogue_df, targets="Silver")
 ```
 
 </div>
@@ -88,21 +88,21 @@ result = scan_workspace_access(catalogue_df, targets=["Silver", "Gold"])
 
 ## Returns
 
-Dictionary with raw workspace observations, normalized METADATA_DATA_ACCESS rows, and unmatched role assignments.
+Dictionary with raw OneLake observations, normalized METADATA_DATA_ACCESS rows, and unmatched paths.
 
 ### Return interpretation
 
-Use result["access"] as the normalized workspace-derived table access snapshot and result["unmatched"] to identify role assignments with no registered scanned table.
+Use result["access"] as the normalized OneLake table-level snapshot, result["observations"] for raw role detail, and result["unmatched"] for paths outside registered governed tables.
 
 ## Raises / Errors
 
-Raises for invalid targets, Fabric REST authentication or permission failures, and Spark mapping or persistence failures.
+Raises for non-Lakehouse targets, Fabric REST authentication or permission failures, unsafe continuation hosts, and Spark mapping or persistence failures.
 
 ### Common failure causes
 
-- The caller is below Workspace Member.
-- The token lacks Workspace.Read.All or Workspace.ReadWrite.All.
-- Configured targets do not match active Catalogue physical identities.
+- A target is not a Lakehouse.
+- The token lacks OneLake.Read.All or OneLake.ReadWrite.All.
+- A role path does not map to an active registered table.
 
 ## See also
 
@@ -122,12 +122,6 @@ Raises for invalid targets, Fabric REST authentication or permission failures, a
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.2.0 |
 
 
 </details>

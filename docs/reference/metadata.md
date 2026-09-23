@@ -4,7 +4,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 
 `table_id` is the canonical bridge for a governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
 
-`scan_workspace_access(...)` scans observable SQL permissions for registered governed physical tables across configured Fabric data items. It is not a complete Fabric authorization inventory and does not cover workspace roles, item sharing, OneLake Security, or Power BI security. For exploration, use **scan → inspect → no persistence**. For a pipeline or project workflow, use **scan → optional transform → optional generic persistence**.
+`scan_workspace_access(...)`, `scan_onelake_access(...)`, and `scan_sql_access(...)` observe the three supported Fabric table-access paths and normalize them into append-only `METADATA_DATA_ACCESS` snapshots. Direct item sharing, Entra group expansion, Power BI security, and effective-access resolution remain outside this scanner set. Pass `persist=False` for inspection-only scans.
 
 The cards below show the current implemented metadata tables and relationships.
 
@@ -358,10 +358,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.</span>
+  <span class="metadata-table-card__purpose">See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; this is not an effective-access resolver.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One observed SQL permission row for one principal and one governed table within one access snapshot.</span>
+    <span>One observed access grant for one principal or access selector and one governed table within one access snapshot.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

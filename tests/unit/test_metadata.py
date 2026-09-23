@@ -187,6 +187,8 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
     """Verify public callable list includes guardrail authoring helpers."""
     expected_public_callables = [
         'scan_workspace_access',
+        'scan_onelake_access',
+        'scan_sql_access',
         'FabricStore',
         'PathConfig',
         'GovernanceConfig',
