@@ -1,4 +1,4 @@
-"""Owner file for the ``scan_workspace_access`` public access inventory function."""
+"""Owner file for the ``scan_sql_access`` public SQL permission scanner."""
 
 from __future__ import annotations
 
@@ -7,11 +7,16 @@ from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from fabricops_kit.config.shared import build_table_id, get_store, resolve_fabric_context
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session, read_warehouse_synapsesql, validate_select_query
+from fabricops_kit.access_scanner.shared import (
+    ACCESS_TABLE,
+    catalogue_tables,
+    normalise_targets,
+    persist_access_rows,
+    target_store_kinds,
+)
 
-
-ACCESS_TABLE = "METADATA_DATA_ACCESS"
 
 SQL_ACCESS_QUERY = r"""
 WITH direct_permissions AS (
@@ -90,20 +95,6 @@ SELECT * FROM role_permissions
 """.strip()
 
 
-def _normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
-    values = [targets] if isinstance(targets, str) else list(targets)
-    normalised = []
-    for value in values:
-        store = str(value or "").strip()
-        if not store:
-            raise ValueError("Workspace access scan targets must be non-empty strings.")
-        if store not in normalised:
-            normalised.append(store)
-    if not normalised:
-        raise ValueError("At least one configured physical data item target is required for access scanning.")
-    return normalised
-
-
 def _read_sql_endpoint_query(
     query: str,
     *,
@@ -149,67 +140,6 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
     return result
 
 
-def _target_store_kinds(config, environment_name: str, targets: list[str]) -> dict[str, str]:
-    """Resolve each configured physical data item target to its store kind."""
-    return {
-        store: str(get_store(config, environment_name, store).kind).strip().lower()
-        for store in targets
-    }
-
-
-def _catalogue_tables(catalogue_df, *, environment_name: str, target_store_kinds: dict[str, str]):
-    from pyspark.sql import functions as F
-    from pyspark.sql import types as T
-
-    spark = catalogue_df.sparkSession
-    targets = spark.createDataFrame(
-        list(target_store_kinds.items()),
-        T.StructType(
-            [
-                T.StructField("_catalogue_target", T.StringType(), False),
-                T.StructField("_target_store_type", T.StringType(), False),
-            ]
-        ),
-    )
-    canonical_table_id = F.udf(
-        lambda store_type, target, schema_name, table_name: build_table_id(
-            store_type,
-            target,
-            None if schema_name is None or not str(schema_name).strip() else schema_name,
-            table_name,
-        ),
-        T.StringType(),
-    )
-
-    return (
-        catalogue_df.filter(
-            (F.lower(F.col("metadata_level")) == F.lit("table"))
-            & (F.col("environment_name") == F.lit(environment_name))
-            & F.col("is_active")
-        )
-        .crossJoin(targets)
-        .filter(
-            (F.lower(F.col("store_type")) == F.col("_target_store_type"))
-            & (
-                F.col("table_id")
-                == canonical_table_id(
-                    F.col("store_type"),
-                    F.col("_catalogue_target"),
-                    F.col("schema_name"),
-                    F.col("table_name"),
-                )
-            )
-        )
-        .select(
-            F.col("table_id").alias("_catalogue_table_id"),
-            F.col("_catalogue_target"),
-            F.col("schema_name").alias("_catalogue_schema_name"),
-            F.col("table_name").alias("_catalogue_table_name"),
-        )
-        .dropDuplicates(["_catalogue_table_id"])
-    )
-
-
 def _map_to_catalogue(observations, catalogue_tables):
     from pyspark.sql import functions as F
 
@@ -222,9 +152,8 @@ def _map_to_catalogue(observations, catalogue_tables):
         & (F.lower(F.col("observed.schema_name")) == F.lower(F.col("catalogue._catalogue_schema_name")))
         & (F.lower(F.col("observed.object_name")) == F.lower(F.col("catalogue._catalogue_table_name")))
     )
-    schema_match = (
-        (F.col("observed.class_desc") == F.lit("SCHEMA"))
-        & (F.lower(F.col("observed.schema_name")) == F.lower(F.col("catalogue._catalogue_schema_name")))
+    schema_match = (F.col("observed.class_desc") == F.lit("SCHEMA")) & (
+        F.lower(F.col("observed.schema_name")) == F.lower(F.col("catalogue._catalogue_schema_name"))
     )
     database_match = F.col("observed.class_desc") == F.lit("DATABASE")
 
@@ -313,13 +242,14 @@ def _unmatched_rows(mapped):
     )
 
 
-def scan_workspace_access(
+def scan_sql_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...] = "warehouse",
     environment_name: str | None = None,
     access_snapshot_id: str | None = None,
     spark_session=None,
+    persist: bool = True,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Scan observable SQL permissions for registered governed physical tables.
@@ -359,27 +289,31 @@ def scan_workspace_access(
         omitted.
     spark_session : object, optional
         Spark session override used by the Fabric SQL connector.
+    persist : bool, default=True
+        Append normalized access rows to METADATA_DATA_ACCESS when True.
     context : dict[str, Any], optional
         Active FabricOps context override.
 
     Returns
     -------
     dict[str, pyspark.sql.DataFrame]
-        ``access`` contains rows aligned to ``METADATA_DATA_ACCESS`` and ready
-        for persistence. ``unmatched`` contains observed permissions that could
+        ``access`` contains rows aligned to ``METADATA_DATA_ACCESS``. By
+        default those rows are appended before return. ``unmatched`` contains observed permissions that could
         not be linked to an active registered physical table, so observations
         are never silently discarded.
 
     Notes
     -----
-    This scans observable SQL permissions only; it is not a complete workspace
-    security inventory. Workspace roles, item sharing, OneLake Security, and
-    Power BI security are outside this scanner's scope. The function returns
-    DataFrames and never persists or changes permissions.
+    This scans SQL-engine permission metadata only; it is not a complete Fabric
+    access inventory. Workspace and OneLake access are scanned by their own
+    access_scanner entrypoints. Direct item sharing and Power BI security are
+    outside this scanner's scope.
+    By default the normalized access rows are appended to METADATA_DATA_ACCESS;
+    pass persist=False for inspection-only scans. The scanner never changes permissions.
 
     Examples
     --------
-    >>> result = scan_workspace_access(
+    >>> result = scan_sql_access(
     ...     catalogue_df,
     ...     targets=["warehouse", "curated_lakehouse"],
     ...     spark_session=spark,
@@ -395,8 +329,8 @@ def scan_workspace_access(
         "config": config,
         "env": resolved_environment,
     }
-    resolved_targets = _normalise_targets(targets)
-    target_store_kinds = _target_store_kinds(config, resolved_environment, resolved_targets)
+    resolved_targets = normalise_targets(targets)
+    resolved_store_kinds = target_store_kinds(config, resolved_environment, resolved_targets)
     snapshot_id = str(access_snapshot_id or uuid4())
 
     observations = _scan_targets(
@@ -404,24 +338,32 @@ def scan_workspace_access(
         spark_session=spark_session,
         context=scan_context,
     )
-    catalogue_tables = _catalogue_tables(
+    registered_tables = catalogue_tables(
         catalogue_df,
         environment_name=resolved_environment,
-        target_store_kinds=target_store_kinds,
+        target_store_kinds=resolved_store_kinds,
     )
-    mapped = _map_to_catalogue(observations, catalogue_tables)
+    mapped = _map_to_catalogue(observations, registered_tables)
     audit_fields = build_runtime_audit_fields(
         config=config,
         env=resolved_environment,
         runtime_context=scan_context,
     )
 
+    access = _access_rows(
+        mapped,
+        environment_name=resolved_environment,
+        access_snapshot_id=snapshot_id,
+        audit_fields=audit_fields,
+    )
+    persist_access_rows(
+        access,
+        config=config,
+        environment_name=resolved_environment,
+        context=scan_context,
+        persist=persist,
+    )
     return {
-        "access": _access_rows(
-            mapped,
-            environment_name=resolved_environment,
-            access_snapshot_id=snapshot_id,
-            audit_fields=audit_fields,
-        ),
+        "access": access,
         "unmatched": _unmatched_rows(mapped),
     }

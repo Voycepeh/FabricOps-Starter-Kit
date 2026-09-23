@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -36,6 +36,46 @@ jobs:
 
       - name: Ruff lint
         run: uv run ruff check .
+
+      - name: Generate access reference artifacts for this PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git log -1 --pretty=%s | grep -qx 'Regenerate access reference artifacts'; then
+            echo "Generated artifacts are already committed on this head."
+            exit 0
+          fi
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_dashboard.py
+
+      - name: Upload access reference artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-reference-artifacts
+          path: |
+            docs/api/reference
+            docs/reference
+            docs/assets/public-function-call-flows-dashboard.html
+
+      - name: Commit regenerated access reference artifacts
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git log -1 --pretty=%s | grep -qx 'Regenerate access reference artifacts'; then
+            exit 0
+          fi
+          git add docs/api/reference docs/reference docs/assets/public-function-call-flows-dashboard.html
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Regenerate access reference artifacts"
+          git push origin HEAD:${{ github.head_ref }}
+
 
       - name: Normalize guided-demo links
         run: uv run python scripts/normalize_guided_demo_links.py
