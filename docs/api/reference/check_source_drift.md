@@ -20,9 +20,9 @@ the source table's governed load behaviour.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_source_drift.py:14`
+`fabricops_kit/pipeline/check_source_drift.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L14-L177">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L16-L209">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

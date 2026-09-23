@@ -567,6 +567,14 @@ def widget_data_contract(
                     **shared.widget_common(widgets, "Change column"),
                 )
                 parameter_controls = [partition_column, change_column]
+                if not str(table.get("load_strategy") or "").strip():
+                    source_load_strategy = widgets.Dropdown(
+                        options=("overwrite", "append", "scd1", "scd2"),
+                        value=str(existing_parameters.get("load_strategy") or "") or None,
+                        disabled=not editable,
+                        **shared.widget_common(widgets, "Source load strategy"),
+                    )
+                    parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Save {title}", disabled=not editable)
 
             def save_table_rule(_button: Any, *, rule_kind: str = kind, old: dict[str, Any] = existing,
@@ -587,6 +595,8 @@ def widget_data_contract(
                             "partition_column": str(controls[0].value or "").strip(),
                             "change_column": str(controls[1].value or "").strip(),
                         }
+                        if len(controls) > 2:
+                            parameters["load_strategy"] = str(controls[2].value or "").strip()
                     if enabled_control.value and any(value in {"", None} for value in parameters.values()):
                         raise ValueError(f"{rule_title} requires all governed configuration fields.")
                     save_guardrails([guardrail_record(

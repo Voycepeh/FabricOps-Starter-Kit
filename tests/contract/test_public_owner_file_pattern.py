@@ -26,6 +26,7 @@ SHARED_HELPER_FILENAMES = {
     "enrichment_shared.py",
     "notebook_registry.py",
     "scheduled_refresh.py",
+    "scheduled_refresh.py",
 }
 
 # Keep allowlists narrow and temporary. Add a TODO with the owning migration when

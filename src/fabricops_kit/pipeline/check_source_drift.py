@@ -1,5 +1,7 @@
 """Public Source Drift Guardrail check for a source-to-target relationship."""
 
+import json
+
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
@@ -128,13 +130,43 @@ def check_source_drift(
     target = resolve_catalogue_table_identity(
         config, env, target_table_id, spark_session=spark_session, context=context
     )
-    source_processing = resolve_table_processing_definition(
-        config,
-        env,
-        str(source["table_id"]),
-        spark_session=spark_session,
-        context=context,
-    )
+    source_load_strategy = str(source.get("load_strategy") or "").strip().lower()
+    processing_origin = "FabricOps Catalogue"
+    if source_load_strategy:
+        raw_parameters = source.get("load_strategy_parameters_json") or "{}"
+        parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
+        authored_processing = {"load_strategy": source_load_strategy, **parameters}
+        source_processing = resolve_table_processing_definition(
+            config,
+            env,
+            str(source["table_id"]),
+            spark_session=spark_session,
+            context=context,
+            authored_processing=authored_processing,
+        )
+    else:
+        payload = contract.get("contract_payload") or {}
+        guardrails = payload.get("guardrails") or []
+        source_drift_rule = next(
+            (
+                rule
+                for rule in guardrails
+                if str(rule.get("guardrail_type") or "").strip().lower() == "source_drift"
+                and rule.get("is_active") is not False
+            ),
+            None,
+        )
+        parameters = (source_drift_rule or {}).get("rule_parameters") or {}
+        source_load_strategy = str(parameters.get("load_strategy") or "").strip().lower()
+        if source_load_strategy not in {"overwrite", "append", "scd1", "scd2"}:
+            raise ValueError(
+                "Source Drift cannot determine the source load strategy. "
+                "This source has no FabricOps-written load strategy in the Catalogue; "
+                "set Source load strategy to overwrite, append, scd1, or scd2 "
+                "in the selected Data Contract Source Drift rule."
+            )
+        source_processing = {"load_strategy": source_load_strategy}
+        processing_origin = "Data Contract Source Drift rule"
     result = check_source_drift_for_target(
         source_table_id=str(source["table_id"]),
         target_table_id=str(target["table_id"]),
@@ -155,7 +187,7 @@ def check_source_drift(
     )
     if verbose:
         print(
-            f"  Source processing {str(source_processing.get('load_strategy') or '').upper()} from governed processing definition."
+            f"  Source processing {str(source_processing.get('load_strategy') or '').upper()} from {processing_origin}."
         )
         print(
             f"  Comparison scope {result.get('comparison_scope', 'configured')} against the last accepted source-to-target baseline."

@@ -6673,9 +6673,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 177,
+      "source_end_line": 209,
       "source_path": "src/fabricops_kit/pipeline/check_source_drift.py",
-      "source_start_line": 14,
+      "source_start_line": 16,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -13980,7 +13980,7 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1070,
+      "source_end_line": 1080,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 208,
       "supports_live_contract": false,
@@ -15736,9 +15736,9 @@
         "large_width_or_depth"
       ],
       "signature": "def check_source_drift(source_table_id: str, *, target_table_id: str, enabled: bool=True, raise_on_failure: bool=False, spark_session=None, verbose: bool=True) -> dict",
-      "source_end_line": 177,
+      "source_end_line": 209,
       "source_path": "src/fabricops_kit/pipeline/check_source_drift.py",
-      "source_start_line": 14,
+      "source_start_line": 16,
       "summary": "Detect governed source drift against one target consumption baseline.",
       "transitive_function_count": 49,
       "usage_notes": "Notebook orchestration calls this function explicitly for every governed\nsource before :func:`pipeline_write`. A successful write then commits the\naccepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.",
@@ -17786,7 +17786,7 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 1070,
+      "source_end_line": 1080,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 208,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
