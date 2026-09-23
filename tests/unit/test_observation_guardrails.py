@@ -31,7 +31,11 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
     monkeypatch.setattr(
         drift,
         "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **kwargs: {"table_id": f"canonical-{table_id}"},
+        lambda _config, _env, table_id, **kwargs: {
+            "table_id": f"canonical-{table_id}",
+            "load_strategy": "append" if table_id == "source-a" else None,
+            "load_strategy_parameters_json": "{}",
+        },
     )
     monkeypatch.setattr(
         drift,
@@ -61,6 +65,90 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         }
     ]
     assert processing_table_ids == ["canonical-source-a"]
+
+
+def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -> None:
+    calls = []
+    monkeypatch.setattr(drift, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(
+        drift,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **kwargs: {
+            "table_id": f"canonical-{table_id}",
+            "load_strategy": None,
+            "load_strategy_parameters_json": "{}",
+        },
+    )
+    monkeypatch.setattr(
+        drift,
+        "resolve_pipeline_data_contract",
+        lambda *args, **kwargs: {
+            "contract_id": "contract",
+            "contract_payload": {
+                "guardrails": [
+                    {
+                        "guardrail_type": "source_drift",
+                        "is_active": True,
+                        "rule_parameters": {"load_strategy": "scd2"},
+                    }
+                ]
+            },
+        },
+    )
+    monkeypatch.setattr(
+        drift,
+        "resolve_table_processing_definition",
+        lambda *args, **kwargs: pytest.fail("unmanaged sources must not use FabricOps writer processing"),
+    )
+    monkeypatch.setattr(
+        drift,
+        "check_source_drift_for_target",
+        lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
+    )
+
+    result = check_source_drift(
+        "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+    )
+
+    assert result["can_continue"] is True
+    assert calls[0]["source_processing"] == {"load_strategy": "scd2"}
+
+
+def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatch) -> None:
+    monkeypatch.setattr(drift, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(
+        drift,
+        "resolve_catalogue_table_identity",
+        lambda _config, _env, table_id, **kwargs: {
+            "table_id": f"canonical-{table_id}",
+            "load_strategy": None,
+            "load_strategy_parameters_json": "{}",
+        },
+    )
+    monkeypatch.setattr(
+        drift,
+        "resolve_pipeline_data_contract",
+        lambda *args, **kwargs: {
+            "contract_id": "contract",
+            "contract_payload": {
+                "guardrails": [
+                    {
+                        "guardrail_type": "source_drift",
+                        "is_active": True,
+                        "rule_parameters": {
+                            "partition_column": "partition_date",
+                            "change_column": "changed_at",
+                        },
+                    }
+                ]
+            },
+        },
+    )
+
+    with pytest.raises(ValueError, match="set Source load strategy"):
+        check_source_drift(
+            "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+        )
 
 
 def test_explicit_source_drift_check_still_requires_its_rule(monkeypatch) -> None:
