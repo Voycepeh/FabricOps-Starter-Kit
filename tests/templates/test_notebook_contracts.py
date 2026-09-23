@@ -242,7 +242,8 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
     """The default pipeline reads and profiles complete governed sources."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert "full-read pipeline template" in source
+    assert "full refresh pipeline template" in source.lower()
+    assert "full read → transform → full overwrite" in source
     assert "source-side incremental reads" in source
     assert "PROFILE_SCOPE" not in source
     assert "PROCESSING_SCOPE" not in source
@@ -255,8 +256,8 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     assert "profile_table(table_id=table_id)" not in source
 
 
-def test_02_pipeline_warehouse_example_uses_sql_pushdown():
-    """Order History demonstrates project-owned Warehouse SQL pushdown with the real demo schema."""
+def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filter():
+    """Order History demonstrates Warehouse SQL projection while keeping a full row scope."""
     block = _cell_by_id("02_pipeline.ipynb", "read-3").source
     assert 'READ_STORE = "Gold"' in block
     assert 'READ_TABLE = "order_history"' in block
@@ -266,7 +267,7 @@ def test_02_pipeline_warehouse_example_uses_sql_pushdown():
     assert "order_datetime" in block
     assert "net_amount" in block
     assert "FROM demo.order_history" in block
-    assert "WHERE order_datetime >= '2025-01-01'" in block
+    assert "WHERE" not in block
     assert "query=READ_QUERY" in block
 
 

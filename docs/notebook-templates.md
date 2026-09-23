@@ -30,7 +30,7 @@ Author and manage FabricOps Governance metadata and Data Contracts.
 
 ## `02_pipeline`
 
-**Full Read Pipeline Template.** Read complete governed sources, transform them, and publish one or more governed targets. Use it when rereading each complete source is acceptable.
+**Full Refresh Pipeline Template.** Read complete governed sources, transform them, and fully overwrite one or more governed targets. Use it when rereading each complete source and replacing each complete target is acceptable.
 
 [Open `02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb){ .md-button }
 
