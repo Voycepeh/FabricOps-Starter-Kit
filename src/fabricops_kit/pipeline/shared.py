@@ -1607,13 +1607,20 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
         if is_table_not_found_error(exc):
             raise ValueError("No Data Contracts exist; Governance must register and activate one first.") from exc
         raise
-    rows = [_row_to_dict(row) for row in frame.collect()]
-    matching = [row for row in rows if str(row.get("table_id") or "") == str(table_id)]
-    active = [row for row in matching if row.get("is_active") is True]
+    escaped_table_id = str(table_id).replace("'", "''")
+    active = [
+        _row_to_dict(row)
+        for row in frame.filter(
+            f"`table_id` = '{escaped_table_id}' AND `is_active` = TRUE"
+        ).limit(2).collect()
+    ]
     if len(active) > 1:
         raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
     if not active:
-        if required or matching:
+        matching = required or bool(
+            frame.filter(f"`table_id` = '{escaped_table_id}'").limit(1).collect()
+        )
+        if matching:
             raise ValueError(f"No active Data Contract exists for {table_id!r}; Governance must activate one first.")
         return None
     row = dict(active[0])
@@ -1656,11 +1663,13 @@ def _resolve_data_contract_version(
                 f"Data Contract {contract_id!r} version {requested_version} does not exist."
             ) from exc
         raise
-    rows = [_row_to_dict(row) for row in frame.collect()]
+    escaped_contract_id = contract_id.replace("'", "''")
     matches = [
-        row for row in rows
-        if str(row.get("contract_id") or "") == contract_id
-        and int(row.get("contract_version") or 0) == requested_version
+        _row_to_dict(row)
+        for row in frame.filter(
+            f"`contract_id` = '{escaped_contract_id}' "
+            f"AND `contract_version` = {requested_version}"
+        ).limit(2).collect()
     ]
     if not matches:
         raise ValueError(f"Data Contract {contract_id!r} version {requested_version} does not exist.")
