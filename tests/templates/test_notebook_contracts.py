@@ -450,6 +450,10 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
 def test_02B_incremental_append_pipeline_is_target_aware_and_mixed_mode():
     """The 02B variant keeps one incremental driver and one full supporting source."""
     source = _notebook_source("02B_incremental_append_pipeline.ipynb")
+    code = "\n".join(
+        source
+        for _, source in _code_cells(NOTEBOOK_DIR / "02B_incremental_append_pipeline.ipynb")
+    )
     target = _cell_by_id("02B_incremental_append_pipeline.ipynb", "flow-1-target").source
     incremental_read = _cell_by_id(
         "02B_incremental_append_pipeline.ipynb", "flow-1-read-incremental"
@@ -457,8 +461,8 @@ def test_02B_incremental_append_pipeline_is_target_aware_and_mixed_mode():
     assert "# 02B Incremental Append Pipeline" in source
     assert "target_1_table_id = resolve_table_id(" in target
     assert 'read_mode="incremental"' in incremental_read
-    assert source.count('read_mode="incremental"') == 1
-    assert source.count('read_mode="full"') == 1
+    assert code.count('read_mode="incremental"') == 1
+    assert code.count('read_mode="full"') == 1
     assert source.count("target_table_id=target_1_table_id") >= 2
     assert 'orders_1["should_process"]' in source
     assert "incremental driving source + full supporting source → append target" in source
