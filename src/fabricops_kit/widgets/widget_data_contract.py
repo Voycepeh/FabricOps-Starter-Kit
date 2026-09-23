@@ -14,7 +14,9 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.enrichment_shared import (
     PII_LABELS,
+    build_ai_enrichment_context,
     build_ai_sensitive_data_context,
+    suggest_enrichment,
     suggest_sensitive_data,
 )
 
@@ -248,9 +250,10 @@ def widget_data_contract(
     versions are review-only.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
     Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
-    Not PII from governed metadata and profile evidence. Suggestions only populate
-    editable authoring state; they never save, freeze, activate, or enforce a contract.
-    Runtime Sensitive Data enforcement remains deterministic.
+    Not PII from governed metadata and profile evidence. Editable draft state remains
+    separate until Governance accepts a suggestion. Manual Description or Classification
+    edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
+    activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
 
     Examples
     --------
@@ -277,7 +280,7 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {},
-        "_sensitive_ai_suggestions": {},
+        "_ai_suggestions": {}, "_ai_errors": {},
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -320,9 +323,9 @@ def widget_data_contract(
     for index, title in enumerate(_TABS):
         tabs.set_title(index, title)
 
-    def set_status(message: str, *, error: bool = False) -> None:
+    def set_status(message: str, *, error: bool = False, warning: bool = False) -> None:
         state["message"] = message
-        colour = "#a4262c" if error else "#107c10"
+        colour = "#a4262c" if error else "#8a6d1d" if warning else "#107c10"
         status.value = f'<div style="color:{colour};font-weight:600;">{html.escape(message)}</div>'
 
     def refresh_manifest() -> dict[str, Any] | None:
@@ -519,6 +522,14 @@ def widget_data_contract(
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
+        suggestion_scope = (str(current["contract_id"]), int(current["contract_version"]))
+        ai_state = state["_ai_suggestions"].setdefault(
+            suggestion_scope, {"table": {}, "columns": {}}
+        )
+        ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
+        classification_labels = list(
+            getattr(governance_config, "sensitivity_labels", None) or _CLASSIFICATIONS[1:]
+        )
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -529,6 +540,12 @@ def widget_data_contract(
             options=_CLASSIFICATIONS, value=enrichment_value(enrichments, "table", "Classification"),
             disabled=not editable, **shared.widget_common(widgets, "Classification"),
         )
+        table_description_ai = widgets.HTML()
+        table_classification_ai = widgets.HTML()
+        accept_table_description = widgets.Button(description="Accept", disabled=not editable)
+        rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
+        accept_table_classification = widgets.Button(description="Accept", disabled=not editable)
+        rerun_table_classification = widgets.Button(description="Re-run", disabled=not editable)
         table_save = widgets.Button(description="Save table enrichment", button_style="primary", disabled=not editable)
 
         def save_table(_button: Any) -> None:
@@ -541,6 +558,99 @@ def widget_data_contract(
                 set_status(str(exc), error=True)
 
         table_save.on_click(save_table)
+
+        def render_table_ai() -> None:
+            if not ai_enrichment.get("enabled"):
+                message = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
+                table_description_ai.value = message
+                table_classification_ai.value = message
+            elif not editable:
+                message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
+                table_description_ai.value = message
+                table_classification_ai.value = message
+            else:
+                table_description_ai.value = _suggestion_html(
+                    "Description", ai_state["table"].get("description")
+                )
+                table_classification_ai.value = _suggestion_html(
+                    "Classification", ai_state["table"].get("classification")
+                )
+            available = editable and bool(ai_enrichment.get("enabled"))
+            accept_table_description.disabled = not (
+                available and ai_state["table"].get("description")
+                and not ai_state["table"]["description"].get("error")
+            )
+            accept_table_classification.disabled = not (
+                available and ai_state["table"].get("classification")
+                and not ai_state["table"]["classification"].get("error")
+            )
+            rerun_table_description.disabled = not available
+            rerun_table_classification.disabled = not available
+
+        def run_table_ai(*, force: bool = False) -> None:
+            if not editable or not ai_enrichment.get("enabled"):
+                render_table_ai()
+                return
+            if (
+                not force
+                and ai_state["table"].get("description")
+                and ai_state["table"].get("classification")
+            ):
+                render_table_ai()
+                return
+            try:
+                result = suggest_enrichment(
+                    build_ai_enrichment_context(
+                        table,
+                        metadata_level="table",
+                        existing_description=str(table_description.value or ""),
+                        classification_labels=classification_labels,
+                    ),
+                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    classification_prompt=str(ai_enrichment.get("classification_prompt") or ""),
+                    classification_labels=classification_labels,
+                )
+                ai_state["table"]["description"] = {
+                    "value": result["Description"], "stale": False
+                }
+                ai_state["table"]["classification"] = {
+                    "value": result["Classification"], "stale": False
+                }
+                ai_errors.pop("table_enrichment", None)
+            except (TypeError, ValueError, RuntimeError) as exc:
+                message = str(exc)
+                ai_state["table"].setdefault(
+                    "description", {"error": message, "stale": False}
+                )
+                ai_state["table"].setdefault(
+                    "classification", {"error": message, "stale": False}
+                )
+                ai_errors["table_enrichment"] = message
+                set_status(f"Table AI suggestions unavailable: {message}", warning=True)
+            render_table_ai()
+
+        accept_table_description.on_click(
+            lambda _button: setattr(
+                table_description, "value",
+                str(ai_state["table"].get("description", {}).get("value") or ""),
+            )
+        )
+        accept_table_classification.on_click(
+            lambda _button: setattr(
+                table_classification, "value",
+                str(ai_state["table"].get("classification", {}).get("value") or ""),
+            )
+        )
+        rerun_table_description.on_click(lambda _button: run_table_ai(force=True))
+        rerun_table_classification.on_click(lambda _button: run_table_ai(force=True))
+
+        def table_description_changed(_change: dict[str, Any]) -> None:
+            suggestion = ai_state["table"].get("classification")
+            if suggestion:
+                suggestion["stale"] = True
+            render_table_ai()
+
+        table_description.observe(table_description_changed, names="value")
         table_rules: dict[str, Any] = {}
         for kind, title in (("freshness", "Freshness"), ("source_drift", "Source Drift")):
             existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == kind), {})
@@ -643,8 +753,11 @@ def widget_data_contract(
             shared.form_section(widgets, title="Table identity & context", children=[identity]),
             shared.form_section(widgets, title="Pipeline / Refresh", children=[pipeline_refresh]),
             shared.form_section(widgets, title="Table Enrichment", children=[
-                table_description, widgets.Button(description="Suggest", disabled=True),
-                table_classification, widgets.Button(description="Suggest", disabled=True), table_save,
+                table_description, table_description_ai,
+                shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
+                table_classification, table_classification_ai,
+                shared.form_grid(widgets, [accept_table_classification, rerun_table_classification]),
+                table_save,
             ]),
             shared.form_section(widgets, title="Table Guardrails", children=[
                 shared.form_grid(widgets, [
@@ -678,6 +791,12 @@ def widget_data_contract(
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="220px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
+        column_description_ai = widgets.HTML()
+        column_classification_ai = widgets.HTML()
+        accept_column_description = widgets.Button(description="Accept", disabled=not editable)
+        rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
+        accept_column_classification = widgets.Button(description="Accept", disabled=not editable)
+        rerun_column_classification = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         pii_type = widgets.Dropdown(
@@ -702,10 +821,9 @@ def widget_data_contract(
         save_column_enrichment = widgets.Button(description="Save enrichment", button_style="primary", disabled=not editable)
         save_required = widgets.Button(description="Save required state", disabled=not editable)
         save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
-        suggest_sensitive = widgets.Button(
-            description="✨ Suggest",
-            disabled=not editable or not bool(ai_enrichment.get("enabled")),
-        )
+        sensitive_ai = widgets.HTML()
+        accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
+        rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
         save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
@@ -715,7 +833,10 @@ def widget_data_contract(
         def selected_column() -> dict[str, Any]:
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
+        hydrating = {"active": False}
+
         def hydrate_column(column_id: str) -> None:
+            hydrating["active"] = True
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
             column_context.value = (
                 f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
@@ -726,9 +847,8 @@ def widget_data_contract(
             column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
             sensitive = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
-            assessment = state["_sensitive_ai_suggestions"].get(column_id, {})
-            pii_type.value = str(assessment.get("pii_type") or ("direct" if sensitive else "none"))
-            pii_reason.value = str(assessment.get("reason") or "")
+            pii_type.value = "direct" if sensitive else "none"
+            pii_reason.value = ""
             sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_parameters = _parameters(sensitive)
             sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
@@ -771,6 +891,8 @@ def widget_data_contract(
                 profile_context.value = _profile_html(load_profile_context(column_id))
             except (ValueError, RuntimeError) as exc:
                 profile_context.value = f"<p>{html.escape(str(exc))}</p>"
+            finally:
+                hydrating["active"] = False
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
@@ -832,32 +954,131 @@ def widget_data_contract(
                 }
                 set_status("Unsaved column edits were retained locally; use the section Save action to persist them.")
             if change.get("new"):
-                hydrate_column(str(change["new"]))
+                selected_id = str(change["new"])
+                hydrate_column(selected_id)
+                prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
 
-        def suggest_sensitive_clicked(_button: Any) -> None:
+        def _suggestion_html(label: str, suggestion: dict[str, Any] | None) -> str:
+            if not suggestion:
+                return "<p><b>AI suggestion</b><br><span style=\"color:#666\">Preparing…</span></p>"
+            stale = " · <b>Needs refresh</b>" if suggestion.get("stale") else ""
+            error = suggestion.get("error")
+            if error:
+                return (
+                    "<p><b>AI suggestion</b><br><span style=\"color:#a4262c\">"
+                    f"{html.escape(str(error))}</span></p>"
+                )
+            value = suggestion.get("value")
+            if label == "Sensitive Data":
+                value = (
+                    f"<b>{html.escape(str(suggestion.get('pii_label') or ''))}</b><br>"
+                    f"{html.escape(str(suggestion.get('reason') or ''))}<br>"
+                    f"Treatment: {html.escape(str(suggestion.get('treatment') or 'None'))} · "
+                    f"Action: {html.escape(str(suggestion.get('action') or 'None'))}"
+                )
+            else:
+                value = html.escape(str(value or ""))
+            return f"<p><b>AI suggestion</b>{stale}<br>{value}</p>"
+
+        def _column_editable_values(column_id: str) -> tuple[str, str]:
+            if str(column_select.value or "") == column_id:
+                return str(column_description.value or ""), str(column_classification.value or "")
+            pending = unsaved_columns.get(column_id, {})
+            return (
+                str(pending.get("description", enrichment_value(
+                    enrichments, "column", "Description", column_id
+                )) or ""),
+                str(pending.get("classification", enrichment_value(
+                    enrichments, "column", "Classification", column_id
+                )) or ""),
+            )
+
+        def render_column_ai(column_id: str) -> None:
+            suggestions = ai_state["columns"].get(column_id, {})
+            if not ai_enrichment.get("enabled"):
+                disabled_message = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
+                column_description_ai.value = disabled_message
+                column_classification_ai.value = disabled_message
+                sensitive_ai.value = disabled_message
+            elif not editable:
+                review_message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
+                column_description_ai.value = review_message
+                column_classification_ai.value = review_message
+                sensitive_ai.value = review_message
+            else:
+                column_description_ai.value = _suggestion_html(
+                    "Description", suggestions.get("description")
+                )
+                column_classification_ai.value = _suggestion_html(
+                    "Classification", suggestions.get("classification")
+                )
+                sensitive_ai.value = _suggestion_html(
+                    "Sensitive Data", suggestions.get("sensitive_data")
+                )
+            available = editable and bool(ai_enrichment.get("enabled"))
+            accept_column_description.disabled = not (
+                available and suggestions.get("description") and not suggestions["description"].get("error")
+            )
+            accept_column_classification.disabled = not (
+                available and suggestions.get("classification") and not suggestions["classification"].get("error")
+            )
+            accept_sensitive.disabled = not (
+                available and suggestions.get("sensitive_data") and not suggestions["sensitive_data"].get("error")
+            )
+            rerun_column_description.disabled = not available
+            rerun_column_classification.disabled = not available
+            rerun_sensitive.disabled = not available
+
+        def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
+            suggestions = ai_state["columns"].setdefault(column_id, {})
+            if not force and suggestions.get("description") and suggestions.get("classification"):
+                render_column_ai(column_id)
+                return
+            selected = next(
+                (column for column in columns if str(column.get("column_id") or "") == column_id), {}
+            )
+            description, _classification = _column_editable_values(column_id)
             try:
-                if not ai_enrichment.get("enabled"):
-                    raise ValueError("AI Enrichment is disabled in 00_env_config.")
-                profile_rows = []
-                for column in columns:
-                    cid = str(column.get("column_id") or "")
-                    profile_context_value = load_profile_context(cid)
-                    profile = dict(profile_context_value.get("profile") or {})
-                    profile_rows.append({
-                        **dict(column),
-                        "description": enrichment_value(enrichments, "column", "Description", cid),
-                        "classification": enrichment_value(enrichments, "column", "Classification", cid),
-                        **{name: profile.get(name) for name in (
-                            "row_count", "non_null_count", "null_count", "null_percent",
-                            "distinct_count", "distinct_percent", "min_value", "max_value",
-                        ) if profile.get(name) is not None},
-                        "frequency_evidence": [
-                            {"count": item.get("count")}
-                            for item in profile_context_value.get("values", [])
-                        ],
-                    })
+                profile_value = load_profile_context(column_id)
+                result = suggest_enrichment(
+                    build_ai_enrichment_context(
+                        selected,
+                        metadata_level="column",
+                        existing_description=description,
+                        classification_labels=classification_labels,
+                        profile_rows=[dict(profile_value.get("profile") or {})],
+                    ),
+                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    classification_prompt=str(ai_enrichment.get("classification_prompt") or ""),
+                    classification_labels=classification_labels,
+                )
+                suggestions["description"] = {"value": result["Description"], "stale": False}
+                suggestions["classification"] = {
+                    "value": result["Classification"], "stale": False
+                }
+                ai_errors.pop((column_id, "enrichment"), None)
+            except (TypeError, ValueError, RuntimeError) as exc:
+                message = str(exc)
+                suggestions.setdefault("description", {"error": message, "stale": False})
+                suggestions.setdefault("classification", {"error": message, "stale": False})
+                ai_errors[(column_id, "enrichment")] = message
+                set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
+            render_column_ai(column_id)
+
+        def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
+            suggestions = ai_state["columns"].setdefault(column_id, {})
+            if not force and suggestions.get("sensitive_data"):
+                render_column_ai(column_id)
+                return
+            selected = next(
+                (column for column in columns if str(column.get("column_id") or "") == column_id), {}
+            )
+            description, classification = _column_editable_values(column_id)
+            try:
+                profile_value = load_profile_context(column_id)
+                profile = dict(profile_value.get("profile") or {})
                 context_value = build_ai_sensitive_data_context({
                     "table_id": state.get("table_id"),
                     "table_name": table.get("table_name"),
@@ -865,40 +1086,103 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": enrichment_value(enrichments, "table", "Description"),
-                    "table_classification": enrichment_value(enrichments, "table", "Classification"),
-                    "catalogue_profile_rows": profile_rows,
+                    "table_description": table_description.value,
+                    "table_classification": table_classification.value,
+                    "catalogue_profile_rows": [{
+                        **dict(selected), "description": description,
+                        "classification": classification,
+                        **{name: profile.get(name) for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                        ) if profile.get(name) is not None},
+                        "frequency_evidence": [
+                            {"count": item.get("count")} for item in profile_value.get("values", [])
+                        ],
+                    }],
                 })
-                suggestions = suggest_sensitive_data(
+                result = suggest_sensitive_data(
                     context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or "")
                 )
-                state["_sensitive_ai_suggestions"] = {
-                    str(item["column_id"]): item for item in suggestions
-                }
-                for cid, item in state["_sensitive_ai_suggestions"].items():
-                    draft = unsaved_columns.setdefault(cid, {})
-                    draft.update({
-                        "description": enrichment_value(enrichments, "column", "Description", cid),
-                        "classification": enrichment_value(enrichments, "column", "Classification", cid),
-                        "required": cid in required_columns,
-                        "pii_type": item["pii_type"], "pii_reason": item["reason"],
-                        "sensitive_enabled": item["pii_type"] != "none",
-                        "sensitive_treatment": item.get("treatment") or "mask",
-                        "sensitive_action": item.get("action") or "Warn",
-                        "mask_start": str(item.get("parameters", {}).get("preserve_start", 0)),
-                        "mask_end": str(item.get("parameters", {}).get("preserve_end", 0)),
-                        "mask_character": str(item.get("parameters", {}).get("mask_character", "*")),
-                        "bucket_bins": ", ".join(map(str, item.get("parameters", {}).get("bins", []))),
-                        "bucket_labels": ", ".join(map(str, item.get("parameters", {}).get("labels", []))),
-                        "dq_type": dq_type.value, "dq_parameter": "", "dq_action": "Warn",
-                    })
-                hydrate_column(str(column_select.value or ""))
-                set_status("AI Sensitive Data assessments are ready for review; nothing has been saved.")
+                if len(result) != 1:
+                    raise ValueError("AI Sensitive Data response must assess the selected column once.")
+                suggestions["sensitive_data"] = {**result[0], "stale": False}
+                ai_errors.pop((column_id, "sensitive_data"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                message = str(exc)
+                suggestions["sensitive_data"] = {"error": message, "stale": False}
+                ai_errors[(column_id, "sensitive_data")] = message
+                set_status(
+                    f"Sensitive Data AI unavailable for this column: {message}", warning=True
+                )
+            render_column_ai(column_id)
 
-        suggest_sensitive.on_click(suggest_sensitive_clicked)
-        state["suggest_sensitive_data"] = suggest_sensitive_clicked
+        def prepare_column_ai(column_id: str) -> None:
+            if not editable or not ai_enrichment.get("enabled") or not column_id:
+                render_column_ai(column_id)
+                return
+            run_column_enrichment_ai(column_id)
+            run_sensitive_ai(column_id)
+
+        def accept_description_clicked(_button: Any) -> None:
+            suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
+            if not suggestion.get("error"):
+                column_description.value = str(suggestion.get("value") or "")
+
+        def accept_classification_clicked(_button: Any) -> None:
+            suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("classification", {})
+            if not suggestion.get("error"):
+                column_classification.value = str(suggestion.get("value") or "")
+
+        def accept_sensitive_clicked(_button: Any) -> None:
+            suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("sensitive_data", {})
+            if not suggestion or suggestion.get("error"):
+                return
+            pii_type.value = str(suggestion["pii_type"])
+            pii_reason.value = str(suggestion["reason"])
+            sensitive_enabled.value = suggestion["pii_type"] != "none"
+            sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
+            sensitive_action.value = str(suggestion.get("action") or "Warn")
+            parameters = suggestion.get("parameters", {})
+            mask_start.value = str(parameters.get("preserve_start", 0))
+            mask_end.value = str(parameters.get("preserve_end", 0))
+            mask_character.value = str(parameters.get("mask_character", "*"))
+            bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
+            bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+
+        accept_column_description.on_click(accept_description_clicked)
+        accept_column_classification.on_click(accept_classification_clicked)
+        accept_sensitive.on_click(accept_sensitive_clicked)
+        rerun_column_description.on_click(
+            lambda _button: run_column_enrichment_ai(str(column_select.value or ""), force=True)
+        )
+        rerun_column_classification.on_click(
+            lambda _button: run_column_enrichment_ai(str(column_select.value or ""), force=True)
+        )
+        rerun_sensitive.on_click(
+            lambda _button: run_sensitive_ai(str(column_select.value or ""), force=True)
+        )
+
+        def description_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            column_id = str(column_select.value or "")
+            suggestions = ai_state["columns"].get(column_id, {})
+            for name in ("classification", "sensitive_data"):
+                if suggestions.get(name):
+                    suggestions[name]["stale"] = True
+            render_column_ai(column_id)
+
+        def classification_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            column_id = str(column_select.value or "")
+            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            if suggestion:
+                suggestion["stale"] = True
+            render_column_ai(column_id)
+
+        column_description.observe(description_changed, names="value")
+        column_classification.observe(classification_changed, names="value")
 
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
@@ -985,15 +1269,23 @@ def widget_data_contract(
             target=[column_select],
             selection=[column_context, widgets.HTML("<b>Profile evidence</b>"), profile_context],
             configuration=[
-                shared.form_section(widgets, title="Enrichment", children=[column_description, widgets.Button(description="Suggest", disabled=True), column_classification, save_column_enrichment]),
+                shared.form_section(widgets, title="Enrichment", children=[
+                    column_description, column_description_ai,
+                    shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
+                    column_classification, column_classification_ai,
+                    shared.form_grid(widgets, [accept_column_classification, rerun_column_classification]),
+                    save_column_enrichment,
+                ]),
                 shared.form_section(widgets, title="Schema", children=[required, save_required]),
-                shared.form_section(widgets, title="Sensitive Data", children=[pii_type, pii_reason, sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, suggest_sensitive, save_sensitive]),
+                shared.form_section(widgets, title="Sensitive Data", children=[sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason, sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, save_sensitive]),
                 shared.form_section(widgets, title="Data Quality", children=[dq_type, dq_help, dq_usage, dq_parameter, dq_action, widgets.Button(description="Suggest rules", disabled=True), save_dq]),
             ], titles=("Columns", "Selected column context", "Configuration"),
         ),)
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
+            prepare_column_ai(str(column_select.value))
+        run_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
@@ -1127,12 +1419,26 @@ def widget_data_contract(
             "table_description": table_description, "table_classification": table_classification,
             "table_save": table_save, "table_guardrails": table_rules,
             "pipeline_refresh": pipeline_refresh,
+            "table_description_ai": table_description_ai,
+            "table_classification_ai": table_classification_ai,
+            "accept_table_description": accept_table_description,
+            "rerun_table_description": rerun_table_description,
+            "accept_table_classification": accept_table_classification,
+            "rerun_table_classification": rerun_table_classification,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
-            "pii_type": pii_type, "pii_reason": pii_reason, "suggest_sensitive": suggest_sensitive,
+            "column_description_ai": column_description_ai,
+            "column_classification_ai": column_classification_ai,
+            "accept_column_description": accept_column_description,
+            "rerun_column_description": rerun_column_description,
+            "accept_column_classification": accept_column_classification,
+            "rerun_column_classification": rerun_column_classification,
+            "pii_type": pii_type, "pii_reason": pii_reason,
+            "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
+            "rerun_sensitive": rerun_sensitive,
             "sensitive_action": sensitive_action, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,

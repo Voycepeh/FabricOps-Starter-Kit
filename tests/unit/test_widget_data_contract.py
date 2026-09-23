@@ -130,7 +130,12 @@ def widget_runtime(monkeypatch):
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
     }
-    ai_enrichment = {"enabled": False, "sensitive_data_prompt": "configured sensitive prompt"}
+    ai_enrichment = {
+        "enabled": False,
+        "description_prompt": "configured description prompt",
+        "classification_prompt": "configured classification prompt",
+        "sensitive_data_prompt": "configured sensitive prompt",
+    }
 
     def review(**_kwargs):
         if contract["status"] == "draft":
@@ -187,7 +192,10 @@ def widget_runtime(monkeypatch):
         return {"changed": True}
 
     config = types.SimpleNamespace(
-        governance_config=types.SimpleNamespace(ai_enrichment=ai_enrichment)
+        governance_config=types.SimpleNamespace(
+            ai_enrichment=ai_enrichment,
+            sensitivity_labels=["Public", "Internal", "Confidential", "Restricted"],
+        )
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
@@ -384,62 +392,197 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
 
 
-def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
-    """The unified widget exposes no executable AI action when 00_env_config disables it."""
-    state = widget_runtime["open"]()
-    assert state["_controls"]["suggest_sensitive"].disabled is True
-    assert widget_runtime["calls"]["guardrails"] == []
-
-
-def test_sensitive_ai_populates_editable_state_without_persisting(widget_runtime, monkeypatch):
-    """Advisory assessments hydrate normal controls and wait for an explicit save."""
+def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
+    """Enable deterministic AI responses for widget interaction tests."""
     widget_runtime["ai_enrichment"]["enabled"] = True
-    captured = {}
+    captures = captures if captures is not None else {"enrichment": [], "sensitive": []}
 
-    def suggest(context, *, prompt):
-        captured.update(context=context, prompt=prompt)
+    def enrichment(context, **_kwargs):
+        captures["enrichment"].append(context)
+        level = context["metadata_level"]
+        return {
+            "Description": f"Suggested {level} description",
+            "Classification": "Confidential",
+        }
+
+    def sensitive(context, **_kwargs):
+        captures["sensitive"].append(context)
+        column = context["columns"][0]
         return [{
-            "column_name": "column_0", "column_id": "col-0", "pii_type": "direct",
-            "pii_label": "Direct PII", "reason": "Can uniquely associate a person.",
-            "treatment": "mask", "action": "Block",
+            "column_name": column["column_name"], "column_id": column["column_id"],
+            "pii_type": "direct", "pii_label": "Direct PII",
+            "reason": "Can uniquely associate a person.", "treatment": "mask",
+            "action": "Block",
             "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"},
             "is_active": True,
         }]
 
-    monkeypatch.setattr(module, "suggest_sensitive_data", suggest)
+    monkeypatch.setattr(module, "suggest_enrichment", enrichment)
+    monkeypatch.setattr(module, "suggest_sensitive_data", sensitive)
+    return captures
+
+
+def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
+    """AI-disabled authoring keeps every manual editor available."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    before = len(widget_runtime["calls"]["guardrails"])
-    controls["suggest_sensitive"].click()
+    assert controls["rerun_sensitive"].disabled is True
+    assert controls["column_description"].disabled is False
+    assert controls["save_column_enrichment"].disabled is False
+    assert all(not drafts for drafts in state["_column_drafts"].values())
 
+
+def test_ai_suggestions_generate_automatically_without_mutating_drafts(widget_runtime, monkeypatch):
+    """Editable contracts prepare separate table, column, and PII suggestions on load."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+
+    assert len(captures["enrichment"]) == 2  # table plus initially displayed column
+    assert len(captures["sensitive"]) == 1
+    assert all(not drafts for drafts in state["_column_drafts"].values())
+    assert state["_ai_suggestions"]
+    assert "Suggested column description" in state["_controls"]["column_description_ai"].value
+    assert "Direct PII" in state["_controls"]["sensitive_ai"].value
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
+    """Description, Classification, and Sensitive Data acceptance stay isolated."""
+    _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["required"].value = False
+    controls["dq_type"].value = "text_pattern"
+    controls["dq_parameter"].value = "manual-pattern"
+
+    original_classification = controls["column_classification"].value
+    controls["accept_column_description"].click()
+    assert controls["column_description"].value == "Suggested column description"
+    assert controls["column_classification"].value == original_classification
+    assert controls["required"].value is False
+    assert controls["dq_parameter"].value == "manual-pattern"
+
+    description = controls["column_description"].value
+    controls["accept_column_classification"].click()
+    assert controls["column_classification"].value == "Confidential"
+    assert controls["column_description"].value == description
+    assert controls["dq_parameter"].value == "manual-pattern"
+
+    controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
-    assert controls["pii_reason"].value == "Can uniquely associate a person."
     assert controls["sensitive_treatment"].value == "mask"
     assert controls["sensitive_action"].value == "Block"
-    assert controls["mask_start"].value == "1"
-    assert len(widget_runtime["calls"]["guardrails"]) == before
-    assert captured["prompt"] == "configured sensitive prompt"
-    assert captured["context"]["columns"][0]["description"] == "Order identifier"
-    assert "nothing has been saved" in state["message"]
-
-    controls["save_sensitive"].click()
-    assert len(widget_runtime["calls"]["guardrails"]) == before + 1
+    assert controls["column_description"].value == description
+    assert controls["column_classification"].value == "Confidential"
+    assert controls["required"].value is False
+    assert controls["dq_type"].value == "text_pattern"
+    assert controls["dq_parameter"].value == "manual-pattern"
+    assert widget_runtime["calls"]["guardrails"] == []
 
 
-def test_not_pii_suggestion_disables_rule_without_persisting(widget_runtime, monkeypatch):
-    """A Not PII assessment remains visible and creates no rule until a user saves."""
-    widget_runtime["ai_enrichment"]["enabled"] = True
-    monkeypatch.setattr(module, "suggest_sensitive_data", lambda *_args, **_kwargs: [{
-        "column_name": "column_0", "column_id": "col-0", "pii_type": "none",
-        "pii_label": "Not PII", "reason": "No identifying basis.", "treatment": None,
-        "action": None, "parameters": {}, "is_active": False,
-    }])
+def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):
+    """Regress PR 1375: PII generation never overwrites unrelated draft fields."""
+    _enable_ai(widget_runtime, monkeypatch)
     state = widget_runtime["open"]()
-    before = len(widget_runtime["calls"]["guardrails"])
-    state["_controls"]["suggest_sensitive"].click()
-    assert state["_controls"]["pii_type"].value == "none"
-    assert state["_controls"]["sensitive_enabled"].value is False
-    assert len(widget_runtime["calls"]["guardrails"]) == before
+    controls = state["_controls"]
+    controls["column_description"].value = "Unsaved description"
+    controls["column_classification"].value = "Restricted"
+    controls["dq_type"].value = "text_pattern"
+    controls["dq_parameter"].value = "keep-me"
+    controls["column_select"].value = "col-1"
+    controls["column_select"].value = "col-0"
+
+    controls["rerun_sensitive"].click()
+
+    assert controls["column_description"].value == "Unsaved description"
+    assert controls["column_classification"].value == "Restricted"
+    assert controls["dq_type"].value == "text_pattern"
+    assert controls["dq_parameter"].value == "keep-me"
+
+
+def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
+    """Lazy suggestions and user drafts survive bounded column navigation."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_description"].value = "First draft"
+    controls["column_select"].value = "col-1"
+    controls["column_description"].value = "Second draft"
+    controls["column_select"].value = "col-0"
+
+    assert controls["column_description"].value == "First draft"
+    assert set(next(iter(state["_ai_suggestions"].values()))["columns"]) == {"col-0", "col-1"}
+    calls_before = len(captures["sensitive"])
+    controls["column_select"].value = "col-1"
+    assert controls["column_description"].value == "Second draft"
+    assert len(captures["sensitive"]) == calls_before
+
+
+def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runtime, monkeypatch):
+    """Manual Description and Classification edits mark only downstream advice stale."""
+    _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_description"].value = "Manual description"
+    assert "Needs refresh" in controls["column_classification_ai"].value
+    assert "Needs refresh" in controls["sensitive_ai"].value
+    controls["rerun_column_classification"].click()
+    assert "Needs refresh" not in controls["column_classification_ai"].value
+    controls["column_classification"].value = "Restricted"
+    assert "Needs refresh" in controls["sensitive_ai"].value
+
+
+def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, monkeypatch):
+    """Explicit refresh reads unsaved Enrichment values without invoking save paths."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_description"].value = "Current unsaved description"
+    controls["column_classification"].value = "Restricted"
+    controls["rerun_column_classification"].click()
+    controls["rerun_sensitive"].click()
+
+    assert captures["enrichment"][-1]["existing_description"] == "Current unsaved description"
+    sensitive_column = captures["sensitive"][-1]["columns"][0]
+    assert sensitive_column["description"] == "Current unsaved description"
+    assert sensitive_column["classification"] == "Restricted"
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
+    """Unavailable Fabric AI reports status while preserving manual authoring."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    monkeypatch.setattr(
+        module, "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+    )
+    monkeypatch.setattr(
+        module, "suggest_sensitive_data",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
+    )
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["column_description"].disabled is False
+    controls["column_description"].value = "Manual still works"
+    controls["save_column_enrichment"].click()
+    assert widget_runtime["calls"]["enrichment"]
+    assert state["_ai_errors"]
+
+
+def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatch):
+    """Frozen review-only versions never invoke authoring AI."""
+    widget_runtime["contract"]["status"] = "frozen"
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    monkeypatch.setattr(
+        module, "suggest_enrichment", lambda *_args, **_kwargs: pytest.fail("AI must not run")
+    )
+    monkeypatch.setattr(
+        module, "suggest_sensitive_data", lambda *_args, **_kwargs: pytest.fail("AI must not run")
+    )
+    state = widget_runtime["open"]()
+    assert state["_controls"]["rerun_sensitive"].disabled is True
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
