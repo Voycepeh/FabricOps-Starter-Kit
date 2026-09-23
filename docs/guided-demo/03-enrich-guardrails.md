@@ -37,6 +37,27 @@ For example:
 
 Do not add rules only to make the screen look busy. The goal is to make it obvious that the Data Contract changes what the same `02_pipeline` will enforce in Step 4.
 
+### Review AI-assisted Sensitive Data assessments
+
+**The Sensitive Data assistant proposes reviewable authoring state; it does not make a governance decision.**
+
+When AI Enrichment is enabled in `00_env_config`, select **Suggest** in the Sensitive Data section. The assistant uses the canonical Catalogue identity, Description and information Classification from `METADATA_ENRICHMENT`, and available `METADATA_DATA_PROFILED` profile evidence. It does not sample source rows for this feature.
+
+For each column, review one of these assessments:
+
+| PII assessment | Meaning |
+| --- | --- |
+| **Direct PII** | The supplied context supports that the column can directly identify, contact, or uniquely associate with an individual. |
+| **Indirect PII** | The supplied context supports that the column can identify or materially narrow down an individual when combined with other information. |
+| **Not PII** | The supplied context does not provide a defensible basis for treating the column as personally identifying. |
+
+For Direct or Indirect PII, the assistant can recommend an existing deterministic treatment—**Tokenize**, **Mask**, **Bucket**, or **Remove**—and a **Warn** or **Block** action. You can change the assessment, explanation, treatment parameters, and action, or disable the proposed rule before saving it.
+
+!!! important "Keep the three decisions distinct"
+    **Confidential** is an information Classification, **Direct PII** describes identifying characteristics, and **Mask** is an enforceable Sensitive Data treatment. Classification can inform an assessment, but it does not create a Sensitive Data Guardrail automatically.
+
+The suggestion remains transient until you explicitly save the Sensitive Data Guardrail through the normal Data Contract authoring path. AI never saves, freezes, activates, or enforces a contract. Freezing remains the Governance sign-off boundary, and [`check_sensitive_data()`](../api/reference/check_sensitive_data.md) applies only the reviewed Guardrail deterministically at runtime.
+
 ## Review the complete definition
 
 Before freezing, review the selected `table_id`, Enrichment, Guardrails, Processing, and ownership together.

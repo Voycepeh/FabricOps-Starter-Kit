@@ -12,6 +12,11 @@ from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
+from fabricops_kit.widgets.enrichment_shared import (
+    PII_LABELS,
+    build_ai_sensitive_data_context,
+    suggest_sensitive_data,
+)
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
@@ -241,6 +246,11 @@ def widget_data_contract(
     to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
+    When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
+    Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
+    Not PII from governed metadata and profile evidence. Suggestions only populate
+    editable authoring state; they never save, freeze, activate, or enforce a contract.
+    Runtime Sensitive Data enforcement remains deterministic.
 
     Examples
     --------
@@ -255,6 +265,8 @@ def widget_data_contract(
     from IPython import display as ip
 
     config, env, resolved = resolve_fabric_context(context=context)
+    governance_config = getattr(config, "governance_config", None)
+    ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     spark = get_spark_session(spark_session)
     catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
     table_rows = catalogue["tables"]
@@ -265,6 +277,7 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {},
+        "_sensitive_ai_suggestions": {},
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -667,6 +680,13 @@ def widget_data_contract(
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         required = widgets.Checkbox(description="Required", disabled=not editable)
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        pii_type = widgets.Dropdown(
+            options=[(label, value) for value, label in PII_LABELS.items()],
+            value="none", disabled=not editable, **shared.widget_common(widgets, "PII assessment"),
+        )
+        pii_reason = widgets.Textarea(
+            disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
+        )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
         sensitive_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
@@ -682,6 +702,10 @@ def widget_data_contract(
         save_column_enrichment = widgets.Button(description="Save enrichment", button_style="primary", disabled=not editable)
         save_required = widgets.Button(description="Save required state", disabled=not editable)
         save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
+        suggest_sensitive = widgets.Button(
+            description="✨ Suggest",
+            disabled=not editable or not bool(ai_enrichment.get("enabled")),
+        )
         save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
@@ -702,6 +726,9 @@ def widget_data_contract(
             column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
             sensitive = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
+            assessment = state["_sensitive_ai_suggestions"].get(column_id, {})
+            pii_type.value = str(assessment.get("pii_type") or ("direct" if sensitive else "none"))
+            pii_reason.value = str(assessment.get("reason") or "")
             sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_parameters = _parameters(sensitive)
             sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
@@ -728,6 +755,8 @@ def widget_data_contract(
                 column_classification.value = pending["classification"]
                 required.value = pending["required"]
                 sensitive_enabled.value = pending["sensitive_enabled"]
+                pii_type.value = pending["pii_type"]
+                pii_reason.value = pending["pii_reason"]
                 sensitive_treatment.value = pending["sensitive_treatment"]
                 sensitive_action.value = pending["sensitive_action"]
                 mask_start.value = pending["mask_start"]
@@ -769,6 +798,17 @@ def widget_data_contract(
         sensitive_treatment.observe(update_sensitive_fields, names="value")
         update_sensitive_fields()
 
+        def update_pii_fields(change: dict[str, Any] | None = None) -> None:
+            is_pii = str(pii_type.value or "none") != "none"
+            if not is_pii:
+                sensitive_enabled.value = False
+            sensitive_treatment.disabled = not editable or not is_pii
+            sensitive_action.disabled = not editable or not is_pii
+            update_sensitive_fields()
+
+        pii_type.observe(update_pii_fields, names="value")
+        update_pii_fields()
+
         def column_changed(change: dict[str, Any]) -> None:
             old = str(change.get("old") or "")
             if old:
@@ -777,6 +817,8 @@ def widget_data_contract(
                     "classification": column_classification.value,
                     "required": required.value,
                     "sensitive_enabled": sensitive_enabled.value,
+                    "pii_type": pii_type.value,
+                    "pii_reason": pii_reason.value,
                     "sensitive_treatment": sensitive_treatment.value,
                     "sensitive_action": sensitive_action.value,
                     "mask_start": mask_start.value,
@@ -793,6 +835,70 @@ def widget_data_contract(
                 hydrate_column(str(change["new"]))
 
         column_select.observe(column_changed, names="value")
+
+        def suggest_sensitive_clicked(_button: Any) -> None:
+            try:
+                if not ai_enrichment.get("enabled"):
+                    raise ValueError("AI Enrichment is disabled in 00_env_config.")
+                profile_rows = []
+                for column in columns:
+                    cid = str(column.get("column_id") or "")
+                    profile_context_value = load_profile_context(cid)
+                    profile = dict(profile_context_value.get("profile") or {})
+                    profile_rows.append({
+                        **dict(column),
+                        "description": enrichment_value(enrichments, "column", "Description", cid),
+                        "classification": enrichment_value(enrichments, "column", "Classification", cid),
+                        **{name: profile.get(name) for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                        ) if profile.get(name) is not None},
+                        "frequency_evidence": [
+                            {"count": item.get("count")}
+                            for item in profile_context_value.get("values", [])
+                        ],
+                    })
+                context_value = build_ai_sensitive_data_context({
+                    "table_id": state.get("table_id"),
+                    "table_name": table.get("table_name"),
+                    "schema_name": table.get("schema_name"),
+                    "layer": table.get("layer"),
+                    "contract_id": current.get("contract_id"),
+                    "contract_version": current.get("contract_version"),
+                    "table_description": enrichment_value(enrichments, "table", "Description"),
+                    "table_classification": enrichment_value(enrichments, "table", "Classification"),
+                    "catalogue_profile_rows": profile_rows,
+                })
+                suggestions = suggest_sensitive_data(
+                    context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or "")
+                )
+                state["_sensitive_ai_suggestions"] = {
+                    str(item["column_id"]): item for item in suggestions
+                }
+                for cid, item in state["_sensitive_ai_suggestions"].items():
+                    draft = unsaved_columns.setdefault(cid, {})
+                    draft.update({
+                        "description": enrichment_value(enrichments, "column", "Description", cid),
+                        "classification": enrichment_value(enrichments, "column", "Classification", cid),
+                        "required": cid in required_columns,
+                        "pii_type": item["pii_type"], "pii_reason": item["reason"],
+                        "sensitive_enabled": item["pii_type"] != "none",
+                        "sensitive_treatment": item.get("treatment") or "mask",
+                        "sensitive_action": item.get("action") or "Warn",
+                        "mask_start": str(item.get("parameters", {}).get("preserve_start", 0)),
+                        "mask_end": str(item.get("parameters", {}).get("preserve_end", 0)),
+                        "mask_character": str(item.get("parameters", {}).get("mask_character", "*")),
+                        "bucket_bins": ", ".join(map(str, item.get("parameters", {}).get("bins", []))),
+                        "bucket_labels": ", ".join(map(str, item.get("parameters", {}).get("labels", []))),
+                        "dq_type": dq_type.value, "dq_parameter": "", "dq_action": "Warn",
+                    })
+                hydrate_column(str(column_select.value or ""))
+                set_status("AI Sensitive Data assessments are ready for review; nothing has been saved.")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_status(str(exc), error=True)
+
+        suggest_sensitive.on_click(suggest_sensitive_clicked)
+        state["suggest_sensitive_data"] = suggest_sensitive_clicked
 
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
@@ -881,7 +987,7 @@ def widget_data_contract(
             configuration=[
                 shared.form_section(widgets, title="Enrichment", children=[column_description, widgets.Button(description="Suggest", disabled=True), column_classification, save_column_enrichment]),
                 shared.form_section(widgets, title="Schema", children=[required, save_required]),
-                shared.form_section(widgets, title="Sensitive Data", children=[sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, widgets.Button(description="Suggest rules", disabled=True), save_sensitive]),
+                shared.form_section(widgets, title="Sensitive Data", children=[pii_type, pii_reason, sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, suggest_sensitive, save_sensitive]),
                 shared.form_section(widgets, title="Data Quality", children=[dq_type, dq_help, dq_usage, dq_parameter, dq_action, widgets.Button(description="Suggest rules", disabled=True), save_dq]),
             ], titles=("Columns", "Selected column context", "Configuration"),
         ),)
@@ -1026,6 +1132,7 @@ def widget_data_contract(
             "column_classification": column_classification, "required": required,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
+            "pii_type": pii_type, "pii_reason": pii_reason, "suggest_sensitive": suggest_sensitive,
             "sensitive_action": sensitive_action, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,

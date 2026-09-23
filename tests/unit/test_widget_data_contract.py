@@ -130,6 +130,7 @@ def widget_runtime(monkeypatch):
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
     }
+    ai_enrichment = {"enabled": False, "sensitive_data_prompt": "configured sensitive prompt"}
 
     def review(**_kwargs):
         if contract["status"] == "draft":
@@ -185,7 +186,10 @@ def widget_runtime(monkeypatch):
         contract["status"] = "active"
         return {"changed": True}
 
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
+    config = types.SimpleNamespace(
+        governance_config=types.SimpleNamespace(ai_enrichment=ai_enrichment)
+    )
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
     monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
@@ -206,6 +210,7 @@ def widget_runtime(monkeypatch):
         "open": lambda: module.widget_data_contract(table_id="orders", contract_version=1),
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "guardrails": guardrails, "schedule": schedule,
+        "ai_enrichment": ai_enrichment,
     }
 
 
@@ -377,6 +382,64 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
     state["_controls"]["advanced_save"].click()
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
+
+
+def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
+    """The unified widget exposes no executable AI action when 00_env_config disables it."""
+    state = widget_runtime["open"]()
+    assert state["_controls"]["suggest_sensitive"].disabled is True
+    assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_sensitive_ai_populates_editable_state_without_persisting(widget_runtime, monkeypatch):
+    """Advisory assessments hydrate normal controls and wait for an explicit save."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    captured = {}
+
+    def suggest(context, *, prompt):
+        captured.update(context=context, prompt=prompt)
+        return [{
+            "column_name": "column_0", "column_id": "col-0", "pii_type": "direct",
+            "pii_label": "Direct PII", "reason": "Can uniquely associate a person.",
+            "treatment": "mask", "action": "Block",
+            "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"},
+            "is_active": True,
+        }]
+
+    monkeypatch.setattr(module, "suggest_sensitive_data", suggest)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    before = len(widget_runtime["calls"]["guardrails"])
+    controls["suggest_sensitive"].click()
+
+    assert controls["pii_type"].value == "direct"
+    assert controls["pii_reason"].value == "Can uniquely associate a person."
+    assert controls["sensitive_treatment"].value == "mask"
+    assert controls["sensitive_action"].value == "Block"
+    assert controls["mask_start"].value == "1"
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    assert captured["prompt"] == "configured sensitive prompt"
+    assert captured["context"]["columns"][0]["description"] == "Order identifier"
+    assert "nothing has been saved" in state["message"]
+
+    controls["save_sensitive"].click()
+    assert len(widget_runtime["calls"]["guardrails"]) == before + 1
+
+
+def test_not_pii_suggestion_disables_rule_without_persisting(widget_runtime, monkeypatch):
+    """A Not PII assessment remains visible and creates no rule until a user saves."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    monkeypatch.setattr(module, "suggest_sensitive_data", lambda *_args, **_kwargs: [{
+        "column_name": "column_0", "column_id": "col-0", "pii_type": "none",
+        "pii_label": "Not PII", "reason": "No identifying basis.", "treatment": None,
+        "action": None, "parameters": {}, "is_active": False,
+    }])
+    state = widget_runtime["open"]()
+    before = len(widget_runtime["calls"]["guardrails"])
+    state["_controls"]["suggest_sensitive"].click()
+    assert state["_controls"]["pii_type"].value == "none"
+    assert state["_controls"]["sensitive_enabled"].value is False
+    assert len(widget_runtime["calls"]["guardrails"]) == before
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
