@@ -223,8 +223,8 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.",
-        "grain": "One observed SQL permission row for one principal and one governed table within one access snapshot.",
+        "purpose": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; this is not an effective-access resolver.",
+        "grain": "One observed access grant for one principal or access selector and one governed table within one access snapshot.",
         "primary_key": ["access_id"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in an environment."},
@@ -409,18 +409,55 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_DATA_ACCESS": {
         "__default__": [
-            "fabricops_kit.access.scan_workspace_access.scan_workspace_access",
-            "fabricops_kit.access.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+            "fabricops_kit.access_scanner.scan_sql_access._access_rows",
+            "fabricops_kit.access_scanner.shared.persist_access_rows",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "access_id": ["fabricops_kit.access.scan_workspace_access._access_rows"],
-        "table_id": ["fabricops_kit.access.scan_workspace_access._map_to_catalogue"],
-        "access_snapshot_id": ["fabricops_kit.access.scan_workspace_access.scan_workspace_access"],
-        "permission_source": ["fabricops_kit.access.scan_workspace_access._scan_targets"],
-        "database_name": ["fabricops_kit.access.scan_workspace_access._scan_targets"],
-        "schema_name": ["fabricops_kit.access.scan_workspace_access._scan_targets"],
-        "object_name": ["fabricops_kit.access.scan_workspace_access._scan_targets"],
-        "object_type": ["fabricops_kit.access.scan_workspace_access._scan_targets"],
+        "access_id": [
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access._access_rows",
+        ],
+        "table_id": [
+            "fabricops_kit.access_scanner.scan_workspace_access._map_to_catalogue",
+            "fabricops_kit.access_scanner.scan_onelake_access._map_to_catalogue",
+            "fabricops_kit.access_scanner.scan_sql_access._map_to_catalogue",
+        ],
+        "access_snapshot_id": [
+            "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+            "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+            "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+        ],
+        "permission_source": [
+            "fabricops_kit.access_scanner.scan_workspace_access._workspace_observations",
+            "fabricops_kit.access_scanner.scan_onelake_access._role_observations",
+            "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
+        ],
+        "database_name": [
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
+        ],
+        "schema_name": [
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
+        ],
+        "object_name": [
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
+        ],
+        "object_type": [
+            "fabricops_kit.access_scanner.scan_workspace_access._access_rows",
+            "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
+            "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
+        ],
     },
     "METADATA_ENRICHMENT": {
         "__default__": [
