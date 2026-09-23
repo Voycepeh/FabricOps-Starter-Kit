@@ -19,10 +19,10 @@ Apply explicit Sensitive Data treatment before a governed write.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">03_incremental_pipeline</span>
+<span class="reference-chip">02B_incremental_append_pipeline</span>
 </p>
 
-**Used in notebooks:** `03_incremental_pipeline`
+**Used in notebooks:** `02B_incremental_append_pipeline`
 
 ## Usage notes
 

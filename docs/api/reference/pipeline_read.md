@@ -33,10 +33,10 @@ choose between Lakehouse and Warehouse table readers.
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">03_incremental_pipeline</span>
+<span class="reference-chip">02B_incremental_append_pipeline</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `03_incremental_pipeline`
+**Used in notebooks:** `02_pipeline`, `02B_incremental_append_pipeline`
 
 ## Usage notes
 
@@ -173,7 +173,7 @@ This function does not execute Freshness, Source Drift, Schema, DQ, or
 Sensitive Data checks. It also does not profile
 data, transform rows, or write a pipeline target. Those meaningful
 engineering decisions remain explicit in ``02_pipeline`` and
-``03_incremental_pipeline``.
+``02B_incremental_append_pipeline``.
 
 With ``verbose=True``, a Warehouse table read reports a line such as
 ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.

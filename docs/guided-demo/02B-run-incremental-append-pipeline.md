@@ -1,6 +1,6 @@
-# Step 2A. Run an incremental pipeline
+# Step 2B. Run an Incremental Append Pipeline
 
-Use the `03_incremental_pipeline` template after you understand the full-read flow in [Step 2. Build and run the ETL](02-run-pipeline.md).
+Use the `02B_incremental_append_pipeline` template after you understand the full-read flow in [Step 2. Build and run the ETL](02-run-pipeline.md).
 
 The incremental template is **target-aware**. FabricOps resolves the unconsumed scope of an incremental source relative to a specific target, so the target identity must be known before the incremental read starts.
 
@@ -10,7 +10,7 @@ This walkthrough focuses on the behaviour that differs from the full-read pipeli
 - read only the unconsumed source scope,
 - mix incremental and full supporting sources in the same target flow,
 - skip publication safely when there is no new source data,
-- publish with an appropriate append, SCD1, SCD2, or partition-scoped overwrite strategy,
+- append the processed incremental scope to the target,
 - profile partial batches and complete persisted tables deliberately.
 
 The standard target-aware shape is:
@@ -185,17 +185,12 @@ This intentionally profiles the **complete persisted target**, not just the incr
 
 That gives the target Catalogue profile one stable meaning across full and incremental pipelines.
 
-## 7. Choose the write strategy deliberately
+## 7. Keep this variant to one pattern
 
-Read mode and write strategy are separate decisions.
+This `02B` variant intentionally demonstrates **incremental read → append** only. Read mode and write strategy remain separate concepts, but this template fixes the write strategy to append so the pattern stays easy to understand and clone.
 
-- `append` adds new rows.
-- `SCD1` updates the current representation of keyed rows.
-- `SCD2` preserves keyed history.
-- partition-scoped `overwrite` replaces only governed changed partitions.
+An append bootstrap is allowed only when the target is new or empty. A populated target without committed source → target state fails safely rather than duplicating the complete source.
 
-FabricOps rejects an incremental partial source when it would destructively replace a whole target. An append bootstrap is also allowed only when the target is new or empty; a populated target without committed source → target state fails safely rather than duplicating the complete source.
-
-The maintained `03_incremental_pipeline` template contains two independent target flows so you can see that source progress is target-specific and each successful `pipeline_write()` is its own publication boundary.
+Use separate `02C` and `02D` variants for the SCD patterns rather than mixing them into this notebook.
 
 **Next:** return to [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md) when you are ready to govern the pipeline.

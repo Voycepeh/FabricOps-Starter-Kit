@@ -170,7 +170,7 @@ def pipeline_read(
     Sensitive Data checks. It also does not profile
     data, transform rows, or write a pipeline target. Those meaningful
     engineering decisions remain explicit in ``02_pipeline`` and
-    ``03_incremental_pipeline``.
+    ``02B_incremental_append_pipeline``.
 
     With ``verbose=True``, a Warehouse table read reports a line such as
     ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.

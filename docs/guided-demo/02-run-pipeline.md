@@ -6,7 +6,7 @@ This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data.md) 
 
 This walkthrough intentionally demonstrates one pattern: **full read → transform → full overwrite**.
 
-For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2A. Run an incremental pipeline](02A-run-incremental-pipeline.md).
+For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2B. Run an incremental append pipeline](02B-run-incremental-append-pipeline.md).
 
 
 ## What you will do
