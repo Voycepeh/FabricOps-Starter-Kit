@@ -1,0 +1,55 @@
+name: Generate Access Reference Artifacts
+
+on:
+  push:
+    branches:
+      - codex/refactor-access-scanning-into-access_scanner-package
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Generate call-flow JSON
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+
+      - name: Generate function reference pages
+        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+
+      - name: Regenerate function reference pages for idempotence
+        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+
+      - name: Generate call-flow dashboard
+        run: PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_dashboard.py
+
+      - name: Capture generated outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p generated-output
+          git status --short > generated-output/git-status.txt
+          cp -R docs/api/reference generated-output/api-reference
+          cp -R docs/reference generated-output/reference
+          cp docs/assets/public-function-call-flows-dashboard.html generated-output/public-function-call-flows-dashboard.html
+
+      - name: Upload generated outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-reference-artifacts
+          path: generated-output
