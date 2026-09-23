@@ -199,6 +199,17 @@ The template contains two independent Write blocks.
 
 ### Configure the Write block
 
+!!! warning "Warehouse schema prerequisite"
+    Before writing to a Fabric Warehouse, the target schema must already exist. FabricOps can create or overwrite the target table, but it does not create the Warehouse schema automatically.
+
+    For example, before writing `demo.customer_summary`, create the `demo` schema in the target Warehouse:
+
+    ```sql
+    CREATE SCHEMA demo;
+    ```
+
+    You only need to create each Warehouse schema once. The guided demo creates the `demo` schema earlier in [Step 00C. Prepare the demo data](00C-prepare-demo-data.md).
+
 !!! important "This is the part you edit"
     Each Write block is designed to be cloned. For a normal pipeline, **these are the only Write settings you need to change**:
 
