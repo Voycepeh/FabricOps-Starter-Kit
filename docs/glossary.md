@@ -134,6 +134,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> notebooks, Fabric notebook</p>
 </details>
 
+<details id="scheduled-refresh">
+<summary><strong>scheduled refresh</strong> — The read-only Microsoft Fabric schedule that determines when a notebook item is configured to execute.</summary>
+<p>Scheduled Refresh is operational metadata discovered from the Microsoft Fabric Job Scheduler APIs. Fabric remains authoritative for whether a schedule is enabled, its recurrence, execution times, and timezone. It is distinct from a Freshness Guardrail, which expresses when governed source data is expected to have arrived.</p>
+<p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules">Official documentation</a></p>
+<p><strong>Also known as:</strong> notebook schedule</p>
+</details>
+
 <details id="medallion-architecture">
 <summary><strong>Medallion Architecture</strong> — A layered data architecture that progressively improves data from Bronze raw data through Silver validated and enriched data to Gold curated data.</summary>
 <p>In Microsoft Fabric, Medallion Architecture organizes data into Bronze, Silver, and Gold layers so data becomes progressively more reliable and useful as it moves from raw ingestion through validation and enrichment to curated consumption. Fabric implementations can use Lakehouses, Warehouses, or a combination of Fabric data stores for these layers.</p>

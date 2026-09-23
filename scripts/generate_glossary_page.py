@@ -47,6 +47,7 @@ GLOSSARY_GROUPS = [
             "lakehouse",
             "warehouse",
             "notebook",
+            "scheduled-refresh",
             "medallion-architecture",
         ],
     ),

@@ -121,7 +121,7 @@
     "id": "read-transform-write",
     "term": "Read / Transform / Write",
     "aliases": [
-      "Read → Transform → Write",
+      "Read \u2192 Transform \u2192 Write",
       "RTW"
     ],
     "category": "FabricOps concepts",
@@ -151,6 +151,19 @@
     "long_definition": "A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.",
     "preferred_usage": "Use load strategy for governed target write behaviour.",
     "avoid_usage": "source pattern or Source Drift behaviour as a second strategy"
+  },
+  {
+    "id": "scheduled-refresh",
+    "term": "scheduled refresh",
+    "aliases": [
+      "notebook schedule"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "The read-only Microsoft Fabric schedule that determines when a notebook item is configured to execute.",
+    "long_definition": "Scheduled Refresh is operational metadata discovered from the Microsoft Fabric Job Scheduler APIs. Fabric remains authoritative for whether a schedule is enabled, its recurrence, execution times, and timezone. It is distinct from a Freshness Guardrail, which expresses when governed source data is expected to have arrived.",
+    "preferred_usage": "Use scheduled refresh for discovered Fabric execution timing, and Freshness for the independently authored source-data arrival expectation.",
+    "avoid_usage": "an editable Data Contract schedule or an inferred Freshness threshold",
+    "source_url": "https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules"
   },
   {
     "id": "source-drift",
