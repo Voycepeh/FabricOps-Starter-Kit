@@ -120,7 +120,7 @@ def widget_runtime(monkeypatch):
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "missing_values", "rule_parameters_json": '{"columns":["column_0"],"maximum_null_percent":0}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare_columns", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
@@ -247,6 +247,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
+    assert controls["table_guardrails"]["source_drift"]["parameters"][2].value == "append"
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "missing_values"
     assert controls["advanced_type"].value == "unique_combination"
