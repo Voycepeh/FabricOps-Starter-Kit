@@ -37,6 +37,23 @@ jobs:
       - name: Ruff lint
         run: uv run ruff check .
 
+      - name: Generate access reference artifacts for this PR
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_dashboard.py
+
+      - name: Upload access reference artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-reference-artifacts
+          path: |
+            docs/api/reference
+            docs/reference
+            docs/assets/public-function-call-flows-dashboard.html
+
+
       - name: Normalize guided-demo links
         run: uv run python scripts/normalize_guided_demo_links.py
 
