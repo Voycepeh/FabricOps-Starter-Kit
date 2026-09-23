@@ -4,7 +4,7 @@ Run the `02_pipeline` template in the Engineering Development Workspace.
 
 This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
 
-For simplicity, this walkthrough **reads the full source tables into DataFrames** before transformation and writes.
+This walkthrough intentionally demonstrates one pattern: **full read → transform → full overwrite**.
 
 For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2A. Run an incremental pipeline](02A-run-incremental-pipeline.md).
 
@@ -17,7 +17,7 @@ For target-aware incremental reads, incremental writes, partition-aware processi
 
 Along the way, FabricOps will skip contract-backed Guardrails before a Data Contract exists, profile the governed tables, record pipeline lineage, and build the Data Catalogue that Governance uses in Step 3.
 
-The standard **full read** pipeline shape is:
+The standard **full refresh** pipeline shape is:
 
 ```mermaid
 flowchart LR
@@ -78,7 +78,7 @@ The template contains three independent Read blocks.
     - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
     - `READ_SCHEMA` → the source schema.
     - `READ_TABLE` → the source table.
-    - `READ_QUERY` → leave as `None` for a full table read, or supply SQL for a Warehouse pushdown read.
+    - `READ_QUERY` → keep as `None` in this full-refresh template so every source is read in full.
 
 ```python
 READ_NAME = "orders"
@@ -116,21 +116,7 @@ table_id = source["table_id"]
 
     `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
 
-    For a Warehouse source, `READ_QUERY` can instead contain SQL so projection and filtering happen before the result reaches Spark:
-
-    ```python
-    READ_QUERY = """
-    SELECT
-        historical_order_id,
-        customer_id,
-        order_datetime,
-        net_amount
-    FROM demo.order_history
-    WHERE order_datetime >= '2025-01-01'
-    """
-    ```
-
-    When `READ_QUERY` is supplied, FabricOps routes the request through `read_warehouse_query()` and pushes the SQL down to the Warehouse.
+    This template keeps `READ_QUERY = None` for Lakehouse and Warehouse sources so the example remains a true full-read pipeline. `pipeline_read()` still supports Warehouse SQL pushdown in other pipeline patterns.
 
     **CHECK**
 
@@ -152,8 +138,6 @@ table_id = source["table_id"]
     # display(profile_result["profile"])
     # display(profile_result["frequency_profile"])
     ```
-
-    For a partial read, FabricOps reads the complete persisted table again before profiling it. Lakehouse tables are profiled with PySpark. Warehouse tables use Warehouse SQL pushdown.
 
     **KEEP**
 
@@ -195,7 +179,7 @@ The template contains two independent Write blocks.
 | Write | Store | Schema | Table | Load strategy |
 | --- | --- | --- | --- | --- |
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
-| Customer Summary | `Gold` | `demo` | `customer_summary` | `append` |
+| Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
 
 ### Configure the Write block
 
@@ -219,7 +203,7 @@ The template contains two independent Write blocks.
     - `WRITE_STORE` → the FabricOps destination store defined in `00_env_config`.
     - `WRITE_SCHEMA` → the target schema.
     - `WRITE_TABLE` → the target table.
-    - `WRITE_LOAD_STRATEGY` → how the incoming DataFrame is applied: `overwrite`, `append`, `SCD1`, or `SCD2`.
+    - `WRITE_LOAD_STRATEGY` → keep as `overwrite` in this full-refresh template.
     - `WRITE_REPARTITION_BY` → optional Spark write parallelism; leave as `None` unless you have a reason to tune it.
 
 ```python
@@ -267,7 +251,7 @@ After this succeeds, the target has been physically written and FabricOps record
 
     **WRITE**
 
-    `pipeline_write()` is the physical publication boundary. `WRITE_LOAD_STRATEGY` supports `overwrite`, `append`, `SCD1`, and `SCD2`.
+    `pipeline_write()` is the physical publication boundary. This template deliberately uses `WRITE_LOAD_STRATEGY = "overwrite"` for every target.
 
     `WRITE_REPARTITION_BY` optionally controls Spark write parallelism. Leave it as `None` for small or normal writes and increase it only when write scale or performance justifies the extra parallelism.
 
@@ -285,7 +269,7 @@ After this succeeds, the target has been physically written and FabricOps record
     # display(write_profile["frequency_profile"])
     ```
 
-    For `overwrite`, the complete DataFrame is already available and can be profiled directly. For `append`, `SCD1`, or `SCD2`, FabricOps re-reads the complete persisted target before profiling it.
+    Because this is a full-refresh pattern, FabricOps profiles the complete persisted target after the overwrite succeeds.
 
     **KEEP**
 
@@ -316,7 +300,7 @@ After this succeeds, the target has been physically written and FabricOps record
 At the end of Step 2 you should have:
 
 - three source tables read through FabricOps into Spark DataFrames,
-- `demo.curated_orders` written to the Silver Lakehouse and `demo.customer_summary` written to the Gold Warehouse,
+- `demo.curated_orders` fully overwritten in the Silver Lakehouse and `demo.customer_summary` fully overwritten in the Gold Warehouse,
 - Catalogue, profile, lineage, and source observation metadata recorded for the pipeline,
 - contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
 
