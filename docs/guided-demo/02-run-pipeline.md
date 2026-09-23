@@ -78,7 +78,7 @@ The template contains three independent Read blocks.
     - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
     - `READ_SCHEMA` → the source schema.
     - `READ_TABLE` → the source table.
-    - `READ_QUERY` → keep as `None` in this full-refresh template so every source is read in full.
+    - `READ_QUERY` → use `None` for a normal full table read, or a Warehouse `SELECT` to project/shape the full row set without turning the flow into an incremental read.
 
 ```python
 READ_NAME = "orders"
@@ -116,7 +116,20 @@ table_id = source["table_id"]
 
     `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
 
-    This template keeps `READ_QUERY = None` for Lakehouse and Warehouse sources so the example remains a true full-read pipeline. `pipeline_read()` still supports Warehouse SQL pushdown in other pipeline patterns.
+    A Warehouse source may still use `READ_QUERY` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
+
+    ```python
+    READ_QUERY = """
+    SELECT
+        historical_order_id,
+        customer_id,
+        order_datetime,
+        net_amount
+    FROM demo.order_history
+    """
+    ```
+
+    This remains a full-read pattern because the query is not selecting an incremental scope by watermark, partition, or previously committed source state.
 
     **CHECK**
 
