@@ -1,9 +1,11 @@
 # METADATA_DATA_ACCESS
 
-See observable SQL permissions for registered governed physical tables across configured Fabric data items; this is not a complete Fabric authorization inventory.
+See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; this is not an effective-access resolver.
 
 ## Writer functions
 
+* [`scan_onelake_access`](../../api/reference/scan_onelake_access.md)
+* [`scan_sql_access`](../../api/reference/scan_sql_access.md)
 * [`scan_workspace_access`](../../api/reference/scan_workspace_access.md)
 
 ## Used in Workflow Template
@@ -16,7 +18,7 @@ See observable SQL permissions for registered governed physical tables across co
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed SQL permission row for one principal and one governed table within one access snapshot.
+**Grain:** One observed access grant for one principal or access selector and one governed table within one access snapshot.
 
 **Primary key:** `access_id`
 
