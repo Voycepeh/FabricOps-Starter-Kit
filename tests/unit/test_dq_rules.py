@@ -417,3 +417,35 @@ def test_custom_expression_supports_safe_column_methods(spark_session, expressio
     )
     check = governance._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
     assert check["failed_count"] == failed_count
+
+
+def test_custom_expression_requires_boolean_spark_column(spark_session):
+    """Reject a valid column reference when it does not resolve to a boolean predicate."""
+    dataframe = spark_session.createDataFrame([(1,)], "amount int")
+    rule = _rule(
+        "custom_expression", columns=[], expression_language="pyspark", expression='F.col("amount")',
+    )
+    with pytest.raises(ValueError, match="must resolve to a boolean Spark Column"):
+        governance._run_dq_guardrail_checks(dataframe, "orders", [rule])
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        'F.col("amount", "other") > 0',
+        'F.lit(1, 2) == 1',
+        'F.col("amount").isNull(1)',
+        'F.col("amount").isNotNull(1)',
+        'F.col("amount").isin()',
+        'F.col("amount").rlike("x", "y")',
+    ],
+)
+def test_custom_expression_rejects_invalid_signatures(expression):
+    """Reject malformed calls rather than silently discarding their arguments."""
+    with pytest.raises(ValueError):
+        governance._validate_dq_rules([
+            _rule(
+                "custom_expression", columns=[], expression_language="pyspark",
+                expression=expression,
+            )
+        ])

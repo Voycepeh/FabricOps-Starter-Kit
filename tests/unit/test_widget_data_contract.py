@@ -123,6 +123,7 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
     calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
@@ -209,7 +210,15 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
-    monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {"kind": "values", "values": [{"value": column_id, "count": 2}]})
+    monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
+        "kind": "values",
+        "profile": {
+            "row_count": 10, "non_null_count": 9, "null_count": 1,
+            "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
+            "min_value": "ORD-1", "max_value": "ORD-9",
+        },
+        "values": [{"value": column_id, "count": 2}],
+    })
     display_module = types.SimpleNamespace(display=lambda *_args, **_kwargs: None)
     monkeypatch.setitem(
         sys.modules, "IPython",
@@ -654,6 +663,71 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     assert len(widget_runtime["calls"]["guardrails"]) == before
     assert "could not convert string to float" in state["message"]
     assert "#a4262c" in controls["status"].value
+
+
+def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_runtime):
+    """Keep multiple rules on one column independently editable and update the matching record."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["dq_type"].value == "completeness"
+    assert controls["dq_max_missing"].value == "0"
+
+    controls["dq_type"].value = "pattern"
+
+    assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
+    assert controls["dq_action"].value == "Warn"
+    controls["dq_pattern"].value = "^ORDER-[0-9]+$"
+    controls["save_dq"].click()
+    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert saved["guardrail_rule_id"] == "dq-pattern"
+    assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
+
+
+def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, monkeypatch):
+    """Pass governed profile statistics and bounded frequencies into DQ suggestions."""
+    _enable_ai(widget_runtime, monkeypatch)
+    captured = {}
+
+    def suggest(context, **_kwargs):
+        captured.update(context)
+        return []
+
+    monkeypatch.setattr(module, "suggest_dq_rules", suggest)
+    state = widget_runtime["open"]()
+    state["_controls"]["suggest_dq"].click()
+
+    column = captured["columns"][0]
+    assert column["profile_evidence"] == {
+        "row_count": 10, "non_null_count": 9, "null_count": 1,
+        "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
+        "min_value": "ORD-1", "max_value": "ORD-9",
+    }
+    assert column["frequency_evidence"] == [{"count": 2}]
+
+
+def test_review_sections_separate_table_dq_categories_from_column_rules():
+    """Render the Review hierarchy without duplicating every Guardrail in two sections."""
+    payload = {
+        "table": {"table_name": "orders", "schema_name": "sales", "columns": []},
+        "contract": {"contract_version": 1, "status": "draft"},
+        "enrichment": {"columns": []},
+        "guardrails": [
+            {"guardrail_type": "freshness", "rule_type": "freshness", "column_id": ""},
+            {"guardrail_type": "source_drift", "rule_type": "source_drift", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "uniqueness", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "column_relationship", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "custom_expression", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1"},
+        ],
+    }
+    sections = module._manifest_sections(payload)
+
+    assert set(sections) == {"Identity", "Table", "Columns", "Lifecycle / Agreement state"}
+    assert "Composite Uniqueness" in sections["Table"]
+    assert "Column Relationships" in sections["Table"]
+    assert "Custom Expressions" in sections["Table"]
+    assert "pattern" not in sections["Table"]
+    assert "pattern" in sections["Columns"]
 
 
 def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(widget_runtime, monkeypatch):

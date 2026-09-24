@@ -3416,8 +3416,15 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             failed = one_null | (left.isNotNull() & right.isNotNull() & failed)
     elif rtype == "custom_expression":
         try:
-            failed = ~_custom_expression_column(rule["expression"], F)
-        except (TypeError, ValueError, AttributeError) as exc:
+            passed = _custom_expression_column(rule["expression"], F)
+            resolved = df.select(passed.alias("_fabricops_custom_dq_predicate")).schema[0]
+            if resolved.dataType.simpleString() != "boolean":
+                raise ValueError(
+                    "Custom DQ expression must resolve to a boolean Spark Column; "
+                    f"received {resolved.dataType.simpleString()}."
+                )
+            failed = ~passed
+        except Exception as exc:  # noqa: BLE001 - normalize Spark analysis failures as rule errors
             raise ValueError(f"Custom DQ rule '{rule['rule_id']}' could not be evaluated: {exc}") from exc
     else:
         raise ValueError(f"Unsupported rule_type: {rtype}")

@@ -116,15 +116,30 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
         )
         for row in table.get("columns", [])
     )
-    rules = "".join(
-        "<li><b>{}</b> · {} · {} · {}</li>".format(
+    def rule_list(rows: list[dict[str, Any]]) -> str:
+        items = "".join(
+            "<li><b>{}</b> · {} · {} · {}</li>".format(
             html.escape(str(row.get("rule_type") or row.get("guardrail_type") or "")),
             html.escape(str(row.get("column_id") or "table")),
             html.escape(str(row.get("action") or "Warn")),
             html.escape(json.dumps(_parameters(row), sort_keys=True, default=str)),
-        )
-        for row in guardrails
-    ) or "<li>None configured</li>"
+            )
+            for row in rows
+        ) or "<li>None configured</li>"
+        return f"<ul>{items}</ul>"
+
+    active = [row for row in guardrails if row.get("is_active", True)]
+    freshness = [row for row in active if str(row.get("guardrail_type") or "").lower() == "freshness"]
+    source_drift = [row for row in active if str(row.get("guardrail_type") or "").lower() == "source_drift"]
+    table_dq = [
+        row for row in active
+        if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+        and not str(row.get("column_id") or "")
+    ]
+    column_guardrails = [row for row in active if str(row.get("column_id") or "")]
+    composite = [row for row in table_dq if str(row.get("rule_type") or "") == "uniqueness"]
+    relationships = [row for row in table_dq if str(row.get("rule_type") or "") == "column_relationship"]
+    custom = [row for row in table_dq if str(row.get("rule_type") or "") == "custom_expression"]
     return {
         "Identity": (
             f"<h3>Identity</h3><p><b>{html.escape(str(table.get('schema_name') or ''))}."
@@ -132,17 +147,21 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
             f"<p>Contract v{html.escape(str(contract.get('contract_version') or ''))} · "
             f"{html.escape(str(contract.get('status') or '').upper())}</p>"
         ),
-        "Table & processing": (
-            "<h3>Table &amp; processing</h3><p><b>Load strategy:</b> "
+        "Table": (
+            "<h3>Table</h3><p><b>Load strategy:</b> "
             f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}</p>"
             + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
+            + f"<h4>Freshness</h4>{rule_list(freshness)}"
+            + f"<h4>Source Drift</h4>{rule_list(source_drift)}"
+            + f"<h4>Data Quality · Composite Uniqueness</h4>{rule_list(composite)}"
+            + f"<h4>Data Quality · Column Relationships</h4>{rule_list(relationships)}"
+            + f"<h4>Data Quality · Custom Expressions</h4>{rule_list(custom)}"
         ),
         "Columns": (
             "<h3>Columns</h3><table><thead><tr><th>Column</th><th>Datatype</th>"
             f"<th>Required</th><th>Description</th></tr></thead><tbody>{column_rows}</tbody></table>"
+            f"<h4>Column Guardrails</h4>{rule_list(column_guardrails)}"
         ),
-        "Guardrails": f"<h3>Guardrails</h3><ul>{rules}</ul>",
-        "Advanced rules": f"<h3>Advanced rules</h3><ul>{rules}</ul>",
         "Lifecycle / Agreement state": (
             "<h3>Lifecycle / Agreement state</h3><p>Status: "
             f"<b>{html.escape(str(contract.get('status') or '').upper())}</b></p>"
@@ -843,6 +862,38 @@ def widget_data_contract(
 
         hydrating = {"active": False}
 
+        def hydrate_dq_family(column_id: str, kind: str) -> None:
+            """Hydrate one column/family pair without borrowing another rule's parameters."""
+            dq_max_missing.value = "0"
+            dq_blank_missing.value = False
+            dq_value_mode.value = "allow"
+            dq_values.value = ""
+            dq_minimum.value = ""
+            dq_minimum_inclusive.value = True
+            dq_maximum.value = ""
+            dq_maximum_inclusive.value = True
+            dq_pattern.value = ""
+            dq_action.value = "Warn"
+            rule = next((
+                row for row in guardrails
+                if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                and str(row.get("column_id") or "") == column_id
+                and str(row.get("rule_type") or "") == kind
+            ), {})
+            if not rule:
+                return
+            params = _parameters(rule)
+            dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
+            dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
+            dq_value_mode.value = str(params.get("mode") or "allow")
+            dq_values.value = ", ".join(map(str, params.get("values", [])))
+            dq_minimum.value = "" if params.get("minimum") is None else str(params["minimum"])
+            dq_minimum_inclusive.value = bool(params.get("minimum_inclusive", True))
+            dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
+            dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
+            dq_pattern.value = str(params.get("pattern") or "")
+            dq_action.value = str(rule.get("action") or "Warn")
+
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
@@ -868,31 +919,15 @@ def widget_data_contract(
             mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
             bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
             bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
-            dq_type.value = _COLUMN_DQ_TYPES[0]
-            dq_max_missing.value = "0"
-            dq_blank_missing.value = False
-            dq_value_mode.value = "allow"
-            dq_values.value = ""
-            dq_minimum.value = ""
-            dq_minimum_inclusive.value = True
-            dq_maximum.value = ""
-            dq_maximum_inclusive.value = True
-            dq_pattern.value = ""
-            dq_action.value = "Warn"
-            current_dq = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == column_id and str(r.get("rule_type") or "") in _COLUMN_DQ_TYPES), {})
-            if current_dq:
-                dq_type.value = str(current_dq.get("rule_type"))
-                params = _parameters(current_dq)
-                dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
-                dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
-                dq_value_mode.value = str(params.get("mode") or "allow")
-                dq_values.value = ", ".join(map(str, params.get("values", [])))
-                dq_minimum.value = "" if params.get("minimum") is None else str(params["minimum"])
-                dq_minimum_inclusive.value = bool(params.get("minimum_inclusive", True))
-                dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
-                dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
-                dq_pattern.value = str(params.get("pattern") or "")
-                dq_action.value = str(current_dq.get("action") or "Warn")
+            configured = [
+                str(rule.get("rule_type") or "") for rule in guardrails
+                if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                and str(rule.get("column_id") or "") == column_id
+                and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
+                and rule.get("is_active", True)
+            ]
+            dq_type.value = configured[0] if configured else _COLUMN_DQ_TYPES[0]
+            hydrate_dq_family(column_id, str(dq_type.value))
             pending = unsaved_columns.get(column_id)
             if pending:
                 column_description.value = pending["description"]
@@ -933,6 +968,13 @@ def widget_data_contract(
             }[kind]
             for control in dq_parameter_controls:
                 control.layout.display = "" if control in visible else "none"
+            selected_id = str(column_select.value or "")
+            if selected_id and not hydrating["active"]:
+                hydrating["active"] = True
+                try:
+                    hydrate_dq_family(selected_id, kind)
+                finally:
+                    hydrating["active"] = False
 
         dq_type.observe(update_dq_help, names="value")
         update_dq_help()
@@ -1311,14 +1353,22 @@ def widget_data_contract(
             """Generate transient standard-rule advice and hydrate controls only on acceptance."""
             try:
                 selected = selected_column()
-                profile = load_profile_context(str(selected.get("column_id") or ""))
+                profile_value = load_profile_context(str(selected.get("column_id") or ""))
+                profile = dict(profile_value.get("profile") or {})
                 context_payload = build_ai_dq_context({
                     "table_name": table.get("table_name"), "schema_name": table.get("schema_name"),
                     "layer": table.get("layer"), "table_description": table_description.value,
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **selected, "description": column_description.value,
-                        "classification": column_classification.value, **profile,
+                        "classification": column_classification.value,
+                        **{name: profile.get(name) for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                        ) if profile.get(name) is not None},
+                        "frequency_evidence": [
+                            {"count": item.get("count")} for item in profile_value.get("values", [])
+                        ],
                     }],
                 })
                 suggestions = suggest_dq_rules(
