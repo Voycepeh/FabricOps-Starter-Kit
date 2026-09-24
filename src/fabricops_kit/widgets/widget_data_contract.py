@@ -427,14 +427,15 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(message: str, *, clear_column_id: str = "") -> None:
-        column_id = str(clear_column_id or "").strip()
-        if column_id and state.get("current"):
-            scope = (
-                str(state["current"]["contract_id"]),
-                int(state["current"]["contract_version"]),
-            )
-            state["_column_drafts"].setdefault(scope, {}).pop(column_id, None)
+    def reload_after_save(
+        message: str, *, clear_column_ids: tuple[str, ...] = (),
+    ) -> None:
+        current = state.get("current")
+        if current:
+            scope = (str(current["contract_id"]), int(current["contract_version"]))
+            drafts = state["_column_drafts"].setdefault(scope, {})
+            for column_id in clear_column_ids:
+                drafts.pop(str(column_id or "").strip(), None)
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
         set_status(message)
@@ -451,7 +452,7 @@ def widget_data_contract(
         }
         reload_after_save(
             "Enrichment saved and the canonical contract state was refreshed.",
-            clear_column_id=next(iter(column_ids), ""),
+            clear_column_ids=tuple(column_ids),
         )
         return saved
 
@@ -1391,7 +1392,7 @@ def widget_data_contract(
                 )
                 reload_after_save(
                     "Guardrails saved and the canonical contract state was refreshed.",
-                    clear_column_id=cid,
+                    clear_column_ids=(cid,),
                 )
                 return saved
             except (ValueError, RuntimeError) as exc:
