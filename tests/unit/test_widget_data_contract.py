@@ -122,8 +122,8 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "missing_values", "rule_parameters_json": '{"columns":["column_0"],"maximum_null_percent":0}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare_columns", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
     calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
@@ -262,8 +262,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["parameters"][2].value == "append"
     assert controls["sensitive_enabled"].value is True
-    assert controls["dq_type"].value == "missing_values"
-    assert controls["advanced_type"].value == "unique_combination"
+    assert controls["dq_type"].value == "completeness"
+    assert controls["advanced_type"].value == "uniqueness"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -318,13 +318,13 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     """Selecting an unconfigured column must not retain another column's DQ values."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    assert controls["dq_type"].value == "missing_values"
+    assert controls["dq_type"].value == "completeness"
     assert controls["dq_parameter"].value == "0"
     assert controls["dq_action"].value == "Block"
 
     controls["column_select"].value = "col-1"
 
-    assert controls["dq_type"].value == "missing_values"
+    assert controls["dq_type"].value == "completeness"
     assert controls["dq_parameter"].value == ""
     assert controls["dq_action"].value == "Warn"
 
@@ -383,10 +383,10 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     state["_controls"]["sensitive_treatment"].value = "tokenize"
     state["_controls"]["save_sensitive"].click()
     assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "sensitive_data"
-    state["_controls"]["dq_type"].value = "blank_text"
+    state["_controls"]["dq_type"].value = "completeness"
     state["_controls"]["save_dq"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "blank_text"
-    state["_controls"]["advanced_type"].value = "compare_columns"
+    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "completeness"
+    state["_controls"]["advanced_type"].value = "compare"
     state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
     state["_controls"]["advanced_save"].click()
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
@@ -453,7 +453,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["required"].value = False
-    controls["dq_type"].value = "text_pattern"
+    controls["dq_type"].value = "pattern"
     controls["dq_parameter"].value = "manual-pattern"
 
     original_classification = controls["column_classification"].value
@@ -476,7 +476,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
-    assert controls["dq_type"].value == "text_pattern"
+    assert controls["dq_type"].value == "pattern"
     assert controls["dq_parameter"].value == "manual-pattern"
     assert widget_runtime["calls"]["guardrails"] == []
 
@@ -488,7 +488,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
     controls["column_classification"].value = "Restricted"
-    controls["dq_type"].value = "text_pattern"
+    controls["dq_type"].value = "pattern"
     controls["dq_parameter"].value = "keep-me"
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
@@ -497,7 +497,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 
     assert controls["column_description"].value == "Unsaved description"
     assert controls["column_classification"].value == "Restricted"
-    assert controls["dq_type"].value == "text_pattern"
+    assert controls["dq_type"].value == "pattern"
     assert controls["dq_parameter"].value == "keep-me"
 
 
@@ -623,7 +623,7 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
-    controls["dq_type"].value = "missing_values"
+    controls["dq_type"].value = "completeness"
     controls["dq_parameter"].value = "not-a-number"
 
     controls["save_dq"].click()

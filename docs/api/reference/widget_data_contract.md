@@ -12,9 +12,9 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:215`
+`fabricops_kit/widgets/widget_data_contract.py:209`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L215-L1493">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L209-L1532">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -96,7 +96,9 @@ Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
 Not PII from governed metadata and profile evidence. Editable draft state remains
 separate until Governance accepts a suggestion. Manual Description or Classification
 edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
-activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
+activates, or enforces a contract. DQ suggestions follow the same transient authoring boundary:
+configured family prompts receive governed metadata and profile summaries only, and validated
+suggestions merely populate editable controls. Runtime enforcement remains deterministic.
 
 </div>
 

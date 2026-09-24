@@ -21,6 +21,7 @@ _PROFILE_CONTEXT_FIELDS = (
 )
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
+DQ_TYPES = frozenset({"completeness", "uniqueness", "value_set", "range", "pattern", "compare"})
 
 
 def build_ai_enrichment_context(
@@ -120,6 +121,66 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
         "contract_version": int(state.get("contract_version") or 0),
         "columns": columns,
     }
+
+
+def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
+    """Build governed, profile-only context for Data Quality suggestions."""
+    context = build_ai_sensitive_data_context(state)
+    context["columns"] = [
+        {key: value for key, value in column.items() if key != "column_id"}
+        for column in context["columns"]
+    ]
+    return context
+
+
+def suggest_dq_rules(
+    context: dict[str, Any], *, prompts: dict[str, str], invoke: Any = None
+) -> list[dict[str, Any]]:
+    """Return validated, non-executable and transient DQ authoring suggestions."""
+    available = {str(row.get("column_name") or "") for row in context.get("columns", [])}
+    configured = {family: str(prompts.get(family) or "").strip() for family in DQ_TYPES}
+    if not all(configured.values()):
+        raise ValueError("A user-configured prompt is required for every DQ rule family.")
+    instruction = (
+        "Suggest conservative governed Data Quality rules using only the supplied metadata and profile evidence. "
+        "Return JSON only: a list of objects with rule_type, columns, parameters, reason, and selected. "
+        "Never return SQL, Python, expressions, or executable content. Suggestions require human review and must not be persisted.\n\n"
+        f"Family instructions:\n{json.dumps(configured, sort_keys=True)}\n\n"
+        f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
+    )
+    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        candidates = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI DQ suggestion was not valid JSON.") from exc
+    if not isinstance(candidates, list):
+        raise ValueError("AI DQ suggestion must be a JSON list.")
+    validated = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict) or candidate.get("rule_type") not in DQ_TYPES:
+            raise ValueError("AI DQ suggestion used an unsupported rule type.")
+        columns = candidate.get("columns")
+        if not isinstance(columns, list) or not columns or any(column not in available for column in columns):
+            raise ValueError("AI DQ suggestion referenced a nonexistent column.")
+        family = candidate["rule_type"]
+        if family in {"completeness", "value_set", "range", "pattern"} and len(columns) != 1:
+            raise ValueError(f"AI {family} suggestions require exactly one column.")
+        if family == "compare" and (len(columns) != 2 or columns[0] == columns[1]):
+            raise ValueError("AI compare suggestions require two different columns.")
+        parameters = candidate.get("parameters")
+        if not isinstance(parameters, dict):
+            raise ValueError("AI DQ suggestion parameters must be an object.")
+        rule = {"rule_type": family, "columns": columns, **parameters}
+        from fabricops_kit.pipeline.shared import _validate_dq_rules
+        _validate_dq_rules([rule])
+        validated.append({
+            "rule_type": family, "columns": columns, "parameters": parameters,
+            "reason": str(candidate.get("reason") or "").strip(),
+            "selected": bool(candidate.get("selected", True)),
+        })
+    return validated
 
 
 def suggest_sensitive_data(

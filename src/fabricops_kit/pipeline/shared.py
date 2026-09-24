@@ -1189,17 +1189,7 @@ GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
 DQ_RULE_TYPES = [
-    "missing_values",
-    "blank_text",
-    "unique_values",
-    "unique_combination",
-    "allowed_values",
-    "blocked_values",
-    "value_range",
-    "text_pattern",
-    "required_when",
-    "conditional_value",
-    "compare_columns",
+    "completeness", "uniqueness", "value_set", "range", "pattern", "compare",
 ]
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
@@ -2929,46 +2919,32 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if rtype not in DQ_RULE_TYPES:
             raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
 
-        if rtype in {"blank_text", "required_when"}:
+        if rtype == "uniqueness":
             require_columns(rule, minimum=1)
-        elif rtype in {
-            "missing_values", "unique_values", "allowed_values", "blocked_values", "value_range", "text_pattern", "conditional_value",
-        }:
+        elif rtype in {"completeness", "value_set", "range", "pattern"}:
             require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype == "compare_columns":
+        elif rtype == "compare":
             require_columns(rule, count=2)
 
-        if rtype == "missing_values":
-            if rule.get("maximum_null_percent") is None:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires maximum_null_percent.")
-            threshold = float(rule["maximum_null_percent"])
+        if rtype == "completeness":
+            if rule.get("maximum_missing_percent") is None:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires maximum_missing_percent.")
+            threshold = float(rule["maximum_missing_percent"])
             if not 0 <= threshold <= 100:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' maximum_null_percent must be between 0 and 100.")
-            rule["maximum_null_percent"] = threshold
-        if rtype == "allowed_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "blocked_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype == "value_range":
+                raise ValueError(f"DQ rule '{rule['rule_id']}' maximum_missing_percent must be between 0 and 100.")
+            rule["maximum_missing_percent"] = threshold
+            rule["treat_blank_as_missing"] = bool(rule.get("treat_blank_as_missing", False))
+        if rtype == "value_set":
+            if str(rule.get("mode") or "") not in {"allow", "block"} or not isinstance(rule.get("values"), list):
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires mode allow/block and a values list.")
+        if rtype == "range":
             if rule.get("minimum") is None and rule.get("maximum") is None:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires minimum or maximum.")
             rule["minimum_inclusive"] = bool(rule.get("minimum_inclusive", True))
             rule["maximum_inclusive"] = bool(rule.get("maximum_inclusive", True))
-        if rtype == "text_pattern" and not str(rule.get("pattern") or ""):
+        if rtype == "pattern" and not str(rule.get("pattern") or ""):
             raise ValueError(f"DQ rule '{rule['rule_id']}' requires pattern.")
-        if rtype in {"required_when", "conditional_value"}:
-            if not str(rule.get("condition_column") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_column.")
-            if str(rule.get("condition_operator") or "") not in DQ_COMPARISON_OPERATORS:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported condition_operator.")
-            if "condition_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_value.")
-        if rtype == "conditional_value":
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-        if rtype == "compare_columns":
+        if rtype == "compare":
             if rule["columns"][0] == rule["columns"][1]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires two different columns.")
             if str(rule.get("operator") or "") not in DQ_COMPARISON_OPERATORS:
@@ -3177,9 +3153,9 @@ def _dq_involved_column_roles(rule: Mapping[str, Any]) -> list[tuple[str, str]]:
     """Return each involved column and its semantic role for one DQ rule."""
     columns = [str(name) for name in rule.get("columns") or ()]
     rule_type = str(rule.get("rule_type") or "")
-    if rule_type == "compare_columns":
+    if rule_type == "compare":
         return [(columns[0], "left"), (columns[1], "right")]
-    role = "participating" if rule_type == "unique_combination" else "target"
+    role = "participating" if rule_type == "uniqueness" and len(columns) > 1 else "target"
     roles = [(name, role) for name in columns]
     condition = str(rule.get("condition_column") or "").strip()
     if condition and condition not in columns:
@@ -3285,21 +3261,17 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             return left < right
         return left <= right
 
-    if rtype == "missing_values":
+    if rtype == "completeness":
         total = int(df.count())
-        null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
-        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["maximum_null_percent"]) else F.lit(False)
-    elif rtype == "blank_text":
-        failed = empty_string(cols[0])
-        for c in cols[1:]:
-            failed = failed | empty_string(c)
-    elif rtype in {"unique_values", "unique_combination"}:
+        missing = empty_string(col_name) if rule["treat_blank_as_missing"] else F.col(col_name).isNull()
+        missing_count = int(df.filter(missing).count()) if total else 0
+        failed = missing if total and ((missing_count / total) * 100) > float(rule["maximum_missing_percent"]) else F.lit(False)
+    elif rtype == "uniqueness":
         failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
-    elif rtype == "allowed_values":
-        failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(list(rule["allowed_values"]))
-    elif rtype == "blocked_values":
-        failed = F.col(col_name).isNotNull() & F.col(col_name).isin(list(rule["blocked_values"]))
-    elif rtype == "value_range":
+    elif rtype == "value_set":
+        included = F.col(col_name).isin(list(rule["values"]))
+        failed = F.col(col_name).isNotNull() & (~included if rule["mode"] == "allow" else included)
+    elif rtype == "range":
         value_col = F.col(col_name)
         cond = F.lit(False)
         if rule.get("minimum") is not None:
@@ -3309,24 +3281,15 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             maximum = F.lit(rule["maximum"])
             cond = cond | (value_col > maximum if rule["maximum_inclusive"] else value_col >= maximum)
         failed = F.col(col_name).isNotNull() & cond
-    elif rtype == "text_pattern":
+    elif rtype == "pattern":
         failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["pattern"])
-    elif rtype == "compare_columns":
+    elif rtype == "compare":
         left = F.col(cols[0])
         right = F.col(cols[1])
         failed = ~compare(left, rule["operator"], right)
         if rule["operator"] in {">", ">=", "<", "<="}:
             one_null = left.isNull() != right.isNull()
             failed = one_null | (left.isNotNull() & right.isNotNull() & failed)
-    elif rtype == "required_when":
-        condition = compare(F.col(condition_column), rule["condition_operator"], F.lit(rule["condition_value"]))
-        missing = empty_string(cols[0])
-        for c in cols[1:]:
-            missing = missing | empty_string(c)
-        failed = condition & missing
-    elif rtype == "conditional_value":
-        condition = compare(F.col(condition_column), rule["condition_operator"], F.lit(rule["condition_value"]))
-        failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
     else:
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))

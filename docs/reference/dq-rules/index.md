@@ -1,82 +1,21 @@
 # DQ rule reference
 
-FabricOps supports **11 lightweight DQ rule types** stored as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL`.
-
-The vocabulary is deliberately structured and governable. DQ rules use named parameters rather than arbitrary JSON expressions, Python callbacks, or plugin execution.
-
-## Canonical rules
+FabricOps supports **six governed DQ rule families** stored in `METADATA_GUARDRAIL`. Rules use structured parameters rather than arbitrary SQL, Python, executable expressions, or plugins.
 
 | Rule | Purpose | Canonical configuration |
 |---|---|---|
-| [`missing_values`](missing-values.md) | Limit the percentage of null values. A threshold of `0` is strict non-null enforcement. | one column; `maximum_null_percent` |
-| [`blank_text`](blank-text.md) | Reject null, blank, and whitespace-only strings. | one column |
-| [`unique_values`](unique-values.md) | Require each selected column to be unique independently. | one column per rule |
-| [`unique_combination`](unique-combination.md) | Require a combined business key to be unique. | two or more ordered `columns` |
-| [`allowed_values`](allowed-values.md) | Allow only an approved value set. | one column; `allowed_values` |
-| [`blocked_values`](blocked-values.md) | Reject a governed list of forbidden values. | one column; `blocked_values` |
-| [`value_range`](value-range.md) | Enforce one-sided or two-sided bounds for numeric, date, or other comparable values. | one column; optional `minimum` / `maximum` and inclusivity flags |
-| [`text_pattern`](text-pattern.md) | Require populated strings to match a governed pattern. | one column; `pattern` |
-| [`required_when`](required-when.md) | Require one or more target columns when a structured condition matches. | target `columns`; condition column, operator, and value |
-| [`conditional_value`](conditional-value.md) | Require one target column to equal an expected value when a structured condition matches. | one target column; structured condition; `expected_value` |
-| [`compare_columns`](compare-columns.md) | Compare two distinct ordered columns with a controlled operator. | two ordered `columns`; `operator` |
+| [`completeness`](completeness.md) | Bound missing values, optionally including blank text. | one column; `maximum_missing_percent`; `treat_blank_as_missing` |
+| [`uniqueness`](uniqueness.md) | Enforce a single-column or composite key. | one or more ordered `columns` |
+| [`value_set`](value-set.md) | Allow or block a stable governed value set. | one column; `mode`; `values` |
+| [`range`](range.md) | Enforce defensible comparable bounds. | one column; bounds and inclusivity flags |
+| [`pattern`](pattern.md) | Match semantically structured text. | one column; `pattern` |
+| [`compare`](compare.md) | Compare two columns with a controlled operator. | two ordered `columns`; `operator` |
 
-## Practical examples
+## Authoring boundary
 
-### Strict non-null
+FabricOps DQ expresses understandable integrity expectations. Complex conditional business logic belongs in project-owned PySpark transformations. A project can derive and persist a validation or business-state column, then govern that output with one of these simple rules.
 
-Use `missing_values` with a zero threshold rather than a separate `not_null` rule:
+The **Suggest rules** action in `widget_data_contract()` uses Microsoft Fabric AI Functions and user-editable family prompts from `GOVERNANCE_CONFIG.ai_enrichment.dq_prompts`. It receives governed Catalogue, Enrichment, and profile summaries—never a new raw-data sample. Its validated output only populates editable controls. A human must review, select, edit, and use the normal save/freeze workflow; AI never persists, approves, freezes, activates, or enforces a rule.
 
-```json
-{"rule_type":"missing_values","columns":["student_id"],"maximum_null_percent":0}
-```
-
-### One-sided and two-sided ranges
-
-`value_range` supports `>`, `>=`, `<`, `<=`, and bounded ranges through values and inclusivity flags:
-
-```json
-{
-  "rule_type": "value_range",
-  "columns": ["amount"],
-  "minimum": 0,
-  "minimum_inclusive": false,
-  "maximum": null,
-  "maximum_inclusive": true
-}
-```
-
-Date-like and other comparable values remain strings when that is their canonical value representation.
-
-### Structured conditional rules
-
-Conditional rules use controlled fields rather than free-form Spark SQL:
-
-```json
-{
-  "rule_type": "required_when",
-  "columns": ["approved_date", "approved_by"],
-  "condition_column": "status",
-  "condition_operator": "=",
-  "condition_value": "Approved"
-}
-```
-
-Supported conditional and column-comparison operators are `=`, `!=`, `>`, `>=`, `<`, and `<=`.
-
-### Ordered column comparison
-
-```json
-{
-  "rule_type": "compare_columns",
-  "columns": ["end_date", "start_date"],
-  "operator": ">="
-}
-```
-
-Column order is meaningful: this rule checks `end_date >= start_date`.
-
-!!! note "Freshness is a dedicated guardrail"
-    Use [`check_freshness()`](../../api/reference/check_freshness.md) and the Freshness section of `widget_data_contract()`. Freshness is not duplicated as a DQ rule.
-
-!!! important "No custom-expression rule"
-    FabricOps intentionally does not support free-form SQL, arbitrary Python, or plugin execution in the lightweight DQ vocabulary.
+!!! important "Deterministic enforcement"
+    `check_dq()` evaluates persisted, reviewed rules with deterministic PySpark. AI is an authoring assistant only.

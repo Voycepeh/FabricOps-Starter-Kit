@@ -79,3 +79,12 @@ Freezing does not activate the version for Production. It creates the exact vers
 You now have a frozen immutable Data Contract built from the real table evidence produced in Step 2.
 
 **Next:** [Step 4. Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)
+
+## Author Data Quality rules with optional AI assistance
+
+**Use the smallest governed rule that expresses the integrity expectation.** The Data Contract editor offers Completeness, Uniqueness, Value set, Range, and Pattern for normal column authoring; Compare remains in Advanced. Uniqueness accepts one column or a composite key.
+
+When AI Enrichment is enabled, **Suggest rules** uses the family prompts configured in `00_env_config` and the governed metadata/profile context already available to the editor. Review, edit, deselect, or replace every suggestion. Suggestions remain transient until you explicitly save and later freeze the Data Contract.
+
+!!! important "Keep business logic in the project transformation"
+    FabricOps DQ does not infer conditional workflows. Implement complex business logic in project-owned PySpark, persist a derived validation or business-state column, and govern that result with a simple FabricOps DQ rule.

@@ -355,6 +355,14 @@ DEFAULT_AI_ENRICHMENT = {
         "and a Warn or Block action. Classification is an input signal, not a PII decision. Never "
         "request or return raw values. Return structured JSON only; final review belongs to Governance."
     ),
+    "dq_prompts": {
+        "completeness": "Suggest completeness only when business meaning supports an expectation; never infer mandatory status solely from zero observed nulls.",
+        "uniqueness": "Suggest uniqueness only when semantic identity evidence supports it; 100% observed distinctness alone is insufficient. Composite keys are allowed.",
+        "value_set": "Suggest a value set only for a stable categorical domain supported by profile frequencies; never turn high-cardinality observations into an enum.",
+        "range": "Suggest a range only when datatype and business meaning provide defensible boundaries; observed minimum and maximum are evidence, not contract limits.",
+        "pattern": "Suggest a pattern only for semantically structured text such as identifiers, codes, or email addresses; do not infer regexes from arbitrary strings.",
+        "compare": "Suggest only an obvious two-column integrity relationship, such as end_date >= start_date; do not infer complex business logic.",
+    },
 }
 
 
@@ -395,11 +403,20 @@ class GovernanceConfig:
         labels = [str(option).strip() for option in (self.sensitivity_labels or []) if str(option).strip()]
         object.__setattr__(self, "sensitivity_labels", labels or ["Public", "Internal", "Confidential", "Restricted"])
         ai_enrichment = {**DEFAULT_AI_ENRICHMENT, **dict(self.ai_enrichment or {})}
+        dq_prompts = {
+            **DEFAULT_AI_ENRICHMENT["dq_prompts"],
+            **dict(ai_enrichment.get("dq_prompts") or {}),
+        }
         object.__setattr__(self, "ai_enrichment", {
             "enabled": bool(ai_enrichment.get("enabled", False)),
             "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
             "classification_prompt": str(ai_enrichment.get("classification_prompt") or "").strip(),
             "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
+            "dq_prompts": {
+                family: str(prompt or "").strip()
+                for family, prompt in dq_prompts.items()
+                if family in DEFAULT_AI_ENRICHMENT["dq_prompts"]
+            },
         })
         object.__setattr__(
             self,
