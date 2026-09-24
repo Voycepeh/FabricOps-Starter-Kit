@@ -24,7 +24,7 @@ from fabricops_kit.widgets.enrichment_shared import (
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
-_TABS = ("Table", "Columns", "Review")
+_TABS = ("Table", "Columns", "Advanced", "Review")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 _ADVANCED_TYPES = (
@@ -330,10 +330,41 @@ def widget_data_contract(
 
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
-    panes = [widgets.VBox() for _ in _TABS]
-    tabs = widgets.Tab(children=panes)
-    for index, title in enumerate(_TABS):
-        tabs.set_title(index, title)
+    top_nav = widgets.ToggleButtons(
+        options=_TABS,
+        value="Table",
+        layout=widgets.Layout(width="520px"),
+    )
+    left = widgets.VBox(
+        layout=widgets.Layout(
+            width="100%", min_width="0", max_width="100%",
+            border="1px solid #e1e6eb", padding="16px", gap="8px",
+            align_items="stretch",
+        )
+    )
+    right = widgets.VBox(
+        layout=widgets.Layout(
+            width="100%", min_width="0", max_width="100%",
+            border="1px solid #e1e6eb", padding="20px 24px", gap="10px",
+            align_items="stretch",
+        )
+    )
+    workspace = widgets.GridBox(
+        [left, right],
+        layout=widgets.Layout(
+            width="100%", min_width="0", max_width="100%",
+            grid_template_columns="minmax(250px, 27fr) minmax(0, 73fr)",
+            grid_gap="12px", align_items="flex-start", overflow="visible",
+        ),
+    )
+    view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
+
+    def apply_view(*_args: Any) -> None:
+        left_children, right_children = view_content.get(str(top_nav.value), ((), ()))
+        left.children = tuple(left_children)
+        right.children = tuple(right_children)
+
+    top_nav.observe(apply_view, names="value")
 
     def set_status(message: str, *, error: bool = False, warning: bool = False) -> None:
         state["message"] = message
@@ -527,11 +558,16 @@ def widget_data_contract(
 
     def render() -> None:
         current = state.get("current")
-        state["_controls"].update({"table": table_control, "contract": contract_control, "tabs": tabs, "status": status})
+        view_content.clear()
+        state["_controls"].update({
+            "table": table_control, "contract": contract_control,
+            "top_nav": top_nav, "workspace": workspace, "left_pane": left,
+            "right_pane": right, "status": status,
+        })
         if not current:
             prompt = widgets.HTML("<p>Select a governed table and contract.</p>")
-            for pane in panes:
-                pane.children = (prompt,)
+            left.children = (prompt,)
+            right.children = ()
             return
         row = current["contract"]
         editable = str(row.get("status") or "").lower() == "draft"
