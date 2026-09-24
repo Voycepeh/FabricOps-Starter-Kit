@@ -50,15 +50,20 @@ def _render_steward(monkeypatch, *, custom_fields=None, stewards=None):
     return steward_widget.widget_render_data_steward(spark=object())
 
 
-def test_shared_form_containers_expand_without_scrollbars():
-    """Keep reusable page and section containers naturally expanding."""
+def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
+    """Bound and scroll the page while keeping its internal sections natural."""
     section = shared.form_section(_FakeWidgets, title="Details", children=[_FakeWidget()])
     page = shared.form_page(_FakeWidgets, title="Title", description="Description", children=[section])
 
-    for container in (page, section):
-        assert container.layout.kwargs["width"] == "100%"
-        assert container.layout.kwargs["height"] == "auto"
-        assert container.layout.kwargs["overflow"] == "visible"
+    assert page.layout.kwargs["width"] == "100%"
+    assert page.layout.kwargs["min_width"] == "0"
+    assert page.layout.kwargs["max_width"] == "100%"
+    assert page.layout.kwargs["height"] == "720px"
+    assert page.layout.kwargs["overflow"] == "auto"
+
+    assert section.layout.kwargs["width"] == "100%"
+    assert section.layout.kwargs["height"] == "auto"
+    assert section.layout.kwargs["overflow"] == "visible"
 
     css = page.children[0].value
     assert ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;" in css
@@ -206,7 +211,8 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     assert "Optional" not in text
     assert controls["save_button"].description == "Save steward"
     assert controls["save_button"].click_callbacks
-    assert controls["container"].layout.kwargs["height"] == "auto"
+    assert controls["container"].layout.kwargs["height"] == "720px"
+    assert controls["container"].layout.kwargs["overflow"] == "auto"
     assert "execution_output" not in controls
     assert "execution_log_section" not in controls
 
