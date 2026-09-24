@@ -1307,7 +1307,9 @@ def widget_data_contract(
                     "dq_parameters": [control.value for control in dq_parameter_controls],
                     "dq_action": dq_action.value,
                 }
-                set_status("Unsaved column edits were retained locally; use the section Save action to persist them.")
+                set_status(
+                    "Column edits were retained locally; use Apply Column Changes before the final save."
+                )
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
@@ -1969,6 +1971,12 @@ def widget_data_contract(
 
             def save_contract_clicked(_button: Any) -> None:
                 try:
+                    scope = (str(current["contract_id"]), int(current["contract_version"]))
+                    unapplied_columns = state["_column_drafts"].get(scope, {})
+                    if unapplied_columns:
+                        raise ValueError(
+                            "Apply retained Column changes before saving the Data Contract."
+                        )
                     save_data_contract_session()
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
