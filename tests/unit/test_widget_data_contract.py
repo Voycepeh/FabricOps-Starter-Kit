@@ -452,6 +452,24 @@ def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime)
     assert state["_controls"]["column_description"].value == "Unsaved local description"
 
 
+def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_runtime):
+    """A successful column save must not be overlaid by an older cached local draft."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["column_description"].value = "Older local draft"
+    controls["column_select"].value = "col-1"
+    controls["column_select"].value = "col-0"
+    controls["column_description"].value = "Canonical saved description"
+    controls["save_column"].click()
+
+    assert state["_controls"]["column_description"].value == "Canonical saved description"
+
+    state["_controls"]["column_select"].value = "col-1"
+    state["_controls"]["column_select"].value = "col-0"
+    assert state["_controls"]["column_description"].value == "Canonical saved description"
+
+
 def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
     """Table, column, and required-state actions persist and refresh their controls."""
     state = widget_runtime["open"]()

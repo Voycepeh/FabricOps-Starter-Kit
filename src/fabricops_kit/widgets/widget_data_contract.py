@@ -427,9 +427,26 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(message: str) -> None:
+    def reload_after_save(
+        message: str, *, clear_column_ids: tuple[str, ...] = (),
+    ) -> None:
+        current = state.get("current")
+        scope = (
+            (str(current["contract_id"]), int(current["contract_version"]))
+            if current else None
+        )
+
+        def clear_saved_column_drafts() -> None:
+            if scope is None:
+                return
+            drafts = state["_column_drafts"].setdefault(scope, {})
+            for column_id in clear_column_ids:
+                drafts.pop(str(column_id or "").strip(), None)
+
+        clear_saved_column_drafts()
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
+        clear_saved_column_drafts()
         set_status(message)
 
     def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -437,7 +454,15 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
-        reload_after_save("Enrichment saved and the canonical contract state was refreshed.")
+        column_ids = {
+            str(record.get("column_id") or "").strip()
+            for record in records
+            if str(record.get("column_id") or "").strip()
+        }
+        reload_after_save(
+            "Enrichment saved and the canonical contract state was refreshed.",
+            clear_column_ids=tuple(column_ids),
+        )
         return saved
 
     def save_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -445,7 +470,15 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
-        reload_after_save("Guardrails saved and the canonical contract state was refreshed.")
+        column_ids = {
+            str(record.get("column_id") or "").strip()
+            for record in records
+            if str(record.get("column_id") or "").strip()
+        }
+        reload_after_save(
+            "Guardrails saved and the canonical contract state was refreshed.",
+            clear_column_ids=tuple(column_ids),
+        )
         return saved
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
@@ -1362,7 +1395,14 @@ def widget_data_contract(
 
         def save_required_clicked(_button: Any) -> None:
             try:
-                save_guardrails([build_required_record()])
+                cid = str(column_select.value or "")
+                contracts.save_guardrails(
+                    [build_required_record()], config=config, env=env, spark_session=spark
+                )
+                reload_after_save(
+                    "Guardrails saved and the canonical contract state was refreshed.",
+                    clear_column_ids=(cid,),
+                )
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1533,7 +1573,10 @@ def widget_data_contract(
                     contracts.save_guardrails(
                         guardrail_records, config=config, env=env, spark_session=spark
                     )
-                reload_after_save("Column contract saved and the canonical contract state was refreshed.")
+                reload_after_save(
+                    "Column contract saved and the canonical contract state was refreshed.",
+                    clear_column_ids=(cid,),
+                )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
