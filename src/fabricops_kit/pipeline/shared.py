@@ -2886,7 +2886,9 @@ def _spark_sql_helpers():
     return SparkSession, F, Window
 
 
-_CUSTOM_COLUMN_METHODS = {"isNull", "isNotNull"}
+_CUSTOM_COLUMN_METHODS = {
+    "isNull", "isNotNull", "isin", "rlike", "contains", "startswith", "endswith",
+}
 
 
 def _custom_expression_tree(expression: str) -> ast.Expression:
@@ -2914,7 +2916,27 @@ def _custom_expression_tree(expression: str) -> ast.Expression:
             )
             is_method = isinstance(node.func, ast.Attribute) and node.func.attr in _CUSTOM_COLUMN_METHODS
             if not (is_col or is_method) or node.keywords:
-                raise ValueError("Custom DQ expression may use only F.col, F.lit, isNull, and isNotNull.")
+                raise ValueError(
+                    "Custom DQ expression contains an unsupported call. Allowed operations are "
+                    "F.col, F.lit, isNull, isNotNull, isin, rlike, contains, startswith, and endswith."
+                )
+            if is_col:
+                if len(node.args) != 1 or not isinstance(node.args[0], ast.Constant):
+                    raise ValueError(f"{node.func.attr} requires exactly one literal argument.")
+                if node.func.attr == "col" and not isinstance(node.args[0].value, str):
+                    raise ValueError("F.col requires a literal string column name.")
+            elif node.func.attr in {"isNull", "isNotNull"} and node.args:
+                raise ValueError(f"{node.func.attr} does not accept arguments.")
+            elif node.func.attr == "isin":
+                if not node.args or not all(isinstance(argument, ast.Constant) for argument in node.args):
+                    raise ValueError("isin requires one or more literal values.")
+            elif node.func.attr in {"rlike", "contains", "startswith", "endswith"}:
+                if (
+                    len(node.args) != 1
+                    or not isinstance(node.args[0], ast.Constant)
+                    or not isinstance(node.args[0].value, str)
+                ):
+                    raise ValueError(f"{node.func.attr} requires exactly one literal string.")
         if isinstance(node, ast.Compare) and (len(node.ops) != 1 or len(node.comparators) != 1):
             raise ValueError("Custom DQ expression comparisons must be explicit and joined with & or |.")
     return tree
@@ -2972,7 +2994,7 @@ def _custom_expression_column(expression: str, functions):
                 value = build(node.args[0])
                 return functions.col(value) if node.func.attr == "col" else functions.lit(value)
             target = build(node.func.value)
-            return getattr(target, node.func.attr)()
+            return getattr(target, node.func.attr)(*[build(argument) for argument in node.args])
         raise ValueError("Custom DQ expression could not be compiled to a Spark Column.")
 
     return build(tree)

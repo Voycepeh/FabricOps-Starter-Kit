@@ -85,8 +85,8 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
-                "rule_type": "missing_values",
-                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
+                "rule_type": "completeness",
+                "rule_parameters_json": json.dumps({"maximum_missing_percent": 0, "treat_blank_as_missing": False}),
                 "action": "Block",
                 "description": "Required",
                 "is_active": True,
@@ -103,8 +103,8 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
-                "rule_type": "missing_values",
-                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
+                "rule_type": "completeness",
+                "rule_parameters_json": json.dumps({"maximum_missing_percent": 0, "treat_blank_as_missing": False}),
                 "action": "Block",
                 "description": "Required",
                 "is_active": False,
@@ -132,7 +132,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "value_range",
+                "rule_type": "range",
                 "rule_parameters_json": json.dumps({"minimum": 0, "minimum_inclusive": False}),
                 "action": "Block",
                 "description": "Amount must be non-negative",
@@ -153,7 +153,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
             "guardrail_rule_id": "amount_positive",
             "guardrail_version": 1,
             "rule_key": "orders|amount_positive",
-            "rule_type": "value_range",
+            "rule_type": "range",
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
@@ -219,14 +219,14 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
         {
             "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
             "guardrail_version": 1,
-            "guardrail_type": "data_quality", "rule_type": "required_when", "column_name": "required_value",
-            "rule_parameters": {"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"},
+            "guardrail_type": "data_quality", "rule_type": "custom_expression", "column_name": "required_value,status",
+            "rule_parameters": {"expression_language": "pyspark", "expression": '(F.col("status") != "open") | F.col("required_value").isNotNull()'},
             "action": "Warn", "description": "required when open",
         },
         {
             "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
             "guardrail_version": 1,
-            "guardrail_type": "data_quality", "rule_type": "compare_columns", "column_name": "upper,lower",
+            "guardrail_type": "data_quality", "rule_type": "column_relationship", "column_name": "upper,lower",
             "rule_parameters": {"columns": ["upper", "lower"], "operator": "<="},
             "action": "Block", "description": "upper <= lower",
         },
@@ -281,7 +281,7 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
     assert len({row.failure_event_id for row in compare}) == 1
     conditional = [row for row in evidence if row.guardrail_rule_id == "gr-required"]
     assert {row.column_name: (row.column_role, row.raw_value) for row in conditional} == {
-        "required_value": ("target", None), "status": ("condition", "open"),
+        "required_value": ("target", None), "status": ("target", "open"),
     }
     assert len({row.failure_event_id for row in conditional}) == 1
     assert {row.action for row in conditional} == {"Warn"}
@@ -299,8 +299,8 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     guardrails = [{
         "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
         "guardrail_version": 1, "guardrail_type": "data_quality",
-        "rule_type": "allowed_values", "column_name": "value",
-        "rule_parameters": {"columns": ["value"], "allowed_values": ["ok"]},
+        "rule_type": "value_set", "column_name": "value",
+        "rule_parameters": {"columns": ["value"], "mode": "allow", "values": ["ok"]},
         "action": "Block",
     }]
     contract = active_contract_frame(
@@ -353,7 +353,7 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     }
 
 
-def test_dq_failed_values_normalize_unique_combination(spark_session):
+def test_dq_failed_values_normalize_composite_uniqueness(spark_session):
     """Composite uniqueness failures emit one typed value per participating column."""
     from fabricops_kit.pipeline import shared
 
@@ -363,7 +363,7 @@ def test_dq_failed_values_normalize_unique_combination(spark_session):
     )
     rule = shared._validate_dq_rules([{
         "guardrail_rule_id": "gr-unique", "guardrail_version": 1,
-        "rule_id": "unique-order", "rule_type": "unique_combination",
+        "rule_id": "unique-order", "rule_type": "uniqueness",
         "columns": ["customer_id", "order_date"], "severity": "error",
     }])[0]
 
@@ -415,8 +415,8 @@ def test_dq_authored_action_controls_runtime_continuation(
     dataframe = spark_session.createDataFrame([(None,)], "value string")
     rule = shared._validate_dq_rules([{
         "guardrail_rule_id": f"gr-{action.lower()}", "guardrail_version": 1,
-        "rule_id": "required", "rule_type": "missing_values", "columns": ["value"],
-        "maximum_null_percent": 0, "severity": action,
+        "rule_id": "required", "rule_type": "completeness", "columns": ["value"],
+        "maximum_missing_percent": 0, "treat_blank_as_missing": False, "severity": action,
     }])[0]
     check = shared._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
     result = shared._summarize_dq_guardrail([check])
@@ -429,28 +429,17 @@ def test_dq_authored_action_controls_runtime_continuation(
     assert {row.action for row in details} == {action}
 
 
-def test_dq_missing_column_returns_failed_value_detail(spark_session):
-    """A missing governed column fails cleanly and remains diagnosable."""
+def test_dq_missing_column_raises_configuration_error(spark_session):
+    """A missing governed column raises a clear configuration error."""
     from fabricops_kit.pipeline import shared
 
     dataframe = spark_session.createDataFrame([("row-1",)], "row_id string")
     rule = shared._validate_dq_rules([{
         "guardrail_rule_id": "gr-missing", "guardrail_version": 1,
-        "rule_id": "email-required", "rule_type": "missing_values",
-        "columns": ["customer_email"], "maximum_null_percent": 0,
-        "severity": "Block",
+        "rule_id": "email-required", "rule_type": "completeness",
+        "columns": ["customer_email"], "maximum_missing_percent": 0,
+        "treat_blank_as_missing": False, "severity": "Block",
     }])[0]
 
-    check = shared._run_dq_guardrail_checks(dataframe, "customers", [rule])[0]
-    failed_values = shared._dq_failed_values_dataframe(
-        dataframe, [rule], run_id="run-missing", row_identity_columns=["row_id"]
-    ).collect()
-
-    assert check["status"] == "failed"
-    assert check["failed_count"] == 1
-    assert len(failed_values) == 1
-    assert failed_values[0].column_name == "customer_email"
-    assert failed_values[0].column_role == "target"
-    assert failed_values[0].raw_value is None
-    assert failed_values[0].raw_value_type == "missing"
-    assert failed_values[0].action == "Block"
+    with pytest.raises(ValueError, match="missing column"):
+        shared._run_dq_guardrail_checks(dataframe, "customers", [rule])

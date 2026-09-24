@@ -395,3 +395,25 @@ def test_custom_expression_pass_fail_and_validation(spark_session):
         governance._validate_dq_rules([
             _rule("custom_expression", columns=[], expression_language="pyspark", expression='__import__("os").system("echo unsafe")')
         ])
+
+
+@pytest.mark.parametrize(
+    ("expression", "failed_count"),
+    [
+        ('F.col("status").isin("Open", "Closed")', 1),
+        ('F.col("code").rlike("^[A-Z]{3}$")', 1),
+        ('F.col("code").contains("BC")', 1),
+        ('F.col("code").startswith("A")', 1),
+        ('F.col("code").endswith("C")', 1),
+    ],
+)
+def test_custom_expression_supports_safe_column_methods(spark_session, expression, failed_count):
+    """Compile the explicit whitelist of useful, side-effect-free Column methods."""
+    dataframe = spark_session.createDataFrame(
+        [("Open", "ABC"), ("Pending", "bad")], "status string, code string"
+    )
+    rule = _rule(
+        "custom_expression", columns=[], expression_language="pyspark", expression=expression,
+    )
+    check = governance._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
+    assert check["failed_count"] == failed_count
