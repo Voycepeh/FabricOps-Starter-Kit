@@ -427,7 +427,14 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(message: str) -> None:
+    def reload_after_save(message: str, *, clear_column_id: str = "") -> None:
+        column_id = str(clear_column_id or "").strip()
+        if column_id and state.get("current"):
+            scope = (
+                str(state["current"]["contract_id"]),
+                int(state["current"]["contract_version"]),
+            )
+            state["_column_drafts"].setdefault(scope, {}).pop(column_id, None)
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
         set_status(message)
@@ -437,7 +444,15 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
-        reload_after_save("Enrichment saved and the canonical contract state was refreshed.")
+        column_ids = {
+            str(record.get("column_id") or "").strip()
+            for record in records
+            if str(record.get("column_id") or "").strip()
+        }
+        reload_after_save(
+            "Enrichment saved and the canonical contract state was refreshed.",
+            clear_column_id=next(iter(column_ids), ""),
+        )
         return saved
 
     def save_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -445,7 +460,15 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
-        reload_after_save("Guardrails saved and the canonical contract state was refreshed.")
+        column_ids = {
+            str(record.get("column_id") or "").strip()
+            for record in records
+            if str(record.get("column_id") or "").strip()
+        }
+        reload_after_save(
+            "Guardrails saved and the canonical contract state was refreshed.",
+            clear_column_id=next(iter(column_ids), ""),
+        )
         return saved
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
@@ -1362,7 +1385,15 @@ def widget_data_contract(
 
         def save_required_clicked(_button: Any) -> None:
             try:
-                save_guardrails([build_required_record()])
+                cid = str(column_select.value or "")
+                saved = contracts.save_guardrails(
+                    [build_required_record()], config=config, env=env, spark_session=spark
+                )
+                reload_after_save(
+                    "Guardrails saved and the canonical contract state was refreshed.",
+                    clear_column_id=cid,
+                )
+                return saved
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1533,7 +1564,10 @@ def widget_data_contract(
                     contracts.save_guardrails(
                         guardrail_records, config=config, env=env, spark_session=spark
                     )
-                reload_after_save("Column contract saved and the canonical contract state was refreshed.")
+                reload_after_save(
+                    "Column contract saved and the canonical contract state was refreshed.",
+                    clear_column_id=cid,
+                )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
