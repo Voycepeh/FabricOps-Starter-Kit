@@ -455,20 +455,28 @@ def widget_data_contract(
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
         save_guardrails=save_guardrails, load_profile_context=load_profile_context,
     )
-    table_options = [
-        (f"{row.get('schema_name') or ''}.{row.get('table_name') or row.get('table_id')}", str(row["table_id"]))
-        for row in table_rows
+    configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
+    store_options = [
+        (
+            f"{name} · {str(getattr(store, 'kind', '') or '').title()}" if getattr(store, "kind", None) else str(name),
+            str(name),
+        )
+        for name, store in configured_stores.items()
     ]
+    store_control = widgets.Dropdown(
+        options=store_options, **shared.widget_common(widgets, "Fabric store"),
+    )
+    schema_control = widgets.Dropdown(
+        options=[], **shared.widget_common(widgets, "Schema"),
+    )
     table_control = widgets.Dropdown(
-        options=[("Select governed table", ""), *table_options],
-        value=state.get("pending_table_id") or "",
+        options=[("Select governed table", "")],
         **shared.widget_common(widgets, "Table"),
     )
     contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
     selector = shared.form_grid(widgets, [
         widgets.Text(value=env, disabled=True, **shared.widget_common(widgets, "Environment")),
-        widgets.Text(value="Metadata", disabled=True, **shared.widget_common(widgets, "Fabric store")),
-        table_control, contract_control,
+        store_control, schema_control, table_control, contract_control,
     ])
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -1625,6 +1633,41 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none"),
     )
 
+    def refresh_table_options(*_args: Any) -> None:
+        selected_store = str(store_control.value or "")
+        selected_schema = str(schema_control.value or "")
+        rows = [
+            row for row in table_rows
+            if str(row.get("layer") or "") == selected_store
+            and str(row.get("schema_name") or "") == selected_schema
+        ]
+        table_control.options = [
+            ("Select governed table", ""),
+            *[
+                (str(row.get("table_name") or row.get("table_id")), str(row["table_id"]))
+                for row in rows
+            ],
+        ]
+        pending = str(state.get("pending_table_id") or "")
+        values = [item[1] if isinstance(item, tuple) else item for item in table_control.options]
+        table_control.value = pending if pending in values else ""
+
+    def refresh_schema_options(*_args: Any) -> None:
+        selected_store = str(store_control.value or "")
+        schemas = list(dict.fromkeys(
+            str(row.get("schema_name") or "")
+            for row in table_rows
+            if str(row.get("layer") or "") == selected_store
+        ))
+        schema_control.options = schemas
+        pending_row = next(
+            (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
+            None,
+        )
+        preferred = str((pending_row or {}).get("schema_name") or "")
+        schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        refresh_table_options()
+
     def table_changed(change: dict[str, Any]) -> None:
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
@@ -1679,8 +1722,22 @@ def widget_data_contract(
 
     open_button.on_click(open_selected)
     change_table_button.on_click(change_table)
+    store_control.observe(refresh_schema_options, names="value")
+    schema_control.observe(refresh_table_options, names="value")
     table_control.observe(table_changed, names="value")
     contract_control.observe(contract_changed, names="value")
+
+    pending_row = next(
+        (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
+        None,
+    )
+    preferred_store = str((pending_row or {}).get("layer") or "")
+    store_values = [item[1] if isinstance(item, tuple) else item for item in store_control.options]
+    if preferred_store in store_values:
+        store_control.value = preferred_store
+    elif store_values:
+        store_control.value = store_values[0]
+    refresh_schema_options()
     if table_control.value:
         table_changed({"new": table_control.value})
     render()
@@ -1691,6 +1748,7 @@ def widget_data_contract(
     )
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
+        "store": store_control, "schema": schema_control,
         "open": open_button, "change_table": change_table_button,
     })
     ip.display(page)
