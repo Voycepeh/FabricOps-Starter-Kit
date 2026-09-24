@@ -134,6 +134,66 @@ def test_draft_validation_returns_only_owned_governance_rows():
         )
 
 
+def test_review_state_reuses_loaded_draft_contract_row(monkeypatch):
+    """Opening a draft reads the Data Contract table once, then reuses that exact row."""
+    contract = {
+        "contract_id": "c", "contract_version": 2, "agreement_id": None,
+        "agreement_version": None, "table_id": "orders",
+        "environment_name": "dev", "status": "draft",
+    }
+    tables = {
+        service.DATA_CONTRACT_TABLE: [contract],
+        "METADATA_DATA_CATALOGUE": [{
+            "table_id": "orders", "environment_name": "dev",
+            "metadata_level": "table", "is_active": True,
+        }],
+        service.ENRICHMENT_TABLE: [],
+        service.GUARDRAIL_TABLE: [],
+    }
+    calls: list[tuple[str, dict]] = []
+
+    def read(table, **kwargs):
+        calls.append((table, kwargs))
+        return tables[table]
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+
+    state = service.get_contract_review_state(
+        config=object(), env="dev", spark_session=object(),
+        contract_id="c", contract_version=2,
+    )
+
+    assert state["table_id"] == "orders"
+    assert [name for name, _kwargs in calls].count(service.DATA_CONTRACT_TABLE) == 1
+
+
+def test_internal_contract_metadata_reads_suppress_io_logging(monkeypatch):
+    """Governance service reads stay quiet without changing public IO logging defaults."""
+    contexts = []
+
+    def read(table, **kwargs):
+        contexts.append(kwargs.get("context"))
+        if table == "METADATA_DATA_CATALOGUE":
+            return [{
+                "table_id": "orders", "environment_name": "dev",
+                "metadata_level": "table", "is_active": True,
+            }]
+        if table == service.DATA_CONTRACT_TABLE:
+            return []
+        raise AssertionError(table)
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+
+    service.list_contract_governance_state(
+        config=object(), env="dev", spark_session=object(),
+    )
+
+    assert contexts
+    assert all(context["_fabricops_suppress_io_log"] is True for context in contexts)
+
+
 def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
     """The same contract identity in another environment cannot leak into state."""
     contracts = [
