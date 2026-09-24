@@ -293,6 +293,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -487,6 +488,69 @@ def widget_data_contract(
         )
         return saved
 
+    def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Enrichment in widget session state without writing Metadata."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be edited.")
+        pending: dict[str, dict[str, Any]] = state["_pending_enrichment"]
+        current_rows = list(current.get("enrichment", []))
+        for record in records:
+            key = str(record.get("enrichment_id") or "")
+            pending[key] = dict(record)
+            current_rows = [
+                row for row in current_rows
+                if str(row.get("enrichment_id") or "") != key
+            ]
+            current_rows.append(dict(record))
+        current["enrichment"] = current_rows
+        state["dirty"] = True
+        refresh_manifest()
+        return records
+
+    def stage_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Guardrails in widget session state without writing Metadata."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be edited.")
+        pending: dict[str, dict[str, Any]] = state["_pending_guardrails"]
+        current_rows = list(current.get("guardrails", []))
+        for record in records:
+            key = str(record.get("guardrail_rule_id") or "")
+            pending[key] = dict(record)
+            current_rows = [
+                row for row in current_rows
+                if str(row.get("guardrail_rule_id") or "") != key
+            ]
+            current_rows.append(dict(record))
+        current["guardrails"] = current_rows
+        state["dirty"] = True
+        refresh_manifest()
+        return records
+
+    def save_data_contract_session() -> None:
+        """Persist all staged draft changes once, then reload canonical state once."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be saved.")
+        enrichment_records = list(state["_pending_enrichment"].values())
+        guardrail_records = list(state["_pending_guardrails"].values())
+        if enrichment_records:
+            contracts.save_enrichment(
+                enrichment_records, config=config, env=env, spark_session=spark
+            )
+        if guardrail_records:
+            contracts.save_guardrails(
+                guardrail_records, config=config, env=env, spark_session=spark
+            )
+        state["_pending_enrichment"].clear()
+        state["_pending_guardrails"].clear()
+        state["_column_drafts"].clear()
+        state["dirty"] = False
+        select(str(state["table_id"]), int(state["contract_version"]))
+        render()
+        set_status("Data Contract saved and canonical state reloaded.")
+
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
         selected_table = str(state.get("table_id") or "").strip()
@@ -532,7 +596,9 @@ def widget_data_contract(
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
-        save_guardrails=save_guardrails, load_profile_context=load_profile_context,
+        save_guardrails=save_guardrails, stage_enrichment=stage_enrichment,
+        stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
+        load_profile_context=load_profile_context,
     )
     configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
     store_options = [
