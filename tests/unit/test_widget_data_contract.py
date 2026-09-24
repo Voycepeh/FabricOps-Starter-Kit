@@ -194,10 +194,18 @@ def widget_runtime(monkeypatch):
         return {"changed": True}
 
     config = types.SimpleNamespace(
+        path_config=types.SimpleNamespace(paths={
+            "dev": {
+                "Bronze": types.SimpleNamespace(kind="lakehouse"),
+                "Silver": types.SimpleNamespace(kind="lakehouse"),
+                "Gold": types.SimpleNamespace(kind="warehouse"),
+                "Metadata": types.SimpleNamespace(kind="lakehouse"),
+            }
+        }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
             sensitivity_labels=["Public", "Internal", "Confidential", "Restricted"],
-        )
+        ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
@@ -224,12 +232,47 @@ def widget_runtime(monkeypatch):
         sys.modules, "IPython",
         types.SimpleNamespace(display=display_module, get_ipython=lambda: None),
     )
+    def start():
+        return module.widget_data_contract(table_id="orders", contract_version=1)
+
+    def open_widget():
+        state = start()
+        state["_controls"]["open"].click()
+        return state
+
     return {
-        "open": lambda: module.widget_data_contract(table_id="orders", contract_version=1),
+        "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "guardrails": guardrails, "schedule": schedule,
         "ai_enrichment": ai_enrichment,
     }
+
+
+def test_selector_is_explicit_and_pending_selection_cannot_change_active_contract(widget_runtime):
+    """The editor stays inactive until Open and Change table deactivates the current contract."""
+    state = widget_runtime["start"]()
+    controls = state["_controls"]
+
+    assert state["current"] is None
+    assert state["table_id"] is None
+    assert state["pending_table_id"] == "orders"
+    assert controls["store"].value == "Silver"
+    assert "Silver · Lakehouse" in [label for label, _value in controls["store"].options]
+    assert controls["schema"].value == "sales"
+    assert controls["selector_panel"].layout.display != "none"
+    assert controls["editor_shell"].layout.display == "none"
+
+    controls["open"].click()
+    assert state["current"]["table_id"] == "orders"
+    assert state["table_id"] == "orders"
+    assert controls["selector_panel"].layout.display == "none"
+    assert controls["editor_shell"].layout.display == ""
+
+    controls["change_table"].click()
+    assert state["current"] is None
+    assert state["table_id"] is None
+    assert controls["selector_panel"].layout.display == ""
+    assert controls["editor_shell"].layout.display == "none"
 
 
 def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():

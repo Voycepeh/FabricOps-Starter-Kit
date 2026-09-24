@@ -287,7 +287,8 @@ def widget_data_contract(
     if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
         raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
     state: dict[str, Any] = {
-        "environment_name": env, "table_id": table_id, "contract_version": contract_version,
+        "environment_name": env, "table_id": None, "contract_version": None,
+        "pending_table_id": table_id, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {},
@@ -454,22 +455,28 @@ def widget_data_contract(
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
         save_guardrails=save_guardrails, load_profile_context=load_profile_context,
     )
-    if table_id:
-        select(str(table_id), contract_version)
-
-    table_options = [
-        (f"{row.get('schema_name') or ''}.{row.get('table_name') or row.get('table_id')}", str(row["table_id"]))
-        for row in table_rows
+    configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
+    store_options = [
+        (
+            f"{name} · {str(getattr(store, 'kind', '') or '').title()}" if getattr(store, "kind", None) else str(name),
+            str(name),
+        )
+        for name, store in configured_stores.items()
     ]
+    store_control = widgets.Dropdown(
+        options=store_options, **shared.widget_common(widgets, "Fabric store"),
+    )
+    schema_control = widgets.Dropdown(
+        options=[], **shared.widget_common(widgets, "Schema"),
+    )
     table_control = widgets.Dropdown(
-        options=[("Select governed table", ""), *table_options], value=state.get("table_id") or "",
+        options=[("Select governed table", "")],
         **shared.widget_common(widgets, "Table"),
     )
     contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
     selector = shared.form_grid(widgets, [
         widgets.Text(value=env, disabled=True, **shared.widget_common(widgets, "Environment")),
-        widgets.Text(value="Metadata", disabled=True, **shared.widget_common(widgets, "Fabric store")),
-        table_control, contract_control,
+        store_control, schema_control, table_control, contract_control,
     ])
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -1615,42 +1622,134 @@ def widget_data_contract(
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
 
+    open_button = widgets.Button(description="Open", button_style="primary")
+    change_table_button = widgets.Button(description="Change table")
+    selector_panel = widgets.VBox(
+        [selector, widgets.HBox([open_button])],
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
+    )
+    editor_shell = widgets.VBox(
+        [widgets.HBox([change_table_button]), tabs],
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none"),
+    )
+
+    def refresh_table_options(*_args: Any) -> None:
+        selected_store = str(store_control.value or "")
+        selected_schema = str(schema_control.value or "")
+        rows = [
+            row for row in table_rows
+            if str(row.get("layer") or "") == selected_store
+            and str(row.get("schema_name") or "") == selected_schema
+        ]
+        table_control.options = [
+            ("Select governed table", ""),
+            *[
+                (str(row.get("table_name") or row.get("table_id")), str(row["table_id"]))
+                for row in rows
+            ],
+        ]
+        pending = str(state.get("pending_table_id") or "")
+        values = [item[1] if isinstance(item, tuple) else item for item in table_control.options]
+        table_control.value = pending if pending in values else ""
+
+    def refresh_schema_options(*_args: Any) -> None:
+        selected_store = str(store_control.value or "")
+        schemas = list(dict.fromkeys(
+            str(row.get("schema_name") or "")
+            for row in table_rows
+            if str(row.get("layer") or "") == selected_store
+        ))
+        schema_control.options = schemas
+        pending_row = next(
+            (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
+            None,
+        )
+        preferred = str((pending_row or {}).get("schema_name") or "")
+        schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        refresh_table_options()
+
     def table_changed(change: dict[str, Any]) -> None:
         selected = str(change.get("new") or "")
-        state["table_id"] = selected or None
+        state["pending_table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
         contract_control.options = [
             *[(f"v{row['contract_version']} · {str(row.get('status') or '').title()}", str(row["contract_version"])) for row in matches],
             ("New draft", "new"),
         ]
-        if matches:
+        preferred = state.get("pending_contract_version")
+        preferred_value = str(preferred) if preferred is not None else None
+        available = [str(row["contract_version"]) for row in matches]
+        if preferred_value in available:
+            contract_control.value = preferred_value
+        elif matches:
             contract_control.value = str(matches[0]["contract_version"])
         else:
-            render()
+            contract_control.value = "new"
 
     def contract_changed(change: dict[str, Any]) -> None:
         value = change.get("new")
-        if not state.get("table_id") or not value:
+        state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
+
+    def open_selected(_button: Any) -> None:
+        selected_table = str(state.get("pending_table_id") or "")
+        selected_contract = contract_control.value
+        if not selected_table or not selected_contract:
+            set_status("Select a governed table and contract before opening.", error=True)
             return
         try:
-            if value == "new":
+            if selected_contract == "new":
+                state["table_id"] = selected_table
                 new_draft()
             else:
-                select(str(state["table_id"]), int(value))
+                select(selected_table, int(selected_contract))
             render()
+            selector_panel.layout.display = "none"
+            editor_shell.layout.display = ""
+            set_status(
+                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}."
+            )
         except (ValueError, RuntimeError) as exc:
             set_status(str(exc), error=True)
 
+    def change_table(_button: Any) -> None:
+        state["current"] = None
+        state["manifest"] = None
+        state["table_id"] = None
+        state["contract_version"] = None
+        editor_shell.layout.display = "none"
+        selector_panel.layout.display = ""
+        set_status("Select a governed table and contract.")
+
+    open_button.on_click(open_selected)
+    change_table_button.on_click(change_table)
+    store_control.observe(refresh_schema_options, names="value")
+    schema_control.observe(refresh_table_options, names="value")
     table_control.observe(table_changed, names="value")
     contract_control.observe(contract_changed, names="value")
+
+    pending_row = next(
+        (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
+        None,
+    )
+    preferred_store = str((pending_row or {}).get("layer") or "")
+    store_values = [item[1] if isinstance(item, tuple) else item for item in store_control.options]
+    if preferred_store in store_values:
+        store_control.value = preferred_store
+    elif store_values:
+        store_control.value = store_values[0]
+    refresh_schema_options()
     if table_control.value:
         table_changed({"new": table_control.value})
     render()
     page = shared.form_page(
         widgets, title="Data Contract",
         description="Select, author, review, freeze, and activate one governed table contract.",
-        children=[selector, tabs, status],
+        children=[selector_panel, editor_shell, status],
     )
-    state["_controls"]["page"] = page
+    state["_controls"].update({
+        "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
+        "store": store_control, "schema": schema_control,
+        "open": open_button, "change_table": change_table_button,
+    })
     ip.display(page)
     return state
