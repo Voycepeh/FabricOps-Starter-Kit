@@ -532,36 +532,41 @@ def test_visible_apply_actions_stage_then_review_save_persists(widget_runtime):
     } == {"freshness", "source_drift", "schema", "sensitive_data"}
 
 
-def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
-    """Every logical rule section saves normalized records through Guardrail services."""
+def test_table_sensitive_dq_and_advanced_guardrails_stage_then_persist_once(widget_runtime):
+    """Logical rule sections stage normalized records and persist in one Review save."""
     state = widget_runtime["open"]()
-    state["_controls"]["table_guardrails"]["freshness"]["block"].value = False
-    state["_controls"]["table_guardrails"]["freshness"]["save"].click()
-    freshness = widget_runtime["calls"]["guardrails"][-1][0]
-    assert freshness["guardrail_type"] == "freshness"
-    assert module._parameters(freshness) == {
+    controls = state["_controls"]
+    controls["table_guardrails"]["freshness"]["block"].value = False
+    controls["table_guardrails"]["freshness"]["save"].click()
+    controls["table_guardrails"]["source_drift"]["save"].click()
+    controls["sensitive_enabled"].value = True
+    controls["sensitive_treatment"].value = "tokenize"
+    controls["pii_reason"].value = "The identifier directly associates an order with a person."
+    controls["save_sensitive"].click()
+    controls["dq_type"].value = "completeness"
+    controls["dq_blank_missing"].value = True
+    controls["save_dq"].click()
+    controls["advanced_type"].value = "column_relationship"
+    controls["advanced_columns"].value = ("column_0", "column_1")
+    controls["advanced_save"].click()
+
+    assert widget_runtime["calls"]["guardrails"] == []
+    staged = list(state["_pending_guardrails"].values())
+    by_type = {record["rule_type"]: record for record in staged}
+    assert module._parameters(by_type["freshness"]) == {
         "freshness_column": "column_1", "maximum_age": 2.0, "maximum_age_unit": "days",
     }
-    state["_controls"]["table_guardrails"]["source_drift"]["save"].click()
-    drift = widget_runtime["calls"]["guardrails"][-1][0]
-    assert drift["guardrail_type"] == "source_drift"
-    assert module._parameters(drift) == {
+    assert module._parameters(by_type["source_drift"]) == {
         "partition_column": "column_0", "change_column": "column_1", "load_strategy": "append",
     }
-    state["_controls"]["sensitive_enabled"].value = True
-    state["_controls"]["sensitive_treatment"].value = "tokenize"
-    state["_controls"]["pii_reason"].value = "The identifier directly associates an order with a person."
-    state["_controls"]["save_sensitive"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "sensitive_data"
-    state["_controls"]["dq_type"].value = "completeness"
-    state["_controls"]["dq_blank_missing"].value = True
-    state["_controls"]["save_dq"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "completeness"
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["treat_blank_as_missing"] is True
-    state["_controls"]["advanced_type"].value = "column_relationship"
-    state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
-    state["_controls"]["advanced_save"].click()
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
+    assert module._parameters(by_type["completeness"])["treat_blank_as_missing"] is True
+    assert module._parameters(by_type["column_relationship"])["columns"] == ["column_0", "column_1"]
+
+    controls["save_contract"].click()
+    persisted = widget_runtime["calls"]["guardrails"][-1]
+    assert {record["guardrail_type"] for record in persisted} >= {
+        "freshness", "source_drift", "sensitive_data", "data_quality",
+    }
 
 
 def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
@@ -664,7 +669,12 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert widget_runtime["calls"]["guardrails"] == []
 
     controls["save_sensitive"].click()
-    saved_parameters = module._parameters(widget_runtime["calls"]["guardrails"][-1][0])
+    assert widget_runtime["calls"]["guardrails"] == []
+    sensitive = next(
+        record for record in state["_pending_guardrails"].values()
+        if record["guardrail_type"] == "sensitive_data"
+    )
+    saved_parameters = module._parameters(sensitive)
     assert saved_parameters["pii_type"] == "direct"
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
@@ -802,7 +812,10 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     freshness["parameters"][1].value = "6"
     freshness["parameters"][2].value = "hours"
     freshness["save"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    saved = next(
+        record for record in state["_pending_guardrails"].values()
+        if record["rule_type"] == "freshness"
+    )
     assert module._parameters(saved) == {
         "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
     }
@@ -812,9 +825,14 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     drift["parameters"][0].value = "column_0"
     drift["parameters"][1].value = "column_1"
     drift["save"].click()
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0]) == {
+    saved_drift = next(
+        record for record in state["_pending_guardrails"].values()
+        if record["rule_type"] == "source_drift"
+    )
+    assert module._parameters(saved_drift) == {
         "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
     }
+    assert widget_runtime["calls"]["guardrails"] == []
 
 
 def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
@@ -845,9 +863,10 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     assert controls["dq_action"].value == "Warn"
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     controls["save_dq"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    saved = state["_pending_guardrails"]["dq-pattern"]
     assert saved["guardrail_rule_id"] == "dq-pattern"
     assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
+    assert widget_runtime["calls"]["guardrails"] == []
 
 
 def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, monkeypatch):
@@ -921,7 +940,11 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     controls["dq_minimum"].value = "1"
     controls["save_dq"].click()
 
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert widget_runtime["calls"]["guardrails"] == []
+    saved = next(
+        record for record in state["_pending_guardrails"].values()
+        if record["rule_type"] == "range"
+    )
     assert saved["column_id"] == "col-0"
     assert module._parameters(saved) == {
         "columns": ["column_0"], "minimum": "1", "minimum_inclusive": True,
