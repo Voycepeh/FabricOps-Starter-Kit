@@ -1626,7 +1626,7 @@ def widget_data_contract(
     change_table_button = widgets.Button(description="Change table")
     selector_panel = widgets.VBox(
         [selector, shared.action_row(widgets, [open_button])],
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
         [shared.action_row(widgets, [change_table_button]), tabs],
