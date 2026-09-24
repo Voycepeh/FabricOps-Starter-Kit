@@ -1776,6 +1776,7 @@ def widget_data_contract(
                 if guardrail_records:
                     stage_guardrails(guardrail_records)
                 unsaved_columns.pop(cid, None)
+                hydrated_column_snapshots[cid] = column_editor_snapshot()
                 set_status("Column changes staged locally. Save the Data Contract from Review to persist.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
