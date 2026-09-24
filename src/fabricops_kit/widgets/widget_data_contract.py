@@ -376,8 +376,14 @@ def widget_data_contract(
         if not current:
             return None
         if str(current["contract"].get("status") or "").lower() == "draft":
-            payload, warnings = contracts.build_contract_manifest(
-                draft=current["contract"], config=config, env=env, spark_session=spark,
+            payload, warnings = contracts.assemble_contract_payload(
+                draft=current["contract"],
+                tables={
+                    "METADATA_DATA_CATALOGUE": current.get("catalogue_rows", []),
+                    contracts.ENRICHMENT_TABLE: current.get("enrichment", []),
+                    contracts.GUARDRAIL_TABLE: current.get("guardrails", []),
+                },
+                environment_name=env,
                 scheduled_refresh=contract_schedule,
             )
             state["manifest_warnings"] = warnings
