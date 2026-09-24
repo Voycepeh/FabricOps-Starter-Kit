@@ -348,11 +348,16 @@ def read_contract_records(
         context={"config": config, "env": env},
         spark_session=spark_session,
     )
-    return _scoped_rows(
-        frame,
-        f"contract_id = {_sql_literal(identity)}",
-        f"contract_version = {version}",
-        f"environment_name = {_sql_literal(env)}",
+    return contract_version_records(
+        _scoped_rows(
+            frame,
+            f"contract_id = {_sql_literal(identity)}",
+            f"contract_version = {version}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=identity,
+        contract_version=version,
+        environment_name=env,
     )
 
 
@@ -409,11 +414,16 @@ def get_contract_authoring_state(
         schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
         context=context, spark_session=spark_session,
     )
-    matches = _scoped_rows(
-        contract_frame,
-        f"contract_id = {_sql_literal(identity)}",
-        f"contract_version = {version}",
-        f"environment_name = {_sql_literal(env)}",
+    matches = contract_version_records(
+        _scoped_rows(
+            contract_frame,
+            f"contract_id = {_sql_literal(identity)}",
+            f"contract_version = {version}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=identity,
+        contract_version=version,
+        environment_name=env,
     )
     if not matches:
         raise ValueError("The exact Data Contract version does not exist.")
@@ -498,7 +508,12 @@ def get_contract_review_state(
         f"contract_version = {version}",
         f"environment_name = {_sql_literal(env)}",
     )
-    matches = rows
+    matches = contract_version_records(
+        rows,
+        contract_id=identity,
+        contract_version=version,
+        environment_name=env,
+    )
     if not matches:
         raise ValueError("The exact Data Contract version does not exist.")
     contract = matches[0]
