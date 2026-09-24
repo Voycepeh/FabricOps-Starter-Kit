@@ -412,6 +412,90 @@ def get_contract_authoring_state(
     return state
 
 
+def load_contract_governance_snapshot(
+    *, config: Any, env: str, spark_session: Any
+) -> dict[str, Any]:
+    """Load the four canonical authoring sources once for one widget session."""
+    context = {"config": config, "env": env}
+    names = (DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE", ENRICHMENT_TABLE, GUARDRAIL_TABLE)
+    source_tables = {
+        name: row_dicts(read_lakehouse_table(
+            name, store="Metadata", schema=metadata_table_physical_schema(config, name),
+            context=context, spark_session=spark_session,
+        ))
+        for name in names
+    }
+    catalogue = source_tables["METADATA_DATA_CATALOGUE"]
+    contracts = source_tables[DATA_CONTRACT_TABLE]
+    tables = _latest([
+        row for row in catalogue
+        if str(row.get("environment_name") or "") == env
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+    ], ("table_id",))
+    versions = sorted(
+        [row for row in contracts if str(row.get("environment_name") or "") == env],
+        key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)),
+    )
+    return {"tables": tables, "contracts": versions, "source_tables": source_tables}
+
+
+def contract_review_state_from_snapshot(
+    *, snapshot: Mapping[str, Any], env: str, contract_id: str, contract_version: int
+) -> dict[str, Any]:
+    """Resolve one exact review state without performing additional metadata IO."""
+    identity, version = validate_contract_identity(contract_id, contract_version)
+    source_tables = snapshot["source_tables"]
+    matches = [
+        row for row in source_tables[DATA_CONTRACT_TABLE]
+        if str(row.get("contract_id") or "") == identity
+        and int(row.get("contract_version") or 0) == version
+        and str(row.get("environment_name") or "") == env
+    ]
+    if not matches:
+        raise ValueError("The exact Data Contract version does not exist.")
+    contract = matches[0]
+    if str(contract.get("status") or "").lower() != "draft":
+        payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default=None)
+        if not isinstance(payload, dict):
+            raise ValueError("Immutable Data Contract version has no valid canonical payload.")
+        return {
+            "contract": contract, "contract_id": identity, "contract_version": version,
+            "table_id": str(contract.get("table_id") or ""), "environment_name": env,
+            "payload": payload, "catalogue_rows": [],
+            "available_columns": payload.get("table", {}).get("columns", []),
+            "enrichment": [*payload.get("enrichment", {}).get("table", []), *payload.get("enrichment", {}).get("columns", [])],
+            "guardrails": payload.get("guardrails", []),
+        }
+    state = validate_contract_draft(
+        contract, catalogue_rows=source_tables["METADATA_DATA_CATALOGUE"],
+        enrichment_rows=source_tables[ENRICHMENT_TABLE],
+        guardrail_rows=source_tables[GUARDRAIL_TABLE], environment_name=env,
+    )
+    state["available_columns"] = [
+        dict(row) for row in state["catalogue_rows"]
+        if str(row.get("metadata_level") or "").lower() == "column" and row.get("is_active") is not False
+    ]
+    return state
+
+
+def contract_manifest_from_snapshot(
+    *, draft: Mapping[str, Any], snapshot: Mapping[str, Any], env: str,
+    scheduled_refresh: Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], list[str]]:
+    """Assemble a draft manifest from an already-loaded governance snapshot."""
+    source_tables = snapshot["source_tables"]
+    validate_contract_draft(
+        draft, catalogue_rows=source_tables["METADATA_DATA_CATALOGUE"],
+        enrichment_rows=source_tables[ENRICHMENT_TABLE],
+        guardrail_rows=source_tables[GUARDRAIL_TABLE], environment_name=env,
+    )
+    return assemble_contract_payload(
+        draft=draft, tables=source_tables, environment_name=env,
+        scheduled_refresh=scheduled_refresh,
+    )
+
+
 def list_contract_governance_state(
     *, config: Any, env: str, spark_session: Any
 ) -> dict[str, list[dict[str, Any]]]:

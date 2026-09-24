@@ -126,7 +126,10 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
-    calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    calls = {
+        "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0,
+        "profiles": [], "snapshots": 0, "reviews": 0, "manifests": 0,
+    }
     schedule = {
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
@@ -203,6 +206,29 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
     monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
+    def snapshot(**_kwargs):
+        calls["snapshots"] += 1
+        return {
+            "tables": [catalogue[0]], "contracts": [dict(contract)],
+            "source_tables": {
+                module.contracts.DATA_CONTRACT_TABLE: [dict(contract)],
+                "METADATA_DATA_CATALOGUE": [dict(row) for row in catalogue],
+                module.contracts.ENRICHMENT_TABLE: [dict(row) for row in enrichment],
+                module.contracts.GUARDRAIL_TABLE: [dict(row) for row in guardrails],
+            },
+        }
+
+    def review_snapshot(**_kwargs):
+        calls["reviews"] += 1
+        return review()
+
+    def manifest_snapshot(**_kwargs):
+        calls["manifests"] += 1
+        return manifest(), []
+
+    monkeypatch.setattr(module.contracts, "load_contract_governance_snapshot", snapshot)
+    monkeypatch.setattr(module.contracts, "contract_review_state_from_snapshot", review_snapshot)
+    monkeypatch.setattr(module.contracts, "contract_manifest_from_snapshot", manifest_snapshot)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
@@ -322,6 +348,64 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert "col-249" in controls["profile_context"].value
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["tabs"].children[1].children[0].layout.grid_template_columns
+
+
+def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widget_runtime):
+    """One session snapshot feeds isolated tabs and targeted saves without read cascades."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert widget_runtime["calls"]["snapshots"] == 1
+    assert widget_runtime["calls"]["reviews"] == 1
+    assert widget_runtime["calls"]["profiles"] == ["col-0"]
+    assert len(controls["tabs"].children) == 3
+    assert controls["tabs"].children[0] is not controls["tabs"].children[1]
+    assert controls["tabs"].children[0].children[0].layout.height == "560px"
+    assert "fabricops-authoring-workspace" in controls["tabs"].children[1].children[0]._dom_classes
+
+    controls["tabs"].selected_index = 1
+    controls["tabs"].selected_index = 2
+    controls["table_description"].value = "Saved without reloading"
+    controls["table_save"].click()
+
+    assert widget_runtime["calls"]["snapshots"] == 1
+    assert widget_runtime["calls"]["profiles"] == ["col-0"]
+    assert len(widget_runtime["calls"]["enrichment"]) == 1
+
+
+def test_profile_context_is_cached_per_table_and_column(widget_runtime):
+    """Returning to a selected column reuses its read-only profile evidence."""
+    state = widget_runtime["open"]()
+    select = state["_controls"]["column_select"]
+    select.value = "col-1"
+    select.value = "col-0"
+    select.value = "col-1"
+
+    assert widget_runtime["calls"]["profiles"] == ["col-0", "col-1"]
+
+
+def test_ai_unavailable_is_session_scoped_until_explicit_retry(widget_runtime, monkeypatch):
+    """Unrelated interactions do not repeatedly invoke an unavailable AI runtime."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    attempts = []
+
+    def unavailable(*_args, **_kwargs):
+        attempts.append("attempt")
+        raise RuntimeError("AI Functions unavailable")
+
+    monkeypatch.setattr(module, "suggest_enrichment", unavailable)
+    state = widget_runtime["open"]()
+    initial_attempts = len(attempts)
+    assert initial_attempts == 1
+    assert state["_ai_unavailable"] == "AI Functions unavailable"
+
+    state["_controls"]["tabs"].selected_index = 2
+    state["_controls"]["table_description"].value = "Manual authoring remains available"
+    state["_controls"]["table_save"].click()
+    assert len(attempts) == initial_attempts
+
+    state["_controls"]["rerun_table_description"].click()
+    assert len(attempts) == initial_attempts + 1
 
 
 def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widget_runtime):

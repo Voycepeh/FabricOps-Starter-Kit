@@ -14,7 +14,7 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 
 `fabricops_kit/widgets/widget_data_contract.py:226`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L226-L1656">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L226-L1745">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -86,9 +86,11 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 <div class="reference-docstring-notes" markdown="1">
 
-Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
-contract version and manifest. Profile context remains read-only and is never added
-to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
+Saves delegate to canonical Enrichment and Guardrail services, then update the
+in-memory governance snapshot and manifest without rereading unrelated metadata.
+Lifecycle actions deliberately reload the snapshot. Profile context is lazy,
+session-cached, read-only, and never added to the canonical payload. Scheduled
+Refresh is discovered read-only from Microsoft
 Fabric and remains independent of the authored Freshness expectation. Immutable
 versions are review-only.
 When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,

@@ -127,6 +127,43 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     assert state["table_id"] == "dev-t"
 
 
+def test_governance_snapshot_reads_each_authoring_source_once(monkeypatch):
+    """A reusable authoring snapshot owns the only initial metadata reads."""
+    draft = {
+        "contract_id": "c", "contract_version": 1, "table_id": "orders",
+        "environment_name": "dev", "status": "draft", "agreement_id": None,
+        "agreement_version": None,
+    }
+    source_tables = {
+        service.DATA_CONTRACT_TABLE: [draft],
+        "METADATA_DATA_CATALOGUE": [
+            {"table_id": "orders", "environment_name": "dev", "metadata_level": "table", "is_active": True},
+            {"table_id": "orders", "column_id": "id", "environment_name": "dev", "metadata_level": "column", "is_active": True},
+        ],
+        service.ENRICHMENT_TABLE: [],
+        service.GUARDRAIL_TABLE: [],
+    }
+    reads = []
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(
+        service, "read_lakehouse_table",
+        lambda table, **_kwargs: reads.append(table) or source_tables[table],
+    )
+
+    snapshot = service.load_contract_governance_snapshot(
+        config=object(), env="dev", spark_session=object()
+    )
+    state = service.contract_review_state_from_snapshot(
+        snapshot=snapshot, env="dev", contract_id="c", contract_version=1,
+    )
+
+    assert reads == [
+        service.DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE",
+        service.ENRICHMENT_TABLE, service.GUARDRAIL_TABLE,
+    ]
+    assert state["available_columns"][0]["column_id"] == "id"
+
+
 def test_draft_environment_must_match_authoring_environment():
     """Draft validation rejects cross-environment contract rows explicitly."""
     draft = {"contract_id": "c", "contract_version": 1, "agreement_id": None, "agreement_version": None, "table_id": "t", "environment_name": "prod", "status": "draft"}

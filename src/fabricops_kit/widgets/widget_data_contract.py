@@ -254,9 +254,11 @@ def widget_data_contract(
 
     Notes
     -----
-    Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
-    contract version and manifest. Profile context remains read-only and is never added
-    to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
+    Saves delegate to canonical Enrichment and Guardrail services, then update the
+    in-memory governance snapshot and manifest without rereading unrelated metadata.
+    Lifecycle actions deliberately reload the snapshot. Profile context is lazy,
+    session-cached, read-only, and never added to the canonical payload. Scheduled
+    Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
@@ -282,7 +284,10 @@ def widget_data_contract(
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     spark = get_spark_session(spark_session)
-    catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
+    governance_snapshot = contracts.load_contract_governance_snapshot(
+        config=config, env=env, spark_session=spark
+    )
+    catalogue = governance_snapshot
     table_rows = catalogue["tables"]
     if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
         raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
@@ -291,7 +296,8 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {},
-        "_ai_suggestions": {}, "_ai_errors": {},
+        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_unavailable": None,
+        "_profile_cache": {}, "_governance_snapshot": governance_snapshot,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -344,8 +350,8 @@ def widget_data_contract(
         if not current:
             return None
         if str(current["contract"].get("status") or "").lower() == "draft":
-            payload, warnings = contracts.build_contract_manifest(
-                draft=current["contract"], config=config, env=env, spark_session=spark,
+            payload, warnings = contracts.contract_manifest_from_snapshot(
+                draft=current["contract"], snapshot=state["_governance_snapshot"], env=env,
                 scheduled_refresh=contract_schedule,
             )
             state["manifest_warnings"] = warnings
@@ -370,8 +376,8 @@ def widget_data_contract(
             matches[0],
         )
         state["contract_version"] = int(chosen["contract_version"])
-        state["current"] = contracts.get_contract_review_state(
-            config=config, env=env, spark_session=spark,
+        state["current"] = contracts.contract_review_state_from_snapshot(
+            snapshot=state["_governance_snapshot"], env=env,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
         refresh_scheduled_refresh(str(state["table_id"] or ""))
@@ -392,19 +398,45 @@ def widget_data_contract(
                 and row.get("contract_version") == draft.get("contract_version")
             )
         ]]
+        snapshot_contracts = state["_governance_snapshot"]["source_tables"][contracts.DATA_CONTRACT_TABLE]
+        snapshot_contracts[:] = [
+            row for row in snapshot_contracts
+            if not (
+                row.get("contract_id") == draft.get("contract_id")
+                and row.get("contract_version") == draft.get("contract_version")
+            )
+        ]
+        snapshot_contracts.append(dict(draft))
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
     def reload_after_save(message: str) -> None:
-        select(str(state["table_id"]), int(state["contract_version"]))
-        render()
+        refresh_manifest()
         set_status(message)
+
+    def update_snapshot(table_name: str, records: list[dict[str, Any]], *identity: str) -> None:
+        """Merge persisted rows into the session snapshot without another physical read."""
+        rows = state["_governance_snapshot"]["source_tables"][table_name]
+        keys = {tuple(str(record.get(name) or "") for name in identity) for record in records}
+        rows[:] = [row for row in rows if tuple(str(row.get(name) or "") for name in identity) not in keys]
+        rows.extend(dict(record) for record in records)
+        current = state.get("current")
+        if current:
+            refreshed = contracts.contract_review_state_from_snapshot(
+                snapshot=state["_governance_snapshot"], env=env,
+                contract_id=str(current["contract_id"]), contract_version=int(current["contract_version"]),
+            )
+            state["current"] = refreshed
 
     def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
+        update_snapshot(
+            contracts.ENRICHMENT_TABLE, saved,
+            "contract_id", "contract_version", "enrichment_level", "column_id", "enrichment_type",
+        )
         reload_after_save("Enrichment saved and the canonical contract state was refreshed.")
         return saved
 
@@ -413,14 +445,21 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
         saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
+        update_snapshot(contracts.GUARDRAIL_TABLE, saved, "guardrail_rule_id")
         reload_after_save("Guardrails saved and the canonical contract state was refreshed.")
         return saved
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
+        key = (str(state.get("table_id") or ""), str(column_id or ""))
+        if key in state["_profile_cache"]:
+            profile = state["_profile_cache"][key]
+            state["profile_context"] = profile
+            return profile
         profile = contracts.get_column_profile_context(
             config=config, env=env, spark_session=spark,
             table_id=str(state.get("table_id") or ""), column_id=str(column_id or ""),
         )
+        state["_profile_cache"][key] = profile
         state["profile_context"] = profile
         return profile
 
@@ -432,7 +471,7 @@ def widget_data_contract(
             draft=current["contract"], config=config, env=env,
             spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
         )
-        select(str(state["table_id"]), int(state["contract_version"]))
+        reload_governance_snapshot()
         return result
 
     def activate(agreement_id: str, agreement_version: str) -> dict[str, Any]:
@@ -446,8 +485,17 @@ def widget_data_contract(
             agreement_id=agreement_id, agreement_version=agreement_version,
             spark_session=spark, context={"config": config, "env": env, **dict(resolved or {})},
         )
-        select(str(state["table_id"]), int(state["contract_version"]))
+        reload_governance_snapshot()
         return result
+
+    def reload_governance_snapshot() -> None:
+        snapshot = contracts.load_contract_governance_snapshot(
+            config=config, env=env, spark_session=spark
+        )
+        state["_governance_snapshot"] = snapshot
+        state["contracts"] = snapshot["contracts"]
+        state["tables"] = snapshot["tables"]
+        select(str(state["table_id"]), int(state["contract_version"]))
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
@@ -466,6 +514,7 @@ def widget_data_contract(
         **shared.widget_common(widgets, "Table"),
     )
     contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
+    rendered = {"value": False}
     selector = shared.form_grid(widgets, [
         widgets.Text(value=env, disabled=True, **shared.widget_common(widgets, "Environment")),
         widgets.Text(value="Metadata", disabled=True, **shared.widget_common(widgets, "Fabric store")),
@@ -519,6 +568,7 @@ def widget_data_contract(
         }
 
     def render() -> None:
+        rendered["value"] = True
         current = state.get("current")
         state["_controls"].update({"table": table_control, "contract": contract_control, "tabs": tabs, "status": status})
         if not current:
@@ -579,6 +629,13 @@ def widget_data_contract(
                 message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
                 table_description_ai.value = message
                 table_classification_ai.value = message
+            elif state["_ai_unavailable"]:
+                message = (
+                    "<p><b>AI suggestion unavailable</b><br>"
+                    f"{html.escape(str(state['_ai_unavailable']))}</p>"
+                )
+                table_description_ai.value = message
+                table_classification_ai.value = message
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description")
@@ -602,6 +659,11 @@ def widget_data_contract(
             if not editable or not ai_enrichment.get("enabled"):
                 render_table_ai()
                 return
+            if state["_ai_unavailable"] and not force:
+                render_table_ai()
+                return
+            if force:
+                state["_ai_unavailable"] = None
             if (
                 not force
                 and ai_state["table"].get("description")
@@ -637,6 +699,7 @@ def widget_data_contract(
                     "classification", {"error": message, "stale": False}
                 )
                 ai_errors["table_enrichment"] = message
+                state["_ai_unavailable"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
             render_table_ai()
 
@@ -1076,6 +1139,14 @@ def widget_data_contract(
                 column_description_ai.value = review_message
                 column_classification_ai.value = review_message
                 sensitive_ai.value = review_message
+            elif state["_ai_unavailable"]:
+                unavailable_message = (
+                    "<p><b>AI suggestion unavailable</b><br>"
+                    f"{html.escape(str(state['_ai_unavailable']))}</p>"
+                )
+                column_description_ai.value = unavailable_message
+                column_classification_ai.value = unavailable_message
+                sensitive_ai.value = unavailable_message
             else:
                 column_description_ai.value = _suggestion_html(
                     "Description", suggestions.get("description")
@@ -1102,6 +1173,11 @@ def widget_data_contract(
 
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
+            if state["_ai_unavailable"] and not force:
+                render_column_ai(column_id)
+                return
+            if force:
+                state["_ai_unavailable"] = None
             if not force and suggestions.get("description") and suggestions.get("classification"):
                 render_column_ai(column_id)
                 return
@@ -1133,11 +1209,17 @@ def widget_data_contract(
                 suggestions.setdefault("description", {"error": message, "stale": False})
                 suggestions.setdefault("classification", {"error": message, "stale": False})
                 ai_errors[(column_id, "enrichment")] = message
+                state["_ai_unavailable"] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
         def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
+            if state["_ai_unavailable"] and not force:
+                render_column_ai(column_id)
+                return
+            if force:
+                state["_ai_unavailable"] = None
             if not force and suggestions.get("sensitive_data"):
                 render_column_ai(column_id)
                 return
@@ -1180,6 +1262,7 @@ def widget_data_contract(
                 message = str(exc)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "sensitive_data")] = message
+                state["_ai_unavailable"] = message
                 set_status(
                     f"Sensitive Data AI unavailable for this column: {message}", warning=True
                 )
@@ -1515,6 +1598,7 @@ def widget_data_contract(
                 custom_description, advanced_action, advanced_save,
             ], titles=("Rule type", "Saved configurations / affected columns", "Selected / new configuration"),
         )]),)
+        panes[0].children = (shared.bounded_region(widgets, panes[0].children),)
 
         # Manifest: compact navigation and bounded selected-section review.
         payload = state.get("manifest") or {}
@@ -1635,7 +1719,11 @@ def widget_data_contract(
         try:
             if value == "new":
                 new_draft()
-            else:
+            elif not (
+                state.get("current")
+                and int(state.get("contract_version") or 0) == int(value)
+                and str(state.get("table_id") or "") == str(state["current"].get("table_id") or "")
+            ):
                 select(str(state["table_id"]), int(value))
             render()
         except (ValueError, RuntimeError) as exc:
@@ -1645,7 +1733,8 @@ def widget_data_contract(
     contract_control.observe(contract_changed, names="value")
     if table_control.value:
         table_changed({"new": table_control.value})
-    render()
+    if not rendered["value"]:
+        render()
     page = shared.form_page(
         widgets, title="Data Contract",
         description="Select, author, review, freeze, and activate one governed table contract.",
