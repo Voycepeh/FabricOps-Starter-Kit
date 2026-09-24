@@ -389,13 +389,15 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
     assert all("scheduled_refresh" not in record for record in saved)
 
 
-def test_profile_context_is_cached_per_table_and_column(widget_runtime):
-    """Profile evidence is loaded once per table/column and reused across widget actions."""
+def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime):
+    """Profile evidence loads only when Columns is opened, then reuses the per-column cache."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    initial_calls = list(widget_runtime["calls"]["profiles"])
-    assert initial_calls.count("col-0") == 1
+    assert widget_runtime["calls"]["profiles"] == []
+
+    controls["top_nav"].value = "Columns"
+    assert widget_runtime["calls"]["profiles"].count("col-0") == 1
 
     controls["column_select"].value = "col-1"
     assert widget_runtime["calls"]["profiles"].count("col-1") == 1
@@ -417,9 +419,10 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     controls["column_select"].value = "col-249"
     assert id(controls["column_description"]) == editor_identity
     assert "column_249" in controls["column_context"].value
+    assert widget_runtime["calls"]["profiles"] == []
+    controls["top_nav"].value = "Columns"
     assert "col-249" in controls["profile_context"].value
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
-    controls["top_nav"].value = "Columns"
     assert controls["left_pane"].children[-1] is controls["column_select"]
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
@@ -527,6 +530,25 @@ def test_visible_apply_actions_stage_table_and_column_sections(widget_runtime):
     controls["save_data_contract"].click()
     assert len(widget_runtime["calls"]["enrichment"]) == 1
     assert len(widget_runtime["calls"]["guardrails"]) == 1
+
+
+def test_discard_changes_restores_canonical_state_without_writes(widget_runtime):
+    """Discard clears staged session changes and reloads canonical state without persistence."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["table_description"].value = "Unsaved table change"
+    controls["table_save"].click()
+    assert state["dirty"] is True
+    assert widget_runtime["calls"]["enrichment"] == []
+
+    controls["discard_data_contract"].click()
+
+    assert state["dirty"] is False
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["_controls"]["table_description"].value == "Orders table"
+    assert "discarded" in state["message"]
 
 
 def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
