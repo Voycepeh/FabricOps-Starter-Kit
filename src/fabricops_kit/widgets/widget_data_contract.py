@@ -431,13 +431,22 @@ def widget_data_contract(
         message: str, *, clear_column_ids: tuple[str, ...] = (),
     ) -> None:
         current = state.get("current")
-        if current:
-            scope = (str(current["contract_id"]), int(current["contract_version"]))
+        scope = (
+            (str(current["contract_id"]), int(current["contract_version"]))
+            if current else None
+        )
+
+        def clear_saved_column_drafts() -> None:
+            if scope is None:
+                return
             drafts = state["_column_drafts"].setdefault(scope, {})
             for column_id in clear_column_ids:
                 drafts.pop(str(column_id or "").strip(), None)
+
+        clear_saved_column_drafts()
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
+        clear_saved_column_drafts()
         set_status(message)
 
     def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
