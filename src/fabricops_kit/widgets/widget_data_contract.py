@@ -291,7 +291,7 @@ def widget_data_contract(
         "pending_table_id": table_id, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
-        "_column_drafts": {},
+        "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {},
     }
     scheduled_refresh: dict[str, Any] = {
@@ -449,10 +449,19 @@ def widget_data_contract(
         return saved
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
-        profile = contracts.get_column_profile_context(
-            config=config, env=env, spark_session=spark,
-            table_id=str(state.get("table_id") or ""), column_id=str(column_id or ""),
-        )
+        """Load one column profile once per governed table and reuse it within the widget."""
+        selected_table = str(state.get("table_id") or "").strip()
+        selected_column = str(column_id or "").strip()
+        if not selected_table or not selected_column:
+            raise ValueError("Select a governed table and column before loading profile context.")
+        cache_key = (selected_table, selected_column)
+        profile_cache: dict[tuple[str, str], dict[str, Any]] = state["_profile_cache"]
+        if cache_key not in profile_cache:
+            profile_cache[cache_key] = contracts.get_column_profile_context(
+                config=config, env=env, spark_session=spark,
+                table_id=selected_table, column_id=selected_column,
+            )
+        profile = profile_cache[cache_key]
         state["profile_context"] = profile
         return profile
 

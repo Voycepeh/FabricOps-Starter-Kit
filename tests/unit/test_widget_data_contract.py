@@ -386,6 +386,25 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
     assert all("scheduled_refresh" not in record for record in saved)
 
 
+def test_profile_context_is_cached_per_table_and_column(widget_runtime):
+    """Profile evidence is loaded once per table/column and reused across widget actions."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    initial_calls = list(widget_runtime["calls"]["profiles"])
+    assert initial_calls.count("col-0") == 1
+
+    controls["column_select"].value = "col-1"
+    assert widget_runtime["calls"]["profiles"].count("col-1") == 1
+
+    controls["column_select"].value = "col-0"
+    assert widget_runtime["calls"]["profiles"].count("col-0") == 1
+
+    state["load_profile_context"]("col-0")
+    assert widget_runtime["calls"]["profiles"].count("col-0") == 1
+    assert ("orders", "col-0") in state["_profile_cache"]
+
+
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):
     """Large schemas remain bounded and column selection rehydrates a single editor."""
     widget_runtime["catalogue"][:] = _catalogue_rows(250)
