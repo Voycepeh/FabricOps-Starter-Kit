@@ -757,34 +757,52 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        panes[0].children = (
-            shared.form_section(widgets, title="Table identity & context", children=[identity]),
-            shared.form_section(widgets, title="Pipeline / Refresh", children=[pipeline_refresh]),
-            shared.form_section(widgets, title="Table Enrichment", children=[
-                table_description, table_description_ai,
-                shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
-                table_classification,
-                table_save,
-            ]),
-            shared.form_section(widgets, title="Table Guardrails", children=[
-                shared.form_grid(widgets, [
-                    shared.form_section(widgets, title="Freshness", children=[
-                        widgets.HTML(
-                            "<p>Freshness is the expected source-data arrival SLA; it is independent "
-                            "of when Fabric schedules this notebook to run.</p>"
-                        ),
-                        table_rules["freshness"]["enabled"],
-                        *table_rules["freshness"]["parameters"],
-                        table_rules["freshness"]["block"], table_rules["freshness"]["save"],
-                    ]),
-                    shared.form_section(widgets, title="Source Drift", children=[
-                        table_rules["source_drift"]["enabled"],
-                        *table_rules["source_drift"]["parameters"],
-                        table_rules["source_drift"]["block"], table_rules["source_drift"]["save"],
-                    ]),
-                ])
-            ]),
+        table_left = (
+            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>TABLE</div>"),
+            identity,
+            widgets.HTML("<div style='border-top:1px solid #e1e6eb;margin:4px 0;'></div>"),
+            pipeline_refresh,
+            change_table_button,
         )
+        table_right = (
+            widgets.VBox(
+                [widgets.HTML("<div style='font-weight:600;'>Classification</div>"), table_classification],
+                layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Description</div>"),
+                    table_description, table_description_ai,
+                    shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
+                ],
+                layout=widgets.Layout(width="100%", gap="6px"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Freshness</div>"),
+                    widgets.HTML(
+                        "<p style='margin:0;'>Freshness is the expected source-data arrival SLA; "
+                        "it is independent of when Fabric schedules this notebook to run.</p>"
+                    ),
+                    table_rules["freshness"]["enabled"],
+                    *table_rules["freshness"]["parameters"],
+                    table_rules["freshness"]["block"], table_rules["freshness"]["save"],
+                ],
+                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
+                    table_rules["source_drift"]["enabled"],
+                    *table_rules["source_drift"]["parameters"],
+                    table_rules["source_drift"]["block"], table_rules["source_drift"]["save"],
+                ],
+                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+            ),
+            widgets.HBox([table_save], layout=widgets.Layout(justify_content="flex-end")),
+        )
+        view_content["Table"] = (table_left, table_right)
+
 
         # Columns: one editor, hydrated on selection, with profile evidence isolated from payload.
         required_rule = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {})
@@ -793,7 +811,15 @@ def widget_data_contract(
             (f"{c.get('column_name')}    {c.get('data_type')}    {'*' if c.get('column_id') in required_columns or c.get('column_name') in required_columns else ''}", str(c.get("column_id") or ""))
             for c in columns
         ]
-        column_select = widgets.Select(options=column_options, **shared.widget_common(widgets, "Columns"))
+        column_search = widgets.Text(
+            placeholder="Search columns",
+            layout=widgets.Layout(width="100%"),
+        )
+        column_select = widgets.Select(
+            options=column_options,
+            rows=14,
+            layout=widgets.Layout(width="100%", height="405px"),
+        )
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="220px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
@@ -1379,25 +1405,74 @@ def widget_data_contract(
         save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
-        panes[1].children = (shared.authoring_workspace(
-            widgets,
-            target=[column_select],
-            selection=[column_context, widgets.HTML("<b>Profile evidence</b>"), profile_context],
-            configuration=[
-                shared.form_section(widgets, title="Enrichment", children=[
+        def refresh_column_options(*_args: Any) -> None:
+            query = str(column_search.value or "").strip().casefold()
+            current_value = str(column_select.value or "")
+            filtered = [
+                option for option in column_options
+                if not query or query in str(option[0]).casefold()
+            ]
+            column_select.options = filtered
+            values = [str(value) for _label, value in filtered]
+            if current_value in values:
+                column_select.value = current_value
+            elif values:
+                column_select.value = values[0]
+            else:
+                column_select.value = None
+
+        column_search.observe(refresh_column_options, names="value")
+
+        column_left = (
+            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>COLUMNS</div>"),
+            column_search,
+            column_select,
+        )
+        column_right = (
+            column_context,
+            widgets.VBox(
+                [widgets.HTML("<div style='font-weight:600;'>Schema</div>"), required, save_required],
+                layout=widgets.Layout(width="100%", gap="6px"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Classification</div>"),
+                    column_classification,
+                ],
+                layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Description</div>"),
                     column_description, column_description_ai,
                     shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
-                    column_classification,
                     save_column_enrichment,
-                ]),
-                shared.form_section(widgets, title="Schema", children=[required, save_required]),
-                shared.form_section(widgets, title="Sensitive Data", children=[sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason, sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, save_sensitive]),
-                shared.form_section(widgets, title="Data Quality", children=[
+                ],
+                layout=widgets.Layout(width="100%", gap="6px"),
+            ),
+            widgets.VBox(
+                [widgets.HTML("<div style='font-weight:600;'>Profile evidence</div>"), profile_context],
+                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #e1e6eb"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Sensitive Data</div>"),
+                    sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
+                    sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character,
+                    bucket_bins, bucket_labels, sensitive_action, save_sensitive,
+                ],
+                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+            ),
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Column data quality</div>"),
                     dq_type, dq_help, dq_usage, *dq_parameter_controls, dq_action,
                     suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
-                ]),
-            ], titles=("Columns", "Selected column context", "Configuration"),
-        ),)
+                ],
+                layout=widgets.Layout(width="100%", gap="6px"),
+            ),
+        )
+        view_content["Columns"] = (column_left, column_right)
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
