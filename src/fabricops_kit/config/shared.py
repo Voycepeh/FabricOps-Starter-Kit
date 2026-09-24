@@ -355,6 +355,11 @@ DEFAULT_AI_ENRICHMENT = {
         "and a Warn or Block action. Classification is an input signal, not a PII decision. Never "
         "request or return raw values. Return structured JSON only; final review belongs to Governance."
     ),
+    "dq_prompt": (
+        "Suggest conservative standard Data Quality rules using only governed metadata and profile evidence. "
+        "Use only completeness, uniqueness, value_set, range, and pattern. Do not infer business "
+        "relationships, custom expressions, or contractual limits from current observations alone."
+    ),
 }
 
 
@@ -374,7 +379,7 @@ class GovernanceConfig:
         column metadata enrichment widgets.
     ai_enrichment : dict[str, Any]
         Optional AI Enrichment authoring settings. ``enabled`` controls the
-        assistant and the three prompt fields provide project instructions.
+        assistant and the prompt fields provide project instructions.
     enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
         Widget definitions for organization-specific enrichment fields. Each
         widget uses ``custom_fields`` entries keyed by ``key``.
@@ -400,6 +405,7 @@ class GovernanceConfig:
             "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
             "classification_prompt": str(ai_enrichment.get("classification_prompt") or "").strip(),
             "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
+            "dq_prompt": str(ai_enrichment.get("dq_prompt") or "").strip(),
         })
         object.__setattr__(
             self,

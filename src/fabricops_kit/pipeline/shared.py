@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import ast
 import re
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -1188,19 +1189,9 @@ GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
 
-DQ_RULE_TYPES = [
-    "missing_values",
-    "blank_text",
-    "unique_values",
-    "unique_combination",
-    "allowed_values",
-    "blocked_values",
-    "value_range",
-    "text_pattern",
-    "required_when",
-    "conditional_value",
-    "compare_columns",
-]
+STANDARD_DQ_RULE_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
+TABLE_DQ_RULE_TYPES = ("column_relationship", "custom_expression")
+DQ_RULE_TYPES = [*STANDARD_DQ_RULE_TYPES, *TABLE_DQ_RULE_TYPES]
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
 
@@ -2894,6 +2885,120 @@ def _spark_sql_helpers():
         raise RuntimeError("DQ enforcement helpers require pyspark in the active runtime.") from exc
     return SparkSession, F, Window
 
+
+_CUSTOM_COLUMN_METHODS = {
+    "isNull", "isNotNull", "isin", "rlike", "contains", "startswith", "endswith",
+}
+
+
+def _custom_expression_tree(expression: str) -> ast.Expression:
+    """Parse the deliberately small, side-effect-free PySpark Column grammar."""
+    try:
+        tree = ast.parse(expression, mode="eval")
+    except SyntaxError as exc:
+        raise ValueError("Custom DQ expression is not valid Python expression syntax.") from exc
+    allowed = (
+        ast.Expression, ast.BinOp, ast.BitAnd, ast.BitOr, ast.UnaryOp, ast.Invert,
+        ast.Compare, ast.Eq, ast.NotEq, ast.Gt, ast.GtE, ast.Lt, ast.LtE,
+        ast.Call, ast.Attribute, ast.Name, ast.Load, ast.Constant,
+    )
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed):
+            raise ValueError(f"Custom DQ expression contains unsupported syntax: {type(node).__name__}.")
+        if isinstance(node, ast.Name) and node.id != "F":
+            raise ValueError(f"Custom DQ expression contains unsupported name {node.id!r}.")
+        if isinstance(node, ast.Call):
+            is_col = (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "F"
+                and node.func.attr in {"col", "lit"}
+            )
+            is_method = isinstance(node.func, ast.Attribute) and node.func.attr in _CUSTOM_COLUMN_METHODS
+            if not (is_col or is_method) or node.keywords:
+                raise ValueError(
+                    "Custom DQ expression contains an unsupported call. Allowed operations are "
+                    "F.col, F.lit, isNull, isNotNull, isin, rlike, contains, startswith, and endswith."
+                )
+            if is_col:
+                if len(node.args) != 1 or not isinstance(node.args[0], ast.Constant):
+                    raise ValueError(f"{node.func.attr} requires exactly one literal argument.")
+                if node.func.attr == "col" and not isinstance(node.args[0].value, str):
+                    raise ValueError("F.col requires a literal string column name.")
+            elif node.func.attr in {"isNull", "isNotNull"} and node.args:
+                raise ValueError(f"{node.func.attr} does not accept arguments.")
+            elif node.func.attr == "isin":
+                if not node.args or not all(isinstance(argument, ast.Constant) for argument in node.args):
+                    raise ValueError("isin requires one or more literal values.")
+            elif node.func.attr in {"rlike", "contains", "startswith", "endswith"}:
+                if (
+                    len(node.args) != 1
+                    or not isinstance(node.args[0], ast.Constant)
+                    or not isinstance(node.args[0].value, str)
+                ):
+                    raise ValueError(f"{node.func.attr} requires exactly one literal string.")
+        if isinstance(node, ast.Compare) and (len(node.ops) != 1 or len(node.comparators) != 1):
+            raise ValueError("Custom DQ expression comparisons must be explicit and joined with & or |.")
+    return tree
+
+
+def _custom_expression_columns(expression: str) -> set[str]:
+    """Return statically referenced columns after validating the custom grammar."""
+    tree = _custom_expression_tree(expression)
+    columns: set[str] = set()
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "F"
+            and node.func.attr == "col"
+        ):
+            if len(node.args) != 1 or not isinstance(node.args[0], ast.Constant) or not isinstance(node.args[0].value, str):
+                raise ValueError("F.col requires exactly one literal column name.")
+            columns.add(node.args[0].value)
+    if not columns:
+        raise ValueError("Custom DQ expression must reference at least one column with F.col().")
+    return columns
+
+
+def _custom_expression_column(expression: str, functions):
+    """Compile the constrained AST into a native Spark boolean Column without eval()."""
+    tree = _custom_expression_tree(expression)
+
+    def build(node):
+        if isinstance(node, ast.Expression):
+            return build(node.body)
+        if isinstance(node, ast.Constant):
+            return node.value
+        if isinstance(node, ast.BinOp):
+            left, right = build(node.left), build(node.right)
+            return left & right if isinstance(node.op, ast.BitAnd) else left | right
+        if isinstance(node, ast.UnaryOp):
+            return ~build(node.operand)
+        if isinstance(node, ast.Compare) and len(node.ops) == len(node.comparators) == 1:
+            left, right, operator = build(node.left), build(node.comparators[0]), node.ops[0]
+            if isinstance(operator, ast.Eq):
+                return left == right
+            if isinstance(operator, ast.NotEq):
+                return left != right
+            if isinstance(operator, ast.Gt):
+                return left > right
+            if isinstance(operator, ast.GtE):
+                return left >= right
+            if isinstance(operator, ast.Lt):
+                return left < right
+            return left <= right
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if isinstance(node.func.value, ast.Name):
+                value = build(node.args[0])
+                return functions.col(value) if node.func.attr == "col" else functions.lit(value)
+            target = build(node.func.value)
+            return getattr(target, node.func.attr)(*[build(argument) for argument in node.args])
+        raise ValueError("Custom DQ expression could not be compiled to a Spark Column.")
+
+    return build(tree)
+
 def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Validate canonical DQ rules before loading or enforcement."""
     if not isinstance(rules, list):
@@ -2929,50 +3034,48 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if rtype not in DQ_RULE_TYPES:
             raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
 
-        if rtype in {"blank_text", "required_when"}:
-            require_columns(rule, minimum=1)
-        elif rtype in {
-            "missing_values", "unique_values", "allowed_values", "blocked_values", "value_range", "text_pattern", "conditional_value",
-        }:
+        if rtype in {"completeness", "value_set", "range", "pattern"}:
             require_columns(rule, count=1)
-        elif rtype == "unique_combination":
-            require_columns(rule, minimum=2)
-        elif rtype == "compare_columns":
+        elif rtype == "uniqueness":
+            require_columns(rule, minimum=1)
+        elif rtype == "column_relationship":
             require_columns(rule, count=2)
+        elif rtype == "custom_expression":
+            rule.setdefault("columns", [])
 
-        if rtype == "missing_values":
-            if rule.get("maximum_null_percent") is None:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires maximum_null_percent.")
-            threshold = float(rule["maximum_null_percent"])
+        if rtype == "completeness":
+            if rule.get("maximum_missing_percent") is None:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires maximum_missing_percent.")
+            threshold = float(rule["maximum_missing_percent"])
             if not 0 <= threshold <= 100:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' maximum_null_percent must be between 0 and 100.")
-            rule["maximum_null_percent"] = threshold
-        if rtype == "allowed_values" and "allowed_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "blocked_values" and "blocked_values" not in rule:
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype == "value_range":
+                raise ValueError(f"DQ rule '{rule['rule_id']}' maximum_missing_percent must be between 0 and 100.")
+            rule["maximum_missing_percent"] = threshold
+            if not isinstance(rule.get("treat_blank_as_missing"), bool):
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires boolean treat_blank_as_missing.")
+        if rtype == "value_set":
+            if rule.get("mode") not in {"allow", "block"}:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' mode must be 'allow' or 'block'.")
+            if not isinstance(rule.get("values"), list) or not rule["values"]:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires a non-empty values list.")
+        if rtype == "range":
             if rule.get("minimum") is None and rule.get("maximum") is None:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires minimum or maximum.")
             rule["minimum_inclusive"] = bool(rule.get("minimum_inclusive", True))
             rule["maximum_inclusive"] = bool(rule.get("maximum_inclusive", True))
-        if rtype == "text_pattern" and not str(rule.get("pattern") or ""):
+        if rtype == "pattern" and not str(rule.get("pattern") or ""):
             raise ValueError(f"DQ rule '{rule['rule_id']}' requires pattern.")
-        if rtype in {"required_when", "conditional_value"}:
-            if not str(rule.get("condition_column") or "").strip():
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_column.")
-            if str(rule.get("condition_operator") or "") not in DQ_COMPARISON_OPERATORS:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported condition_operator.")
-            if "condition_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_value.")
-        if rtype == "conditional_value":
-            if "expected_value" not in rule:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
-        if rtype == "compare_columns":
+        if rtype == "column_relationship":
             if rule["columns"][0] == rule["columns"][1]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires two different columns.")
             if str(rule.get("operator") or "") not in DQ_COMPARISON_OPERATORS:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported operator.")
+        if rtype == "custom_expression":
+            if str(rule.get("expression_language") or "").lower() != "pyspark":
+                raise ValueError(f"DQ rule '{rule['rule_id']}' expression_language must be 'pyspark'.")
+            expression = str(rule.get("expression") or "").strip()
+            if not expression:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
+            rule["columns"] = sorted(_custom_expression_columns(expression))
     return rules
 
 def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
@@ -3177,9 +3280,9 @@ def _dq_involved_column_roles(rule: Mapping[str, Any]) -> list[tuple[str, str]]:
     """Return each involved column and its semantic role for one DQ rule."""
     columns = [str(name) for name in rule.get("columns") or ()]
     rule_type = str(rule.get("rule_type") or "")
-    if rule_type == "compare_columns":
+    if rule_type == "column_relationship":
         return [(columns[0], "left"), (columns[1], "right")]
-    role = "participating" if rule_type == "unique_combination" else "target"
+    role = "participating" if rule_type == "uniqueness" and len(columns) > 1 else "target"
     roles = [(name, role) for name in columns]
     condition = str(rule.get("condition_column") or "").strip()
     if condition and condition not in columns:
@@ -3262,11 +3365,8 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
     cols = [str(column) for column in rule.get("columns", [])]
     dataframe_columns = set(getattr(df, "columns", []))
     missing_columns = [column for column in cols if column not in dataframe_columns]
-    condition_column = str(rule.get("condition_column") or "")
-    if condition_column and condition_column not in dataframe_columns:
-        missing_columns.append(condition_column)
     if missing_columns:
-        return F.lit(True)
+        raise ValueError(f"DQ rule '{rule['rule_id']}' references missing column(s): {', '.join(missing_columns)}.")
     col_name = cols[0] if cols else None
 
     def empty_string(column: str):
@@ -3285,21 +3385,17 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             return left < right
         return left <= right
 
-    if rtype == "missing_values":
+    if rtype == "completeness":
         total = int(df.count())
-        null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
-        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["maximum_null_percent"]) else F.lit(False)
-    elif rtype == "blank_text":
-        failed = empty_string(cols[0])
-        for c in cols[1:]:
-            failed = failed | empty_string(c)
-    elif rtype in {"unique_values", "unique_combination"}:
+        missing = empty_string(col_name) if rule["treat_blank_as_missing"] else F.col(col_name).isNull()
+        missing_count = int(df.filter(missing).count()) if total else 0
+        failed = missing if total and ((missing_count / total) * 100) > float(rule["maximum_missing_percent"]) else F.lit(False)
+    elif rtype == "uniqueness":
         failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
-    elif rtype == "allowed_values":
-        failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(list(rule["allowed_values"]))
-    elif rtype == "blocked_values":
-        failed = F.col(col_name).isNotNull() & F.col(col_name).isin(list(rule["blocked_values"]))
-    elif rtype == "value_range":
+    elif rtype == "value_set":
+        contained = F.col(col_name).isin(list(rule["values"]))
+        failed = F.col(col_name).isNotNull() & (contained if rule["mode"] == "block" else ~contained)
+    elif rtype == "range":
         value_col = F.col(col_name)
         cond = F.lit(False)
         if rule.get("minimum") is not None:
@@ -3309,24 +3405,27 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             maximum = F.lit(rule["maximum"])
             cond = cond | (value_col > maximum if rule["maximum_inclusive"] else value_col >= maximum)
         failed = F.col(col_name).isNotNull() & cond
-    elif rtype == "text_pattern":
+    elif rtype == "pattern":
         failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["pattern"])
-    elif rtype == "compare_columns":
+    elif rtype == "column_relationship":
         left = F.col(cols[0])
         right = F.col(cols[1])
         failed = ~compare(left, rule["operator"], right)
         if rule["operator"] in {">", ">=", "<", "<="}:
             one_null = left.isNull() != right.isNull()
             failed = one_null | (left.isNotNull() & right.isNotNull() & failed)
-    elif rtype == "required_when":
-        condition = compare(F.col(condition_column), rule["condition_operator"], F.lit(rule["condition_value"]))
-        missing = empty_string(cols[0])
-        for c in cols[1:]:
-            missing = missing | empty_string(c)
-        failed = condition & missing
-    elif rtype == "conditional_value":
-        condition = compare(F.col(condition_column), rule["condition_operator"], F.lit(rule["condition_value"]))
-        failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
+    elif rtype == "custom_expression":
+        try:
+            passed = _custom_expression_column(rule["expression"], F)
+            resolved = df.select(passed.alias("_fabricops_custom_dq_predicate")).schema[0]
+            if resolved.dataType.simpleString() != "boolean":
+                raise ValueError(
+                    "Custom DQ expression must resolve to a boolean Spark Column; "
+                    f"received {resolved.dataType.simpleString()}."
+                )
+            failed = ~passed
+        except Exception as exc:  # noqa: BLE001 - normalize Spark analysis failures as rule errors
+            raise ValueError(f"Custom DQ rule '{rule['rule_id']}' could not be evaluated: {exc}") from exc
     else:
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))

@@ -1,0 +1,78 @@
+"""Tests for governed, transient AI Data Quality suggestions."""
+
+import json
+
+import pytest
+
+from fabricops_kit.widgets.enrichment_shared import build_ai_dq_context, suggest_dq_rules
+
+pytestmark = pytest.mark.unit
+
+
+def _context():
+    return build_ai_dq_context({
+        "table_id": "internal-id-not-sent",
+        "table_name": "orders",
+        "schema_name": "sales",
+        "layer": "Silver",
+        "catalogue_profile_rows": [{
+            "column_id": "internal-column-id",
+            "column_name": "amount",
+            "data_type": "decimal",
+            "null_percent": 0,
+            "min_value": 0,
+            "max_value": 100,
+            "frequency_evidence": [{"value": "governed", "count": 2}],
+        }],
+    })
+
+
+def test_ai_dq_context_excludes_internal_identifiers_and_raw_rows():
+    """Send governed evidence without internal identifiers or raw rows."""
+    context = _context()
+    text = json.dumps(context)
+    assert "internal-id-not-sent" not in text
+    assert "internal-column-id" not in text
+    assert "raw" not in context["columns"][0]
+
+
+def test_ai_dq_suggestions_preserve_all_structured_parameters_and_prompt():
+    """Preserve every validated parameter and merge configured instructions."""
+    captured = {}
+    payload = [
+        {"rule_type": "completeness", "columns": ["amount"], "parameters": {"maximum_missing_percent": 1, "treat_blank_as_missing": False}, "rationale": "semantic", "selected": True},
+        {"rule_type": "value_set", "columns": ["amount"], "parameters": {"mode": "block", "values": [-1]}, "rationale": "sentinel", "selected": False},
+        {"rule_type": "range", "columns": ["amount"], "parameters": {"minimum": 0, "maximum": 100, "minimum_inclusive": True, "maximum_inclusive": False}, "rationale": "defined scale", "selected": True},
+        {"rule_type": "pattern", "columns": ["amount"], "parameters": {"pattern": "^[0-9]+$"}, "rationale": "structured", "selected": True},
+        {"rule_type": "uniqueness", "columns": ["amount"], "parameters": {}, "rationale": "identifier", "selected": True},
+    ]
+
+    def invoke(prompt):
+        captured["prompt"] = prompt
+        return json.dumps(payload)
+
+    result = suggest_dq_rules(_context(), prompt="Configured governance prompt", invoke=invoke)
+    assert result == payload
+    assert "Configured governance prompt" in captured["prompt"]
+    assert "current 100% distinctness alone is insufficient" in captured["prompt"]
+
+
+@pytest.mark.parametrize("rule_type", ["column_relationship", "custom_expression", "compare", "required_when"])
+def test_ai_dq_rejects_nonstandard_families(rule_type):
+    """Keep relationship and custom logic outside AI standard suggestions."""
+    raw = json.dumps([{"rule_type": rule_type, "columns": ["amount"], "parameters": {}}])
+    with pytest.raises(ValueError, match="unsupported rule_type"):
+        suggest_dq_rules(_context(), prompt="configured", invoke=lambda _prompt: raw)
+
+
+def test_ai_dq_rejects_unknown_columns_composite_and_malformed_parameters():
+    """Reject suggestions that cannot safely hydrate column controls."""
+    cases = [
+        [{"rule_type": "pattern", "columns": ["unknown"], "parameters": {"pattern": "x"}}],
+        [{"rule_type": "uniqueness", "columns": ["amount", "other"], "parameters": {}}],
+        [{"rule_type": "range", "columns": ["amount"], "parameters": {"minimum": 0, "minimum_inclusive": True}}],
+        [{"rule_type": "completeness", "columns": ["amount"], "parameters": {"maximum_missing_percent": 0}}],
+    ]
+    for payload in cases:
+        with pytest.raises(ValueError):
+            suggest_dq_rules(_context(), prompt="configured", invoke=lambda _prompt, value=payload: json.dumps(value))

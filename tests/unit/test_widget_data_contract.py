@@ -122,8 +122,9 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "missing_values", "rule_parameters_json": '{"columns":["column_0"],"maximum_null_percent":0}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "compare_columns", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
     calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
@@ -135,6 +136,7 @@ def widget_runtime(monkeypatch):
         "description_prompt": "configured description prompt",
         "classification_prompt": "configured classification prompt",
         "sensitive_data_prompt": "configured sensitive prompt",
+        "dq_prompt": "configured DQ prompt",
     }
 
     def review(**_kwargs):
@@ -208,7 +210,15 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
-    monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {"kind": "values", "values": [{"value": column_id, "count": 2}]})
+    monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
+        "kind": "values",
+        "profile": {
+            "row_count": 10, "non_null_count": 9, "null_count": 1,
+            "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
+            "min_value": "ORD-1", "max_value": "ORD-9",
+        },
+        "values": [{"value": column_id, "count": 2}],
+    })
     display_module = types.SimpleNamespace(display=lambda *_args, **_kwargs: None)
     monkeypatch.setitem(
         sys.modules, "IPython",
@@ -262,8 +272,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["parameters"][2].value == "append"
     assert controls["sensitive_enabled"].value is True
-    assert controls["dq_type"].value == "missing_values"
-    assert controls["advanced_type"].value == "unique_combination"
+    assert controls["dq_type"].value == "completeness"
+    assert controls["advanced_type"].value == "uniqueness"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -318,14 +328,14 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     """Selecting an unconfigured column must not retain another column's DQ values."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    assert controls["dq_type"].value == "missing_values"
-    assert controls["dq_parameter"].value == "0"
+    assert controls["dq_type"].value == "completeness"
+    assert controls["dq_max_missing"].value == "0"
     assert controls["dq_action"].value == "Block"
 
     controls["column_select"].value = "col-1"
 
-    assert controls["dq_type"].value == "missing_values"
-    assert controls["dq_parameter"].value == ""
+    assert controls["dq_type"].value == "completeness"
+    assert controls["dq_max_missing"].value == "0"
     assert controls["dq_action"].value == "Warn"
 
 
@@ -384,10 +394,12 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     state["_controls"]["pii_reason"].value = "The identifier directly associates an order with a person."
     state["_controls"]["save_sensitive"].click()
     assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "sensitive_data"
-    state["_controls"]["dq_type"].value = "blank_text"
+    state["_controls"]["dq_type"].value = "completeness"
+    state["_controls"]["dq_blank_missing"].value = True
     state["_controls"]["save_dq"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "blank_text"
-    state["_controls"]["advanced_type"].value = "compare_columns"
+    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "completeness"
+    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["treat_blank_as_missing"] is True
+    state["_controls"]["advanced_type"].value = "column_relationship"
     state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
     state["_controls"]["advanced_save"].click()
     assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
@@ -454,21 +466,21 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["required"].value = False
-    controls["dq_type"].value = "text_pattern"
-    controls["dq_parameter"].value = "manual-pattern"
+    controls["dq_type"].value = "pattern"
+    controls["dq_pattern"].value = "manual-pattern"
 
     original_classification = controls["column_classification"].value
     controls["accept_column_description"].click()
     assert controls["column_description"].value == "Suggested column description"
     assert controls["column_classification"].value == original_classification
     assert controls["required"].value is False
-    assert controls["dq_parameter"].value == "manual-pattern"
+    assert controls["dq_pattern"].value == "manual-pattern"
 
     description = controls["column_description"].value
     controls["accept_column_classification"].click()
     assert controls["column_classification"].value == "Confidential"
     assert controls["column_description"].value == description
-    assert controls["dq_parameter"].value == "manual-pattern"
+    assert controls["dq_pattern"].value == "manual-pattern"
 
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
@@ -477,8 +489,8 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
-    assert controls["dq_type"].value == "text_pattern"
-    assert controls["dq_parameter"].value == "manual-pattern"
+    assert controls["dq_type"].value == "pattern"
+    assert controls["dq_pattern"].value == "manual-pattern"
     assert widget_runtime["calls"]["guardrails"] == []
 
     controls["save_sensitive"].click()
@@ -508,8 +520,8 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
     controls["column_classification"].value = "Restricted"
-    controls["dq_type"].value = "text_pattern"
-    controls["dq_parameter"].value = "keep-me"
+    controls["dq_type"].value = "pattern"
+    controls["dq_pattern"].value = "keep-me"
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
 
@@ -517,8 +529,8 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 
     assert controls["column_description"].value == "Unsaved description"
     assert controls["column_classification"].value == "Restricted"
-    assert controls["dq_type"].value == "text_pattern"
-    assert controls["dq_parameter"].value == "keep-me"
+    assert controls["dq_type"].value == "pattern"
+    assert controls["dq_pattern"].value == "keep-me"
 
 
 def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
@@ -643,14 +655,111 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
-    controls["dq_type"].value = "missing_values"
-    controls["dq_parameter"].value = "not-a-number"
+    controls["dq_type"].value = "completeness"
+    controls["dq_max_missing"].value = "not-a-number"
 
     controls["save_dq"].click()
 
     assert len(widget_runtime["calls"]["guardrails"]) == before
     assert "could not convert string to float" in state["message"]
     assert "#a4262c" in controls["status"].value
+
+
+def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_runtime):
+    """Keep multiple rules on one column independently editable and update the matching record."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["dq_type"].value == "completeness"
+    assert controls["dq_max_missing"].value == "0"
+
+    controls["dq_type"].value = "pattern"
+
+    assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
+    assert controls["dq_action"].value == "Warn"
+    controls["dq_pattern"].value = "^ORDER-[0-9]+$"
+    controls["save_dq"].click()
+    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert saved["guardrail_rule_id"] == "dq-pattern"
+    assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
+
+
+def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, monkeypatch):
+    """Pass governed profile statistics and bounded frequencies into DQ suggestions."""
+    _enable_ai(widget_runtime, monkeypatch)
+    captured = {}
+
+    def suggest(context, **_kwargs):
+        captured.update(context)
+        return []
+
+    monkeypatch.setattr(module, "suggest_dq_rules", suggest)
+    state = widget_runtime["open"]()
+    state["_controls"]["suggest_dq"].click()
+
+    column = captured["columns"][0]
+    assert column["profile_evidence"] == {
+        "row_count": 10, "non_null_count": 9, "null_count": 1,
+        "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
+        "min_value": "ORD-1", "max_value": "ORD-9",
+    }
+    assert column["frequency_evidence"] == [{"value": "col-0", "count": 2}]
+
+
+def test_review_sections_separate_table_dq_categories_from_column_rules():
+    """Render the Review hierarchy without duplicating every Guardrail in two sections."""
+    payload = {
+        "table": {"table_name": "orders", "schema_name": "sales", "columns": []},
+        "contract": {"contract_version": 1, "status": "draft"},
+        "enrichment": {"columns": []},
+        "guardrails": [
+            {"guardrail_type": "freshness", "rule_type": "freshness", "column_id": ""},
+            {"guardrail_type": "source_drift", "rule_type": "source_drift", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "uniqueness", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "column_relationship", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "custom_expression", "column_id": ""},
+            {"guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1"},
+        ],
+    }
+    sections = module._manifest_sections(payload)
+
+    assert set(sections) == {"Identity", "Table", "Columns", "Lifecycle / Agreement state"}
+    assert "Composite Uniqueness" in sections["Table"]
+    assert "Column Relationships" in sections["Table"]
+    assert "Custom Expressions" in sections["Table"]
+    assert "pattern" not in sections["Table"]
+    assert "pattern" in sections["Columns"]
+
+
+def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(widget_runtime, monkeypatch):
+    """Carry structured AI parameters through explicit acceptance, editing, and persistence."""
+    _enable_ai(widget_runtime, monkeypatch)
+    monkeypatch.setattr(module, "suggest_dq_rules", lambda *_args, **_kwargs: [{
+        "rule_type": "range", "columns": ["column_0"],
+        "parameters": {
+            "minimum": 0, "minimum_inclusive": True,
+            "maximum": 100, "maximum_inclusive": False,
+        },
+        "rationale": "A governed scale.", "selected": True,
+    }])
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    before = len(widget_runtime["calls"]["guardrails"])
+
+    controls["suggest_dq"].click()
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    controls["accept_dq_suggestion"].click()
+    assert controls["dq_type"].value == "range"
+    assert controls["dq_maximum"].value == "100"
+    assert controls["dq_maximum_inclusive"].value is False
+    controls["dq_minimum"].value = "1"
+    controls["save_dq"].click()
+
+    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert saved["column_id"] == "col-0"
+    assert module._parameters(saved) == {
+        "columns": ["column_0"], "minimum": "1", "minimum_inclusive": True,
+        "maximum": "100", "maximum_inclusive": False,
+    }
 
 
 def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):

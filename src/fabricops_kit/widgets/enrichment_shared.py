@@ -21,6 +21,7 @@ _PROFILE_CONTEXT_FIELDS = (
 )
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
+STANDARD_DQ_TYPES = frozenset({"completeness", "uniqueness", "value_set", "range", "pattern"})
 
 
 def build_ai_enrichment_context(
@@ -212,6 +213,111 @@ def suggest_sensitive_data(
     return suggestions
 
 
+def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
+    """Build governed metadata/profile context without raw rows or internal identifiers."""
+    fields = (
+        "row_count", "non_null_count", "null_count", "null_percent",
+        "distinct_count", "distinct_percent", "min_value", "max_value",
+    )
+    return {
+        "table_name": str(state.get("table_name") or ""),
+        "schema_name": str(state.get("schema_name") or ""),
+        "layer": str(state.get("layer") or ""),
+        "table_description": str(state.get("table_description") or ""),
+        "table_classification": str(state.get("table_classification") or ""),
+        "columns": [
+            {
+                "column_name": str(row.get("column_name") or ""),
+                "data_type": str(row.get("data_type") or ""),
+                "description": str(row.get("description") or ""),
+                "classification": str(row.get("classification") or ""),
+                "profile_evidence": {name: row.get(name) for name in fields if row.get(name) is not None},
+                "frequency_evidence": list(row.get("frequency_evidence") or [])[:10],
+            }
+            for row in state.get("catalogue_profile_rows", [])
+        ],
+    }
+
+
+def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> list[dict[str, Any]]:
+    """Return validated, transient suggestions for the five standard DQ families."""
+    if not str(prompt).strip():
+        raise ValueError("An AI Data Quality prompt is required.")
+    allowed_columns = {
+        str(row.get("column_name") or "") for row in context.get("columns", [])
+        if str(row.get("column_name") or "")
+    }
+    instruction = f"""{prompt.strip()}
+
+Return JSON only: a list of objects with rule_type, columns, parameters, rationale, and selected.
+Allowed rule_type values: completeness, uniqueness, value_set, range, pattern.
+Suggest only single-column rules. Never suggest relationships, conditional logic, SQL, Python, or executable code.
+Completeness requires maximum_missing_percent and treat_blank_as_missing. Zero observed nulls alone is not requiredness evidence.
+Uniqueness requires semantic ID/key evidence; current 100% distinctness alone is insufficient.
+Value Set requires mode allow or block and a values list, only for stable categorical domains.
+Range requires minimum and/or maximum plus both inclusivity booleans; observed extrema are evidence, not contract limits.
+Pattern requires a regex only for clearly structured text. Use governed evidence only.
+
+Context:
+{json.dumps(context, sort_keys=True, default=str)}"""
+    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        candidates = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI Data Quality suggestion was not valid JSON.") from exc
+    if not isinstance(candidates, list):
+        raise ValueError("AI Data Quality suggestion must be a JSON list.")
+    suggestions = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError("Each AI Data Quality suggestion must be a JSON object.")
+        rule_type = str(candidate.get("rule_type") or "")
+        if rule_type not in STANDARD_DQ_TYPES:
+            raise ValueError(f"AI Data Quality suggestion used unsupported rule_type {rule_type!r}.")
+        columns = candidate.get("columns")
+        if not isinstance(columns, list) or len(columns) != 1 or columns[0] not in allowed_columns:
+            raise ValueError("AI standard Data Quality suggestions require exactly one known column.")
+        parameters = dict(candidate.get("parameters") or {})
+        _validate_ai_dq_parameters(rule_type, parameters)
+        suggestions.append({
+            "rule_type": rule_type, "columns": list(columns), "parameters": parameters,
+            "rationale": str(candidate.get("rationale") or "").strip(),
+            "selected": bool(candidate.get("selected", True)),
+        })
+    return suggestions
+
+
+def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> None:
+    """Reject malformed or executable AI-authored standard-rule parameters."""
+    expected = {
+        "completeness": {"maximum_missing_percent", "treat_blank_as_missing"},
+        "uniqueness": set(),
+        "value_set": {"mode", "values"},
+        "range": {"minimum", "maximum", "minimum_inclusive", "maximum_inclusive"},
+        "pattern": {"pattern"},
+    }[rule_type]
+    if set(parameters) - expected:
+        raise ValueError(f"AI {rule_type} suggestion contains unsupported parameters.")
+    if rule_type == "completeness":
+        value = parameters.get("maximum_missing_percent")
+        if not isinstance(value, (int, float)) or not 0 <= value <= 100 or not isinstance(parameters.get("treat_blank_as_missing"), bool):
+            raise ValueError("AI completeness parameters are invalid.")
+    elif rule_type == "value_set":
+        if parameters.get("mode") not in {"allow", "block"} or not isinstance(parameters.get("values"), list) or not parameters["values"]:
+            raise ValueError("AI value_set parameters are invalid.")
+    elif rule_type == "range":
+        if parameters.get("minimum") is None and parameters.get("maximum") is None:
+            raise ValueError("AI range requires minimum or maximum.")
+        if not all(isinstance(parameters.get(name), bool) for name in ("minimum_inclusive", "maximum_inclusive")):
+            raise ValueError("AI range inclusivity parameters are required booleans.")
+    elif rule_type == "pattern":
+        pattern = parameters.get("pattern")
+        if not isinstance(pattern, str) or not pattern or "F." in pattern or "SELECT " in pattern.upper():
+            raise ValueError("AI pattern parameters are invalid.")
+
+
 def _rows(value: Any) -> list[dict[str, Any]]:
     """Return row-like values as dictionaries."""
     source = value.collect() if hasattr(value, "collect") else value
@@ -380,8 +486,10 @@ __all__ = [
     "catalogue_table_browser_state",
     "catalogue_table_options",
     "build_ai_enrichment_context",
+    "build_ai_dq_context",
     "latest_enrichment_values",
     "suggest_enrichment",
+    "suggest_dq_rules",
     "build_ai_sensitive_data_context",
     "suggest_sensitive_data",
     "PII_LABELS",

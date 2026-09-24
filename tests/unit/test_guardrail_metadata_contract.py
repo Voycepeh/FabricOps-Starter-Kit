@@ -167,9 +167,9 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "metadata_column_key": "legacy-column-id",
         "environment_name": "dev",
         "guardrail_type": "data_quality",
-        "rule_id": "missing_values",
-        "rule_type": "missing_values",
-        "rule_parameters_json": '{"z":2,"maximum_null_percent":0,"a":1}',
+        "rule_id": "completeness",
+        "rule_type": "completeness",
+        "rule_parameters_json": '{"z":2,"maximum_missing_percent":0,"treat_blank_as_missing":false,"a":1}',
         "action": "Warn",
         "is_active": True,
         "review_status": "approved",
@@ -184,8 +184,8 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     assert row["contract_version"] == 2
     assert "table_id" not in row
     assert row["column_id"] == "column-id"
-    assert row["rule_parameters_json"] == '{"a":1,"maximum_null_percent":0,"z":2}'
-    assert json.loads(row["rule_parameters_json"])["maximum_null_percent"] == 0
+    assert row["rule_parameters_json"] == '{"a":1,"maximum_missing_percent":0,"treat_blank_as_missing":false,"z":2}'
+    assert json.loads(row["rule_parameters_json"])["maximum_missing_percent"] == 0
     assert "configuration_version" not in row
     assert "metadata_table_key" not in row
     assert "metadata_column_key" not in row
