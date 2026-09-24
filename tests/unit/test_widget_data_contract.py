@@ -214,6 +214,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
+    monkeypatch.setattr(module.contracts, "assemble_contract_payload", lambda **_kwargs: (manifest(), []))
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
@@ -339,14 +340,14 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Refresh Frequency" in table_summary
     assert "Classification" in table_summary
     assert "Guardrails" in table_summary
-    assert controls["table_save"].description == "Save Table"
+    assert controls["table_save"].description == "Apply Table Changes"
 
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(190px, 32fr) minmax(0, 68fr)"
     )
-    assert controls["save_column"].description == "Save Column"
+    assert controls["save_column"].description == "Apply Column Changes"
 
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
@@ -381,18 +382,22 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
 
     state["_controls"]["table_description"].value = "Still governed"
     state["_controls"]["table_save"].click()
+    assert widget_runtime["calls"]["enrichment"] == []
 
+    state["_controls"]["save_data_contract"].click()
     saved = widget_runtime["calls"]["enrichment"][-1]
     assert all("scheduled_refresh" not in record for record in saved)
 
 
-def test_profile_context_is_cached_per_table_and_column(widget_runtime):
-    """Profile evidence is loaded once per table/column and reused across widget actions."""
+def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime):
+    """Profile evidence loads only when Columns is opened, then reuses the per-column cache."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    initial_calls = list(widget_runtime["calls"]["profiles"])
-    assert initial_calls.count("col-0") == 1
+    assert widget_runtime["calls"]["profiles"] == []
+
+    controls["top_nav"].value = "Columns"
+    assert widget_runtime["calls"]["profiles"].count("col-0") == 1
 
     controls["column_select"].value = "col-1"
     assert widget_runtime["calls"]["profiles"].count("col-1") == 1
@@ -414,9 +419,10 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     controls["column_select"].value = "col-249"
     assert id(controls["column_description"]) == editor_identity
     assert "column_249" in controls["column_context"].value
+    assert widget_runtime["calls"]["profiles"] == []
+    controls["top_nav"].value = "Columns"
     assert "col-249" in controls["profile_context"].value
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
-    controls["top_nav"].value = "Columns"
     assert controls["left_pane"].children[-1] is controls["column_select"]
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
@@ -452,8 +458,8 @@ def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime)
     assert state["_controls"]["column_description"].value == "Unsaved local description"
 
 
-def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_runtime):
-    """A successful column save must not be overlaid by an older cached local draft."""
+def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_runtime):
+    """Final Data Contract save persists staged column state then reloads canonical values once."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -461,86 +467,131 @@ def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_ru
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Canonical saved description"
+    controls["pii_reason"].value = "Existing sensitive policy remains reviewed."
     controls["save_column"].click()
 
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert state["dirty"] is True
+
+    state["_controls"]["save_data_contract"].click()
+    assert widget_runtime["calls"]["enrichment"]
+    assert state["dirty"] is False
     assert state["_controls"]["column_description"].value == "Canonical saved description"
 
-    state["_controls"]["column_select"].value = "col-1"
-    state["_controls"]["column_select"].value = "col-0"
-    assert state["_controls"]["column_description"].value == "Canonical saved description"
 
-
-def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
-    """Table, column, and required-state actions persist and refresh their controls."""
+def test_section_actions_stage_without_writes_until_final_save(widget_runtime):
+    """Table and column Apply actions stay local; Review save persists once."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
+
     controls["table_description"].value = "Governed orders"
     controls["table_save"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Governed orders"
-    assert state["_controls"]["table_description"].value == "Governed orders"
-    state["_controls"]["column_description"].value = "Canonical ID"
-    state["_controls"]["save_column_enrichment"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["column_id"] == "col-0"
-    state["_controls"]["required"].value = False
-    state["_controls"]["save_required"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
-    assert module._parameters(saved)["required_columns"] == []
-    assert state["_controls"]["required"].value is False
-    assert "refreshed" in state["message"]
+    controls["column_description"].value = "Canonical ID"
+    controls["save_column_enrichment"].click()
+    controls["required"].value = False
+    controls["save_required"].click()
+
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["dirty"] is True
+
+    controls["save_data_contract"].click()
+
+    assert len(widget_runtime["calls"]["enrichment"]) == 1
+    assert len(widget_runtime["calls"]["guardrails"]) == 1
+    assert any(
+        record.get("value") == "Governed orders"
+        for record in widget_runtime["calls"]["enrichment"][0]
+    )
+    assert any(
+        module._parameters(record).get("required_columns") == []
+        for record in widget_runtime["calls"]["guardrails"][0]
+        if record.get("guardrail_type") == "schema"
+    )
+    assert state["dirty"] is False
+    assert "canonical state reloaded" in state["message"]
 
 
-def test_v38_visible_save_actions_persist_table_and_column_sections(widget_runtime):
-    """Visible v38 Save Table / Save Column actions persist their grouped editor sections."""
+def test_visible_apply_actions_stage_table_and_column_sections(widget_runtime):
+    """Visible section actions update session state without partial persistence."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     controls["table_description"].value = "Unified table save"
     controls["table_save"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified table save"
-    assert {
-        record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
-    } == {"freshness", "source_drift"}
-
-    controls = state["_controls"]
     controls["column_description"].value = "Unified column save"
     controls["pii_reason"].value = "Direct identifier for a person."
     controls["save_column"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified column save"
-    assert {
-        record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
-    } == {"schema", "sensitive_data"}
+
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["_pending_enrichment"]
+    assert state["_pending_guardrails"]
+
+    controls["save_data_contract"].click()
+    assert len(widget_runtime["calls"]["enrichment"]) == 1
+    assert len(widget_runtime["calls"]["guardrails"]) == 1
 
 
-def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
-    """Every logical rule section saves normalized records through Guardrail services."""
+def test_discard_changes_restores_canonical_state_without_writes(widget_runtime):
+    """Discard clears staged session changes and reloads canonical state without persistence."""
     state = widget_runtime["open"]()
-    state["_controls"]["table_guardrails"]["freshness"]["block"].value = False
-    state["_controls"]["table_guardrails"]["freshness"]["save"].click()
-    freshness = widget_runtime["calls"]["guardrails"][-1][0]
-    assert freshness["guardrail_type"] == "freshness"
-    assert module._parameters(freshness) == {
-        "freshness_column": "column_1", "maximum_age": 2.0, "maximum_age_unit": "days",
-    }
-    state["_controls"]["table_guardrails"]["source_drift"]["save"].click()
-    drift = widget_runtime["calls"]["guardrails"][-1][0]
-    assert drift["guardrail_type"] == "source_drift"
-    assert module._parameters(drift) == {
-        "partition_column": "column_0", "change_column": "column_1", "load_strategy": "append",
-    }
-    state["_controls"]["sensitive_enabled"].value = True
-    state["_controls"]["sensitive_treatment"].value = "tokenize"
-    state["_controls"]["pii_reason"].value = "The identifier directly associates an order with a person."
-    state["_controls"]["save_sensitive"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "sensitive_data"
-    state["_controls"]["dq_type"].value = "completeness"
-    state["_controls"]["dq_blank_missing"].value = True
-    state["_controls"]["save_dq"].click()
-    assert widget_runtime["calls"]["guardrails"][-1][0]["rule_type"] == "completeness"
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["treat_blank_as_missing"] is True
-    state["_controls"]["advanced_type"].value = "column_relationship"
-    state["_controls"]["advanced_columns"].value = ("column_0", "column_1")
-    state["_controls"]["advanced_save"].click()
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0])["columns"] == ["column_0", "column_1"]
+    controls = state["_controls"]
+
+    controls["table_description"].value = "Unsaved table change"
+    controls["table_save"].click()
+    assert state["dirty"] is True
+    assert widget_runtime["calls"]["enrichment"] == []
+
+    controls["discard_data_contract"].click()
+
+    assert state["dirty"] is False
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["_controls"]["table_description"].value == "Orders table"
+    assert "discarded" in state["message"]
+
+
+def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
+    """Guardrail editors stage normalized records and persist them only at final save."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["table_guardrails"]["freshness"]["block"].value = False
+    controls["table_guardrails"]["freshness"]["save"].click()
+    controls["table_guardrails"]["source_drift"]["save"].click()
+
+    controls["sensitive_enabled"].value = True
+    controls["sensitive_treatment"].value = "tokenize"
+    controls["pii_reason"].value = "The identifier directly associates an order with a person."
+    controls["save_sensitive"].click()
+
+    controls["dq_type"].value = "completeness"
+    controls["dq_blank_missing"].value = True
+    controls["save_dq"].click()
+
+    controls["advanced_type"].value = "column_relationship"
+    controls["advanced_columns"].value = ("column_0", "column_1")
+    controls["advanced_save"].click()
+
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["_pending_guardrails"]
+
+    controls["save_data_contract"].click()
+    saved = widget_runtime["calls"]["guardrails"][-1]
+
+    by_type = {record["guardrail_type"] for record in saved}
+    assert {"freshness", "source_drift", "sensitive_data", "data_quality"} <= by_type
+    assert any(
+        record["rule_type"] == "completeness"
+        and module._parameters(record)["treat_blank_as_missing"] is True
+        for record in saved
+    )
+    assert any(
+        record["rule_type"] == "column_relationship"
+        and module._parameters(record)["columns"] == ["column_0", "column_1"]
+        for record in saved
+    )
 
 
 def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
@@ -643,7 +694,13 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert widget_runtime["calls"]["guardrails"] == []
 
     controls["save_sensitive"].click()
-    saved_parameters = module._parameters(widget_runtime["calls"]["guardrails"][-1][0])
+    assert widget_runtime["calls"]["guardrails"] == []
+    controls["save_data_contract"].click()
+    saved_sensitive = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("guardrail_type") == "sensitive_data"
+    )
+    saved_parameters = module._parameters(saved_sensitive)
     assert saved_parameters["pii_type"] == "direct"
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
@@ -745,6 +802,9 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
     controls["save_column_enrichment"].click()
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert state["_pending_enrichment"]
+    controls["save_data_contract"].click()
     assert widget_runtime["calls"]["enrichment"]
     assert state["_ai_errors"]
 
@@ -781,8 +841,13 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     freshness["parameters"][1].value = "6"
     freshness["parameters"][2].value = "hours"
     freshness["save"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
-    assert module._parameters(saved) == {
+    assert widget_runtime["calls"]["guardrails"] == []
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_type") == "freshness"
+    )
+    assert module._parameters(staged) == {
         "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
     }
 
@@ -791,9 +856,16 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     drift["parameters"][0].value = "column_0"
     drift["parameters"][1].value = "column_1"
     drift["save"].click()
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0]) == {
+    staged_drift = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_type") == "source_drift"
+    )
+    assert module._parameters(staged_drift) == {
         "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
     }
+    state["_controls"]["save_data_contract"].click()
+    assert widget_runtime["calls"]["guardrails"]
 
 
 def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
@@ -824,7 +896,12 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     assert controls["dq_action"].value == "Warn"
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     controls["save_dq"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert widget_runtime["calls"]["guardrails"] == []
+    state["_controls"]["save_data_contract"].click()
+    saved = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("guardrail_rule_id") == "dq-pattern"
+    )
     assert saved["guardrail_rule_id"] == "dq-pattern"
     assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
 
@@ -899,8 +976,13 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     assert controls["dq_maximum_inclusive"].value is False
     controls["dq_minimum"].value = "1"
     controls["save_dq"].click()
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    controls["save_data_contract"].click()
 
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    saved = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "range"
+    )
     assert saved["column_id"] == "col-0"
     assert module._parameters(saved) == {
         "columns": ["column_0"], "minimum": "1", "minimum_inclusive": True,

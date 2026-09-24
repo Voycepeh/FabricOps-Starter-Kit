@@ -293,6 +293,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -363,6 +364,10 @@ def widget_data_contract(
         left_children, right_children = view_content.get(str(top_nav.value), ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
+        if str(top_nav.value) == "Columns":
+            load_selected_profile = state.get("_load_selected_profile")
+            if callable(load_selected_profile):
+                load_selected_profile()
 
     top_nav.observe(apply_view, names="value")
 
@@ -376,8 +381,14 @@ def widget_data_contract(
         if not current:
             return None
         if str(current["contract"].get("status") or "").lower() == "draft":
-            payload, warnings = contracts.build_contract_manifest(
-                draft=current["contract"], config=config, env=env, spark_session=spark,
+            payload, warnings = contracts.assemble_contract_payload(
+                draft=current["contract"],
+                tables={
+                    "METADATA_DATA_CATALOGUE": current.get("catalogue_rows", []),
+                    contracts.ENRICHMENT_TABLE: current.get("enrichment", []),
+                    contracts.GUARDRAIL_TABLE: current.get("guardrails", []),
+                },
+                environment_name=env,
                 scheduled_refresh=contract_schedule,
             )
             state["manifest_warnings"] = warnings
@@ -405,6 +416,12 @@ def widget_data_contract(
         state["current"] = contracts.get_contract_review_state(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
+        )
+        scope = (str(chosen["contract_id"]), state["contract_version"])
+        state["dirty"] = bool(
+            state["_pending_enrichment"].get(scope)
+            or state["_pending_guardrails"].get(scope)
+            or state["_column_drafts"].get(scope)
         )
         refresh_scheduled_refresh(str(state["table_id"] or ""))
         refresh_manifest()
@@ -481,6 +498,86 @@ def widget_data_contract(
         )
         return saved
 
+    def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Enrichment in widget session state without writing Metadata."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be edited.")
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        pending: dict[str, dict[str, Any]] = state["_pending_enrichment"].setdefault(scope, {})
+        current_rows = list(current.get("enrichment", []))
+        for record in records:
+            key = str(record.get("enrichment_id") or "")
+            pending[key] = dict(record)
+            current_rows = [
+                row for row in current_rows
+                if str(row.get("enrichment_id") or "") != key
+            ]
+            current_rows.append(dict(record))
+        current["enrichment"] = current_rows
+        state["dirty"] = True
+        refresh_manifest()
+        return records
+
+    def stage_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Guardrails in widget session state without writing Metadata."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be edited.")
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        pending: dict[str, dict[str, Any]] = state["_pending_guardrails"].setdefault(scope, {})
+        current_rows = list(current.get("guardrails", []))
+        for record in records:
+            key = str(record.get("guardrail_rule_id") or "")
+            pending[key] = dict(record)
+            current_rows = [
+                row for row in current_rows
+                if str(row.get("guardrail_rule_id") or "") != key
+            ]
+            current_rows.append(dict(record))
+        current["guardrails"] = current_rows
+        state["dirty"] = True
+        refresh_manifest()
+        return records
+
+    def save_data_contract_session() -> None:
+        """Persist all staged draft changes once, then reload canonical state once."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be saved.")
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        enrichment_records = list(state["_pending_enrichment"].get(scope, {}).values())
+        guardrail_records = list(state["_pending_guardrails"].get(scope, {}).values())
+        if enrichment_records:
+            contracts.save_enrichment(
+                enrichment_records, config=config, env=env, spark_session=spark
+            )
+        if guardrail_records:
+            contracts.save_guardrails(
+                guardrail_records, config=config, env=env, spark_session=spark
+            )
+        state["_pending_enrichment"].pop(scope, None)
+        state["_pending_guardrails"].pop(scope, None)
+        state["_column_drafts"].pop(scope, None)
+        state["dirty"] = False
+        select(str(state["table_id"]), int(state["contract_version"]))
+        render()
+        set_status("Data Contract saved and canonical state reloaded.")
+
+    def discard_data_contract_session() -> None:
+        """Discard staged changes for the selected contract and reload canonical state."""
+        current = state.get("current")
+        if not current:
+            return
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        state["_pending_enrichment"].pop(scope, None)
+        state["_pending_guardrails"].pop(scope, None)
+        state["_column_drafts"].pop(scope, None)
+        state["dirty"] = False
+        select(str(state["table_id"]), int(state["contract_version"]))
+        render()
+        set_status("Unsaved Data Contract changes discarded.")
+
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
         selected_table = str(state.get("table_id") or "").strip()
@@ -526,7 +623,10 @@ def widget_data_contract(
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
-        save_guardrails=save_guardrails, load_profile_context=load_profile_context,
+        save_guardrails=save_guardrails, stage_enrichment=stage_enrichment,
+        stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
+        discard_data_contract=discard_data_contract_session,
+        load_profile_context=load_profile_context,
     )
     configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
     store_options = [
@@ -614,6 +714,10 @@ def widget_data_contract(
         row = current["contract"]
         editable = str(row.get("status") or "").lower() == "draft"
         enrichments, guardrails = current_rows()
+
+        def session_guardrails() -> list[dict[str, Any]]:
+            return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
+
         columns = list(current.get("available_columns", []))
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
@@ -675,7 +779,7 @@ def widget_data_contract(
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
-        table_save = widgets.Button(description="Save Table", button_style="primary", disabled=not editable)
+        table_save = widgets.Button(description="Apply Table Changes", button_style="primary", disabled=not editable)
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
@@ -790,13 +894,18 @@ def widget_data_contract(
                         **shared.widget_common(widgets, "Source load strategy"),
                     )
                     parameter_controls.append(source_load_strategy)
-            save = widgets.Button(description=f"Save {title}", disabled=not editable)
+            save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
-                *, rule_kind: str = kind, old: dict[str, Any] = existing,
+                *, rule_kind: str = kind,
                 enabled_control: Any = enabled, block_control: Any = block,
                 controls: list[Any] = parameter_controls, rule_title: str = title,
             ) -> dict[str, Any] | None:
+                old = next((
+                    rule for rule in session_guardrails()
+                    if str(rule.get("guardrail_type") or "").lower() == rule_kind
+                    and not str(rule.get("column_id") or "")
+                ), {})
                 if not enabled_control.value and not old:
                     return None
                 if not enabled_control.value:
@@ -822,11 +931,14 @@ def widget_data_contract(
                     action="Block" if block_control.value else "Warn", active=enabled_control.value,
                 )
 
-            def save_table_rule(_button: Any, builder: Any = build_table_rule_record) -> None:
+            def save_table_rule(
+                _button: Any, builder: Any = build_table_rule_record, rule_title: str = title,
+            ) -> None:
                 try:
                     record = builder()
                     if record is not None:
-                        save_guardrails([record])
+                        stage_guardrails([record])
+                        set_status(f"{rule_title} changes staged locally.")
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
@@ -848,14 +960,10 @@ def widget_data_contract(
                     )
                     if record is not None
                 ]
-                contracts.save_enrichment(
-                    enrichment_records, config=config, env=env, spark_session=spark
-                )
+                stage_enrichment(enrichment_records)
                 if guardrail_records:
-                    contracts.save_guardrails(
-                        guardrail_records, config=config, env=env, spark_session=spark
-                    )
-                reload_after_save("Table contract saved and the canonical contract state was refreshed.")
+                    stage_guardrails(guardrail_records)
+                set_status("Table changes staged locally. Save the Data Contract from Review to persist.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1036,17 +1144,17 @@ def widget_data_contract(
         )
         dq_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         dq_usage = widgets.HTML()
-        save_column_enrichment = widgets.Button(description="Save enrichment", button_style="primary", disabled=not editable)
+        save_column_enrichment = widgets.Button(description="Apply enrichment", button_style="primary", disabled=not editable)
         save_column = widgets.Button(
-            description="Save Column", button_style="primary", disabled=not editable,
+            description="Apply Column Changes", button_style="primary", disabled=not editable,
             layout=widgets.Layout(width="130px", height="34px"),
         )
-        save_required = widgets.Button(description="Save required state", disabled=not editable)
-        save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
+        save_required = widgets.Button(description="Apply required state", disabled=not editable)
+        save_sensitive = widgets.Button(description="Apply Sensitive Data", disabled=not editable)
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
-        save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
+        save_dq = widgets.Button(description="Apply Data Quality rule", disabled=not editable)
         suggest_dq = widgets.Button(
             description="Suggest rules",
             disabled=(
@@ -1067,6 +1175,27 @@ def widget_data_contract(
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
         hydrating = {"active": False}
+        hydrated_column_snapshots: dict[str, dict[str, Any]] = {}
+
+        def column_editor_snapshot() -> dict[str, Any]:
+            return {
+                "description": column_description.value,
+                "classification": column_classification.value,
+                "required": required.value,
+                "sensitive_enabled": sensitive_enabled.value,
+                "pii_type": pii_type.value,
+                "pii_reason": pii_reason.value,
+                "sensitive_treatment": sensitive_treatment.value,
+                "sensitive_action": sensitive_action.value,
+                "mask_start": mask_start.value,
+                "mask_end": mask_end.value,
+                "mask_character": mask_character.value,
+                "bucket_bins": bucket_bins.value,
+                "bucket_labels": bucket_labels.value,
+                "dq_type": dq_type.value,
+                "dq_parameters": [control.value for control in dq_parameter_controls],
+                "dq_action": dq_action.value,
+            }
 
         def hydrate_dq_family(column_id: str, kind: str) -> None:
             """Hydrate one column/family pair without borrowing another rule's parameters."""
@@ -1134,6 +1263,7 @@ def widget_data_contract(
             ]
             dq_type.value = configured[0] if configured else _COLUMN_DQ_TYPES[0]
             hydrate_dq_family(column_id, str(dq_type.value))
+            hydrated_column_snapshots[column_id] = column_editor_snapshot()
             pending = unsaved_columns.get(column_id)
             if pending:
                 column_description.value = pending["description"]
@@ -1153,12 +1283,20 @@ def widget_data_contract(
                 for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
                     control.value = value
                 dq_action.value = pending["dq_action"]
+            profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
+            hydrating["active"] = False
+
+        def load_selected_profile() -> None:
+            column_id = str(column_select.value or "")
+            if not column_id:
+                profile_context.value = "<p>No column selected.</p>"
+                return
             try:
                 profile_context.value = _profile_html(load_profile_context(column_id))
             except (ValueError, RuntimeError) as exc:
                 profile_context.value = f"<p>{html.escape(str(exc))}</p>"
-            finally:
-                hydrating["active"] = False
+
+        state["_load_selected_profile"] = load_selected_profile
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
@@ -1209,28 +1347,19 @@ def widget_data_contract(
         def column_changed(change: dict[str, Any]) -> None:
             old = str(change.get("old") or "")
             if old:
-                unsaved_columns[old] = {
-                    "description": column_description.value,
-                    "classification": column_classification.value,
-                    "required": required.value,
-                    "sensitive_enabled": sensitive_enabled.value,
-                    "pii_type": pii_type.value,
-                    "pii_reason": pii_reason.value,
-                    "sensitive_treatment": sensitive_treatment.value,
-                    "sensitive_action": sensitive_action.value,
-                    "mask_start": mask_start.value,
-                    "mask_end": mask_end.value,
-                    "mask_character": mask_character.value,
-                    "bucket_bins": bucket_bins.value,
-                    "bucket_labels": bucket_labels.value,
-                    "dq_type": dq_type.value,
-                    "dq_parameters": [control.value for control in dq_parameter_controls],
-                    "dq_action": dq_action.value,
-                }
-                set_status("Unsaved column edits were retained locally; use the section Save action to persist them.")
+                snapshot = column_editor_snapshot()
+                if snapshot != hydrated_column_snapshots.get(old, snapshot):
+                    unsaved_columns[old] = snapshot
+                    set_status(
+                        "Column edits were retained locally; use Apply Column Changes before the final save."
+                    )
+                else:
+                    unsaved_columns.pop(old, None)
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
+                if str(top_nav.value) == "Columns":
+                    load_selected_profile()
                 prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
@@ -1451,41 +1580,40 @@ def widget_data_contract(
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
                 cid = str(column_select.value or "")
-                save_enrichment([
+                stage_enrichment([
                     enrichment_record("column", "Description", column_description.value, cid),
                     enrichment_record("column", "Classification", column_classification.value, cid),
                 ])
+                set_status("Column enrichment staged locally.")
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
         def build_required_record() -> dict[str, Any]:
             selected = selected_column()
             cid = str(selected.get("column_id") or "")
-            updated = set(required_columns)
+            current_rule = next((
+                rule for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "").lower() == "schema"
+            ), required_rule)
+            updated = set(_parameters(current_rule).get("required_columns", []))
             identifier = cid or str(selected.get("column_name") or "")
             (updated.add if required.value else updated.discard)(identifier)
             return guardrail_record(
                 "schema", "required_columns", {"required_columns": sorted(updated)},
-                existing=required_rule,
+                existing=current_rule,
             )
 
         def save_required_clicked(_button: Any) -> None:
             try:
-                cid = str(column_select.value or "")
-                contracts.save_guardrails(
-                    [build_required_record()], config=config, env=env, spark_session=spark
-                )
-                reload_after_save(
-                    "Guardrails saved and the canonical contract state was refreshed.",
-                    clear_column_ids=(cid,),
-                )
+                stage_guardrails([build_required_record()])
+                set_status("Required-column change staged locally.")
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
         def build_sensitive_record() -> dict[str, Any] | None:
             cid = str(column_select.value or "")
             existing = next((
-                r for r in guardrails
+                r for r in session_guardrails()
                 if str(r.get("guardrail_type") or "").lower() == "sensitive_data"
                 and str(r.get("column_id") or "") == cid
             ), {})
@@ -1533,7 +1661,8 @@ def widget_data_contract(
             try:
                 record = build_sensitive_record()
                 if record is not None:
-                    save_guardrails([record])
+                    stage_guardrails([record])
+                    set_status("Sensitive Data change staged locally.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1566,11 +1695,12 @@ def widget_data_contract(
                     if not dq_pattern.value.strip():
                         raise ValueError("pattern requires a regular expression.")
                     params["pattern"] = dq_pattern.value
-                existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
-                save_guardrails([guardrail_record(
+                existing = next((r for r in session_guardrails() if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
+                stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
                     action=str(dq_action.value), existing=existing,
                 )])
+                set_status("Data Quality rule staged locally.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1610,7 +1740,7 @@ def widget_data_contract(
                 dq_ai.value = "<p><b>Transient suggestions</b></p><ul>" + "".join(
                     f"<li>{html.escape(item['rule_type'])}: {html.escape(item['rationale'])}</li>"
                     for item in suggestions
-                ) + "</ul><p>Select and edit a rule before saving; suggestions are never persisted automatically.</p>"
+                ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
@@ -1642,17 +1772,12 @@ def widget_data_contract(
                     record for record in (build_required_record(), build_sensitive_record())
                     if record is not None
                 ]
-                contracts.save_enrichment(
-                    enrichment_records, config=config, env=env, spark_session=spark
-                )
+                stage_enrichment(enrichment_records)
                 if guardrail_records:
-                    contracts.save_guardrails(
-                        guardrail_records, config=config, env=env, spark_session=spark
-                    )
-                reload_after_save(
-                    "Column contract saved and the canonical contract state was refreshed.",
-                    clear_column_ids=(cid,),
-                )
+                    stage_guardrails(guardrail_records)
+                unsaved_columns.pop(cid, None)
+                hydrated_column_snapshots[cid] = column_editor_snapshot()
+                set_status("Column changes staged locally. Save the Data Contract from Review to persist.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1790,7 +1915,7 @@ def widget_data_contract(
         custom_description = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Description"))
         advanced_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         advanced_help = widgets.HTML()
-        advanced_save = widgets.Button(description="Save configuration", button_style="primary", disabled=not editable)
+        advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
@@ -1838,9 +1963,10 @@ def widget_data_contract(
                 }
             existing = advanced_lookup.get(str(advanced_saved.value or ""), {})
             try:
-                save_guardrails([guardrail_record(
+                stage_guardrails([guardrail_record(
                     "data_quality", kind, params, action=str(advanced_action.value), existing=existing,
                 )])
+                set_status("Advanced Data Quality configuration staged locally.")
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1884,19 +2010,51 @@ def widget_data_contract(
             ), height="240px",
         )
         actions: list[Any] = []
+        save_contract_button = None
+        discard_contract_button = None
         if editable:
-            freeze_button = widgets.Button(description=f"Freeze v{row['contract_version']}", button_style="primary")
+            save_contract_button = widgets.Button(
+                description="Save Data Contract",
+                button_style="primary",
+            )
+            discard_contract_button = widgets.Button(description="Discard changes")
+            freeze_button = widgets.Button(
+                description=f"Freeze v{row['contract_version']}",
+                disabled=bool(state.get("dirty")),
+            )
+
+            def save_contract_clicked(_button: Any) -> None:
+                try:
+                    scope = (str(current["contract_id"]), int(current["contract_version"]))
+                    unapplied_columns = state["_column_drafts"].get(scope, {})
+                    if unapplied_columns:
+                        raise ValueError(
+                            "Apply retained Column changes before saving the Data Contract."
+                        )
+                    save_data_contract_session()
+                except (TypeError, ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
 
             def freeze_clicked(_button: Any) -> None:
                 try:
+                    if state.get("dirty"):
+                        raise ValueError("Save the Data Contract before freezing this version.")
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
+            def discard_contract_clicked(_button: Any) -> None:
+                try:
+                    discard_data_contract_session()
+                except (ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
+
+            save_contract_button.on_click(save_contract_clicked)
+            discard_contract_button.on_click(discard_contract_clicked)
             freeze_button.on_click(freeze_clicked)
-            actions.append(freeze_button)
+            actions.extend([save_contract_button, discard_contract_button, freeze_button])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -1968,6 +2126,8 @@ def widget_data_contract(
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
+            "save_data_contract": save_contract_button,
+            "discard_data_contract": discard_contract_button,
             "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
