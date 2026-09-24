@@ -292,7 +292,7 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
-        "_ai_suggestions": {}, "_ai_errors": {},
+        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -623,6 +623,46 @@ def widget_data_contract(
             suggestion_scope, {"table": {}, "columns": {}}
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
+        ai_mode = state["_ai_mode"].get(suggestion_scope)
+        run_with_ai = widgets.Button(
+            description="Run with AI suggestions",
+            button_style="info",
+            disabled=not editable or not bool(ai_enrichment.get("enabled")),
+        )
+        run_without_ai = widgets.Button(
+            description="Run without AI",
+            button_style="primary",
+            disabled=not editable,
+        )
+        if not ai_enrichment.get("enabled"):
+            ai_startup_note = widgets.HTML(
+                "<p><b>AI startup</b><br>AI suggestions are disabled in 00_env_config. "
+                "Open the contract without AI.</p>"
+            )
+        elif ai_mode == "with_ai":
+            ai_startup_note = widgets.HTML(
+                "<p><b>AI startup</b><br>AI suggestions are enabled for this selected table. "
+                "Only the current column is evaluated when opened.</p>"
+            )
+        elif ai_mode == "without_ai":
+            ai_startup_note = widgets.HTML(
+                "<p><b>AI startup</b><br>Running without AI suggestions for this contract session.</p>"
+            )
+        else:
+            ai_startup_note = widgets.HTML(
+                "<p><b>Choose how to open this contract</b><br>"
+                "Run without AI for the fastest startup, or run with AI suggestions. "
+                "AI is scoped to this selected table and evaluates columns only as you open them.</p>"
+            )
+        ai_startup_controls = widgets.VBox(
+            [
+                ai_startup_note,
+                widgets.HBox([run_with_ai, run_without_ai], layout=widgets.Layout(gap="8px")),
+            ],
+            layout=widgets.Layout(
+                width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb",
+            ),
+        )
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
@@ -642,11 +682,20 @@ def widget_data_contract(
                 table_description_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
             elif not editable:
                 table_description_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
+            elif ai_mode != "with_ai":
+                message = (
+                    "Skipped for this contract session."
+                    if ai_mode == "without_ai"
+                    else "Choose Run with AI suggestions above."
+                )
+                table_description_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description")
                 )
-            available = editable and bool(ai_enrichment.get("enabled"))
+            available = (
+                editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
+            )
             accept_table_description.disabled = not (
                 available and ai_state["table"].get("description")
                 and not ai_state["table"]["description"].get("error")
@@ -654,7 +703,11 @@ def widget_data_contract(
             rerun_table_description.disabled = not available
 
         def run_table_ai(*, force: bool = False) -> None:
-            if not editable or not ai_enrichment.get("enabled"):
+            if (
+                not editable
+                or not ai_enrichment.get("enabled")
+                or ai_mode != "with_ai"
+            ):
                 render_table_ai()
                 return
             if not force and ai_state["table"].get("description"):
@@ -876,6 +929,7 @@ def widget_data_contract(
             change_table_button,
         )
         table_right = (
+            ai_startup_controls,
             widgets.VBox(
                 [widgets.HTML("<div style='font-weight:600;'>Classification</div>"), table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
@@ -993,7 +1047,14 @@ def widget_data_contract(
         accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
         save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
-        suggest_dq = widgets.Button(description="Suggest rules", disabled=not editable or not ai_enrichment.get("enabled"))
+        suggest_dq = widgets.Button(
+            description="Suggest rules",
+            disabled=(
+                not editable
+                or not ai_enrichment.get("enabled")
+                or ai_mode != "with_ai"
+            ),
+        )
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
         accept_dq_suggestion = widgets.Button(description="Apply selected suggestion", disabled=True)
         dq_ai = widgets.HTML()
@@ -1219,6 +1280,14 @@ def widget_data_contract(
                 review_message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
                 column_description_ai.value = review_message
                 sensitive_ai.value = review_message
+            elif ai_mode != "with_ai":
+                message = (
+                    "Skipped for this contract session."
+                    if ai_mode == "without_ai"
+                    else "Choose Run with AI suggestions on the Table tab."
+                )
+                column_description_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
+                sensitive_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
             else:
                 column_description_ai.value = _suggestion_html(
                     "Description", suggestions.get("description")
@@ -1226,7 +1295,9 @@ def widget_data_contract(
                 sensitive_ai.value = _suggestion_html(
                     "Sensitive Data", suggestions.get("sensitive_data")
                 )
-            available = editable and bool(ai_enrichment.get("enabled"))
+            available = (
+                editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
+            )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
             )
@@ -1315,7 +1386,12 @@ def widget_data_contract(
             render_column_ai(column_id)
 
         def prepare_column_ai(column_id: str) -> None:
-            if not editable or not ai_enrichment.get("enabled") or not column_id:
+            if (
+                not editable
+                or not ai_enrichment.get("enabled")
+                or ai_mode != "with_ai"
+                or not column_id
+            ):
                 render_column_ai(column_id)
                 return
             run_column_enrichment_ai(column_id)
@@ -1675,11 +1751,29 @@ def widget_data_contract(
             widgets.HBox([save_column], layout=widgets.Layout(justify_content="flex-end")),
         )
         view_content["Columns"] = (column_left, column_right)
+
+        def run_with_ai_clicked(_button: Any) -> None:
+            state["_ai_mode"][suggestion_scope] = "with_ai"
+            render()
+            set_status(
+                "AI suggestions enabled for the selected table; columns are evaluated only when opened."
+            )
+
+        def run_without_ai_clicked(_button: Any) -> None:
+            state["_ai_mode"][suggestion_scope] = "without_ai"
+            render()
+            set_status("Contract opened without AI suggestions.")
+
+        run_with_ai.on_click(run_with_ai_clicked)
+        run_without_ai.on_click(run_without_ai_clicked)
+
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
-            prepare_column_ai(str(column_select.value))
-        run_table_ai()
+            if ai_mode == "with_ai":
+                prepare_column_ai(str(column_select.value))
+        if ai_mode == "with_ai":
+            run_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
