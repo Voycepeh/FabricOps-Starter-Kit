@@ -29,7 +29,6 @@ def build_ai_enrichment_context(
     *,
     metadata_level: str,
     existing_description: str,
-    classification_labels: list[str],
     profile_rows: Any = (),
 ) -> dict[str, Any]:
     """Build compact technical context for an Enrichment suggestion."""
@@ -45,7 +44,6 @@ def build_ai_enrichment_context(
         "column_name": str(catalogue_row.get("column_name") or ""),
         "data_type": str(catalogue_row.get("data_type") or ""),
         "existing_description": str(existing_description or ""),
-        "classification_labels": [str(label) for label in classification_labels],
         "profile_evidence": profiles[:3],
     }
 
