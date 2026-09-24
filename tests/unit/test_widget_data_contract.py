@@ -104,6 +104,7 @@ def widget_runtime(monkeypatch):
     ipywidgets = types.SimpleNamespace(
         Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget,
         Dropdown=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
+        ToggleButtons=Widget,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
@@ -332,8 +333,21 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
 
+    controls["top_nav"].value = "Table"
+    table_summary = controls["left_pane"].children[0].value
+    assert "Loading Strategy" in table_summary
+    assert "Refresh Frequency" in table_summary
+    assert "Classification" in table_summary
+    assert "Guardrails" in table_summary
+    assert controls["table_save"].description == "Save Table"
+
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
+    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
+        "minmax(190px, 32fr) minmax(0, 68fr)"
+    )
+    assert controls["save_column"].description == "Save Column"
+
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
     controls["top_nav"].value = "Review"
@@ -436,6 +450,28 @@ def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
     assert module._parameters(saved)["required_columns"] == []
     assert state["_controls"]["required"].value is False
     assert "refreshed" in state["message"]
+
+
+def test_v38_visible_save_actions_persist_table_and_column_sections(widget_runtime):
+    """Visible v38 Save Table / Save Column actions persist their grouped editor sections."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["table_description"].value = "Unified table save"
+    controls["table_save"].click()
+    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified table save"
+    assert {
+        record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
+    } == {"freshness", "source_drift"}
+
+    controls = state["_controls"]
+    controls["column_description"].value = "Unified column save"
+    controls["pii_reason"].value = "Direct identifier for a person."
+    controls["save_column"].click()
+    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified column save"
+    assert {
+        record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
+    } == {"schema", "sensitive_data"}
 
 
 def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
