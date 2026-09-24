@@ -193,14 +193,13 @@ def widget_runtime(monkeypatch):
         contract["status"] = "active"
         return {"changed": True}
 
-    fabric_store = lambda kind: types.SimpleNamespace(kind=kind)
     config = types.SimpleNamespace(
         path_config=types.SimpleNamespace(paths={
             "dev": {
-                "Bronze": fabric_store("lakehouse"),
-                "Silver": fabric_store("lakehouse"),
-                "Gold": fabric_store("warehouse"),
-                "Metadata": fabric_store("lakehouse"),
+                "Bronze": types.SimpleNamespace(kind="lakehouse"),
+                "Silver": types.SimpleNamespace(kind="lakehouse"),
+                "Gold": types.SimpleNamespace(kind="warehouse"),
+                "Metadata": types.SimpleNamespace(kind="lakehouse"),
             }
         }),
         governance_config=types.SimpleNamespace(
