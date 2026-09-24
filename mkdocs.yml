@@ -57,17 +57,13 @@ nav:
           - Data Access: reference/metadata/metadata_data_access.md
       - DQ Rules:
           - Overview: reference/dq-rules/index.md
-          - missing_values: reference/dq-rules/missing-values.md
-          - blank_text: reference/dq-rules/blank-text.md
-          - unique_values: reference/dq-rules/unique-values.md
-          - unique_combination: reference/dq-rules/unique-combination.md
-          - allowed_values: reference/dq-rules/allowed-values.md
-          - blocked_values: reference/dq-rules/blocked-values.md
-          - value_range: reference/dq-rules/value-range.md
-          - text_pattern: reference/dq-rules/text-pattern.md
-          - required_when: reference/dq-rules/required-when.md
-          - conditional_value: reference/dq-rules/conditional-value.md
-          - compare_columns: reference/dq-rules/compare-columns.md
+          - Completeness: reference/dq-rules/completeness.md
+          - Uniqueness: reference/dq-rules/uniqueness.md
+          - Value Set: reference/dq-rules/value-set.md
+          - Range: reference/dq-rules/range.md
+          - Pattern: reference/dq-rules/pattern.md
+          - Column Relationship: reference/dq-rules/column-relationship.md
+          - Custom Expression: reference/dq-rules/custom-expression.md
   - Releases:
       - Overview: releases/index.md
       - 0.2.0: releases/0.2.0/index.md

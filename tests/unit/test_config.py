@@ -1580,6 +1580,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         "description_prompt": "describe",
         "classification_prompt": "classify",
         "sensitive_data_prompt": "sensitive rules",
+        "dq_prompt": GovernanceConfig().ai_enrichment["dq_prompt"],
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
     default_prompt = GovernanceConfig().ai_enrichment["sensitive_data_prompt"]
