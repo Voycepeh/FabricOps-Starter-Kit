@@ -1135,7 +1135,7 @@ def widget_data_contract(
             dq_pattern.value = str(params.get("pattern") or "")
             dq_action.value = str(rule.get("action") or "Warn")
 
-        def hydrate_column(column_id: str) -> None:
+        def hydrate_column(column_id: str, *, load_profile: bool = False) -> None:
             hydrating["active"] = True
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
             column_context.value = (
@@ -1189,11 +1189,28 @@ def widget_data_contract(
                     control.value = value
                 dq_action.value = pending["dq_action"]
             try:
-                profile_context.value = _profile_html(load_profile_context(column_id))
+                cache_key = (str(state.get("table_id") or ""), column_id)
+                if load_profile or cache_key in state["_profile_cache"]:
+                    profile_context.value = _profile_html(load_profile_context(column_id))
+                else:
+                    profile_context.value = (
+                        "<p>Profile evidence loads when you open the Columns tab or select a column.</p>"
+                    )
             except (ValueError, RuntimeError) as exc:
                 profile_context.value = f"<p>{html.escape(str(exc))}</p>"
             finally:
                 hydrating["active"] = False
+
+        def load_selected_profile() -> None:
+            column_id = str(column_select.value or "")
+            if not column_id:
+                return
+            try:
+                profile_context.value = _profile_html(load_profile_context(column_id))
+            except (ValueError, RuntimeError) as exc:
+                profile_context.value = f"<p>{html.escape(str(exc))}</p>"
+
+        state["_load_selected_profile"] = load_selected_profile
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
@@ -1265,7 +1282,7 @@ def widget_data_contract(
                 set_status("Unsaved column edits were retained locally; use the section Save action to persist them.")
             if change.get("new"):
                 selected_id = str(change["new"])
-                hydrate_column(selected_id)
+                hydrate_column(selected_id, load_profile=True)
                 prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
@@ -1893,7 +1910,7 @@ def widget_data_contract(
         view_content["Advanced"] = (advanced_left, advanced_right)
 
 
-        # Manifest: compact navigation and bounded selected-section review.
+        # Manifest: compact navigation and one final persistence boundary.
         payload = state.get("manifest") or {}
         sections = _manifest_sections(payload)
         manifest_nav = widgets.Select(options=list(sections), **shared.widget_common(widgets, "Section"))
@@ -1909,12 +1926,71 @@ def widget_data_contract(
                 f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
             ), height="240px",
         )
+        session_status = widgets.HTML()
+        save_contract = widgets.Button(
+            description="Save Data Contract", button_style="primary",
+            disabled=not editable or not bool(state.get("_dirty")),
+        )
+        discard_contract = widgets.Button(
+            description="Discard changes",
+            disabled=not editable or not bool(state.get("_dirty")),
+        )
+        freeze_button = None
         actions: list[Any] = []
+
+        def refresh_review_ui() -> None:
+            latest_payload = state.get("manifest") or {}
+            current_section = str(manifest_nav.value or "")
+            sections.clear()
+            sections.update(_manifest_sections(latest_payload))
+            manifest_nav.options = list(sections)
+            if current_section in sections:
+                manifest_nav.value = current_section
+            elif sections:
+                manifest_nav.value = next(iter(sections))
+            manifest_preview.value = sections.get(str(manifest_nav.value or ""), "")
+            exact_json.value = (
+                f"<details><summary>Exact JSON manifest</summary><pre>"
+                f"{html.escape(_expose_manifest(latest_payload))}</pre></details>"
+            )
+            dirty = bool(state.get("_dirty"))
+            session_status.value = (
+                "<p><b>Unsaved changes</b><br>Changes are staged in this widget session. "
+                "Save Data Contract to persist them.</p>"
+                if dirty else
+                "<p><b>Saved state</b><br>No staged changes.</p>"
+            )
+            save_contract.disabled = not editable or not dirty
+            discard_contract.disabled = not editable or not dirty
+            if freeze_button is not None:
+                freeze_button.disabled = dirty
+
+        state["_refresh_review"] = refresh_review_ui
+
         if editable:
-            freeze_button = widgets.Button(description=f"Freeze v{row['contract_version']}", button_style="primary")
+            def save_contract_clicked(_button: Any) -> None:
+                try:
+                    persist_session()
+                except (TypeError, ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
+
+            def discard_contract_clicked(_button: Any) -> None:
+                try:
+                    discard_session()
+                except (TypeError, ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
+
+            save_contract.on_click(save_contract_clicked)
+            discard_contract.on_click(discard_contract_clicked)
+            freeze_button = widgets.Button(
+                description=f"Freeze v{row['contract_version']}",
+                disabled=bool(state.get("_dirty")),
+            )
 
             def freeze_clicked(_button: Any) -> None:
                 try:
+                    if state.get("_dirty"):
+                        raise ValueError("Save or discard staged changes before freezing the Data Contract.")
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
@@ -1922,7 +1998,11 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             freeze_button.on_click(freeze_clicked)
-            actions.append(freeze_button)
+            actions.extend([
+                session_status,
+                widgets.HBox([save_contract, discard_contract]),
+                freeze_button,
+            ])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -1952,6 +2032,7 @@ def widget_data_contract(
             *actions,
         )
         view_content["Review"] = (review_left, review_right)
+        refresh_review_ui()
         apply_view()
 
 
@@ -1994,6 +2075,8 @@ def widget_data_contract(
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
+            "save_contract": save_contract, "discard_contract": discard_contract,
+            "session_status": session_status,
             "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
