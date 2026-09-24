@@ -143,3 +143,38 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     monkeypatch.setattr(module.importlib, "import_module", lambda _name: type("Pandas", (), {"DataFrame": lambda *_args, **_kwargs: Frame()})())
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
         module._invoke_fabric_ai("prompt")
+
+
+def test_fabric_ai_uses_one_row_pandas_prompt_api(monkeypatch):
+    """Create the temporary prompt frame internally and use Fabric's pandas accessor."""
+    calls = {"imports": [], "frames": [], "prompts": []}
+
+    class Result:
+        iloc = [" generated response "]
+
+    class AI:
+        def generate_response(self, prompt):
+            calls["prompts"].append(prompt)
+            return Result()
+
+    class Frame:
+        ai = AI()
+
+    class Pandas:
+        @staticmethod
+        def DataFrame(value):
+            calls["frames"].append(value)
+            return Frame()
+
+    def import_module(name):
+        calls["imports"].append(name)
+        return Pandas if name == "pandas" else object()
+
+    monkeypatch.setattr(module.importlib, "import_module", import_module)
+
+    assert module._invoke_fabric_ai("govern this") == "generated response"
+    assert calls == {
+        "imports": ["synapse.ml.aifunc", "pandas"],
+        "frames": [{"fabricops_prompt": ["govern this"]}],
+        "prompts": ["{fabricops_prompt}"],
+    }

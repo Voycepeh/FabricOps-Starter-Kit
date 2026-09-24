@@ -127,8 +127,8 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     assert state["table_id"] == "dev-t"
 
 
-def test_governance_snapshot_reads_each_authoring_source_once(monkeypatch):
-    """A reusable authoring snapshot owns the only initial metadata reads."""
+def test_governance_snapshot_defers_authoring_sources_until_selection(monkeypatch):
+    """Selector loading is lightweight and selected authoring sources load once."""
     draft = {
         "contract_id": "c", "contract_version": 1, "table_id": "orders",
         "environment_name": "dev", "status": "draft", "agreement_id": None,
@@ -153,15 +153,50 @@ def test_governance_snapshot_reads_each_authoring_source_once(monkeypatch):
     snapshot = service.load_contract_governance_snapshot(
         config=object(), env="dev", spark_session=object()
     )
+    assert reads == [service.DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE"]
+    selected = service.load_contract_governance_snapshot(
+        config=object(), env="dev", spark_session=object(), table_id="orders",
+        contract_id="c", contract_version=1, selector_snapshot=snapshot,
+    )
     state = service.contract_review_state_from_snapshot(
-        snapshot=snapshot, env="dev", contract_id="c", contract_version=1,
+        snapshot=selected, env="dev", contract_id="c", contract_version=1,
     )
 
     assert reads == [
         service.DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE",
-        service.ENRICHMENT_TABLE, service.GUARDRAIL_TABLE,
+        "METADATA_DATA_CATALOGUE", service.ENRICHMENT_TABLE, service.GUARDRAIL_TABLE,
     ]
     assert state["available_columns"][0]["column_id"] == "id"
+
+
+def test_selected_snapshot_filters_spark_frames_before_collection(monkeypatch):
+    """Interactive contract identity filters are applied before Spark collection."""
+    predicates = []
+
+    class Frame:
+        def filter(self, predicate):
+            predicates.append(predicate)
+            return self
+
+        def collect(self):
+            return []
+
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_args, **_kwargs: Frame())
+    selector = {
+        "tables": [{"table_id": "orders", "environment_name": "dev", "metadata_level": "table"}],
+        "contracts": [{"contract_id": "c", "contract_version": 2, "table_id": "orders", "environment_name": "dev"}],
+    }
+
+    service.load_contract_governance_snapshot(
+        config=object(), env="dev", spark_session=object(), table_id="orders",
+        contract_id="c", contract_version=2, selector_snapshot=selector,
+    )
+
+    assert len(predicates) == 3
+    assert "table_id = 'orders'" in predicates[0]
+    assert all("contract_id = 'c'" in predicate for predicate in predicates[1:])
+    assert all("contract_version = 2" in predicate for predicate in predicates[1:])
 
 
 def test_draft_environment_must_match_authoring_environment():

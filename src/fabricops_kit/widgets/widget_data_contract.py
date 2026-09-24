@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+from time import perf_counter
 import uuid
 from typing import Any, Mapping
 
@@ -262,8 +263,10 @@ def widget_data_contract(
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
-    Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
-    Not PII from governed metadata and profile evidence. Editable draft state remains
+    AI runs only after choosing Open with AI suggestions or an individual Run suggestion
+    action. Open without AI is the primary path and performs no AI Function calls.
+    Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or Not PII
+    from governed metadata and profile evidence. Editable draft state remains
     separate until Governance accepts a suggestion. Manual Description or Classification
     edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
     activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
@@ -271,7 +274,7 @@ def widget_data_contract(
     Examples
     --------
     >>> state = widget_data_contract(table_id="table-orders", spark_session=spark)
-    >>> state["refresh_manifest"]()
+    >>> state["_controls"]["open_without_ai"].click()
 
     See Also
     --------
@@ -298,6 +301,8 @@ def widget_data_contract(
         "_column_drafts": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_unavailable": None,
         "_profile_cache": {}, "_governance_snapshot": governance_snapshot,
+        "_selector_snapshot": governance_snapshot,
+        "ai_mode": "off", "ai_started": False, "ai_available": None,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -376,6 +381,12 @@ def widget_data_contract(
             matches[0],
         )
         state["contract_version"] = int(chosen["contract_version"])
+        state["_governance_snapshot"] = contracts.load_contract_governance_snapshot(
+            config=config, env=env, spark_session=spark,
+            table_id=str(state["table_id"]), contract_id=str(chosen["contract_id"]),
+            contract_version=state["contract_version"],
+            selector_snapshot=state["_selector_snapshot"],
+        )
         state["current"] = contracts.contract_review_state_from_snapshot(
             snapshot=state["_governance_snapshot"], env=env,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
@@ -398,6 +409,7 @@ def widget_data_contract(
                 and row.get("contract_version") == draft.get("contract_version")
             )
         ]]
+        state["_selector_snapshot"]["contracts"] = list(state["contracts"])
         snapshot_contracts = state["_governance_snapshot"]["source_tables"][contracts.DATA_CONTRACT_TABLE]
         snapshot_contracts[:] = [
             row for row in snapshot_contracts
@@ -489,8 +501,19 @@ def widget_data_contract(
         return result
 
     def reload_governance_snapshot() -> None:
-        snapshot = contracts.load_contract_governance_snapshot(
+        selector_snapshot = contracts.load_contract_governance_snapshot(
             config=config, env=env, spark_session=spark
+        )
+        chosen = next(
+            row for row in selector_snapshot["contracts"]
+            if str(row.get("table_id") or "") == str(state["table_id"])
+            and int(row.get("contract_version") or 0) == int(state["contract_version"])
+        )
+        state["_selector_snapshot"] = selector_snapshot
+        snapshot = contracts.load_contract_governance_snapshot(
+            config=config, env=env, spark_session=spark, table_id=str(state["table_id"]),
+            contract_id=str(chosen["contract_id"]), contract_version=int(state["contract_version"]),
+            selector_snapshot=selector_snapshot,
         )
         state["_governance_snapshot"] = snapshot
         state["contracts"] = snapshot["contracts"]
@@ -502,9 +525,6 @@ def widget_data_contract(
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
         save_guardrails=save_guardrails, load_profile_context=load_profile_context,
     )
-    if table_id:
-        select(str(table_id), contract_version)
-
     table_options = [
         (f"{row.get('schema_name') or ''}.{row.get('table_name') or row.get('table_id')}", str(row["table_id"]))
         for row in table_rows
@@ -520,6 +540,9 @@ def widget_data_contract(
         widgets.Text(value="Metadata", disabled=True, **shared.widget_common(widgets, "Fabric store")),
         table_control, contract_control,
     ])
+    open_without_ai = widgets.Button(description="Open without AI", button_style="primary")
+    open_with_ai = widgets.Button(description="Open with AI suggestions")
+    open_actions = shared.action_row(widgets, [open_with_ai, open_without_ai])
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         current = state["current"]
@@ -654,6 +677,12 @@ def widget_data_contract(
             )
             rerun_table_description.disabled = not available
             rerun_table_classification.disabled = not available
+            rerun_table_description.description = (
+                "Re-run" if ai_state["table"].get("description") else "Run suggestion"
+            )
+            rerun_table_classification.description = (
+                "Re-run" if ai_state["table"].get("classification") else "Run suggestion"
+            )
 
         def run_table_ai(*, force: bool = False) -> None:
             if not editable or not ai_enrichment.get("enabled"):
@@ -1094,13 +1123,17 @@ def widget_data_contract(
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
-                prepare_column_ai(selected_id)
+                if state["ai_mode"] == "enabled":
+                    prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
 
         def _suggestion_html(label: str, suggestion: dict[str, Any] | None) -> str:
             if not suggestion:
-                return "<p><b>AI suggestion</b><br><span style=\"color:#666\">Preparing…</span></p>"
+                return (
+                    "<p><b>AI suggestion</b><br><span style=\"color:#666\">"
+                    "Not generated. Use Run suggestion.</span></p>"
+                )
             stale = " · <b>Needs refresh</b>" if suggestion.get("stale") else ""
             error = suggestion.get("error")
             if error:
@@ -1176,6 +1209,15 @@ def widget_data_contract(
             rerun_column_description.disabled = not available
             rerun_column_classification.disabled = not available
             rerun_sensitive.disabled = not available
+            rerun_column_description.description = (
+                "Re-run" if suggestions.get("description") else "Run suggestion"
+            )
+            rerun_column_classification.description = (
+                "Re-run" if suggestions.get("classification") else "Run suggestion"
+            )
+            rerun_sensitive.description = (
+                "Re-run" if suggestions.get("sensitive_data") else "Run suggestion"
+            )
 
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
@@ -1555,8 +1597,14 @@ def widget_data_contract(
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
-            prepare_column_ai(str(column_select.value))
-        run_table_ai()
+            render_column_ai(str(column_select.value))
+        render_table_ai()
+        def run_initial_ai() -> None:
+            run_table_ai()
+            if column_options:
+                prepare_column_ai(str(column_select.value))
+
+        state["_run_initial_ai"] = run_initial_ai
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
@@ -1791,18 +1839,44 @@ def widget_data_contract(
         value = change.get("new")
         if not state.get("table_id") or not value:
             return
+        state["contract_version"] = None if value == "new" else int(value)
+
+    def open_selected(*, with_ai: bool) -> None:
+        if not state.get("table_id") or not contract_control.value:
+            set_status("Select a governed table and contract before opening the workspace.", error=True)
+            return
         try:
-            if value == "new":
+            started = perf_counter()
+            if contract_control.value == "new":
                 new_draft()
-            elif not (
-                state.get("current")
-                and int(state.get("contract_version") or 0) == int(value)
-                and str(state.get("table_id") or "") == str(state["current"].get("table_id") or "")
-            ):
-                select(str(state["table_id"]), int(value))
+            else:
+                select(str(state["table_id"]), int(contract_control.value))
+            state["ai_mode"] = "enabled" if with_ai else "off"
+            state["ai_started"] = False
             render()
+            load_seconds = perf_counter() - started
+            set_status(f"Contract loaded in {load_seconds:.1f}s.")
+            if with_ai and ai_enrichment.get("enabled"):
+                ai_started = perf_counter()
+                set_status(f"Contract loaded in {load_seconds:.1f}s. Generating AI suggestions…")
+                state["ai_started"] = True
+                state["_run_initial_ai"]()
+                state["ai_available"] = state["_ai_unavailable"] is None
+                ai_seconds = perf_counter() - ai_started
+                if state["ai_available"]:
+                    set_status(
+                        f"Contract loaded in {load_seconds:.1f}s. "
+                        f"AI suggestions completed in {ai_seconds:.1f}s."
+                    )
+            elif with_ai:
+                set_status(
+                    f"Contract loaded in {load_seconds:.1f}s. AI suggestions are disabled in 00_env_config."
+                )
         except (ValueError, RuntimeError) as exc:
             set_status(str(exc), error=True)
+
+    open_without_ai.on_click(lambda _button: open_selected(with_ai=False))
+    open_with_ai.on_click(lambda _button: open_selected(with_ai=True))
 
     table_control.observe(table_changed, names="value")
     contract_control.observe(contract_changed, names="value")
@@ -1813,8 +1887,11 @@ def widget_data_contract(
     page = shared.form_page(
         widgets, title="Data Contract",
         description="Select, author, review, freeze, and activate one governed table contract.",
-        children=[selector, tabs, status],
+        children=[selector, open_actions, tabs, status],
     )
-    state["_controls"]["page"] = page
+    state["_controls"].update({
+        "page": page, "open_without_ai": open_without_ai, "open_with_ai": open_with_ai,
+        "open_actions": open_actions,
+    })
     ip.display(page)
     return state

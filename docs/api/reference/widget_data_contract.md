@@ -12,9 +12,9 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:226`
+`fabricops_kit/widgets/widget_data_contract.py:227`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L226-L1820">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L227-L1897">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -51,7 +51,7 @@ def widget_data_contract(
 <div class="reference-example-usage" markdown="1">
 
 >>> state = widget_data_contract(table_id="table-orders", spark_session=spark)
->>> state["refresh_manifest"]()
+>>> state["_controls"]["open_without_ai"].click()
 
 </div>
 
@@ -94,8 +94,10 @@ Refresh is discovered read-only from Microsoft
 Fabric and remains independent of the authored Freshness expectation. Immutable
 versions are review-only.
 When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
-Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
-Not PII from governed metadata and profile evidence. Editable draft state remains
+AI runs only after choosing Open with AI suggestions or an individual Run suggestion
+action. Open without AI is the primary path and performs no AI Function calls.
+Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or Not PII
+from governed metadata and profile evidence. Editable draft state remains
 separate until Governance accepts a suggestion. Manual Description or Classification
 edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
 activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.

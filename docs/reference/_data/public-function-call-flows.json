@@ -15,9 +15,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.data_contract.shared.build_contract_manifest",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 579,
+      "source_end_line": 645,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 560,
+      "source_start_line": 626,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -25,9 +25,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.data_contract.shared.get_contract_review_state",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 557,
+      "source_end_line": 623,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 527,
+      "source_start_line": 593,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -35,9 +35,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.data_contract.shared.list_contract_governance_state",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 524,
+      "source_end_line": 590,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 499,
+      "source_start_line": 565,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -175,9 +175,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_browser_state",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 480,
+      "source_end_line": 481,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 411,
+      "source_start_line": 412,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -185,9 +185,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_options",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 364,
+      "source_end_line": 365,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 339,
+      "source_start_line": 340,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -195,9 +195,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.latest_enrichment_values",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 391,
+      "source_end_line": 392,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 367,
+      "source_start_line": 368,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
@@ -285,9 +285,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 178,
+      "source_end_line": 179,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 172,
+      "source_start_line": 173,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     }
   ],
@@ -1881,15 +1881,14 @@
       "inbound_callers": [
         "fabricops_kit.access_scanner.shared.persist_access_rows",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.read_contract_records",
         "fabricops_kit.data_contract.shared.save_enrichment",
@@ -1922,15 +1921,14 @@
         "fabricops_kit.access_scanner.shared::<module>",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_metadata_tables::<module>",
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.read_contract_records",
         "fabricops_kit.data_contract.shared.save_enrichment",
@@ -3213,9 +3211,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared._contract_activation_changes",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 644,
+      "source_end_line": 734,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 626,
+      "source_start_line": 716,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3245,6 +3243,37 @@
       "source_end_line": 173,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
       "source_start_line": 171,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_filtered_metadata_rows",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.data_contract.shared.get_column_profile_context",
+        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.data_contract.shared.get_column_profile_context",
+        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 433,
+      "source_path": "src/fabricops_kit/data_contract/shared.py",
+      "source_start_line": 420,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3355,6 +3384,37 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
+      "function_name": "_sql_literal",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.data_contract.shared.get_column_profile_context",
+        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.data_contract.shared.get_column_profile_context",
+        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.data_contract.shared._sql_literal",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 417,
+      "source_path": "src/fabricops_kit/data_contract/shared.py",
+      "source_start_line": 415,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
       "function_name": "activate_contract_version",
       "function_type": "shared_function",
       "inbound_callers": [
@@ -3370,9 +3430,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.activate_contract_version",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 706,
+      "source_end_line": 796,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 647,
+      "source_start_line": 737,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3403,9 +3463,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.assemble_contract_payload",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 948,
+      "source_end_line": 1038,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 832,
+      "source_start_line": 922,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3428,9 +3488,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.build_contract_manifest",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 579,
+      "source_end_line": 645,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 560,
+      "source_start_line": 626,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3457,9 +3517,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.build_enrichment_records",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 751,
+      "source_end_line": 841,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 709,
+      "source_start_line": 799,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3578,9 +3638,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.contract_manifest_from_snapshot",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 496,
+      "source_end_line": 562,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 482,
+      "source_start_line": 548,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3607,9 +3667,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.contract_review_state_from_snapshot",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 479,
+      "source_end_line": 545,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 443,
+      "source_start_line": 509,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3696,9 +3756,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1013,
+      "source_end_line": 1103,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 951,
+      "source_start_line": 1041,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3725,9 +3785,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 829,
+      "source_end_line": 919,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 820,
+      "source_start_line": 910,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3754,9 +3814,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.get_column_profile_context",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 623,
+      "source_end_line": 713,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 582,
+      "source_start_line": 648,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3808,9 +3868,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.get_contract_review_state",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 557,
+      "source_end_line": 623,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 527,
+      "source_start_line": 593,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3833,9 +3893,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.list_contract_governance_state",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 524,
+      "source_end_line": 590,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 499,
+      "source_start_line": 565,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3862,9 +3922,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 440,
+      "source_end_line": 506,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 415,
+      "source_start_line": 436,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3989,6 +4049,7 @@
       "function_name": "row_dicts",
       "function_type": "shared_function",
       "inbound_callers": [
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.assemble_contract_payload",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
@@ -3996,15 +4057,14 @@
         "fabricops_kit.data_contract.shared.contract_version_records",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.validate_contract_draft"
       ],
       "inbound_source_references": [
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.assemble_contract_payload",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
@@ -4012,11 +4072,9 @@
         "fabricops_kit.data_contract.shared.contract_version_records",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.validate_contract_draft"
       ],
@@ -4056,9 +4114,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.save_enrichment",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 766,
+      "source_end_line": 856,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 754,
+      "source_start_line": 844,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -4085,9 +4143,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.save_guardrails",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 784,
+      "source_end_line": 874,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 770,
+      "source_start_line": 860,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -4147,9 +4205,9 @@
       "qualified_name": "fabricops_kit.data_contract.shared.validate_contract_draft",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 817,
+      "source_end_line": 907,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 788,
+      "source_start_line": 878,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -4393,15 +4451,14 @@
       "function_type": "public_function",
       "inbound_callers": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.read_contract_records",
         "fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results",
@@ -4430,15 +4487,14 @@
       ],
       "inbound_source_references": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.data_contract.shared._filtered_metadata_rows",
         "fabricops_kit.data_contract.shared.activate_contract_version",
         "fabricops_kit.data_contract.shared.build_contract_manifest",
         "fabricops_kit.data_contract.shared.create_contract_draft",
         "fabricops_kit.data_contract.shared.freeze_contract",
-        "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_contract_authoring_state",
         "fabricops_kit.data_contract.shared.get_contract_review_state",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
-        "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
         "fabricops_kit.data_contract.shared.read_all_enrichment",
         "fabricops_kit.data_contract.shared.read_contract_records",
         "fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results",
@@ -11850,9 +11906,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._enrichment_values",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 408,
+      "source_end_line": 409,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 394,
+      "source_start_line": 395,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11879,7 +11935,7 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._invoke_fabric_ai",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 63,
+      "source_end_line": 64,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
       "source_start_line": 53,
       "supports_live_contract": false,
@@ -11914,9 +11970,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._rows",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 324,
+      "source_end_line": 325,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 321,
+      "source_start_line": 322,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11947,9 +12003,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._sort_timestamp",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 336,
+      "source_end_line": 337,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 327,
+      "source_start_line": 328,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -11976,9 +12032,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 318,
+      "source_end_line": 319,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 292,
+      "source_start_line": 293,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12006,9 +12062,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_dq_context",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 239,
+      "source_end_line": 240,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 216,
+      "source_start_line": 217,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12066,9 +12122,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_sensitive_data_context",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 123,
+      "source_end_line": 124,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 94,
+      "source_start_line": 95,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12091,9 +12147,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_browser_state",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 480,
+      "source_end_line": 481,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 411,
+      "source_start_line": 412,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12116,9 +12172,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 364,
+      "source_end_line": 365,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 339,
+      "source_start_line": 340,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12141,9 +12197,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.latest_enrichment_values",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 391,
+      "source_end_line": 392,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 367,
+      "source_start_line": 368,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12171,9 +12227,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 289,
+      "source_end_line": 290,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 242,
+      "source_start_line": 243,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12201,9 +12257,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_enrichment",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 91,
+      "source_end_line": 92,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 66,
+      "source_start_line": 67,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -12231,9 +12287,9 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_sensitive_data",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 213,
+      "source_end_line": 214,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 126,
+      "source_start_line": 127,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14063,9 +14119,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 60,
+      "source_end_line": 61,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 46,
+      "source_start_line": 47,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14092,9 +14148,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 92,
+      "source_end_line": 93,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 74,
+      "source_start_line": 75,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14117,9 +14173,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 178,
+      "source_end_line": 179,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 172,
+      "source_start_line": 173,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14148,9 +14204,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 169,
+      "source_end_line": 170,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 95,
+      "source_start_line": 96,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14179,9 +14235,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 71,
+      "source_end_line": 72,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 63,
+      "source_start_line": 64,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14208,9 +14264,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 196,
+      "source_end_line": 197,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 181,
+      "source_start_line": 182,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14239,9 +14295,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._scheduled_refresh_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 223,
+      "source_end_line": 224,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 199,
+      "source_start_line": 200,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14264,9 +14320,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1820,
+      "source_end_line": 1897,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 226,
+      "source_start_line": 227,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -17994,7 +18050,7 @@
       "depth": 7,
       "direct_call_count": 33,
       "discontinued_in": null,
-      "examples": ">>> state = widget_data_contract(table_id=\"table-orders\", spark_session=spark)\n>>> state[\"refresh_manifest\"]()",
+      "examples": ">>> state = widget_data_contract(table_id=\"table-orders\", spark_session=spark)\n>>> state[\"_controls\"][\"open_without_ai\"].click()",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -18066,17 +18122,17 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
-      "scope": 92,
+      "scope": 94,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 1820,
+      "source_end_line": 1897,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 226,
+      "source_start_line": 227,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
-      "transitive_function_count": 92,
-      "usage_notes": "Saves delegate to canonical Enrichment and Guardrail services, then update the\nin-memory governance snapshot and manifest without rereading unrelated metadata.\nLifecycle actions deliberately reload the snapshot. Profile context is lazy,\nsession-cached, read-only, and never added to the canonical payload. Scheduled\nRefresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.",
+      "transitive_function_count": 94,
+      "usage_notes": "Saves delegate to canonical Enrichment and Guardrail services, then update the\nin-memory governance snapshot and manifest without rereading unrelated metadata.\nLifecycle actions deliberately reload the snapshot. Profile context is lazy,\nsession-cached, read-only, and never added to the canonical payload. Scheduled\nRefresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nAI runs only after choosing Open with AI suggestions or an individual Run suggestion\naction. Open without AI is the primary path and performs no AI Function calls.\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or Not PII\nfrom governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.",
       "width": 33
     },
     {
@@ -20011,6 +20067,48 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.data_contract.shared.row_dicts",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.activate_contract_version",
       "violation_details": [],
       "violation_types": []
@@ -20640,7 +20738,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "callee_qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.get_column_profile_context",
       "violation_details": [],
       "violation_types": []
@@ -20651,27 +20749,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.data_contract.shared.row_dicts",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.get_column_profile_context",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [
-        "Calls foundational Fabric I/O."
-      ],
-      "architecture_signal_types": [
-        "Type 0"
-      ],
-      "architecture_signals": [
-        {
-          "detail": "Calls foundational Fabric I/O.",
-          "type": "Type 0"
-        }
-      ],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "callee_qualified_name": "fabricops_kit.data_contract.shared._sql_literal",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.get_column_profile_context",
       "violation_details": [],
       "violation_types": []
@@ -20847,7 +20925,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "callee_qualified_name": "fabricops_kit.data_contract.shared._filtered_metadata_rows",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
       "violation_details": [],
       "violation_types": []
@@ -20869,27 +20947,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.data_contract.shared.row_dicts",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [
-        "Calls foundational Fabric I/O."
-      ],
-      "architecture_signal_types": [
-        "Type 0"
-      ],
-      "architecture_signals": [
-        {
-          "detail": "Calls foundational Fabric I/O.",
-          "type": "Type 0"
-        }
-      ],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "callee_qualified_name": "fabricops_kit.data_contract.shared._sql_literal",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.load_contract_governance_snapshot",
       "violation_details": [],
       "violation_types": []
@@ -29361,13 +29419,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 29,
-    "defined_function_count": 444,
+    "defined_function_count": 446,
     "detached_function_count": 42,
     "implicit_runtime_hook_count": 3,
     "public_function_count": 29,
-    "relationship_count": 915,
+    "relationship_count": 916,
     "source_referenced_function_count": 39,
-    "used_function_count": 373
+    "used_function_count": 375
   },
   "used_functions": [
     "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
@@ -29443,9 +29501,11 @@
     "fabricops_kit.data_contract.scheduled_refresh.normalize_scheduled_refresh",
     "fabricops_kit.data_contract.shared._contract_activation_changes",
     "fabricops_kit.data_contract.shared._fields",
+    "fabricops_kit.data_contract.shared._filtered_metadata_rows",
     "fabricops_kit.data_contract.shared._json_safe",
     "fabricops_kit.data_contract.shared._json_value",
     "fabricops_kit.data_contract.shared._latest",
+    "fabricops_kit.data_contract.shared._sql_literal",
     "fabricops_kit.data_contract.shared.activate_contract_version",
     "fabricops_kit.data_contract.shared.assemble_contract_payload",
     "fabricops_kit.data_contract.shared.build_enrichment_records",

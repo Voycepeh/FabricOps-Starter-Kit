@@ -412,21 +412,87 @@ def get_contract_authoring_state(
     return state
 
 
-def load_contract_governance_snapshot(
-    *, config: Any, env: str, spark_session: Any
-) -> dict[str, Any]:
-    """Load the four canonical authoring sources once for one widget session."""
+def _sql_literal(value: Any) -> str:
+    """Return a quoted Spark SQL string literal for trusted metadata filters."""
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _filtered_metadata_rows(
+    *, table_name: str, config: Any, env: str, spark_session: Any,
+    spark_predicate: str, python_predicate: Any,
+) -> list[dict[str, Any]]:
+    """Push an interactive metadata predicate into Spark before collection."""
     context = {"config": config, "env": env}
-    names = (DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE", ENRICHMENT_TABLE, GUARDRAIL_TABLE)
-    source_tables = {
-        name: row_dicts(read_lakehouse_table(
-            name, store="Metadata", schema=metadata_table_physical_schema(config, name),
-            context=context, spark_session=spark_session,
-        ))
-        for name in names
+    frame = read_lakehouse_table(
+        table_name, store="Metadata", schema=metadata_table_physical_schema(config, table_name),
+        context=context, spark_session=spark_session,
+    )
+    if hasattr(frame, "filter") and hasattr(frame, "collect"):
+        frame = frame.filter(spark_predicate)
+        return row_dicts(frame)
+    return [row for row in row_dicts(frame) if python_predicate(row)]
+
+
+def load_contract_governance_snapshot(
+    *, config: Any, env: str, spark_session: Any, table_id: str | None = None,
+    contract_id: str | None = None, contract_version: int | None = None,
+    selector_snapshot: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Load selector rows or one filtered contract authoring snapshot."""
+    env_sql = _sql_literal(env)
+    selected_table = str(table_id or "").strip()
+    selected_contract = str(contract_id or "").strip()
+    selected_version = int(contract_version or 0)
+    if selector_snapshot is None:
+        contracts = _filtered_metadata_rows(
+            table_name=DATA_CONTRACT_TABLE, config=config, env=env,
+            spark_session=spark_session,
+            spark_predicate=f"environment_name = {env_sql}",
+            python_predicate=lambda row: str(row.get("environment_name") or "") == env,
+        )
+        catalogue_predicate = f"environment_name = {env_sql} AND (metadata_level = 'table' OR column_id IS NULL OR column_id = '')"
+        catalogue = _filtered_metadata_rows(
+            table_name="METADATA_DATA_CATALOGUE", config=config, env=env,
+            spark_session=spark_session, spark_predicate=catalogue_predicate,
+            python_predicate=lambda row: (
+                str(row.get("environment_name") or "") == env
+                and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+            ),
+        )
+    else:
+        contracts = list(selector_snapshot["contracts"])
+        catalogue = list(selector_snapshot["tables"])
+    source_tables: dict[str, list[dict[str, Any]]] = {
+        DATA_CONTRACT_TABLE: contracts,
+        "METADATA_DATA_CATALOGUE": catalogue,
+        ENRICHMENT_TABLE: [], GUARDRAIL_TABLE: [],
     }
+    if selected_table and selected_contract and selected_version:
+        table_sql = _sql_literal(selected_table)
+        contract_sql = _sql_literal(selected_contract)
+        version_filter = f"contract_version = {selected_version}"
+        source_tables["METADATA_DATA_CATALOGUE"] = _filtered_metadata_rows(
+            table_name="METADATA_DATA_CATALOGUE", config=config, env=env,
+            spark_session=spark_session,
+            spark_predicate=f"environment_name = {env_sql} AND table_id = {table_sql}",
+            python_predicate=lambda row: (
+                str(row.get("environment_name") or "") == env
+                and str(row.get("table_id") or "") == selected_table
+            ),
+        )
+        for name in (ENRICHMENT_TABLE, GUARDRAIL_TABLE):
+            source_tables[name] = _filtered_metadata_rows(
+                table_name=name, config=config, env=env, spark_session=spark_session,
+                spark_predicate=(
+                    f"environment_name = {env_sql} AND contract_id = {contract_sql} AND {version_filter}"
+                ),
+                python_predicate=lambda row, identity=selected_contract, version=selected_version: (
+                    str(row.get("environment_name") or "") == env
+                    and str(row.get("contract_id") or "") == identity
+                    and int(row.get("contract_version") or 0) == version
+                ),
+            )
     catalogue = source_tables["METADATA_DATA_CATALOGUE"]
-    contracts = source_tables[DATA_CONTRACT_TABLE]
     tables = _latest([
         row for row in catalogue
         if str(row.get("environment_name") or "") == env
@@ -583,12 +649,20 @@ def get_column_profile_context(
     *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
 ) -> dict[str, Any]:
     """Return top frequency values or a range from the latest completed profile snapshot."""
-    context = {"config": config, "env": env}
-    profiled = row_dicts(read_lakehouse_table(
-        "METADATA_DATA_PROFILED", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
-        context=context, spark_session=spark_session,
-    ))
+    table_value, column_value, env_value = map(_sql_literal, (table_id, column_id, env))
+    profiled = _filtered_metadata_rows(
+        table_name="METADATA_DATA_PROFILED", config=config, env=env,
+        spark_session=spark_session,
+        spark_predicate=(
+            f"table_id = {table_value} AND column_id = {column_value} "
+            f"AND environment_name = {env_value}"
+        ),
+        python_predicate=lambda row: (
+            str(row.get("table_id") or "") == str(table_id)
+            and str(row.get("column_id") or "") == str(column_id)
+            and str(row.get("environment_name") or env) == env
+        ),
+    )
     candidates = [row for row in profiled
                   if str(row.get("table_id") or "") == str(table_id)
                   and str(row.get("column_id") or "") == str(column_id)
@@ -599,11 +673,27 @@ def get_column_profile_context(
     latest = max(candidates, key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""))
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
     try:
-        frequency = row_dicts(read_lakehouse_table(
-            "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-            context=context, spark_session=spark_session,
-        ))
+        snapshot_predicate = ""
+        if snapshot is not None:
+            snapshot_value = _sql_literal(snapshot)
+            snapshot_predicate = (
+                f" AND (profile_id = {snapshot_value} OR profile_snapshot_id = {snapshot_value})"
+            )
+        frequency = _filtered_metadata_rows(
+            table_name="METADATA_DATA_PROFILED_FREQUENCY", config=config, env=env,
+            spark_session=spark_session,
+            spark_predicate=(
+                f"table_id = {table_value} AND column_id = {column_value}{snapshot_predicate}"
+            ),
+            python_predicate=lambda row: (
+                str(row.get("table_id") or table_id) == str(table_id)
+                and str(row.get("column_id") or "") == str(column_id)
+                and (
+                    snapshot is None or row.get("profile_id") == snapshot
+                    or row.get("profile_snapshot_id") == snapshot
+                )
+            ),
+        )
     except Exception as exc:
         if not any(marker in str(exc).lower() for marker in ("not found", "does not exist", "path does not exist")):
             raise

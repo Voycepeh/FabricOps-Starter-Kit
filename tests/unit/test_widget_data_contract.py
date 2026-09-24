@@ -40,6 +40,7 @@ def widget_runtime(monkeypatch):
             self._dom_classes = []
             self.description = description
             self.disabled = disabled
+            self.button_style = kwargs.get("button_style", "")
             self.layout = layout or Layout()
             self.style = kwargs.get("style", {})
             self._options = options
@@ -206,15 +207,16 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
     monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
-    def snapshot(**_kwargs):
+    def snapshot(**kwargs):
         calls["snapshots"] += 1
+        selected = bool(kwargs.get("contract_id"))
         return {
             "tables": [catalogue[0]], "contracts": [dict(contract)],
             "source_tables": {
                 module.contracts.DATA_CONTRACT_TABLE: [dict(contract)],
-                "METADATA_DATA_CATALOGUE": [dict(row) for row in catalogue],
-                module.contracts.ENRICHMENT_TABLE: [dict(row) for row in enrichment],
-                module.contracts.GUARDRAIL_TABLE: [dict(row) for row in guardrails],
+                "METADATA_DATA_CATALOGUE": [dict(row) for row in catalogue] if selected else [dict(catalogue[0])],
+                module.contracts.ENRICHMENT_TABLE: [dict(row) for row in enrichment] if selected else [],
+                module.contracts.GUARDRAIL_TABLE: [dict(row) for row in guardrails] if selected else [],
             },
         }
 
@@ -250,8 +252,16 @@ def widget_runtime(monkeypatch):
         sys.modules, "IPython",
         types.SimpleNamespace(display=display_module, get_ipython=lambda: None),
     )
+    def start():
+        return module.widget_data_contract(table_id="orders", contract_version=1)
+
+    def open_widget(*, with_ai=False):
+        state = start()
+        state["_controls"]["open_with_ai" if with_ai else "open_without_ai"].click()
+        return state
+
     return {
-        "open": lambda: module.widget_data_contract(table_id="orders", contract_version=1),
+        "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "guardrails": guardrails, "schedule": schedule,
         "ai_enrichment": ai_enrichment,
@@ -283,7 +293,7 @@ def test_profile_context_rendering_priority_and_escaping():
 
 def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     """The unified page uses shared layout primitives and hydrates all main editors."""
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
     assert "fabricops-authoring-workspace" in controls["tabs"].children[1].children[0]._dom_classes
@@ -314,7 +324,7 @@ def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runt
         ],
     })
 
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     rendered = state["_controls"]["pipeline_refresh"].value
 
     assert "Daily · 08:00 · Asia/Singapore" in rendered
@@ -355,7 +365,7 @@ def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widge
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    assert widget_runtime["calls"]["snapshots"] == 1
+    assert widget_runtime["calls"]["snapshots"] == 2
     assert widget_runtime["calls"]["reviews"] == 1
     assert widget_runtime["calls"]["profiles"] == ["col-0"]
     assert len(controls["tabs"].children) == 3
@@ -371,7 +381,7 @@ def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widge
     controls["table_description"].value = "Saved without reloading"
     controls["table_save"].click()
 
-    assert widget_runtime["calls"]["snapshots"] == 1
+    assert widget_runtime["calls"]["snapshots"] == 2
     assert widget_runtime["calls"]["profiles"] == ["col-0"]
     assert len(widget_runtime["calls"]["enrichment"]) == 1
 
@@ -427,6 +437,24 @@ def test_profile_context_is_cached_per_table_and_column(widget_runtime):
     assert widget_runtime["calls"]["profiles"] == ["col-0", "col-1"]
 
 
+def test_open_without_ai_is_the_explicit_default_and_makes_no_ai_calls(widget_runtime, monkeypatch):
+    """Selector startup and the primary non-AI open path never invoke suggestions."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["start"]()
+
+    assert state["current"] is None
+    assert state["_controls"]["open_without_ai"].button_style == "primary"
+    assert captures == {"enrichment": [], "sensitive": []}
+    assert widget_runtime["calls"]["snapshots"] == 1
+
+    state["_controls"]["open_without_ai"].click()
+
+    assert state["ai_mode"] == "off"
+    assert state["ai_started"] is False
+    assert captures == {"enrichment": [], "sensitive": []}
+    assert "Contract loaded in" in state["message"]
+
+
 def test_ai_unavailable_is_session_scoped_until_explicit_retry(widget_runtime, monkeypatch):
     """Unrelated interactions do not repeatedly invoke an unavailable AI runtime."""
     widget_runtime["ai_enrichment"]["enabled"] = True
@@ -437,7 +465,7 @@ def test_ai_unavailable_is_session_scoped_until_explicit_retry(widget_runtime, m
         raise RuntimeError("AI Functions unavailable")
 
     monkeypatch.setattr(module, "suggest_enrichment", unavailable)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     initial_attempts = len(attempts)
     assert initial_attempts == 1
     assert state["_ai_unavailable"] == "AI Functions unavailable"
@@ -572,10 +600,10 @@ def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
     assert all(not drafts for drafts in state["_column_drafts"].values())
 
 
-def test_ai_suggestions_generate_automatically_without_mutating_drafts(widget_runtime, monkeypatch):
-    """Editable contracts prepare separate table, column, and PII suggestions on load."""
+def test_open_with_ai_generates_initial_suggestions_without_mutating_drafts(widget_runtime, monkeypatch):
+    """The explicit AI open path prepares separate table, column, and PII suggestions."""
     captures = _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
 
     assert len(captures["enrichment"]) == 2  # table plus initially displayed column
     assert len(captures["sensitive"]) == 1
@@ -590,7 +618,7 @@ def test_ai_suggestions_generate_automatically_without_mutating_drafts(widget_ru
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
     """Description, Classification, and Sensitive Data acceptance stay isolated."""
     _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     controls["required"].value = False
     controls["dq_type"].value = "pattern"
@@ -663,7 +691,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
     """Lazy suggestions and user drafts survive bounded column navigation."""
     captures = _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     controls["column_description"].value = "First draft"
     controls["column_select"].value = "col-1"
@@ -681,7 +709,7 @@ def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monk
 def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runtime, monkeypatch):
     """Manual Description and Classification edits mark only downstream advice stale."""
     _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     controls["column_description"].value = "Manual description"
     assert "Needs refresh" in controls["column_classification_ai"].value
@@ -695,7 +723,7 @@ def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runti
 def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, monkeypatch):
     """Explicit refresh reads unsaved Enrichment values without invoking save paths."""
     captures = _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     controls["column_description"].value = "Current unsaved description"
     controls["column_classification"].value = "Restricted"
@@ -721,7 +749,7 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
         module, "suggest_sensitive_data",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
     )
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
@@ -740,7 +768,7 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
     monkeypatch.setattr(
         module, "suggest_sensitive_data", lambda *_args, **_kwargs: pytest.fail("AI must not run")
     )
-    state = widget_runtime["open"]()
+    state = widget_runtime["open"](with_ai=True)
     assert state["_controls"]["rerun_sensitive"].disabled is True
 
 
