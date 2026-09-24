@@ -364,6 +364,10 @@ def widget_data_contract(
         left_children, right_children = view_content.get(str(top_nav.value), ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
+        if str(top_nav.value) == "Columns":
+            load_selected_profile = state.get("_load_selected_profile")
+            if callable(load_selected_profile):
+                load_selected_profile()
 
     top_nav.observe(apply_view, names="value")
 
@@ -560,6 +564,20 @@ def widget_data_contract(
         render()
         set_status("Data Contract saved and canonical state reloaded.")
 
+    def discard_data_contract_session() -> None:
+        """Discard staged changes for the selected contract and reload canonical state."""
+        current = state.get("current")
+        if not current:
+            return
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        state["_pending_enrichment"].pop(scope, None)
+        state["_pending_guardrails"].pop(scope, None)
+        state["_column_drafts"].pop(scope, None)
+        state["dirty"] = False
+        select(str(state["table_id"]), int(state["contract_version"]))
+        render()
+        set_status("Unsaved Data Contract changes discarded.")
+
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
         selected_table = str(state.get("table_id") or "").strip()
@@ -607,6 +625,7 @@ def widget_data_contract(
         freeze=freeze, activate=activate, save_enrichment=save_enrichment,
         save_guardrails=save_guardrails, stage_enrichment=stage_enrichment,
         stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
+        discard_data_contract=discard_data_contract_session,
         load_profile_context=load_profile_context,
     )
     configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
@@ -1264,12 +1283,20 @@ def widget_data_contract(
                 for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
                     control.value = value
                 dq_action.value = pending["dq_action"]
+            profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
+            hydrating["active"] = False
+
+        def load_selected_profile() -> None:
+            column_id = str(column_select.value or "")
+            if not column_id:
+                profile_context.value = "<p>No column selected.</p>"
+                return
             try:
                 profile_context.value = _profile_html(load_profile_context(column_id))
             except (ValueError, RuntimeError) as exc:
                 profile_context.value = f"<p>{html.escape(str(exc))}</p>"
-            finally:
-                hydrating["active"] = False
+
+        state["_load_selected_profile"] = load_selected_profile
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
@@ -1331,6 +1358,8 @@ def widget_data_contract(
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
+                if str(top_nav.value) == "Columns":
+                    load_selected_profile()
                 prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
@@ -1981,11 +2010,13 @@ def widget_data_contract(
         )
         actions: list[Any] = []
         save_contract_button = None
+        discard_contract_button = None
         if editable:
             save_contract_button = widgets.Button(
                 description="Save Data Contract",
                 button_style="primary",
             )
+            discard_contract_button = widgets.Button(description="Discard changes")
             freeze_button = widgets.Button(
                 description=f"Freeze v{row['contract_version']}",
                 disabled=bool(state.get("dirty")),
@@ -2013,9 +2044,16 @@ def widget_data_contract(
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
+            def discard_contract_clicked(_button: Any) -> None:
+                try:
+                    discard_data_contract_session()
+                except (ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
+
             save_contract_button.on_click(save_contract_clicked)
+            discard_contract_button.on_click(discard_contract_clicked)
             freeze_button.on_click(freeze_clicked)
-            actions.extend([save_contract_button, freeze_button])
+            actions.extend([save_contract_button, discard_contract_button, freeze_button])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -2088,6 +2126,7 @@ def widget_data_contract(
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
+            "discard_data_contract": discard_contract_button,
             "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
