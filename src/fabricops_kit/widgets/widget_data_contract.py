@@ -1167,10 +1167,9 @@ def widget_data_contract(
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestions = ai_state["columns"].get(column_id, {})
-            for name in ("classification", "sensitive_data"):
-                if suggestions.get(name):
-                    suggestions[name]["stale"] = True
+            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            if suggestion:
+                suggestion["stale"] = True
             render_column_ai(column_id)
 
         def classification_changed(_change: dict[str, Any]) -> None:
