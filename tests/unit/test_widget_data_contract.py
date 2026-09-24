@@ -193,11 +193,20 @@ def widget_runtime(monkeypatch):
         contract["status"] = "active"
         return {"changed": True}
 
+    fabric_store = lambda kind: types.SimpleNamespace(kind=kind)
     config = types.SimpleNamespace(
+        path_config=types.SimpleNamespace(paths={
+            "dev": {
+                "Bronze": fabric_store("lakehouse"),
+                "Silver": fabric_store("lakehouse"),
+                "Gold": fabric_store("warehouse"),
+                "Metadata": fabric_store("lakehouse"),
+            }
+        }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
             sensitivity_labels=["Public", "Internal", "Confidential", "Restricted"],
-        )
+        ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
@@ -248,6 +257,9 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["current"] is None
     assert state["table_id"] is None
     assert state["pending_table_id"] == "orders"
+    assert controls["store"].value == "Silver"
+    assert "Silver · Lakehouse" in [label for label, _value in controls["store"].options]
+    assert controls["schema"].value == "sales"
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
