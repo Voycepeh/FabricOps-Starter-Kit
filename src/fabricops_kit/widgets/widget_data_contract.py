@@ -695,6 +695,10 @@ def widget_data_contract(
         row = current["contract"]
         editable = str(row.get("status") or "").lower() == "draft"
         enrichments, guardrails = current_rows()
+
+        def session_guardrails() -> list[dict[str, Any]]:
+            return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
+
         columns = list(current.get("available_columns", []))
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
@@ -874,10 +878,15 @@ def widget_data_contract(
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
-                *, rule_kind: str = kind, old: dict[str, Any] = existing,
+                *, rule_kind: str = kind,
                 enabled_control: Any = enabled, block_control: Any = block,
                 controls: list[Any] = parameter_controls, rule_title: str = title,
             ) -> dict[str, Any] | None:
+                old = next((
+                    rule for rule in session_guardrails()
+                    if str(rule.get("guardrail_type") or "").lower() == rule_kind
+                    and not str(rule.get("column_id") or "")
+                ), {})
                 if not enabled_control.value and not old:
                     return None
                 if not enabled_control.value:
@@ -1553,12 +1562,16 @@ def widget_data_contract(
         def build_required_record() -> dict[str, Any]:
             selected = selected_column()
             cid = str(selected.get("column_id") or "")
-            updated = set(required_columns)
+            current_rule = next((
+                rule for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "").lower() == "schema"
+            ), required_rule)
+            updated = set(_parameters(current_rule).get("required_columns", []))
             identifier = cid or str(selected.get("column_name") or "")
             (updated.add if required.value else updated.discard)(identifier)
             return guardrail_record(
                 "schema", "required_columns", {"required_columns": sorted(updated)},
-                existing=required_rule,
+                existing=current_rule,
             )
 
         def save_required_clicked(_button: Any) -> None:
@@ -1571,7 +1584,7 @@ def widget_data_contract(
         def build_sensitive_record() -> dict[str, Any] | None:
             cid = str(column_select.value or "")
             existing = next((
-                r for r in guardrails
+                r for r in session_guardrails()
                 if str(r.get("guardrail_type") or "").lower() == "sensitive_data"
                 and str(r.get("column_id") or "") == cid
             ), {})
@@ -1653,7 +1666,7 @@ def widget_data_contract(
                     if not dq_pattern.value.strip():
                         raise ValueError("pattern requires a regular expression.")
                     params["pattern"] = dq_pattern.value
-                existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
+                existing = next((r for r in session_guardrails() if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
                 stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
                     action=str(dq_action.value), existing=existing,
