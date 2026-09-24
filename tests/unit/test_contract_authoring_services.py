@@ -21,6 +21,40 @@ def test_exact_contract_version_and_environment_isolation():
     ) == [rows[1]]
 
 
+def test_exact_contract_read_pushes_scope_before_collect(monkeypatch):
+    """Exact contract reads apply lazy Spark predicates before collecting metadata."""
+    class Frame:
+        def __init__(self, rows):
+            self.rows = rows
+            self.predicates = []
+
+        def where(self, predicate):
+            self.predicates.append(predicate)
+            return self
+
+        def collect(self):
+            return self.rows
+
+    frame = Frame([{
+        "contract_id": "c", "contract_version": 2,
+        "environment_name": "dev", "value": "owned",
+    }])
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_args, **_kwargs: frame)
+
+    rows = service.read_contract_records(
+        service.ENRICHMENT_TABLE, config=object(), env="dev",
+        spark_session=object(), contract_id="c", contract_version=2,
+    )
+
+    assert rows == [frame.rows[0]]
+    assert frame.predicates == [
+        "contract_id = 'c'",
+        "contract_version = 2",
+        "environment_name = 'dev'",
+    ]
+
+
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{

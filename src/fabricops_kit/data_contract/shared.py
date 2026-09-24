@@ -106,6 +106,25 @@ def create_contract_draft(
     return row
 
 
+def _sql_literal(value: Any) -> str:
+    """Return one safely quoted scalar for an internal Spark SQL predicate."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return str(value)
+    return "'" + str(value or "").replace("'", "''") + "'"
+
+
+def _scoped_rows(frame: Any, *predicates: str) -> list[dict[str, Any]]:
+    """Apply lazy Spark predicates before collecting; preserve iterable test inputs."""
+    scoped = frame
+    if hasattr(scoped, "where"):
+        for predicate in predicates:
+            if predicate:
+                scoped = scoped.where(predicate)
+    return row_dicts(scoped)
+
+
 def row_dicts(value: Any) -> list[dict[str, Any]]:
     """Return a DataFrame or iterable of row-like values as dictionaries."""
     if value is None:
@@ -321,6 +340,7 @@ def read_contract_records(
     contract_version: int,
 ) -> list[dict[str, Any]]:
     """Read exact-version governance records through the configured metadata target."""
+    identity, version = validate_contract_identity(contract_id, contract_version)
     frame = read_lakehouse_table(
         table_name,
         store="Metadata",
@@ -329,9 +349,14 @@ def read_contract_records(
         spark_session=spark_session,
     )
     return contract_version_records(
-        frame,
-        contract_id=contract_id,
-        contract_version=contract_version,
+        _scoped_rows(
+            frame,
+            f"contract_id = {_sql_literal(identity)}",
+            f"contract_version = {version}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=identity,
+        contract_version=version,
         environment_name=env,
     )
 
@@ -384,25 +409,47 @@ def get_contract_authoring_state(
     """Load the governance state needed by a contract editor without UI objects."""
     identity, version = validate_contract_identity(contract_id, contract_version)
     context = {"config": config, "env": env}
-    tables = {}
-    for table_name in (DATA_CONTRACT_TABLE, "METADATA_DATA_CATALOGUE", ENRICHMENT_TABLE, GUARDRAIL_TABLE):
-        tables[table_name] = row_dicts(read_lakehouse_table(
-            table_name, store="Metadata",
-            schema=metadata_table_physical_schema(config, table_name),
-            context=context, spark_session=spark_session,
-        ))
-    matches = [
-        row for row in tables[DATA_CONTRACT_TABLE]
-        if str(row.get("contract_id") or "") == identity
-        and int(row.get("contract_version") or 0) == version
-        and str(row.get("environment_name") or "") == str(env)
-    ]
+    contract_frame = read_lakehouse_table(
+        DATA_CONTRACT_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        context=context, spark_session=spark_session,
+    )
+    matches = contract_version_records(
+        _scoped_rows(
+            contract_frame,
+            f"contract_id = {_sql_literal(identity)}",
+            f"contract_version = {version}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=identity,
+        contract_version=version,
+        environment_name=env,
+    )
     if not matches:
         raise ValueError("The exact Data Contract version does not exist.")
     draft = matches[0]
+    table_id = str(draft.get("table_id") or "")
+    catalogue_frame = read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        context=context, spark_session=spark_session,
+    )
+    catalogue_rows = _scoped_rows(
+        catalogue_frame,
+        f"table_id = {_sql_literal(table_id)}",
+        f"environment_name = {_sql_literal(env)}",
+    )
+    enrichment_rows = read_contract_records(
+        ENRICHMENT_TABLE, config=config, env=env, spark_session=spark_session,
+        contract_id=identity, contract_version=version,
+    )
+    guardrail_rows = read_contract_records(
+        GUARDRAIL_TABLE, config=config, env=env, spark_session=spark_session,
+        contract_id=identity, contract_version=version,
+    )
     state = validate_contract_draft(
-        draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
-        enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
+        draft, catalogue_rows=catalogue_rows,
+        enrichment_rows=enrichment_rows, guardrail_rows=guardrail_rows,
         environment_name=env,
     )
     state["available_columns"] = [
@@ -417,16 +464,22 @@ def list_contract_governance_state(
 ) -> dict[str, list[dict[str, Any]]]:
     """Return governed tables and Data Contract versions for the authoring selector."""
     context = {"config": config, "env": env}
-    catalogue = row_dicts(read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        context=context, spark_session=spark_session,
-    ))
-    contracts = row_dicts(read_lakehouse_table(
-        DATA_CONTRACT_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-        context=context, spark_session=spark_session,
-    ))
+    catalogue = _scoped_rows(
+        read_lakehouse_table(
+            "METADATA_DATA_CATALOGUE", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+            context=context, spark_session=spark_session,
+        ),
+        f"environment_name = {_sql_literal(env)}",
+    )
+    contracts = _scoped_rows(
+        read_lakehouse_table(
+            DATA_CONTRACT_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+            context=context, spark_session=spark_session,
+        ),
+        f"environment_name = {_sql_literal(env)}",
+    )
     tables = _latest([
         row for row in catalogue
         if str(row.get("environment_name") or "") == env
@@ -445,14 +498,22 @@ def get_contract_review_state(
 ) -> dict[str, Any]:
     """Load an exact draft or immutable Data Contract version for governance review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
-    rows = row_dicts(read_lakehouse_table(
-        DATA_CONTRACT_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-        context={"config": config, "env": env}, spark_session=spark_session,
-    ))
-    matches = [row for row in rows if str(row.get("contract_id") or "") == identity
-               and int(row.get("contract_version") or 0) == version
-               and str(row.get("environment_name") or "") == env]
+    rows = _scoped_rows(
+        read_lakehouse_table(
+            DATA_CONTRACT_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+            context={"config": config, "env": env}, spark_session=spark_session,
+        ),
+        f"contract_id = {_sql_literal(identity)}",
+        f"contract_version = {version}",
+        f"environment_name = {_sql_literal(env)}",
+    )
+    matches = contract_version_records(
+        rows,
+        contract_id=identity,
+        contract_version=version,
+        environment_name=env,
+    )
     if not matches:
         raise ValueError("The exact Data Contract version does not exist.")
     contract = matches[0]
@@ -500,11 +561,16 @@ def get_column_profile_context(
 ) -> dict[str, Any]:
     """Return top frequency values or a range from the latest completed profile snapshot."""
     context = {"config": config, "env": env}
-    profiled = row_dicts(read_lakehouse_table(
-        "METADATA_DATA_PROFILED", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
-        context=context, spark_session=spark_session,
-    ))
+    profiled = _scoped_rows(
+        read_lakehouse_table(
+            "METADATA_DATA_PROFILED", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
+            context=context, spark_session=spark_session,
+        ),
+        f"table_id = {_sql_literal(table_id)}",
+        f"column_id = {_sql_literal(column_id)}",
+        f"environment_name = {_sql_literal(env)}",
+    )
     candidates = [row for row in profiled
                   if str(row.get("table_id") or "") == str(table_id)
                   and str(row.get("column_id") or "") == str(column_id)
@@ -515,11 +581,15 @@ def get_column_profile_context(
     latest = max(candidates, key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""))
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
     try:
-        frequency = row_dicts(read_lakehouse_table(
-            "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-            context=context, spark_session=spark_session,
-        ))
+        frequency = _scoped_rows(
+            read_lakehouse_table(
+                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
+                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
+                context=context, spark_session=spark_session,
+            ),
+            f"table_id = {_sql_literal(table_id)}",
+            f"column_id = {_sql_literal(column_id)}",
+        )
     except Exception as exc:
         if not any(marker in str(exc).lower() for marker in ("not found", "does not exist", "path does not exist")):
             raise
