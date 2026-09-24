@@ -714,7 +714,7 @@ def widget_data_contract(
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
-        table_save = widgets.Button(description="Save Table", button_style="primary", disabled=not editable)
+        table_save = widgets.Button(description="Apply Table", button_style="primary", disabled=not editable)
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
@@ -829,7 +829,7 @@ def widget_data_contract(
                         **shared.widget_common(widgets, "Source load strategy"),
                     )
                     parameter_controls.append(source_load_strategy)
-            save = widgets.Button(description=f"Save {title}", disabled=not editable)
+            save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
                 *, rule_kind: str = kind, old: dict[str, Any] = existing,
@@ -865,7 +865,7 @@ def widget_data_contract(
                 try:
                     record = builder()
                     if record is not None:
-                        save_guardrails([record])
+                        stage_guardrails([record])
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
@@ -887,14 +887,10 @@ def widget_data_contract(
                     )
                     if record is not None
                 ]
-                contracts.save_enrichment(
-                    enrichment_records, config=config, env=env, spark_session=spark
-                )
+                stage_enrichment(enrichment_records)
                 if guardrail_records:
-                    contracts.save_guardrails(
-                        guardrail_records, config=config, env=env, spark_session=spark
-                    )
-                reload_after_save("Table contract saved and the canonical contract state was refreshed.")
+                    stage_guardrails(guardrail_records)
+                set_status("Table changes applied locally. Save the Data Contract from Review to persist.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1075,17 +1071,17 @@ def widget_data_contract(
         )
         dq_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         dq_usage = widgets.HTML()
-        save_column_enrichment = widgets.Button(description="Save enrichment", button_style="primary", disabled=not editable)
+        save_column_enrichment = widgets.Button(description="Apply enrichment", button_style="primary", disabled=not editable)
         save_column = widgets.Button(
-            description="Save Column", button_style="primary", disabled=not editable,
+            description="Apply Column", button_style="primary", disabled=not editable,
             layout=widgets.Layout(width="130px", height="34px"),
         )
-        save_required = widgets.Button(description="Save required state", disabled=not editable)
-        save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
+        save_required = widgets.Button(description="Apply required state", disabled=not editable)
+        save_sensitive = widgets.Button(description="Apply Sensitive Data", disabled=not editable)
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
-        save_dq = widgets.Button(description="Save Data Quality rule", disabled=not editable)
+        save_dq = widgets.Button(description="Apply Data Quality rule", disabled=not editable)
         suggest_dq = widgets.Button(
             description="Suggest rules",
             disabled=(
@@ -1490,7 +1486,7 @@ def widget_data_contract(
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
                 cid = str(column_select.value or "")
-                save_enrichment([
+                stage_enrichment([
                     enrichment_record("column", "Description", column_description.value, cid),
                     enrichment_record("column", "Classification", column_classification.value, cid),
                 ])
@@ -1510,13 +1506,9 @@ def widget_data_contract(
 
         def save_required_clicked(_button: Any) -> None:
             try:
-                cid = str(column_select.value or "")
-                contracts.save_guardrails(
-                    [build_required_record()], config=config, env=env, spark_session=spark
-                )
-                reload_after_save(
-                    "Guardrails saved and the canonical contract state was refreshed.",
-                    clear_column_ids=(cid,),
+                stage_guardrails([build_required_record()])
+                set_status(
+                    "Required-state change applied locally. Save the Data Contract from Review to persist."
                 )
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
@@ -1572,7 +1564,7 @@ def widget_data_contract(
             try:
                 record = build_sensitive_record()
                 if record is not None:
-                    save_guardrails([record])
+                    stage_guardrails([record])
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1649,7 +1641,7 @@ def widget_data_contract(
                 dq_ai.value = "<p><b>Transient suggestions</b></p><ul>" + "".join(
                     f"<li>{html.escape(item['rule_type'])}: {html.escape(item['rationale'])}</li>"
                     for item in suggestions
-                ) + "</ul><p>Select and edit a rule before saving; suggestions are never persisted automatically.</p>"
+                ) + "</ul><p>Select and edit a rule before applying; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
@@ -1681,16 +1673,11 @@ def widget_data_contract(
                     record for record in (build_required_record(), build_sensitive_record())
                     if record is not None
                 ]
-                contracts.save_enrichment(
-                    enrichment_records, config=config, env=env, spark_session=spark
-                )
+                stage_enrichment(enrichment_records)
                 if guardrail_records:
-                    contracts.save_guardrails(
-                        guardrail_records, config=config, env=env, spark_session=spark
-                    )
-                reload_after_save(
-                    "Column contract saved and the canonical contract state was refreshed.",
-                    clear_column_ids=(cid,),
+                    stage_guardrails(guardrail_records)
+                set_status(
+                    "Column changes applied locally. Save the Data Contract from Review to persist."
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
@@ -1829,7 +1816,7 @@ def widget_data_contract(
         custom_description = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Description"))
         advanced_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         advanced_help = widgets.HTML()
-        advanced_save = widgets.Button(description="Save configuration", button_style="primary", disabled=not editable)
+        advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
