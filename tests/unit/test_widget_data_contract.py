@@ -479,6 +479,42 @@ def test_ai_unavailable_is_session_scoped_until_explicit_retry(widget_runtime, m
     assert len(attempts) == initial_attempts + 1
 
 
+def test_malformed_ai_response_does_not_disable_other_widget_suggestions(widget_runtime, monkeypatch):
+    """Suggestion validation failures stay local when the Fabric AI runtime is available."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    sensitive_attempts = []
+    monkeypatch.setattr(
+        module, "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("invalid classification")),
+    )
+    monkeypatch.setattr(
+        module, "suggest_sensitive_data",
+        lambda *_args, **_kwargs: sensitive_attempts.append("sensitive") or [],
+    )
+
+    state = widget_runtime["open"](with_ai=True)
+
+    assert state["_ai_unavailable"] is None
+    assert sensitive_attempts == ["sensitive"]
+    assert state["ai_available"] is True
+    assert state["_ai_errors"]
+
+
+@pytest.mark.parametrize(
+    "error, expected",
+    [
+        (RuntimeError("Microsoft Fabric AI Functions are unavailable."), True),
+        (ModuleNotFoundError("No module named 'synapse'"), True),
+        (RuntimeError("temporary malformed response"), False),
+        (ValueError("invalid classification"), False),
+        (TypeError("response shape mismatch"), False),
+    ],
+)
+def test_only_runtime_availability_failures_disable_ai_session(error, expected):
+    """Response and validation errors must not become widget-wide availability failures."""
+    assert module._fabric_ai_is_unavailable(error) is expected
+
+
 def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widget_runtime):
     """Selecting an unconfigured column must not retain another column's DQ values."""
     state = widget_runtime["open"]()

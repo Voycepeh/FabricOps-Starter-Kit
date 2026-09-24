@@ -285,9 +285,9 @@
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
       "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 179,
+      "source_end_line": 187,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 173,
+      "source_start_line": 181,
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     }
   ],
@@ -14119,7 +14119,36 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 61,
+      "source_end_line": 69,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 55,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_fabric_ai_is_unavailable",
+      "function_type": "private_function",
+      "inbound_callers": [
+        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._fabric_ai_is_unavailable",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 52,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 47,
       "supports_live_contract": false,
@@ -14148,9 +14177,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 93,
+      "source_end_line": 101,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 75,
+      "source_start_line": 83,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14173,9 +14202,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 179,
+      "source_end_line": 187,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 173,
+      "source_start_line": 181,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14204,9 +14233,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 170,
+      "source_end_line": 178,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 96,
+      "source_start_line": 104,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14235,9 +14264,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 72,
+      "source_end_line": 80,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 64,
+      "source_start_line": 72,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14264,9 +14293,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 197,
+      "source_end_line": 205,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 182,
+      "source_start_line": 190,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14295,9 +14324,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._scheduled_refresh_html",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 224,
+      "source_end_line": 232,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 200,
+      "source_start_line": 208,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14320,9 +14349,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 1897,
+      "source_end_line": 1914,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 227,
+      "source_start_line": 235,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -18048,7 +18077,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 7,
-      "direct_call_count": 33,
+      "direct_call_count": 34,
       "discontinued_in": null,
       "examples": ">>> state = widget_data_contract(table_id=\"table-orders\", spark_session=spark)\n>>> state[\"_controls\"][\"open_without_ai\"].click()",
       "files_touched": [
@@ -18110,7 +18139,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 33
+              "width": 34
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -18122,18 +18151,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
-      "scope": 94,
+      "scope": 95,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 1897,
+      "source_end_line": 1914,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 227,
+      "source_start_line": 235,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
-      "transitive_function_count": 94,
+      "transitive_function_count": 95,
       "usage_notes": "Saves delegate to canonical Enrichment and Guardrail services, then update the\nin-memory governance snapshot and manifest without rereading unrelated metadata.\nLifecycle actions deliberately reload the snapshot. Profile context is lazy,\nsession-cached, read-only, and never added to the canonical payload. Scheduled\nRefresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nAI runs only after choosing Open with AI suggestions or an individual Run suggestion\naction. Open without AI is the primary path and performs no AI Function calls.\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or Not PII\nfrom governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.",
-      "width": 33
+      "width": 34
     },
     {
       "architecture_classification": "domain_public_api",
@@ -28047,6 +28076,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._fabric_ai_is_unavailable",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "violation_details": [],
@@ -29419,13 +29459,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 29,
-    "defined_function_count": 446,
+    "defined_function_count": 447,
     "detached_function_count": 42,
     "implicit_runtime_hook_count": 3,
     "public_function_count": 29,
-    "relationship_count": 916,
+    "relationship_count": 917,
     "source_referenced_function_count": 39,
-    "used_function_count": 375
+    "used_function_count": 376
   },
   "used_functions": [
     "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
@@ -29768,6 +29808,7 @@
     "fabricops_kit.widgets.shared.widget_common",
     "fabricops_kit.widgets.shared.write_widget_metadata_row",
     "fabricops_kit.widgets.widget_data_contract._expose_manifest",
+    "fabricops_kit.widgets.widget_data_contract._fabric_ai_is_unavailable",
     "fabricops_kit.widgets.widget_data_contract._latest",
     "fabricops_kit.widgets.widget_data_contract._manifest_sections",
     "fabricops_kit.widgets.widget_data_contract._parameters",

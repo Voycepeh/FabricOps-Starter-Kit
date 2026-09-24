@@ -44,6 +44,14 @@ _DQ_HELP = {
 }
 
 
+def _fabric_ai_is_unavailable(exc: BaseException) -> bool:
+    """Return whether an AI failure proves the Fabric AI runtime is unavailable."""
+    if isinstance(exc, ImportError):
+        return True
+    message = str(exc).casefold()
+    return isinstance(exc, RuntimeError) and "ai functions" in message and "unavailable" in message
+
+
 def _expose_manifest(payload: dict[str, Any]) -> str:
     """Expose one canonical payload to both module and active notebook namespaces."""
     global DATA_CONTRACT_MANIFEST, DATA_CONTRACT_MANIFEST_JSON
@@ -719,7 +727,7 @@ def widget_data_contract(
                     "value": result["Classification"], "stale": False
                 }
                 ai_errors.pop("table_enrichment", None)
-            except (TypeError, ValueError, RuntimeError) as exc:
+            except (ImportError, TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 ai_state["table"].setdefault(
                     "description", {"error": message, "stale": False}
@@ -728,8 +736,11 @@ def widget_data_contract(
                     "classification", {"error": message, "stale": False}
                 )
                 ai_errors["table_enrichment"] = message
-                state["_ai_unavailable"] = message
-                set_status(f"Table AI suggestions unavailable: {message}", warning=True)
+                unavailable = _fabric_ai_is_unavailable(exc)
+                if unavailable:
+                    state["_ai_unavailable"] = message
+                outcome = "unavailable" if unavailable else "failed"
+                set_status(f"Table AI suggestions {outcome}: {message}", warning=True)
             render_table_ai()
 
         accept_table_description.on_click(
@@ -1252,13 +1263,16 @@ def widget_data_contract(
                     "value": result["Classification"], "stale": False
                 }
                 ai_errors.pop((column_id, "enrichment"), None)
-            except (TypeError, ValueError, RuntimeError) as exc:
+            except (ImportError, TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 suggestions.setdefault("description", {"error": message, "stale": False})
                 suggestions.setdefault("classification", {"error": message, "stale": False})
                 ai_errors[(column_id, "enrichment")] = message
-                state["_ai_unavailable"] = message
-                set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
+                unavailable = _fabric_ai_is_unavailable(exc)
+                if unavailable:
+                    state["_ai_unavailable"] = message
+                outcome = "unavailable" if unavailable else "failed"
+                set_status(f"AI suggestions {outcome} for this column: {message}", warning=True)
             render_column_ai(column_id)
 
         def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
@@ -1306,13 +1320,16 @@ def widget_data_contract(
                     raise ValueError("AI Sensitive Data response must assess the selected column once.")
                 suggestions["sensitive_data"] = {**result[0], "stale": False}
                 ai_errors.pop((column_id, "sensitive_data"), None)
-            except (TypeError, ValueError, RuntimeError) as exc:
+            except (ImportError, TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "sensitive_data")] = message
-                state["_ai_unavailable"] = message
+                unavailable = _fabric_ai_is_unavailable(exc)
+                if unavailable:
+                    state["_ai_unavailable"] = message
+                outcome = "unavailable" if unavailable else "failed"
                 set_status(
-                    f"Sensitive Data AI unavailable for this column: {message}", warning=True
+                    f"Sensitive Data AI {outcome} for this column: {message}", warning=True
                 )
             render_column_ai(column_id)
 
