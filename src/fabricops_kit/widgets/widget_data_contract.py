@@ -1367,7 +1367,8 @@ def widget_data_contract(
                             "distinct_count", "distinct_percent", "min_value", "max_value",
                         ) if profile.get(name) is not None},
                         "frequency_evidence": [
-                            {"count": item.get("count")} for item in profile_value.get("values", [])
+                            {"value": item.get("value"), "count": item.get("count")}
+                            for item in profile_value.get("values", [])[:10]
                         ],
                     }],
                 })

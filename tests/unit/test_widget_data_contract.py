@@ -702,7 +702,7 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
         "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
         "min_value": "ORD-1", "max_value": "ORD-9",
     }
-    assert column["frequency_evidence"] == [{"count": 2}]
+    assert column["frequency_evidence"] == [{"value": "col-0", "count": 2}]
 
 
 def test_review_sections_separate_table_dq_categories_from_column_rules():
