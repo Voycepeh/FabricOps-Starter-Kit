@@ -345,7 +345,7 @@ def read_contract_records(
         table_name,
         store="Metadata",
         schema=metadata_table_physical_schema(config, table_name),
-        context={"config": config, "env": env},
+        context={"config": config, "env": env, "_fabricops_suppress_io_log": True},
         spark_session=spark_session,
     )
     return contract_version_records(
@@ -367,7 +367,7 @@ def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[di
         frame = read_lakehouse_table(
             ENRICHMENT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-            context={"config": config, "env": env}, spark_session=spark_session,
+            context={"config": config, "env": env, "_fabricops_suppress_io_log": True}, spark_session=spark_session,
         )
     except Exception as exc:
         message = str(exc).lower()
@@ -408,7 +408,7 @@ def get_contract_authoring_state(
 ) -> dict[str, Any]:
     """Load the governance state needed by a contract editor without UI objects."""
     identity, version = validate_contract_identity(contract_id, contract_version)
-    context = {"config": config, "env": env}
+    context = {"config": config, "env": env, "_fabricops_suppress_io_log": True}
     contract_frame = read_lakehouse_table(
         DATA_CONTRACT_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
@@ -463,7 +463,7 @@ def list_contract_governance_state(
     *, config: Any, env: str, spark_session: Any
 ) -> dict[str, list[dict[str, Any]]]:
     """Return governed tables and Data Contract versions for the authoring selector."""
-    context = {"config": config, "env": env}
+    context = {"config": config, "env": env, "_fabricops_suppress_io_log": True}
     catalogue = _scoped_rows(
         read_lakehouse_table(
             "METADATA_DATA_CATALOGUE", store="Metadata",
@@ -502,7 +502,7 @@ def get_contract_review_state(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context={"config": config, "env": env}, spark_session=spark_session,
+            context={"config": config, "env": env, "_fabricops_suppress_io_log": True}, spark_session=spark_session,
         ),
         f"contract_id = {_sql_literal(identity)}",
         f"contract_version = {version}",
@@ -542,7 +542,7 @@ def build_contract_manifest(
     tables = {
         name: row_dicts(read_lakehouse_table(
             name, store="Metadata", schema=metadata_table_physical_schema(config, name),
-            spark_session=spark_session, context={"config": config, "env": env},
+            spark_session=spark_session, context={"config": config, "env": env, "_fabricops_suppress_io_log": True},
         )) for name in CONTRACT_SOURCE_TABLES
     }
     validate_contract_draft(
@@ -560,7 +560,7 @@ def get_column_profile_context(
     *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
 ) -> dict[str, Any]:
     """Return top frequency values or a range from the latest completed profile snapshot."""
-    context = {"config": config, "env": env}
+    context = {"config": config, "env": env, "_fabricops_suppress_io_log": True}
     profiled = _scoped_rows(
         read_lakehouse_table(
             "METADATA_DATA_PROFILED", store="Metadata",
@@ -747,7 +747,7 @@ def save_enrichment(records: list[dict[str, Any]], *, config: Any, env: str, spa
                 schema=metadata_table_schema_registry()[ENRICHMENT_TABLE],
             ), ENRICHMENT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-            context={"config": config, "env": env}, mode="append",
+            context={"config": config, "env": env, "_fabricops_suppress_io_log": True}, mode="append",
         )
     return canonical
 
@@ -765,7 +765,7 @@ def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spa
             spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_TABLE, row) for row in canonical]),
             GUARDRAIL_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
-            context={"config": config, "env": env}, mode="append",
+            context={"config": config, "env": env, "_fabricops_suppress_io_log": True}, mode="append",
         )
     return canonical
 
