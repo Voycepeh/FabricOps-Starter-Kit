@@ -467,6 +467,7 @@ def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_r
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Canonical saved description"
+    controls["pii_reason"].value = "Existing sensitive policy remains reviewed."
     controls["save_column"].click()
 
     assert widget_runtime["calls"]["enrichment"] == []
@@ -801,6 +802,9 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
     controls["save_column_enrichment"].click()
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert state["_pending_enrichment"]
+    controls["save_data_contract"].click()
     assert widget_runtime["calls"]["enrichment"]
     assert state["_ai_errors"]
 
@@ -837,8 +841,13 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     freshness["parameters"][1].value = "6"
     freshness["parameters"][2].value = "hours"
     freshness["save"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
-    assert module._parameters(saved) == {
+    assert widget_runtime["calls"]["guardrails"] == []
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_type") == "freshness"
+    )
+    assert module._parameters(staged) == {
         "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
     }
 
@@ -847,9 +856,16 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     drift["parameters"][0].value = "column_0"
     drift["parameters"][1].value = "column_1"
     drift["save"].click()
-    assert module._parameters(widget_runtime["calls"]["guardrails"][-1][0]) == {
+    staged_drift = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_type") == "source_drift"
+    )
+    assert module._parameters(staged_drift) == {
         "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
     }
+    state["_controls"]["save_data_contract"].click()
+    assert widget_runtime["calls"]["guardrails"]
 
 
 def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
@@ -880,7 +896,12 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     assert controls["dq_action"].value == "Warn"
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     controls["save_dq"].click()
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    assert widget_runtime["calls"]["guardrails"] == []
+    state["_controls"]["save_data_contract"].click()
+    saved = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("guardrail_rule_id") == "dq-pattern"
+    )
     assert saved["guardrail_rule_id"] == "dq-pattern"
     assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
 
@@ -955,8 +976,13 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     assert controls["dq_maximum_inclusive"].value is False
     controls["dq_minimum"].value = "1"
     controls["save_dq"].click()
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    controls["save_data_contract"].click()
 
-    saved = widget_runtime["calls"]["guardrails"][-1][0]
+    saved = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "range"
+    )
     assert saved["column_id"] == "col-0"
     assert module._parameters(saved) == {
         "columns": ["column_0"], "minimum": "1", "minimum_inclusive": True,
