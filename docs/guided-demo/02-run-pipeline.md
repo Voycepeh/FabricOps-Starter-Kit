@@ -78,6 +78,7 @@ The template contains three independent Read blocks.
     - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
     - `READ_SCHEMA` → the source schema.
     - `READ_TABLE` → the source table.
+    - `READ_MODE` → keep as `"full"` in this full-refresh template.
     - `READ_QUERY` → use `None` for a normal full table read, or a Warehouse `SELECT` to project/shape the full row set without turning the flow into an incremental read.
 
 ```python
@@ -85,6 +86,7 @@ READ_NAME = "orders"
 READ_STORE = "Bronze"
 READ_SCHEMA = "demo"
 READ_TABLE = "orders"
+READ_MODE = "full"
 READ_QUERY = None
 ```
 
@@ -99,6 +101,7 @@ source = pipeline_read(
     store=READ_STORE,
     schema=READ_SCHEMA,
     table_name=READ_TABLE,
+    read_mode=READ_MODE,
     query=READ_QUERY,
     spark_session=spark,
 )
