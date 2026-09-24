@@ -894,7 +894,9 @@ def widget_data_contract(
                     action="Block" if block_control.value else "Warn", active=enabled_control.value,
                 )
 
-            def save_table_rule(_button: Any, builder: Any = build_table_rule_record) -> None:
+            def save_table_rule(
+                _button: Any, builder: Any = build_table_rule_record, rule_title: str = title,
+            ) -> None:
                 try:
                     record = builder()
                     if record is not None:
@@ -1677,7 +1679,7 @@ def widget_data_contract(
                 dq_ai.value = "<p><b>Transient suggestions</b></p><ul>" + "".join(
                     f"<li>{html.escape(item['rule_type'])}: {html.escape(item['rationale'])}</li>"
                     for item in suggestions
-                ) + "</ul><p>Select and edit a rule before saving; suggestions are never persisted automatically.</p>"
+                ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
@@ -1946,19 +1948,39 @@ def widget_data_contract(
             ), height="240px",
         )
         actions: list[Any] = []
+        save_contract_button = None
         if editable:
-            freeze_button = widgets.Button(description=f"Freeze v{row['contract_version']}", button_style="primary")
+            save_contract_button = widgets.Button(
+                description="Save Data Contract",
+                button_style="primary",
+            )
+            freeze_button = widgets.Button(
+                description=f"Freeze v{row['contract_version']}",
+                disabled=bool(state.get("dirty")),
+            )
+
+            def save_contract_clicked(_button: Any) -> None:
+                try:
+                    # Capture the currently visible Table and Column editors before the one write.
+                    save_table(None)
+                    save_column_clicked(None)
+                    save_data_contract_session()
+                except (TypeError, ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
 
             def freeze_clicked(_button: Any) -> None:
                 try:
+                    if state.get("dirty"):
+                        raise ValueError("Save the Data Contract before freezing this version.")
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
+            save_contract_button.on_click(save_contract_clicked)
             freeze_button.on_click(freeze_clicked)
-            actions.append(freeze_button)
+            actions.extend([save_contract_button, freeze_button])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -2030,6 +2052,7 @@ def widget_data_contract(
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
+            "save_data_contract": save_contract_button,
             "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
