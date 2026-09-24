@@ -1549,13 +1549,24 @@ def widget_data_contract(
         advanced_saved.observe(hydrate_advanced_saved, names="value")
         advanced_save.on_click(save_advanced_clicked)
         hydrate_advanced_type()
-        panes[0].children = (*panes[0].children, shared.form_section(
-            widgets, title="Table Data Quality", children=[shared.authoring_workspace(
-            widgets, target=[advanced_type], selection=[advanced_saved], configuration=[
-                advanced_help, advanced_columns, advanced_operator, custom_expression,
-                custom_description, advanced_action, advanced_save,
-            ], titles=("Rule type", "Saved configurations / affected columns", "Selected / new configuration"),
-        )]),)
+        advanced_left = (
+            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>ADVANCED RULES</div>"),
+            widgets.HTML("<div style='color:#666;font-size:12px;'>Multi-column and custom Data Quality configurations.</div>"),
+            advanced_type,
+            widgets.HTML("<div style='font-weight:600;margin-top:8px;'>Saved configurations</div>"),
+            advanced_saved,
+        )
+        advanced_right = (
+            advanced_help,
+            advanced_columns,
+            advanced_operator,
+            custom_expression,
+            custom_description,
+            advanced_action,
+            widgets.HBox([advanced_save], layout=widgets.Layout(justify_content="flex-start")),
+        )
+        view_content["Advanced"] = (advanced_left, advanced_right)
+
 
         # Manifest: compact navigation and bounded selected-section review.
         payload = state.get("manifest") or {}
@@ -1605,11 +1616,19 @@ def widget_data_contract(
 
             activate_button.on_click(activate_clicked)
             actions.extend([agreement_id, agreement_version, activate_button])
-        panes[2].children = (shared.authoring_workspace(
-            widgets, target=[manifest_nav, widgets.HTML("<p><b>Notebook variable</b><br>DATA_CONTRACT_MANIFEST</p>")],
-            selection=[manifest_preview], configuration=[exact_json, *actions],
-            titles=("Section summary", "Human-readable review", "Exact manifest & lifecycle"),
-        ),)
+        review_left = (
+            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>REVIEW</div>"),
+            manifest_nav,
+            widgets.HTML("<p><b>Notebook variable</b><br>DATA_CONTRACT_MANIFEST</p>"),
+        )
+        review_right = (
+            manifest_preview,
+            exact_json,
+            *actions,
+        )
+        view_content["Review"] = (review_left, review_right)
+        apply_view()
+
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
@@ -1618,6 +1637,7 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
+            "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
@@ -1657,8 +1677,16 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
-        [widgets.HBox([change_table_button]), tabs],
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none"),
+        [
+            widgets.HBox(
+                [top_nav],
+                layout=widgets.Layout(
+                    width="100%", justify_content="center", margin="4px 0 6px 0",
+                ),
+            ),
+            workspace,
+        ],
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
     )
 
     def refresh_table_options(*_args: Any) -> None:
