@@ -135,11 +135,59 @@ def test_configured_prompt_and_metadata_only_context_are_sent():
     assert "Do not include raw values" in prompts[0]
 
 
+def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monkeypatch):
+    """Register Fabric AI Functions before invoking the pandas accessor."""
+    calls = []
+    response = type("Response", (), {"iloc": [" generated response "]})()
+
+    class AI:
+        def generate_response(self, *args, **kwargs):
+            calls.append(("generate_response", args, kwargs))
+            return response
+
+    class Frame:
+        ai = AI()
+
+    class Pandas:
+        @staticmethod
+        def DataFrame(rows):
+            calls.append(("DataFrame", rows))
+            return Frame()
+
+    def fake_import(name):
+        calls.append(("import", name))
+        if name == "synapse.ml.aifunc":
+            return object()
+        if name == "pandas":
+            return Pandas()
+        raise AssertionError(name)
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import)
+
+    assert module._invoke_fabric_ai("prompt text") == "generated response"
+    assert calls[0] == ("import", "synapse.ml.aifunc")
+    assert calls[1] == ("import", "pandas")
+    assert calls[2] == ("DataFrame", [{"fabricops_prompt": "prompt text"}])
+    assert calls[3] == ("generate_response", ("{fabricops_prompt}",), {})
+
+
 def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     """Report an actionable error outside an AI-enabled Fabric runtime."""
     class Frame:
         ai = None
 
-    monkeypatch.setattr(module.importlib, "import_module", lambda _name: type("Pandas", (), {"DataFrame": lambda *_args, **_kwargs: Frame()})())
+    class Pandas:
+        @staticmethod
+        def DataFrame(*_args, **_kwargs):
+            return Frame()
+
+    def fake_import(name):
+        if name == "synapse.ml.aifunc":
+            return object()
+        if name == "pandas":
+            return Pandas()
+        raise AssertionError(name)
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import)
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
         module._invoke_fabric_ai("prompt")
