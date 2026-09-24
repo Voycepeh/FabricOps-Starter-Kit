@@ -413,6 +413,12 @@ def widget_data_contract(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
+        scope = (str(chosen["contract_id"]), state["contract_version"])
+        state["dirty"] = bool(
+            state["_pending_enrichment"].get(scope)
+            or state["_pending_guardrails"].get(scope)
+            or state["_column_drafts"].get(scope)
+        )
         refresh_scheduled_refresh(str(state["table_id"] or ""))
         refresh_manifest()
         return state["current"]
@@ -493,7 +499,8 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
-        pending: dict[str, dict[str, Any]] = state["_pending_enrichment"]
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        pending: dict[str, dict[str, Any]] = state["_pending_enrichment"].setdefault(scope, {})
         current_rows = list(current.get("enrichment", []))
         for record in records:
             key = str(record.get("enrichment_id") or "")
@@ -513,7 +520,8 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be edited.")
-        pending: dict[str, dict[str, Any]] = state["_pending_guardrails"]
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        pending: dict[str, dict[str, Any]] = state["_pending_guardrails"].setdefault(scope, {})
         current_rows = list(current.get("guardrails", []))
         for record in records:
             key = str(record.get("guardrail_rule_id") or "")
@@ -533,8 +541,9 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be saved.")
-        enrichment_records = list(state["_pending_enrichment"].values())
-        guardrail_records = list(state["_pending_guardrails"].values())
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        enrichment_records = list(state["_pending_enrichment"].get(scope, {}).values())
+        guardrail_records = list(state["_pending_guardrails"].get(scope, {}).values())
         if enrichment_records:
             contracts.save_enrichment(
                 enrichment_records, config=config, env=env, spark_session=spark
@@ -543,9 +552,9 @@ def widget_data_contract(
             contracts.save_guardrails(
                 guardrail_records, config=config, env=env, spark_session=spark
             )
-        state["_pending_enrichment"].clear()
-        state["_pending_guardrails"].clear()
-        state["_column_drafts"].clear()
+        state["_pending_enrichment"].pop(scope, None)
+        state["_pending_guardrails"].pop(scope, None)
+        state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
@@ -1543,7 +1552,6 @@ def widget_data_contract(
 
         def save_required_clicked(_button: Any) -> None:
             try:
-                cid = str(column_select.value or "")
                 stage_guardrails([build_required_record()])
                 set_status("Required-column change staged locally.")
             except (ValueError, RuntimeError) as exc:
@@ -1961,9 +1969,6 @@ def widget_data_contract(
 
             def save_contract_clicked(_button: Any) -> None:
                 try:
-                    # Capture the currently visible Table and Column editors before the one write.
-                    save_table(None)
-                    save_column_clicked(None)
                     save_data_contract_session()
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
