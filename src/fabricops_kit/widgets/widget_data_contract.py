@@ -1147,6 +1147,27 @@ def widget_data_contract(
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
         hydrating = {"active": False}
+        hydrated_column_snapshots: dict[str, dict[str, Any]] = {}
+
+        def column_editor_snapshot() -> dict[str, Any]:
+            return {
+                "description": column_description.value,
+                "classification": column_classification.value,
+                "required": required.value,
+                "sensitive_enabled": sensitive_enabled.value,
+                "pii_type": pii_type.value,
+                "pii_reason": pii_reason.value,
+                "sensitive_treatment": sensitive_treatment.value,
+                "sensitive_action": sensitive_action.value,
+                "mask_start": mask_start.value,
+                "mask_end": mask_end.value,
+                "mask_character": mask_character.value,
+                "bucket_bins": bucket_bins.value,
+                "bucket_labels": bucket_labels.value,
+                "dq_type": dq_type.value,
+                "dq_parameters": [control.value for control in dq_parameter_controls],
+                "dq_action": dq_action.value,
+            }
 
         def hydrate_dq_family(column_id: str, kind: str) -> None:
             """Hydrate one column/family pair without borrowing another rule's parameters."""
@@ -1214,6 +1235,7 @@ def widget_data_contract(
             ]
             dq_type.value = configured[0] if configured else _COLUMN_DQ_TYPES[0]
             hydrate_dq_family(column_id, str(dq_type.value))
+            hydrated_column_snapshots[column_id] = column_editor_snapshot()
             pending = unsaved_columns.get(column_id)
             if pending:
                 column_description.value = pending["description"]
@@ -1289,27 +1311,14 @@ def widget_data_contract(
         def column_changed(change: dict[str, Any]) -> None:
             old = str(change.get("old") or "")
             if old:
-                unsaved_columns[old] = {
-                    "description": column_description.value,
-                    "classification": column_classification.value,
-                    "required": required.value,
-                    "sensitive_enabled": sensitive_enabled.value,
-                    "pii_type": pii_type.value,
-                    "pii_reason": pii_reason.value,
-                    "sensitive_treatment": sensitive_treatment.value,
-                    "sensitive_action": sensitive_action.value,
-                    "mask_start": mask_start.value,
-                    "mask_end": mask_end.value,
-                    "mask_character": mask_character.value,
-                    "bucket_bins": bucket_bins.value,
-                    "bucket_labels": bucket_labels.value,
-                    "dq_type": dq_type.value,
-                    "dq_parameters": [control.value for control in dq_parameter_controls],
-                    "dq_action": dq_action.value,
-                }
-                set_status(
-                    "Column edits were retained locally; use Apply Column Changes before the final save."
-                )
+                snapshot = column_editor_snapshot()
+                if snapshot != hydrated_column_snapshots.get(old, snapshot):
+                    unsaved_columns[old] = snapshot
+                    set_status(
+                        "Column edits were retained locally; use Apply Column Changes before the final save."
+                    )
+                else:
+                    unsaved_columns.pop(old, None)
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
