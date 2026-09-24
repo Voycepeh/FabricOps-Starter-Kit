@@ -1933,6 +1933,8 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
+            "run_with_ai": run_with_ai, "run_without_ai": run_without_ai,
+            "ai_startup_note": ai_startup_note,
             "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
