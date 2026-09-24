@@ -360,7 +360,10 @@ def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widge
     assert widget_runtime["calls"]["profiles"] == ["col-0"]
     assert len(controls["tabs"].children) == 3
     assert controls["tabs"].children[0] is not controls["tabs"].children[1]
-    assert controls["tabs"].children[0].children[0].layout.height == "560px"
+    table_workspace = controls["tabs"].children[0].children[0]
+    assert "fabricops-authoring-workspace" in table_workspace._dom_classes
+    assert table_workspace.children[0].layout.max_height == "560px"
+    assert table_workspace.children[0].layout.height == "auto"
     assert "fabricops-authoring-workspace" in controls["tabs"].children[1].children[0]._dom_classes
 
     controls["tabs"].selected_index = 1
@@ -371,6 +374,46 @@ def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widge
     assert widget_runtime["calls"]["snapshots"] == 1
     assert widget_runtime["calls"]["profiles"] == ["col-0"]
     assert len(widget_runtime["calls"]["enrichment"]) == 1
+
+
+def test_compact_configuration_navigation_and_action_rows(widget_runtime):
+    """Column configuration shows one compact editor and groups related actions."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    selector = controls["column_configuration"]
+    editor = controls["column_configuration_editor"]
+
+    assert len(editor.children) == 1
+    assert "Enrichment" in editor.children[0].children[0].value
+    selector.value = "Sensitive Data"
+    sensitive = editor.children[0]
+    assert len(sensitive.children[2].children) == 2  # Accept + Re-run action row.
+    assert sensitive.children[-1].children == (controls["save_sensitive"],)
+
+    controls["pii_type"].value = "none"
+    assert controls["sensitive_treatment"].layout.display == "none"
+    assert controls["mask_start"].layout.display == "none"
+    assert controls["bucket_bins"].layout.display == "none"
+
+    selector.value = "Data Quality"
+    assert len(editor.children) == 1
+    controls["dq_type"].value = "pattern"
+    assert controls["dq_pattern"].layout.display == ""
+    assert controls["dq_max_missing"].layout.display == "none"
+    assert controls["dq_values"].layout.display == "none"
+
+
+def test_review_lifecycle_action_precedes_collapsed_manifest(widget_runtime):
+    """Review keeps lifecycle controls at the top and exact JSON collapsed last."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    review_workspace = controls["tabs"].children[2].children[0]
+    right_pane = review_workspace.children[2]
+
+    assert right_pane.children[1] is controls["lifecycle_summary"]
+    assert controls["freeze"] in right_pane.children[2].children
+    assert right_pane.children[-1] is controls["exact_json"]
+    assert controls["exact_json"].value.startswith("<details><summary>Exact JSON manifest")
 
 
 def test_profile_context_is_cached_per_table_and_column(widget_runtime):

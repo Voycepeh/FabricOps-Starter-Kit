@@ -29,7 +29,7 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.pipeline.shared import DQ_RULE_TYPES
 
 
-_WIDGET_STYLE = {"description_width": "initial"}
+_WIDGET_STYLE = {"description_width": "120px"}
 _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
@@ -134,13 +134,16 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     """Compose a full-width widget form with a consistent page header."""
     field_style = (
         "<style>"
-        ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;"
-        "min-width:0;max-width:100%;}"
-        ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}"
-        ".fabricops-form .widget-label{display:block;width:100%;max-width:100%;}"
+        ".fabricops-form .widget-inline-hbox{display:grid;grid-template-columns:minmax(100px,120px) "
+        "minmax(0,1fr);column-gap:8px;align-items:start;min-width:0;max-width:100%;}"
+        ".fabricops-form .widget-inline-hbox>.widget-label{width:auto;min-width:0;margin:5px 0 0;}"
+        ".fabricops-form .widget-label{display:block;max-width:100%;white-space:normal;line-height:1.25;}"
         ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
         ".fabricops-form .widget-textarea textarea{width:100%;min-width:0;max-width:100%;box-sizing:border-box;}"
         ".fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
+        ".fabricops-form p{margin:4px 0 8px;}"
+        "@media(max-width:700px){.fabricops-form .widget-inline-hbox{grid-template-columns:1fr;}"
+        ".fabricops-form .widget-inline-hbox>.widget-label{margin:0 0 3px;}}"
         "</style>"
     )
     header = widgets.HTML(
@@ -178,17 +181,26 @@ def status_message(widgets: Any) -> Any:
     return message
 
 
-def bounded_region(widgets: Any, children: Iterable[Any], *, height: str = _AUTHORING_PANE_HEIGHT) -> Any:
-    """Contain long authoring content in a stable, internally scrolling region."""
+def bounded_region(
+    widgets: Any,
+    children: Iterable[Any],
+    *,
+    height: str | None = None,
+    min_height: str = "180px",
+    max_height: str = _AUTHORING_PANE_HEIGHT,
+) -> Any:
+    """Contain authoring content naturally and scroll only when it exceeds its bound."""
     return widgets.VBox(
         list(children),
         layout=widgets.Layout(
             width="100%",
             min_width="0",
             max_width="100%",
-            height=height,
+            height=height or "auto",
+            min_height=min_height,
+            max_height=max_height,
             overflow="auto",
-            gap="8px",
+            gap="6px",
         ),
     )
 
@@ -198,7 +210,7 @@ def authoring_pane(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
     heading = widgets.HTML(
         value=(
             '<div style="color:#0f548c;font-size:15px;font-weight:600;'
-            f'border-bottom:1px solid #d7e7f5;padding-bottom:6px;">{_html_escape(title)}</div>'
+            f'border-bottom:1px solid #d7e7f5;padding-bottom:4px;">{_html_escape(title)}</div>'
         )
     )
     return bounded_region(widgets, [heading, *children])
@@ -247,15 +259,15 @@ def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
     """Group naturally expanding form content under a visible heading."""
     heading = widgets.HTML(
         value=(
-            '<div style="color:#0f548c;font-size:16px;font-weight:600;'
-            f'border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">{_html_escape(title)}</div>'
+            '<div style="color:#0f548c;font-size:14px;font-weight:600;'
+            f'padding:0 0 3px 0;">{_html_escape(title)}</div>'
         ),
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
     )
     return widgets.VBox(
         [heading, *children],
         layout=widgets.Layout(
-            width="100%", height="auto", overflow="visible", border="1px solid #d7e7f5", padding="12px", gap="8px"
+            width="100%", height="auto", overflow="visible", padding="4px 0", gap="6px"
         ),
     )
 
@@ -269,7 +281,7 @@ def form_grid(widgets: Any, children: Iterable[Any]) -> Any:
             height="auto",
             overflow="visible",
             grid_template_columns="repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-            grid_gap="16px 24px",
+            grid_gap="8px 16px",
         ),
     )
 
@@ -303,7 +315,7 @@ def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None
             overflow="visible",
             justify_content="flex-end",
             align_items="center",
-            gap="10px",
+            gap="6px",
         ),
     )
 

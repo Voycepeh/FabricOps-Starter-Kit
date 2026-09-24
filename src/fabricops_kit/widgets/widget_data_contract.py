@@ -823,17 +823,17 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        panes[0].children = (
-            shared.form_section(widgets, title="Table identity & context", children=[identity]),
-            shared.form_section(widgets, title="Pipeline / Refresh", children=[pipeline_refresh]),
-            shared.form_section(widgets, title="Table Enrichment", children=[
+        table_context_section = shared.form_section(
+            widgets, title="Table identity & context", children=[identity, pipeline_refresh]
+        )
+        table_enrichment_section = shared.form_section(widgets, title="Table Enrichment", children=[
                 table_description, table_description_ai,
-                shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
+                shared.action_row(widgets, [accept_table_description, rerun_table_description]),
                 table_classification, table_classification_ai,
-                shared.form_grid(widgets, [accept_table_classification, rerun_table_classification]),
-                table_save,
-            ]),
-            shared.form_section(widgets, title="Table Guardrails", children=[
+                shared.action_row(widgets, [accept_table_classification, rerun_table_classification]),
+                shared.action_row(widgets, [table_save]),
+            ])
+        table_guardrails_section = shared.form_section(widgets, title="Table Guardrails", children=[
                 shared.form_grid(widgets, [
                     shared.form_section(widgets, title="Freshness", children=[
                         widgets.HTML(
@@ -842,16 +842,17 @@ def widget_data_contract(
                         ),
                         table_rules["freshness"]["enabled"],
                         *table_rules["freshness"]["parameters"],
-                        table_rules["freshness"]["block"], table_rules["freshness"]["save"],
+                        table_rules["freshness"]["block"],
+                        shared.action_row(widgets, [table_rules["freshness"]["save"]]),
                     ]),
                     shared.form_section(widgets, title="Source Drift", children=[
                         table_rules["source_drift"]["enabled"],
                         *table_rules["source_drift"]["parameters"],
-                        table_rules["source_drift"]["block"], table_rules["source_drift"]["save"],
+                        table_rules["source_drift"]["block"],
+                        shared.action_row(widgets, [table_rules["source_drift"]["save"]]),
                     ]),
                 ])
-            ]),
-        )
+            ])
 
         # Columns: one editor, hydrated on selection, with profile evidence isolated from payload.
         required_rule = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {})
@@ -872,7 +873,7 @@ def widget_data_contract(
         accept_column_classification = widgets.Button(description="Accept", disabled=not editable)
         rerun_column_classification = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
-        sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        sensitive_enabled = widgets.Checkbox(description="Enable guardrail", disabled=not editable)
         pii_type = widgets.Dropdown(
             options=[(label, value) for value, label in PII_LABELS.items()],
             value="none", disabled=not editable, **shared.widget_common(widgets, "PII assessment"),
@@ -1044,10 +1045,11 @@ def widget_data_contract(
 
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
+            is_pii = str(pii_type.value or "none") != "none"
             for control in (mask_start, mask_end, mask_character):
-                control.layout.display = "" if treatment == "mask" else "none"
+                control.layout.display = "" if is_pii and treatment == "mask" else "none"
             for control in (bucket_bins, bucket_labels):
-                control.layout.display = "" if treatment == "bucket" else "none"
+                control.layout.display = "" if is_pii and treatment == "bucket" else "none"
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
         update_sensitive_fields()
@@ -1056,6 +1058,10 @@ def widget_data_contract(
             is_pii = str(pii_type.value or "none") != "none"
             if not is_pii:
                 sensitive_enabled.value = False
+            pii_reason.layout.display = "" if is_pii else "none"
+            sensitive_enabled.layout.display = "" if is_pii else "none"
+            sensitive_treatment.layout.display = "" if is_pii else "none"
+            sensitive_action.layout.display = "" if is_pii else "none"
             sensitive_treatment.disabled = not editable or not is_pii
             sensitive_action.disabled = not editable or not is_pii
             update_sensitive_fields()
@@ -1495,24 +1501,55 @@ def widget_data_contract(
         save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        enrichment_section = shared.form_section(widgets, title="Enrichment", children=[
+            column_description, column_description_ai,
+            shared.action_row(widgets, [accept_column_description, rerun_column_description]),
+            column_classification, column_classification_ai,
+            shared.action_row(widgets, [accept_column_classification, rerun_column_classification]),
+            shared.action_row(widgets, [save_column_enrichment]),
+        ])
+        schema_section = shared.form_section(
+            widgets, title="Schema", children=[required, shared.action_row(widgets, [save_required])]
+        )
+        sensitive_section = shared.form_section(widgets, title="Sensitive Data", children=[
+            sensitive_ai,
+            shared.action_row(widgets, [accept_sensitive, rerun_sensitive]),
+            pii_type, pii_reason, sensitive_enabled, sensitive_treatment,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            sensitive_action, shared.action_row(widgets, [save_sensitive]),
+        ])
+        dq_section = shared.form_section(widgets, title="Data Quality", children=[
+            dq_type, dq_help, dq_usage, *dq_parameter_controls, dq_action,
+            dq_ai, dq_suggestion,
+            shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
+            shared.action_row(widgets, [save_dq]),
+        ])
+        column_configuration = widgets.Dropdown(
+            options=("Enrichment", "Schema", "Sensitive Data", "Data Quality"),
+            value="Enrichment", **shared.widget_common(widgets, "Configuration"),
+        )
+        configuration_sections = {
+            "Enrichment": enrichment_section,
+            "Schema": schema_section,
+            "Sensitive Data": sensitive_section,
+            "Data Quality": dq_section,
+        }
+        column_configuration_editor = widgets.VBox(
+            [enrichment_section],
+            layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+        )
+
+        def column_configuration_changed(change: dict[str, Any]) -> None:
+            selected_section = configuration_sections.get(str(change.get("new") or ""))
+            column_configuration_editor.children = (selected_section,) if selected_section else ()
+
+        column_configuration.observe(column_configuration_changed, names="value")
         panes[1].children = (shared.authoring_workspace(
             widgets,
             target=[column_select],
             selection=[column_context, widgets.HTML("<b>Profile evidence</b>"), profile_context],
             configuration=[
-                shared.form_section(widgets, title="Enrichment", children=[
-                    column_description, column_description_ai,
-                    shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
-                    column_classification, column_classification_ai,
-                    shared.form_grid(widgets, [accept_column_classification, rerun_column_classification]),
-                    save_column_enrichment,
-                ]),
-                shared.form_section(widgets, title="Schema", children=[required, save_required]),
-                shared.form_section(widgets, title="Sensitive Data", children=[sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason, sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character, bucket_bins, bucket_labels, sensitive_action, save_sensitive]),
-                shared.form_section(widgets, title="Data Quality", children=[
-                    dq_type, dq_help, dq_usage, *dq_parameter_controls, dq_action,
-                    suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
-                ]),
+                column_configuration, column_configuration_editor,
             ], titles=("Columns", "Selected column context", "Configuration"),
         ),)
         if column_options:
@@ -1591,32 +1628,63 @@ def widget_data_contract(
         advanced_saved.observe(hydrate_advanced_saved, names="value")
         advanced_save.on_click(save_advanced_clicked)
         hydrate_advanced_type()
-        panes[0].children = (*panes[0].children, shared.form_section(
+        table_dq_section = shared.form_section(
             widgets, title="Table Data Quality", children=[shared.authoring_workspace(
             widgets, target=[advanced_type], selection=[advanced_saved], configuration=[
                 advanced_help, advanced_columns, advanced_operator, custom_expression,
-                custom_description, advanced_action, advanced_save,
+                custom_description, advanced_action, shared.action_row(widgets, [advanced_save]),
             ], titles=("Rule type", "Saved configurations / affected columns", "Selected / new configuration"),
-        )]),)
-        panes[0].children = (shared.bounded_region(widgets, panes[0].children),)
+        )])
+        table_configuration = widgets.Dropdown(
+            options=("Enrichment", "Guardrails", "Data Quality"), value="Enrichment",
+            **shared.widget_common(widgets, "Configuration"),
+        )
+        table_sections = {
+            "Enrichment": table_enrichment_section,
+            "Guardrails": table_guardrails_section,
+            "Data Quality": table_dq_section,
+        }
+        table_configuration_editor = widgets.VBox(
+            [table_enrichment_section],
+            layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+        )
+
+        def table_configuration_changed(change: dict[str, Any]) -> None:
+            selected_section = table_sections.get(str(change.get("new") or ""))
+            table_configuration_editor.children = (selected_section,) if selected_section else ()
+
+        table_configuration.observe(table_configuration_changed, names="value")
+        panes[0].children = (shared.authoring_workspace(
+            widgets,
+            target=[table_configuration],
+            selection=[table_context_section],
+            configuration=[table_configuration_editor],
+            titles=("Table areas", "Table context", "Configuration"),
+        ),)
 
         # Manifest: compact navigation and bounded selected-section review.
         payload = state.get("manifest") or {}
         sections = _manifest_sections(payload)
         manifest_nav = widgets.Select(options=list(sections), **shared.widget_common(widgets, "Section"))
-        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="500px")
+        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="320px")
 
         def manifest_section_changed(change: dict[str, Any]) -> None:
             manifest_preview.value = sections.get(str(change.get("new") or ""), "")
 
         manifest_nav.observe(manifest_section_changed, names="value")
         manifest_preview.value = sections.get(str(manifest_nav.value or ""), "")
-        exact_json = shared.preview_region(
-            widgets, widgets.HTML(
-                f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
-            ), height="240px",
+        exact_json = widgets.HTML(
+            f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
+        )
+        lifecycle_summary = widgets.HTML(
+            "<p><b>Lifecycle</b><br>Contract v{} · {}</p>".format(
+                html.escape(str(row.get("contract_version") or "")),
+                html.escape(str(row.get("status") or "").upper()),
+            )
         )
         actions: list[Any] = []
+        freeze_button = None
+        activate_button = None
         if editable:
             freeze_button = widgets.Button(description=f"Freeze v{row['contract_version']}", button_style="primary")
 
@@ -1629,7 +1697,7 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             freeze_button.on_click(freeze_clicked)
-            actions.append(freeze_button)
+            actions.append(shared.action_row(widgets, [freeze_button]))
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -1647,11 +1715,14 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             activate_button.on_click(activate_clicked)
-            actions.extend([agreement_id, agreement_version, activate_button])
+            actions.extend([
+                agreement_id, agreement_version,
+                shared.action_row(widgets, [activate_button]),
+            ])
         panes[2].children = (shared.authoring_workspace(
             widgets, target=[manifest_nav, widgets.HTML("<p><b>Notebook variable</b><br>DATA_CONTRACT_MANIFEST</p>")],
-            selection=[manifest_preview], configuration=[exact_json, *actions],
-            titles=("Section summary", "Human-readable review", "Exact manifest & lifecycle"),
+            selection=[manifest_preview], configuration=[lifecycle_summary, *actions, exact_json],
+            titles=("Section summary", "Human-readable review", "Lifecycle & exact manifest"),
         ),)
 
         state["_controls"].update({
@@ -1665,6 +1736,8 @@ def widget_data_contract(
             "accept_table_classification": accept_table_classification,
             "rerun_table_classification": rerun_table_classification,
             "column_select": column_select, "column_context": column_context,
+            "column_configuration": column_configuration,
+            "column_configuration_editor": column_configuration_editor,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
@@ -1694,9 +1767,11 @@ def widget_data_contract(
             "advanced_columns": advanced_columns, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
+            "table_configuration": table_configuration,
+            "table_configuration_editor": table_configuration_editor,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
-            "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
-            "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
+            "exact_json": exact_json, "lifecycle_summary": lifecycle_summary,
+            "freeze": freeze_button, "activate": activate_button,
         })
 
     def table_changed(change: dict[str, Any]) -> None:

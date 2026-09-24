@@ -19,6 +19,8 @@ def _install_fake_notebook_widgets(monkeypatch):
             self.value = value
             self.options = options
             self.layout = layout or types.SimpleNamespace(display="")
+            self.description = kwargs.get("description", "")
+            self.style = kwargs.get("style", {})
 
     class Box(Widget):
         def __init__(self, children=None, **kwargs):
@@ -111,8 +113,20 @@ def test_authoring_workspace_is_full_width_stable_and_shrinkable(monkeypatch):
         assert pane.layout.width == "100%"
         assert pane.layout.min_width == "0"
         assert pane.layout.max_width == "100%"
-        assert pane.layout.height == "560px"
+        assert pane.layout.height == "auto"
+        assert pane.layout.min_height == "180px"
+        assert pane.layout.max_height == "560px"
         assert pane.layout.overflow == "auto"
+
+
+def test_widget_common_uses_consistent_responsive_label_width(monkeypatch):
+    """Shared fields align labels without assigning oversized control widths."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    common = shared.widget_common(widgets, "PII assessment")
+
+    assert common["style"]["description_width"] == "120px"
+    assert common["layout"].width == "100%"
+    assert common["layout"].max_width == "100%"
 
 
 def test_status_and_preview_regions_reserve_bounded_space(monkeypatch):
