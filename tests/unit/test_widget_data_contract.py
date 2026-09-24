@@ -739,7 +739,7 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
     )
     state = widget_runtime["open"]()
-    assert state["_ai_errors"] == {}
+    assert all(not errors for errors in state["_ai_errors"].values())
     state["_controls"]["run_with_ai"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
@@ -839,7 +839,7 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
         return []
 
     monkeypatch.setattr(module, "suggest_dq_rules", suggest)
-    state = widget_runtime["open"]()
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     state["_controls"]["suggest_dq"].click()
 
     column = captured["columns"][0]
@@ -887,7 +887,7 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
         },
         "rationale": "A governed scale.", "selected": True,
     }])
-    state = widget_runtime["open"]()
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
 
