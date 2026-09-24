@@ -155,8 +155,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     }
     assert 'store="Metadata"' in source
     assert 'mode="explore"' in source
-    assert 'TABLE_ID = table_selection["table_id"]' in source
-    assert 'contract_authoring["table_id"] == TABLE_ID' in source
+    assert "TABLE_ID" not in source
     assert "Data Steward" in source
     assert "Data Agreement" in source
     for demoted_widget in (
@@ -170,6 +169,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
     assert "widget_select_data_contract" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
+    assert "table_id=" not in authoring_cell
     assert "widget_select_data_contract" not in source
     assert "widget_data_contract(" not in _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "METADATA_SCHEMA" not in source

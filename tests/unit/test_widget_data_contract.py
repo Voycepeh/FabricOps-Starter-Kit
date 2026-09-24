@@ -386,6 +386,20 @@ def test_initial_snapshot_tabs_and_save_do_not_repeat_metadata_or_profiles(widge
     assert len(widget_runtime["calls"]["enrichment"]) == 1
 
 
+def test_selector_change_immediately_clears_the_open_workspace(widget_runtime):
+    """An editor can never remain interactive under a different selector identity."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["contract"].value = "new"
+
+    assert state["current"] is None
+    assert state["manifest"] is None
+    assert state["ai_mode"] == "off"
+    assert all("Select a governed table and contract" in pane.children[0].value for pane in controls["tabs"].children)
+    assert "Selection changed" in state["message"]
+
+
 def test_compact_configuration_navigation_and_action_rows(widget_runtime):
     """Column configuration shows one compact editor and groups related actions."""
     state = widget_runtime["open"]()
@@ -562,6 +576,63 @@ def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
     assert module._parameters(saved)["required_columns"] == []
     assert state["_controls"]["required"].value is False
     assert "refreshed" in state["message"]
+
+
+def test_repeated_required_saves_use_the_latest_in_memory_guardrail(widget_runtime):
+    """Successive required-column edits accumulate and increment one logical rule."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["required"].value = True
+    controls["save_required"].click()
+    first = widget_runtime["calls"]["guardrails"][-1][0]
+
+    controls["column_select"].value = "col-0"
+    controls["required"].value = False
+    controls["save_required"].click()
+    second = widget_runtime["calls"]["guardrails"][-1][0]
+
+    assert module._parameters(first)["required_columns"] == ["col-0", "col-1"]
+    assert module._parameters(second)["required_columns"] == ["col-1"]
+    assert second["guardrail_rule_id"] == first["guardrail_rule_id"] == "schema"
+    assert second["guardrail_version"] == first["guardrail_version"] + 1
+
+
+def test_repeated_new_dq_save_updates_one_logical_rule(widget_runtime):
+    """A newly authored rule is visible to the next save without a full rerender."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["dq_type"].value = "completeness"
+    controls["save_dq"].click()
+    first = widget_runtime["calls"]["guardrails"][-1][0]
+    controls["dq_max_missing"].value = "5"
+    controls["save_dq"].click()
+    second = widget_runtime["calls"]["guardrails"][-1][0]
+
+    assert second["guardrail_rule_id"] == first["guardrail_rule_id"]
+    assert second["guardrail_version"] == first["guardrail_version"] + 1
+    assert module._parameters(second)["maximum_missing_percent"] == 5.0
+
+
+def test_repeated_new_sensitive_save_updates_one_logical_rule(widget_runtime):
+    """A new Sensitive Data rule is reused by subsequent in-session saves."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["pii_type"].value = "direct"
+    controls["pii_reason"].value = "Direct personal identifier."
+    controls["sensitive_enabled"].value = True
+    controls["sensitive_treatment"].value = "tokenize"
+    controls["save_sensitive"].click()
+    first = widget_runtime["calls"]["guardrails"][-1][0]
+    controls["sensitive_action"].value = "Block"
+    controls["save_sensitive"].click()
+    second = widget_runtime["calls"]["guardrails"][-1][0]
+
+    assert second["guardrail_rule_id"] == first["guardrail_rule_id"]
+    assert second["guardrail_version"] == first["guardrail_version"] + 1
+    assert second["action"] == "Block"
 
 
 def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
@@ -957,8 +1028,10 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     """Lifecycle actions reload exact state, refresh manifest, and close immutable editors."""
     state = widget_runtime["open"]()
     before = module.DATA_CONTRACT_MANIFEST
+    snapshots_before_freeze = widget_runtime["calls"]["snapshots"]
     state["_controls"]["freeze"].click()
     assert widget_runtime["calls"]["freeze"] == 1
+    assert widget_runtime["calls"]["snapshots"] == snapshots_before_freeze + 2
     assert state["current"]["contract"]["status"] == "frozen"
     assert state["_controls"]["table_description"].disabled is True
     assert module.DATA_CONTRACT_MANIFEST is not before

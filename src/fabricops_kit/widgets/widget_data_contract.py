@@ -447,6 +447,17 @@ def widget_data_contract(
                 contract_id=str(current["contract_id"]), contract_version=int(current["contract_version"]),
             )
             state["current"] = refreshed
+            rendered_enrichments = state.get("_render_enrichments")
+            if isinstance(rendered_enrichments, list):
+                rendered_enrichments[:] = _latest(
+                    list(refreshed.get("enrichment", [])),
+                    "enrichment_level", "column_id", "enrichment_type",
+                )
+            rendered_guardrails = state.get("_render_guardrails")
+            if isinstance(rendered_guardrails, list):
+                rendered_guardrails[:] = _latest(
+                    list(refreshed.get("guardrails", [])), "guardrail_rule_id"
+                )
 
     def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         current = state.get("current")
@@ -526,7 +537,12 @@ def widget_data_contract(
         state["_governance_snapshot"] = snapshot
         state["contracts"] = snapshot["contracts"]
         state["tables"] = snapshot["tables"]
-        select(str(state["table_id"]), int(state["contract_version"]))
+        state["current"] = contracts.contract_review_state_from_snapshot(
+            snapshot=snapshot, env=env, contract_id=str(chosen["contract_id"]),
+            contract_version=int(state["contract_version"]),
+        )
+        refresh_scheduled_refresh(str(state["table_id"] or ""))
+        refresh_manifest()
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
@@ -610,6 +626,8 @@ def widget_data_contract(
         row = current["contract"]
         editable = str(row.get("status") or "").lower() == "draft"
         enrichments, guardrails = current_rows()
+        state["_render_enrichments"] = enrichments
+        state["_render_guardrails"] = guardrails
         columns = list(current.get("available_columns", []))
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
@@ -814,10 +832,14 @@ def widget_data_contract(
                     parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Save {title}", disabled=not editable)
 
-            def save_table_rule(_button: Any, *, rule_kind: str = kind, old: dict[str, Any] = existing,
+            def save_table_rule(_button: Any, *, rule_kind: str = kind,
                                 enabled_control: Any = enabled, block_control: Any = block,
                                 controls: list[Any] = parameter_controls, rule_title: str = title) -> None:
                 try:
+                    old = next((
+                        rule for rule in guardrails
+                        if str(rule.get("guardrail_type") or "").lower() == rule_kind
+                    ), {})
                     if not enabled_control.value:
                         parameters = _parameters(old)
                     elif rule_kind == "freshness":
@@ -1414,13 +1436,20 @@ def widget_data_contract(
         def save_required_clicked(_button: Any) -> None:
             selected = selected_column()
             cid = str(selected.get("column_id") or "")
-            updated = set(required_columns)
+            current_required_rule = next((
+                rule for rule in guardrails
+                if str(rule.get("guardrail_type") or "").lower() == "schema"
+            ), {})
+            updated = set(_parameters(current_required_rule).get("required_columns", []))
             identifier = cid or str(selected.get("column_name") or "")
             (updated.add if required.value else updated.discard)(identifier)
             try:
                 save_guardrails([guardrail_record(
-                    "schema", "required_columns", {"required_columns": sorted(updated)}, existing=required_rule,
+                    "schema", "required_columns", {"required_columns": sorted(updated)},
+                    existing=current_required_rule,
                 )])
+                required_columns.clear()
+                required_columns.update(updated)
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1683,9 +1712,12 @@ def widget_data_contract(
                 }
             existing = advanced_lookup.get(str(advanced_saved.value or ""), {})
             try:
-                save_guardrails([guardrail_record(
+                saved = save_guardrails([guardrail_record(
                     "data_quality", kind, params, action=str(advanced_action.value), existing=existing,
                 )])
+                hydrate_advanced_type()
+                if saved:
+                    advanced_saved.value = str(saved[0].get("guardrail_rule_id") or "")
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1839,7 +1871,20 @@ def widget_data_contract(
             "freeze": freeze_button, "activate": activate_button,
         })
 
+    def clear_open_workspace() -> None:
+        """Clear an open editor as soon as its selector identity changes."""
+        if state.get("current") is None:
+            return
+        state["current"] = None
+        state["manifest"] = None
+        state["ai_mode"] = "off"
+        state["ai_started"] = False
+        state.pop("_run_initial_ai", None)
+        render()
+        set_status("Selection changed. Choose an Open action to load the selected contract.")
+
     def table_changed(change: dict[str, Any]) -> None:
+        clear_open_workspace()
         selected = str(change.get("new") or "")
         state["table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
@@ -1856,6 +1901,7 @@ def widget_data_contract(
         value = change.get("new")
         if not state.get("table_id") or not value:
             return
+        clear_open_workspace()
         state["contract_version"] = None if value == "new" else int(value)
 
     def open_selected(*, with_ai: bool) -> None:
