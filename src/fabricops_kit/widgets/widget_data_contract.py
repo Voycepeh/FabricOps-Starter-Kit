@@ -293,6 +293,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "_dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -363,6 +364,14 @@ def widget_data_contract(
         left_children, right_children = view_content.get(str(top_nav.value), ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
+        if str(top_nav.value) == "Columns":
+            load_profile = state.get("_load_selected_profile")
+            if callable(load_profile):
+                load_profile()
+        elif str(top_nav.value) == "Review":
+            refresh_review = state.get("_refresh_review")
+            if callable(refresh_review):
+                refresh_review()
 
     top_nav.observe(apply_view, names="value")
 
@@ -376,8 +385,14 @@ def widget_data_contract(
         if not current:
             return None
         if str(current["contract"].get("status") or "").lower() == "draft":
-            payload, warnings = contracts.build_contract_manifest(
-                draft=current["contract"], config=config, env=env, spark_session=spark,
+            payload, warnings = contracts.assemble_contract_payload(
+                draft=current["contract"],
+                tables={
+                    "METADATA_DATA_CATALOGUE": current.get("catalogue_rows", []),
+                    contracts.ENRICHMENT_TABLE: current.get("enrichment", []),
+                    contracts.GUARDRAIL_TABLE: current.get("guardrails", []),
+                },
+                environment_name=env,
                 scheduled_refresh=contract_schedule,
             )
             state["manifest_warnings"] = warnings
@@ -406,6 +421,9 @@ def widget_data_contract(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
+        state["_pending_enrichment"] = {}
+        state["_pending_guardrails"] = {}
+        state["_dirty"] = False
         refresh_scheduled_refresh(str(state["table_id"] or ""))
         refresh_manifest()
         return state["current"]
@@ -427,59 +445,79 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(
-        message: str, *, clear_column_ids: tuple[str, ...] = (),
-    ) -> None:
+    def _stage_records(
+        collection_name: str, pending_name: str, identity_field: str,
+        records: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         current = state.get("current")
-        scope = (
-            (str(current["contract_id"]), int(current["contract_version"]))
-            if current else None
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be edited.")
+        collection = list(current.get(collection_name, []))
+        pending: dict[str, dict[str, Any]] = state[pending_name]
+        for record in records:
+            identity = str(record.get(identity_field) or "").strip()
+            if not identity:
+                raise ValueError(f"{identity_field} is required for staged Data Contract changes.")
+            collection = [
+                row for row in collection
+                if str(row.get(identity_field) or "") != identity
+            ]
+            collection.append(dict(record))
+            pending[identity] = dict(record)
+        current[collection_name] = collection
+        state["_dirty"] = True
+        refresh_manifest()
+        refresh_review = state.get("_refresh_review")
+        if callable(refresh_review):
+            refresh_review()
+        return records
+
+    def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Enrichment edits in the widget session without metadata writes."""
+        return _stage_records(
+            "enrichment", "_pending_enrichment", "enrichment_id", records
         )
 
-        def clear_saved_column_drafts() -> None:
-            if scope is None:
-                return
-            drafts = state["_column_drafts"].setdefault(scope, {})
-            for column_id in clear_column_ids:
-                drafts.pop(str(column_id or "").strip(), None)
+    def stage_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Stage Guardrail edits in the widget session without metadata writes."""
+        return _stage_records(
+            "guardrails", "_pending_guardrails", "guardrail_rule_id", records
+        )
 
-        clear_saved_column_drafts()
+    def persist_session() -> None:
+        """Persist all staged draft changes once, then reload canonical state once."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can be saved.")
+        if not state.get("_dirty"):
+            set_status("No staged Data Contract changes to save.")
+            return
+        enrichment_records = list(state["_pending_enrichment"].values())
+        guardrail_records = list(state["_pending_guardrails"].values())
+        if enrichment_records:
+            contracts.save_enrichment(
+                enrichment_records, config=config, env=env, spark_session=spark
+            )
+        if guardrail_records:
+            contracts.save_guardrails(
+                guardrail_records, config=config, env=env, spark_session=spark
+            )
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        state["_column_drafts"].pop(scope, None)
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
-        clear_saved_column_drafts()
-        set_status(message)
+        set_status("Data Contract changes saved and canonical state reloaded.")
 
-    def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def discard_session() -> None:
+        """Discard staged draft changes and reload the last canonical state."""
         current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Enrichment saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
-
-    def save_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Guardrails saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
+        if not current:
+            return
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        state["_column_drafts"].pop(scope, None)
+        select(str(state["table_id"]), int(state["contract_version"]))
+        render()
+        set_status("Unsaved Data Contract changes discarded.")
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
@@ -525,8 +563,9 @@ def widget_data_contract(
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
-        freeze=freeze, activate=activate, save_enrichment=save_enrichment,
-        save_guardrails=save_guardrails, load_profile_context=load_profile_context,
+        freeze=freeze, activate=activate, stage_enrichment=stage_enrichment,
+        stage_guardrails=stage_guardrails, persist_session=persist_session,
+        discard_session=discard_session, load_profile_context=load_profile_context,
     )
     configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
     store_options = [
