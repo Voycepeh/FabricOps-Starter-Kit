@@ -214,6 +214,10 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
+    monkeypatch.setattr(
+        module.contracts, "assemble_contract_payload",
+        lambda **_kwargs: (manifest(), []),
+    )
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
@@ -339,14 +343,14 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Refresh Frequency" in table_summary
     assert "Classification" in table_summary
     assert "Guardrails" in table_summary
-    assert controls["table_save"].description == "Save Table"
+    assert controls["table_save"].description == "Apply Table"
 
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(190px, 32fr) minmax(0, 68fr)"
     )
-    assert controls["save_column"].description == "Save Column"
+    assert controls["save_column"].description == "Apply Column"
 
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
@@ -381,7 +385,9 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
 
     state["_controls"]["table_description"].value = "Still governed"
     state["_controls"]["table_save"].click()
+    assert widget_runtime["calls"]["enrichment"] == []
 
+    state["_controls"]["save_contract"].click()
     saved = widget_runtime["calls"]["enrichment"][-1]
     assert all("scheduled_refresh" not in record for record in saved)
 
@@ -392,7 +398,10 @@ def test_profile_context_is_cached_per_table_and_column(widget_runtime):
     controls = state["_controls"]
 
     initial_calls = list(widget_runtime["calls"]["profiles"])
-    assert initial_calls.count("col-0") == 1
+    assert initial_calls.count("col-0") == 0
+
+    controls["top_nav"].value = "Columns"
+    assert widget_runtime["calls"]["profiles"].count("col-0") == 1
 
     controls["column_select"].value = "col-1"
     assert widget_runtime["calls"]["profiles"].count("col-1") == 1
@@ -462,6 +471,8 @@ def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_ru
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Canonical saved description"
     controls["save_column"].click()
+    assert widget_runtime["calls"]["enrichment"] == []
+    state["_controls"]["save_contract"].click()
 
     assert state["_controls"]["column_description"].value == "Canonical saved description"
 
@@ -470,45 +481,55 @@ def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_ru
     assert state["_controls"]["column_description"].value == "Canonical saved description"
 
 
-def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
-    """Table, column, and required-state actions persist and refresh their controls."""
+def test_section_actions_stage_until_one_review_save(widget_runtime):
+    """Table, column, and required-state actions remain local until Review saves once."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["table_description"].value = "Governed orders"
     controls["table_save"].click()
+    controls["column_description"].value = "Canonical ID"
+    controls["save_column_enrichment"].click()
+    controls["required"].value = False
+    controls["save_required"].click()
+
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert state["_dirty"] is True
+
+    controls["save_contract"].click()
     assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Governed orders"
-    assert state["_controls"]["table_description"].value == "Governed orders"
-    state["_controls"]["column_description"].value = "Canonical ID"
-    state["_controls"]["save_column_enrichment"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["column_id"] == "col-0"
-    state["_controls"]["required"].value = False
-    state["_controls"]["save_required"].click()
+    assert any(
+        record.get("column_id") == "col-0"
+        for record in widget_runtime["calls"]["enrichment"][-1]
+    )
     saved = widget_runtime["calls"]["guardrails"][-1][0]
     assert module._parameters(saved)["required_columns"] == []
-    assert state["_controls"]["required"].value is False
-    assert "refreshed" in state["message"]
+    assert state["_dirty"] is False
+    assert "canonical state reloaded" in state["message"]
 
 
-def test_v38_visible_save_actions_persist_table_and_column_sections(widget_runtime):
-    """Visible v38 Save Table / Save Column actions persist their grouped editor sections."""
+def test_visible_apply_actions_stage_then_review_save_persists(widget_runtime):
+    """Visible Apply actions stage locally; Review performs the only persistence write."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     controls["table_description"].value = "Unified table save"
     controls["table_save"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified table save"
-    assert {
-        record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
-    } == {"freshness", "source_drift"}
-
-    controls = state["_controls"]
     controls["column_description"].value = "Unified column save"
     controls["pii_reason"].value = "Direct identifier for a person."
     controls["save_column"].click()
-    assert widget_runtime["calls"]["enrichment"][-1][0]["value"] == "Unified column save"
+
+    assert widget_runtime["calls"]["enrichment"] == []
+    assert widget_runtime["calls"]["guardrails"] == []
+    controls["save_contract"].click()
+
+    assert {
+        record["value"] for record in widget_runtime["calls"]["enrichment"][-1]
+        if record["enrichment_type"] == "Description"
+    } == {"Unified table save", "Unified column save"}
     assert {
         record["guardrail_type"] for record in widget_runtime["calls"]["guardrails"][-1]
-    } == {"schema", "sensitive_data"}
+    } == {"freshness", "source_drift", "schema", "sensitive_data"}
 
 
 def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
