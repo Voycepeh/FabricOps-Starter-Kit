@@ -53,6 +53,23 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
         assert "form_page(" in inspect.getsource(module)
 
 
+def test_form_page_is_a_stable_full_width_scrolling_viewport(monkeypatch):
+    """Keep long widget content inside a bounded notebook output viewport."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    page = shared.form_page(
+        widgets,
+        title="Title",
+        description="Description",
+        children=[widgets.HTML(str(index)) for index in range(100)],
+    )
+
+    assert page.layout.width == "100%"
+    assert page.layout.min_width == "0"
+    assert page.layout.max_width == "100%"
+    assert page.layout.height == "720px"
+    assert page.layout.overflow == "auto"
+
+
 def test_live_widgets_avoid_fabric_unsupported_widget_apis():
     """Verify live widget owners do not use APIs unsupported by Fabric notebooks."""
     forbidden = re.compile(r"(?:\bwidgets\.(?:Output|FileUpload|interact|jslink)|\b(?:interact|jslink))\s*\(")

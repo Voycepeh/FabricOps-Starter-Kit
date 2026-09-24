@@ -34,6 +34,7 @@ _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
 _AUTHORING_PANE_HEIGHT = "560px"
+_FORM_PAGE_HEIGHT = "720px"
 _STATUS_MIN_HEIGHT = "32px"
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -131,7 +132,7 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
 
 
 def form_page(widgets: Any, *, title: str, description: str, children: Iterable[Any]) -> Any:
-    """Compose a full-width widget form with a consistent page header."""
+    """Compose a full-width, bounded widget form with a consistent page header."""
     field_style = (
         "<style>"
         ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;"
@@ -156,7 +157,14 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     )
     page = widgets.VBox(
         [header, *children],
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="12px"),
+        layout=widgets.Layout(
+            width="100%",
+            min_width="0",
+            max_width="100%",
+            height=_FORM_PAGE_HEIGHT,
+            overflow="auto",
+            gap="12px",
+        ),
     )
     add_class = getattr(page, "add_class", None)
     if callable(add_class):
