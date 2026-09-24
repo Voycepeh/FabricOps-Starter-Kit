@@ -55,6 +55,46 @@ def test_exact_contract_read_pushes_scope_before_collect(monkeypatch):
     ]
 
 
+def test_exact_contract_read_filters_before_collection(monkeypatch):
+    """Exact-version reads push Spark predicates before collecting metadata rows."""
+    rows = [
+        {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "value": "keep"},
+        {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "old"},
+        {"contract_id": "c", "contract_version": 2, "environment_name": "prod", "value": "prod"},
+    ]
+
+    class Frame:
+        def __init__(self):
+            self.predicates = []
+
+        def where(self, predicate):
+            self.predicates.append(predicate)
+            return self
+
+        def collect(self):
+            return rows
+
+    frame = Frame()
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_args, **_kwargs: frame)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+
+    result = service.read_contract_records(
+        service.ENRICHMENT_TABLE,
+        config=object(),
+        env="dev",
+        spark_session=object(),
+        contract_id="c",
+        contract_version=2,
+    )
+
+    assert result == [rows[0]]
+    assert frame.predicates == [
+        "contract_id = 'c'",
+        "contract_version = 2",
+        "environment_name = 'dev'",
+    ]
+
+
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{
