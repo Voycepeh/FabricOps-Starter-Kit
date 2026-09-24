@@ -464,8 +464,10 @@ def test_saved_column_clears_stale_local_draft_before_canonical_reload(widget_ru
     controls["save_column"].click()
 
     assert state["_controls"]["column_description"].value == "Canonical saved description"
-    scope = ("contract-orders", 1)
-    assert "col-0" not in state["_column_drafts"].get(scope, {})
+
+    state["_controls"]["column_select"].value = "col-1"
+    state["_controls"]["column_select"].value = "col-0"
+    assert state["_controls"]["column_description"].value == "Canonical saved description"
 
 
 def test_enrichment_and_schema_saves_reload_canonical_state(widget_runtime):
