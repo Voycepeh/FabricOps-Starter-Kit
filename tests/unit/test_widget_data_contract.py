@@ -308,7 +308,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["table_description"].value == "Orders table"
     assert controls["table_classification"].value == "Internal"
     assert controls["column_description"].value == "Order identifier"
-    assert controls["column_classification"].value == original_classification
+    assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
