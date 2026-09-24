@@ -480,6 +480,11 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["dq_parameter"].value == "manual-pattern"
     assert widget_runtime["calls"]["guardrails"] == []
 
+    controls["save_sensitive"].click()
+    saved_parameters = module._parameters(widget_runtime["calls"]["guardrails"][-1][0])
+    assert saved_parameters["pii_type"] == "direct"
+    assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
+
 
 def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):
     """Regress PR 1375: PII generation never overwrites unrelated draft fields."""

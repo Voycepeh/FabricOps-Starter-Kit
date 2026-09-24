@@ -88,6 +88,21 @@ def test_invalid_treatment_parameters_are_rejected():
         module.suggest_sensitive_data(_context(), prompt="configured", invoke=_invoke([candidate]))
 
 
+def test_assessment_metadata_uses_canonical_sensitive_data_validation():
+    """Retain only validated review rationale in Sensitive Data parameters."""
+    validated = module.validate_sensitive_data_parameters({
+        "scope": "column", "treatment": "remove", "pii_type": "indirect",
+        "pii_reason": "A quasi-identifier when combined with other attributes.",
+    })
+    assert validated["pii_type"] == "indirect"
+    assert validated["pii_reason"].startswith("A quasi-identifier")
+    with pytest.raises(ValueError, match="pii_type"):
+        module.validate_sensitive_data_parameters({
+            "scope": "column", "treatment": "remove", "pii_type": "none",
+            "pii_reason": "Not identifying.",
+        })
+
+
 def test_duplicate_columns_use_first_valid_suggestion():
     """Resolve duplicate suggestions deterministically by keeping the first."""
     candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "First.",
