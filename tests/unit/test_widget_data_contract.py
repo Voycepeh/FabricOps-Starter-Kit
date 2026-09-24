@@ -381,6 +381,7 @@ def test_table_sensitive_dq_and_advanced_guardrails_persist(widget_runtime):
     }
     state["_controls"]["sensitive_enabled"].value = True
     state["_controls"]["sensitive_treatment"].value = "tokenize"
+    state["_controls"]["pii_reason"].value = "The identifier directly associates an order with a person."
     state["_controls"]["save_sensitive"].click()
     assert widget_runtime["calls"]["guardrails"][-1][0]["guardrail_type"] == "sensitive_data"
     state["_controls"]["dq_type"].value = "blank_text"
@@ -484,6 +485,20 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     saved_parameters = module._parameters(widget_runtime["calls"]["guardrails"][-1][0])
     assert saved_parameters["pii_type"] == "direct"
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
+
+
+def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
+    """Do not silently discard a reviewed Direct or Indirect PII assessment."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["pii_type"].value = "indirect"
+    controls["pii_reason"].value = ""
+    before = len(widget_runtime["calls"]["guardrails"])
+
+    controls["save_sensitive"].click()
+
+    assert len(widget_runtime["calls"]["guardrails"]) == before
+    assert "Explain why this column is Direct or Indirect PII." in state["message"]
 
 
 def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):

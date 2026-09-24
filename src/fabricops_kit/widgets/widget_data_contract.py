@@ -1218,7 +1218,11 @@ def widget_data_contract(
                 parameters: dict[str, Any] = {
                     "scope": "column", "treatment": sensitive_treatment.value,
                 }
-                if str(pii_type.value or "none") != "none" and str(pii_reason.value or "").strip():
+                if str(pii_type.value or "none") != "none":
+                    if not str(pii_reason.value or "").strip():
+                        raise ValueError(
+                            "Explain why this column is Direct or Indirect PII."
+                        )
                     parameters.update({
                         "pii_type": str(pii_type.value),
                         "pii_reason": str(pii_reason.value or "").strip(),
