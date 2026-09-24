@@ -545,10 +545,6 @@ def widget_data_contract(
             suggestion_scope, {"table": {}, "columns": {}}
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
-        classification_labels = list(
-            getattr(governance_config, "sensitivity_labels", None) or _CLASSIFICATIONS[1:]
-        )
-
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
@@ -559,11 +555,8 @@ def widget_data_contract(
             disabled=not editable, **shared.widget_common(widgets, "Classification"),
         )
         table_description_ai = widgets.HTML()
-        table_classification_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
-        accept_table_classification = widgets.Button(description="Accept", disabled=not editable)
-        rerun_table_classification = widgets.Button(description="Re-run", disabled=not editable)
         table_save = widgets.Button(description="Save table enrichment", button_style="primary", disabled=not editable)
 
         def save_table(_button: Any) -> None:
@@ -579,41 +572,25 @@ def widget_data_contract(
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
-                message = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
-                table_description_ai.value = message
-                table_classification_ai.value = message
+                table_description_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
             elif not editable:
-                message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
-                table_description_ai.value = message
-                table_classification_ai.value = message
+                table_description_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description")
-                )
-                table_classification_ai.value = _suggestion_html(
-                    "Classification", ai_state["table"].get("classification")
                 )
             available = editable and bool(ai_enrichment.get("enabled"))
             accept_table_description.disabled = not (
                 available and ai_state["table"].get("description")
                 and not ai_state["table"]["description"].get("error")
             )
-            accept_table_classification.disabled = not (
-                available and ai_state["table"].get("classification")
-                and not ai_state["table"]["classification"].get("error")
-            )
             rerun_table_description.disabled = not available
-            rerun_table_classification.disabled = not available
 
         def run_table_ai(*, force: bool = False) -> None:
             if not editable or not ai_enrichment.get("enabled"):
                 render_table_ai()
                 return
-            if (
-                not force
-                and ai_state["table"].get("description")
-                and ai_state["table"].get("classification")
-            ):
+            if not force and ai_state["table"].get("description"):
                 render_table_ai()
                 return
             try:
@@ -622,26 +599,17 @@ def widget_data_contract(
                         table,
                         metadata_level="table",
                         existing_description=str(table_description.value or ""),
-                        classification_labels=classification_labels,
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
-                    classification_prompt=str(ai_enrichment.get("classification_prompt") or ""),
-                    classification_labels=classification_labels,
                 )
                 ai_state["table"]["description"] = {
                     "value": result["Description"], "stale": False
-                }
-                ai_state["table"]["classification"] = {
-                    "value": result["Classification"], "stale": False
                 }
                 ai_errors.pop("table_enrichment", None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 ai_state["table"].setdefault(
                     "description", {"error": message, "stale": False}
-                )
-                ai_state["table"].setdefault(
-                    "classification", {"error": message, "stale": False}
                 )
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
@@ -653,22 +621,8 @@ def widget_data_contract(
                 str(ai_state["table"].get("description", {}).get("value") or ""),
             )
         )
-        accept_table_classification.on_click(
-            lambda _button: setattr(
-                table_classification, "value",
-                str(ai_state["table"].get("classification", {}).get("value") or ""),
-            )
-        )
         rerun_table_description.on_click(lambda _button: run_table_ai(force=True))
-        rerun_table_classification.on_click(lambda _button: run_table_ai(force=True))
 
-        def table_description_changed(_change: dict[str, Any]) -> None:
-            suggestion = ai_state["table"].get("classification")
-            if suggestion:
-                suggestion["stale"] = True
-            render_table_ai()
-
-        table_description.observe(table_description_changed, names="value")
         table_rules: dict[str, Any] = {}
         for kind, title in (("freshness", "Freshness"), ("source_drift", "Source Drift")):
             existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == kind), {})
@@ -773,8 +727,7 @@ def widget_data_contract(
             shared.form_section(widgets, title="Table Enrichment", children=[
                 table_description, table_description_ai,
                 shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
-                table_classification, table_classification_ai,
-                shared.form_grid(widgets, [accept_table_classification, rerun_table_classification]),
+                table_classification,
                 table_save,
             ]),
             shared.form_section(widgets, title="Table Guardrails", children=[
@@ -810,11 +763,8 @@ def widget_data_contract(
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description_ai = widgets.HTML()
-        column_classification_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
-        accept_column_classification = widgets.Button(description="Accept", disabled=not editable)
-        rerun_column_classification = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         pii_type = widgets.Dropdown(
@@ -1076,19 +1026,14 @@ def widget_data_contract(
             if not ai_enrichment.get("enabled"):
                 disabled_message = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
                 column_description_ai.value = disabled_message
-                column_classification_ai.value = disabled_message
                 sensitive_ai.value = disabled_message
             elif not editable:
                 review_message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
                 column_description_ai.value = review_message
-                column_classification_ai.value = review_message
                 sensitive_ai.value = review_message
             else:
                 column_description_ai.value = _suggestion_html(
                     "Description", suggestions.get("description")
-                )
-                column_classification_ai.value = _suggestion_html(
-                    "Classification", suggestions.get("classification")
                 )
                 sensitive_ai.value = _suggestion_html(
                     "Sensitive Data", suggestions.get("sensitive_data")
@@ -1097,19 +1042,15 @@ def widget_data_contract(
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
             )
-            accept_column_classification.disabled = not (
-                available and suggestions.get("classification") and not suggestions["classification"].get("error")
-            )
             accept_sensitive.disabled = not (
                 available and suggestions.get("sensitive_data") and not suggestions["sensitive_data"].get("error")
             )
             rerun_column_description.disabled = not available
-            rerun_column_classification.disabled = not available
             rerun_sensitive.disabled = not available
 
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not force and suggestions.get("description") and suggestions.get("classification"):
+            if not force and suggestions.get("description"):
                 render_column_ai(column_id)
                 return
             selected = next(
@@ -1123,22 +1064,15 @@ def widget_data_contract(
                         selected,
                         metadata_level="column",
                         existing_description=description,
-                        classification_labels=classification_labels,
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
-                    classification_prompt=str(ai_enrichment.get("classification_prompt") or ""),
-                    classification_labels=classification_labels,
                 )
                 suggestions["description"] = {"value": result["Description"], "stale": False}
-                suggestions["classification"] = {
-                    "value": result["Classification"], "stale": False
-                }
                 ai_errors.pop((column_id, "enrichment"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 suggestions.setdefault("description", {"error": message, "stale": False})
-                suggestions.setdefault("classification", {"error": message, "stale": False})
                 ai_errors[(column_id, "enrichment")] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
@@ -1204,11 +1138,6 @@ def widget_data_contract(
             if not suggestion.get("error"):
                 column_description.value = str(suggestion.get("value") or "")
 
-        def accept_classification_clicked(_button: Any) -> None:
-            suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("classification", {})
-            if not suggestion.get("error"):
-                column_classification.value = str(suggestion.get("value") or "")
-
         def accept_sensitive_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("sensitive_data", {})
             if not suggestion or suggestion.get("error"):
@@ -1226,12 +1155,8 @@ def widget_data_contract(
             bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
 
         accept_column_description.on_click(accept_description_clicked)
-        accept_column_classification.on_click(accept_classification_clicked)
         accept_sensitive.on_click(accept_sensitive_clicked)
         rerun_column_description.on_click(
-            lambda _button: run_column_enrichment_ai(str(column_select.value or ""), force=True)
-        )
-        rerun_column_classification.on_click(
             lambda _button: run_column_enrichment_ai(str(column_select.value or ""), force=True)
         )
         rerun_sensitive.on_click(
@@ -1242,10 +1167,9 @@ def widget_data_contract(
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestions = ai_state["columns"].get(column_id, {})
-            for name in ("classification", "sensitive_data"):
-                if suggestions.get(name):
-                    suggestions[name]["stale"] = True
+            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            if suggestion:
+                suggestion["stale"] = True
             render_column_ai(column_id)
 
         def classification_changed(_change: dict[str, Any]) -> None:
@@ -1427,8 +1351,7 @@ def widget_data_contract(
                 shared.form_section(widgets, title="Enrichment", children=[
                     column_description, column_description_ai,
                     shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
-                    column_classification, column_classification_ai,
-                    shared.form_grid(widgets, [accept_column_classification, rerun_column_classification]),
+                    column_classification,
                     save_column_enrichment,
                 ]),
                 shared.form_section(widgets, title="Schema", children=[required, save_required]),
@@ -1582,22 +1505,16 @@ def widget_data_contract(
             "table_save": table_save, "table_guardrails": table_rules,
             "pipeline_refresh": pipeline_refresh,
             "table_description_ai": table_description_ai,
-            "table_classification_ai": table_classification_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
-            "accept_table_classification": accept_table_classification,
-            "rerun_table_classification": rerun_table_classification,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
             "column_description_ai": column_description_ai,
-            "column_classification_ai": column_classification_ai,
             "accept_column_description": accept_column_description,
             "rerun_column_description": rerun_column_description,
-            "accept_column_classification": accept_column_classification,
-            "rerun_column_classification": rerun_column_classification,
             "pii_type": pii_type, "pii_reason": pii_reason,
             "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
             "rerun_sensitive": rerun_sensitive,

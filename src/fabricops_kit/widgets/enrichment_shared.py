@@ -29,7 +29,6 @@ def build_ai_enrichment_context(
     *,
     metadata_level: str,
     existing_description: str,
-    classification_labels: list[str],
     profile_rows: Any = (),
 ) -> dict[str, Any]:
     """Build compact technical context for an Enrichment suggestion."""
@@ -45,13 +44,13 @@ def build_ai_enrichment_context(
         "column_name": str(catalogue_row.get("column_name") or ""),
         "data_type": str(catalogue_row.get("data_type") or ""),
         "existing_description": str(existing_description or ""),
-        "classification_labels": [str(label) for label in classification_labels],
         "profile_evidence": profiles[:3],
     }
 
 
 def _invoke_fabric_ai(prompt: str) -> str:
     """Invoke the Microsoft Fabric AI Functions pandas extension."""
+    importlib.import_module("synapse.ml.aifunc")
     pandas = importlib.import_module("pandas")
     frame = pandas.DataFrame([{"fabricops_prompt": prompt}])
     ai = getattr(frame, "ai", None)
@@ -59,8 +58,8 @@ def _invoke_fabric_ai(prompt: str) -> str:
         raise RuntimeError(
             "Microsoft Fabric AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
         )
-    result = ai.generate_response(prompt="{fabricops_prompt}", output_col="fabricops_response")
-    return str(result.iloc[0]["fabricops_response"]).strip()
+    result = ai.generate_response("{fabricops_prompt}")
+    return str(result.iloc[0]).strip()
 
 
 def suggest_enrichment(

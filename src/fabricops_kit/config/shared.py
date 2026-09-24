@@ -346,19 +346,28 @@ class PathConfig:
 
 DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
-    "description_prompt": "Write a concise business description using only the supplied metadata context. Return only the proposed description.",
-    "classification_prompt": "Choose the best information classification using only the configured labels and supplied metadata context. Return only the label.",
+    "description_prompt": (
+        "Write a concise business description for the selected table or column using only the supplied "
+        "FabricOps metadata context. For a table, use its Catalogue identity and existing description. "
+        "For a column, also use its datatype and profile summary. Treat profile statistics as observed "
+        "evidence rather than business truth, do not invent unsupported meaning, and return only the "
+        "proposed description."
+    ),
     "sensitive_data_prompt": (
-        "Assess every active canonical column as Direct PII, Indirect PII, or Not PII using only the "
-        "supplied metadata, Enrichment, and profile evidence. Briefly explain each assessment. For "
-        "Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, explicit parameters, "
-        "and a Warn or Block action. Classification is an input signal, not a PII decision. Never "
-        "request or return raw values. Return structured JSON only; final review belongs to Governance."
+        "Assess the selected active canonical column as Direct PII, Indirect PII, or Not PII using only "
+        "the supplied table context, column metadata, Enrichment, and profile evidence. Explain the "
+        "assessment briefly. For Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, "
+        "explicit parameters, and a Warn or Block action. The manually selected information "
+        "classification is context only, not a PII decision. Never request or return raw values. Return "
+        "structured JSON only; final review belongs to Governance."
     ),
     "dq_prompt": (
-        "Suggest conservative standard Data Quality rules using only governed metadata and profile evidence. "
-        "Use only completeness, uniqueness, value_set, range, and pattern. Do not infer business "
-        "relationships, custom expressions, or contractual limits from current observations alone."
+        "Suggest conservative standard Data Quality rules for the selected column using only its governed "
+        "metadata, description, manually selected classification, profile summary, and supplied frequency "
+        "evidence. Use only completeness, uniqueness, value_set, range, and pattern. Observed nulls, "
+        "distinctness, frequencies, minima, and maxima are evidence, not automatic contractual rules. "
+        "Do not infer business relationships, custom expressions, or contractual limits from current "
+        "observations alone. Return structured JSON only; final review belongs to Governance."
     ),
 }
 
@@ -403,7 +412,6 @@ class GovernanceConfig:
         object.__setattr__(self, "ai_enrichment", {
             "enabled": bool(ai_enrichment.get("enabled", False)),
             "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
-            "classification_prompt": str(ai_enrichment.get("classification_prompt") or "").strip(),
             "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
             "dq_prompt": str(ai_enrichment.get("dq_prompt") or "").strip(),
         })

@@ -134,7 +134,6 @@ def widget_runtime(monkeypatch):
     ai_enrichment = {
         "enabled": False,
         "description_prompt": "configured description prompt",
-        "classification_prompt": "configured classification prompt",
         "sensitive_data_prompt": "configured sensitive prompt",
         "dq_prompt": "configured DQ prompt",
     }
@@ -456,10 +455,7 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
     def enrichment(context, **_kwargs):
         captures["enrichment"].append(context)
         level = context["metadata_level"]
-        return {
-            "Description": f"Suggested {level} description",
-            "Classification": "Confidential",
-        }
+        return {"Description": f"Suggested {level} description"}
 
     def sensitive(context, **_kwargs):
         captures["sensitive"].append(context)
@@ -504,7 +500,7 @@ def test_ai_suggestions_generate_automatically_without_mutating_drafts(widget_ru
 
 
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
-    """Description, Classification, and Sensitive Data acceptance stay isolated."""
+    """Description and Sensitive Data acceptance stay isolated from manual Classification."""
     _enable_ai(widget_runtime, monkeypatch)
     state = widget_runtime["open"]()
     controls = state["_controls"]
@@ -520,11 +516,6 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["dq_pattern"].value == "manual-pattern"
 
     description = controls["column_description"].value
-    controls["accept_column_classification"].click()
-    assert controls["column_classification"].value == "Confidential"
-    assert controls["column_description"].value == description
-    assert controls["dq_pattern"].value == "manual-pattern"
-
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
     assert controls["sensitive_treatment"].value == "mask"
@@ -595,15 +586,14 @@ def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monk
 
 
 def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runtime, monkeypatch):
-    """Manual Description and Classification edits mark only downstream advice stale."""
+    """Manual Description and Classification edits mark Sensitive Data advice stale."""
     _enable_ai(widget_runtime, monkeypatch)
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_description"].value = "Manual description"
-    assert "Needs refresh" in controls["column_classification_ai"].value
     assert "Needs refresh" in controls["sensitive_ai"].value
-    controls["rerun_column_classification"].click()
-    assert "Needs refresh" not in controls["column_classification_ai"].value
+    controls["rerun_sensitive"].click()
+    assert "Needs refresh" not in controls["sensitive_ai"].value
     controls["column_classification"].value = "Restricted"
     assert "Needs refresh" in controls["sensitive_ai"].value
 
@@ -615,7 +605,7 @@ def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, 
     controls = state["_controls"]
     controls["column_description"].value = "Current unsaved description"
     controls["column_classification"].value = "Restricted"
-    controls["rerun_column_classification"].click()
+    controls["rerun_column_description"].click()
     controls["rerun_sensitive"].click()
 
     assert captures["enrichment"][-1]["existing_description"] == "Current unsaved description"
