@@ -593,18 +593,7 @@ def widget_data_contract(
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
-        table_save = widgets.Button(description="Save table enrichment", button_style="primary", disabled=not editable)
-
-        def save_table(_button: Any) -> None:
-            try:
-                save_enrichment([
-                    enrichment_record("table", "Description", table_description.value),
-                    enrichment_record("table", "Classification", table_classification.value),
-                ])
-            except (ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
-
-        table_save.on_click(save_table)
+        table_save = widgets.Button(description="Save Table", button_style="primary", disabled=not editable)
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
@@ -708,40 +697,102 @@ def widget_data_contract(
                     parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Save {title}", disabled=not editable)
 
-            def save_table_rule(_button: Any, *, rule_kind: str = kind, old: dict[str, Any] = existing,
-                                enabled_control: Any = enabled, block_control: Any = block,
-                                controls: list[Any] = parameter_controls, rule_title: str = title) -> None:
+            def build_table_rule_record(
+                *, rule_kind: str = kind, old: dict[str, Any] = existing,
+                enabled_control: Any = enabled, block_control: Any = block,
+                controls: list[Any] = parameter_controls, rule_title: str = title,
+            ) -> dict[str, Any]:
+                if not enabled_control.value:
+                    parameters = _parameters(old)
+                elif rule_kind == "freshness":
+                    raw_age = str(controls[1].value or "").strip()
+                    parameters = {
+                        "freshness_column": str(controls[0].value or "").strip(),
+                        "maximum_age": float(raw_age),
+                        "maximum_age_unit": str(controls[2].value or "days"),
+                    }
+                else:
+                    parameters = {
+                        "partition_column": str(controls[0].value or "").strip(),
+                        "change_column": str(controls[1].value or "").strip(),
+                    }
+                    if len(controls) > 2:
+                        parameters["load_strategy"] = str(controls[2].value or "").strip()
+                if enabled_control.value and any(value in {"", None} for value in parameters.values()):
+                    raise ValueError(f"{rule_title} requires all governed configuration fields.")
+                return guardrail_record(
+                    rule_kind, rule_kind, parameters, existing=old,
+                    action="Block" if block_control.value else "Warn", active=enabled_control.value,
+                )
+
+            def save_table_rule(_button: Any, builder: Any = build_table_rule_record) -> None:
                 try:
-                    if not enabled_control.value:
-                        parameters = _parameters(old)
-                    elif rule_kind == "freshness":
-                        raw_age = str(controls[1].value or "").strip()
-                        parameters = {
-                            "freshness_column": str(controls[0].value or "").strip(),
-                            "maximum_age": float(raw_age),
-                            "maximum_age_unit": str(controls[2].value or "days"),
-                        }
-                    else:
-                        parameters = {
-                            "partition_column": str(controls[0].value or "").strip(),
-                            "change_column": str(controls[1].value or "").strip(),
-                        }
-                        if len(controls) > 2:
-                            parameters["load_strategy"] = str(controls[2].value or "").strip()
-                    if enabled_control.value and any(value in {"", None} for value in parameters.values()):
-                        raise ValueError(f"{rule_title} requires all governed configuration fields.")
-                    save_guardrails([guardrail_record(
-                        rule_kind, rule_kind, parameters, existing=old,
-                        action="Block" if block_control.value else "Warn", active=enabled_control.value,
-                    )])
+                    save_guardrails([builder()])
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
             save.on_click(save_table_rule)
             table_rules[kind] = {
                 "enabled": enabled, "parameters": parameter_controls,
-                "block": block, "save": save,
+                "block": block, "save": save, "build_record": build_table_rule_record,
             }
+        def save_table(_button: Any) -> None:
+            try:
+                enrichment_records = [
+                    enrichment_record("table", "Description", table_description.value),
+                    enrichment_record("table", "Classification", table_classification.value),
+                ]
+                guardrail_records = [
+                    table_rules["freshness"]["build_record"](),
+                    table_rules["source_drift"]["build_record"](),
+                ]
+                contracts.save_enrichment(
+                    enrichment_records, config=config, env=env, spark_session=spark
+                )
+                contracts.save_guardrails(
+                    guardrail_records, config=config, env=env, spark_session=spark
+                )
+                reload_after_save("Table contract saved and the canonical contract state was refreshed.")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_status(str(exc), error=True)
+
+        table_save.on_click(save_table)
+
+        active_guardrails = [rule for rule in guardrails if rule.get("is_active", True)]
+        guardrail_status = {
+            "Schema": any(
+                str(rule.get("guardrail_type") or "").lower() == "schema"
+                for rule in active_guardrails
+            ),
+            "Freshness": bool(table_rules["freshness"]["enabled"].value),
+            "Sensitive Data": any(
+                str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+                for rule in active_guardrails
+            ),
+            "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
+            "Data Quality": any(
+                str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                for rule in active_guardrails
+            ),
+        }
+        guardrail_status_html = "".join(
+            "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
+            f"<span style='color:#666'>{html.escape(name)}</span>"
+            f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
+            for name, enabled in guardrail_status.items()
+        )
+        schedule_status = str(scheduled_refresh.get("status") or "unavailable")
+        if schedule_status == "configured" and scheduled_refresh.get("schedules"):
+            first_schedule = scheduled_refresh["schedules"][0]
+            refresh_frequency = str(first_schedule.get("frequency") or "Scheduled").replace("_", " ").title()
+            schedule_times = ", ".join(str(value) for value in first_schedule.get("times") or [])
+            if schedule_times:
+                refresh_frequency = f"{refresh_frequency} · {schedule_times}"
+        elif schedule_status == "not_configured":
+            refresh_frequency = "Not configured"
+        else:
+            refresh_frequency = "Unavailable"
+
         identity = widgets.HTML(
             "<p><b>{}</b><br>Contract v{} · {}<br>Environment: {}<br>Store: {} · {}</p>".format(
                 html.escape(f"{table.get('schema_name') or ''}.{table.get('table_name') or state['table_id']}"),
@@ -758,10 +809,20 @@ def widget_data_contract(
             + _scheduled_refresh_html(scheduled_refresh)
         )
         table_left = (
-            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>TABLE</div>"),
-            identity,
-            widgets.HTML("<div style='border-top:1px solid #e1e6eb;margin:4px 0;'></div>"),
-            pipeline_refresh,
+            widgets.HTML(
+                "<div style='color:#0f548c;font-size:13px;font-weight:600;'>TABLE</div>"
+                + identity.value
+                + "<div style='border-top:1px solid #e1e6eb;margin:8px 0;'></div>"
+                + "<div style='color:#666;font-size:12px'><b>Loading Strategy</b></div>"
+                + f"<div>{html.escape(load_strategy)}</div>"
+                + "<div style='color:#666;font-size:12px;margin-top:12px'><b>Refresh Frequency</b></div>"
+                + f"<div>{html.escape(refresh_frequency)}</div>"
+                + "<div style='color:#666;font-size:12px;margin-top:12px'><b>Classification</b></div>"
+                + f"<div>{html.escape(str(table_classification.value or 'Not classified'))}</div>"
+                + "<div style='border-top:1px solid #e1e6eb;margin:10px 0;'></div>"
+                + "<div style='color:#666;font-size:12px'><b>Guardrails</b></div>"
+                + guardrail_status_html
+            ),
             change_table_button,
         )
         table_right = (
@@ -786,7 +847,7 @@ def widget_data_contract(
                     ),
                     table_rules["freshness"]["enabled"],
                     *table_rules["freshness"]["parameters"],
-                    table_rules["freshness"]["block"], table_rules["freshness"]["save"],
+                    table_rules["freshness"]["block"],
                 ],
                 layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
             ),
@@ -795,7 +856,7 @@ def widget_data_contract(
                     widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
                     table_rules["source_drift"]["enabled"],
                     *table_rules["source_drift"]["parameters"],
-                    table_rules["source_drift"]["block"], table_rules["source_drift"]["save"],
+                    table_rules["source_drift"]["block"],
                 ],
                 layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
             ),
@@ -843,7 +904,18 @@ def widget_data_contract(
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
         bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket boundaries (comma-separated)"))
         bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket labels (comma-separated)"))
-        dq_type = widgets.Dropdown(options=_COLUMN_DQ_TYPES, disabled=not editable, **shared.widget_common(widgets, "Rule type"))
+        dq_type = widgets.Select(
+            options=[
+                ("Completeness", "completeness"),
+                ("Uniqueness", "uniqueness"),
+                ("Value Set", "value_set"),
+                ("Range", "range"),
+                ("Pattern", "pattern"),
+            ],
+            rows=5,
+            disabled=not editable,
+            layout=widgets.Layout(width="100%", height="175px"),
+        )
         dq_help = widgets.HTML()
         dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
         dq_blank_missing = widgets.Checkbox(value=False, description="Treat blank/whitespace text as missing", disabled=not editable)
@@ -861,6 +933,10 @@ def widget_data_contract(
         dq_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
         dq_usage = widgets.HTML()
         save_column_enrichment = widgets.Button(description="Save enrichment", button_style="primary", disabled=not editable)
+        save_column = widgets.Button(
+            description="Save Column", button_style="primary", disabled=not editable,
+            layout=widgets.Layout(width="130px", height="34px"),
+        )
         save_required = widgets.Button(description="Save required state", disabled=not editable)
         save_sensitive = widgets.Button(description="Save Sensitive Data", disabled=not editable)
         sensitive_ai = widgets.HTML()
@@ -1256,53 +1332,68 @@ def widget_data_contract(
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
-        def save_required_clicked(_button: Any) -> None:
+        def build_required_record() -> dict[str, Any]:
             selected = selected_column()
             cid = str(selected.get("column_id") or "")
             updated = set(required_columns)
             identifier = cid or str(selected.get("column_name") or "")
             (updated.add if required.value else updated.discard)(identifier)
+            return guardrail_record(
+                "schema", "required_columns", {"required_columns": sorted(updated)},
+                existing=required_rule,
+            )
+
+        def save_required_clicked(_button: Any) -> None:
             try:
-                save_guardrails([guardrail_record(
-                    "schema", "required_columns", {"required_columns": sorted(updated)}, existing=required_rule,
-                )])
+                save_guardrails([build_required_record()])
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
+        def build_sensitive_record() -> dict[str, Any]:
+            cid = str(column_select.value or "")
+            existing = next((
+                r for r in guardrails
+                if str(r.get("guardrail_type") or "").lower() == "sensitive_data"
+                and str(r.get("column_id") or "") == cid
+            ), {})
+            if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
+                raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
+            parameters: dict[str, Any] = {
+                "scope": "column", "treatment": sensitive_treatment.value,
+            }
+            if str(pii_type.value or "none") != "none":
+                if not str(pii_reason.value or "").strip():
+                    raise ValueError("Explain why this column is Direct or Indirect PII.")
+                parameters.update({
+                    "pii_type": str(pii_type.value),
+                    "pii_reason": str(pii_reason.value or "").strip(),
+                })
+            if sensitive_treatment.value == "mask":
+                parameters.update({
+                    "preserve_start": int(mask_start.value),
+                    "preserve_end": int(mask_end.value),
+                    "mask_character": mask_character.value,
+                })
+            elif sensitive_treatment.value == "bucket":
+                parameters.update({
+                    "bins": [
+                        float(value.strip()) for value in bucket_bins.value.split(",")
+                        if value.strip()
+                    ],
+                    "labels": [
+                        value.strip() for value in bucket_labels.value.split(",")
+                        if value.strip()
+                    ],
+                })
+            return guardrail_record(
+                "sensitive_data", str(sensitive_treatment.value), parameters, column_id=cid,
+                action=str(sensitive_action.value), existing=existing, active=sensitive_enabled.value,
+            )
+
         def save_sensitive_clicked(_button: Any) -> None:
             try:
-                cid = str(column_select.value or "")
-                existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == cid), {})
-                if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
-                    raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
-                parameters: dict[str, Any] = {
-                    "scope": "column", "treatment": sensitive_treatment.value,
-                }
-                if str(pii_type.value or "none") != "none":
-                    if not str(pii_reason.value or "").strip():
-                        raise ValueError(
-                            "Explain why this column is Direct or Indirect PII."
-                        )
-                    parameters.update({
-                        "pii_type": str(pii_type.value),
-                        "pii_reason": str(pii_reason.value or "").strip(),
-                    })
-                if sensitive_treatment.value == "mask":
-                    parameters.update({
-                        "preserve_start": int(mask_start.value),
-                        "preserve_end": int(mask_end.value),
-                        "mask_character": mask_character.value,
-                    })
-                elif sensitive_treatment.value == "bucket":
-                    parameters.update({
-                        "bins": [float(value.strip()) for value in bucket_bins.value.split(",") if value.strip()],
-                        "labels": [value.strip() for value in bucket_labels.value.split(",") if value.strip()],
-                    })
-                save_guardrails([guardrail_record(
-                    "sensitive_data", str(sensitive_treatment.value), parameters, column_id=cid,
-                    action=str(sensitive_action.value), existing=existing, active=sensitive_enabled.value,
-                )])
-            except (ValueError, RuntimeError) as exc:
+                save_guardrails([build_sensitive_record()])
+            except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
         def save_dq_clicked(_button: Any) -> None:
@@ -1399,9 +1490,28 @@ def widget_data_contract(
             dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
             dq_pattern.value = str(params.get("pattern") or "")
 
+        def save_column_clicked(_button: Any) -> None:
+            try:
+                cid = str(column_select.value or "")
+                enrichment_records = [
+                    enrichment_record("column", "Description", column_description.value, cid),
+                    enrichment_record("column", "Classification", column_classification.value, cid),
+                ]
+                guardrail_records = [build_required_record(), build_sensitive_record()]
+                contracts.save_enrichment(
+                    enrichment_records, config=config, env=env, spark_session=spark
+                )
+                contracts.save_guardrails(
+                    guardrail_records, config=config, env=env, spark_session=spark
+                )
+                reload_after_save("Column contract saved and the canonical contract state was refreshed.")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_status(str(exc), error=True)
+
         save_column_enrichment.on_click(save_column_enrichment_clicked)
         save_required.on_click(save_required_clicked)
         save_sensitive.on_click(save_sensitive_clicked)
+        save_column.on_click(save_column_clicked)
         save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
@@ -1428,10 +1538,31 @@ def widget_data_contract(
             column_search,
             column_select,
         )
+        dq_editor = widgets.VBox(
+            [
+                dq_help, dq_usage, *dq_parameter_controls, dq_action,
+                suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
+            ],
+            layout=widgets.Layout(width="100%", gap="6px", padding="8px 0 0 0"),
+        )
+        dq_panel = widgets.VBox(
+            [
+                widgets.HTML("<div style='font-weight:600;'>Column data quality</div>"),
+                widgets.GridBox(
+                    [dq_type, dq_editor],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="minmax(190px, 32fr) minmax(0, 68fr)",
+                        grid_gap="14px",
+                    ),
+                ),
+            ],
+            layout=widgets.Layout(width="100%", gap="6px"),
+        )
         column_right = (
             column_context,
             widgets.VBox(
-                [widgets.HTML("<div style='font-weight:600;'>Schema</div>"), required, save_required],
+                [widgets.HTML("<div style='font-weight:600;'>Schema</div>"), required],
                 layout=widgets.Layout(width="100%", gap="6px"),
             ),
             widgets.VBox(
@@ -1446,31 +1577,30 @@ def widget_data_contract(
                     widgets.HTML("<div style='font-weight:600;'>Description</div>"),
                     column_description, column_description_ai,
                     shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
-                    save_column_enrichment,
                 ],
                 layout=widgets.Layout(width="100%", gap="6px"),
             ),
             widgets.VBox(
                 [widgets.HTML("<div style='font-weight:600;'>Profile evidence</div>"), profile_context],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #e1e6eb"),
+                layout=widgets.Layout(
+                    width="100%", gap="6px", padding="10px 12px",
+                    border="1px solid #e1e6eb",
+                ),
             ),
             widgets.VBox(
                 [
                     widgets.HTML("<div style='font-weight:600;'>Sensitive Data</div>"),
                     sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
                     sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character,
-                    bucket_bins, bucket_labels, sensitive_action, save_sensitive,
+                    bucket_bins, bucket_labels, sensitive_action,
                 ],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+                layout=widgets.Layout(
+                    width="100%", gap="6px", padding="10px 12px",
+                    border="1px solid #dfe5eb",
+                ),
             ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Column data quality</div>"),
-                    dq_type, dq_help, dq_usage, *dq_parameter_controls, dq_action,
-                    suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
-                ],
-                layout=widgets.Layout(width="100%", gap="6px"),
-            ),
+            dq_panel,
+            widgets.HBox([save_column], layout=widgets.Layout(justify_content="flex-end")),
         )
         view_content["Columns"] = (column_left, column_right)
         if column_options:
@@ -1642,6 +1772,7 @@ def widget_data_contract(
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
+            "save_column": save_column, "dq_panel": dq_panel, "dq_editor": dq_editor,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
             "column_description_ai": column_description_ai,
             "accept_column_description": accept_column_description,
