@@ -701,7 +701,9 @@ def widget_data_contract(
                 *, rule_kind: str = kind, old: dict[str, Any] = existing,
                 enabled_control: Any = enabled, block_control: Any = block,
                 controls: list[Any] = parameter_controls, rule_title: str = title,
-            ) -> dict[str, Any]:
+            ) -> dict[str, Any] | None:
+                if not enabled_control.value and not old:
+                    return None
                 if not enabled_control.value:
                     parameters = _parameters(old)
                 elif rule_kind == "freshness":
@@ -727,7 +729,9 @@ def widget_data_contract(
 
             def save_table_rule(_button: Any, builder: Any = build_table_rule_record) -> None:
                 try:
-                    save_guardrails([builder()])
+                    record = builder()
+                    if record is not None:
+                        save_guardrails([record])
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
@@ -743,15 +747,19 @@ def widget_data_contract(
                     enrichment_record("table", "Classification", table_classification.value),
                 ]
                 guardrail_records = [
-                    table_rules["freshness"]["build_record"](),
-                    table_rules["source_drift"]["build_record"](),
+                    record for record in (
+                        table_rules["freshness"]["build_record"](),
+                        table_rules["source_drift"]["build_record"](),
+                    )
+                    if record is not None
                 ]
                 contracts.save_enrichment(
                     enrichment_records, config=config, env=env, spark_session=spark
                 )
-                contracts.save_guardrails(
-                    guardrail_records, config=config, env=env, spark_session=spark
-                )
+                if guardrail_records:
+                    contracts.save_guardrails(
+                        guardrail_records, config=config, env=env, spark_session=spark
+                    )
                 reload_after_save("Table contract saved and the canonical contract state was refreshed.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
@@ -1349,13 +1357,19 @@ def widget_data_contract(
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
-        def build_sensitive_record() -> dict[str, Any]:
+        def build_sensitive_record() -> dict[str, Any] | None:
             cid = str(column_select.value or "")
             existing = next((
                 r for r in guardrails
                 if str(r.get("guardrail_type") or "").lower() == "sensitive_data"
                 and str(r.get("column_id") or "") == cid
             ), {})
+            if (
+                not existing
+                and not sensitive_enabled.value
+                and str(pii_type.value or "none") == "none"
+            ):
+                return None
             if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
                 raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
             parameters: dict[str, Any] = {
@@ -1392,7 +1406,9 @@ def widget_data_contract(
 
         def save_sensitive_clicked(_button: Any) -> None:
             try:
-                save_guardrails([build_sensitive_record()])
+                record = build_sensitive_record()
+                if record is not None:
+                    save_guardrails([record])
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1497,13 +1513,17 @@ def widget_data_contract(
                     enrichment_record("column", "Description", column_description.value, cid),
                     enrichment_record("column", "Classification", column_classification.value, cid),
                 ]
-                guardrail_records = [build_required_record(), build_sensitive_record()]
+                guardrail_records = [
+                    record for record in (build_required_record(), build_sensitive_record())
+                    if record is not None
+                ]
                 contracts.save_enrichment(
                     enrichment_records, config=config, env=env, spark_session=spark
                 )
-                contracts.save_guardrails(
-                    guardrail_records, config=config, env=env, spark_session=spark
-                )
+                if guardrail_records:
+                    contracts.save_guardrails(
+                        guardrail_records, config=config, env=env, spark_session=spark
+                    )
                 reload_after_save("Column contract saved and the canonical contract state was refreshed.")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
