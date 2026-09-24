@@ -204,6 +204,16 @@ def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[st
     if treatment not in SENSITIVE_DATA_TREATMENTS:
         raise ValueError("Sensitive Data treatment must be tokenize, mask, bucket, or remove.")
     normalized: dict[str, Any] = {"scope": "column", "treatment": treatment}
+    pii_type = str(values.get("pii_type") or "").strip().lower()
+    pii_reason = str(values.get("pii_reason") or "").strip()
+    if pii_type:
+        if pii_type not in {"direct", "indirect"}:
+            raise ValueError("Sensitive Data pii_type must be direct or indirect.")
+        if not pii_reason:
+            raise ValueError("Sensitive Data pii_reason is required when pii_type is provided.")
+        normalized.update({"pii_type": pii_type, "pii_reason": pii_reason})
+    elif pii_reason:
+        raise ValueError("Sensitive Data pii_type is required when pii_reason is provided.")
     if treatment == "mask":
         for name in ("preserve_start", "preserve_end"):
             value = values.get(name)

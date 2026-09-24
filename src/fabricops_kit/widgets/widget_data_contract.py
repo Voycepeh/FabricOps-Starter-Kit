@@ -847,10 +847,12 @@ def widget_data_contract(
             column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
             sensitive = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
-            pii_type.value = "direct" if sensitive else "none"
-            pii_reason.value = ""
-            sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_parameters = _parameters(sensitive)
+            pii_type.value = str(sensitive_parameters.get("pii_type") or (
+                "direct" if sensitive else "none"
+            ))
+            pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
+            sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
             sensitive_action.value = str(sensitive.get("action") or "Warn")
             mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
@@ -1211,7 +1213,20 @@ def widget_data_contract(
             try:
                 cid = str(column_select.value or "")
                 existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == cid), {})
-                parameters: dict[str, Any] = {"scope": "column", "treatment": sensitive_treatment.value}
+                if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
+                    raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
+                parameters: dict[str, Any] = {
+                    "scope": "column", "treatment": sensitive_treatment.value,
+                }
+                if str(pii_type.value or "none") != "none":
+                    if not str(pii_reason.value or "").strip():
+                        raise ValueError(
+                            "Explain why this column is Direct or Indirect PII."
+                        )
+                    parameters.update({
+                        "pii_type": str(pii_type.value),
+                        "pii_reason": str(pii_reason.value or "").strip(),
+                    })
                 if sensitive_treatment.value == "mask":
                     parameters.update({
                         "preserve_start": int(mask_start.value),
