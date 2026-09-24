@@ -468,7 +468,7 @@ def widget_data_contract(
         }
         reload_after_save(
             "Guardrails saved and the canonical contract state was refreshed.",
-            clear_column_id=next(iter(column_ids), ""),
+            clear_column_ids=tuple(column_ids),
         )
         return saved
 
@@ -1387,14 +1387,13 @@ def widget_data_contract(
         def save_required_clicked(_button: Any) -> None:
             try:
                 cid = str(column_select.value or "")
-                saved = contracts.save_guardrails(
+                contracts.save_guardrails(
                     [build_required_record()], config=config, env=env, spark_session=spark
                 )
                 reload_after_save(
                     "Guardrails saved and the canonical contract state was refreshed.",
                     clear_column_ids=(cid,),
                 )
-                return saved
             except (ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
 
@@ -1567,7 +1566,7 @@ def widget_data_contract(
                     )
                 reload_after_save(
                     "Column contract saved and the canonical contract state was refreshed.",
-                    clear_column_id=cid,
+                    clear_column_ids=(cid,),
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_status(str(exc), error=True)
