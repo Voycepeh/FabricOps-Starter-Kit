@@ -1770,10 +1770,13 @@ def widget_data_contract(
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
+            render_column_ai(str(column_select.value))
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
         if ai_mode == "with_ai":
             run_table_ai()
+        else:
+            render_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
