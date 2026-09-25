@@ -89,6 +89,52 @@ def test_env_config_uses_physical_item_keys_without_duplicate_names():
     assert "name=" not in source
 
 
+def test_framework_config_allows_shared_metadata_store_across_environments():
+    """Environment-specific store objects may route to one shared Metadata Lakehouse."""
+    metadata_dev = FabricStore(
+        env="dev", workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
+    )
+    metadata_prod = FabricStore(
+        env="prod", workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
+    )
+    config = FrameworkConfig(
+        path_config=PathConfig(
+            paths={
+                "dev": {"Bronze": store(env="dev"), "Metadata": metadata_dev},
+                "prod": {"Bronze": store(env="prod"), "Metadata": metadata_prod},
+            }
+        )
+    )
+
+    assert validate_framework_config(config) is config
+
+
+def test_framework_config_rejects_different_metadata_stores_across_environments():
+    """Governance requires one physical Metadata Lakehouse across the environment registry."""
+    config = FrameworkConfig(
+        path_config=PathConfig(
+            paths={
+                "dev": {
+                    "Metadata": FabricStore(
+                        env="dev", workspace_id="metadata-workspace", item_id="metadata-dev", kind="lakehouse"
+                    )
+                },
+                "prod": {
+                    "Metadata": FabricStore(
+                        env="prod", workspace_id="metadata-workspace", item_id="metadata-prod", kind="lakehouse"
+                    )
+                },
+            }
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="All configured environments must use the same physical FabricOps Metadata Lakehouse",
+    ):
+        validate_framework_config(config)
+
+
 def test_config_setup_public_api_signatures_match_frozen_contract():
     """Verify config setup public API signatures match the frozen contract."""
     assert str(inspect.signature(setup_notebook)) == (
