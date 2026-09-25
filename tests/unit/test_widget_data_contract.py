@@ -587,7 +587,7 @@ def test_section_actions_stage_without_writes_until_final_save(widget_runtime):
         if record.get("guardrail_type") == "schema"
     )
     assert state["dirty"] is False
-    assert "canonical state reloaded" in state["message"]
+    assert "draft saved" in state["message"]
 
 
 def test_visible_apply_actions_stage_table_and_column_sections(widget_runtime):
