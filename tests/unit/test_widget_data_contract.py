@@ -279,6 +279,27 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "latest_profile": {
+            "profile_snapshot_id": "snapshot-prod",
+            "environment_name": "PROD",
+            "pipeline_name": "02_pipeline",
+            "committed_by": "voyce@example.com",
+            "committed_at": "2026-09-26T02:45:00",
+        },
+        "writer_count": 1,
+        "reader_count": 2,
+        "lineage": [
+            {
+                "environment_name": "DEV", "relationship": "Writer",
+                "pipeline_name": "02_pipeline", "last_seen": "2026-09-26T03:00:00",
+            },
+            {
+                "environment_name": "PROD", "relationship": "Reader",
+                "pipeline_name": "04_reporting", "last_seen": "2026-09-26T02:30:00",
+            },
+        ],
+    })
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
         "kind": "profile",
         "profile": {
@@ -466,7 +487,16 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         assert len(controls["right_pane"].children) > 0
 
     controls["top_nav"].value = "Table"
-    table_summary = controls["left_pane"].children[0].value
+    table_context = controls["left_pane"].children[0]
+    table_summary = table_context.value
+    assert "v1 · DRAFT" in table_summary
+    assert "Latest profile" in table_summary
+    assert "PROD · 02_pipeline" in table_summary
+    assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
+    assert "Pipeline usage" in table_summary
+    assert "1 writer · 2 readers" in table_summary
+    assert "View lineage" in table_summary
+    assert "04_reporting" in table_summary
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
     assert "Classification" in table_summary
@@ -498,6 +528,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["advanced_enabled"].description == "Enabled"
     assert controls["advanced_block"].description == "Block on failure"
     controls["top_nav"].value = "Manifest & Freeze"
+    assert controls["left_pane"].children[0] is table_context
     assert "Contract summary" in controls["manifest_preview"].value
 
 
