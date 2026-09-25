@@ -202,7 +202,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "same `02_pipeline`" in step_4
     assert "do not edit a frozen version in place" in normalized["step_4"]
     assert "defaults every table to **enforce**" in normalized["step_4"]
-    assert "cannot call `pipeline_write()`" in normalized["step_4"]
+    assert "`pipeline_write()` is never reached" in normalized["step_4"]
 
     assert "# step 5. link the data agreement and activate" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]
@@ -255,7 +255,7 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
     assert "same cloneable blocks" in step_2
     assert "switches only the governed target to Validate mode" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
-    assert "Any other target left in Enforce mode" in step_4
+    assert "Enforce does not need a second branch" in step_4
     assert "business target remains unchanged" in step_4
 
 
@@ -274,7 +274,7 @@ def test_02_pipeline_target_validate_mode_exits_before_business_write():
             and any(isinstance(value, ast.Constant) and value.value == "validate" for value in node.test.comparators)
         )
         validate_source = ast.unparse(ast.Module(body=mode_branch.body, type_ignores=[]))
-        assert 'CONTRACTS["validate"]' in validate_source
+        assert "CONTRACTS['validate']" in validate_source
         assert "notebookutils.notebook.exit" in validate_source
         assert "pipeline_write" not in validate_source
         assert mode_branch.orelse == []
