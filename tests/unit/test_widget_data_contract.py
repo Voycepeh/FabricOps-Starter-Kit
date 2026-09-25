@@ -434,13 +434,13 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     controls = state["_controls"]
     assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_action"].value == "Block"
+    assert controls["dq_block"].value is True
 
     controls["column_select"].value = "col-1"
 
     assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_action"].value == "Warn"
+    assert controls["dq_block"].value is False
 
 
 def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime):
@@ -624,8 +624,8 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
 def _open_with_ai(widget_runtime, monkeypatch, *, captures=None):
     """Open one contract and explicitly opt in to scoped AI suggestions."""
     captures = _enable_ai(widget_runtime, monkeypatch, captures=captures)
-    state = widget_runtime["open"]()
-    state["_controls"]["run_with_ai"].click()
+    state = widget_runtime["start"]()
+    state["_controls"]["open_with_ai"].click()
     return state, captures
 
 
@@ -640,21 +640,16 @@ def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
 
 
 def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_runtime, monkeypatch):
-    """Opening is immediate; AI runs only after explicit opt-in for the selected contract."""
+    """Choose AI before opening; the editor then renders the complete contract."""
     captures = _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["start"]()
     controls = state["_controls"]
 
     assert captures["enrichment"] == []
     assert captures["sensitive"] == []
-    assert "Choose Run with AI suggestions" in controls["column_description_ai"].value
+    assert controls["selector_panel"].layout.display != "none"
 
-    controls["run_without_ai"].click()
-    assert captures["enrichment"] == []
-    assert captures["sensitive"] == []
-    assert "without AI" in state["message"]
-
-    state["_controls"]["run_with_ai"].click()
+    controls["open_with_ai"].click()
     controls = state["_controls"]
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
     assert len(captures["sensitive"]) == 1
@@ -662,6 +657,12 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert state["_ai_suggestions"]
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
+    assert controls["selector_panel"].layout.display == "none"
+    assert controls["editor_shell"].layout.display == ""
+    for label in ("Table", "Columns", "Advanced", "Review"):
+        controls["top_nav"].value = label
+        assert len(controls["left_pane"].children) > 0
+        assert len(controls["right_pane"].children) > 0
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
 
@@ -685,7 +686,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
     assert controls["sensitive_treatment"].value == "mask"
-    assert controls["sensitive_action"].value == "Block"
+    assert controls["sensitive_block"].value is True
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
@@ -795,9 +796,9 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
         module, "suggest_sensitive_data",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
     )
-    state = widget_runtime["open"]()
+    state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
-    state["_controls"]["run_with_ai"].click()
+    state["_controls"]["open_with_ai"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
@@ -893,7 +894,7 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     controls["dq_type"].value = "pattern"
 
     assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
-    assert controls["dq_action"].value == "Warn"
+    assert controls["dq_block"].value is False
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     controls["save_dq"].click()
     assert widget_runtime["calls"]["guardrails"] == []
@@ -995,6 +996,8 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     state = widget_runtime["open"]()
     before = module.DATA_CONTRACT_MANIFEST
     state["_controls"]["freeze"].click()
+    assert widget_runtime["calls"]["freeze"] == 0
+    state["_controls"]["freeze_confirm"].click()
     assert widget_runtime["calls"]["freeze"] == 1
     assert state["current"]["contract"]["status"] == "frozen"
     assert state["_controls"]["table_description"].disabled is True

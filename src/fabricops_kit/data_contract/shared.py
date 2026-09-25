@@ -601,23 +601,25 @@ def get_column_profile_context(
     latest = max(candidates, key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""))
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
     try:
+        frequency_filters = []
+        if snapshot is not None:
+            frequency_filters.append(f"profile_id = {_sql_literal(snapshot)}")
         frequency = _scoped_rows(
             read_lakehouse_table(
                 "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
                 schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
                 context=context, spark_session=spark_session,
             ),
-            f"table_id = {_sql_literal(table_id)}",
-            f"column_id = {_sql_literal(column_id)}",
+            *frequency_filters,
         )
     except Exception as exc:
         if not any(marker in str(exc).lower() for marker in ("not found", "does not exist", "path does not exist")):
             raise
         frequency = []
     values = [row for row in frequency
-              if str(row.get("table_id") or table_id) == str(table_id)
-              and str(row.get("column_id") or "") == str(column_id)
-              and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)]
+              if snapshot is None
+              or row.get("profile_id") == snapshot
+              or row.get("profile_snapshot_id") == snapshot]
     values.sort(key=lambda row: int(row.get("frequency") or row.get("count") or 0), reverse=True)
     if values:
         return {"kind": "values", "values": [
@@ -919,12 +921,30 @@ def assemble_contract_payload(
     parameters = _json_value(table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={})
     if not isinstance(parameters, dict):
         raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
-    try:
-        processing = validated_processing({**parameters, "load_strategy": table.get("load_strategy")})
-    except ValueError as exc:
-        raise ValueError(
-            f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
-        ) from exc
+    catalogue_load_strategy = str(table.get("load_strategy") or "").strip()
+    if catalogue_load_strategy:
+        try:
+            processing = validated_processing({**parameters, "load_strategy": catalogue_load_strategy})
+        except ValueError as exc:
+            raise ValueError(
+                f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
+            ) from exc
+    else:
+        source_drift_rule = next(
+            (
+                rule for rule in guardrail_docs
+                if str(rule.get("guardrail_type") or "").strip().lower() == "source_drift"
+            ),
+            None,
+        )
+        source_load_strategy = str(
+            ((source_drift_rule or {}).get("rule_parameters") or {}).get("load_strategy") or ""
+        ).strip()
+        processing = (
+            {"load_strategy": source_load_strategy}
+            if source_load_strategy
+            else {}
+        )
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
         "table": {

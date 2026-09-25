@@ -334,7 +334,7 @@ def widget_data_contract(
     top_nav = widgets.ToggleButtons(
         options=_TABS,
         value="Table",
-        layout=widgets.Layout(width="520px"),
+        layout=widgets.Layout(width="720px"),
     )
     left = widgets.VBox(
         layout=widgets.Layout(
@@ -718,7 +718,13 @@ def widget_data_contract(
         def session_guardrails() -> list[dict[str, Any]]:
             return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
 
-        columns = list(current.get("available_columns", []))
+        columns = sorted(
+            list(current.get("available_columns", [])),
+            key=lambda column: (
+                str(column.get("column_name") or "").startswith("_"),
+                str(column.get("column_name") or "").casefold(),
+            ),
+        )
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
@@ -728,45 +734,9 @@ def widget_data_contract(
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        run_with_ai = widgets.Button(
-            description="Run with AI suggestions",
-            button_style="info",
-            disabled=not editable or not bool(ai_enrichment.get("enabled")),
-        )
-        run_without_ai = widgets.Button(
-            description="Run without AI",
-            button_style="primary",
-            disabled=not editable,
-        )
-        if not ai_enrichment.get("enabled"):
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>AI suggestions are disabled in 00_env_config. "
-                "Open the contract without AI.</p>"
-            )
-        elif ai_mode == "with_ai":
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>AI suggestions are enabled for this selected table. "
-                "Only the current column is evaluated when opened.</p>"
-            )
-        elif ai_mode == "without_ai":
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>Running without AI suggestions for this contract session.</p>"
-            )
-        else:
-            ai_startup_note = widgets.HTML(
-                "<p><b>Choose how to open this contract</b><br>"
-                "Run without AI for the fastest startup, or run with AI suggestions. "
-                "AI is scoped to this selected table and evaluates columns only as you open them.</p>"
-            )
-        ai_startup_controls = widgets.VBox(
-            [
-                ai_startup_note,
-                widgets.HBox([run_with_ai, run_without_ai], layout=widgets.Layout(gap="8px")),
-            ],
-            layout=widgets.Layout(
-                width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb",
-            ),
-        )
+        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
+        compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
+
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
@@ -862,15 +832,18 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Freshness column"),
                 )
+                freshness_column.layout = compact_field_layout
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
                     **shared.widget_common(widgets, "Maximum age"),
                 )
+                maximum_age.layout = compact_text_layout
                 maximum_age_unit = widgets.Dropdown(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
                     **shared.widget_common(widgets, "Age unit"),
                 )
+                maximum_age_unit.layout = compact_field_layout
                 parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
             else:
                 partition_column = widgets.Dropdown(
@@ -879,12 +852,14 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
+                partition_column.layout = compact_field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
                     value=str(existing_parameters.get("change_column") or "") or None,
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change column"),
                 )
+                change_column.layout = compact_field_layout
                 parameter_controls = [partition_column, change_column]
                 if not str(table.get("load_strategy") or "").strip():
                     source_load_strategy = widgets.Dropdown(
@@ -893,6 +868,7 @@ def widget_data_contract(
                         disabled=not editable,
                         **shared.widget_common(widgets, "Source load strategy"),
                     )
+                    source_load_strategy.layout = compact_field_layout
                     parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
@@ -1037,14 +1013,12 @@ def widget_data_contract(
             change_table_button,
         )
         table_right = (
-            ai_startup_controls,
             widgets.VBox(
-                [widgets.HTML("<div style='font-weight:600;'>Classification</div>"), table_classification],
+                [table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
             ),
             widgets.VBox(
                 [
-                    widgets.HTML("<div style='font-weight:600;'>Description</div>"),
                     table_description, table_description_ai,
                     shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
                 ],
@@ -1057,20 +1031,30 @@ def widget_data_contract(
                         "<p style='margin:0;'>Freshness is the expected source-data arrival SLA; "
                         "it is independent of when Fabric schedules this notebook to run.</p>"
                     ),
-                    table_rules["freshness"]["enabled"],
+                    widgets.HBox(
+                        [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
                     *table_rules["freshness"]["parameters"],
-                    table_rules["freshness"]["block"],
                 ],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
             ),
             widgets.VBox(
                 [
                     widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
-                    table_rules["source_drift"]["enabled"],
+                    widgets.HBox(
+                        [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
                     *table_rules["source_drift"]["parameters"],
-                    table_rules["source_drift"]["block"],
                 ],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
             ),
             widgets.HBox([table_save], layout=widgets.Layout(justify_content="flex-end")),
         )
@@ -1110,7 +1094,7 @@ def widget_data_contract(
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
-        sensitive_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
@@ -1142,7 +1126,8 @@ def widget_data_contract(
             dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
-        dq_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        dq_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         dq_usage = widgets.HTML()
         save_column_enrichment = widgets.Button(description="Apply enrichment", button_style="primary", disabled=not editable)
         save_column = widgets.Button(
@@ -1186,7 +1171,7 @@ def widget_data_contract(
                 "pii_type": pii_type.value,
                 "pii_reason": pii_reason.value,
                 "sensitive_treatment": sensitive_treatment.value,
-                "sensitive_action": sensitive_action.value,
+                "sensitive_block": sensitive_block.value,
                 "mask_start": mask_start.value,
                 "mask_end": mask_end.value,
                 "mask_character": mask_character.value,
@@ -1194,7 +1179,8 @@ def widget_data_contract(
                 "bucket_labels": bucket_labels.value,
                 "dq_type": dq_type.value,
                 "dq_parameters": [control.value for control in dq_parameter_controls],
-                "dq_action": dq_action.value,
+                "dq_enabled": dq_enabled.value,
+                "dq_block": dq_block.value,
             }
 
         def hydrate_dq_family(column_id: str, kind: str) -> None:
@@ -1208,7 +1194,8 @@ def widget_data_contract(
             dq_maximum.value = ""
             dq_maximum_inclusive.value = True
             dq_pattern.value = ""
-            dq_action.value = "Warn"
+            dq_enabled.value = False
+            dq_block.value = False
             rule = next((
                 row for row in guardrails
                 if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -1227,7 +1214,8 @@ def widget_data_contract(
             dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
             dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
             dq_pattern.value = str(params.get("pattern") or "")
-            dq_action.value = str(rule.get("action") or "Warn")
+            dq_enabled.value = bool(rule and rule.get("is_active", True))
+            dq_block.value = str(rule.get("action") or "Warn") == "Block"
 
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
@@ -1248,7 +1236,7 @@ def widget_data_contract(
             pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
             sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
-            sensitive_action.value = str(sensitive.get("action") or "Warn")
+            sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
             mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
             mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
             mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
@@ -1273,7 +1261,7 @@ def widget_data_contract(
                 pii_type.value = pending["pii_type"]
                 pii_reason.value = pending["pii_reason"]
                 sensitive_treatment.value = pending["sensitive_treatment"]
-                sensitive_action.value = pending["sensitive_action"]
+                sensitive_block.value = pending["sensitive_block"]
                 mask_start.value = pending["mask_start"]
                 mask_end.value = pending["mask_end"]
                 mask_character.value = pending["mask_character"]
@@ -1282,7 +1270,8 @@ def widget_data_contract(
                 dq_type.value = pending["dq_type"]
                 for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
                     control.value = value
-                dq_action.value = pending["dq_action"]
+                dq_enabled.value = pending["dq_enabled"]
+                dq_block.value = pending["dq_block"]
             profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
             hydrating["active"] = False
 
@@ -1338,7 +1327,7 @@ def widget_data_contract(
             if not is_pii:
                 sensitive_enabled.value = False
             sensitive_treatment.disabled = not editable or not is_pii
-            sensitive_action.disabled = not editable or not is_pii
+            sensitive_block.disabled = not editable or not is_pii
             update_sensitive_fields()
 
         pii_type.observe(update_pii_fields, names="value")
@@ -1539,7 +1528,7 @@ def widget_data_contract(
             pii_reason.value = str(suggestion["reason"])
             sensitive_enabled.value = suggestion["pii_type"] != "none"
             sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
-            sensitive_action.value = str(suggestion.get("action") or "Warn")
+            sensitive_block.value = str(suggestion.get("action") or "Warn") == "Block"
             parameters = suggestion.get("parameters", {})
             mask_start.value = str(parameters.get("preserve_start", 0))
             mask_end.value = str(parameters.get("preserve_end", 0))
@@ -1654,7 +1643,8 @@ def widget_data_contract(
                 })
             return guardrail_record(
                 "sensitive_data", str(sensitive_treatment.value), parameters, column_id=cid,
-                action=str(sensitive_action.value), existing=existing, active=sensitive_enabled.value,
+                action="Block" if sensitive_block.value else "Warn",
+                existing=existing, active=sensitive_enabled.value,
             )
 
         def save_sensitive_clicked(_button: Any) -> None:
@@ -1698,7 +1688,8 @@ def widget_data_contract(
                 existing = next((r for r in session_guardrails() if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
                 stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
-                    action=str(dq_action.value), existing=existing,
+                    action="Block" if dq_block.value else "Warn",
+                    existing=existing, active=dq_enabled.value,
                 )])
                 set_status("Data Quality rule staged locally.")
             except (TypeError, ValueError, RuntimeError) as exc:
@@ -1813,7 +1804,12 @@ def widget_data_contract(
         )
         dq_editor = widgets.VBox(
             [
-                dq_help, dq_usage, *dq_parameter_controls, dq_action,
+                dq_help, dq_usage,
+                widgets.HBox(
+                    [dq_enabled, dq_block],
+                    layout=widgets.Layout(gap="20px", align_items="center"),
+                ),
+                *dq_parameter_controls,
                 suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
             ],
             layout=widgets.Layout(width="100%", gap="6px", padding="8px 0 0 0"),
@@ -1864,8 +1860,12 @@ def widget_data_contract(
                 [
                     widgets.HTML("<div style='font-weight:600;'>Sensitive Data</div>"),
                     sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
-                    sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character,
-                    bucket_bins, bucket_labels, sensitive_action,
+                    widgets.HBox(
+                        [sensitive_enabled, sensitive_block],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
+                    sensitive_treatment, mask_start, mask_end, mask_character,
+                    bucket_bins, bucket_labels,
                 ],
                 layout=widgets.Layout(
                     width="100%", gap="6px", padding="10px 12px",
@@ -1876,21 +1876,6 @@ def widget_data_contract(
             widgets.HBox([save_column], layout=widgets.Layout(justify_content="flex-end")),
         )
         view_content["Columns"] = (column_left, column_right)
-
-        def run_with_ai_clicked(_button: Any) -> None:
-            state["_ai_mode"][suggestion_scope] = "with_ai"
-            render()
-            set_status(
-                "AI suggestions enabled for the selected table; columns are evaluated only when opened."
-            )
-
-        def run_without_ai_clicked(_button: Any) -> None:
-            state["_ai_mode"][suggestion_scope] = "without_ai"
-            render()
-            set_status("Contract opened without AI suggestions.")
-
-        run_with_ai.on_click(run_with_ai_clicked)
-        run_without_ai.on_click(run_without_ai_clicked)
 
         if column_options:
             column_select.value = column_options[0][1]
@@ -2019,8 +2004,24 @@ def widget_data_contract(
             )
             discard_contract_button = widgets.Button(description="Discard changes")
             freeze_button = widgets.Button(
-                description=f"Freeze v{row['contract_version']}",
+                description=f"Freeze v{row['contract_version']}…",
                 disabled=bool(state.get("dirty")),
+            )
+            freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
+            freeze_cancel = widgets.Button(description="Cancel")
+            freeze_confirm_button = widgets.Button(
+                description=f"Freeze v{row['contract_version']}",
+                button_style="danger",
+            )
+            freeze_confirm.children = (
+                widgets.HTML(
+                    f"<b>Freeze Data Contract v{row['contract_version']}?</b><br>"
+                    "This version will become immutable. Further changes require a new contract version."
+                ),
+                widgets.HBox(
+                    [freeze_cancel, freeze_confirm_button],
+                    layout=widgets.Layout(gap="8px"),
+                ),
             )
 
             def save_contract_clicked(_button: Any) -> None:
@@ -2036,13 +2037,22 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def freeze_clicked(_button: Any) -> None:
+                if state.get("dirty"):
+                    set_status("Save the Data Contract before freezing this version.", error=True)
+                    return
+                freeze_confirm.layout.display = ""
+
+            def freeze_cancel_clicked(_button: Any) -> None:
+                freeze_confirm.layout.display = "none"
+
+            def freeze_confirm_clicked(_button: Any) -> None:
                 try:
-                    if state.get("dirty"):
-                        raise ValueError("Save the Data Contract before freezing this version.")
+                    freeze_confirm_button.disabled = True
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
                 except (ValueError, RuntimeError) as exc:
+                    freeze_confirm_button.disabled = False
                     set_status(str(exc), error=True)
 
             def discard_contract_clicked(_button: Any) -> None:
@@ -2054,7 +2064,15 @@ def widget_data_contract(
             save_contract_button.on_click(save_contract_clicked)
             discard_contract_button.on_click(discard_contract_clicked)
             freeze_button.on_click(freeze_clicked)
-            actions.extend([save_contract_button, discard_contract_button, freeze_button])
+            freeze_cancel.on_click(freeze_cancel_clicked)
+            freeze_confirm_button.on_click(freeze_confirm_clicked)
+            actions.extend([
+                widgets.HBox(
+                    [save_contract_button, discard_contract_button, freeze_button],
+                    layout=widgets.Layout(gap="8px", align_items="center"),
+                ),
+                freeze_confirm,
+            ])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
@@ -2094,8 +2112,6 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
-            "run_with_ai": run_with_ai, "run_without_ai": run_without_ai,
-            "ai_startup_note": ai_startup_note,
             "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
@@ -2109,7 +2125,7 @@ def widget_data_contract(
             "pii_type": pii_type, "pii_reason": pii_reason,
             "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
             "rerun_sensitive": rerun_sensitive,
-            "sensitive_action": sensitive_action, "mask_start": mask_start,
+            "sensitive_block": sensitive_block, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
             "save_sensitive": save_sensitive,
@@ -2118,9 +2134,10 @@ def widget_data_contract(
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
-            "dq_pattern": dq_pattern, "suggest_dq": suggest_dq, "dq_ai": dq_ai,
+            "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
+            "suggest_dq": suggest_dq, "dq_ai": dq_ai,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
-            "dq_action": dq_action, "save_dq": save_dq,
+            "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
@@ -2128,14 +2145,41 @@ def widget_data_contract(
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
-            "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
+            "freeze": freeze_button if editable else None,
+            "freeze_confirm": freeze_confirm_button if editable else None,
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
 
-    open_button = widgets.Button(description="Open", button_style="primary")
+    open_with_ai_button = widgets.Button(
+        description="Open with AI suggestions",
+        button_style="info",
+        disabled=not bool(ai_enrichment.get("enabled")),
+        layout=widgets.Layout(width="220px"),
+    )
+    open_without_ai_button = widgets.Button(
+        description="Open without AI",
+        button_style="primary",
+        layout=widgets.Layout(width="220px"),
+    )
+    open_progress = widgets.HTML()
+    ai_availability = widgets.HTML(
+        "" if ai_enrichment.get("enabled") else
+        "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
+    )
     change_table_button = widgets.Button(description="Change table")
+    selector_actions = widgets.VBox(
+        [
+            widgets.HBox(
+                [open_with_ai_button, open_without_ai_button],
+                layout=widgets.Layout(width="100%", justify_content="center", gap="12px"),
+            ),
+            ai_availability,
+            open_progress,
+        ],
+        layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
+    )
     selector_panel = widgets.VBox(
-        [selector, widgets.HBox([open_button])],
+        [selector, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
@@ -2208,26 +2252,52 @@ def widget_data_contract(
         value = change.get("new")
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
-    def open_selected(_button: Any) -> None:
+    def open_selected(*, with_ai: bool) -> None:
         selected_table = str(state.get("pending_table_id") or "")
         selected_contract = contract_control.value
         if not selected_table or not selected_contract:
             set_status("Select a governed table and contract before opening.", error=True)
             return
+        open_with_ai_button.disabled = True
+        open_without_ai_button.disabled = True
+        open_progress.value = (
+            "<div style='width:440px;max-width:100%;'>"
+            "<div style='font-size:12px;margin-bottom:4px;'>Opening contract…</div>"
+            "<div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
+            "<div style='width:25%;height:100%;background:#2b88d8;'></div></div></div>"
+        )
         try:
             if selected_contract == "new":
                 state["table_id"] = selected_table
                 new_draft()
             else:
                 select(selected_table, int(selected_contract))
+            scope = (
+                str(state["current"]["contract_id"]),
+                int(state["current"]["contract_version"]),
+            )
+            state["_ai_mode"][scope] = "with_ai" if with_ai else "without_ai"
+            open_progress.value = (
+                "<div style='width:440px;max-width:100%;'>"
+                "<div style='font-size:12px;margin-bottom:4px;'>"
+                + ("Preparing AI suggestions…" if with_ai else "Loading editor…")
+                + "</div><div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
+                "<div style='width:70%;height:100%;background:#2b88d8;'></div></div></div>"
+            )
             render()
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
+            open_progress.value = ""
             set_status(
-                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}."
+                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}"
+                + (" with AI suggestions." if with_ai else " without AI.")
             )
-        except (ValueError, RuntimeError) as exc:
+        except Exception as exc:
+            open_progress.value = ""
             set_status(str(exc), error=True)
+        finally:
+            open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
+            open_without_ai_button.disabled = False
 
     def change_table(_button: Any) -> None:
         state["current"] = None
@@ -2238,7 +2308,8 @@ def widget_data_contract(
         selector_panel.layout.display = ""
         set_status("Select a governed table and contract.")
 
-    open_button.on_click(open_selected)
+    open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
+    open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
     change_table_button.on_click(change_table)
     store_control.observe(refresh_schema_options, names="value")
     schema_control.observe(refresh_table_options, names="value")
@@ -2267,7 +2338,9 @@ def widget_data_contract(
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
         "store": store_control, "schema": schema_control,
-        "open": open_button, "change_table": change_table_button,
+        "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
+        "open": open_without_ai_button, "open_progress": open_progress,
+        "change_table": change_table_button,
     })
     ip.display(page)
     return state
