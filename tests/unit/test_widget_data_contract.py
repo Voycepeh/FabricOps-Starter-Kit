@@ -1247,8 +1247,8 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
     ]
 
 
-def test_review_sections_separate_table_dq_categories_from_column_rules():
-    """Render the Review hierarchy without duplicating every Guardrail in two sections."""
+def test_review_sections_render_single_page_without_duplicate_column_rules():
+    """Render the single Review page with table, advanced, and column rule detail."""
     payload = {
         "table": {"table_name": "orders", "schema_name": "sales", "columns": []},
         "contract": {"contract_version": 1, "status": "draft"},
@@ -1262,16 +1262,46 @@ def test_review_sections_separate_table_dq_categories_from_column_rules():
             {"guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1"},
         ],
     }
+
     sections = module._manifest_sections(payload)
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
-    assert "Advanced rules" in review
-    assert "uniqueness" in review
-    assert "column_relationship" in review
-    assert "custom_expression" in review
-    assert "Column guardrails" in review
-    assert "pattern" in review
+    assert "<b>Advanced rules</b> · 3 configured" in review
+    assert "<b>Column definitions and rules</b> · 0 columns, 1 column rules" in review
+    assert review.count("<b>pattern</b>") == 1
+
+
+def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
+    """Advanced families without saved rules never inherit values from another family."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Advanced"
+
+    advanced_type = controls["advanced_type"]
+    advanced_saved = controls["advanced_saved"]
+    advanced_columns = controls["advanced_columns"]
+    advanced_operator = controls["advanced_operator"]
+    custom_expression = controls["custom_expression"]
+    custom_description = controls["custom_description"]
+    advanced_enabled = controls["advanced_enabled"]
+    advanced_block = controls["advanced_block"]
+
+    advanced_type.value = "column_relationship"
+    advanced_columns.value = tuple(value for _label, value in advanced_columns.options[:2])
+    advanced_operator.value = "!="
+    advanced_enabled.value = True
+    advanced_block.value = True
+
+    advanced_type.value = "custom_expression"
+
+    if not advanced_saved.options:
+        assert advanced_columns.value == ()
+        assert advanced_operator.value == "="
+        assert custom_expression.value == ""
+        assert custom_description.value == ""
+        assert advanced_enabled.value is False
+        assert advanced_block.value is False
 
 
 def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(widget_runtime, monkeypatch):

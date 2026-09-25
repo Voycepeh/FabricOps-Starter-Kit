@@ -2439,6 +2439,7 @@ def widget_data_contract(
         advanced_columns.layout.height = "150px"
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
+            """Reset and deterministically hydrate the selected Advanced rule family."""
             kind = str(advanced_type.value or "")
             advanced_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
             advanced_save.disabled = not editable
@@ -2454,7 +2455,19 @@ def widget_data_contract(
                 key = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or label)
                 advanced_lookup[key] = rule
                 options.append((label, key))
+
+            # Clear values from the previously selected family before replacing options.
+            advanced_saved.options = ()
+            advanced_columns.value = ()
+            advanced_operator.value = "="
+            custom_expression.value = ""
+            custom_description.value = ""
+            advanced_enabled.value = False
+            advanced_block.value = False
             advanced_saved.options = options
+            if options:
+                advanced_saved.value = options[0][1]
+                hydrate_advanced_saved({"new": advanced_saved.value})
 
         def hydrate_advanced_saved(change: dict[str, Any]) -> None:
             rule = advanced_lookup.get(str(change.get("new") or ""), {})
