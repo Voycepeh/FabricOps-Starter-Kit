@@ -2916,7 +2916,9 @@ def _custom_expression_tree(expression: str) -> ast.Expression:
     except SyntaxError as exc:
         raise ValueError("Custom DQ expression is not valid Python expression syntax.") from exc
     allowed = (
-        ast.Expression, ast.BinOp, ast.BitAnd, ast.BitOr, ast.UnaryOp, ast.Invert,
+        ast.Expression, ast.BinOp, ast.BitAnd, ast.BitOr,
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Mod,
+        ast.UnaryOp, ast.Invert, ast.USub, ast.UAdd,
         ast.Compare, ast.Eq, ast.NotEq, ast.Gt, ast.GtE, ast.Lt, ast.LtE,
         ast.Call, ast.Attribute, ast.Name, ast.Load, ast.Constant,
     )
@@ -2955,6 +2957,14 @@ def _custom_expression_tree(expression: str) -> ast.Expression:
                     or not isinstance(node.args[0].value, str)
                 ):
                     raise ValueError(f"{node.func.attr} requires exactly one literal string.")
+        if isinstance(node, ast.BinOp) and not isinstance(
+            node.op, (ast.BitAnd, ast.BitOr, ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Mod)
+        ):
+            raise ValueError("Custom DQ expression contains an unsupported binary operator.")
+        if isinstance(node, ast.UnaryOp) and not isinstance(
+            node.op, (ast.Invert, ast.USub, ast.UAdd)
+        ):
+            raise ValueError("Custom DQ expression contains an unsupported unary operator.")
         if isinstance(node, ast.Compare) and (len(node.ops) != 1 or len(node.comparators) != 1):
             raise ValueError("Custom DQ expression comparisons must be explicit and joined with & or |.")
     return tree
@@ -2991,9 +3001,30 @@ def _custom_expression_column(expression: str, functions):
             return node.value
         if isinstance(node, ast.BinOp):
             left, right = build(node.left), build(node.right)
-            return left & right if isinstance(node.op, ast.BitAnd) else left | right
+            if isinstance(node.op, ast.BitAnd):
+                return left & right
+            if isinstance(node.op, ast.BitOr):
+                return left | right
+            if isinstance(node.op, ast.Add):
+                return left + right
+            if isinstance(node.op, ast.Sub):
+                return left - right
+            if isinstance(node.op, ast.Mult):
+                return left * right
+            if isinstance(node.op, ast.Div):
+                return left / right
+            if isinstance(node.op, ast.Mod):
+                return left % right
+            raise ValueError("Custom DQ expression contains an unsupported binary operator.")
         if isinstance(node, ast.UnaryOp):
-            return ~build(node.operand)
+            operand = build(node.operand)
+            if isinstance(node.op, ast.Invert):
+                return ~operand
+            if isinstance(node.op, ast.USub):
+                return -operand
+            if isinstance(node.op, ast.UAdd):
+                return +operand
+            raise ValueError("Custom DQ expression contains an unsupported unary operator.")
         if isinstance(node, ast.Compare) and len(node.ops) == len(node.comparators) == 1:
             left, right, operator = build(node.left), build(node.comparators[0]), node.ops[0]
             if isinstance(operator, ast.Eq):
