@@ -1223,7 +1223,6 @@ def widget_data_contract(
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
-        render_table_summary()
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -1307,6 +1306,7 @@ def widget_data_contract(
             (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
         )
         required_columns = set(_parameters(required_rule).get("required_columns", []))
+        render_table_summary()
         saved_payload = json.loads(
             str(current["contract"].get("contract_payload_json") or "{}")
         )
