@@ -1184,9 +1184,9 @@ def widget_data_contract(
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
             selected_sensitive = bool(
-                "sensitive_enabled" in locals() and sensitive_enabled.value
+                state.get("_working_sensitive_enabled", False)
             )
-            selected_dq = bool("dq_enabled" in locals() and dq_enabled.value)
+            selected_dq = bool(state.get("_working_dq_enabled", False))
             statuses = {
                 "Schema": bool(required_columns),
                 "Freshness": bool(table_rules["freshness"]["enabled"].value),
@@ -1613,14 +1613,20 @@ def widget_data_contract(
                 control.layout.display = "" if treatment == "bucket" else "none"
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
-        sensitive_enabled.observe(
-            lambda _change: None if hydrating["active"] else render_table_summary(),
-            names="value",
-        )
-        dq_enabled.observe(
-            lambda _change: None if hydrating["active"] else render_table_summary(),
-            names="value",
-        )
+        def working_sensitive_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            state["_working_sensitive_enabled"] = bool(sensitive_enabled.value)
+            render_table_summary()
+
+        def working_dq_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            state["_working_dq_enabled"] = bool(dq_enabled.value)
+            render_table_summary()
+
+        sensitive_enabled.observe(working_sensitive_changed, names="value")
+        dq_enabled.observe(working_dq_changed, names="value")
         update_sensitive_fields()
 
         def update_pii_fields(change: dict[str, Any] | None = None) -> None:
