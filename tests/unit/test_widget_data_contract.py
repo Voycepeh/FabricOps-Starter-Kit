@@ -163,6 +163,7 @@ def widget_runtime(monkeypatch):
         "sensitive_data_prompt": "configured sensitive prompt",
         "grain_prompt": "configured grain prompt",
         "pattern_prompt": "configured pattern prompt",
+        "business_rule_prompt": "configured business rule prompt",
     }
 
     def review(**_kwargs):
@@ -454,7 +455,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Advanced", "Manifest & Freeze")
+    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Business Rules", "Manifest & Freeze")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -471,10 +472,10 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
-    assert controls["advanced_type"].value == "column_relationship"
+    assert controls["business_saved"].value == ""
     assert controls["row_key_columns"].value == ()
-    assert controls["advanced_enabled"].description == "Enabled"
-    assert controls["advanced_block"].description == "Block on failure"
+    assert controls["business_enabled"].description == "Enabled"
+    assert controls["business_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -507,7 +508,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -548,17 +549,17 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    controls["top_nav"].value = "Advanced"
-    assert controls["advanced_type"] in controls["left_pane"].children
-    assert controls["advanced_type"].layout.max_width == "560px"
-    assert controls["advanced_columns"].layout.height == "150px"
-    assert controls["advanced_enabled"].description == "Enabled"
-    assert controls["advanced_block"].description == "Block on failure"
+    controls["top_nav"].value = "Business Rules"
+    assert controls["business_saved"] in controls["left_pane"].children
+    assert controls["business_requirement"].layout.max_width == "760px"
+    assert controls["business_columns"].layout.height == "130px"
+    assert controls["business_enabled"].description == "Enabled"
+    assert controls["business_block"].description == "Block on failure"
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
     assert "Table guardrails" in controls["manifest_preview"].value
     assert "Column definitions and rules" in controls["manifest_preview"].value
-    assert "Advanced rules" in controls["manifest_preview"].value
+    assert "Business Rules" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
@@ -865,7 +866,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
-    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
