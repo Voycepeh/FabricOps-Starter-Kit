@@ -19,6 +19,7 @@ def _row(*, run_id: str, status: str, can_continue: bool, severity: str, committ
 
 
 def test_latest_validation_requires_exact_version_evidence():
+    """Reject activation when the exact frozen version has no validation evidence."""
     result = _latest_validation(
         [], contract_id="contract-a", contract_version=2, environment_name="dev"
     )
@@ -27,6 +28,7 @@ def test_latest_validation_requires_exact_version_evidence():
 
 
 def test_latest_validation_uses_latest_run_and_blocks_failed_guardrails():
+    """Use the latest validation run and allow warnings that can continue."""
     rows = [
         _row(run_id="old", status="failed", can_continue=False, severity="blocking", committed_at="2026-09-25T10:00:00"),
         _row(run_id="new", status="passed", can_continue=True, severity="blocking", committed_at="2026-09-26T10:00:00"),
@@ -42,6 +44,7 @@ def test_latest_validation_uses_latest_run_and_blocks_failed_guardrails():
 
 
 def test_latest_validation_blocks_latest_failed_run():
+    """Block activation when the latest validation run has a blocking failure."""
     rows = [
         _row(run_id="old", status="passed", can_continue=True, severity="blocking", committed_at="2026-09-25T10:00:00"),
         _row(run_id="new", status="failed", can_continue=False, severity="blocking", committed_at="2026-09-26T10:00:00"),
