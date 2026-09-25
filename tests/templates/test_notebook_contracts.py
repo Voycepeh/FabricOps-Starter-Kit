@@ -135,12 +135,11 @@ def test_official_governance_workflow_inventory():
 
 
 def test_01_governance_supports_the_complete_governance_lifecycle():
-    """Governance uses the unified, table-scoped Data Contract authoring path."""
+    """Governance uses one unified Data Contract workspace without a separate Catalogue picker."""
     source = _notebook_source("01_governance.ipynb")
     required_functions = {
         "widget_render_data_steward",
         "widget_render_data_agreement",
-        "widget_view_catalogue",
         "widget_data_contract",
     }
 
@@ -154,12 +153,18 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         for node in ast.walk(tree)
         if isinstance(node, ast.Name)
     }
-    assert 'store="Metadata"' in source
-    assert 'mode="explore"' in source
-    assert 'TABLE_ID = table_selection["table_id"]' in source
-    assert 'contract_authoring["table_id"] == TABLE_ID' in source
+    assert "widget_view_catalogue" not in source
+    assert 'mode="explore"' not in source
+    assert 'store="Metadata"' not in source
+    assert 'TABLE_ID = table_selection["table_id"]' not in source
+    assert source.count("widget_data_contract(spark_session=spark)") == 2
     assert "Data Steward" in source
     assert "Data Agreement" in source
+    assert "**Table**, **Columns**, and **Review**" in source
+    assert "Freezing creates an immutable candidate for Engineering validation" in source
+    assert "Governance authoring and Engineering validation intentionally loop" in source
+    assert "Activation makes that contract the governed Production definition" in source
+    assert "does **not** promote or deploy `02_pipeline`" in source
     for demoted_widget in (
         "widget_enrich_table_metadata",
         "widget_author_guardrails",
@@ -169,12 +174,13 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         assert demoted_widget not in source
         assert f"fabricops_kit.widgets.{demoted_widget}" not in source
     authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
+    activation_cell = _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "widget_select_data_contract" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
+    assert "widget_select_data_contract" not in activation_cell
+    assert "widget_data_contract(" in activation_cell
     assert "widget_select_data_contract" not in source
-    assert "widget_data_contract(" not in _cell_by_id("01_governance.ipynb", "activation-widget").source
     assert "METADATA_SCHEMA" not in source
-
 
 def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     """Guided Demo Steps 3–6 preserve lifecycle order and responsibility boundaries."""
