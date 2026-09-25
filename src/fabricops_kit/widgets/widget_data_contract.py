@@ -1123,7 +1123,7 @@ def widget_data_contract(
         guardrail_status_html = "".join(
             "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
             f"<span style='color:#666'>{html.escape(name)}</span>"
-            f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
+            f"<span style='font-size:12px;{'color:#0f6cbd;' if enabled else ''}'>{'Enabled' if enabled else 'Disabled'}</span></div>"
             for name, enabled in guardrail_status.items()
         )
         schedule_status = str(scheduled_refresh.get("status") or "unavailable")
@@ -1204,7 +1204,7 @@ def widget_data_contract(
             guardrail_html = "".join(
                 "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
                 f"<span style='color:#666'>{html.escape(name)}</span>"
-                f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
+                f"<span style='font-size:12px;{'color:#0f6cbd;' if enabled else ''}'>{'Enabled' if enabled else 'Disabled'}</span></div>"
                 for name, enabled in statuses.items()
             )
             table_summary.value = (
