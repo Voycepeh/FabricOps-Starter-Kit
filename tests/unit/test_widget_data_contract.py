@@ -448,12 +448,37 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
-    assert controls["advanced_type"].value == "uniqueness"
+    assert controls["advanced_type"].value == "column_relationship"
+    assert controls["row_key_columns"].value == ()
     assert controls["advanced_enabled"].description == "Enabled"
     assert controls["advanced_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
+
+
+
+def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
+    """Hydrate an existing table-level uniqueness rule into Grain & Row Key."""
+    widget_runtime["guardrails"].append({
+        "guardrail_rule_id": "row-key",
+        "guardrail_version": 1,
+        "guardrail_type": "data_quality",
+        "column_id": "",
+        "rule_type": "uniqueness",
+        "rule_parameters_json": '{"columns":["column_0","column_1"]}',
+        "action": "Block",
+        "is_active": True,
+        "contract_id": "contract-orders",
+        "contract_version": 1,
+        "environment_name": "dev",
+    })
+
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
+    assert controls["row_key_block"].value is True
 
 def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
@@ -473,8 +498,9 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Guardrails" in table_summary
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
-    assert [section.children[0].value for section in table_sections[:4]] == [
+    assert [section.children[0].value for section in table_sections[:5]] == [
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Grain &amp; Row Key</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
@@ -486,7 +512,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
     assert [label for label, _value in controls["dq_type"].options] == [
-        "Completeness", "Uniqueness", "Allowed Values", "Value Rules", "Pattern",
+        "Completeness", "Allowed Values", "Value Rules", "Pattern",
     ]
     assert "save_column" not in controls
     assert "save_dq" not in controls
@@ -1157,7 +1183,7 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
-    freshness_section = state["_controls"]["right_pane"].children[2]
+    freshness_section = state["_controls"]["right_pane"].children[3]
     assert "Applies when this table is used as a source in a downstream pipeline." in freshness_section.children[1].value
     assert "not when this table itself is written" in freshness_section.children[1].value
 
@@ -1213,7 +1239,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "last successfully consumed state for that downstream target" in drift_preview
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
-    drift_section = state["_controls"]["right_pane"].children[3]
+    drift_section = state["_controls"]["right_pane"].children[4]
     assert "Applies when this table is used as a source in a downstream pipeline." in drift_section.children[1].value
     assert "previously consumed from this table has changed" in drift_section.children[1].value
 
@@ -1331,7 +1357,7 @@ def test_review_sections_render_single_page_without_duplicate_column_rules():
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
-    assert "<b>Advanced rules</b> · 3 configured" in review
+    assert "<b>Advanced rules</b> · 2 configured" in review
     assert "<b>Column definitions and rules</b> · 0 columns, 1 column rules" in review
     assert review.count("<b>pattern</b>") == 1
 

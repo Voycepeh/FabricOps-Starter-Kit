@@ -361,12 +361,19 @@ DEFAULT_AI_ENRICHMENT = {
         "classification is context only, not a PII decision. Never request or return raw values. Return "
         "structured JSON only; final review belongs to Governance."
     ),
+    "grain_prompt": (
+        "Suggest the table row grain and the smallest defensible single or composite row-key candidate using "
+        "only governed table metadata, column descriptions, and profile evidence. Prefer a single column when "
+        "it is 100% distinct with no missing values. Per-column distinctness cannot prove composite uniqueness, "
+        "so describe composite keys as candidates that the table-level uniqueness guardrail must validate. "
+        "Return structured JSON only; final review belongs to Governance."
+    ),
     "dq_prompt": (
-        "Suggest conservative standard Data Quality rules for the selected column using only its governed "
+        "Suggest conservative column-level Data Quality rules for the selected column using only its governed "
         "metadata, description, manually selected classification, profile summary, and supplied frequency "
-        "evidence. Use only completeness, uniqueness, value_set, range, and pattern. Observed nulls, "
-        "distinctness, frequencies, minima, and maxima are evidence, not automatic contractual rules. "
-        "Do not infer business relationships, custom expressions, or contractual limits from current "
+        "evidence. Use only completeness, value_set, range, and pattern. Observed nulls, distinctness, "
+        "frequencies, minima, and maxima are evidence, not automatic contractual rules. "
+        "Do not infer business relationships, row keys, custom expressions, or contractual limits from current "
         "observations alone. Return structured JSON only; final review belongs to Governance."
     ),
 }
@@ -413,6 +420,7 @@ class GovernanceConfig:
             "enabled": bool(ai_enrichment.get("enabled", False)),
             "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
             "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
+            "grain_prompt": str(ai_enrichment.get("grain_prompt") or "").strip(),
             "dq_prompt": str(ai_enrichment.get("dq_prompt") or "").strip(),
         })
         object.__setattr__(
