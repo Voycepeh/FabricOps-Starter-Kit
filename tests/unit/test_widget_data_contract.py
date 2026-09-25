@@ -762,6 +762,38 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert widget_runtime["calls"]["guardrails"] == []
 
 
+def test_ai_open_reports_granular_progress(widget_runtime, monkeypatch):
+    """Slow AI startup reports the real stage before each blocking suggestion call."""
+    widget_runtime["ai_enrichment"]["enabled"] = True
+    progress = []
+    state = widget_runtime["start"]()
+
+    def enrichment(context, **_kwargs):
+        progress.append(state["_controls"]["open_progress"].value)
+        level = context["metadata_level"]
+        return {"Description": f"Suggested {level} description"}
+
+    def sensitive(context, **_kwargs):
+        progress.append(state["_controls"]["open_progress"].value)
+        column = context["columns"][0]
+        return [{
+            "column_name": column["column_name"], "column_id": column["column_id"],
+            "pii_type": "none", "pii_label": "Not PII",
+            "reason": "No sensitive evidence.", "treatment": "mask",
+            "action": "Warn", "parameters": {}, "is_active": False,
+        }]
+
+    monkeypatch.setattr(module, "suggest_enrichment", enrichment)
+    monkeypatch.setattr(module, "suggest_sensitive_data", sensitive)
+
+    state["_controls"]["open_with_ai"].click()
+
+    assert "Generating table description" in progress[0]
+    assert "Generating first-column description" in progress[1]
+    assert "Assessing first column for sensitive data" in progress[2]
+    assert state["_controls"]["open_progress"].value == ""
+
+
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
     """Description and Sensitive Data acceptance stay isolated from manual Classification."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
