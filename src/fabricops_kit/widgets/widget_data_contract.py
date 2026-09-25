@@ -625,7 +625,6 @@ def widget_data_contract(
     )
     contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
     selector = shared.form_grid(widgets, [
-        widgets.Text(value=env, disabled=True, **shared.widget_common(widgets, "Environment")),
         store_control, schema_control, table_control, contract_control,
     ])
 
@@ -853,6 +852,8 @@ def widget_data_contract(
                 render_table_ai()
                 return
             try:
+                if state.get("_opening_with_ai"):
+                    set_open_progress("Generating table description…", 50)
                 result = suggest_enrichment(
                     build_ai_enrichment_context(
                         table,
@@ -1551,7 +1552,11 @@ def widget_data_contract(
             )
             description, _ = _column_editable_values(column_id)
             try:
+                if state.get("_opening_with_ai"):
+                    set_open_progress("Loading first-column profile…", 65)
                 profile_value = load_profile_context(column_id)
+                if state.get("_opening_with_ai"):
+                    set_open_progress("Generating first-column description…", 75)
                 result = suggest_enrichment(
                     build_ai_enrichment_context(
                         selected,
@@ -1589,6 +1594,8 @@ def widget_data_contract(
             if use_description_suggestion:
                 description = _effective_ai_description(column_id)
             try:
+                if state.get("_opening_with_ai"):
+                    set_open_progress("Assessing first column for sensitive data…", 88)
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
                 context_value = build_ai_sensitive_data_context({
@@ -2358,6 +2365,18 @@ def widget_data_contract(
         layout=widgets.Layout(width="220px"),
     )
     open_progress = widgets.HTML()
+
+    def set_open_progress(label: str, percent: int) -> None:
+        """Show real opening stages so slow AI calls still feel visibly active."""
+        bounded = max(0, min(100, int(percent)))
+        open_progress.value = (
+            "<div style='width:440px;max-width:100%;'>"
+            f"<div style='font-size:12px;margin-bottom:4px;'>{html.escape(label)}</div>"
+            "<div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
+            f"<div style='width:{bounded}%;height:100%;background:#2b88d8;"
+            "transition:width .25s ease;'></div></div></div>"
+        )
+
     ai_availability = widgets.HTML(
         "" if ai_enrichment.get("enabled") else
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
@@ -2456,12 +2475,8 @@ def widget_data_contract(
             return
         open_with_ai_button.disabled = True
         open_without_ai_button.disabled = True
-        open_progress.value = (
-            "<div style='width:440px;max-width:100%;'>"
-            "<div style='font-size:12px;margin-bottom:4px;'>Opening contract…</div>"
-            "<div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
-            "<div style='width:25%;height:100%;background:#2b88d8;'></div></div></div>"
-        )
+        state["_opening_with_ai"] = bool(with_ai)
+        set_open_progress("Opening contract…", 20)
         try:
             if selected_contract == "new":
                 state["table_id"] = selected_table
@@ -2473,14 +2488,12 @@ def widget_data_contract(
                 int(state["current"]["contract_version"]),
             )
             state["_ai_mode"][scope] = "with_ai" if with_ai else "without_ai"
-            open_progress.value = (
-                "<div style='width:440px;max-width:100%;'>"
-                "<div style='font-size:12px;margin-bottom:4px;'>"
-                + ("Preparing AI suggestions…" if with_ai else "Loading editor…")
-                + "</div><div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
-                "<div style='width:70%;height:100%;background:#2b88d8;'></div></div></div>"
+            set_open_progress(
+                "Preparing AI context…" if with_ai else "Loading editor…",
+                35 if with_ai else 70,
             )
             render()
+            set_open_progress("Building editor…", 96)
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
             open_progress.value = ""
@@ -2492,6 +2505,7 @@ def widget_data_contract(
             open_progress.value = ""
             set_status(str(exc), error=True)
         finally:
+            state["_opening_with_ai"] = False
             open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
             open_without_ai_button.disabled = False
 
