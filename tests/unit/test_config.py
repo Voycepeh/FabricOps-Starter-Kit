@@ -1635,6 +1635,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         "sensitive_data_prompt": "sensitive rules",
         "grain_prompt": GovernanceConfig().ai_enrichment["grain_prompt"],
         "pattern_prompt": "pattern rules",
+        "business_rule_prompt": GovernanceConfig().ai_enrichment["business_rule_prompt"],
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
     default_prompt = GovernanceConfig().ai_enrichment["sensitive_data_prompt"]
