@@ -637,6 +637,7 @@ def validate_framework_config(config: Any | dict[str, Any]) -> Any:
         raise ValueError("data_agreement_config must be a DataAgreementConfig object.")
     _validate_audit_timezone(normalized.audit_timezone)
 
+    metadata_targets: dict[tuple[str, str], list[str]] = {}
     for env, targets in normalized.path_config.paths.items():
         if not isinstance(targets, dict) or not targets:
             raise ValueError(f"Environment '{env}' must contain at least one target.")
@@ -644,6 +645,23 @@ def validate_framework_config(config: Any | dict[str, Any]) -> Any:
             required = ("workspace_id", "item_id", "kind")
             if not all(hasattr(housepath, attr) for attr in required):
                 raise ValueError(f"Target '{env}/{target_name}' must provide FabricStore fields: {required}.")
+        metadata_store = targets.get("Metadata")
+        if metadata_store is not None:
+            identity = (
+                str(getattr(metadata_store, "workspace_id", "")),
+                str(getattr(metadata_store, "item_id", "")),
+            )
+            metadata_targets.setdefault(identity, []).append(str(env))
+
+    if len(metadata_targets) > 1:
+        configured = "; ".join(
+            f"{', '.join(sorted(envs))} -> {workspace_id}/{item_id}"
+            for (workspace_id, item_id), envs in sorted(metadata_targets.items())
+        )
+        raise ValueError(
+            "All configured environments must use the same physical FabricOps Metadata Lakehouse "
+            f"(workspace_id + item_id). Configured targets: {configured}."
+        )
 
     return normalized
 
