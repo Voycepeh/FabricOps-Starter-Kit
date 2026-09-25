@@ -25,7 +25,7 @@ _PROFILE_CONTEXT_FIELDS = (
 )
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
-STANDARD_DQ_TYPES = frozenset({"completeness", "uniqueness", "value_set", "range", "pattern"})
+STANDARD_DQ_TYPES = frozenset({"completeness", "value_set", "range", "pattern"})
 
 
 def build_ai_enrichment_context(
@@ -252,8 +252,42 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> dict[str, Any]:
+    """Return one transient table-grain and row-key suggestion."""
+    if not str(prompt).strip():
+        raise ValueError("An AI Grain & Row Key prompt is required.")
+    allowed_columns = {
+        str(row.get("column_name") or "") for row in context.get("columns", [])
+        if str(row.get("column_name") or "")
+    }
+    instruction = f"""{prompt.strip()}
+
+Return JSON only with grain, key_columns, and rationale.
+key_columns must contain only supplied column names and may be empty when no defensible key is evident.
+A single column with 100% observed distinctness and zero missing values is strong profile evidence.
+Per-column distinctness cannot prove composite uniqueness; composite selections are candidates until the uniqueness guardrail validates them on table data.
+Do not invent columns or business meaning unsupported by the governed metadata.
+
+Context:
+{json.dumps(context, sort_keys=True, default=str)}"""
+    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    try:
+        candidate = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI Grain & Row Key suggestion was not valid JSON.") from exc
+    if not isinstance(candidate, dict):
+        raise ValueError("AI Grain & Row Key suggestion must be a JSON object.")
+    key_columns = candidate.get("key_columns", [])
+    if not isinstance(key_columns, list) or any(str(name) not in allowed_columns for name in key_columns):
+        raise ValueError("AI Grain & Row Key suggestion contains an unknown key column.")
+    return {
+        "grain": str(candidate.get("grain") or "").strip(),
+        "key_columns": [str(name) for name in key_columns],
+        "rationale": str(candidate.get("rationale") or "").strip(),
+    }
+
 def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> list[dict[str, Any]]:
-    """Return validated, transient suggestions for the five standard DQ families."""
+    """Return validated, transient suggestions for the four column-level DQ families."""
     if not str(prompt).strip():
         raise ValueError("An AI Data Quality prompt is required.")
     allowed_columns = {
@@ -263,7 +297,7 @@ def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None
     instruction = f"""{prompt.strip()}
 
 Return JSON only: a list of objects with rule_type, columns, parameters, rationale, and selected.
-Allowed rule_type values: completeness, uniqueness, value_set, range, pattern.
+Allowed rule_type values: completeness, value_set, range, pattern.
 Suggest only single-column rules. Never suggest relationships, conditional logic, SQL, Python, or executable code.
 Completeness requires maximum_missing_percent and treat_blank_as_missing. Zero observed nulls alone is not requiredness evidence.
 Uniqueness requires semantic ID/key evidence; current 100% distinctness alone is insufficient.

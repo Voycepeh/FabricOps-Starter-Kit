@@ -1,17 +1,18 @@
 # Data Quality rules
 
-FabricOps supports **7 lightweight DQ rule types** in `METADATA_GUARDRAIL`: five standard families plus two explicitly authored table-level families.
+FabricOps supports **7 lightweight DQ rule types** in `METADATA_GUARDRAIL`: four column-level standard families, one table-level row-key uniqueness rule, and two explicitly authored Advanced families.
 
 ## Architecture boundary
 
 | Boundary | Rule types | Ownership |
 |---|---|---|
-| Standard DQ | [`completeness`](completeness.md), [`uniqueness`](uniqueness.md), [`value_set`](value-set.md), [`range`](range.md), [`pattern`](pattern.md) | Structured, deterministic, manually editable, and safe for conservative AI suggestion. |
+| Column DQ | [`completeness`](completeness.md), [`value_set`](value-set.md), [`range`](range.md), [`pattern`](pattern.md) | Structured, deterministic, manually editable, and safe for conservative AI suggestion. |
+| Grain & Row Key | [`uniqueness`](uniqueness.md) | Table-level uniqueness derived from the selected single or composite row key. Profile evidence can suggest candidates; pipeline validation proves the configured key against table data. |
 | Table relationship DQ | [`column_relationship`](column-relationship.md) | Human-authored, structured cross-column row validation; FabricOps does not infer business relationships. |
 | Custom Advanced DQ | [`custom_expression`](custom-expression.md) | Project-authored constrained PySpark boolean `Column` logic; FabricOps validates, executes, records, and applies Warn/Block. |
 | Transform | Project code | Persisted derived business or validation columns. FabricOps never automatically persists an `is_valid_*` column. |
 
-AI suggestions are transient. They use governed Catalogue, Enrichment, Data Profiled, and Data Profiled Frequency evidence, never save/freeze/activate/enforce, and never suggest relationship or custom rules.
+AI suggestions are transient. Column DQ suggestions use governed Catalogue, Enrichment, Data Profiled, and Data Profiled Frequency evidence and never save, freeze, activate, or enforce. Grain & Row Key suggestions may use profile distinctness to identify strong single-column candidates, but per-column statistics alone do not prove a composite key.
 
 Custom expressions are not arbitrary Python: the runtime compiles a deliberately constrained, side-effect-free PySpark `Column` grammar without `eval()` or Python UDFs.
 
