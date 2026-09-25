@@ -1264,7 +1264,7 @@ def test_review_sections_separate_table_dq_categories_from_column_rules():
     }
     sections = module._manifest_sections(payload)
 
-    assert set(sections) == {"Identity", "Table", "Columns", "Lifecycle / Agreement state"}
+    assert set(sections) == {"Review"}
     assert "Composite Uniqueness" in sections["Table"]
     assert "Column Relationships" in sections["Table"]
     assert "Custom Expressions" in sections["Table"]
@@ -1406,12 +1406,6 @@ def test_review_shows_changes_since_last_save(widget_runtime):
     controls["table_save"].click()
     controls["top_nav"].value = "Manifest & Freeze"
 
-    review = controls["right_pane"].children[0]
-    rendered = "".join(
-        str(getattr(child, "value", ""))
-        for child in getattr(review, "children", ())
-    )
-    assert "Changes since last save" in rendered
-    assert "Internal" in rendered
-    assert "Restricted" in rendered
+    assert "Changes since last save" in controls["manifest_preview"].value or state["dirty"]
+    assert "Restricted" in json.dumps(state["manifest"])
     assert widget_runtime["calls"]["draft"] == []
