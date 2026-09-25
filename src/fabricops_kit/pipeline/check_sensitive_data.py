@@ -242,6 +242,10 @@ def _check_sensitive_data_rules(
             rule_type=treatment,
             result=check,
             column_name=column_name,
+            table_id=identity["table_id"],
+            contract_id=str(rule.get("contract_id") or ""),
+            contract_version=int(rule.get("contract_version") or 0),
+            execution_type=execution_type,
         )
     support_mapping = None
     if mappings:
@@ -417,13 +421,14 @@ def check_sensitive_data(
         context=context,
     )
     if verbose:
+        checks = result["checks"]
         treatments = [str(check.get("treatment") or "unknown") for check in checks]
         print(f"  Contract selected; evaluated {len(checks)} active Sensitive Data rule(s).")
         print(f"  Treatments applied/evaluated: {', '.join(treatments) if treatments else 'none'}.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS without raw sensitive values.")
         print(
             "  Token support mapping returned to caller and not persisted automatically."
-            if support_mapping is not None
+            if result["support_mapping"] is not None
             else "  No token support mapping produced."
         )
     if raise_on_failure and not result["can_continue"]:
