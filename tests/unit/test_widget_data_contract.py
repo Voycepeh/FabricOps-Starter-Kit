@@ -345,7 +345,7 @@ def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_r
     assert controls["load_strategy"].disabled is False
     controls["load_strategy"].value = "append"
     controls["table_save"].click()
-    controls["top_nav"].value = "Review"
+    controls["top_nav"].value = "Manifest & Freeze"
     controls["save_data_contract"].click()
 
     saved = widget_runtime["calls"]["draft"][-1]
@@ -384,7 +384,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Advanced", "Review")
+    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Advanced", "Manifest & Freeze")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -413,7 +413,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Advanced", "Review"):
+    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -425,6 +425,13 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Classification" in table_summary
     assert "Guardrails" in table_summary
     assert controls["table_save"].description == "Apply Table Changes"
+    table_sections = controls["right_pane"].children
+    assert [section.children[0].value for section in table_sections[:4]] == [
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table metadata</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
+    ]
 
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
@@ -439,7 +446,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["advanced_columns"].layout.height == "150px"
     assert controls["advanced_enabled"].description == "Enabled"
     assert controls["advanced_block"].description == "Block on failure"
-    controls["top_nav"].value = "Review"
+    controls["top_nav"].value = "Manifest & Freeze"
     assert controls["manifest_nav"] in controls["left_pane"].children
 
 
@@ -754,7 +761,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
-    for label in ("Table", "Columns", "Advanced", "Review"):
+    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0

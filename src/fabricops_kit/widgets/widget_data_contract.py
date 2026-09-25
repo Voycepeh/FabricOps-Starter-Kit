@@ -24,7 +24,7 @@ from fabricops_kit.widgets.enrichment_shared import (
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
-_TABS = ("Table", "Columns", "Advanced", "Review")
+_TABS = ("Table", "Columns", "Advanced", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 _ADVANCED_TYPES = (
@@ -1053,51 +1053,83 @@ def widget_data_contract(
         )
         table_left = (
             widgets.HTML(
-                "<div style='color:#0f548c;font-size:13px;font-weight:600;'>TABLE</div>"
+                "<div style='background:#e7f5ef;border-left:4px solid #107c41;"
+                "border-radius:4px;padding:10px 11px;margin-bottom:12px;'>"
+                "<div style='color:#0b5d35;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Governed table</div>"
                 + identity.value
-                + "<div style='border-top:1px solid #e1e6eb;margin:8px 0;'></div>"
-                + "<div style='color:#666;font-size:12px'><b>Loading Strategy</b></div>"
-                + f"<div>{html.escape(load_strategy)}</div>"
-                + "<div style='color:#666;font-size:12px;margin-top:12px'><b>Refresh Frequency</b></div>"
-                + f"<div>{html.escape(refresh_frequency)}</div>"
-                + "<div style='color:#666;font-size:12px;margin-top:12px'><b>Classification</b></div>"
-                + f"<div>{html.escape(str(table_classification.value or 'Not classified'))}</div>"
-                + "<div style='border-top:1px solid #e1e6eb;margin:10px 0;'></div>"
-                + "<div style='color:#666;font-size:12px'><b>Guardrails</b></div>"
-                + guardrail_status_html
+                + "</div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Contract</div>"
+                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
+                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
+                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Loading Strategy</div>"
+                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(load_strategy)}</div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Refresh Frequency</div>"
+                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(refresh_frequency)}</div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Classification</div>"
+                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
+                + f"{html.escape(str(table_classification.value or 'Not classified'))}</div>"
+                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Guardrails</div>"
+                + "<div style='margin-top:6px;'>" + guardrail_status_html + "</div>"
             ),
             change_table_button,
         )
+        processing_hint_row = widgets.HBox(
+            [
+                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
+                processing_source_hint,
+            ],
+            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
+        )
+        table_ai_row = widgets.HBox(
+            [
+                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
+                widgets.VBox(
+                    [
+                        table_description_ai,
+                        shared.action_row(
+                            widgets, [accept_table_description, rerun_table_description]
+                        ),
+                    ],
+                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
+                ),
+            ],
+            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
+        )
         table_right = (
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Processing</div>"),
+            shared.form_section(
+                widgets,
+                title="Table metadata",
+                children=[
+                    table_classification,
+                    table_description,
+                    table_ai_row,
+                ],
+            ),
+            shared.form_section(
+                widgets,
+                title="Processing",
+                children=[
                     load_strategy_control,
-                    processing_source_hint,
+                    processing_hint_row,
                     *processing_parameter_controls,
                 ],
-                layout=widgets.Layout(
-                    width="560px", max_width="100%", gap="6px",
-                    padding="10px 12px", border="1px solid #dfe5eb",
-                ),
             ),
-            widgets.VBox(
-                [table_classification],
-                layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
-            ),
-            widgets.VBox(
-                [
-                    table_description, table_description_ai,
-                    shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
-                ],
-                layout=widgets.Layout(width="100%", gap="6px"),
-            ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Freshness</div>"),
+            shared.form_section(
+                widgets,
+                title="Freshness",
+                children=[
                     widgets.HTML(
-                        "<p style='margin:0;'>Freshness is the expected source-data arrival SLA; "
-                        "it is independent of when Fabric schedules this notebook to run.</p>"
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                        "Expected source-data arrival SLA. This is independent of when Fabric "
+                        "schedules the notebook to run.</div>"
                     ),
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
@@ -1105,26 +1137,24 @@ def widget_data_contract(
                     ),
                     *table_rules["freshness"]["parameters"],
                 ],
-                layout=widgets.Layout(
-                    width="560px", max_width="100%", gap="6px",
-                    padding="10px 12px", border="1px solid #dfe5eb",
-                ),
             ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
+            shared.form_section(
+                widgets,
+                title="Source Drift",
+                children=[
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                        "Detect changes in source partitions and the selected change column "
+                        "before governed publication.</div>"
+                    ),
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
                         layout=checkbox_row_layout,
                     ),
                     *table_rules["source_drift"]["parameters"],
                 ],
-                layout=widgets.Layout(
-                    width="560px", max_width="100%", gap="6px",
-                    padding="10px 12px", border="1px solid #dfe5eb",
-                ),
             ),
-            widgets.HBox([table_save], layout=widgets.Layout(justify_content="flex-end")),
+            shared.action_row(widgets, [table_save]),
         )
         view_content["Table"] = (table_left, table_right)
 
@@ -1978,82 +2008,110 @@ def widget_data_contract(
         column_search.observe(refresh_column_options, names="value")
 
         column_left = (
-            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>COLUMNS</div>"),
+            widgets.HTML(
+                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Columns</div>"
+                "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
+                "Select one column to review metadata, profile evidence, Sensitive Data, "
+                "and Data Quality rules.</div>"
+            ),
             column_search,
             column_select,
         )
         dq_editor = widgets.VBox(
             [
-                dq_help, dq_usage,
+                dq_help,
+                dq_usage,
                 widgets.HBox(
                     [dq_enabled, dq_block],
                     layout=checkbox_row_layout,
                 ),
                 *dq_parameter_controls,
-                suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
+                dq_suggestion,
+                dq_ai,
+                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion, save_dq]),
             ],
-            layout=widgets.Layout(width="100%", gap="6px", padding="8px 0 0 0"),
+            layout=widgets.Layout(width="100%", gap="8px", padding="2px 0 0 0"),
         )
-        dq_panel = widgets.VBox(
-            [
-                widgets.HTML("<div style='font-weight:600;'>Column data quality</div>"),
+        dq_panel = shared.form_section(
+            widgets,
+            title="Column data quality",
+            children=[
                 widgets.GridBox(
                     [dq_type, dq_editor],
                     layout=widgets.Layout(
                         width="100%",
                         grid_template_columns="minmax(190px, 32fr) minmax(0, 68fr)",
-                        grid_gap="14px",
+                        grid_gap="16px",
+                        align_items="flex-start",
                     ),
                 ),
             ],
-            layout=widgets.Layout(width="100%", gap="6px"),
+        )
+        column_schema_row = widgets.HBox(
+            [
+                widgets.HTML(
+                    "<div style='color:#253858;font-size:13px;font-weight:600;'>Schema</div>",
+                    layout=widgets.Layout(width="150px", min_width="150px"),
+                ),
+                required,
+            ],
+            layout=widgets.Layout(width="100%", gap="12px", align_items="center"),
+        )
+        column_ai_row = widgets.HBox(
+            [
+                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
+                widgets.VBox(
+                    [
+                        column_description_ai,
+                        shared.action_row(
+                            widgets, [accept_column_description, rerun_column_description]
+                        ),
+                    ],
+                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
+                ),
+            ],
+            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
         )
         column_right = (
             column_context,
-            widgets.VBox(
-                [widgets.HTML("<div style='font-weight:600;'>Schema</div>"), required],
-                layout=widgets.Layout(width="100%", gap="6px"),
-            ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Classification</div>"),
+            shared.form_section(
+                widgets,
+                title="Column definition",
+                children=[
+                    column_schema_row,
                     column_classification,
+                    column_description,
+                    column_ai_row,
                 ],
-                layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
             ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Description</div>"),
-                    column_description, column_description_ai,
-                    shared.form_grid(widgets, [accept_column_description, rerun_column_description]),
-                ],
-                layout=widgets.Layout(width="100%", gap="6px"),
+            shared.form_section(
+                widgets,
+                title="Profile evidence",
+                children=[profile_context],
             ),
-            widgets.VBox(
-                [widgets.HTML("<div style='font-weight:600;'>Profile evidence</div>"), profile_context],
-                layout=widgets.Layout(
-                    width="100%", gap="6px", padding="10px 12px",
-                    border="1px solid #e1e6eb",
-                ),
-            ),
-            widgets.VBox(
-                [
-                    widgets.HTML("<div style='font-weight:600;'>Sensitive Data</div>"),
-                    sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
+            shared.form_section(
+                widgets,
+                title="Sensitive Data",
+                children=[
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
                         layout=checkbox_row_layout,
                     ),
-                    sensitive_treatment, mask_start, mask_end, mask_character,
-                    bucket_bins, bucket_labels,
+                    sensitive_ai,
+                    shared.action_row(widgets, [accept_sensitive, rerun_sensitive]),
+                    pii_type,
+                    pii_reason,
+                    sensitive_treatment,
+                    mask_start,
+                    mask_end,
+                    mask_character,
+                    bucket_bins,
+                    bucket_labels,
                 ],
-                layout=widgets.Layout(
-                    width="100%", gap="6px", padding="10px 12px",
-                    border="1px solid #dfe5eb",
-                ),
             ),
             dq_panel,
-            widgets.HBox([save_column], layout=widgets.Layout(justify_content="flex-end")),
+            shared.action_row(widgets, [save_column]),
         )
         view_content["Columns"] = (column_left, column_right)
 
@@ -2154,20 +2212,36 @@ def widget_data_contract(
         advanced_save.on_click(save_advanced_clicked)
         hydrate_advanced_type()
         advanced_left = (
-            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>ADVANCED RULES</div>"),
-            widgets.HTML("<div style='color:#666;font-size:12px;'>Multi-column and custom Data Quality configurations.</div>"),
+            widgets.HTML(
+                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Advanced rules</div>"
+                "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
+                "Multi-column and custom Data Quality configurations.</div>"
+            ),
             advanced_type,
-            widgets.HTML("<div style='font-weight:600;margin-top:8px;'>Saved configurations</div>"),
+            widgets.HTML(
+                "<div style='color:#253858;font-size:13px;font-weight:700;margin-top:8px;'>"
+                "Saved configurations</div>"
+            ),
             advanced_saved,
         )
         advanced_right = (
-            advanced_help,
-            advanced_columns,
-            advanced_operator,
-            custom_expression,
-            custom_description,
-            widgets.HBox([advanced_enabled, advanced_block], layout=checkbox_row_layout),
-            widgets.HBox([advanced_save], layout=widgets.Layout(justify_content="flex-start")),
+            shared.form_section(
+                widgets,
+                title="Configuration",
+                children=[
+                    advanced_help,
+                    widgets.HBox(
+                        [advanced_enabled, advanced_block],
+                        layout=checkbox_row_layout,
+                    ),
+                    advanced_columns,
+                    advanced_operator,
+                    custom_expression,
+                    custom_description,
+                    shared.action_row(widgets, [advanced_save]),
+                ],
+            ),
         )
         view_content["Advanced"] = (advanced_left, advanced_right)
 
@@ -2286,16 +2360,40 @@ def widget_data_contract(
             activate_button.on_click(activate_clicked)
             actions.extend([agreement_id, agreement_version, activate_button])
         review_left = (
-            widgets.HTML("<div style='color:#0f548c;font-size:13px;font-weight:600;'>REVIEW</div>"),
+            widgets.HTML(
+                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Manifest</div>"
+                + "<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
+                + html.escape(
+                    f"{str(table.get('schema_name') or '')}.{str(table.get('table_name') or state.get('table_id') or '')}"
+                )
+                + "</div>"
+                + "<div style='color:#667085;font-size:12px;margin-top:5px;'>"
+                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
+                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
+                + "<div style='color:#667085;font-size:10px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Sections</div>"
+            ),
             manifest_nav,
-            widgets.HTML("<p><b>Notebook variable</b><br>DATA_CONTRACT_MANIFEST</p>"),
+            widgets.HTML(
+                "<div style='color:#667085;font-size:12px;line-height:1.5;margin-top:8px;'>"
+                "Notebook variable<br><b style='color:#172b4d;'>DATA_CONTRACT_MANIFEST</b></div>"
+            ),
         )
         review_right = (
-            manifest_preview,
-            exact_json,
+            shared.form_section(
+                widgets,
+                title="Contract manifest",
+                children=[manifest_preview],
+            ),
+            shared.form_section(
+                widgets,
+                title="Exact JSON",
+                children=[exact_json],
+            ),
             *actions,
         )
-        view_content["Review"] = (review_left, review_right)
+        view_content["Manifest & Freeze"] = (review_left, review_right)
         apply_view()
 
 

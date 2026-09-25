@@ -261,18 +261,23 @@ def preview_region(widgets: Any, preview: Any, *, height: str = "180px") -> Any:
 
 
 def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
-    """Group naturally expanding form content under a visible heading."""
+    """Group naturally expanding form content in one consistent FabricOps card."""
     heading = widgets.HTML(
         value=(
-            '<div style="color:#0f548c;font-size:16px;font-weight:600;'
-            f'border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">{_html_escape(title)}</div>'
+            '<div style="color:#253858;font-size:14px;font-weight:700;'
+            f'line-height:1.25;">{_html_escape(title)}</div>'
         ),
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
     )
     return widgets.VBox(
         [heading, *children],
         layout=widgets.Layout(
-            width="100%", height="auto", overflow="visible", border="1px solid #d7e7f5", padding="12px", gap="8px"
+            width="100%",
+            height="auto",
+            overflow="visible",
+            border="1px solid #e1e6eb",
+            padding="14px",
+            gap="10px",
         ),
     )
 
