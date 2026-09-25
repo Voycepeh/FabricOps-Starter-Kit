@@ -313,26 +313,24 @@ expandEngineeringChoiceFromHash();
 
     The goal is a self-contained Fabric operating model with explicit write ownership, a canonical asset identity, and a clear contract bridge—not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
 
-### AI-assisted Enrichment authoring
+### AI-assisted Data Contract authoring
 
-The Enrichment section of `widget_data_contract()` can explicitly request a Description and
-Classification suggestion through Microsoft Fabric AI Functions. The helper
-sends compact technical context only: metadata level, table or column name,
-data type, existing Description, relevant profile metrics, and configured
-Classification labels. It does not introduce a raw-data sampling path.
+`widget_data_contract()` can explicitly request AI suggestions for Description, Sensitive Data,
+and the standard single-column Data Quality rule families through Microsoft Fabric AI Functions.
+Classification remains a manual Governance choice from the configured information-classification
+labels; FabricOps does not ask AI to classify the table or column.
 
-Projects configure the Description prompt, Classification prompt, enabled state,
-and information-classification labels in `00_env_config`. A Classification
-response must match one configured label. Suggestions exist only in widget
-memory and populate the normal editable controls; Governance can accept, edit,
-or replace them. Only the normal save path writes approved Description and
-Classification values to `METADATA_ENRICHMENT`, and Data Contract freeze remains
-the sign-off boundary. If AI Enrichment is disabled or Fabric AI Functions are
-unavailable, manual authoring continues unchanged.
+The helpers receive only the governed context needed for each task. Description uses the selected
+table or column metadata and profile summary. Sensitive Data additionally uses the reviewed
+Description and manual Classification to assess Direct PII, Indirect PII, or Not PII and may
+suggest one supported deterministic treatment. Data Quality uses the selected column's governed
+metadata, profile, and frequency evidence to propose conservative standard rules.
 
-Classification describes how sensitive information is under the organisation's
-information-classification policy. PII detection and required runtime treatment
-belong to a dedicated future Guardrail workflow, not Enrichment.
+Projects configure the enabled state plus the Description, Sensitive Data, and Data Quality prompts
+in `00_env_config`. Suggestions live only in widget memory and never save, freeze, activate, or
+enforce a contract automatically. Governance can accept, edit, ignore, or re-run them, while the
+normal save path remains the only route to persisted Enrichment and Guardrail metadata. If AI is
+disabled or Fabric AI Functions are unavailable, manual authoring continues unchanged.
 
 <span id="pyspark-first"></span>
 
