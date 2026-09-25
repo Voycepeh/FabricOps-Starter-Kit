@@ -921,12 +921,30 @@ def assemble_contract_payload(
     parameters = _json_value(table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={})
     if not isinstance(parameters, dict):
         raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
-    try:
-        processing = validated_processing({**parameters, "load_strategy": table.get("load_strategy")})
-    except ValueError as exc:
-        raise ValueError(
-            f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
-        ) from exc
+    catalogue_load_strategy = str(table.get("load_strategy") or "").strip()
+    if catalogue_load_strategy:
+        try:
+            processing = validated_processing({**parameters, "load_strategy": catalogue_load_strategy})
+        except ValueError as exc:
+            raise ValueError(
+                f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
+            ) from exc
+    else:
+        source_drift_rule = next(
+            (
+                rule for rule in guardrail_docs
+                if str(rule.get("guardrail_type") or "").strip().lower() == "source_drift"
+            ),
+            None,
+        )
+        source_load_strategy = str(
+            ((source_drift_rule or {}).get("rule_parameters") or {}).get("load_strategy") or ""
+        ).strip()
+        processing = (
+            {"load_strategy": source_load_strategy}
+            if source_load_strategy
+            else {}
+        )
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
         "table": {
