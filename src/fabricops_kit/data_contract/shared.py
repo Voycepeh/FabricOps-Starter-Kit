@@ -799,7 +799,7 @@ def build_contract_manifest(
 def get_column_profile_context(
     *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
 ) -> dict[str, Any]:
-    """Return top frequency values or a range from the latest completed profile snapshot."""
+    """Return the latest column profile with optional top frequency evidence."""
     context = _metadata_io_context(config, env)
     profiled = _scoped_rows(
         read_lakehouse_table(
@@ -811,14 +811,20 @@ def get_column_profile_context(
         f"column_id = {_sql_literal(column_id)}",
         f"environment_name = {_sql_literal(env)}",
     )
-    candidates = [row for row in profiled
-                  if str(row.get("table_id") or "") == str(table_id)
-                  and str(row.get("column_id") or "") == str(column_id)
-                  and str(row.get("environment_name") or env) == env
-                  and str(row.get("status") or "completed").lower() == "completed"]
+    candidates = [
+        row for row in profiled
+        if str(row.get("table_id") or "") == str(table_id)
+        and str(row.get("column_id") or "") == str(column_id)
+        and str(row.get("environment_name") or env) == env
+        and str(row.get("status") or "completed").lower() == "completed"
+    ]
     if not candidates:
         return {"kind": "unavailable", "message": "No profile values available."}
-    latest = max(candidates, key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""))
+
+    latest = max(
+        candidates,
+        key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""),
+    )
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
     try:
         frequency_filters = []
@@ -833,23 +839,34 @@ def get_column_profile_context(
             *frequency_filters,
         )
     except Exception as exc:
-        if not any(marker in str(exc).lower() for marker in ("not found", "does not exist", "path does not exist")):
+        if not any(
+            marker in str(exc).lower()
+            for marker in ("not found", "does not exist", "path does not exist")
+        ):
             raise
         frequency = []
-    values = [row for row in frequency
-              if snapshot is None
-              or row.get("profile_id") == snapshot
-              or row.get("profile_snapshot_id") == snapshot]
-    values.sort(key=lambda row: int(row.get("frequency") or row.get("count") or 0), reverse=True)
-    if values:
-        return {"kind": "values", "values": [
-            {"value": row.get("value", row.get("observed_value")), "count": row.get("frequency", row.get("count"))}
-            for row in values[:3]
-        ], "profile": latest}
-    if latest.get("min_value") is not None or latest.get("max_value") is not None:
-        return {"kind": "range", "min": latest.get("min_value"), "max": latest.get("max_value"), "profile": latest}
-    return {"kind": "unavailable", "message": "No profile values available.", "profile": latest}
 
+    values = [
+        row for row in frequency
+        if snapshot is None
+        or row.get("profile_id") == snapshot
+        or row.get("profile_snapshot_id") == snapshot
+    ]
+    values.sort(
+        key=lambda row: (
+            int(row.get("frequency_rank") or 2_147_483_647),
+            -int(row.get("frequency_count") or 0),
+        )
+    )
+    top_values = [
+        {
+            "value": row.get("value"),
+            "count": row.get("frequency_count"),
+            "percent": row.get("frequency_percent"),
+        }
+        for row in values[:3]
+    ]
+    return {"kind": "profile", "profile": latest, "values": top_values}
 
 def _contract_activation_changes(
     rows: list[dict[str, Any]], selected: dict[str, Any], *, agreement_id: str, agreement_version: str
