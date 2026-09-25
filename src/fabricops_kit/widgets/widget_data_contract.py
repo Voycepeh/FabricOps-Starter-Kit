@@ -2157,8 +2157,11 @@ def widget_data_contract(
                     hydrating["active"] = False
 
         def update_value_source(_change: dict[str, Any] | None = None) -> None:
-            is_reference = dq_value_source.value == "reference"
-            dq_values.layout.display = "none" if is_reference else ""
+            is_value_set = dq_type.value == "value_set"
+            is_reference = is_value_set and dq_value_source.value == "reference"
+            dq_values.layout.display = (
+                "" if is_value_set and not is_reference else "none"
+            )
             dq_reference_table_id.layout.display = "" if is_reference else "none"
             dq_reference_column.layout.display = "" if is_reference else "none"
 
