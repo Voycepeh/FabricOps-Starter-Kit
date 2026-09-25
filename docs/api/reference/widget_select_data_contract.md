@@ -12,9 +12,9 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:125`
+`fabricops_kit/widgets/widget_select_data_contract.py:122`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L125-L472">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L122-L469">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -92,8 +92,8 @@ RuntimeError
 Every Lineage-linked source remains in ``enforce`` mode. Each target can
 independently use ``enforce`` or ``validate``. Enforce resolves the
 environment's enforceable contract without showing a version picker;
-Production requires exactly one active version. Target validation exposes
-only frozen candidates and never installs the candidate as an enforcement
+Production requires exactly one frozen version tagged active. Target validation exposes
+frozen candidates and never installs the candidate as an enforcement
 override. This widget never activates metadata.
 
 </div>

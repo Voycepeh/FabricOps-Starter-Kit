@@ -14,7 +14,7 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 
 `fabricops_kit/widgets/widget_data_contract.py:226`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L226-L2442">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L226-L2542">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -86,8 +86,12 @@ Raises validation, widget, Spark, or configured metadata routing errors.
 
 <div class="reference-docstring-notes" markdown="1">
 
-Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
-contract version and manifest. Profile context remains read-only and is never added
+Save overwrites the complete canonical JSON for the selected draft version, then reloads
+that exact version. A new draft is seeded from the previous frozen version when one exists.
+Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
+then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
+or manually saved processing remains editable until the draft is frozen.
+Profile context remains read-only and is never added
 to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
 Fabric and remains independent of the authored Freshness expectation. Immutable
 versions are review-only.

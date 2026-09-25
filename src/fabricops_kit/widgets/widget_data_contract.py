@@ -711,7 +711,9 @@ def widget_data_contract(
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
+        column_names = [str(column.get("column_name") or "") for column in columns]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
+        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
