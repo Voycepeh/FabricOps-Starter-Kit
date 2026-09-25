@@ -1145,8 +1145,7 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        table_left = (
-            widgets.HTML(
+        table_summary = widgets.HTML(
                 "<div style='background:#e7f5ef;border-left:4px solid #107c41;"
                 "border-radius:4px;padding:10px 11px;margin-bottom:12px;'>"
                 "<div style='color:#0b5d35;font-size:10px;font-weight:800;"
@@ -1172,9 +1171,17 @@ def widget_data_contract(
                 + "<div style='color:#667085;font-size:10px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Guardrails</div>"
                 + "<div style='margin-top:6px;'>" + guardrail_status_html + "</div>"
-            ),
-            change_table_button,
         )
+        table_left = (table_summary, change_table_button)
+
+        def refresh_table_summary(_change: dict[str, Any] | None = None) -> None:
+            classification = str(table_classification.value or "Not classified")
+            table_summary.value = table_summary.value.replace(
+                ">{}</div>".format(html.escape(str(enrichment_value(enrichments, "table", "Classification") or "Not classified"))),
+                ">{}</div>".format(html.escape(classification)),
+            )
+
+        table_classification.observe(refresh_table_summary, names="value")
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -1254,21 +1261,35 @@ def widget_data_contract(
 
 
         # Columns: one editor, hydrated on selection, with profile evidence isolated from payload.
-        required_rule = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {})
+        required_rule = next(
+            (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
+        )
         required_columns = set(_parameters(required_rule).get("required_columns", []))
-        column_options = [
-            (f"{c.get('column_name')}    {c.get('data_type')}    {'*' if c.get('column_id') in required_columns or c.get('column_name') in required_columns else ''}", str(c.get("column_id") or ""))
-            for c in columns
-        ]
+        contracted_columns = {
+            str(item.get("column_id") or ""): dict(item)
+            for item in (current.get("payload", {}).get("table", {}).get("columns", []) or [])
+            if item.get("column_id")
+        }
+        observed_types = {
+            str(item.get("column_id") or ""): str(item.get("data_type") or "")
+            for item in columns
+        }
+        contracted_types = {
+            cid: str(contracted_columns.get(cid, {}).get("data_type") or observed_type)
+            for cid, observed_type in observed_types.items()
+        }
+        column_options: list[tuple[str, str]] = []
+        column_option_style = widgets.HTML()
         column_search = widgets.Text(
             placeholder="Search columns",
             layout=widgets.Layout(width="100%"),
         )
         column_select = widgets.Select(
-            options=column_options,
+            options=(),
             rows=8,
             layout=widgets.Layout(width="100%", height="250px"),
         )
+        column_select.add_class("fabricops-contract-columns")
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
@@ -1277,6 +1298,11 @@ def widget_data_contract(
         accept_column_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
+        datatype_choice = widgets.Dropdown(
+            options=(), disabled=not editable,
+            **shared.widget_common(widgets, "Contract datatype"),
+        )
+        datatype_choice.layout.display = "none"
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         pii_type = widgets.Dropdown(
             options=[(label, value) for value, label in PII_LABELS.items()],
@@ -1345,7 +1371,7 @@ def widget_data_contract(
         dq_ai = widgets.HTML()
         for control in (
             table_description, table_classification,
-            column_description, column_classification,
+            column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
             dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
@@ -1422,11 +1448,32 @@ def widget_data_contract(
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
-            column_context.value = (
-                f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
-                f"<p>Datatype: <b>{html.escape(str(selected.get('data_type') or ''))}</b><br>"
-                f"Required: <b>{'Yes' if column_id in required_columns or selected.get('column_name') in required_columns else 'No'}</b></p>"
-            )
+            observed_type = str(selected.get("data_type") or "")
+            contract_type = str(contracted_types.get(column_id) or observed_type)
+            mismatch = bool(contract_type and observed_type and contract_type != observed_type)
+            if mismatch:
+                column_context.value = (
+                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
+                    "<p><span style='color:#a4262c;font-weight:700;'>Datatype drift detected</span><br>"
+                    f"Contract: <b>{html.escape(contract_type)}</b> · "
+                    f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b><br>"
+                    "Choose which datatype this draft should govern before saving.</p>"
+                )
+                datatype_choice.options = (
+                    (f"Keep contract · {contract_type}", contract_type),
+                    (f"Accept observed · {observed_type}", observed_type),
+                )
+                datatype_choice.value = contract_type
+                datatype_choice.layout.display = ""
+            else:
+                column_context.value = (
+                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
+                    f"<p>Datatype: <b>{html.escape(contract_type or observed_type)}</b><br>"
+                    f"Required: <b>{'Yes' if column_id in required_columns or selected.get('column_name') in required_columns else 'No'}</b></p>"
+                )
+                datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
+                datatype_choice.value = contract_type or observed_type
+                datatype_choice.layout.display = "none"
             column_description.value = enrichment_value(enrichments, "column", "Description", column_id)
             column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
@@ -2089,7 +2136,33 @@ def widget_data_contract(
         save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        def rebuild_column_options() -> None:
+            nonlocal column_options
+            column_options = []
+            required_indexes = []
+            for index, column in enumerate(columns, start=1):
+                cid = str(column.get("column_id") or "")
+                name = str(column.get("column_name") or "")
+                contract_type = str(contracted_types.get(cid) or column.get("data_type") or "")
+                observed_type = str(observed_types.get(cid) or "")
+                is_required = cid in required_columns or name in required_columns
+                drift = contract_type != observed_type
+                marker = " *" if is_required else ""
+                drift_marker = f"  → {observed_type}" if drift else ""
+                column_options.append(
+                    (f"{name}    {contract_type}{drift_marker}{marker}", cid)
+                )
+                if is_required:
+                    required_indexes.append(index)
+            rules = "".join(
+                f".fabricops-contract-columns option:nth-child({index})"
+                "{color:#0f6cbd;font-weight:600;}"
+                for index in required_indexes
+            )
+            column_option_style.value = f"<style>{rules}</style>"
+
         def refresh_column_options(*_args: Any) -> None:
+            rebuild_column_options()
             query = str(column_search.value or "").strip().casefold()
             current_value = str(column_select.value or "")
             filtered = [
@@ -2105,7 +2178,43 @@ def widget_data_contract(
             else:
                 column_select.value = None
 
+        def required_feedback(change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            cid = str(column_select.value or "")
+            selected = selected_column()
+            name = str(selected.get("column_name") or "")
+            if bool(change.get("new")):
+                required_columns.add(cid)
+            else:
+                required_columns.discard(cid)
+                required_columns.discard(name)
+            refresh_column_options()
+
+        def datatype_feedback(change: dict[str, Any]) -> None:
+            if hydrating["active"] or not change.get("new"):
+                return
+            cid = str(column_select.value or "")
+            contracted_types[cid] = str(change["new"])
+            payload = json.loads(str(current["contract"].get("contract_payload_json") or "{}"))
+            for item in payload.get("table", {}).get("columns", []):
+                if str(item.get("column_id") or "") == cid:
+                    item["data_type"] = contracted_types[cid]
+                    break
+            current["contract"]["contract_payload_json"] = json.dumps(
+                payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            )
+            state["dirty"] = True
+            refresh_manifest()
+            refresh_column_options()
+            hydrate_column(cid)
+            set_status("Contract datatype choice staged locally. Save the Data Contract to persist.")
+
+        required.observe(required_feedback, names="value")
+        datatype_choice.observe(datatype_feedback, names="value")
         column_search.observe(refresh_column_options, names="value")
+        rebuild_column_options()
+        refresh_column_options()
 
         column_left = (
             widgets.HTML(
@@ -2116,6 +2225,7 @@ def widget_data_contract(
                 "and Data Quality rules.</div>"
             ),
             column_search,
+            column_option_style,
             column_select,
         )
         dq_editor = widgets.VBox(
@@ -2154,7 +2264,10 @@ def widget_data_contract(
                     "<div style='color:#253858;font-size:13px;font-weight:600;'>Schema</div>",
                     layout=widgets.Layout(width="150px", min_width="150px"),
                 ),
-                required,
+                widgets.VBox(
+                    [required, datatype_choice],
+                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
+                ),
             ],
             layout=widgets.Layout(width="100%", gap="12px", align_items="center"),
         )
@@ -2508,6 +2621,7 @@ def widget_data_contract(
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
+            "datatype_choice": datatype_choice, "column_option_style": column_option_style,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
             "save_column": save_column, "dq_panel": dq_panel, "dq_editor": dq_editor,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
