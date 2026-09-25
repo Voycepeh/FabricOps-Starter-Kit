@@ -1811,7 +1811,7 @@ def widget_data_contract(
         dq_ai_instruction = widgets.Textarea(
             value="",
             disabled=True,
-            placeholder="Optional: describe the business rule to translate into a Pattern or Range.",
+            placeholder="Optional: describe the text pattern you want FabricOps to translate into a regular expression.",
             **shared.widget_common(widgets, "Additional instruction", textarea=True),
         )
         dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0", height="72px")
@@ -2635,11 +2635,11 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def suggest_dq_clicked(_button: Any) -> None:
-            """Generate Pattern or Range advice and hydrate controls only on apply."""
+            """Generate Pattern advice and hydrate controls only on apply."""
             try:
                 requested_type = str(dq_type.value or "")
-                if requested_type not in {"pattern", "range"}:
-                    raise ValueError("AI assistance is available only for Pattern and Range.")
+                if requested_type != "pattern":
+                    raise ValueError("AI assistance is available only for Pattern.")
                 selected = selected_column()
                 profile_value = load_profile_context(str(selected.get("column_id") or ""))
                 profile = dict(profile_value.get("profile") or {})
@@ -2741,7 +2741,7 @@ def widget_data_contract(
                 dq_suggestion.options = ()
                 dq_suggestion.disabled = True
                 accept_dq_suggestion.disabled = True
-            supported = str(dq_type.value or "") in {"pattern", "range"}
+            supported = str(dq_type.value or "") == "pattern"
             available = bool(
                 editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
             )
@@ -2749,14 +2749,14 @@ def widget_data_contract(
             dq_ai_instruction.disabled = not enabled
             suggest_dq.disabled = not enabled
             if supported:
-                family = "Pattern" if dq_type.value == "pattern" else "Range"
                 dq_ai_instruction.placeholder = (
-                    f"Optional: describe the business rule for this {family}."
+                    "Optional: describe the text pattern you want FabricOps to translate "
+                    "into a regular expression."
                 )
                 if not state["_ai_suggestions"][suggestion_scope].get("dq"):
                     dq_ai.value = (
-                        f"<p>Use AI to translate business intent into a {family} rule, "
-                        "then choose <b>Apply</b> and edit the populated fields if needed.</p>"
+                        "<p>Use AI to translate a human description into a Pattern rule, "
+                        "then choose <b>Apply</b> and edit the regular expression if needed.</p>"
                     )
             else:
                 state["_ai_suggestions"][suggestion_scope].pop("dq", None)
@@ -2764,8 +2764,8 @@ def widget_data_contract(
                 dq_suggestion.disabled = True
                 accept_dq_suggestion.disabled = True
                 dq_ai.value = (
-                    "<p>Completeness and Allowed Values are configured directly; "
-                    "AI assistance is reserved for Pattern and Range.</p>"
+                    "<p>Completeness, Allowed Values, and Value Rules are configured directly; "
+                    "AI assistance is reserved for Pattern.</p>"
                 )
 
         suggest_dq.on_click(suggest_dq_clicked)
