@@ -961,6 +961,7 @@ def widget_data_contract(
                         table,
                         metadata_level="table",
                         existing_description=str(table_description.value or ""),
+                        column_rows=columns,
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
                 )
