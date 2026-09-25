@@ -266,7 +266,6 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
-    monkeypatch.setattr(module.contracts, "assemble_contract_payload", lambda **_kwargs: (manifest(), []))
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
