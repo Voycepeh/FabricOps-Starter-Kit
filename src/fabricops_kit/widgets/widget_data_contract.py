@@ -19,6 +19,7 @@ from fabricops_kit.widgets.enrichment_shared import (
     build_ai_enrichment_context,
     build_ai_sensitive_data_context,
     suggest_enrichment,
+    suggest_grain_key,
     suggest_dq_rules,
     suggest_sensitive_data,
 )
@@ -27,9 +28,8 @@ DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 _TABS = ("Table", "Columns", "Advanced", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
-_COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
+_COLUMN_DQ_TYPES = ("completeness", "value_set", "range", "pattern")
 _ADVANCED_TYPES = (
-    ("Composite uniqueness", "uniqueness"),
     ("Column relationship", "column_relationship"),
     ("Custom expression", "custom_expression"),
 )
@@ -133,7 +133,7 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
     column_guardrails = [row for row in active if str(row.get("column_id") or "")]
     advanced = [
         row for row in table_dq
-        if str(row.get("rule_type") or "") in {"uniqueness", "column_relationship", "custom_expression"}
+        if str(row.get("rule_type") or "") in {"column_relationship", "custom_expression"}
     ]
     blocking = [row for row in active if str(row.get("action") or "").lower() == "block"]
     required_count = sum(
@@ -840,6 +840,136 @@ def widget_data_contract(
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
 
+        # Table grain and row key: grain is descriptive Enrichment; selected key columns
+        # create one table-level uniqueness guardrail.
+        table_grain = widgets.Textarea(
+            value=enrichment_value(enrichments, "table", "Grain"), disabled=not editable,
+            placeholder="Example: One row per order line",
+            **shared.widget_common(widgets, "Row grain", textarea=True),
+        )
+        table_grain.description = ""
+        table_grain.layout = widgets.Layout(width="100%", min_width="0", height="80px")
+        existing_row_key = next((
+            rule for rule in guardrails
+            if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+            and str(rule.get("rule_type") or "") == "uniqueness"
+            and not str(rule.get("column_id") or "")
+        ), {})
+        existing_row_key_columns = [
+            str(name) for name in _parameters(existing_row_key).get("columns", [])
+            if str(name) in column_names
+        ]
+        row_key_columns = widgets.SelectMultiple(
+            options=column_names,
+            value=tuple(existing_row_key_columns),
+            disabled=not editable,
+            **shared.widget_common(widgets, "Row key columns"),
+        )
+        row_key_columns.layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="120px")
+        row_key_block = widgets.Checkbox(
+            value=str(existing_row_key.get("action") or "Block") == "Block",
+            description="Block on duplicate row keys",
+            disabled=not editable,
+        )
+        grain_profile_evidence = widgets.HTML()
+        grain_ai = widgets.HTML()
+        suggest_grain = widgets.Button(
+            description="Suggest grain & key",
+            disabled=(
+                not editable or not ai_enrichment.get("enabled") or ai_mode != "with_ai"
+            ),
+        )
+        accept_grain = widgets.Button(description="Accept suggestion", disabled=True)
+
+        def render_grain_profile_evidence() -> None:
+            evidence = []
+            for column in columns:
+                cid = str(column.get("column_id") or "")
+                try:
+                    profile_value = load_profile_context(cid)
+                except (TypeError, ValueError, RuntimeError):
+                    continue
+                profile = dict(profile_value.get("profile") or {})
+                if profile.get("distinct_percent") is None:
+                    continue
+                evidence.append((
+                    float(profile.get("distinct_percent") or 0),
+                    float(profile.get("null_percent") or 0),
+                    str(column.get("column_name") or ""),
+                ))
+            evidence.sort(reverse=True)
+            rows = "".join(
+                "<li><code>{}</code> · <b>{:.3f}%</b> distinct · <b>{:.3f}%</b> missing{}</li>".format(
+                    html.escape(name), distinct, missing,
+                    " · strong single-key candidate" if distinct >= 100.0 and missing <= 0.0 else "",
+                )
+                for distinct, missing, name in evidence[:8]
+            )
+            grain_profile_evidence.value = (
+                "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
+                + (rows or "<li>No profile evidence available.</li>") +
+                "</ul><span>Per-column distinctness can prove a single-column candidate, but it cannot "
+                "prove composite uniqueness. Composite keys are validated by the table-level uniqueness "
+                "guardrail during pipeline execution.</span></div>"
+            )
+
+        def run_grain_ai(*_args: Any) -> None:
+            if suggest_grain.disabled:
+                return
+            try:
+                profile_rows = []
+                for column in columns:
+                    cid = str(column.get("column_id") or "")
+                    profile_value = load_profile_context(cid)
+                    profile = dict(profile_value.get("profile") or {})
+                    profile_rows.append({
+                        "column_name": str(column.get("column_name") or ""),
+                        "data_type": str(column.get("data_type") or ""),
+                        "description": enrichment_value(
+                            enrichments, "column", "Description", cid
+                        ),
+                        **{name: profile.get(name) for name in (
+                            "row_count", "non_null_count", "null_count", "null_percent",
+                            "distinct_count", "distinct_percent",
+                        ) if profile.get(name) is not None},
+                    })
+                suggestion = suggest_grain_key(
+                    {
+                        "table_name": str(table.get("table_name") or ""),
+                        "schema_name": str(table.get("schema_name") or ""),
+                        "table_description": str(table_description.value or ""),
+                        "columns": profile_rows,
+                    },
+                    prompt=str(ai_enrichment.get("grain_prompt") or ""),
+                )
+                ai_state["table"]["grain_key"] = suggestion
+                key_text = ", ".join(suggestion["key_columns"]) or "No key suggested"
+                grain_ai.value = (
+                    "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                    "padding:9px 11px;font-size:12px;line-height:1.5;'>"
+                    f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
+                    f"<b>Suggested row key:</b> {html.escape(key_text)}<br>"
+                    f"<span style='color:#667085;'>{html.escape(suggestion['rationale'])}</span></div>"
+                )
+                accept_grain.disabled = False
+            except (TypeError, ValueError, RuntimeError) as exc:
+                ai_state["table"].pop("grain_key", None)
+                accept_grain.disabled = True
+                grain_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
+
+        def accept_grain_ai(_button: Any) -> None:
+            suggestion = ai_state["table"].get("grain_key") or {}
+            table_grain.value = str(suggestion.get("grain") or "")
+            allowed = set(column_names)
+            row_key_columns.value = tuple(
+                name for name in suggestion.get("key_columns", []) if name in allowed
+            )
+
+        suggest_grain.on_click(run_grain_ai)
+        accept_grain.on_click(accept_grain_ai)
+        render_grain_profile_evidence()
+
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
         processing_locked = processing_source == "catalogue"
@@ -1207,10 +1337,27 @@ def widget_data_contract(
                 stage_enrichment([
                     enrichment_record("table", "Description", table_description.value),
                     enrichment_record("table", "Classification", table_classification.value),
+                    enrichment_record("table", "Grain", table_grain.value),
                 ])
                 set_validation_error("table.enrichment")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("table.enrichment", exc)
+
+        def sync_row_key(_change: dict[str, Any] | None = None) -> None:
+            if not editable:
+                return
+            try:
+                selected_keys = [str(name) for name in row_key_columns.value]
+                if existing_row_key or selected_keys:
+                    stage_guardrails([guardrail_record(
+                        "data_quality", "uniqueness", {"columns": selected_keys or existing_row_key_columns},
+                        existing=existing_row_key,
+                        action="Block" if row_key_block.value else "Warn",
+                        active=bool(selected_keys),
+                    )])
+                set_validation_error("table.row_key")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error("table.row_key", exc)
 
         def sync_table_processing(_change: dict[str, Any] | None = None) -> None:
             if not editable:
@@ -1234,8 +1381,10 @@ def widget_data_contract(
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(f"table.{rule_kind}", exc)
 
-        for control in (table_description, table_classification):
+        for control in (table_description, table_classification, table_grain):
             control.observe(sync_table_enrichment, names="value")
+        row_key_columns.observe(sync_row_key, names="value")
+        row_key_block.observe(sync_row_key, names="value")
         for control in (load_strategy_control, *processing_parameter_controls):
             control.observe(sync_table_processing, names="value")
         for rule_kind, rule_controls in table_rules.items():
@@ -1369,6 +1518,12 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
                 "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Grain</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Row Key</div>"
+                f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
+                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
                 + guardrail_html + "</div>"
             )
@@ -1420,6 +1575,35 @@ def widget_data_contract(
         )
         table_right = (
             table_definition,
+            shared.form_section(
+                widgets,
+                title="Grain & Row Key",
+                children=[
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;margin-bottom:8px;'>"
+                        "Define what one row represents, then select the column or smallest column combination "
+                        "that should uniquely identify that row. The selected key automatically becomes the "
+                        "table-level uniqueness guardrail.</div>"
+                    ),
+                    table_grain,
+                    row_key_columns,
+                    row_key_block,
+                    grain_profile_evidence,
+                    widgets.GridBox(
+                        [
+                            widgets.VBox([grain_ai], layout=widgets.Layout(width="100%")),
+                            widgets.VBox(
+                                [shared.action_row(widgets, [suggest_grain, accept_grain])],
+                                layout=widgets.Layout(width="100%"),
+                            ),
+                        ],
+                        layout=widgets.Layout(
+                            width="100%", grid_template_columns="minmax(0,1fr) auto",
+                            grid_gap="12px", align_items="start",
+                        ),
+                    ),
+                ],
+            ),
             shared.form_section(
                 widgets,
                 title="Processing",
@@ -1558,7 +1742,6 @@ def widget_data_contract(
         dq_type = widgets.ToggleButtons(
             options=[
                 ("Completeness", "completeness"),
-                ("Uniqueness", "uniqueness"),
                 ("Allowed Values", "value_set"),
                 ("Value Rules", "range"),
                 ("Pattern", "pattern"),
@@ -1567,14 +1750,11 @@ def widget_data_contract(
             layout=widgets.Layout(width="100%"),
         )
         dq_catalogue = widgets.HTML(
-            "<div style='display:grid;grid-template-columns:repeat(5,minmax(135px,1fr));"
+            "<div style='display:grid;grid-template-columns:repeat(4,minmax(135px,1fr));"
             "gap:8px;margin-bottom:10px;'>"
             "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
             "<b>Completeness</b><br><span style='color:#667085;font-size:12px;'>"
             "How much of the column must be populated.</span></div>"
-            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
-            "<b>Uniqueness</b><br><span style='color:#667085;font-size:12px;'>"
-            "Whether populated values must be unique.</span></div>"
             "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
             "<b>Allowed Values</b><br><span style='color:#667085;font-size:12px;'>"
             "Which values are accepted or blocked.</span></div>"
@@ -1817,7 +1997,6 @@ def widget_data_contract(
             dq_usage.value = f"<p>{count} current configuration(s) use this rule type.</p>"
             visible = {
                 "completeness": {dq_max_missing, dq_blank_missing},
-                "uniqueness": set(),
                 "value_set": {dq_value_mode, dq_values},
                 "range": {dq_minimum, dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive},
                 "pattern": {dq_pattern},
