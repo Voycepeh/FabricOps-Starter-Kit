@@ -821,7 +821,6 @@ def widget_data_contract(
         ]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
-        selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
