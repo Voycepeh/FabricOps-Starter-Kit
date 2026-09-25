@@ -28,15 +28,15 @@ Run the same visible **Read → Transform → Write-block** sequence.
 - Transform remains ordinary PySpark.
 - The selected target Write block reads `CONTRACTS["tables"][target_table_id]`.
 - Validate mode evaluates the transformed target against the exact frozen candidate and records aggregate evidence.
-- The Validate branch cannot call `pipeline_write()`, so the governed business target is not changed.
-- Any other target left in Enforce mode continues through its normal checks and write path independently.
+- Validate is a small pre-write exit gate: it evaluates the exact frozen candidate, records the evidence, and exits the notebook before the existing Enforce checks and `pipeline_write()` path.
+- Enforce does not need a second branch. Its existing checks remain flat and stop naturally at the first blocking failure; only a successful Enforce run reaches `pipeline_write()`.
 
 | Step 2 default | Step 4 selected target |
 | --- | --- |
 | Enforce mode | Validate mode |
-| Normal checks and publication path | Exact frozen candidate evaluation |
-| No contract-backed rule before authoring | Applicable Schema and DQ rules evaluate |
-| Target write is allowed | Target write is structurally blocked |
+| Existing checks stop on the first blocking failure, then publish | Exact frozen candidate evaluation, then notebook exit |
+| No contract-backed rule before authoring | Applicable Schema, DQ, and Sensitive Data rules evaluate |
+| Target write is allowed only after checks pass | `pipeline_write()` is never reached |
 
 ## Review the validation result
 
@@ -47,7 +47,7 @@ The target validation result identifies the exact table, contract version, envir
 - `not_applicable` outcomes for Guardrails that require enforcement pipeline context,
 - caller-visible DQ failure details when present.
 
-Freshness, Source Drift, and Sensitive Data can depend on enforcement observations or transformations. Validation keeps these outcomes visible as `not_applicable`; it does not falsely record them as PASS and does not persist raw rows, sensitive values, or token mappings.
+Sensitive Data is evaluated against the exact frozen candidate using the same treatment core as Enforce; any token support mapping remains caller-owned and is not persisted automatically. Freshness and Source Drift require enforcement observation context, so validation keeps those outcomes visible as `not_applicable` rather than falsely recording them as PASS.
 
 Only aggregate evidence is appended to `METADATA_GUARDRAIL_RESULTS` with `execution_type = validate`.
 
@@ -65,6 +65,6 @@ Do not edit a frozen version in place.
 
 ## Expected result
 
-The exact frozen target contract has successful validation evidence for the Development environment, while the business target remains unchanged. This evidence is one prerequisite for the later Governance activation decision; it does not activate the contract by itself.
+The exact frozen target contract has successful validation evidence for the Development environment, and the notebook exits at the validation gate before the business target can be written. This evidence is one prerequisite for the later Governance activation decision; it does not activate the contract by itself.
 
 **Next:** [Step 5. Link the Data Agreement and activate](05-create-data-contract.md)
