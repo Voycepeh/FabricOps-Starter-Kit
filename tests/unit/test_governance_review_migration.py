@@ -20,6 +20,7 @@ DELETED_MODULE_SUFFIXES = (
     "docs_metadata",
     "hand" + "over",
 )
+DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
 
 
 def test_widget_public_callables_live_under_widgets_package():
