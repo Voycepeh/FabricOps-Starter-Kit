@@ -744,35 +744,6 @@ def widget_data_contract(
             button_style="primary",
             disabled=not editable,
         )
-        if not ai_enrichment.get("enabled"):
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>AI suggestions are disabled in 00_env_config. "
-                "Open the contract without AI.</p>"
-            )
-        elif ai_mode == "with_ai":
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>AI suggestions are enabled for this selected table. "
-                "Only the current column is evaluated when opened.</p>"
-            )
-        elif ai_mode == "without_ai":
-            ai_startup_note = widgets.HTML(
-                "<p><b>AI startup</b><br>Running without AI suggestions for this contract session.</p>"
-            )
-        else:
-            ai_startup_note = widgets.HTML(
-                "<p><b>Choose how to open this contract</b><br>"
-                "Run without AI for the fastest startup, or run with AI suggestions. "
-                "AI is scoped to this selected table and evaluates columns only as you open them.</p>"
-            )
-        ai_startup_controls = widgets.VBox(
-            [
-                ai_startup_note,
-                widgets.HBox([run_with_ai, run_without_ai], layout=widgets.Layout(gap="8px")),
-            ],
-            layout=widgets.Layout(
-                width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb",
-            ),
-        )
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
 
