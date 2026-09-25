@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from fabricops_kit.widgets.enrichment_shared import build_ai_dq_context, suggest_dq_rules
+from fabricops_kit.widgets.enrichment_shared import build_ai_dq_context, suggest_dq_rules, suggest_grain_key
 
 pytestmark = pytest.mark.unit
 
@@ -44,7 +44,6 @@ def test_ai_dq_suggestions_preserve_all_structured_parameters_and_prompt():
         {"rule_type": "value_set", "columns": ["amount"], "parameters": {"mode": "block", "values": [-1]}, "rationale": "sentinel", "selected": False},
         {"rule_type": "range", "columns": ["amount"], "parameters": {"minimum": 0, "maximum": 100, "minimum_inclusive": True, "maximum_inclusive": False}, "rationale": "defined scale", "selected": True},
         {"rule_type": "pattern", "columns": ["amount"], "parameters": {"pattern": "^[0-9]+$"}, "rationale": "structured", "selected": True},
-        {"rule_type": "uniqueness", "columns": ["amount"], "parameters": {}, "rationale": "identifier", "selected": True},
     ]
 
     def invoke(prompt):
@@ -54,10 +53,10 @@ def test_ai_dq_suggestions_preserve_all_structured_parameters_and_prompt():
     result = suggest_dq_rules(_context(), prompt="Configured governance prompt", invoke=invoke)
     assert result == payload
     assert "Configured governance prompt" in captured["prompt"]
-    assert "current 100% distinctness alone is insufficient" in captured["prompt"]
+    assert "Allowed rule_type values: completeness, value_set, range, pattern." in captured["prompt"]
 
 
-@pytest.mark.parametrize("rule_type", ["column_relationship", "custom_expression", "compare", "required_when"])
+@pytest.mark.parametrize("rule_type", ["uniqueness", "column_relationship", "custom_expression", "compare", "required_when"])
 def test_ai_dq_rejects_nonstandard_families(rule_type):
     """Keep relationship and custom logic outside AI standard suggestions."""
     raw = json.dumps([{"rule_type": rule_type, "columns": ["amount"], "parameters": {}}])
@@ -69,10 +68,34 @@ def test_ai_dq_rejects_unknown_columns_composite_and_malformed_parameters():
     """Reject suggestions that cannot safely hydrate column controls."""
     cases = [
         [{"rule_type": "pattern", "columns": ["unknown"], "parameters": {"pattern": "x"}}],
-        [{"rule_type": "uniqueness", "columns": ["amount", "other"], "parameters": {}}],
+        [{"rule_type": "value_set", "columns": ["amount", "other"], "parameters": {"mode": "allow", "values": [1]}}],
         [{"rule_type": "range", "columns": ["amount"], "parameters": {"minimum": 0, "minimum_inclusive": True}}],
         [{"rule_type": "completeness", "columns": ["amount"], "parameters": {"maximum_missing_percent": 0}}],
     ]
     for payload in cases:
         with pytest.raises(ValueError):
             suggest_dq_rules(_context(), prompt="configured", invoke=lambda _prompt, value=payload: json.dumps(value))
+
+
+def test_ai_grain_key_preserves_candidate_and_warns_about_composite_proof():
+    """Keep grain/key advice transient and distinguish profile evidence from validation."""
+    context = {
+        "table_name": "orders",
+        "columns": [
+            {"column_name": "order_id", "distinct_percent": 100.0, "null_percent": 0.0},
+            {"column_name": "line_id", "distinct_percent": 20.0, "null_percent": 0.0},
+        ],
+    }
+    captured = {}
+    payload = {
+        "grain": "One row per order line",
+        "key_columns": ["order_id", "line_id"],
+        "rationale": "Candidate composite key",
+    }
+
+    def invoke(prompt):
+        captured["prompt"] = prompt
+        return json.dumps(payload)
+
+    assert suggest_grain_key(context, prompt="configured", invoke=invoke) == payload
+    assert "cannot prove composite uniqueness" in captured["prompt"]
