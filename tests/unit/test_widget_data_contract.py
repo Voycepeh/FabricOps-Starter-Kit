@@ -653,6 +653,8 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     controls = state["_controls"]
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
     assert len(captures["sensitive"]) == 1
+    assert captures["sensitive"][0]["table_description"] == "Suggested table description"
+    assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
     assert all(not drafts for drafts in state["_column_drafts"].values())
     assert state["_ai_suggestions"]
     assert "Suggested column description" in controls["column_description_ai"].value
@@ -704,6 +706,27 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     saved_parameters = module._parameters(saved_sensitive)
     assert saved_parameters["pii_type"] == "direct"
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
+
+
+def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runtime, monkeypatch):
+    """Dependent DQ advice sees fresh AI Description context without auto-accepting it."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    captured: list[dict[str, object]] = []
+
+    def dq(context, **_kwargs):
+        captured.append(context)
+        return []
+
+    monkeypatch.setattr(module, "suggest_dq_rules", dq)
+
+    assert controls["column_description"].value == "Order identifier"
+    controls["suggest_dq"].click()
+
+    assert captured
+    assert captured[0]["table_description"] == "Suggested table description"
+    assert captured[0]["columns"][0]["description"] == "Suggested column description"
+    assert controls["column_description"].value == "Order identifier"
 
 
 def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
