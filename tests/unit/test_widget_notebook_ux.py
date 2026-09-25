@@ -27,14 +27,18 @@ def test_focus_release_is_scoped_to_fabricops_forms():
     assert "releaseFocus(form, 100)" in script
 
 
-def test_fabric_form_css_prevents_label_control_overlap():
-    """Force Fabric form labels above controls and constrain controls to their cells."""
+def test_fabric_form_css_uses_one_fixed_label_control_grid():
+    """Keep every standard FabricOps field aligned to the same label and control columns."""
     script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
 
-    assert ".fabricops-form .widget-inline-hbox" in script
-    assert "flex-direction: column !important" in script
-    assert ".fabricops-form .widget-inline-hbox > .widget-label" in script
-    assert "white-space: normal !important" in script
-    assert ".fabricops-form .widget-select-multiple" in script
+    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)" in script
+    assert "display: grid !important" in script
+    assert "grid-template-columns: 150px minmax(0, 560px) !important" in script
+    assert "column-gap: 12px !important" in script
+    assert "max-width: 722px !important" in script
+    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox) > .widget-label" in script
+    assert "width: 150px !important" in script
+    assert ".fabricops-form .widget-select-multiple select" in script
+    assert "max-width: 560px !important" in script
     assert "box-sizing: border-box !important" in script
     assert 'STYLE_ID = "fabricops-widget-ux-style"' in script
