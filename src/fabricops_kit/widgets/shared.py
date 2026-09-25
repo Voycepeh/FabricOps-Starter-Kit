@@ -29,7 +29,9 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.pipeline.shared import DQ_RULE_TYPES
 
 
-_WIDGET_STYLE = {"description_width": "initial"}
+_WIDGET_LABEL_WIDTH = "150px"
+_WIDGET_FIELD_MAX_WIDTH = "722px"
+_WIDGET_STYLE = {"description_width": _WIDGET_LABEL_WIDTH}
 _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
@@ -124,7 +126,11 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
     common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
     layout_class = getattr(widgets_module, "Layout", None)
     if layout_class is not None:
-        kwargs = {"width": _WIDGET_FIELD_WIDTH, "min_width": _WIDGET_FIELD_MIN_WIDTH, "max_width": "100%"}
+        kwargs = {
+            "width": _WIDGET_FIELD_WIDTH,
+            "min_width": _WIDGET_FIELD_MIN_WIDTH,
+            "max_width": _WIDGET_FIELD_MAX_WIDTH,
+        }
         if textarea:
             kwargs["height"] = _TEXTAREA_HEIGHT
         common["layout"] = layout_class(**kwargs)
@@ -135,12 +141,15 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     """Compose a full-width, bounded widget form with a consistent page header."""
     field_style = (
         "<style>"
-        ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;"
-        "min-width:0;max-width:100%;}"
-        ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}"
-        ".fabricops-form .widget-label{display:block;width:100%;max-width:100%;}"
+        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox){display:grid;"
+        "grid-template-columns:150px minmax(0,560px);column-gap:12px;align-items:start;"
+        "width:100%;min-width:0;max-width:722px;}"
+        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
+        "width:150px;min-width:150px;max-width:150px;margin:0;white-space:normal;overflow-wrap:anywhere;}"
         ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
-        ".fabricops-form .widget-textarea textarea{width:100%;min-width:0;max-width:100%;box-sizing:border-box;}"
+        ".fabricops-form .widget-combobox input,.fabricops-form .widget-select select,"
+        ".fabricops-form .widget-select-multiple select,.fabricops-form .widget-textarea textarea{"
+        "width:100%;min-width:0;max-width:560px;box-sizing:border-box;}"
         ".fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
         "</style>"
     )
