@@ -109,10 +109,24 @@ def widget_runtime(monkeypatch):
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
+    contract_payload = {
+        "contract": {
+            "contract_id": "contract-orders", "contract_version": 1, "status": "draft",
+        },
+        "table": {
+            **catalogue[0],
+            "processing": {"load_strategy": "append"},
+            "processing_source": "catalogue",
+            "columns": [dict(row) for row in catalogue[1:]],
+        },
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    }
     contract = {
         "contract_id": "contract-orders", "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev", "processing_json": '{"load_strategy":"append"}',
-        "processing_source": "catalogue", "status": "draft", "is_active": False,
+        "environment_name": "dev",
+        "contract_payload_json": json.dumps(contract_payload, sort_keys=True, separators=(",", ":")),
+        "status": "draft", "is_active": False,
     }
     enrichment = [
         {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
@@ -129,7 +143,7 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
-    calls = {"enrichment": [], "guardrails": [], "processing": [], "freeze": 0, "activate": 0, "profiles": []}
+    calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
@@ -160,9 +174,15 @@ def widget_runtime(monkeypatch):
         }
 
     def manifest():
+        saved = json.loads(contract["contract_payload_json"])
         return {
             "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": contract["status"]},
-            "table": {**catalogue[0], "processing": json.loads(contract["processing_json"]), "columns": [dict(row) for row in catalogue[1:]]},
+            "table": {
+                **catalogue[0],
+                "processing": dict(saved.get("table", {}).get("processing") or {}),
+                "processing_source": str(saved.get("table", {}).get("processing_source") or "default"),
+                "columns": [dict(row) for row in catalogue[1:]],
+            },
             "enrichment": {
                 "table": [dict(row) for row in enrichment if not row.get("column_id")],
                 "columns": [dict(row) for row in enrichment if row.get("column_id")],
@@ -185,21 +205,42 @@ def widget_runtime(monkeypatch):
             guardrails.append(dict(record))
         return records
 
-    def save_contract_processing(*, draft, processing, **_kwargs):
-        calls["processing"].append(dict(processing))
-        contract["processing_json"] = json.dumps(processing, sort_keys=True, separators=(",", ":"))
-        if contract.get("processing_source") != "catalogue":
-            contract["processing_source"] = "manual"
+    def save_contract_draft(*, draft, payload, **_kwargs):
+        saved_payload = json.loads(json.dumps(payload))
+        calls["draft"].append(saved_payload)
+        contract["contract_payload_json"] = json.dumps(
+            saved_payload, sort_keys=True, separators=(",", ":")
+        )
+        enrichment[:] = [
+            dict(row)
+            for row in [
+                *saved_payload.get("enrichment", {}).get("table", []),
+                *saved_payload.get("enrichment", {}).get("columns", []),
+            ]
+        ]
+        guardrails[:] = []
+        for item in saved_payload.get("guardrails", []):
+            row = dict(item)
+            row["rule_parameters_json"] = json.dumps(
+                row.pop("rule_parameters", {}), sort_keys=True, separators=(",", ":")
+            )
+            row["is_active"] = True
+            guardrails.append(row)
         return dict(contract)
 
     def freeze_contract(**_kwargs):
         calls["freeze"] += 1
         contract["status"] = "frozen"
-        return {"payload": manifest()}
+        payload = json.loads(contract["contract_payload_json"])
+        payload["contract"]["status"] = "frozen"
+        contract["contract_payload_json"] = json.dumps(
+            payload, sort_keys=True, separators=(",", ":")
+        )
+        return {"payload": payload}
 
     def activate_contract_version(**_kwargs):
         calls["activate"] += 1
-        contract["status"] = "active"
+        contract["is_active"] = True
         return {"changed": True}
 
     config = types.SimpleNamespace(
@@ -226,7 +267,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "assemble_contract_payload", lambda **_kwargs: (manifest(), []))
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
-    monkeypatch.setattr(module.contracts, "save_contract_processing", save_contract_processing)
+    monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
