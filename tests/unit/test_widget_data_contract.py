@@ -729,6 +729,66 @@ def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runti
     assert controls["column_description"].value == "Order identifier"
 
 
+def test_manual_description_change_marks_dependent_ai_stale_and_requests_rerun(
+    widget_runtime, monkeypatch
+):
+    """Changing Description invalidates dependent AI advice without changing manual controls."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    state["_ai_suggestions"][scope]["dq"] = [{
+        "rule_type": "completeness",
+        "columns": ["column_0"],
+        "parameters": {},
+        "rationale": "old",
+        "selected": True,
+    }]
+    controls["dq_suggestion"].options = [("old", "0")]
+    controls["dq_suggestion"].disabled = False
+    controls["accept_dq_suggestion"].disabled = False
+
+    controls["column_description"].value = "Edited business description"
+
+    suggestions = state["_ai_suggestions"][scope]["columns"][column_id]
+    assert suggestions["description"]["stale"] is True
+    assert suggestions["sensitive_data"]["stale"] is True
+    assert "dq" not in state["_ai_suggestions"][scope]
+    assert controls["dq_suggestion"].options == ()
+    assert "Re-run suggestions" in controls["dq_ai"].value
+    assert "Needs refresh" in controls["sensitive_ai"].value
+
+
+def test_accepting_description_does_not_invalidate_matching_ai_context(
+    widget_runtime, monkeypatch
+):
+    """Accepting the exact AI Description keeps dependent advice current."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    controls["accept_column_description"].click()
+
+    suggestions = state["_ai_suggestions"][scope]["columns"][column_id]
+    assert suggestions["description"]["stale"] is False
+    assert suggestions["sensitive_data"]["stale"] is False
+
+
+def test_table_context_change_marks_loaded_sensitive_ai_stale(widget_runtime, monkeypatch):
+    """Table Description and Classification changes invalidate column-level dependent advice."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    controls["table_classification"].value = "Restricted"
+
+    assert state["_ai_suggestions"][scope]["columns"][column_id]["sensitive_data"]["stale"] is True
+    assert "Needs refresh" in controls["sensitive_ai"].value
+
+
 def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
     """A failed Description re-run must surface the error instead of an old suggestion."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
