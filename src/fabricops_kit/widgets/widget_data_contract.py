@@ -1122,11 +1122,44 @@ def widget_data_contract(
                     options=column_names,
                     value=str(existing_parameters.get("change_column") or "") or None,
                     disabled=not editable,
-                    **shared.widget_common(widgets, "Change column"),
+                    **shared.widget_common(widgets, "Change tracking column"),
                 )
                 change_column.layout = field_layout
+                source_drift_rule_preview = widgets.HTML()
+
+                def refresh_source_drift_rule_preview(
+                    _change: dict[str, Any] | None = None,
+                ) -> None:
+                    partition = str(partition_column.value or "").strip()
+                    change = str(change_column.value or "").strip()
+                    if not enabled.value or not partition or not change:
+                        source_drift_rule_preview.value = ""
+                        return
+                    source_drift_rule_preview.value = (
+                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                        "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
+                        "<b>ⓘ Rule</b><br>"
+                        "When this table is consumed as a source, FabricOps compares each "
+                        f"<code>{html.escape(partition)}</code> partition with the last "
+                        "successfully consumed state for that downstream target. "
+                        "Changes are detected from row count, "
+                        f"<code>{html.escape(change)}</code> values, and a content fingerprint."
+                        "<br><span style='color:#667085;'>Example: if a previously consumed "
+                        f"<code>{html.escape(partition)}</code> partition is different when read "
+                        "again today, Source Drift is detected.</span></div>"
+                    )
+
+                for source_drift_control in (enabled, partition_column, change_column):
+                    source_drift_control.observe(
+                        refresh_source_drift_rule_preview, names="value"
+                    )
+                refresh_source_drift_rule_preview()
                 parameter_controls = [partition_column, change_column]
-                display_controls = parameter_controls
+                display_controls = [
+                    partition_column,
+                    change_column,
+                    source_drift_rule_preview,
+                ]
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
@@ -1376,6 +1409,11 @@ def widget_data_contract(
                 title="Freshness",
                 children=[
                     widgets.HTML(
+                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
+                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
+                        "<br><span style='color:#667085;'>This rule is checked when the table is "
+                        "consumed as an input, not when this table itself is written.</span></div>"
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                         "Check whether the source has received sufficiently recent data. "
                         "Freshness uses the latest value in the selected timestamp column "
@@ -1393,15 +1431,20 @@ def widget_data_contract(
                 title="Source Drift",
                 children=[
                     widgets.HTML(
+                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
+                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
+                        "<br><span style='color:#667085;'>This rule is checked when the table is "
+                        "consumed as an input, not when this table itself is written.</span></div>"
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Detect changes in source partitions and the selected change column "
-                        "before governed publication.</div>"
+                        "Check whether data that was previously consumed from this table has "
+                        "changed when the same source data is read again.</div>"
                     ),
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
                         layout=checkbox_row_layout,
                     ),
-                    *table_rules["source_drift"]["parameters"],
+                    *table_rules["source_drift"]["display"],
                 ],
             ),
             shared.action_row(widgets, [table_save]),
