@@ -22,14 +22,14 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install project
-        run: pip install -e .
+        run: pip install -e . packaging
       - name: Generate public call flows
-        run: PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+        run: PYTHONPATH=.:src python scripts/generate_public_function_call_flows_json.py
       - name: Generate function references twice
         run: |
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=.:src python scripts/generate_individual_function_reference_pages.py
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/first-reference.diff
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=.:src python scripts/generate_individual_function_reference_pages.py
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/second-reference.diff
           diff -u /tmp/first-reference.diff /tmp/second-reference.diff
       - name: Remove temporary workflow and commit generated diff
