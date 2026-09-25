@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import uuid
+from datetime import datetime, timedelta
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -813,6 +814,14 @@ def widget_data_contract(
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
+        temporal_column_names = [
+            str(column.get("column_name") or "")
+            for column in columns
+            if any(
+                marker in str(column.get("data_type") or "").lower()
+                for marker in ("date", "timestamp", "datetime")
+            )
+        ]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
@@ -995,26 +1004,112 @@ def widget_data_contract(
             enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
             block = widgets.Checkbox(value=str(existing.get("action") or "Warn") == "Block", description="Block on failure", disabled=not editable)
             parameter_controls: list[Any] = []
+            display_controls: list[Any] = []
             if kind == "freshness":
+                configured_freshness_column = str(
+                    existing_parameters.get("freshness_column") or ""
+                )
                 freshness_column = widgets.Dropdown(
-                    options=column_names,
-                    value=str(existing_parameters.get("freshness_column") or "") or None,
-                    disabled=not editable,
-                    **shared.widget_common(widgets, "Freshness column"),
+                    options=[("Select timestamp column", ""), *temporal_column_names],
+                    value=(
+                        configured_freshness_column
+                        if configured_freshness_column in temporal_column_names
+                        else ""
+                    ),
+                    disabled=not editable or not temporal_column_names,
+                    **shared.widget_common(widgets, "Timestamp column"),
                 )
                 freshness_column.layout = field_layout
                 maximum_age = widgets.Text(
-                    value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
-                    **shared.widget_common(widgets, "Maximum age"),
+                    value=str(existing_parameters.get("maximum_age") or ""),
+                    disabled=not editable or not temporal_column_names,
+                    layout=widgets.Layout(width="150px", min_width="100px"),
                 )
-                maximum_age.layout = field_layout
                 maximum_age_unit = widgets.Dropdown(
                     options=("minutes", "hours", "days"),
-                    value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
-                    **shared.widget_common(widgets, "Age unit"),
+                    value=str(existing_parameters.get("maximum_age_unit") or "days"),
+                    disabled=not editable or not temporal_column_names,
+                    layout=widgets.Layout(width="150px", min_width="120px"),
                 )
-                maximum_age_unit.layout = field_layout
+                freshness_age_row = widgets.HBox(
+                    [
+                        widgets.HTML(
+                            "<div style='width:150px;padding-top:7px;'>"
+                            "Data must have received data within</div>",
+                            layout=widgets.Layout(width="150px", min_width="150px"),
+                        ),
+                        maximum_age,
+                        maximum_age_unit,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
+                    ),
+                )
+                freshness_rule_preview = widgets.HTML()
+                freshness_unavailable = widgets.HTML()
+
+                def refresh_freshness_rule_preview(
+                    _change: dict[str, Any] | None = None,
+                ) -> None:
+                    if not temporal_column_names:
+                        freshness_unavailable.value = (
+                            "<div style='color:#b42318;font-size:12px;font-weight:600;"
+                            "margin:4px 0 8px;'>No date or datetime columns are available. "
+                            "Freshness cannot be configured for this table.</div>"
+                        )
+                        freshness_rule_preview.value = ""
+                        enabled.disabled = True
+                        block.disabled = True
+                        return
+                    freshness_unavailable.value = ""
+                    enabled.disabled = not editable
+                    block.disabled = not editable
+                    selected = str(freshness_column.value or "").strip()
+                    raw_age = str(maximum_age.value or "").strip()
+                    unit = str(maximum_age_unit.value or "days")
+                    if not enabled.value or not selected or not raw_age:
+                        freshness_rule_preview.value = ""
+                        return
+                    try:
+                        age = float(raw_age)
+                    except ValueError:
+                        freshness_rule_preview.value = ""
+                        return
+                    if age <= 0:
+                        freshness_rule_preview.value = ""
+                        return
+                    shown_age = str(int(age)) if age.is_integer() else str(age)
+                    sample_run = datetime(2026, 1, 2, 23, 0)
+                    if unit == "minutes":
+                        cutoff = sample_run - timedelta(minutes=age)
+                    elif unit == "hours":
+                        cutoff = sample_run - timedelta(hours=age)
+                    else:
+                        cutoff = sample_run - timedelta(days=age)
+                    freshness_rule_preview.value = (
+                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                        "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
+                        "<b>ⓘ Rule</b><br>"
+                        f"The latest <code>{html.escape(selected)}</code> must be within "
+                        f"<b>{html.escape(shown_age)} {html.escape(unit)}</b> of the pipeline run."
+                        "<br><span style='color:#667085;'>Example: if the pipeline runs at "
+                        "2 Jan 2026 23:00, "
+                        f"<code>MAX({html.escape(selected)})</code> must be on or after "
+                        f"{cutoff.day} {cutoff.strftime('%b %Y %H:%M')}.</span></div>"
+                    )
+
+                for freshness_control in (
+                    enabled, freshness_column, maximum_age, maximum_age_unit
+                ):
+                    freshness_control.observe(refresh_freshness_rule_preview, names="value")
+                refresh_freshness_rule_preview()
                 parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
+                display_controls = [
+                    freshness_unavailable,
+                    freshness_column,
+                    freshness_age_row,
+                    freshness_rule_preview,
+                ]
             else:
                 partition_column = widgets.Dropdown(
                     options=column_names,
@@ -1031,6 +1126,7 @@ def widget_data_contract(
                 )
                 change_column.layout = field_layout
                 parameter_controls = [partition_column, change_column]
+                display_controls = parameter_controls
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
@@ -1043,6 +1139,8 @@ def widget_data_contract(
                     if str(rule.get("guardrail_type") or "").lower() == rule_kind
                     and not str(rule.get("column_id") or "")
                 ), {})
+                if rule_kind == "freshness" and not temporal_column_names:
+                    return old or None
                 if not enabled_control.value and not old:
                     return None
                 if not enabled_control.value:
@@ -1080,6 +1178,7 @@ def widget_data_contract(
             save.on_click(save_table_rule)
             table_rules[kind] = {
                 "enabled": enabled, "parameters": parameter_controls,
+                "display": display_controls,
                 "block": block, "save": save, "build_record": build_table_rule_record,
             }
         def save_table(_button: Any) -> None:
@@ -1278,14 +1377,15 @@ def widget_data_contract(
                 children=[
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Expected source-data arrival SLA. This is independent of when Fabric "
-                        "schedules the notebook to run.</div>"
+                        "Check whether the source has received sufficiently recent data. "
+                        "Freshness uses the latest value in the selected timestamp column "
+                        "relative to the pipeline run time.</div>"
                     ),
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
                         layout=checkbox_row_layout,
                     ),
-                    *table_rules["freshness"]["parameters"],
+                    *table_rules["freshness"]["display"],
                 ],
             ),
             shared.form_section(
