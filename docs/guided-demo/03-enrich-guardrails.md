@@ -55,7 +55,7 @@ AI suggestions remain visually separate from the editable contract. Choose **Acc
 
 When you save a Direct or Indirect PII rule, FabricOps requires a reason and retains the reviewed PII assessment and reason inside that Sensitive Data Guardrail's parameters. This keeps the rationale reviewable without adding another metadata table; runtime enforcement still validates and executes only the supported deterministic treatment. A **Not PII** assessment remains authoring state and does not create an enforceable treatment.
 
-Manual Description or Classification changes mark the dependent Sensitive Data suggestion as needing refresh. The widget does not call AI while you type; use **Re-run** when you want refreshed advice based on the current unsaved Description and Classification.
+Manual Description or Classification changes mark dependent AI advice as needing refresh. Sensitive Data shows **Needs refresh**, and existing Data Quality suggestions are cleared so you can run them again against the updated context. The widget does not call AI while you type; use **Re-run** when you want refreshed advice based on the current unsaved Description and Classification.
 
 !!! important "Keep the three decisions distinct"
     **Confidential** is an information Classification, **Direct PII** describes identifying characteristics, and **Mask** is an enforceable Sensitive Data treatment. Classification can inform an assessment, but it does not create a Sensitive Data Guardrail automatically.
