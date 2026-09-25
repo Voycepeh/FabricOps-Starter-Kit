@@ -920,7 +920,7 @@ def widget_data_contract(
         table_classification.description = ""
         table_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         table_description_ai = widgets.HTML()
-        accept_table_description = widgets.Button(description="Accept", disabled=not editable)
+        accept_table_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
 
         # Table grain and row key: grain is descriptive Enrichment; selected key columns
@@ -964,7 +964,7 @@ def widget_data_contract(
                 not editable or not ai_enrichment.get("enabled") or ai_mode != "with_ai"
             ),
         )
-        accept_grain = widgets.Button(description="Accept suggestion", disabled=True)
+        accept_grain = widgets.Button(description="Apply", disabled=True)
 
         def render_grain_profile_evidence() -> None:
             evidence = []
@@ -1197,7 +1197,7 @@ def widget_data_contract(
                         existing_description=str(table_description.value or ""),
                         column_rows=columns,
                     ),
-                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -1824,7 +1824,7 @@ def widget_data_contract(
         column_classification.description = ""
         column_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         column_description_ai = widgets.HTML()
-        accept_column_description = widgets.Button(description="Accept", disabled=not editable)
+        accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
         column_header = widgets.GridBox(
@@ -1905,21 +1905,23 @@ def widget_data_contract(
         dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         dq_usage = widgets.HTML()
         sensitive_ai = widgets.HTML()
-        accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
+        accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
         )
-        suggest_dq = widgets.Button(
-            description="Suggest rules",
-            disabled=(
-                not editable
-                or not ai_enrichment.get("enabled")
-                or ai_mode != "with_ai"
-            ),
+        dq_ai_instruction = widgets.Textarea(
+            value="",
+            disabled=True,
+            placeholder="Optional: describe the text pattern you want FabricOps to translate into a regular expression.",
+            **shared.widget_common(widgets, "Additional instruction", textarea=True),
         )
-        dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
-        accept_dq_suggestion = widgets.Button(description="Accept selected suggestion", disabled=True)
+        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0", height="72px")
+        suggest_dq = widgets.Button(description="Suggest", disabled=True)
+        dq_suggestion = widgets.Select(
+            options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions")
+        )
+        accept_dq_suggestion = widgets.Button(description="Apply", disabled=True)
         dq_ai = widgets.HTML()
         for control in (
             table_description, table_classification,
@@ -2373,7 +2375,7 @@ def widget_data_contract(
                         existing_description=description,
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
-                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    description_prompt=str(ai_enrichment.get("column_description_prompt") or ""),
                 )
                 previous_value = str(suggestions.get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -2735,8 +2737,11 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def suggest_dq_clicked(_button: Any) -> None:
-            """Generate transient standard-rule advice and hydrate controls only on acceptance."""
+            """Generate Pattern advice and hydrate controls only on apply."""
             try:
+                requested_type = str(dq_type.value or "")
+                if requested_type != "pattern":
+                    raise ValueError("AI assistance is available only for Pattern.")
                 selected = selected_column()
                 profile_value = load_profile_context(str(selected.get("column_id") or ""))
                 profile = dict(profile_value.get("profile") or {})
@@ -2765,9 +2770,26 @@ def widget_data_contract(
                         ],
                     }],
                 })
-                suggestions = suggest_dq_rules(
-                    context_payload, prompt=str(ai_enrichment.get("dq_prompt") or ""),
+                user_instruction = str(dq_ai_instruction.value or "").strip()
+                family_instruction = (
+                    f"Suggest only one {requested_type} rule for the selected column. "
+                    "Do not return any other Data Quality rule family."
                 )
+                if user_instruction:
+                    family_instruction += (
+                        "\nAdditional author instruction:\n" + user_instruction
+                    )
+                prompt_value = (
+                    str(ai_enrichment.get("pattern_prompt") or "").strip()
+                    + "\n\n"
+                    + family_instruction
+                )
+                suggestions = [
+                    item for item in suggest_dq_rules(
+                        context_payload, prompt=prompt_value,
+                    )
+                    if str(item.get("rule_type") or "") == requested_type
+                ]
                 state["_ai_suggestions"][suggestion_scope]["dq"] = suggestions
                 dq_suggestion.options = [
                     (f"{item['rule_type']} · {item['columns'][0]}", str(index))
@@ -2778,7 +2800,7 @@ def widget_data_contract(
                 dq_ai.value = "<p><b>Transient suggestions</b></p><ul>" + "".join(
                     f"<li>{html.escape(item['rule_type'])}: {html.escape(item['rationale'])}</li>"
                     for item in suggestions
-                ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
+                ) + "</ul><p>Select a suggestion and choose <b>Apply</b>. FabricOps copies only the canonical supported fields into the editor; you can still edit them before the final Data Contract save.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
                 state["_ai_suggestions"][suggestion_scope].pop("dq", None)
                 dq_suggestion.options = ()
@@ -2815,8 +2837,43 @@ def widget_data_contract(
         for control in (dq_type, *dq_parameter_controls, dq_enabled, dq_block):
             control.observe(sync_dq, names="value")
 
+        def refresh_dq_ai_controls(_change: dict[str, Any] | None = None) -> None:
+            if _change and _change.get("old") != _change.get("new"):
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
+            supported = str(dq_type.value or "") == "pattern"
+            available = bool(
+                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
+            )
+            enabled = supported and available
+            dq_ai_instruction.disabled = not enabled
+            suggest_dq.disabled = not enabled
+            if supported:
+                dq_ai_instruction.placeholder = (
+                    "Optional: describe the text pattern you want FabricOps to translate "
+                    "into a regular expression."
+                )
+                if not state["_ai_suggestions"][suggestion_scope].get("dq"):
+                    dq_ai.value = (
+                        "<p>Use AI to translate a human description into a Pattern rule, "
+                        "then choose <b>Apply</b> and edit the regular expression if needed.</p>"
+                    )
+            else:
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
+                dq_ai.value = (
+                    "<p>Completeness, Allowed Values, and Value Rules are configured directly; "
+                    "AI assistance is reserved for Pattern.</p>"
+                )
+
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        dq_type.observe(refresh_dq_ai_controls, names="value")
+        refresh_dq_ai_controls()
         def rebuild_column_options() -> None:
             nonlocal column_options
             column_options = [
@@ -2909,7 +2966,8 @@ def widget_data_contract(
         )
         dq_ai_panel = widgets.VBox(
             [
-                widgets.HTML("<b>AI suggestion</b>"),
+                widgets.HTML("<b>AI assistant</b>"),
+                dq_ai_instruction,
                 dq_suggestion,
                 dq_ai,
                 shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
@@ -3451,6 +3509,7 @@ def widget_data_contract(
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
             "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
             "suggest_dq": suggest_dq, "dq_ai": dq_ai,
+            "dq_ai_instruction": dq_ai_instruction,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,

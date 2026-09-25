@@ -346,12 +346,16 @@ class PathConfig:
 
 DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
-    "description_prompt": (
-        "Write a concise business description for the selected table or column using only the supplied "
-        "FabricOps metadata context. For a table, use its Catalogue identity and existing description. "
-        "For a column, also use its datatype and profile summary. Treat profile statistics as observed "
-        "evidence rather than business truth, do not invent unsupported meaning, and return only the "
-        "proposed description."
+    "table_description_prompt": (
+        "Write a concise business description for the selected table using only the supplied FabricOps "
+        "Catalogue identity, existing description, column names, and datatypes. Treat metadata as evidence "
+        "rather than business truth, do not invent unsupported meaning, and return only the proposed description."
+    ),
+    "column_description_prompt": (
+        "Write a concise business description for the selected column using only the supplied FabricOps "
+        "column name, datatype, existing description, table context, and profile summary. Treat profile "
+        "statistics as observed evidence rather than business truth, do not invent unsupported meaning, "
+        "and return only the proposed description."
     ),
     "sensitive_data_prompt": (
         "Assess the selected active canonical column as Direct PII, Indirect PII, or Not PII using only "
@@ -368,13 +372,13 @@ DEFAULT_AI_ENRICHMENT = {
         "so describe composite keys as candidates that the table-level uniqueness guardrail must validate. "
         "Return structured JSON only; final review belongs to Governance."
     ),
-    "dq_prompt": (
-        "Suggest conservative column-level Data Quality rules for the selected column using only its governed "
-        "metadata, description, manually selected classification, profile summary, and supplied frequency "
-        "evidence. Use only completeness, value_set, range, and pattern. Observed nulls, distinctness, "
-        "frequencies, minima, and maxima are evidence, not automatic contractual rules. "
-        "Do not infer business relationships, row keys, custom expressions, or contractual limits from current "
-        "observations alone. Return structured JSON only; final review belongs to Governance."
+    "pattern_prompt": (
+        "Translate the author's business intent into one conservative Pattern rule for the selected column. "
+        "Use only the supplied governed metadata, description, manually selected classification, profile "
+        "summary, frequency evidence, and any additional author instruction. Return one regular expression "
+        "that can be applied directly to the Pattern editor. Observed values are evidence, not automatic "
+        "contractual requirements. Do not invent business rules, row keys, relationships, ranges, allowed "
+        "values, or executable code. Return structured JSON only; final review belongs to Governance."
     ),
 }
 
@@ -418,10 +422,17 @@ class GovernanceConfig:
         ai_enrichment = {**DEFAULT_AI_ENRICHMENT, **dict(self.ai_enrichment or {})}
         object.__setattr__(self, "ai_enrichment", {
             "enabled": bool(ai_enrichment.get("enabled", False)),
-            "description_prompt": str(ai_enrichment.get("description_prompt") or "").strip(),
-            "sensitive_data_prompt": str(ai_enrichment.get("sensitive_data_prompt") or "").strip(),
+            "table_description_prompt": str(
+                ai_enrichment.get("table_description_prompt") or ""
+            ).strip(),
+            "column_description_prompt": str(
+                ai_enrichment.get("column_description_prompt") or ""
+            ).strip(),
+            "sensitive_data_prompt": str(
+                ai_enrichment.get("sensitive_data_prompt") or ""
+            ).strip(),
             "grain_prompt": str(ai_enrichment.get("grain_prompt") or "").strip(),
-            "dq_prompt": str(ai_enrichment.get("dq_prompt") or "").strip(),
+            "pattern_prompt": str(ai_enrichment.get("pattern_prompt") or "").strip(),
         })
         object.__setattr__(
             self,

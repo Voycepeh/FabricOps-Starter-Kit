@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from io import StringIO
@@ -128,6 +129,41 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _normalize_ai_column_reference(
+    value: Any, allowed_columns: dict[str, str]
+) -> str:
+    """Return a canonical known column name from tolerant AI output."""
+    by_id = {column_id: column_name for column_name, column_id in allowed_columns.items()}
+
+    def from_mapping(mapping: dict[str, Any]) -> str:
+        name = str(mapping.get("column_name") or mapping.get("name") or "").strip()
+        if name in allowed_columns:
+            return name
+        column_id = str(mapping.get("column_id") or "").strip()
+        return by_id.get(column_id, "")
+
+    if isinstance(value, dict):
+        return from_mapping(value)
+
+    text = str(value or "").strip()
+    if text in allowed_columns:
+        return text
+    if text in by_id:
+        return by_id[text]
+    if text.startswith("{") and text.endswith("}"):
+        parsed: Any = None
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            try:
+                parsed = ast.literal_eval(text)
+            except (SyntaxError, ValueError):
+                parsed = None
+        if isinstance(parsed, dict):
+            return from_mapping(parsed)
+    return ""
+
+
 def suggest_sensitive_data(
     context: dict[str, Any], *, prompt: str, invoke: Any = None
 ) -> list[dict[str, Any]]:
@@ -143,6 +179,7 @@ def suggest_sensitive_data(
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
         "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
         "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, and parameters. "
+        "The column field must be the supplied column_name string, not a column object. "
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
         "Allowed treatments: tokenize, mask, bucket, remove. Allowed actions: Warn, Block. "
@@ -164,13 +201,8 @@ def suggest_sensitive_data(
         if not isinstance(candidate, dict):
             raise ValueError("Each AI Sensitive Data suggestion must be a JSON object.")
         column_ref = candidate.get("column")
-        if isinstance(column_ref, dict):
-            column_name = str(
-                column_ref.get("column_name") or column_ref.get("name") or ""
-            ).strip()
-        else:
-            column_name = str(column_ref or "").strip()
-        if column_name not in allowed_columns:
+        column_name = _normalize_ai_column_reference(column_ref, allowed_columns)
+        if not column_name:
             continue
         if column_name in seen:
             continue
@@ -326,7 +358,9 @@ Context:
         columns = candidate.get("columns")
         if not isinstance(columns, list) or len(columns) != 1 or columns[0] not in allowed_columns:
             raise ValueError("AI standard Data Quality suggestions require exactly one known column.")
-        parameters = dict(candidate.get("parameters") or {})
+        parameters = _normalize_ai_dq_parameters(
+            rule_type, dict(candidate.get("parameters") or {})
+        )
         _validate_ai_dq_parameters(rule_type, parameters)
         suggestions.append({
             "rule_type": rule_type, "columns": list(columns), "parameters": parameters,
@@ -336,17 +370,21 @@ Context:
     return suggestions
 
 
-def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> None:
-    """Reject malformed or executable AI-authored standard-rule parameters."""
+def _normalize_ai_dq_parameters(
+    rule_type: str, parameters: dict[str, Any]
+) -> dict[str, Any]:
+    """Keep only canonical parameters supported by the selected DQ family."""
     expected = {
         "completeness": {"maximum_missing_percent", "treat_blank_as_missing"},
-        "uniqueness": set(),
         "value_set": {"mode", "values"},
         "range": {"minimum", "maximum", "minimum_inclusive", "maximum_inclusive"},
         "pattern": {"pattern"},
     }[rule_type]
-    if set(parameters) - expected:
-        raise ValueError(f"AI {rule_type} suggestion contains unsupported parameters.")
+    return {key: value for key, value in parameters.items() if key in expected}
+
+
+def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> None:
+    """Reject malformed or executable AI-authored standard-rule parameters."""
     if rule_type == "completeness":
         value = parameters.get("maximum_missing_percent")
         if not isinstance(value, (int, float)) or not 0 <= value <= 100 or not isinstance(parameters.get("treat_blank_as_missing"), bool):
