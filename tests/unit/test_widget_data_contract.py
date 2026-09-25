@@ -218,6 +218,7 @@ def widget_runtime(monkeypatch):
                 *saved_payload.get("enrichment", {}).get("columns", []),
             ]
         ]
+        calls["enrichment"].append([dict(row) for row in enrichment])
         guardrails[:] = []
         for item in saved_payload.get("guardrails", []):
             row = dict(item)
@@ -226,6 +227,7 @@ def widget_runtime(monkeypatch):
             )
             row["is_active"] = True
             guardrails.append(row)
+        calls["guardrails"].append([dict(row) for row in guardrails])
         return dict(contract)
 
     def freeze_contract(**_kwargs):
