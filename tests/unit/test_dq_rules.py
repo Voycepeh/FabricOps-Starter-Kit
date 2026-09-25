@@ -75,6 +75,34 @@ def _rule(rule_type: str, **kwargs):
     return rule
 
 
+def test_reference_backed_value_set_requires_complete_reference():
+    """Reference-backed Allowed Values must identify one governed table column."""
+    rule = _rule(
+        "value_set",
+        columns=["status"],
+        mode="allow",
+        reference_table_id="lakehouse||reference||dbo||status",
+    )
+
+    with pytest.raises(ValueError, match="reference_table_id and reference_column"):
+        governance._validate_dq_rules([rule])
+
+
+def test_reference_backed_value_set_rejects_mixed_inline_values():
+    """Keep inline and reference value sources mutually exclusive."""
+    rule = _rule(
+        "value_set",
+        columns=["status"],
+        mode="allow",
+        values=["Open"],
+        reference_table_id="lakehouse||reference||dbo||status",
+        reference_column="status",
+    )
+
+    with pytest.raises(ValueError, match="cannot combine inline values"):
+        governance._validate_dq_rules([rule])
+
+
 @pytest.mark.parametrize(
     ("rule", "failed"),
     [
