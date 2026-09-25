@@ -1488,7 +1488,8 @@ def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
     controls["datatype_choice"].value = "string"
 
     assert state["dirty"] is True
-    assert "Datatype: <b>string</b>" in controls["column_context"].value
+    assert "Datatype drift detected" not in controls["column_context"].value
+    assert ">string</div>" in controls["column_context"].value
     assert controls["datatype_choice"].layout.display == "none"
     payload = json.loads(state["current"]["contract"]["contract_payload_json"])
     selected = next(item for item in payload["table"]["columns"] if item["column_id"] == "col-0")
