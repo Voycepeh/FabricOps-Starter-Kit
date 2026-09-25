@@ -897,7 +897,7 @@ def widget_data_contract(
                 not editable or not ai_enrichment.get("enabled") or ai_mode != "with_ai"
             ),
         )
-        accept_grain = widgets.Button(description="Accept suggestion", disabled=True)
+        accept_grain = widgets.Button(description="Apply", disabled=True)
 
         def render_grain_profile_evidence() -> None:
             evidence = []
