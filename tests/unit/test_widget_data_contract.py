@@ -783,7 +783,7 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     assert any(
         record["rule_type"] == "column_relationship"
         and module._parameters(record)["columns"] == ["column_0", "column_1"]
-        and record["action"] == "Block"
+        and record["action"] == "Warn"
         and record["is_active"] is True
         for record in saved
     )
