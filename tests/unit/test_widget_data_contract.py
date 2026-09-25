@@ -225,7 +225,7 @@ def widget_runtime(monkeypatch):
             row["rule_parameters_json"] = json.dumps(
                 row.pop("rule_parameters", {}), sort_keys=True, separators=(",", ":")
             )
-            row["is_active"] = True
+            row["is_active"] = bool(item.get("is_active", True))
             guardrails.append(row)
         calls["guardrails"].append([dict(row) for row in guardrails])
         return dict(contract)
