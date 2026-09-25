@@ -8,6 +8,7 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_table
 from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.pipeline.check_sensitive_data import _check_sensitive_data_rules
 from fabricops_kit.pipeline.shared import (
     check_dq_runtime,
     contract_guardrail_rows,
@@ -69,11 +70,12 @@ def _validate_data_contract(
     This Engineering/data-plane operation only reads business data. It writes
     aggregate outcomes to ``METADATA_GUARDRAIL_RESULTS`` with
     ``execution_type='validate'`` and never calls ``pipeline_write``. Schema
-    and Data Quality use the same evaluator cores as normal enforcement checks.
-    Freshness, Source Drift, and Sensitive Data are reported as
-    ``not_applicable`` because validation lacks the legitimate enforcement
-    pipeline observation or transformation context they require. This
-    applicability state is neither a pass nor an activation blocker.
+    Data Quality, and Sensitive Data use the same evaluator cores as normal
+    enforcement checks. Sensitive Data treatments are evaluated in memory and
+    any support mapping remains caller-owned; no business table or mapping is
+    persisted. Freshness and Source Drift are reported as ``not_applicable``
+    because validation lacks their legitimate enforcement observation context.
+    This applicability state is neither a pass nor an activation blocker.
 
     """
     config, env, context = resolve_fabric_context()
@@ -147,9 +149,27 @@ def _validate_data_contract(
         failed_values = dq_result.get("failed_values")
         outcomes.extend(dq_result.get("checks") or [])
 
+    sensitive_rules = [
+        rule for rule in rules if str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+    ]
+    support_mapping = None
+    if sensitive_rules:
+        sensitive_result = _check_sensitive_data_rules(
+            dataframe,
+            rules=sensitive_rules,
+            identity=identity,
+            config=config,
+            env=env,
+            spark_session=spark,
+            run_id=effective_run_id,
+            execution_type="validate",
+        )
+        support_mapping = sensitive_result.get("support_mapping")
+        outcomes.extend(sensitive_result.get("checks") or [])
+
     for rule in rules:
         guardrail_type = str(rule.get("guardrail_type") or "").lower()
-        if guardrail_type in {"schema", "data_quality"}:
+        if guardrail_type in {"schema", "data_quality", "sensitive_data"}:
             continue
         outcome = {
             "guardrail_rule_id": str(rule.get("guardrail_rule_id") or ""),
@@ -197,6 +217,7 @@ def _validate_data_contract(
         "status": "passed" if outcomes and blocked == 0 else "failed",
         "outcomes": outcomes,
         "failed_values": failed_values,
+        "support_mapping": support_mapping,
     }
     if verbose:
         print("FabricOps Data Contract Validation")
