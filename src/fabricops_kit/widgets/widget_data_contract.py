@@ -1805,6 +1805,7 @@ def widget_data_contract(
                 return
             suggestion = suggestions[int(dq_suggestion.value)]
             dq_type.value = suggestion["rule_type"]
+            dq_enabled.value = True
             params = suggestion["parameters"]
             dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
             dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
