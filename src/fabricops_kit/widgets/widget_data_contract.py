@@ -718,7 +718,13 @@ def widget_data_contract(
         def session_guardrails() -> list[dict[str, Any]]:
             return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
 
-        columns = list(current.get("available_columns", []))
+        columns = sorted(
+            list(current.get("available_columns", [])),
+            key=lambda column: (
+                str(column.get("column_name") or "").startswith("_"),
+                str(column.get("column_name") or "").casefold(),
+            ),
+        )
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
