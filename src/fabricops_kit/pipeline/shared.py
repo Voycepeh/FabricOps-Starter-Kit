@@ -1629,8 +1629,10 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
             raise ValueError(f"No active Data Contract exists for {table_id!r}; Governance must activate one first.")
         return None
     row = dict(active[0])
-    if str(row.get("status") or "").lower() != "active":
-        raise RuntimeError(f"Data Contract integrity error: active version for {table_id!r} does not have status='active'.")
+    if str(row.get("status") or "").lower() != "frozen":
+        raise RuntimeError(
+            f"Data Contract integrity error: active version for {table_id!r} must remain frozen."
+        )
     if not str(row.get("agreement_id") or "").strip() or not str(row.get("agreement_version") or "").strip():
         raise RuntimeError(
             f"Data Contract integrity error: active version for {table_id!r} has no exact Data Agreement linkage."
@@ -1687,7 +1689,7 @@ def resolve_data_contract_version(
         raise ValueError(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
-    if str(row.get("status") or "").strip().lower() not in {"frozen", "active", "superseded"}:
+    if str(row.get("status") or "").strip().lower() != "frozen":
         raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before validation.")
     row["contract_payload"] = _contract_payload(row)
     return row
@@ -1877,6 +1879,8 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
     for raw in rules:
         if not isinstance(raw, dict):
             raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
+        if raw.get("is_active", True) is False:
+            continue
         params = raw.get("rule_parameters") or {}
         if not isinstance(params, dict):
             raise ValueError("Active Data Contract Guardrail rule_parameters must be an object.")

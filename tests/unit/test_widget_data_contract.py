@@ -16,7 +16,8 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
     rows = [{
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
-        "layer": "Silver", "is_active": True,
+        "layer": "Silver", "load_strategy": "append",
+        "load_strategy_parameters_json": "{}", "is_active": True,
         "_workspace_id": "workspace-id", "_notebook_id": "writer-notebook-id",
     }]
     for index in range(count):
@@ -108,9 +109,24 @@ def widget_runtime(monkeypatch):
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
+    contract_payload = {
+        "contract": {
+            "contract_id": "contract-orders", "contract_version": 1, "status": "draft",
+        },
+        "table": {
+            **catalogue[0],
+            "processing": {"load_strategy": "append"},
+            "processing_source": "catalogue",
+            "columns": [dict(row) for row in catalogue[1:]],
+        },
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    }
     contract = {
         "contract_id": "contract-orders", "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev", "status": "draft", "is_active": False,
+        "environment_name": "dev",
+        "contract_payload_json": json.dumps(contract_payload, sort_keys=True, separators=(",", ":")),
+        "status": "draft", "is_active": False,
     }
     enrichment = [
         {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
@@ -121,13 +137,13 @@ def widget_runtime(monkeypatch):
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
-    calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
@@ -158,9 +174,15 @@ def widget_runtime(monkeypatch):
         }
 
     def manifest():
+        saved = json.loads(contract["contract_payload_json"])
         return {
             "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": contract["status"]},
-            "table": {**catalogue[0], "processing": {}, "columns": [dict(row) for row in catalogue[1:]]},
+            "table": {
+                **catalogue[0],
+                "processing": dict(saved.get("table", {}).get("processing") or {}),
+                "processing_source": str(saved.get("table", {}).get("processing_source") or "default"),
+                "columns": [dict(row) for row in catalogue[1:]],
+            },
             "enrichment": {
                 "table": [dict(row) for row in enrichment if not row.get("column_id")],
                 "columns": [dict(row) for row in enrichment if row.get("column_id")],
@@ -183,14 +205,44 @@ def widget_runtime(monkeypatch):
             guardrails.append(dict(record))
         return records
 
+    def save_contract_draft(*, draft, payload, **_kwargs):
+        saved_payload = json.loads(json.dumps(payload))
+        calls["draft"].append(saved_payload)
+        contract["contract_payload_json"] = json.dumps(
+            saved_payload, sort_keys=True, separators=(",", ":")
+        )
+        enrichment[:] = [
+            dict(row)
+            for row in [
+                *saved_payload.get("enrichment", {}).get("table", []),
+                *saved_payload.get("enrichment", {}).get("columns", []),
+            ]
+        ]
+        calls["enrichment"].append([dict(row) for row in enrichment])
+        guardrails[:] = []
+        for item in saved_payload.get("guardrails", []):
+            row = dict(item)
+            row["rule_parameters_json"] = json.dumps(
+                row.pop("rule_parameters", {}), sort_keys=True, separators=(",", ":")
+            )
+            row["is_active"] = bool(item.get("is_active", True))
+            guardrails.append(row)
+        calls["guardrails"].append([dict(row) for row in guardrails])
+        return dict(contract)
+
     def freeze_contract(**_kwargs):
         calls["freeze"] += 1
         contract["status"] = "frozen"
-        return {"payload": manifest()}
+        payload = json.loads(contract["contract_payload_json"])
+        payload["contract"]["status"] = "frozen"
+        contract["contract_payload_json"] = json.dumps(
+            payload, sort_keys=True, separators=(",", ":")
+        )
+        return {"payload": payload}
 
     def activate_contract_version(**_kwargs):
         calls["activate"] += 1
-        contract["status"] = "active"
+        contract["is_active"] = True
         return {"changed": True}
 
     config = types.SimpleNamespace(
@@ -214,9 +266,9 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
-    monkeypatch.setattr(module.contracts, "assemble_contract_payload", lambda **_kwargs: (manifest(), []))
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
+    monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
@@ -276,6 +328,30 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["editor_shell"].layout.display == "none"
 
 
+def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
+    """Fallback processing stays editable and is saved inside the exact draft JSON."""
+    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    payload["table"]["processing"] = {"load_strategy": "overwrite"}
+    payload["table"]["processing_source"] = "previous_contract"
+    widget_runtime["contract"]["contract_payload_json"] = json.dumps(payload)
+
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert controls["load_strategy"].disabled is False
+    controls["load_strategy"].value = "append"
+    controls["table_save"].click()
+    controls["top_nav"].value = "Review"
+    controls["save_data_contract"].click()
+
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert saved["table"]["processing"] == {"load_strategy": "append"}
+    assert saved["table"]["processing_source"] == "manual"
+    persisted = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    assert persisted["table"]["processing"] == {"load_strategy": "append"}
+    assert persisted["table"]["processing_source"] == "manual"
+
+
 def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():
     """Human review and notebook variables share an escaped canonical object."""
     payload = {
@@ -316,7 +392,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
-    assert controls["table_guardrails"]["source_drift"]["parameters"][2].value == "append"
+    assert len(controls["table_guardrails"]["source_drift"]["parameters"]) == 2
+    assert controls["load_strategy"].value == "append"
+    assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
     assert controls["advanced_type"].value == "uniqueness"
@@ -515,7 +593,7 @@ def test_section_actions_stage_without_writes_until_final_save(widget_runtime):
         if record.get("guardrail_type") == "schema"
     )
     assert state["dirty"] is False
-    assert "canonical state reloaded" in state["message"]
+    assert "draft saved" in state["message"]
 
 
 def test_visible_apply_actions_stage_table_and_column_sections(widget_runtime):
@@ -1011,10 +1089,29 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "source_drift"
     )
     assert module._parameters(staged_drift) == {
-        "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
+        "partition_column": "column_0", "change_column": "column_1",
     }
     state["_controls"]["save_data_contract"].click()
     assert widget_runtime["calls"]["guardrails"]
+
+
+def test_disabled_guardrail_is_preserved_in_draft_json(widget_runtime):
+    """Disabled Guardrails stay in the draft JSON so they can be re-enabled later."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    freshness = controls["table_guardrails"]["freshness"]
+
+    freshness["enabled"].value = False
+    freshness["save"].click()
+    controls["save_data_contract"].click()
+
+    saved = widget_runtime["calls"]["draft"][-1]
+    rule = next(
+        item for item in saved["guardrails"]
+        if item.get("guardrail_rule_id") == "fresh"
+    )
+    assert rule["is_active"] is False
+    assert state["_controls"]["table_guardrails"]["freshness"]["enabled"].value is False
 
 
 def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
@@ -1152,5 +1249,6 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     assert module.DATA_CONTRACT_MANIFEST is not before
     state["_controls"]["activate"].click()
     assert widget_runtime["calls"]["activate"] == 1
-    assert state["current"]["contract"]["status"] == "active"
+    assert state["current"]["contract"]["status"] == "frozen"
+    assert state["current"]["contract"]["is_active"] is True
     assert "ACTIVE" in state["message"]

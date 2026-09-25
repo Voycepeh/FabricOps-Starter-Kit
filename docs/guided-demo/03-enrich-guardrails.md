@@ -22,6 +22,10 @@ Author the contract in three parts:
 
 The important concept is that these are not separate disconnected metadata records from the user's point of view. Together they form the governed definition for that table and version.
 
+For **Processing**, FabricOps keeps the load strategy inside the exact Data Contract JSON. A new version first uses the Engineering Catalogue value when one has been observed; that value is shown read-only. If Engineering has not resolved processing, FabricOps inherits the previous frozen Data Contract version when available. If neither exists, the draft starts at `overwrite`. Inherited and defaulted values remain editable.
+
+While a version is **draft**, **Save Data Contract** overwrites that version's complete JSON definition in place. FabricOps does not create history for intermediate draft saves. **Freeze** changes that same version to `frozen` and makes its JSON immutable. Further edits start the next draft version seeded from the frozen JSON.
+
 ## Make the Step 2 behaviour governed
 
 Use the contract to formalise decisions that were only Development proposals in Step 2.

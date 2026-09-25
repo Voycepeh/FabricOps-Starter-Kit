@@ -254,8 +254,12 @@ def widget_data_contract(
 
     Notes
     -----
-    Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
-    contract version and manifest. Profile context remains read-only and is never added
+    Save overwrites the complete canonical JSON for the selected draft version, then reloads
+    that exact version. A new draft is seeded from the previous frozen version when one exists.
+    Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
+    then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
+    or manually saved processing remains editable until the draft is frozen.
+    Profile context remains read-only and is never added
     to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
@@ -444,60 +448,6 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(
-        message: str, *, clear_column_ids: tuple[str, ...] = (),
-    ) -> None:
-        current = state.get("current")
-        scope = (
-            (str(current["contract_id"]), int(current["contract_version"]))
-            if current else None
-        )
-
-        def clear_saved_column_drafts() -> None:
-            if scope is None:
-                return
-            drafts = state["_column_drafts"].setdefault(scope, {})
-            for column_id in clear_column_ids:
-                drafts.pop(str(column_id or "").strip(), None)
-
-        clear_saved_column_drafts()
-        select(str(state["table_id"]), int(state["contract_version"]))
-        render()
-        clear_saved_column_drafts()
-        set_status(message)
-
-    def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Enrichment saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
-
-    def save_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Guardrails saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
-
     def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Stage Enrichment in widget session state without writing Metadata."""
         current = state.get("current")
@@ -540,29 +490,55 @@ def widget_data_contract(
         refresh_manifest()
         return records
 
+    def stage_processing(processing: dict[str, Any]) -> dict[str, Any]:
+        """Stage processing inside the mutable draft JSON."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can edit processing.")
+        normalized = contracts.validated_processing(dict(processing))
+        payload = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        )
+        table_payload = payload.setdefault("table", {})
+        source = str(table_payload.get("processing_source") or "default")
+        if source == "catalogue" and normalized != contracts.contract_processing(current["contract"]):
+            raise ValueError("Catalogue-resolved processing is read-only in this Data Contract.")
+        if normalized != contracts.contract_processing(current["contract"]):
+            source = "manual"
+        table_payload["processing"] = normalized
+        table_payload["processing_source"] = source
+        current["contract"]["contract_payload_json"] = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        )
+        state["dirty"] = True
+        refresh_manifest()
+        return normalized
+
     def save_data_contract_session() -> None:
-        """Persist all staged draft changes once, then reload canonical state once."""
+        """Overwrite the selected draft JSON once, then reload canonical state once."""
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be saved.")
         scope = (str(current["contract_id"]), int(current["contract_version"]))
-        enrichment_records = list(state["_pending_enrichment"].get(scope, {}).values())
-        guardrail_records = list(state["_pending_guardrails"].get(scope, {}).values())
-        if enrichment_records:
-            contracts.save_enrichment(
-                enrichment_records, config=config, env=env, spark_session=spark
-            )
-        if guardrail_records:
-            contracts.save_guardrails(
-                guardrail_records, config=config, env=env, spark_session=spark
-            )
+        payload = refresh_manifest()
+        if payload is None:
+            raise ValueError("Data Contract draft has no payload to save.")
+        saved = contracts.save_contract_draft(
+            draft=current["contract"],
+            payload=payload,
+            config=config,
+            env=env,
+            spark_session=spark,
+            context=resolved,
+        )
+        current["contract"] = saved
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
-        set_status("Data Contract saved and canonical state reloaded.")
+        set_status("Data Contract draft saved.")
 
     def discard_data_contract_session() -> None:
         """Discard staged changes for the selected contract and reload canonical state."""
@@ -599,6 +575,8 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
+        if state.get("dirty"):
+            raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
             draft=current["contract"], config=config, env=env,
             spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
@@ -622,8 +600,7 @@ def widget_data_contract(
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
-        freeze=freeze, activate=activate, save_enrichment=save_enrichment,
-        save_guardrails=save_guardrails, stage_enrichment=stage_enrichment,
+        freeze=freeze, activate=activate, stage_enrichment=stage_enrichment,
         stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
         discard_data_contract=discard_data_contract_session,
         load_profile_context=load_profile_context,
@@ -752,6 +729,91 @@ def widget_data_contract(
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
         table_save = widgets.Button(description="Apply Table Changes", button_style="primary", disabled=not editable)
 
+        processing = contracts.contract_processing(row)
+        processing_source = contracts.contract_processing_source(row)
+        processing_locked = processing_source == "catalogue"
+        load_strategy_control = widgets.Dropdown(
+            options=("overwrite", "append", "scd1", "scd2"),
+            value=str(processing.get("load_strategy") or "overwrite"),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Load strategy"),
+        )
+        load_strategy_control.layout = compact_field_layout
+        processing_source_labels = {
+            "catalogue": "Resolved from Engineering Catalogue · read-only",
+            "previous_contract": "Inherited from the previous Data Contract version",
+            "default": "No scan or prior contract value found · defaulted to overwrite",
+            "manual": "Saved on this Data Contract draft",
+        }
+        processing_source_hint = widgets.HTML(
+            "<span style='color:#666;font-size:12px;'>"
+            + html.escape(processing_source_labels.get(processing_source, "Saved on this Data Contract"))
+            + "</span>"
+        )
+        partition_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("partition_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Partition column"),
+        )
+        watermark_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("watermark_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Watermark column"),
+        )
+        key_columns_control = widgets.SelectMultiple(
+            options=column_names,
+            value=tuple(value for value in processing.get("key_columns", []) if value in column_names),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Key columns"),
+        )
+        effective_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("effective_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Effective column"),
+        )
+        tracked_columns_control = widgets.SelectMultiple(
+            options=column_names,
+            value=tuple(value for value in processing.get("tracked_columns", []) if value in column_names),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Tracked columns"),
+        )
+        processing_parameter_controls = (
+            partition_column_control, watermark_column_control, key_columns_control,
+            effective_column_control, tracked_columns_control,
+        )
+
+        def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
+            strategy = str(load_strategy_control.value or "overwrite")
+            partition_column_control.layout.display = "" if strategy == "overwrite" else "none"
+            watermark_column_control.layout.display = "" if strategy in {"overwrite", "append", "scd1", "scd2"} else "none"
+            key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
+            effective_column_control.layout.display = "" if strategy == "scd2" else "none"
+            tracked_columns_control.layout.display = "" if strategy == "scd2" else "none"
+
+        def build_processing() -> dict[str, Any]:
+            strategy = str(load_strategy_control.value or "").strip()
+            value: dict[str, Any] = {"load_strategy": strategy}
+            watermark = str(watermark_column_control.value or "").strip()
+            if watermark:
+                value["watermark_column"] = watermark
+            if strategy == "overwrite":
+                partition = str(partition_column_control.value or "").strip()
+                if partition:
+                    value["partition_column"] = partition
+            if strategy in {"scd1", "scd2"}:
+                value["key_columns"] = [str(item) for item in key_columns_control.value]
+            if strategy == "scd2":
+                value["effective_column"] = str(effective_column_control.value or "").strip()
+                if tracked_columns_control.value:
+                    value["tracked_columns"] = [str(item) for item in tracked_columns_control.value]
+            return contracts.validated_processing(value)
+
+        load_strategy_control.observe(update_processing_controls, names="value")
+        update_processing_controls()
+
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
                 table_description_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
@@ -825,7 +887,6 @@ def widget_data_contract(
             existing_parameters = _parameters(existing)
             enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
             block = widgets.Checkbox(value=str(existing.get("action") or "Warn") == "Block", description="Block on failure", disabled=not editable)
-            column_names = [str(column.get("column_name") or "") for column in columns]
             parameter_controls: list[Any] = []
             if kind == "freshness":
                 freshness_column = widgets.Dropdown(
@@ -863,15 +924,6 @@ def widget_data_contract(
                 )
                 change_column.layout = field_layout
                 parameter_controls = [partition_column, change_column]
-                if not str(table.get("load_strategy") or "").strip():
-                    source_load_strategy = widgets.Dropdown(
-                        options=("overwrite", "append", "scd1", "scd2"),
-                        value=str(existing_parameters.get("load_strategy") or "") or None,
-                        disabled=not editable,
-                        **shared.widget_common(widgets, "Source load strategy"),
-                    )
-                    source_load_strategy.layout = field_layout
-                    parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
@@ -900,8 +952,6 @@ def widget_data_contract(
                         "partition_column": str(controls[0].value or "").strip(),
                         "change_column": str(controls[1].value or "").strip(),
                     }
-                    if len(controls) > 2:
-                        parameters["load_strategy"] = str(controls[2].value or "").strip()
                 if enabled_control.value and any(value in {"", None} for value in parameters.values()):
                     raise ValueError(f"{rule_title} requires all governed configuration fields.")
                 return guardrail_record(
@@ -938,6 +988,7 @@ def widget_data_contract(
                     )
                     if record is not None
                 ]
+                stage_processing(build_processing())
                 stage_enrichment(enrichment_records)
                 if guardrail_records:
                     stage_guardrails(guardrail_records)
@@ -990,8 +1041,8 @@ def widget_data_contract(
                 html.escape(str(table.get("layer") or "")),
             )
         )
-        processing = (state.get("manifest") or {}).get("table", {}).get("processing", {})
-        load_strategy = str(processing.get("load_strategy") or table.get("load_strategy") or "Not configured").upper()
+        processing = contracts.contract_processing(row)
+        load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
         pipeline_refresh = widgets.HTML(
             "<div><b>Load strategy</b><br>"
             f"{html.escape(load_strategy)}</div><br>"
@@ -1015,6 +1066,18 @@ def widget_data_contract(
             change_table_button,
         )
         table_right = (
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Processing</div>"),
+                    load_strategy_control,
+                    processing_source_hint,
+                    *processing_parameter_controls,
+                ],
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
+            ),
             widgets.VBox(
                 [table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
@@ -1848,6 +1911,7 @@ def widget_data_contract(
                 return
             suggestion = suggestions[int(dq_suggestion.value)]
             dq_type.value = suggestion["rule_type"]
+            dq_enabled.value = True
             params = suggestion["parameters"]
             dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
             dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
@@ -2199,7 +2263,7 @@ def widget_data_contract(
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
             activate_button = widgets.Button(
                 description="Activate for Production",
-                disabled=str(row.get("status") or "").lower() not in {"frozen", "superseded"},
+                disabled=str(row.get("status") or "").lower() != "frozen" or row.get("is_active") is True,
             )
 
             def activate_clicked(_button: Any) -> None:
@@ -2229,6 +2293,14 @@ def widget_data_contract(
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
             "table_save": table_save, "table_guardrails": table_rules,
+            "load_strategy": load_strategy_control,
+            "processing_source": processing_source_hint,
+            "processing_parameters": processing_parameter_controls,
+            "partition_column": partition_column_control,
+            "watermark_column": watermark_column_control,
+            "key_columns": key_columns_control,
+            "effective_column": effective_column_control,
+            "tracked_columns": tracked_columns_control,
             "pipeline_refresh": pipeline_refresh,
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,

@@ -245,11 +245,13 @@ def setup_metadata_tables(
       ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
       ``start_date``, ``expiry_date``, ``business_purpose``,
       ``custom_fields_json``, and the standard audit fields.
-    - ``METADATA_DATA_CONTRACT`` first stores a payload-free, table-centric draft
-      through ``contract_id``, ``contract_version``, and ``table_id`` while
-      ``agreement_id`` and ``agreement_version`` remain null. Freezing assembles
-      the immutable ``contract_payload_json``. Activation links an exact Data
-      Agreement version and updates lifecycle state without changing that payload.
+    - ``METADATA_DATA_CONTRACT`` stores one table-centric lifecycle version.
+      A draft keeps its complete editable governed definition in
+      ``contract_payload_json``; each Save overwrites that draft JSON in place.
+      Freezing changes the version to ``frozen`` and makes its JSON immutable.
+      A later version is seeded from the previous frozen JSON. Activation keeps
+      ``status='frozen'`` and uses ``is_active`` to identify the Production
+      version while linking the exact Data Agreement version.
     - ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
       ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,
       physical table context, ``column_name``, ``data_type``, profiling dates,

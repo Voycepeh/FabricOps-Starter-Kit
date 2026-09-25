@@ -41,7 +41,7 @@ def _contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[st
         (
             dict(row) for row in rows
             if str(row.get("table_id") or "") == table_id
-            and str(row.get("status") or "").lower() in {"frozen", "active", "superseded"}
+            and str(row.get("status") or "").lower() == "frozen"
         ),
         key=lambda row: int(row.get("contract_version") or 0), reverse=True,
     )
@@ -49,10 +49,7 @@ def _contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[st
 
 def _validation_contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[str, Any]]:
     """Return newest-first frozen candidates available for validation."""
-    return [
-        row for row in _contract_options(rows, table_id)
-        if str(row.get("status") or "").lower() == "frozen"
-    ]
+    return _contract_options(rows, table_id)
 
 
 def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
@@ -154,8 +151,8 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     Every Lineage-linked source remains in ``enforce`` mode. Each target can
     independently use ``enforce`` or ``validate``. Enforce resolves the
     environment's enforceable contract without showing a version picker;
-    Production requires exactly one active version. Target validation exposes
-    only frozen candidates and never installs the candidate as an enforcement
+    Production requires exactly one frozen version tagged active. Target validation exposes
+    frozen candidates and never installs the candidate as an enforcement
     override. This widget never activates metadata.
 
     Examples
@@ -268,7 +265,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             versions = _validation_contract_options(contracts, table_id)
             enforceable = [
                 row for row in _contract_options(contracts, table_id)
-                if str(row.get("status") or "").lower() == "active" and bool(row.get("is_active"))
+                if str(row.get("status") or "").lower() == "frozen" and bool(row.get("is_active"))
             ]
             if len(enforceable) > 1:
                 raise RuntimeError(
@@ -295,7 +292,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                     "contract_version": int(selected["contract_version"]),
                 }
         state["message"] = (
-            f"Environment {env} · each table can enforce its enforceable contract or validate a frozen candidate."
+            f"Environment {env} · each table can enforce its active frozen contract or validate a frozen candidate."
         )
 
     def set_mode(

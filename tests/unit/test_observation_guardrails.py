@@ -85,13 +85,13 @@ def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -
         lambda *args, **kwargs: {
             "contract_id": "contract",
             "contract_payload": {
-                "guardrails": [
-                    {
-                        "guardrail_type": "source_drift",
-                        "is_active": True,
-                        "rule_parameters": {"load_strategy": "scd2"},
+                "table": {
+                    "processing": {
+                        "load_strategy": "scd2",
+                        "key_columns": ["id"],
+                        "effective_column": "effective_at",
                     }
-                ]
+                }
             },
         },
     )
@@ -111,7 +111,11 @@ def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -
     )
 
     assert result["can_continue"] is True
-    assert calls[0]["source_processing"] == {"load_strategy": "scd2"}
+    assert calls[0]["source_processing"] == {
+        "load_strategy": "scd2",
+        "key_columns": ["id"],
+        "effective_column": "effective_at",
+    }
 
 
 def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatch) -> None:
@@ -130,22 +134,11 @@ def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatc
         "resolve_pipeline_data_contract",
         lambda *args, **kwargs: {
             "contract_id": "contract",
-            "contract_payload": {
-                "guardrails": [
-                    {
-                        "guardrail_type": "source_drift",
-                        "is_active": True,
-                        "rule_parameters": {
-                            "partition_column": "partition_date",
-                            "change_column": "changed_at",
-                        },
-                    }
-                ]
-            },
+            "contract_payload": {"table": {"processing": {}}},
         },
     )
 
-    with pytest.raises(ValueError, match="set Source load strategy"):
+    with pytest.raises(ValueError, match="selected Data Contract has no valid processing definition"):
         check_source_drift(
             "source-a", target_table_id="target-a", spark_session="spark", verbose=False
         )

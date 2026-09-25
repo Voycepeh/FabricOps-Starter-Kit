@@ -90,7 +90,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "contract_id": "Stable identifier for the contract row.",
     "contract_version": "Version recorded for the contract row.",
     "contract_status": "Lifecycle status recorded for the contract row.",
-    "contract_payload_json": "Serialized contract payload stored for the row.",
+    "contract_payload_json": "Serialized governed Data Contract definition; mutable while draft and immutable once frozen.",
     "lineage_event_id": "Deterministic runtime lineage event identifier.",
     "activity_id": "Runtime Fabric activity identifier captured for the lineage row.",
     "notebook_id": "Fabric notebook identifier captured for the lineage row.",
@@ -225,12 +225,10 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_PROFILED": ["profile_table"],
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
-    "METADATA_ENRICHMENT": ["widget_data_contract"],
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "check_source_drift", "check_dq",
     ],
     "METADATA_SOURCE_OBSERVATION": ["pipeline_read"],
-    "METADATA_GUARDRAIL": ["widget_data_contract"],
 }
 
 
