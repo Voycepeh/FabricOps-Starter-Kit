@@ -1981,8 +1981,12 @@ def widget_data_contract(
             available = (
                 editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
             )
-            sensitive_ai.layout.display = "" if available else "none"
-            sensitive_ai_actions.layout.display = "" if available else "none"
+            sensitive_ai_panel.layout.display = "" if available else "none"
+            sensitive_editor.layout.grid_template_columns = (
+                "minmax(0, 68fr) minmax(240px, 32fr)"
+                if available
+                else "minmax(0, 1fr)"
+            )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
             )
@@ -2611,6 +2615,44 @@ def widget_data_contract(
                 ),
             ],
         )
+        sensitive_primary = widgets.VBox(
+            [
+                pii_type,
+                sensitive_treatment,
+                mask_start,
+                mask_end,
+                mask_character,
+                bucket_bins,
+                bucket_labels,
+                pii_reason,
+                sensitive_rule_preview,
+            ],
+            layout=widgets.Layout(width="100%", gap="8px"),
+        )
+        sensitive_ai_panel = widgets.VBox(
+            [
+                widgets.HTML(
+                    "<div style='color:#253858;font-size:13px;font-weight:600;'>"
+                    "AI suggestion</div>"
+                ),
+                sensitive_ai,
+                sensitive_ai_actions,
+            ],
+            layout=widgets.Layout(
+                width="100%", min_width="0", gap="8px",
+                padding="0 0 0 16px",
+                border_left="1px solid #e1e6eb",
+            ),
+        )
+        sensitive_editor = widgets.GridBox(
+            [sensitive_primary, sensitive_ai_panel],
+            layout=widgets.Layout(
+                width="100%",
+                grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                grid_gap="16px",
+                align_items="flex-start",
+            ),
+        )
         column_schema_row = widgets.HBox(
             [
                 widgets.HTML(
@@ -2665,17 +2707,7 @@ def widget_data_contract(
                         [sensitive_enabled, sensitive_block],
                         layout=checkbox_row_layout,
                     ),
-                    pii_type,
-                    pii_reason,
-                    sensitive_treatment,
-                    mask_start,
-                    mask_end,
-                    mask_character,
-                    bucket_bins,
-                    bucket_labels,
-                    sensitive_rule_preview,
-                    sensitive_ai,
-                    sensitive_ai_actions,
+                    sensitive_editor,
                 ],
             ),
             dq_panel,
