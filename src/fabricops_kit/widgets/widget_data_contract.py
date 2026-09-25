@@ -254,8 +254,12 @@ def widget_data_contract(
 
     Notes
     -----
-    Saves delegate to canonical Enrichment and Guardrail services, then reload the exact
-    contract version and manifest. Profile context remains read-only and is never added
+    Saves delegate to canonical Data Contract processing, Enrichment, and Guardrail
+    services, then reload the exact contract version and manifest. New draft processing is
+    initialized from the Engineering Catalogue when available, otherwise from the previous
+    Data Contract version, then defaults to overwrite. Catalogue-resolved processing is
+    read-only; inherited, defaulted, or manually saved processing remains editable.
+    Profile context remains read-only and is never added
     to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
