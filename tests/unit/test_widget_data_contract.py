@@ -286,6 +286,24 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["editor_shell"].layout.display == "none"
 
 
+def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
+    """Fallback processing stays editable and is saved on the exact draft."""
+    widget_runtime["contract"]["processing_json"] = '{"load_strategy":"overwrite"}'
+    widget_runtime["contract"]["processing_source"] = "previous_contract"
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert controls["load_strategy"].disabled is False
+    controls["load_strategy"].value = "append"
+    controls["table_save"].click()
+    controls["top_nav"].value = "Review"
+    controls["save_data_contract"].click()
+
+    assert widget_runtime["calls"]["processing"][-1] == {"load_strategy": "append"}
+    assert json.loads(widget_runtime["contract"]["processing_json"]) == {"load_strategy": "append"}
+    assert widget_runtime["contract"]["processing_source"] == "manual"
+
+
 def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():
     """Human review and notebook variables share an escaped canonical object."""
     payload = {
