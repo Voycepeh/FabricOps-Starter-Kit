@@ -301,13 +301,19 @@ def save_contract_processing(
         "processing_source": source,
         **audit,
     }
+    row = coerce_metadata_row_types(
+        DATA_CONTRACT_TABLE,
+        {**dict(draft), **change},
+    )
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - Fabric dependency
         raise RuntimeError("Delta Lake support is required to save Data Contract processing.") from exc
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
-    frame = spark_session.createDataFrame([change])
+    frame = spark_session.createDataFrame(
+        [row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]
+    )
     _, _, _, path = resolve_configured_lakehouse_table(
         store,
         DATA_CONTRACT_TABLE,
