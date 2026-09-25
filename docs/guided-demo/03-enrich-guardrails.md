@@ -41,7 +41,7 @@ Do not add rules only to make the screen look busy. The goal is to make it obvio
 
 **The Sensitive Data assistant proposes reviewable authoring state; it does not make a governance decision.**
 
-When AI Enrichment is enabled in `00_env_config`, the widget prepares Description, Classification, and Sensitive Data suggestions automatically for each editable context as you open it. The assistant uses the canonical Catalogue identity, Description and information Classification from `METADATA_ENRICHMENT`, and available `METADATA_DATA_PROFILED` profile evidence. It does not sample source rows for this feature.
+When AI Enrichment is enabled in `00_env_config`, the widget prepares Description and Sensitive Data suggestions for each editable context as you open it. Classification remains a manual Governance choice. The assistant uses the canonical Catalogue identity, the reviewed Description and information Classification from `METADATA_ENRICHMENT`, and available `METADATA_DATA_PROFILED` profile evidence. It does not sample source rows for this feature.
 
 For each column, review one of these assessments:
 
@@ -51,11 +51,11 @@ For each column, review one of these assessments:
 | **Indirect PII** | The supplied context supports that the column can identify or materially narrow down an individual when combined with other information. |
 | **Not PII** | The supplied context does not provide a defensible basis for treating the column as personally identifying. |
 
-AI suggestions remain visually separate from the editable contract. Choose **Accept** to copy only that Description, Classification, or Sensitive Data proposal into its corresponding editor; choose **Re-run** for new advice, or ignore the suggestion. For Direct or Indirect PII, the assistant can recommend an existing deterministic treatment—**Tokenize**, **Mask**, **Bucket**, or **Remove**—and a **Warn** or **Block** action. You can then edit the assessment, explanation, treatment parameters, and action, or disable the proposed rule before saving it.
+AI suggestions remain visually separate from the editable contract. Choose **Accept** to copy only that Description or Sensitive Data proposal into its corresponding editor; choose **Re-run** for new advice, or ignore the suggestion. For Direct or Indirect PII, the assistant can recommend an existing deterministic treatment—**Tokenize**, **Mask**, **Bucket**, or **Remove**—and a **Warn** or **Block** action. You can then edit the assessment, explanation, treatment parameters, and action, or disable the proposed rule before saving it.
 
 When you save a Direct or Indirect PII rule, FabricOps requires a reason and retains the reviewed PII assessment and reason inside that Sensitive Data Guardrail's parameters. This keeps the rationale reviewable without adding another metadata table; runtime enforcement still validates and executes only the supported deterministic treatment. A **Not PII** assessment remains authoring state and does not create an enforceable treatment.
 
-Manual Description changes mark the Classification and Sensitive Data suggestions as needing refresh. Manual Classification changes mark the Sensitive Data suggestion as needing refresh. The widget does not call AI while you type; use **Re-run** when you want refreshed advice based on the current unsaved Description and Classification.
+Manual Description or Classification changes mark dependent AI advice as needing refresh. Sensitive Data shows **Needs refresh**, and existing Data Quality suggestions are cleared so you can run them again against the updated context. The widget does not call AI while you type; use **Re-run** when you want refreshed advice based on the current unsaved Description and Classification.
 
 !!! important "Keep the three decisions distinct"
     **Confidential** is an information Classification, **Direct PII** describes identifying characteristics, and **Mask** is an enforceable Sensitive Data treatment. Classification can inform an assessment, but it does not create a Sensitive Data Guardrail automatically.

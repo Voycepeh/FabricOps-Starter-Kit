@@ -796,15 +796,16 @@ def widget_data_contract(
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
                 )
-                ai_state["table"]["description"] = {
-                    "value": result["Description"], "stale": False
-                }
+                previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
+                new_value = str(result["Description"])
+                ai_state["table"]["description"] = {"value": new_value, "stale": False}
+                if previous_value and new_value != previous_value:
+                    mark_all_sensitive_stale()
+                    invalidate_dq_suggestions("Table Description suggestion changed.")
                 ai_errors.pop("table_enrichment", None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                ai_state["table"].setdefault(
-                    "description", {"error": message, "stale": False}
-                )
+                ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
             render_table_ai()
@@ -1388,6 +1389,21 @@ def widget_data_contract(
                 )) or ""),
             )
 
+        def _effective_ai_description(column_id: str) -> str:
+            """Return the freshest Description context for dependent AI suggestions."""
+            description, _classification = _column_editable_values(column_id)
+            suggestion = ai_state["columns"].get(column_id, {}).get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or description)
+            return description
+
+        def _effective_table_ai_description() -> str:
+            """Return the freshest table Description context for dependent AI suggestions."""
+            suggestion = ai_state["table"].get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or table_description.value or "")
+            return str(table_description.value or "")
+
         def render_column_ai(column_id: str) -> None:
             suggestions = ai_state["columns"].get(column_id, {})
             if not ai_enrichment.get("enabled"):
@@ -1425,6 +1441,30 @@ def widget_data_contract(
             rerun_column_description.disabled = not available
             rerun_sensitive.disabled = not available
 
+        def invalidate_dq_suggestions(message: str) -> None:
+            """Clear DQ advice when any of its governed inputs change."""
+            if state["_ai_suggestions"][suggestion_scope].pop("dq", None) is not None:
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
+                dq_ai.value = (
+                    "<p><b>AI suggestions</b><br>"
+                    f"{html.escape(message)} Re-run suggestions to refresh them.</p>"
+                )
+
+        def mark_sensitive_stale(column_id: str) -> None:
+            """Mark one column's dependent Sensitive Data advice stale."""
+            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            if suggestion:
+                suggestion["stale"] = True
+
+        def mark_all_sensitive_stale() -> None:
+            """Mark all loaded column Sensitive Data suggestions stale."""
+            for column_suggestions in ai_state["columns"].values():
+                suggestion = column_suggestions.get("sensitive_data")
+                if suggestion:
+                    suggestion["stale"] = True
+
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not force and suggestions.get("description"):
@@ -1433,7 +1473,7 @@ def widget_data_contract(
             selected = next(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
-            description, _classification = _column_editable_values(column_id)
+            description, _ = _column_editable_values(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 result = suggest_enrichment(
@@ -1445,16 +1485,23 @@ def widget_data_contract(
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
                 )
-                suggestions["description"] = {"value": result["Description"], "stale": False}
+                previous_value = str(suggestions.get("description", {}).get("value") or "")
+                new_value = str(result["Description"])
+                suggestions["description"] = {"value": new_value, "stale": False}
+                if previous_value and new_value != previous_value:
+                    mark_sensitive_stale(column_id)
+                    invalidate_dq_suggestions("Description suggestion changed.")
                 ai_errors.pop((column_id, "enrichment"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                suggestions.setdefault("description", {"error": message, "stale": False})
+                suggestions["description"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "enrichment")] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
-        def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
+        def run_sensitive_ai(
+            column_id: str, *, force: bool = False, use_description_suggestion: bool = False
+        ) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not force and suggestions.get("sensitive_data"):
                 render_column_ai(column_id)
@@ -1463,6 +1510,8 @@ def widget_data_contract(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
             description, classification = _column_editable_values(column_id)
+            if use_description_suggestion:
+                description = _effective_ai_description(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
@@ -1473,7 +1522,11 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": table_description.value,
+                    "table_description": (
+                        _effective_table_ai_description()
+                        if use_description_suggestion
+                        else str(table_description.value or "")
+                    ),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
@@ -1513,7 +1566,7 @@ def widget_data_contract(
                 render_column_ai(column_id)
                 return
             run_column_enrichment_ai(column_id)
-            run_sensitive_ai(column_id)
+            run_sensitive_ai(column_id, use_description_suggestion=True)
 
         def accept_description_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
@@ -1545,26 +1598,63 @@ def widget_data_contract(
             lambda _button: run_sensitive_ai(str(column_select.value or ""), force=True)
         )
 
-        def description_changed(_change: dict[str, Any]) -> None:
+        def description_changed(change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
-            if suggestion:
-                suggestion["stale"] = True
+            suggestions = ai_state["columns"].get(column_id, {})
+            description_suggestion = suggestions.get("description")
+            new_value = str(change.get("new") or "")
+            if (
+                description_suggestion
+                and not description_suggestion.get("error")
+                and new_value == str(description_suggestion.get("value") or "")
+            ):
+                render_column_ai(column_id)
+                return
+            if description_suggestion:
+                description_suggestion["stale"] = True
+            mark_sensitive_stale(column_id)
+            invalidate_dq_suggestions("Description changed.")
             render_column_ai(column_id)
 
         def classification_changed(_change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            mark_sensitive_stale(column_id)
+            invalidate_dq_suggestions("Classification changed.")
+            render_column_ai(column_id)
+
+        def table_description_changed(change: dict[str, Any]) -> None:
+            suggestion = ai_state["table"].get("description")
+            new_value = str(change.get("new") or "")
+            if (
+                suggestion
+                and not suggestion.get("error")
+                and new_value == str(suggestion.get("value") or "")
+            ):
+                return
             if suggestion:
                 suggestion["stale"] = True
-            render_column_ai(column_id)
+            mark_all_sensitive_stale()
+            invalidate_dq_suggestions("Table Description changed.")
+            render_table_ai()
+            selected_id = str(column_select.value or "")
+            if selected_id:
+                render_column_ai(selected_id)
+
+        def table_classification_changed(_change: dict[str, Any]) -> None:
+            mark_all_sensitive_stale()
+            invalidate_dq_suggestions("Table Classification changed.")
+            selected_id = str(column_select.value or "")
+            if selected_id:
+                render_column_ai(selected_id)
 
         column_description.observe(description_changed, names="value")
         column_classification.observe(classification_changed, names="value")
+        table_description.observe(table_description_changed, names="value")
+        table_classification.observe(table_classification_changed, names="value")
 
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
@@ -1703,10 +1793,12 @@ def widget_data_contract(
                 profile = dict(profile_value.get("profile") or {})
                 context_payload = build_ai_dq_context({
                     "table_name": table.get("table_name"), "schema_name": table.get("schema_name"),
-                    "layer": table.get("layer"), "table_description": table_description.value,
+                    "layer": table.get("layer"), "table_description": _effective_table_ai_description(),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
-                        **selected, "description": column_description.value,
+                        **selected, "description": _effective_ai_description(
+                            str(selected.get("column_id") or "")
+                        ),
                         "classification": column_classification.value,
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
@@ -1733,6 +1825,10 @@ def widget_data_contract(
                     for item in suggestions
                 ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
         def accept_dq_clicked(_button: Any) -> None:
@@ -1877,16 +1973,16 @@ def widget_data_contract(
         )
         view_content["Columns"] = (column_left, column_right)
 
+        if ai_mode == "with_ai":
+            run_table_ai()
+        else:
+            render_table_ai()
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
             render_column_ai(str(column_select.value))
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
-        if ai_mode == "with_ai":
-            run_table_ai()
-        else:
-            render_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
