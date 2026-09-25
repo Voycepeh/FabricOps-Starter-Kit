@@ -145,6 +145,12 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
+    for row in guardrails:
+        row.update({
+            "contract_id": "contract-orders",
+            "contract_version": 1,
+            "environment_name": "dev",
+        })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
         "status": "unavailable", "schedules": [],
@@ -581,8 +587,8 @@ def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime)
     assert state["_controls"]["column_description"].value == "Unsaved local description"
 
 
-def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_runtime):
-    """Final Data Contract save persists staged column state then reloads canonical values once."""
+def test_final_save_returns_to_selector_after_persisting_canonical_draft(widget_runtime):
+    """Final Data Contract save persists staged state and completes the authoring cycle."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -598,7 +604,10 @@ def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_r
     state["_controls"]["save_data_contract"].click()
     assert widget_runtime["calls"]["enrichment"]
     assert state["dirty"] is False
-    assert state["_controls"]["column_description"].value == "Canonical saved description"
+    assert state["current"] is None
+    assert state["_controls"]["selector_panel"].layout.display != "none"
+    assert state["_controls"]["editor_shell"].layout.display == "none"
+    assert "draft saved" in state["message"]
 
 
 def test_live_edits_stage_without_writes_until_final_save(widget_runtime):
