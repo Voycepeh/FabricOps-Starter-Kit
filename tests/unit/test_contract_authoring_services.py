@@ -84,7 +84,42 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     assert first["agreement_id"] is None
     assert first["agreement_version"] is None
     assert first["contract_id"] == service.contract_lifecycle_id("orders", "dev")
+    assert json.loads(first["processing_json"]) == {"load_strategy": "overwrite"}
+    assert first["processing_source"] == "default"
     assert len(writes) == 1
+
+
+def test_initial_contract_processing_prefers_catalogue_then_previous_contract_then_default():
+    """New versions prefer current Engineering scan, then prior contract, then overwrite."""
+    catalogue = [{
+        "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
+        "load_strategy": "append", "load_strategy_parameters_json": "{}", "is_active": True,
+    }]
+    previous = [{
+        "contract_id": "c", "contract_version": 2, "environment_name": "dev",
+        "status": "frozen", "processing_json": '{"load_strategy":"scd1","key_columns":["id"]}',
+    }]
+
+    processing, source = service._initial_contract_processing(
+        table_id="orders", environment_name="dev",
+        catalogue_rows=catalogue, contract_rows=previous,
+    )
+    assert processing == {"load_strategy": "append"}
+    assert source == "catalogue"
+
+    processing, source = service._initial_contract_processing(
+        table_id="orders", environment_name="dev",
+        catalogue_rows=[{**catalogue[0], "load_strategy": None}], contract_rows=previous,
+    )
+    assert processing == {"load_strategy": "scd1", "key_columns": ["id"]}
+    assert source == "previous_contract"
+
+    processing, source = service._initial_contract_processing(
+        table_id="orders", environment_name="dev",
+        catalogue_rows=[{**catalogue[0], "load_strategy": None}], contract_rows=[],
+    )
+    assert processing == {"load_strategy": "overwrite"}
+    assert source == "default"
 
 
 @pytest.mark.parametrize("contract_id,version", [("", 1), ("c", 0), ("c", "bad")])
@@ -314,6 +349,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     draft = {
         "contract_id": "contract-orders", "contract_version": 1,
         "table_id": "orders", "environment_name": "dev", "status": "draft",
+        "processing_json": '{"load_strategy":"append"}', "processing_source": "catalogue",
     }
     tables = {
         "METADATA_DATA_CATALOGUE": [{
