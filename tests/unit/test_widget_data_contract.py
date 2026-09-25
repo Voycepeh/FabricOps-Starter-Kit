@@ -1383,3 +1383,35 @@ def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
     selected = next(item for item in payload["table"]["columns"] if item["column_id"] == "col-0")
     assert selected["data_type"] == "string"
     assert widget_runtime["calls"]["draft"] == []
+
+
+def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
+    """The Table summary reflects working Guardrail state before persistence."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    summary = controls["left_pane"].children[0]
+
+    assert "Freshness" in summary.value
+    controls["table_guardrails"]["freshness"]["enabled"].value = False
+    assert "Freshness" in summary.value
+    assert "Disabled" in summary.value
+    assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_review_shows_changes_since_last_save(widget_runtime):
+    """Review compares the working contract with the persisted draft baseline."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_classification"].value = "Restricted"
+    controls["table_save"].click()
+    controls["top_nav"].value = "Manifest & Freeze"
+
+    review = controls["right_pane"].children[0]
+    rendered = "".join(
+        str(getattr(child, "value", ""))
+        for child in getattr(review, "children", ())
+    )
+    assert "Changes since last save" in rendered
+    assert "Internal" in rendered
+    assert "Restricted" in rendered
+    assert widget_runtime["calls"]["draft"] == []
