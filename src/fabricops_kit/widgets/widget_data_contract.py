@@ -2446,7 +2446,7 @@ def widget_data_contract(
             "advanced_block": advanced_block, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
-            "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
+            "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
             "freeze": freeze_button if editable else None,
