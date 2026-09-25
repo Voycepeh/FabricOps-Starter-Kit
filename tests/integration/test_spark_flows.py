@@ -68,7 +68,7 @@ def active_contract_frame(spark_session, *, table_id, columns, guardrails):
         "agreement_version": "1.0.0",
         "table_id": table_id,
         "contract_payload_json": json.dumps(payload),
-        "status": "active",
+        "status": "frozen",
         "is_active": True,
     }])
 
