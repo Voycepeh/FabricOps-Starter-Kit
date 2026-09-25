@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from contextlib import redirect_stderr, redirect_stdout
 import ast
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from io import StringIO
 import importlib
