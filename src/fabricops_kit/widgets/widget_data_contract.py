@@ -254,11 +254,11 @@ def widget_data_contract(
 
     Notes
     -----
-    Saves delegate to canonical Data Contract processing, Enrichment, and Guardrail
-    services, then reload the exact contract version and manifest. New draft processing is
-    initialized from the Engineering Catalogue when available, otherwise from the previous
-    Data Contract version, then defaults to overwrite. Catalogue-resolved processing is
-    read-only; inherited, defaulted, or manually saved processing remains editable.
+    Save overwrites the complete canonical JSON for the selected draft version, then reloads
+    that exact version. A new draft is seeded from the previous frozen version when one exists.
+    Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
+    then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
+    or manually saved processing remains editable until the draft is frozen.
     Profile context remains read-only and is never added
     to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
@@ -297,7 +297,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
-        "_pending_enrichment": {}, "_pending_guardrails": {}, "_pending_processing": {}, "dirty": False,
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -425,7 +425,6 @@ def widget_data_contract(
         state["dirty"] = bool(
             state["_pending_enrichment"].get(scope)
             or state["_pending_guardrails"].get(scope)
-            or state["_pending_processing"].get(scope)
             or state["_column_drafts"].get(scope)
         )
         refresh_scheduled_refresh(str(state["table_id"] or ""))
@@ -546,55 +545,54 @@ def widget_data_contract(
         return records
 
     def stage_processing(processing: dict[str, Any]) -> dict[str, Any]:
-        """Stage Data Contract processing in widget session state without writing Metadata."""
+        """Stage processing inside the mutable draft JSON."""
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can edit processing.")
         normalized = contracts.validated_processing(dict(processing))
-        scope = (str(current["contract_id"]), int(current["contract_version"]))
-        pending = dict(normalized)
-        state["_pending_processing"][scope] = pending
-        source = str(current["contract"].get("processing_source") or "").strip()
-        if source != "catalogue" and normalized != contracts.contract_processing(current["contract"]):
-            source = "manual"
-        current["contract"]["processing_json"] = json.dumps(
-            normalized, sort_keys=True, separators=(",", ":")
+        payload = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
         )
-        current["contract"]["processing_source"] = source or "manual"
+        table_payload = payload.setdefault("table", {})
+        source = str(table_payload.get("processing_source") or "default")
+        if source == "catalogue" and normalized != contracts.contract_processing(current["contract"]):
+            raise ValueError("Catalogue-resolved processing is read-only in this Data Contract.")
+        if normalized != contracts.contract_processing(current["contract"]):
+            source = "manual"
+        table_payload["processing"] = normalized
+        table_payload["processing_source"] = source
+        current["contract"]["contract_payload_json"] = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        )
         state["dirty"] = True
         refresh_manifest()
-        return pending
+        return normalized
 
     def save_data_contract_session() -> None:
-        """Persist all staged draft changes once, then reload canonical state once."""
+        """Overwrite the selected draft JSON once, then reload canonical state once."""
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be saved.")
         scope = (str(current["contract_id"]), int(current["contract_version"]))
-        enrichment_records = list(state["_pending_enrichment"].get(scope, {}).values())
-        guardrail_records = list(state["_pending_guardrails"].get(scope, {}).values())
-        processing = state["_pending_processing"].get(scope)
-        if enrichment_records:
-            contracts.save_enrichment(
-                enrichment_records, config=config, env=env, spark_session=spark
-            )
-        if guardrail_records:
-            contracts.save_guardrails(
-                guardrail_records, config=config, env=env, spark_session=spark
-            )
-        if processing is not None:
-            contracts.save_contract_processing(
-                draft=current["contract"], processing=processing,
-                config=config, env=env, spark_session=spark, context=resolved,
-            )
+        payload = refresh_manifest()
+        if payload is None:
+            raise ValueError("Data Contract draft has no payload to save.")
+        saved = contracts.save_contract_draft(
+            draft=current["contract"],
+            payload=payload,
+            config=config,
+            env=env,
+            spark_session=spark,
+            context=resolved,
+        )
+        current["contract"] = saved
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
-        state["_pending_processing"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
-        set_status("Data Contract saved and canonical state reloaded.")
+        set_status("Data Contract draft saved.")
 
     def discard_data_contract_session() -> None:
         """Discard staged changes for the selected contract and reload canonical state."""
@@ -604,7 +602,6 @@ def widget_data_contract(
         scope = (str(current["contract_id"]), int(current["contract_version"]))
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
-        state["_pending_processing"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
@@ -786,7 +783,7 @@ def widget_data_contract(
         table_save = widgets.Button(description="Apply Table Changes", button_style="primary", disabled=not editable)
 
         processing = contracts.contract_processing(row)
-        processing_source = str(row.get("processing_source") or "").strip() or "default"
+        processing_source = contracts.contract_processing_source(row)
         processing_locked = processing_source == "catalogue"
         load_strategy_control = widgets.Dropdown(
             options=("overwrite", "append", "scd1", "scd2"),
@@ -2198,7 +2195,7 @@ def widget_data_contract(
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
             activate_button = widgets.Button(
                 description="Activate for Production",
-                disabled=str(row.get("status") or "").lower() not in {"frozen", "superseded"},
+                disabled=str(row.get("status") or "").lower() != "frozen" or row.get("is_active") is True,
             )
 
             def activate_clicked(_button: Any) -> None:
