@@ -738,13 +738,6 @@ def widget_data_contract(
         selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
-        def normalize_field_width(*controls: Any) -> None:
-            """Keep scalar authoring fields aligned without stretching across the whole pane."""
-            for control in controls:
-                control.layout.width = "100%"
-                control.layout.max_width = "560px"
-                control.layout.min_width = "0"
-
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
@@ -1159,13 +1152,16 @@ def widget_data_contract(
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
         accept_dq_suggestion = widgets.Button(description="Apply selected suggestion", disabled=True)
         dq_ai = widgets.HTML()
-        normalize_field_width(
+        for control in (
             table_description, table_classification,
             column_description, column_classification,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
             dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
-        )
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
@@ -1918,10 +1914,13 @@ def widget_data_contract(
         advanced_help = widgets.HTML()
         advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
-        normalize_field_width(
+        for control in (
             advanced_type, advanced_saved, advanced_columns, advanced_operator,
             custom_expression, custom_description,
-        )
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
         advanced_type.layout.height = "120px"
         advanced_saved.layout.height = "120px"
         advanced_columns.layout.height = "150px"
