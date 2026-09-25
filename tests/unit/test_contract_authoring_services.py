@@ -501,6 +501,17 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
             "table_id": "orders", "column_id": "amount", "environment_name": "PROD",
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 8, "distinct_percent": 6.667,
+            "min_value": "29.9", "max_value": "438.6",
+            "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
+            "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
+        },
+        {
+            "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "table_id": "orders", "column_id": "customer_id", "environment_name": "PROD",
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 120, "distinct_percent": 100.0,
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
             "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
         },
@@ -548,6 +559,17 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
+    }
+    assert context["column_profiles"] == {
+        "amount": {
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 8, "distinct_percent": 6.667,
+            "min_value": "29.9", "max_value": "438.6",
+        },
+        "customer_id": {
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 120, "distinct_percent": 100.0,
+        },
     }
     assert context["writer_count"] == 1
     assert context["reader_count"] == 1
