@@ -1808,15 +1808,17 @@ def widget_data_contract(
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
         )
-        suggest_dq = widgets.Button(
-            description="Suggest rules",
-            disabled=(
-                not editable
-                or not ai_enrichment.get("enabled")
-                or ai_mode != "with_ai"
-            ),
+        dq_ai_instruction = widgets.Textarea(
+            value="",
+            disabled=True,
+            placeholder="Optional: describe the business rule to translate into a Pattern or Range.",
+            **shared.widget_common(widgets, "Additional instruction", textarea=True),
         )
-        dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
+        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0", height="72px")
+        suggest_dq = widgets.Button(description="Suggest", disabled=True)
+        dq_suggestion = widgets.Select(
+            options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions")
+        )
         accept_dq_suggestion = widgets.Button(description="Apply", disabled=True)
         dq_ai = widgets.HTML()
         for control in (
@@ -2633,8 +2635,11 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def suggest_dq_clicked(_button: Any) -> None:
-            """Generate transient standard-rule advice and hydrate controls only on apply."""
+            """Generate Pattern or Range advice and hydrate controls only on apply."""
             try:
+                requested_type = str(dq_type.value or "")
+                if requested_type not in {"pattern", "range"}:
+                    raise ValueError("AI assistance is available only for Pattern and Range.")
                 selected = selected_column()
                 profile_value = load_profile_context(str(selected.get("column_id") or ""))
                 profile = dict(profile_value.get("profile") or {})
@@ -2663,9 +2668,26 @@ def widget_data_contract(
                         ],
                     }],
                 })
-                suggestions = suggest_dq_rules(
-                    context_payload, prompt=str(ai_enrichment.get("dq_prompt") or ""),
+                user_instruction = str(dq_ai_instruction.value or "").strip()
+                family_instruction = (
+                    f"Suggest only one {requested_type} rule for the selected column. "
+                    "Do not return any other Data Quality rule family."
                 )
+                if user_instruction:
+                    family_instruction += (
+                        "\nAdditional author instruction:\n" + user_instruction
+                    )
+                prompt_value = (
+                    str(ai_enrichment.get("dq_prompt") or "").strip()
+                    + "\n\n"
+                    + family_instruction
+                )
+                suggestions = [
+                    item for item in suggest_dq_rules(
+                        context_payload, prompt=prompt_value,
+                    )
+                    if str(item.get("rule_type") or "") == requested_type
+                ]
                 state["_ai_suggestions"][suggestion_scope]["dq"] = suggestions
                 dq_suggestion.options = [
                     (f"{item['rule_type']} · {item['columns'][0]}", str(index))
@@ -2713,8 +2735,38 @@ def widget_data_contract(
         for control in (dq_type, *dq_parameter_controls, dq_enabled, dq_block):
             control.observe(sync_dq, names="value")
 
+        def refresh_dq_ai_controls(_change: dict[str, Any] | None = None) -> None:
+            supported = str(dq_type.value or "") in {"pattern", "range"}
+            available = bool(
+                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
+            )
+            enabled = supported and available
+            dq_ai_instruction.disabled = not enabled
+            suggest_dq.disabled = not enabled
+            if supported:
+                family = "Pattern" if dq_type.value == "pattern" else "Range"
+                dq_ai_instruction.placeholder = (
+                    f"Optional: describe the business rule for this {family}."
+                )
+                if not state["_ai_suggestions"][suggestion_scope].get("dq"):
+                    dq_ai.value = (
+                        f"<p>Use AI to translate business intent into a {family} rule, "
+                        "then choose <b>Apply</b> and edit the populated fields if needed.</p>"
+                    )
+            else:
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
+                dq_ai.value = (
+                    "<p>Completeness and Allowed Values are configured directly; "
+                    "AI assistance is reserved for Pattern and Range.</p>"
+                )
+
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        dq_type.observe(refresh_dq_ai_controls, names="value")
+        refresh_dq_ai_controls()
         def rebuild_column_options() -> None:
             nonlocal column_options
             column_options = [
@@ -2807,7 +2859,8 @@ def widget_data_contract(
         )
         dq_ai_panel = widgets.VBox(
             [
-                widgets.HTML("<b>AI suggestion</b>"),
+                widgets.HTML("<b>AI assistant</b>"),
+                dq_ai_instruction,
                 dq_suggestion,
                 dq_ai,
                 shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
@@ -3360,6 +3413,7 @@ def widget_data_contract(
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
             "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
             "suggest_dq": suggest_dq, "dq_ai": dq_ai,
+            "dq_ai_instruction": dq_ai_instruction,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,
