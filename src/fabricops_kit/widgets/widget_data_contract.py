@@ -889,8 +889,8 @@ def widget_data_contract(
 
         def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
             strategy = str(load_strategy_control.value or "overwrite")
-            partition_column_control.layout.display = "" if strategy == "overwrite" else "none"
-            watermark_column_control.layout.display = "" if strategy in {"overwrite", "append", "scd1", "scd2"} else "none"
+            partition_column_control.layout.display = "" if strategy == "append" else "none"
+            watermark_column_control.layout.display = "" if strategy in {"append", "scd1", "scd2"} else "none"
             key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
             effective_column_control.layout.display = "" if strategy == "scd2" else "none"
             tracked_columns_control.layout.display = "" if strategy == "scd2" else "none"
@@ -898,10 +898,11 @@ def widget_data_contract(
         def build_processing() -> dict[str, Any]:
             strategy = str(load_strategy_control.value or "").strip()
             value: dict[str, Any] = {"load_strategy": strategy}
-            watermark = str(watermark_column_control.value or "").strip()
-            if watermark:
-                value["watermark_column"] = watermark
-            if strategy == "overwrite":
+            if strategy in {"append", "scd1", "scd2"}:
+                watermark = str(watermark_column_control.value or "").strip()
+                if watermark:
+                    value["watermark_column"] = watermark
+            if strategy == "append":
                 partition = str(partition_column_control.value or "").strip()
                 if partition:
                     value["partition_column"] = partition
