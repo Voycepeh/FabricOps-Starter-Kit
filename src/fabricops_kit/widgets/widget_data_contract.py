@@ -1657,7 +1657,8 @@ def widget_data_contract(
                 hydrate_column(selected_id)
                 if str(top_nav.value) == "Columns":
                     load_selected_profile()
-                prepare_column_ai(selected_id)
+                if not state.get("_opening_with_ai"):
+                    prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
 
@@ -2618,16 +2619,15 @@ def widget_data_contract(
             manifest_preview.value = refreshed_sections["Review"]
             change_preview.value = review_change_html()
         state["_refresh_review"] = refresh_review
-        exact_json = shared.preview_region(
-            widgets, widgets.HTML(
-                f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
-            ), height="240px",
+        exact_json_content = widgets.HTML(
+            f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
         )
+        exact_json = shared.preview_region(widgets, exact_json_content, height="240px")
         refresh_review_base = refresh_review
 
         def refresh_review() -> None:
             refresh_review_base()
-            exact_json.children[0].value = (
+            exact_json_content.value = (
                 "<details><summary>Exact JSON manifest</summary><pre>"
                 + html.escape(_expose_manifest(payload))
                 + "</pre></details>"
