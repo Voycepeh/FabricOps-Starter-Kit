@@ -3118,7 +3118,7 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                         f"DQ rule '{rule['rule_id']}' reference-backed value_set requires "
                         "reference_table_id and reference_column."
                     )
-                if rule.get("values") not in (None, []):
+                if rule.get("values") not in (None, []) and not rule.get("_reference_values_resolved"):
                     raise ValueError(
                         f"DQ rule '{rule['rule_id']}' cannot combine inline values with a reference."
                     )
@@ -3289,6 +3289,7 @@ def _resolve_reference_value_sets(
             raise ValueError(
                 f"Reference table {table_id!r} column {column!r} contains no allowed values."
             )
+        rule["_reference_values_resolved"] = True
         resolved.append(rule)
     return resolved
 
