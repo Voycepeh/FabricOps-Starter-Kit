@@ -765,6 +765,7 @@ def widget_data_contract(
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
+        column_names = [str(column.get("column_name") or "") for column in columns]
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -779,6 +780,91 @@ def widget_data_contract(
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
         table_save = widgets.Button(description="Apply Table Changes", button_style="primary", disabled=not editable)
+
+        processing = contracts.contract_processing(row)
+        processing_source = str(row.get("processing_source") or "").strip() or "default"
+        processing_locked = processing_source == "catalogue"
+        load_strategy_control = widgets.Dropdown(
+            options=("overwrite", "append", "scd1", "scd2"),
+            value=str(processing.get("load_strategy") or "overwrite"),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Load strategy"),
+        )
+        load_strategy_control.layout = compact_field_layout
+        processing_source_labels = {
+            "catalogue": "Resolved from Engineering Catalogue · read-only",
+            "previous_contract": "Inherited from the previous Data Contract version",
+            "default": "No scan or prior contract value found · defaulted to overwrite",
+            "manual": "Saved on this Data Contract draft",
+        }
+        processing_source_hint = widgets.HTML(
+            "<span style='color:#666;font-size:12px;'>"
+            + html.escape(processing_source_labels.get(processing_source, "Saved on this Data Contract"))
+            + "</span>"
+        )
+        partition_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("partition_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Partition column"),
+        )
+        watermark_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("watermark_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Watermark column"),
+        )
+        key_columns_control = widgets.SelectMultiple(
+            options=column_names,
+            value=tuple(value for value in processing.get("key_columns", []) if value in column_names),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Key columns"),
+        )
+        effective_column_control = widgets.Dropdown(
+            options=["", *column_names],
+            value=str(processing.get("effective_column") or ""),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Effective column"),
+        )
+        tracked_columns_control = widgets.SelectMultiple(
+            options=column_names,
+            value=tuple(value for value in processing.get("tracked_columns", []) if value in column_names),
+            disabled=not editable or processing_locked,
+            **shared.widget_common(widgets, "Tracked columns"),
+        )
+        processing_parameter_controls = (
+            partition_column_control, watermark_column_control, key_columns_control,
+            effective_column_control, tracked_columns_control,
+        )
+
+        def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
+            strategy = str(load_strategy_control.value or "overwrite")
+            partition_column_control.layout.display = "" if strategy == "overwrite" else "none"
+            watermark_column_control.layout.display = "" if strategy in {"overwrite", "append", "scd1", "scd2"} else "none"
+            key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
+            effective_column_control.layout.display = "" if strategy == "scd2" else "none"
+            tracked_columns_control.layout.display = "" if strategy == "scd2" else "none"
+
+        def build_processing() -> dict[str, Any]:
+            strategy = str(load_strategy_control.value or "").strip()
+            value: dict[str, Any] = {"load_strategy": strategy}
+            watermark = str(watermark_column_control.value or "").strip()
+            if watermark:
+                value["watermark_column"] = watermark
+            if strategy == "overwrite":
+                partition = str(partition_column_control.value or "").strip()
+                if partition:
+                    value["partition_column"] = partition
+            if strategy in {"scd1", "scd2"}:
+                value["key_columns"] = [str(item) for item in key_columns_control.value]
+            if strategy == "scd2":
+                value["effective_column"] = str(effective_column_control.value or "").strip()
+                if tracked_columns_control.value:
+                    value["tracked_columns"] = [str(item) for item in tracked_columns_control.value]
+            return contracts.validated_processing(value)
+
+        load_strategy_control.observe(update_processing_controls, names="value")
+        update_processing_controls()
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
@@ -852,7 +938,6 @@ def widget_data_contract(
             existing_parameters = _parameters(existing)
             enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
             block = widgets.Checkbox(value=str(existing.get("action") or "Warn") == "Block", description="Block on failure", disabled=not editable)
-            column_names = [str(column.get("column_name") or "") for column in columns]
             parameter_controls: list[Any] = []
             if kind == "freshness":
                 freshness_column = widgets.Dropdown(
@@ -890,15 +975,6 @@ def widget_data_contract(
                 )
                 change_column.layout = compact_field_layout
                 parameter_controls = [partition_column, change_column]
-                if not str(table.get("load_strategy") or "").strip():
-                    source_load_strategy = widgets.Dropdown(
-                        options=("overwrite", "append", "scd1", "scd2"),
-                        value=str(existing_parameters.get("load_strategy") or "") or None,
-                        disabled=not editable,
-                        **shared.widget_common(widgets, "Source load strategy"),
-                    )
-                    source_load_strategy.layout = compact_field_layout
-                    parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
@@ -927,8 +1003,6 @@ def widget_data_contract(
                         "partition_column": str(controls[0].value or "").strip(),
                         "change_column": str(controls[1].value or "").strip(),
                     }
-                    if len(controls) > 2:
-                        parameters["load_strategy"] = str(controls[2].value or "").strip()
                 if enabled_control.value and any(value in {"", None} for value in parameters.values()):
                     raise ValueError(f"{rule_title} requires all governed configuration fields.")
                 return guardrail_record(
@@ -965,6 +1039,7 @@ def widget_data_contract(
                     )
                     if record is not None
                 ]
+                stage_processing(build_processing())
                 stage_enrichment(enrichment_records)
                 if guardrail_records:
                     stage_guardrails(guardrail_records)
@@ -1017,8 +1092,8 @@ def widget_data_contract(
                 html.escape(str(table.get("layer") or "")),
             )
         )
-        processing = (state.get("manifest") or {}).get("table", {}).get("processing", {})
-        load_strategy = str(processing.get("load_strategy") or table.get("load_strategy") or "Not configured").upper()
+        processing = contracts.contract_processing(row)
+        load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
         pipeline_refresh = widgets.HTML(
             "<div><b>Load strategy</b><br>"
             f"{html.escape(load_strategy)}</div><br>"
@@ -1042,6 +1117,18 @@ def widget_data_contract(
             change_table_button,
         )
         table_right = (
+            widgets.VBox(
+                [
+                    widgets.HTML("<div style='font-weight:600;'>Processing</div>"),
+                    load_strategy_control,
+                    processing_source_hint,
+                    *processing_parameter_controls,
+                ],
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
+            ),
             widgets.VBox(
                 [table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
