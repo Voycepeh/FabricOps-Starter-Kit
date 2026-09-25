@@ -35,6 +35,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_dq.check_dq",
     "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
     "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
+    "fabricops_kit.pipeline.validate_data_contract.validate_data_contract",
     "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
     "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
 )

@@ -197,6 +197,10 @@ def check_schema(
             guardrail_type="schema",
             rule_type=str(result.get("rule_type")),
             result=result,
+            table_id=table_id,
+            contract_id=str(contract.get("contract_id") or ""),
+            contract_version=int(contract.get("contract_version") or 0),
+            execution_type="runtime",
         )
     print_guardrail_result(
         "Schema",

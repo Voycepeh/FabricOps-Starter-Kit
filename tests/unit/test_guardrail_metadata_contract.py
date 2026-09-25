@@ -36,6 +36,10 @@ _RESULT_COLUMNS = [
     "guardrail_result_id",
     "guardrail_rule_id",
     "guardrail_version",
+    "table_id",
+    "contract_id",
+    "contract_version",
+    "execution_type",
     "run_id",
     "environment_name",
     "status",
@@ -103,8 +107,7 @@ def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
 
     assert {"contract_id", "contract_version", "column_id"} <= guardrail_fields
     assert "table_id" not in guardrail_fields
-    assert {"guardrail_rule_id", "guardrail_version"} <= result_fields
-    assert "table_id" not in result_fields
+    assert {"guardrail_rule_id", "guardrail_version", "table_id", "contract_id", "contract_version"} <= result_fields
     assert "column_id" not in result_fields
 
 
@@ -225,6 +228,9 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
             "reason": "Rule passed.",
             "expected": {"b": 2, "a": 1},
         },
+        table_id="table-a",
+        contract_id="contract-a",
+        contract_version=2,
     )
 
     table_name, row = writes[0]
@@ -233,6 +239,10 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     assert row["guardrail_rule_id"] == "rule-1"
     assert row["guardrail_version"] == 3
     assert row["run_id"] == "run-1"
+    assert row["execution_type"] == "runtime"
+    assert row["table_id"] == "table-a"
+    assert row["contract_id"] == "contract-a"
+    assert row["contract_version"] == 2
     assert json.loads(row["result_payload_json"])["expected"] == {"a": 1, "b": 2}
     assert "metadata_table_key" not in row
     assert "rule_key" not in row

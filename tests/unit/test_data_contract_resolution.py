@@ -130,7 +130,7 @@ def test_exact_contract_version_filters_and_limits_before_collect(monkeypatch):
         ],
     )
 
-    resolved = shared._resolve_data_contract_version(
+    resolved = shared.resolve_data_contract_version(
         object(), "dev", "table-a", "contract-a", 1
     )
 
@@ -152,11 +152,20 @@ def test_duplicate_exact_contract_versions_still_raise(monkeypatch):
     )
 
     with pytest.raises(RuntimeError, match="duplicate version rows"):
-        shared._resolve_data_contract_version(
+        shared.resolve_data_contract_version(
             object(), "dev", "table-a", "contract-a", 1
         )
 
     assert ("limit", 2) in frame.operations
+
+
+def test_exact_contract_version_rejects_draft(monkeypatch):
+    install_contract_frame(monkeypatch, [contract_row(status="draft", is_active=False)])
+
+    with pytest.raises(ValueError, match="must be frozen"):
+        shared.resolve_data_contract_version(
+            object(), "dev", "table-a", "contract-a", 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -173,6 +182,6 @@ def test_exact_resolution_preserves_non_matching_errors(
     install_contract_frame(monkeypatch, rows)
 
     with pytest.raises(ValueError, match=message):
-        shared._resolve_data_contract_version(
+        shared.resolve_data_contract_version(
             object(), "dev", table_id, contract_id, version
         )

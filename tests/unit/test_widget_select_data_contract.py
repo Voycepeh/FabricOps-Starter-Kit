@@ -113,7 +113,7 @@ def test_development_deselect_clears_contract_and_restores_skip(monkeypatch):
     """Keep the No Data Contract option and runtime enforcement state aligned."""
     context, state = _render(monkeypatch, [_row(2), _row(1, table_id="table-b")])
     monkeypatch.setattr(
-        pipeline_shared, "_resolve_data_contract_version",
+        pipeline_shared, "resolve_data_contract_version",
         lambda *_args, **_kwargs: {"contract_id": "contract-table-a", "contract_version": 2},
     )
 

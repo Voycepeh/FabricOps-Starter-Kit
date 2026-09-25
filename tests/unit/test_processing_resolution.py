@@ -59,7 +59,7 @@ def test_development_uses_current_notebook_authoring_without_catalogue(monkeypat
 
 
 def test_development_override_uses_frozen_contract(monkeypatch):
-    monkeypatch.setattr(shared, "_resolve_data_contract_version", lambda *args, **kwargs: contract())
+    monkeypatch.setattr(shared, "resolve_data_contract_version", lambda *args, **kwargs: contract())
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students",
         context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
@@ -80,7 +80,7 @@ def test_development_override_uses_frozen_contract(monkeypatch):
     ],
 )
 def test_development_override_rejects_engineering_processing_drift(monkeypatch, authored):
-    monkeypatch.setattr(shared, "_resolve_data_contract_version", lambda *args, **kwargs: contract())
+    monkeypatch.setattr(shared, "resolve_data_contract_version", lambda *args, **kwargs: contract())
     with pytest.raises(ValueError, match="Processing mismatch detected.*Engineering proposes"):
         shared.resolve_table_processing_definition(
             object(), "dev", "students",

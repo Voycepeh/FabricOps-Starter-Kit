@@ -152,6 +152,9 @@ def check_dq(
         run_id=run_id,
         row_identity_columns=row_identity_columns,
         context=context,
+        contract_id=str(contract.get("contract_id") or ""),
+        contract_version=int(contract.get("contract_version") or 0),
+        execution_type="runtime",
     )
     print_guardrail_result(
         "Data Quality",

@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.
+Store aggregate runtime and preflight Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.
 
 ## Writer functions
 
@@ -19,7 +19,7 @@ Store runtime Guardrail summaries and continuation decisions; caller-owned faile
 
 **Default physical schema:** `engineering`
 
-**Grain:** One runtime outcome for one Guardrail rule in one pipeline run.
+**Grain:** One Guardrail outcome for one exact Data Contract version in one runtime or preflight execution.
 
 **Primary key:** `guardrail_result_id`
 
@@ -32,17 +32,21 @@ via `guardrail_rule_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 18 |
-| Business columns | 10 |
+| Total columns | 22 |
+| Business columns | 14 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Description |
 | --- | --- | --- |
-| `guardrail_result_id` | `string` | Stable identifier for the runtime guardrail result row. |
+| `guardrail_result_id` | `string` | Stable identifier for the aggregate Guardrail result row. |
 | `guardrail_rule_id` | `string` | Stable identifier for the guardrail rule row. |
 | `guardrail_version` | `integer` | Metadata Guardrail Results field `guardrail_version`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `contract_id` | `string` | Stable identifier for the contract row. |
+| `contract_version` | `integer` | Version recorded for the contract row. |
+| `execution_type` | `string` | Whether the Guardrail outcome came from runtime enforcement or preflight validation. |
 | `run_id` | `string` | Identifier stored for `run_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |

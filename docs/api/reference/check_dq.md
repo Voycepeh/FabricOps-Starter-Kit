@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L175">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L178">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

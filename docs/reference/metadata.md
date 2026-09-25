@@ -424,10 +424,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.</span>
+  <span class="metadata-table-card__purpose">Store aggregate runtime and preflight Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One runtime outcome for one Guardrail rule in one pipeline run.</span>
+    <span>One Guardrail outcome for one exact Data Contract version in one runtime or preflight execution.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

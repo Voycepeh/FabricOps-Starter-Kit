@@ -1007,6 +1007,9 @@ def check_source_drift_for_target(
             guardrail_type="source_drift",
             rule_type="historical_mutation",
             result=result,
+            table_id=source_table_id,
+            contract_id=str(selected_rule.get("contract_id") or ""),
+            contract_version=int(selected_rule.get("contract_version") or 0),
         )
     if raise_on_failure and not result.get("can_continue", False):
         raise RuntimeError(str(result.get("reason") or "Source Drift check failed."))
@@ -1130,9 +1133,13 @@ def write_guardrail_result_row(
     result: dict[str, Any],
     rule_key: str = "",
     column_name: str = "",
+    table_id: str = "",
+    contract_id: str = "",
+    contract_version: int = 0,
+    execution_type: str = "runtime",
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
-    """Append one runtime outcome for one exact Guardrail revision."""
+    """Append one aggregate outcome for one exact contract and Guardrail revision."""
     del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
@@ -1153,6 +1160,10 @@ def write_guardrail_result_row(
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
+        "table_id": str(table_id or result.get("table_id") or "").strip(),
+        "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
+        "contract_version": int(contract_version or result.get("contract_version") or 0),
+        "execution_type": str(execution_type or "runtime").strip().lower(),
         "run_id": resolved_run_id,
         "environment_name": env,
         "status": str(result.get("status") or "not_run"),
@@ -1625,7 +1636,7 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
     return row
 
 
-def _resolve_data_contract_version(
+def resolve_data_contract_version(
     config,
     env: str,
     table_id: str,
@@ -1674,7 +1685,7 @@ def _resolve_data_contract_version(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
     if str(row.get("status") or "").strip().lower() not in {"frozen", "active", "superseded"}:
-        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before Development testing.")
+        raise ValueError(f"Data Contract {contract_id!r} version {requested_version} must be frozen before validation.")
     row["contract_payload"] = _contract_payload(row)
     return row
 
@@ -1707,7 +1718,7 @@ def resolve_pipeline_data_contract(
         )
     if not contract_id:
         return None
-    return _resolve_data_contract_version(
+    return resolve_data_contract_version(
         config, env, table_id, contract_id, version,
         spark_session=spark_session, context=context,
     )
@@ -1957,7 +1968,7 @@ def resolve_table_processing_definition(
         if bool(contract_id) != bool(str(version or "").strip()):
             raise ValueError("Development Data Contract override requires both contract_id and contract_version.")
         if contract_id:
-            contract = _resolve_data_contract_version(
+            contract = resolve_data_contract_version(
                 config, env, table_id, contract_id, version,
                 spark_session=spark_session, context=context,
             )
@@ -3141,6 +3152,8 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
                 "rule_id": str(row.get("rule_id") or ""),
                 "guardrail_rule_id": str(row.get("guardrail_rule_id") or row.get("rule_id") or ""),
                 "guardrail_version": int(row.get("guardrail_version") or row.get("configuration_version") or 1),
+                "contract_id": str(row.get("contract_id") or ""),
+                "contract_version": int(row.get("contract_version") or 0),
                 "rule_key": str(row.get("rule_key") or row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
@@ -3166,6 +3179,10 @@ def check_dq_runtime(
     run_id: str = "",
     row_identity_columns: list[str] | None = None,
     context: Mapping[str, Any] | None = None,
+    rules_df: Any = None,
+    contract_id: str = "",
+    contract_version: int = 0,
+    execution_type: str = "runtime",
 ) -> dict[str, Any]:
     """Evaluate governed DQ rules, persist summaries, and return failed values."""
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -3178,9 +3195,11 @@ def check_dq_runtime(
     missing_identities = [name for name in identities if name not in source_columns]
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
-    metadata_df = load_table_guardrail_rules(
-        config, env, spark_session=spark_session, table_id=table_id, context=context,
-    )
+    metadata_df = rules_df
+    if metadata_df is None:
+        metadata_df = load_table_guardrail_rules(
+            config, env, spark_session=spark_session, table_id=table_id, context=context,
+        )
     rules = (
         []
         if isinstance(metadata_df, list) and not metadata_df
@@ -3224,10 +3243,13 @@ def check_dq_runtime(
             "guardrail_result_id": result_ids[rule["rule_id"]],
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "guardrail_version": rule["guardrail_version"],
+            "table_id": table_id,
+            "contract_id": str(contract_id or rule.get("contract_id") or ""),
+            "contract_version": int(contract_version or rule.get("contract_version") or 0),
+            "execution_type": execution_type,
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "table_id": table_id,
             "environment_name": env,
             "dataset_name": dataset_name,
             "table_name": table_name,
