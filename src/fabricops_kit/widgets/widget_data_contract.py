@@ -1054,12 +1054,11 @@ def widget_data_contract(
         )
         table_right = (
             widgets.VBox(
-                [widgets.HTML("<div style='font-weight:600;'>Classification</div>"), table_classification],
+                [table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
             ),
             widgets.VBox(
                 [
-                    widgets.HTML("<div style='font-weight:600;'>Description</div>"),
                     table_description, table_description_ai,
                     shared.form_grid(widgets, [accept_table_description, rerun_table_description]),
                 ],
