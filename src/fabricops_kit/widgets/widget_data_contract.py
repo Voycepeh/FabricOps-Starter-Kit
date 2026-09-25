@@ -392,7 +392,8 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
-        "_pending_enrichment": {}, "_pending_guardrails": {}, "dirty": False,
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
+        "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -503,6 +504,7 @@ def widget_data_contract(
         return payload
 
     def select(selected_table: str, version: int | None = None) -> dict[str, Any] | None:
+        state["_validation_errors"].clear()
         state["table_id"] = str(selected_table or "").strip() or None
         matches = [
             row for row in state["contracts"]
@@ -767,9 +769,15 @@ def widget_data_contract(
     ) -> dict[str, Any]:
         current = state["current"]
         old = dict(existing or {})
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        old_id = str(old.get("guardrail_rule_id") or "")
+        pending = state["_pending_guardrails"].get(scope, {})
+        version = int(old.get("guardrail_version") or 0)
+        if not old_id or old_id not in pending:
+            version += 1
         return {
             "guardrail_rule_id": old.get("guardrail_rule_id") or str(uuid.uuid4()),
-            "guardrail_version": int(old.get("guardrail_version") or 0) + 1,
+            "guardrail_version": version,
             "contract_id": current["contract_id"], "contract_version": current["contract_version"],
             "environment_name": env, "column_id": column_id,
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
@@ -796,6 +804,13 @@ def widget_data_contract(
 
         def session_guardrails() -> list[dict[str, Any]]:
             return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
+
+        def set_validation_error(key: str, error: Exception | str | None = None) -> None:
+            errors: dict[str, str] = state["_validation_errors"]
+            if error is None:
+                errors.pop(key, None)
+            else:
+                errors[key] = str(error)
 
         columns = sorted(
             list(current.get("available_columns", [])),
@@ -839,7 +854,6 @@ def widget_data_contract(
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
-        table_save = widgets.Button(description="Apply Table Changes", button_style="primary", disabled=not editable)
 
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
@@ -1160,7 +1174,6 @@ def widget_data_contract(
                     change_column,
                     source_drift_rule_preview,
                 ]
-            save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
             def build_table_rule_record(
                 *, rule_kind: str = kind,
@@ -1197,45 +1210,60 @@ def widget_data_contract(
                     action="Block" if block_control.value else "Warn", active=enabled_control.value,
                 )
 
-            def save_table_rule(
-                _button: Any, builder: Any = build_table_rule_record, rule_title: str = title,
-            ) -> None:
-                try:
-                    record = builder()
-                    if record is not None:
-                        stage_guardrails([record])
-                        set_status(f"{rule_title} changes staged locally.")
-                except (TypeError, ValueError, RuntimeError) as exc:
-                    set_status(str(exc), error=True)
-
-            save.on_click(save_table_rule)
             table_rules[kind] = {
                 "enabled": enabled, "parameters": parameter_controls,
                 "display": display_controls,
-                "block": block, "save": save, "build_record": build_table_rule_record,
+                "block": block, "build_record": build_table_rule_record,
             }
-        def save_table(_button: Any) -> None:
+        def sync_table_enrichment(_change: dict[str, Any] | None = None) -> None:
+            if not editable:
+                return
             try:
-                enrichment_records = [
+                stage_enrichment([
                     enrichment_record("table", "Description", table_description.value),
                     enrichment_record("table", "Classification", table_classification.value),
-                ]
-                guardrail_records = [
-                    record for record in (
-                        table_rules["freshness"]["build_record"](),
-                        table_rules["source_drift"]["build_record"](),
-                    )
-                    if record is not None
-                ]
-                stage_processing(build_processing())
-                stage_enrichment(enrichment_records)
-                if guardrail_records:
-                    stage_guardrails(guardrail_records)
-                set_status("Table changes staged locally. Save the Data Contract from Review to persist.")
+                ])
+                set_validation_error("table.enrichment")
             except (TypeError, ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                set_validation_error("table.enrichment", exc)
 
-        table_save.on_click(save_table)
+        def sync_table_processing(_change: dict[str, Any] | None = None) -> None:
+            if not editable:
+                return
+            try:
+                stage_processing(build_processing())
+                set_validation_error("table.processing")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error("table.processing", exc)
+
+        def sync_table_rule(
+            rule_kind: str, _change: dict[str, Any] | None = None,
+        ) -> None:
+            if not editable:
+                return
+            try:
+                record = table_rules[rule_kind]["build_record"]()
+                if record is not None:
+                    stage_guardrails([record])
+                set_validation_error(f"table.{rule_kind}")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error(f"table.{rule_kind}", exc)
+
+        for control in (table_description, table_classification):
+            control.observe(sync_table_enrichment, names="value")
+        for control in (load_strategy_control, *processing_parameter_controls):
+            control.observe(sync_table_processing, names="value")
+        for rule_kind, rule_controls in table_rules.items():
+            rule_controls["enabled"].observe(
+                lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
+            )
+            rule_controls["block"].observe(
+                lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
+            )
+            for control in rule_controls["parameters"]:
+                control.observe(
+                    lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
+                )
 
         active_guardrails = [rule for rule in guardrails if rule.get("is_active", True)]
         guardrail_status = {
@@ -1447,7 +1475,6 @@ def widget_data_contract(
                     *table_rules["source_drift"]["display"],
                 ],
             ),
-            shared.action_row(widgets, [table_save]),
         )
         view_content["Table"] = (table_left, table_right)
 
@@ -1543,17 +1570,9 @@ def widget_data_contract(
         dq_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         dq_usage = widgets.HTML()
-        save_column_enrichment = widgets.Button(description="Apply enrichment", button_style="primary", disabled=not editable)
-        save_column = widgets.Button(
-            description="Apply Column Changes", button_style="primary", disabled=not editable,
-            layout=widgets.Layout(width="130px", height="34px"),
-        )
-        save_required = widgets.Button(description="Apply required state", disabled=not editable)
-        save_sensitive = widgets.Button(description="Apply Sensitive Data", disabled=not editable)
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
-        save_dq = widgets.Button(description="Apply Data Quality rule", disabled=not editable)
         suggest_dq = widgets.Button(
             description="Suggest rules",
             disabled=(
@@ -1563,7 +1582,7 @@ def widget_data_contract(
             ),
         )
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
-        accept_dq_suggestion = widgets.Button(description="Apply selected suggestion", disabled=True)
+        accept_dq_suggestion = widgets.Button(description="Accept selected suggestion", disabled=True)
         dq_ai = widgets.HTML()
         for control in (
             table_description, table_classification,
@@ -1621,7 +1640,7 @@ def widget_data_contract(
             dq_enabled.value = False
             dq_block.value = False
             rule = next((
-                row for row in guardrails
+                row for row in session_guardrails()
                 if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
                 and str(row.get("column_id") or "") == column_id
                 and str(row.get("rule_type") or "") == kind
@@ -1643,6 +1662,7 @@ def widget_data_contract(
 
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
+            live_enrichments, live_guardrails = current_rows()
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
             observed_type = str(selected.get("data_type") or "")
             contract_type = str(contracted_types.get(column_id) or observed_type)
@@ -1670,10 +1690,10 @@ def widget_data_contract(
                 datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
                 datatype_choice.value = contract_type or observed_type
                 datatype_choice.layout.display = "none"
-            column_description.value = enrichment_value(enrichments, "column", "Description", column_id)
-            column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
+            column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
+            column_classification.value = enrichment_value(live_enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
-            sensitive = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
+            sensitive = next((r for r in live_guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
             sensitive_parameters = _parameters(sensitive)
             pii_type.value = str(sensitive_parameters.get("pii_type") or (
                 "direct" if sensitive else "none"
@@ -1688,7 +1708,7 @@ def widget_data_contract(
             bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
             bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
             configured = [
-                str(rule.get("rule_type") or "") for rule in guardrails
+                str(rule.get("rule_type") or "") for rule in live_guardrails
                 if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
                 and str(rule.get("column_id") or "") == column_id
                 and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
@@ -1734,7 +1754,10 @@ def widget_data_contract(
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
-            count = sum(1 for rule in guardrails if str(rule.get("rule_type") or "") == kind and rule.get("is_active", True))
+            count = sum(
+                1 for rule in session_guardrails()
+                if str(rule.get("rule_type") or "") == kind and rule.get("is_active", True)
+            )
             dq_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
             dq_usage.value = f"<p>{count} current configuration(s) use this rule type.</p>"
             visible = {
@@ -1798,9 +1821,7 @@ def widget_data_contract(
                 snapshot = column_editor_snapshot()
                 if snapshot != hydrated_column_snapshots.get(old, snapshot):
                     unsaved_columns[old] = snapshot
-                    set_status(
-                        "Column edits were retained locally; use Apply Column Changes before the final save."
-                    )
+                    set_status("Column edits were retained in the current draft session.")
                 else:
                     unsaved_columns.pop(old, None)
             if change.get("new"):
@@ -1838,13 +1859,14 @@ def widget_data_contract(
         def _column_editable_values(column_id: str) -> tuple[str, str]:
             if str(column_select.value or "") == column_id:
                 return str(column_description.value or ""), str(column_classification.value or "")
+            live_enrichments, _live_guardrails = current_rows()
             pending = unsaved_columns.get(column_id, {})
             return (
                 str(pending.get("description", enrichment_value(
-                    enrichments, "column", "Description", column_id
+                    live_enrichments, "column", "Description", column_id
                 )) or ""),
                 str(pending.get("classification", enrichment_value(
-                    enrichments, "column", "Classification", column_id
+                    live_enrichments, "column", "Classification", column_id
                 )) or ""),
             )
 
@@ -2126,16 +2148,35 @@ def widget_data_contract(
         table_description.observe(table_description_changed, names="value")
         table_classification.observe(table_classification_changed, names="value")
 
-        def save_column_enrichment_clicked(_button: Any) -> None:
+        def mark_column_hydrated(*keys: str) -> None:
+            cid = str(column_select.value or "")
+            if not cid:
+                return
+            current_snapshot = column_editor_snapshot()
+            baseline = hydrated_column_snapshots.setdefault(cid, dict(current_snapshot))
+            for key in keys:
+                baseline[key] = current_snapshot[key]
+            if baseline == current_snapshot:
+                unsaved_columns.pop(cid, None)
+            else:
+                unsaved_columns[cid] = current_snapshot
+
+        def sync_column_enrichment(_change: dict[str, Any] | None = None) -> None:
+            if hydrating["active"] or not editable:
+                return
+            cid = str(column_select.value or "")
+            if not cid:
+                return
+            key = f"column.{cid}.enrichment"
             try:
-                cid = str(column_select.value or "")
                 stage_enrichment([
                     enrichment_record("column", "Description", column_description.value, cid),
                     enrichment_record("column", "Classification", column_classification.value, cid),
                 ])
-                set_status("Column enrichment staged locally.")
-            except (ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                set_validation_error(key)
+                mark_column_hydrated("description", "classification")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error(key, exc)
 
         def build_required_record() -> dict[str, Any]:
             selected = selected_column()
@@ -2152,12 +2193,19 @@ def widget_data_contract(
                 existing=current_rule,
             )
 
-        def save_required_clicked(_button: Any) -> None:
+        def sync_required(_change: dict[str, Any] | None = None) -> None:
+            if hydrating["active"] or not editable:
+                return
+            cid = str(column_select.value or "")
+            if not cid:
+                return
+            key = f"column.{cid}.required"
             try:
                 stage_guardrails([build_required_record()])
-                set_status("Required-column change staged locally.")
-            except (ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                set_validation_error(key)
+                mark_column_hydrated("required")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error(key, exc)
 
         def build_sensitive_record() -> dict[str, Any] | None:
             cid = str(column_select.value or "")
@@ -2207,20 +2255,46 @@ def widget_data_contract(
                 existing=existing, active=sensitive_enabled.value,
             )
 
-        def save_sensitive_clicked(_button: Any) -> None:
+        def sync_sensitive(_change: dict[str, Any] | None = None) -> None:
+            if hydrating["active"] or not editable:
+                return
+            cid = str(column_select.value or "")
+            if not cid:
+                return
+            key = f"column.{cid}.sensitive"
             try:
                 record = build_sensitive_record()
                 if record is not None:
                     stage_guardrails([record])
-                    set_status("Sensitive Data change staged locally.")
+                set_validation_error(key)
+                mark_column_hydrated(
+                    "sensitive_enabled", "pii_type", "pii_reason", "sensitive_treatment",
+                    "sensitive_block", "mask_start", "mask_end", "mask_character",
+                    "bucket_bins", "bucket_labels",
+                )
             except (TypeError, ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                set_validation_error(key, exc)
 
-        def save_dq_clicked(_button: Any) -> None:
+        def sync_dq(_change: dict[str, Any] | None = None) -> None:
+            if hydrating["active"] or not editable:
+                return
+            cid = str(column_select.value or "")
+            if not cid:
+                return
+            kind = str(dq_type.value)
+            key = f"column.{cid}.dq.{kind}"
             try:
-                cid = str(column_select.value or "")
                 selected = selected_column()
-                kind = str(dq_type.value)
+                existing = next((
+                    r for r in session_guardrails()
+                    if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                    and str(r.get("column_id") or "") == cid
+                    and str(r.get("rule_type") or "") == kind
+                ), {})
+                if not existing and not dq_enabled.value:
+                    set_validation_error(key)
+                    mark_column_hydrated("dq_type", "dq_parameters", "dq_enabled", "dq_block")
+                    return
                 params: dict[str, Any] = {"columns": [str(selected.get("column_name") or cid)]}
                 if kind == "completeness":
                     params.update({
@@ -2245,15 +2319,15 @@ def widget_data_contract(
                     if not dq_pattern.value.strip():
                         raise ValueError("pattern requires a regular expression.")
                     params["pattern"] = dq_pattern.value
-                existing = next((r for r in session_guardrails() if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
                 stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
                     action="Block" if dq_block.value else "Warn",
                     existing=existing, active=dq_enabled.value,
                 )])
-                set_status("Data Quality rule staged locally.")
+                set_validation_error(key)
+                mark_column_hydrated("dq_type", "dq_parameters", "dq_enabled", "dq_block")
             except (TypeError, ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                set_validation_error(key, exc)
 
         def suggest_dq_clicked(_button: Any) -> None:
             """Generate transient standard-rule advice and hydrate controls only on acceptance."""
@@ -2325,31 +2399,17 @@ def widget_data_contract(
             dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
             dq_pattern.value = str(params.get("pattern") or "")
 
-        def save_column_clicked(_button: Any) -> None:
-            try:
-                cid = str(column_select.value or "")
-                enrichment_records = [
-                    enrichment_record("column", "Description", column_description.value, cid),
-                    enrichment_record("column", "Classification", column_classification.value, cid),
-                ]
-                guardrail_records = [
-                    record for record in (build_required_record(), build_sensitive_record())
-                    if record is not None
-                ]
-                stage_enrichment(enrichment_records)
-                if guardrail_records:
-                    stage_guardrails(guardrail_records)
-                unsaved_columns.pop(cid, None)
-                hydrated_column_snapshots[cid] = column_editor_snapshot()
-                set_status("Column changes staged locally. Save the Data Contract from Review to persist.")
-            except (TypeError, ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+        for control in (column_description, column_classification):
+            control.observe(sync_column_enrichment, names="value")
+        required.observe(sync_required, names="value")
+        for control in (
+            sensitive_enabled, pii_type, pii_reason, sensitive_treatment, sensitive_block,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+        ):
+            control.observe(sync_sensitive, names="value")
+        for control in (dq_type, *dq_parameter_controls, dq_enabled, dq_block):
+            control.observe(sync_dq, names="value")
 
-        save_column_enrichment.on_click(save_column_enrichment_clicked)
-        save_required.on_click(save_required_clicked)
-        save_sensitive.on_click(save_sensitive_clicked)
-        save_column.on_click(save_column_clicked)
-        save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
         def rebuild_column_options() -> None:
@@ -2462,7 +2522,7 @@ def widget_data_contract(
                 *dq_parameter_controls,
                 dq_suggestion,
                 dq_ai,
-                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion, save_dq]),
+                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
             ],
             layout=widgets.Layout(width="100%", gap="8px", padding="2px 0 0 0"),
         )
@@ -2547,7 +2607,6 @@ def widget_data_contract(
                 ],
             ),
             dq_panel,
-            shared.action_row(widgets, [save_column]),
         )
         view_content["Columns"] = (column_left, column_right)
 
@@ -2575,8 +2634,9 @@ def widget_data_contract(
         advanced_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         advanced_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         advanced_help = widgets.HTML()
-        advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
+        advanced_new_rules: dict[str, dict[str, Any]] = {}
+        advanced_hydrating = {"active": False}
         for control in (
             advanced_type, advanced_saved, advanced_columns, advanced_operator,
             custom_expression, custom_description,
@@ -2590,76 +2650,110 @@ def widget_data_contract(
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
             """Reset and deterministically hydrate the selected Advanced rule family."""
-            kind = str(advanced_type.value or "")
-            advanced_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
-            advanced_save.disabled = not editable
-            advanced_columns.layout.display = "none" if kind == "custom_expression" else ""
-            advanced_operator.layout.display = "" if kind == "column_relationship" else "none"
-            custom_expression.layout.display = "" if kind == "custom_expression" else "none"
-            custom_description.layout.display = "" if kind == "custom_expression" else "none"
-            matching = [r for r in guardrails if str(r.get("rule_type") or "") == kind]
-            advanced_lookup.clear()
-            options = []
-            for rule in matching:
-                label = ", ".join(map(str, _parameters(rule).get("columns", []))) or str(rule.get("rule_id") or "Configuration")
-                key = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or label)
-                advanced_lookup[key] = rule
-                options.append((label, key))
-
-            # Clear values from the previously selected family before replacing options.
-            advanced_saved.options = ()
-            advanced_columns.value = ()
-            advanced_operator.value = "="
-            custom_expression.value = ""
-            custom_description.value = ""
-            advanced_enabled.value = False
-            advanced_block.value = False
-            advanced_saved.options = options
-            if options:
-                advanced_saved.value = options[0][1]
-                hydrate_advanced_saved({"new": advanced_saved.value})
+            advanced_hydrating["active"] = True
+            try:
+                kind = str(advanced_type.value or "")
+                advanced_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
+                advanced_columns.layout.display = "none" if kind == "custom_expression" else ""
+                advanced_operator.layout.display = "" if kind == "column_relationship" else "none"
+                custom_expression.layout.display = "" if kind == "custom_expression" else "none"
+                custom_description.layout.display = "" if kind == "custom_expression" else "none"
+                matching = [
+                    r for r in session_guardrails()
+                    if str(r.get("rule_type") or "") == kind
+                ]
+                advanced_lookup.clear()
+                options = []
+                for rule in matching:
+                    label = ", ".join(map(str, _parameters(rule).get("columns", []))) or str(
+                        rule.get("rule_id") or "Configuration"
+                    )
+                    key = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or label)
+                    advanced_lookup[key] = rule
+                    options.append((label, key))
+                advanced_saved.options = ()
+                advanced_columns.value = ()
+                advanced_operator.value = "="
+                custom_expression.value = ""
+                custom_description.value = ""
+                advanced_enabled.value = False
+                advanced_block.value = False
+                advanced_saved.options = options
+                if options:
+                    advanced_saved.value = options[0][1]
+                    hydrate_advanced_saved({"new": advanced_saved.value})
+            finally:
+                advanced_hydrating["active"] = False
 
         def hydrate_advanced_saved(change: dict[str, Any]) -> None:
-            rule = advanced_lookup.get(str(change.get("new") or ""), {})
-            params = _parameters(rule)
-            advanced_columns.value = tuple(name for name in params.get("columns", []) if name in {value for _label, value in advanced_columns.options})
-            advanced_operator.value = str(params.get("operator") or params.get("condition_operator") or "=")
-            custom_expression.value = str(params.get("expression") or "")
-            custom_description.value = str(params.get("description") or "")
-            advanced_enabled.value = bool(rule and rule.get("is_active", True))
-            advanced_block.value = str(rule.get("action") or "Warn") == "Block"
-
-        def save_advanced_clicked(_button: Any) -> None:
-            kind = str(advanced_type.value or "")
-            params: dict[str, Any] = {"columns": list(advanced_columns.value)}
-            if kind == "uniqueness" and len(params["columns"]) < 2:
-                set_status("Composite uniqueness requires at least two columns.", error=True)
-                return
-            if kind == "column_relationship":
-                if len(params["columns"]) != 2:
-                    set_status("Column relationship requires exactly two columns.", error=True)
-                    return
-                params["operator"] = advanced_operator.value
-            elif kind == "custom_expression":
-                params = {
-                    "expression_language": "pyspark", "expression": custom_expression.value.strip(),
-                    "description": custom_description.value.strip(),
-                }
-            existing = advanced_lookup.get(str(advanced_saved.value or ""), {})
+            previous = advanced_hydrating["active"]
+            advanced_hydrating["active"] = True
             try:
-                stage_guardrails([guardrail_record(
+                rule = advanced_lookup.get(str(change.get("new") or ""), {})
+                params = _parameters(rule)
+                valid_columns = {value for _label, value in advanced_columns.options}
+                advanced_columns.value = tuple(
+                    name for name in params.get("columns", []) if name in valid_columns
+                )
+                advanced_operator.value = str(
+                    params.get("operator") or params.get("condition_operator") or "="
+                )
+                custom_expression.value = str(params.get("expression") or "")
+                custom_description.value = str(params.get("description") or "")
+                advanced_enabled.value = bool(rule and rule.get("is_active", True))
+                advanced_block.value = str(rule.get("action") or "Warn") == "Block"
+            finally:
+                advanced_hydrating["active"] = previous
+
+        def sync_advanced(_change: dict[str, Any] | None = None) -> None:
+            if advanced_hydrating["active"] or not editable:
+                return
+            kind = str(advanced_type.value or "")
+            key = f"advanced.{kind}"
+            existing = (
+                advanced_lookup.get(str(advanced_saved.value or ""), {})
+                or advanced_new_rules.get(kind, {})
+            )
+            if not existing and not advanced_enabled.value:
+                set_validation_error(key)
+                return
+            try:
+                params: dict[str, Any] = {"columns": list(advanced_columns.value)}
+                if kind == "uniqueness" and len(params["columns"]) < 2:
+                    raise ValueError("Composite uniqueness requires at least two columns.")
+                if kind == "column_relationship":
+                    if len(params["columns"]) != 2:
+                        raise ValueError("Column relationship requires exactly two columns.")
+                    params["operator"] = advanced_operator.value
+                elif kind == "custom_expression":
+                    expression = custom_expression.value.strip()
+                    if not expression:
+                        raise ValueError("Custom expression requires a PySpark boolean expression.")
+                    params = {
+                        "expression_language": "pyspark",
+                        "expression": expression,
+                        "description": custom_description.value.strip(),
+                    }
+                record = guardrail_record(
                     "data_quality", kind, params,
                     action="Block" if advanced_block.value else "Warn",
                     existing=existing, active=advanced_enabled.value,
-                )])
-                set_status("Advanced Data Quality configuration staged locally.")
-            except (ValueError, RuntimeError) as exc:
-                set_status(str(exc), error=True)
+                )
+                stage_guardrails([record])
+                if not advanced_saved.value:
+                    advanced_new_rules[kind] = record
+                set_validation_error(key)
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error(key, exc)
 
         advanced_type.observe(hydrate_advanced_type, names="value")
         advanced_saved.observe(hydrate_advanced_saved, names="value")
-        advanced_save.on_click(save_advanced_clicked)
         hydrate_advanced_type()
+        for control in (
+            advanced_columns, advanced_operator, custom_expression, custom_description,
+            advanced_enabled, advanced_block,
+        ):
+            control.observe(sync_advanced, names="value")
         advanced_left = (
             widgets.HTML(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
@@ -2688,7 +2782,6 @@ def widget_data_contract(
                     advanced_operator,
                     custom_expression,
                     custom_description,
-                    shared.action_row(widgets, [advanced_save]),
                 ],
             ),
         )
@@ -2835,11 +2928,18 @@ def widget_data_contract(
 
             def save_contract_clicked(_button: Any) -> None:
                 try:
-                    scope = (str(current["contract_id"]), int(current["contract_version"]))
-                    unapplied_columns = state["_column_drafts"].get(scope, {})
-                    if unapplied_columns:
+                    errors = state["_validation_errors"]
+                    if errors:
+                        first_error = next(iter(errors.values()))
                         raise ValueError(
-                            "Apply retained Column changes before saving the Data Contract."
+                            "Complete the current draft configuration before saving: "
+                            f"{first_error}"
+                        )
+                    scope = (str(current["contract_id"]), int(current["contract_version"]))
+                    retained_columns = state["_column_drafts"].get(scope, {})
+                    if retained_columns:
+                        raise ValueError(
+                            "Complete the retained Column edits before saving the Data Contract."
                         )
                     save_data_contract_session()
                 except (TypeError, ValueError, RuntimeError) as exc:
@@ -2936,7 +3036,7 @@ def widget_data_contract(
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
-            "table_save": table_save, "table_guardrails": table_rules,
+            "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
             "processing_source": processing_source_hint,
             "processing_parameters": processing_parameter_controls,
@@ -2954,8 +3054,7 @@ def widget_data_contract(
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
-            "save_column_enrichment": save_column_enrichment, "save_required": save_required,
-            "save_column": save_column, "dq_panel": dq_panel, "dq_editor": dq_editor,
+            "dq_panel": dq_panel, "dq_editor": dq_editor,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
             "column_description_ai": column_description_ai,
             "accept_column_description": accept_column_description,
@@ -2966,7 +3065,6 @@ def widget_data_contract(
             "sensitive_block": sensitive_block, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
-            "save_sensitive": save_sensitive,
             "dq_type": dq_type, "dq_parameter_controls": dq_parameter_controls,
             "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
@@ -2975,10 +3073,9 @@ def widget_data_contract(
             "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
             "suggest_dq": suggest_dq, "dq_ai": dq_ai,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
-            "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,
-            "advanced_block": advanced_block, "advanced_save": advanced_save,
+            "advanced_block": advanced_block,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_preview": manifest_preview,
