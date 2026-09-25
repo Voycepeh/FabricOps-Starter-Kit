@@ -893,7 +893,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "source_drift"
     )
     assert module._parameters(staged_drift) == {
-        "partition_column": "column_0", "change_column": "column_1", "load_strategy": "overwrite",
+        "partition_column": "column_0", "change_column": "column_1",
     }
     state["_controls"]["save_data_contract"].click()
     assert widget_runtime["calls"]["guardrails"]
