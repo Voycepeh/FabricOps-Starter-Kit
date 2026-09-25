@@ -160,6 +160,106 @@ def _bucket_column(dataframe, *, column_name, parameters):
     return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket))
 
 
+
+def _check_sensitive_data_rules(
+    dataframe,
+    *,
+    rules: list[dict[str, Any]],
+    identity: dict[str, Any],
+    config,
+    env: str,
+    spark_session,
+    run_id: str = "",
+    existing_mapping=None,
+    execution_type: str = "enforce",
+) -> dict[str, Any]:
+    """Apply supplied exact-contract Sensitive Data rules without resolving contract state."""
+    transformed = dataframe
+    mappings = []
+    checks = []
+    for rule in rules:
+        action = str(rule.get("action") or "Warn").strip().title()
+        column_id = str(rule.get("column_id") or "").strip()
+        column_name = str(rule.get("column_name") or "").strip()
+        treatment = ""
+        error = ""
+        try:
+            params = validate_sensitive_data_parameters(_parameters(rule))
+            treatment = params["treatment"]
+            if action not in {"Warn", "Block"}:
+                raise ValueError("Sensitive Data action must be Warn or Block.")
+            if not column_id or not column_name:
+                raise ValueError("Sensitive Data Guardrail has an unresolved column identity or invalid scope.")
+            if column_name not in transformed.columns:
+                raise ValueError(f"Sensitive Data column {column_name!r} is missing from the DataFrame.")
+            if treatment == "remove":
+                transformed = transformed.drop(column_name)
+            elif treatment == "tokenize":
+                transformed, mapping = _tokenize_column(
+                    transformed,
+                    column_name=column_name,
+                    column_id=column_id,
+                    table_id=identity["table_id"],
+                    existing_mapping=existing_mapping,
+                )
+                mappings.append(mapping)
+            elif treatment == "mask":
+                transformed = _mask_column(transformed, column_name=column_name, parameters=params)
+            else:
+                transformed = _bucket_column(transformed, column_name=column_name, parameters=params)
+        except ValueError as exc:
+            error = str(exc)
+        except Exception:
+            error = f"{treatment.title() or 'Sensitive Data'} treatment could not be applied."
+        passed = not error
+        can_continue = passed or action == "Warn"
+        check = {
+            "guardrail_rule_id": str(rule.get("guardrail_rule_id") or rule.get("rule_id") or ""),
+            "guardrail_version": int(rule.get("guardrail_version") or 1),
+            "contract_id": str(rule.get("contract_id") or ""),
+            "contract_version": int(rule.get("contract_version") or 0),
+            "table_id": identity["table_id"],
+            "column_id": column_id,
+            "treatment": treatment,
+            "action": action,
+            "status": "passed" if passed else ("warning" if can_continue else "failed"),
+            "can_continue": can_continue,
+            "severity": "warning" if action == "Warn" else "blocking",
+            "reason": "Treatment applied." if passed else error,
+        }
+        checks.append(check)
+        write_guardrail_result_row(
+            spark_session=spark_session,
+            config=config,
+            env=env,
+            run_id=run_id,
+            dataset_name="",
+            table_name=identity["table_name"],
+            store_type=identity["store_type"],
+            layer="",
+            schema_name=identity["schema"],
+            guardrail_type="sensitive_data",
+            rule_type=treatment,
+            result=check,
+            column_name=column_name,
+        )
+    support_mapping = None
+    if mappings:
+        support_mapping = mappings[0]
+        for mapping in mappings[1:]:
+            support_mapping = support_mapping.unionByName(mapping)
+    can_continue = all(check["can_continue"] for check in checks)
+    result = {
+        "status": "passed"
+        if all(check["status"] == "passed" for check in checks)
+        else ("warning" if can_continue else "failed"),
+        "can_continue": can_continue,
+        "dataframe": transformed,
+        "support_mapping": support_mapping,
+        "checks": checks,
+    }
+    return result
+
 def check_sensitive_data(
     dataframe,
     *,
@@ -295,90 +395,17 @@ def check_sensitive_data(
         if str(row.get("guardrail_type") or "").strip().lower() == "sensitive_data"
         and row.get("is_active", True) is not False
     ]
-    transformed = dataframe
-    mappings = []
-    checks = []
-    for rule in rules:
-        action = str(rule.get("action") or "Warn").strip().title()
-        column_id = str(rule.get("column_id") or "").strip()
-        column_name = str(rule.get("column_name") or "").strip()
-        treatment = ""
-        error = ""
-        try:
-            params = validate_sensitive_data_parameters(_parameters(rule))
-            treatment = params["treatment"]
-            if action not in {"Warn", "Block"}:
-                raise ValueError("Sensitive Data action must be Warn or Block.")
-            if not column_id or not column_name:
-                raise ValueError("Sensitive Data Guardrail has an unresolved column identity or invalid scope.")
-            if column_name not in transformed.columns:
-                raise ValueError(f"Sensitive Data column {column_name!r} is missing from the DataFrame.")
-            if treatment == "remove":
-                transformed = transformed.drop(column_name)
-            elif treatment == "tokenize":
-                transformed, mapping = _tokenize_column(
-                    transformed,
-                    column_name=column_name,
-                    column_id=column_id,
-                    table_id=identity["table_id"],
-                    existing_mapping=existing_mapping,
-                )
-                mappings.append(mapping)
-            elif treatment == "mask":
-                transformed = _mask_column(transformed, column_name=column_name, parameters=params)
-            else:
-                transformed = _bucket_column(transformed, column_name=column_name, parameters=params)
-        except ValueError as exc:
-            error = str(exc)
-        except Exception:
-            error = f"{treatment.title() or 'Sensitive Data'} treatment could not be applied."
-        passed = not error
-        can_continue = passed or action == "Warn"
-        check = {
-            "guardrail_rule_id": str(rule.get("guardrail_rule_id") or rule.get("rule_id") or ""),
-            "guardrail_version": int(rule.get("guardrail_version") or 1),
-            "contract_id": str(rule.get("contract_id") or ""),
-            "contract_version": int(rule.get("contract_version") or 0),
-            "table_id": identity["table_id"],
-            "column_id": column_id,
-            "treatment": treatment,
-            "action": action,
-            "status": "passed" if passed else ("warning" if can_continue else "failed"),
-            "can_continue": can_continue,
-            "severity": "warning" if action == "Warn" else "blocking",
-            "reason": "Treatment applied." if passed else error,
-        }
-        checks.append(check)
-        write_guardrail_result_row(
-            spark_session=spark_session,
-            config=config,
-            env=env,
-            run_id=run_id,
-            dataset_name="",
-            table_name=identity["table_name"],
-            store_type=identity["store_type"],
-            layer="",
-            schema_name=identity["schema"],
-            guardrail_type="sensitive_data",
-            rule_type=treatment,
-            result=check,
-            column_name=column_name,
-        )
-    support_mapping = None
-    if mappings:
-        support_mapping = mappings[0]
-        for mapping in mappings[1:]:
-            support_mapping = support_mapping.unionByName(mapping)
-    can_continue = all(check["can_continue"] for check in checks)
-    result = {
-        "status": "passed"
-        if all(check["status"] == "passed" for check in checks)
-        else ("warning" if can_continue else "failed"),
-        "can_continue": can_continue,
-        "dataframe": transformed,
-        "support_mapping": support_mapping,
-        "checks": checks,
-    }
+    result = _check_sensitive_data_rules(
+        dataframe,
+        rules=rules,
+        identity=identity,
+        config=config,
+        env=env,
+        spark_session=spark_session,
+        run_id=run_id,
+        existing_mapping=existing_mapping,
+        execution_type="enforce",
+    )
     print_guardrail_result(
         "Sensitive Data",
         result,
