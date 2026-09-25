@@ -22,6 +22,8 @@ Author the contract in three parts:
 
 The important concept is that these are not separate disconnected metadata records from the user's point of view. Together they form the governed definition for that table and version.
 
+For **Processing**, FabricOps saves the load strategy on the exact Data Contract version. A new version first uses the Engineering Catalogue value when one has been observed; that value is shown read-only. If Engineering has not resolved processing, FabricOps inherits the previous Data Contract version when available. If neither exists, the draft starts at `overwrite`. Inherited and defaulted values remain editable before you save and freeze the version.
+
 ## Make the Step 2 behaviour governed
 
 Use the contract to formalise decisions that were only Development proposals in Step 2.
