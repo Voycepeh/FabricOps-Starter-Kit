@@ -909,10 +909,10 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
 
-def test_dq_ai_is_scoped_to_pattern_and_range_and_forwards_instruction(
+def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
     widget_runtime, monkeypatch
 ):
-    """Only Pattern and Range expose AI assistance and user intent augments the prompt."""
+    """Only Pattern exposes AI assistance and user intent augments the prompt."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     captured: dict[str, object] = {}
@@ -1450,7 +1450,7 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     before = len(widget_runtime["calls"]["guardrails"])
 
     controls["dq_type"].value = "range"
-    controls["suggest_dq"].click()
+    assert controls["suggest_dq"].disabled is True
     assert len(widget_runtime["calls"]["guardrails"]) == before
     controls["accept_dq_suggestion"].click()
     assert controls["dq_type"].value == "range"
