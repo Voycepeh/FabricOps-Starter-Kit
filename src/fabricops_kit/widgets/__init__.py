@@ -26,8 +26,8 @@ def __getattr__(name: str):
 # value change or button callback. That focus restoration also scrolls the
 # notebook back to the widget, fighting normal user scrolling. Install one
 # form-scoped browser safeguard when the widgets package is imported. The CSS
-# also makes Fabric render long labels above their controls instead of allowing
-# labels and selection boxes to overlap in dense Data Contract forms.
+# also gives every FabricOps form a stable two-column field grid so labels and
+# controls align consistently instead of starting at the end of variable label text.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
   const STYLE_ID = "fabricops-widget-ux-style";
@@ -35,35 +35,23 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      .fabricops-form .widget-inline-hbox {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
+      .fabricops-form .widget-inline-hbox:not(.widget-checkbox) {
+        display: grid !important;
+        grid-template-columns: 150px minmax(0, 560px) !important;
+        column-gap: 12px !important;
+        align-items: start !important;
         width: 100% !important;
         min-width: 0 !important;
-        max-width: 100% !important;
+        max-width: 722px !important;
       }
-      .fabricops-form .widget-inline-hbox > .widget-label,
-      .fabricops-form .widget-label {
+      .fabricops-form .widget-inline-hbox:not(.widget-checkbox) > .widget-label {
         display: block !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        flex: 0 0 auto !important;
-        margin: 0 0 6px 0 !important;
+        width: 150px !important;
+        min-width: 150px !important;
+        max-width: 150px !important;
+        margin: 0 !important;
         white-space: normal !important;
         overflow-wrap: anywhere !important;
-      }
-      .fabricops-form .widget-text,
-      .fabricops-form .widget-textarea,
-      .fabricops-form .widget-dropdown,
-      .fabricops-form .widget-combobox,
-      .fabricops-form .widget-select,
-      .fabricops-form .widget-select-multiple,
-      .fabricops-form .widget-toggle-buttons {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
       }
       .fabricops-form .widget-text input,
       .fabricops-form .widget-textarea textarea,
@@ -73,7 +61,7 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
       .fabricops-form .widget-select-multiple select {
         width: 100% !important;
         min-width: 0 !important;
-        max-width: 100% !important;
+        max-width: 560px !important;
         box-sizing: border-box !important;
       }
       .fabricops-form .widget-hbox,
