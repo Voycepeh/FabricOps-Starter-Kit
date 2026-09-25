@@ -3105,6 +3105,33 @@ def widget_data_contract(
             ),
         )
         apply_business_rule = widgets.Button(description="Apply", disabled=True)
+        engineering_reviewer = widgets.Text(
+            disabled=not editable,
+            placeholder="Engineer name or identifier",
+            **shared.widget_common(widgets, "Engineering reviewer"),
+        )
+        engineering_review_note = widgets.Textarea(
+            disabled=not editable,
+            placeholder="Optional review note",
+            **shared.widget_common(widgets, "Review note", textarea=True),
+        )
+        approve_engineering_review = widgets.Button(
+            description="Approve engineering review", disabled=True
+        )
+        engineering_review_status = widgets.HTML()
+        engineering_review_panel = widgets.VBox(
+            [
+                engineering_review_status,
+                engineering_reviewer,
+                engineering_review_note,
+                approve_engineering_review,
+            ],
+            layout=widgets.Layout(
+                width="100%", gap="8px", padding="10px 12px",
+                border="1px solid #e1e6eb",
+            ),
+        )
+        engineering_review_panel.layout.display = "none"
         business_lookup: dict[str, dict[str, Any]] = {}
         business_resolved: dict[str, Any] = {}
         business_hydrating = {"active": False}
@@ -3118,6 +3145,7 @@ def widget_data_contract(
         business_saved.layout.height = "160px"
         business_columns.layout.height = "130px"
         business_requirement.layout.height = "100px"
+        engineering_review_note.layout.height = "80px"
 
         def business_rule_label(rule: Mapping[str, Any]) -> str:
             params = _parameters(rule)
@@ -3155,6 +3183,42 @@ def widget_data_contract(
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
             business_saved.value = selected if selected in option_values else ""
+
+        def engineering_review_state(rule: Mapping[str, Any]) -> tuple[bool, str]:
+            if str(rule.get("rule_type") or "") != "custom_expression":
+                return False, "not_required"
+            params = _parameters(rule)
+            required = bool(params.get("engineering_review_required", True))
+            status = str(params.get("engineering_review_status") or "pending").lower()
+            return required, status
+
+        def render_engineering_review(rule: Mapping[str, Any] | None = None) -> None:
+            current_rule = dict(rule or {})
+            required, status = engineering_review_state(current_rule)
+            engineering_review_panel.layout.display = "" if required else "none"
+            if not required:
+                engineering_review_status.value = ""
+                approve_engineering_review.disabled = True
+                return
+            params = _parameters(current_rule)
+            approved = status == "approved"
+            reviewer = str(params.get("engineering_reviewed_by") or "")
+            note = str(params.get("engineering_review_note") or "")
+            engineering_reviewer.value = reviewer
+            engineering_review_note.value = note
+            if approved:
+                engineering_review_status.value = (
+                    "<div style='color:#107c10;font-weight:600;'>Engineering review approved"
+                    + (f" by {html.escape(reviewer)}" if reviewer else "")
+                    + ".</div>"
+                )
+            else:
+                engineering_review_status.value = (
+                    "<div style='color:#8a6d1d;font-weight:600;'>Engineering review pending.</div>"
+                    "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+                    "Review the resolved Custom Expression before approving it for freeze.</div>"
+                )
+            approve_engineering_review.disabled = not editable or approved
 
         def render_business_proposal(proposal: Mapping[str, Any] | None = None) -> None:
             if not proposal:
@@ -3227,8 +3291,10 @@ def widget_data_contract(
                         "parameters": params,
                         "rationale": "Saved deterministic Guardrail.",
                     })
+                    render_engineering_review(rule)
                 else:
                     render_business_proposal()
+                    render_engineering_review()
             finally:
                 business_hydrating["active"] = False
 
@@ -3285,6 +3351,13 @@ def widget_data_contract(
             try:
                 existing = business_lookup.get(str(business_saved.value or ""), {})
                 params = dict(business_resolved.get("parameters") or {})
+                if str(business_resolved.get("rule_type") or "") == "custom_expression":
+                    params.update({
+                        "engineering_review_required": True,
+                        "engineering_review_status": "pending",
+                    })
+                    params.pop("engineering_reviewed_by", None)
+                    params.pop("engineering_review_note", None)
                 record = guardrail_record(
                     "data_quality",
                     str(business_resolved["rule_type"]),
@@ -3298,6 +3371,7 @@ def widget_data_contract(
                 business_resolved.clear()
                 apply_business_rule.disabled = True
                 set_validation_error("business_rule")
+                render_engineering_review(record)
                 set_status(
                     "Business Rule staged in the Data Contract. Save Data Contract to persist."
                 )
@@ -3305,11 +3379,47 @@ def widget_data_contract(
                 set_validation_error("business_rule", exc)
                 set_status(str(exc), error=True)
 
+        def approve_engineering_review_clicked(_button: Any) -> None:
+            try:
+                rule = business_lookup.get(str(business_saved.value or ""), {})
+                required, status = engineering_review_state(rule)
+                if not required:
+                    raise ValueError("The selected Business Rule does not require Engineering review.")
+                if status == "approved":
+                    return
+                reviewer = str(engineering_reviewer.value or "").strip()
+                if not reviewer:
+                    raise ValueError("Engineering reviewer is required before approval.")
+                params = _parameters(rule)
+                params.update({
+                    "engineering_review_required": True,
+                    "engineering_review_status": "approved",
+                    "engineering_reviewed_by": reviewer,
+                    "engineering_review_note": str(engineering_review_note.value or "").strip(),
+                })
+                record = guardrail_record(
+                    "data_quality", "custom_expression", params,
+                    action=str(rule.get("action") or "Warn"),
+                    existing=rule,
+                    active=bool(rule.get("is_active", True)),
+                )
+                stage_guardrails([record])
+                refresh_business_saved_options(str(record["guardrail_rule_id"]))
+                render_engineering_review(record)
+                set_validation_error("business_rule.engineering_review")
+                set_status(
+                    "Engineering review approved and staged. Save Data Contract to persist."
+                )
+            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error("business_rule.engineering_review", exc)
+                set_status(str(exc), error=True)
+
         business_saved.observe(hydrate_business_saved, names="value")
         business_requirement.observe(invalidate_business_proposal, names="value")
         business_columns.observe(invalidate_business_proposal, names="value")
         resolve_business_rule.on_click(resolve_business_rule_clicked)
         apply_business_rule.on_click(apply_business_rule_clicked)
+        approve_engineering_review.on_click(approve_engineering_review_clicked)
         refresh_business_saved_options()
         hydrate_business_saved()
 
@@ -3352,6 +3462,7 @@ def widget_data_contract(
                     ),
                     business_ai_status,
                     business_proposal,
+                    engineering_review_panel,
                     shared.action_row(
                         widgets, [resolve_business_rule, apply_business_rule]
                     ),
@@ -3482,9 +3593,17 @@ def widget_data_contract(
                 button_style="primary",
             )
             discard_contract_button = widgets.Button(description="Discard changes")
+            pending_engineering_review = any(
+                str(rule.get("rule_type") or "") == "custom_expression"
+                and rule.get("is_active", True)
+                and bool(_parameters(rule).get("engineering_review_required", True))
+                and str(_parameters(rule).get("engineering_review_status") or "pending").lower()
+                != "approved"
+                for rule in session_guardrails()
+            )
             freeze_button = widgets.Button(
                 description=f"Freeze v{row['contract_version']}…",
-                disabled=bool(state.get("dirty")),
+                disabled=bool(state.get("dirty")) or pending_engineering_review,
             )
             freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
             freeze_cancel = widgets.Button(description="Cancel")
@@ -3525,6 +3644,20 @@ def widget_data_contract(
             def freeze_clicked(_button: Any) -> None:
                 if state.get("dirty"):
                     set_status("Save the Data Contract before freezing this version.", error=True)
+                    return
+                pending_review = any(
+                    str(rule.get("rule_type") or "") == "custom_expression"
+                    and rule.get("is_active", True)
+                    and bool(_parameters(rule).get("engineering_review_required", True))
+                    and str(_parameters(rule).get("engineering_review_status") or "pending").lower()
+                    != "approved"
+                    for rule in session_guardrails()
+                )
+                if pending_review:
+                    set_status(
+                        "Complete Engineering review for all active Custom Expression Business Rules before freezing.",
+                        error=True,
+                    )
                     return
                 freeze_confirm.layout.display = ""
 
@@ -3649,6 +3782,11 @@ def widget_data_contract(
             "business_proposal": business_proposal,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
+            "engineering_review_panel": engineering_review_panel,
+            "engineering_review_status": engineering_review_status,
+            "engineering_reviewer": engineering_reviewer,
+            "engineering_review_note": engineering_review_note,
+            "approve_engineering_review": approve_engineering_review,
             "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
