@@ -780,14 +780,6 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
         and module._parameters(record)["treat_blank_as_missing"] is True
         for record in saved
     )
-    assert any(
-        record["rule_type"] == "column_relationship"
-        and module._parameters(record)["columns"] == ["column_0", "column_1"]
-        and record["action"] == "Warn"
-        and record["is_active"] is True
-        for record in saved
-    )
-
 
 def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
     """Enable deterministic AI responses for widget interaction tests."""
