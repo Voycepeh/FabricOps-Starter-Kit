@@ -265,7 +265,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             versions = _validation_contract_options(contracts, table_id)
             enforceable = [
                 row for row in _contract_options(contracts, table_id)
-                if str(row.get("status") or "").lower() == "active" and bool(row.get("is_active"))
+                if str(row.get("status") or "").lower() == "frozen" and bool(row.get("is_active"))
             ]
             if len(enforceable) > 1:
                 raise RuntimeError(
@@ -292,7 +292,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                     "contract_version": int(selected["contract_version"]),
                 }
         state["message"] = (
-            f"Environment {env} · each table can enforce its enforceable contract or validate a frozen candidate."
+            f"Environment {env} · each table can enforce its active frozen contract or validate a frozen candidate."
         )
 
     def set_mode(
