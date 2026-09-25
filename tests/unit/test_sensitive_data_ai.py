@@ -67,17 +67,58 @@ def test_supported_non_bucket_treatments(treatment):
         ("pii_type", "possible", "invalid pii_type"),
         ("treatment", "hash", "invalid"),
         ("action", "Approve", "invalid"),
-        ("column", "MISSING", "unknown column"),
     ],
 )
 def test_invalid_suggestion_fields_are_rejected(field, value, message):
-    """Reject unsupported assessment, treatment, action, and column values."""
+    """Reject unsupported assessment, treatment, and action values."""
     candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifying.",
                  "treatment": "mask", "action": "Block",
                  "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"}}
     candidate[field] = value
     with pytest.raises(ValueError, match=message):
         module.suggest_sensitive_data(_context(), prompt="configured", invoke=_invoke([candidate]))
+
+
+def test_unknown_column_suggestion_is_ignored():
+    """Ignore model output that does not reference a governed column."""
+    candidate = {
+        "column": "MISSING",
+        "pii_type": "direct",
+        "reason": "Invented column.",
+        "treatment": "mask",
+        "action": "Block",
+        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
+    }
+
+    result = module.suggest_sensitive_data(
+        _context(), prompt="configured", invoke=_invoke([candidate])
+    )
+
+    assert result == []
+
+
+def test_nested_column_context_is_normalized_to_known_column():
+    """Accept a known column when the model echoes the supplied column object."""
+    candidate = {
+        "column": {
+            "column_id": "email-id",
+            "column_name": "EMAIL",
+            "data_type": "string",
+            "description": "Email address",
+            "profile_evidence": {"row_count": 120},
+        },
+        "pii_type": "direct",
+        "reason": "Can contact a person.",
+        "treatment": "mask",
+        "action": "Block",
+        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
+    }
+
+    result = module.suggest_sensitive_data(
+        _context(), prompt="configured", invoke=_invoke([candidate])
+    )
+
+    assert result[0]["column_name"] == "EMAIL"
 
 
 def test_invalid_treatment_parameters_are_rejected():
@@ -135,13 +176,15 @@ def test_configured_prompt_and_metadata_only_context_are_sent():
     assert "Do not include raw values" in prompts[0]
 
 
-def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monkeypatch):
-    """Register Fabric AI Functions before invoking the pandas accessor."""
+def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monkeypatch, capsys):
+    """Register Fabric AI Functions and suppress its notebook console chatter."""
     calls = []
     response = type("Response", (), {"iloc": [" generated response "]})()
 
     class AI:
         def generate_response(self, *args, **kwargs):
+            print("Calling getAccessToken from PyTridentTokenLibrary")
+            print("ai.generate_response: 100%", file=__import__("sys").stderr)
             calls.append(("generate_response", args, kwargs))
             return response
 
@@ -169,6 +212,9 @@ def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monk
     assert calls[1] == ("import", "pandas")
     assert calls[2] == ("DataFrame", [{"fabricops_prompt": "prompt text"}])
     assert calls[3] == ("generate_response", ("{fabricops_prompt}",), {})
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
 
 
 def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
