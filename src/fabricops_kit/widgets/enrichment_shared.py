@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
+from io import StringIO
 import importlib
 import json
 from typing import Any
@@ -70,7 +72,10 @@ def _invoke_fabric_ai(prompt: str) -> str:
         raise RuntimeError(
             "Microsoft Fabric AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
         )
-    result = ai.generate_response("{fabricops_prompt}")
+    stdout = StringIO()
+    stderr = StringIO()
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+        result = ai.generate_response("{fabricops_prompt}")
     return str(result.iloc[0]).strip()
 
 
@@ -158,9 +163,15 @@ def suggest_sensitive_data(
     for candidate in candidates:
         if not isinstance(candidate, dict):
             raise ValueError("Each AI Sensitive Data suggestion must be a JSON object.")
-        column_name = str(candidate.get("column") or "").strip()
+        column_ref = candidate.get("column")
+        if isinstance(column_ref, dict):
+            column_name = str(
+                column_ref.get("column_name") or column_ref.get("name") or ""
+            ).strip()
+        else:
+            column_name = str(column_ref or "").strip()
         if column_name not in allowed_columns:
-            raise ValueError(f"AI Sensitive Data suggestion referenced unknown column {column_name!r}.")
+            continue
         if column_name in seen:
             continue
         pii_type = str(candidate.get("pii_type") or "").strip().lower()
