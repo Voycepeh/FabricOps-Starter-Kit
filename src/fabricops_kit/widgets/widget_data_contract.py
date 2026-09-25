@@ -713,6 +713,7 @@ def widget_data_contract(
             str(name),
         )
         for name, store in configured_stores.items()
+        if str(name).strip().lower() != "metadata"
     ]
     store_control = widgets.Dropdown(
         options=store_options, **shared.widget_common(widgets, "Fabric store"),

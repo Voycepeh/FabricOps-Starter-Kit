@@ -313,7 +313,9 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["table_id"] is None
     assert state["pending_table_id"] == "orders"
     assert controls["store"].value == "Silver"
-    assert "Silver · Lakehouse" in [label for label, _value in controls["store"].options]
+    store_labels = [label for label, _value in controls["store"].options]
+    assert "Silver · Lakehouse" in store_labels
+    assert "Metadata · Lakehouse" not in store_labels
     assert controls["schema"].value == "sales"
     selector = controls["selector_panel"].children[0]
     assert [child.description for child in selector.children] == [
