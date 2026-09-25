@@ -207,7 +207,9 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
     """Build governed metadata/profile context without raw rows or internal identifiers."""
     fields = (
         "row_count", "non_null_count", "null_count", "null_percent",
-        "distinct_count", "distinct_percent", "min_value", "max_value",
+        "distinct_count", "distinct_percent", "mean_value", "stddev_value",
+        "min_value", "percentile_25_value", "median_value",
+        "percentile_75_value", "max_value",
     )
     return {
         "table_name": str(state.get("table_name") or ""),

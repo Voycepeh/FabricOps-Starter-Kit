@@ -466,6 +466,10 @@ def widget_data_contract(
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
+        elif str(top_nav.value) == "Manifest & Freeze":
+            refresh_review = state.get("_refresh_review")
+            if callable(refresh_review):
+                refresh_review()
 
     top_nav.observe(apply_view, names="value")
 
@@ -514,6 +518,9 @@ def widget_data_contract(
         state["current"] = contracts.get_contract_review_state(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
+        )
+        state["_saved_payload"] = json.loads(
+            str(state["current"]["contract"].get("contract_payload_json") or "{}")
         )
         scope = (str(chosen["contract_id"]), state["contract_version"])
         state["dirty"] = bool(
@@ -1145,8 +1152,7 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        table_left = (
-            widgets.HTML(
+        table_summary = widgets.HTML(
                 "<div style='background:#e7f5ef;border-left:4px solid #107c41;"
                 "border-radius:4px;padding:10px 11px;margin-bottom:12px;'>"
                 "<div style='color:#0b5d35;font-size:10px;font-weight:800;"
@@ -1172,9 +1178,51 @@ def widget_data_contract(
                 + "<div style='color:#667085;font-size:10px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Guardrails</div>"
                 + "<div style='margin-top:6px;'>" + guardrail_status_html + "</div>"
-            ),
-            change_table_button,
         )
+        table_left = (table_summary, change_table_button)
+
+        def render_table_summary(_change: dict[str, Any] | None = None) -> None:
+            active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
+            selected_sensitive = bool(
+                state.get("_working_sensitive_enabled", False)
+            )
+            selected_dq = bool(state.get("_working_dq_enabled", False))
+            statuses = {
+                "Schema": bool(required_columns),
+                "Freshness": bool(table_rules["freshness"]["enabled"].value),
+                "Sensitive Data": selected_sensitive or any(
+                    str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+                    for rule in active
+                ),
+                "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
+                "Data Quality": selected_dq or any(
+                    str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                    for rule in active
+                ),
+            }
+            guardrail_html = "".join(
+                "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
+                f"<span style='color:#666'>{html.escape(name)}</span>"
+                f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
+                for name, enabled in statuses.items()
+            )
+            table_summary.value = (
+                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Table</div>"
+                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(str(table.get('schema_name') or ''))}</div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
+                + guardrail_html + "</div>"
+            )
+
+        table_classification.observe(render_table_summary, names="value")
+        for rule_controls in table_rules.values():
+            rule_controls["enabled"].observe(render_table_summary, names="value")
+        render_table_summary()
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -1254,21 +1302,38 @@ def widget_data_contract(
 
 
         # Columns: one editor, hydrated on selection, with profile evidence isolated from payload.
-        required_rule = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {})
+        required_rule = next(
+            (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
+        )
         required_columns = set(_parameters(required_rule).get("required_columns", []))
-        column_options = [
-            (f"{c.get('column_name')}    {c.get('data_type')}    {'*' if c.get('column_id') in required_columns or c.get('column_name') in required_columns else ''}", str(c.get("column_id") or ""))
-            for c in columns
-        ]
+        saved_payload = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        )
+        contracted_columns = {
+            str(item.get("column_id") or ""): dict(item)
+            for item in (saved_payload.get("table", {}).get("columns", []) or [])
+            if item.get("column_id")
+        }
+        observed_types = {
+            str(item.get("column_id") or ""): str(item.get("data_type") or "")
+            for item in columns
+        }
+        contracted_types = {
+            cid: str(contracted_columns.get(cid, {}).get("data_type") or observed_type)
+            for cid, observed_type in observed_types.items()
+        }
+        column_options: list[tuple[str, str]] = []
+        column_option_style = widgets.HTML()
         column_search = widgets.Text(
             placeholder="Search columns",
             layout=widgets.Layout(width="100%"),
         )
         column_select = widgets.Select(
-            options=column_options,
+            options=(),
             rows=8,
             layout=widgets.Layout(width="100%", height="250px"),
         )
+        column_select.add_class("fabricops-contract-columns")
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
@@ -1277,6 +1342,11 @@ def widget_data_contract(
         accept_column_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
+        datatype_choice = widgets.Dropdown(
+            options=(), disabled=not editable,
+            **shared.widget_common(widgets, "Contract datatype"),
+        )
+        datatype_choice.layout.display = "none"
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         pii_type = widgets.Dropdown(
             options=[(label, value) for value, label in PII_LABELS.items()],
@@ -1345,7 +1415,7 @@ def widget_data_contract(
         dq_ai = widgets.HTML()
         for control in (
             table_description, table_classification,
-            column_description, column_classification,
+            column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
             dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
@@ -1422,11 +1492,32 @@ def widget_data_contract(
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
             selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
-            column_context.value = (
-                f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
-                f"<p>Datatype: <b>{html.escape(str(selected.get('data_type') or ''))}</b><br>"
-                f"Required: <b>{'Yes' if column_id in required_columns or selected.get('column_name') in required_columns else 'No'}</b></p>"
-            )
+            observed_type = str(selected.get("data_type") or "")
+            contract_type = str(contracted_types.get(column_id) or observed_type)
+            mismatch = bool(contract_type and observed_type and contract_type != observed_type)
+            if mismatch:
+                column_context.value = (
+                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
+                    "<p><span style='color:#a4262c;font-weight:700;'>Datatype drift detected</span><br>"
+                    f"Contract: <b>{html.escape(contract_type)}</b> · "
+                    f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b><br>"
+                    "Choose which datatype this draft should govern before saving.</p>"
+                )
+                datatype_choice.options = (
+                    (f"Keep contract · {contract_type}", contract_type),
+                    (f"Accept observed · {observed_type}", observed_type),
+                )
+                datatype_choice.value = contract_type
+                datatype_choice.layout.display = ""
+            else:
+                column_context.value = (
+                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
+                    f"<p>Datatype: <b>{html.escape(contract_type or observed_type)}</b><br>"
+                    f"Required: <b>{'Yes' if column_id in required_columns or selected.get('column_name') in required_columns else 'No'}</b></p>"
+                )
+                datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
+                datatype_choice.value = contract_type or observed_type
+                datatype_choice.layout.display = "none"
             column_description.value = enrichment_value(enrichments, "column", "Description", column_id)
             column_classification.value = enrichment_value(enrichments, "column", "Classification", column_id)
             required.value = column_id in required_columns or selected.get("column_name") in required_columns
@@ -1522,6 +1613,20 @@ def widget_data_contract(
                 control.layout.display = "" if treatment == "bucket" else "none"
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
+        def working_sensitive_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            state["_working_sensitive_enabled"] = bool(sensitive_enabled.value)
+            render_table_summary()
+
+        def working_dq_changed(_change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            state["_working_dq_enabled"] = bool(dq_enabled.value)
+            render_table_summary()
+
+        sensitive_enabled.observe(working_sensitive_changed, names="value")
+        dq_enabled.observe(working_dq_changed, names="value")
         update_sensitive_fields()
 
         def update_pii_fields(change: dict[str, Any] | None = None) -> None:
@@ -2089,7 +2194,39 @@ def widget_data_contract(
         save_dq.on_click(save_dq_clicked)
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        def rebuild_column_options() -> None:
+            nonlocal column_options
+            column_options = []
+            required_indexes = []
+            for index, column in enumerate(columns, start=1):
+                cid = str(column.get("column_id") or "")
+                name = str(column.get("column_name") or "")
+                contract_type = str(contracted_types.get(cid) or column.get("data_type") or "")
+                observed_type = str(observed_types.get(cid) or "")
+                is_required = cid in required_columns or name in required_columns
+                drift = contract_type != observed_type
+                marker = " *" if is_required else ""
+                drift_marker = f"  → {observed_type}" if drift else ""
+                column_options.append(
+                    (f"{name}    {contract_type}{drift_marker}{marker}", cid)
+                )
+                if is_required:
+                    required_indexes.append(index)
+            rules = "".join(
+                f".fabricops-contract-columns option:nth-child({index}):not(:checked)"
+                "{color:#0f6cbd;font-weight:600;}"
+                for index in required_indexes
+            )
+            column_option_style.value = (
+                "<style>"
+                + rules
+                + ".fabricops-contract-columns option:checked{"
+                "color:CanvasText !important;font-weight:600;}"
+                + "</style>"
+            )
+
         def refresh_column_options(*_args: Any) -> None:
+            rebuild_column_options()
             query = str(column_search.value or "").strip().casefold()
             current_value = str(column_select.value or "")
             filtered = [
@@ -2105,7 +2242,44 @@ def widget_data_contract(
             else:
                 column_select.value = None
 
+        def required_feedback(change: dict[str, Any]) -> None:
+            if hydrating["active"]:
+                return
+            cid = str(column_select.value or "")
+            selected = selected_column()
+            name = str(selected.get("column_name") or "")
+            if bool(change.get("new")):
+                required_columns.add(cid)
+            else:
+                required_columns.discard(cid)
+                required_columns.discard(name)
+            refresh_column_options()
+            render_table_summary()
+
+        def datatype_feedback(change: dict[str, Any]) -> None:
+            if hydrating["active"] or not change.get("new"):
+                return
+            cid = str(column_select.value or "")
+            contracted_types[cid] = str(change["new"])
+            payload = json.loads(str(current["contract"].get("contract_payload_json") or "{}"))
+            for item in payload.get("table", {}).get("columns", []):
+                if str(item.get("column_id") or "") == cid:
+                    item["data_type"] = contracted_types[cid]
+                    break
+            current["contract"]["contract_payload_json"] = json.dumps(
+                payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            )
+            state["dirty"] = True
+            refresh_manifest()
+            refresh_column_options()
+            hydrate_column(cid)
+            set_status("Contract datatype choice staged locally. Save the Data Contract to persist.")
+
+        required.observe(required_feedback, names="value")
+        datatype_choice.observe(datatype_feedback, names="value")
         column_search.observe(refresh_column_options, names="value")
+        rebuild_column_options()
+        refresh_column_options()
 
         column_left = (
             widgets.HTML(
@@ -2116,6 +2290,7 @@ def widget_data_contract(
                 "and Data Quality rules.</div>"
             ),
             column_search,
+            column_option_style,
             column_select,
         )
         dq_editor = widgets.VBox(
@@ -2154,7 +2329,10 @@ def widget_data_contract(
                     "<div style='color:#253858;font-size:13px;font-weight:600;'>Schema</div>",
                     layout=widgets.Layout(width="150px", min_width="150px"),
                 ),
-                required,
+                widgets.VBox(
+                    [required, datatype_choice],
+                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
+                ),
             ],
             layout=widgets.Layout(width="100%", gap="12px", align_items="center"),
         )
@@ -2346,18 +2524,115 @@ def widget_data_contract(
         view_content["Advanced"] = (advanced_left, advanced_right)
 
 
-        # Manifest: one scannable review page with expandable detail.
-        payload = state.get("manifest") or {}
+        # Manifest: current working contract plus changes since the last persisted draft.
+        payload = refresh_manifest() or {}
+        saved_payload = state.get("_saved_payload") or {}
         sections = _manifest_sections(payload)
+
+        def review_change_html() -> str:
+            changes: list[str] = []
+            old_table = dict(saved_payload.get("table") or {})
+            new_table = dict(payload.get("table") or {})
+            old_processing = old_table.get("processing") or {}
+            new_processing = new_table.get("processing") or {}
+            if old_processing != new_processing:
+                changes.append(
+                    "<li><b>Processing</b> changed from "
+                    f"<code>{html.escape(json.dumps(old_processing, sort_keys=True))}</code> to "
+                    f"<code>{html.escape(json.dumps(new_processing, sort_keys=True))}</code></li>"
+                )
+
+            def enrichment_map(doc: dict[str, Any]) -> dict[tuple[str, str], str]:
+                result: dict[tuple[str, str], str] = {}
+                enrichment = doc.get("enrichment") or {}
+                for item in [*(enrichment.get("table") or []), *(enrichment.get("columns") or [])]:
+                    result[(str(item.get("column_id") or ""), str(item.get("enrichment_type") or ""))] = str(item.get("value") or "")
+                return result
+
+            old_enrichment, new_enrichment = enrichment_map(saved_payload), enrichment_map(payload)
+            for key in sorted(set(old_enrichment) | set(new_enrichment)):
+                before, after = old_enrichment.get(key, ""), new_enrichment.get(key, "")
+                if before != after:
+                    target = key[0] or "Table"
+                    changes.append(
+                        f"<li><b>{html.escape(target)} · {html.escape(key[1])}</b>: "
+                        f"{html.escape(before or 'Not set')} → {html.escape(after or 'Not set')}</li>"
+                    )
+
+            old_columns = {
+                str(item.get("column_id") or ""): item
+                for item in old_table.get("columns", []) if item.get("column_id")
+            }
+            for item in new_table.get("columns", []):
+                cid = str(item.get("column_id") or "")
+                before = str(old_columns.get(cid, {}).get("data_type") or "")
+                after = str(item.get("data_type") or "")
+                if before and after and before != after:
+                    changes.append(
+                        f"<li><b>{html.escape(str(item.get('column_name') or cid))} datatype</b>: "
+                        f"{html.escape(before)} → {html.escape(after)}</li>"
+                    )
+
+            def active_rules(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
+                return {
+                    str(item.get("guardrail_rule_id") or item.get("rule_id") or ""): item
+                    for item in doc.get("guardrails", []) if item.get("is_active", True)
+                }
+            old_rules, new_rules = active_rules(saved_payload), active_rules(payload)
+            added = [rule for key, rule in new_rules.items() if key not in old_rules]
+            removed = [rule for key, rule in old_rules.items() if key not in new_rules]
+            changed = [
+                rule for key, rule in new_rules.items()
+                if key in old_rules and rule != old_rules[key]
+            ]
+            if added:
+                changes.append(f"<li><b>Guardrails</b>: +{len(added)} enabled configuration(s)</li>")
+            if removed:
+                changes.append(f"<li><b>Guardrails</b>: -{len(removed)} configuration(s)</li>")
+            if changed:
+                changes.append(f"<li><b>Guardrails</b>: {len(changed)} configuration(s) changed</li>")
+            if not changes:
+                return "<p style='color:#667085;'>No unsaved changes. Current draft matches the last save.</p>"
+            return (
+                "<div style='border-left:4px solid #0f6cbd;padding:10px 12px;background:#f5f9fd;'>"
+                "<b>Changes since last save</b><ul style='margin-bottom:0;'>"
+                + "".join(changes) + "</ul></div>"
+            )
+
+        current_summary = widgets.HTML(
+            "<div style='font-size:16px;font-weight:700;color:#172b4d;'>Current draft</div>"
+            "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+            "This is the complete contract that will replace the saved draft JSON.</div>"
+        )
+        change_preview = widgets.HTML(review_change_html())
         manifest_preview = widgets.HTML(
             value=sections["Review"],
             layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
         )
+
+        def refresh_review() -> None:
+            nonlocal payload
+            payload = refresh_manifest() or {}
+            refreshed_sections = _manifest_sections(payload)
+            manifest_preview.value = refreshed_sections["Review"]
+            change_preview.value = review_change_html()
+        state["_refresh_review"] = refresh_review
         exact_json = shared.preview_region(
             widgets, widgets.HTML(
                 f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
             ), height="240px",
         )
+        refresh_review_base = refresh_review
+
+        def refresh_review() -> None:
+            refresh_review_base()
+            exact_json.children[0].value = (
+                "<details><summary>Exact JSON manifest</summary><pre>"
+                + html.escape(_expose_manifest(payload))
+                + "</pre></details>"
+            )
+
+        state["_refresh_review"] = refresh_review
         actions: list[Any] = []
         save_contract_button = None
         discard_contract_button = None
@@ -2475,8 +2750,8 @@ def widget_data_contract(
         review_right = (
             shared.form_section(
                 widgets,
-                title="Contract manifest",
-                children=[manifest_preview],
+                title="Current contract",
+                children=[current_summary, change_preview, manifest_preview],
             ),
             shared.form_section(
                 widgets,
@@ -2508,6 +2783,7 @@ def widget_data_contract(
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
+            "datatype_choice": datatype_choice, "column_option_style": column_option_style,
             "save_column_enrichment": save_column_enrichment, "save_required": save_required,
             "save_column": save_column, "dq_panel": dq_panel, "dq_editor": dq_editor,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
