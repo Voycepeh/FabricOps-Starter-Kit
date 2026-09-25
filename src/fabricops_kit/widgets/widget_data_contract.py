@@ -93,93 +93,176 @@ def _latest(rows: list[dict[str, Any]], *identity: str) -> list[dict[str, Any]]:
     return list(selected.values())
 
 
-def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
-    """Build one scannable manifest review page with expandable rule detail."""
+def _manifest_sections(
+    payload: dict[str, Any],
+    *,
+    column_profiles: Mapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, str]:
+    """Build one scannable review page from table, column, and cross-column contract rules."""
     table = payload.get("table", {})
-    contract = payload.get("contract", {})
     enrichments = payload.get("enrichment", {})
     guardrails = payload.get("guardrails", [])
     columns = table.get("columns", [])
-    description_by_column = {
-        str(row.get("column_id") or ""): str(row.get("value") or "")
+    profiles = dict(column_profiles or {})
+
+    column_enrichment: dict[tuple[str, str], str] = {
+        (str(row.get("column_id") or ""), str(row.get("enrichment_type") or "")): str(
+            row.get("value") or ""
+        )
         for row in enrichments.get("columns", [])
-        if row.get("enrichment_type") == "Description"
     }
     required: set[str] = set()
     for rule in guardrails:
         if str(rule.get("guardrail_type") or "").lower() == "schema" and rule.get("is_active", True):
             required.update(_parameters(rule).get("required_columns", []))
 
+    def parameter_text(row: Mapping[str, Any]) -> str:
+        parts = []
+        for name, value in _parameters(row).items():
+            if value in (None, "", [], {}):
+                continue
+            if isinstance(value, list):
+                shown = ", ".join(str(item) for item in value)
+            elif isinstance(value, bool):
+                shown = "Yes" if value else "No"
+            else:
+                shown = str(value)
+            parts.append(f"{name.replace('_', ' ')}: {shown}")
+        return " · ".join(parts)
+
+    def rule_label(row: Mapping[str, Any]) -> str:
+        return str(row.get("rule_type") or row.get("guardrail_type") or "").replace("_", " ").title()
+
     def rule_list(rows: list[dict[str, Any]]) -> str:
         items = "".join(
-            "<li><b>{}</b> · {} · {} · {}</li>".format(
-                html.escape(str(row.get("rule_type") or row.get("guardrail_type") or "")),
-                html.escape(str(row.get("column_id") or "table")),
+            "<li><b>{}</b> · {}{}</li>".format(
+                html.escape(rule_label(row)),
                 html.escape(str(row.get("action") or "Warn")),
-                html.escape(json.dumps(_parameters(row), sort_keys=True, default=str)),
+                (
+                    " · " + html.escape(parameter_text(row))
+                    if parameter_text(row) else ""
+                ),
             )
             for row in rows
         ) or "<li>None configured</li>"
         return f"<ul>{items}</ul>"
 
+    def profile_evidence(column_id: str) -> str:
+        profile = dict(profiles.get(column_id) or {})
+        if not profile:
+            return "<span style='color:#667085;'>No profile available</span>"
+        lines = []
+        range_parts = []
+        if profile.get("min_value") is not None:
+            range_parts.append(f"Min value: <b>{html.escape(str(profile['min_value']))}</b>")
+        if profile.get("max_value") is not None:
+            range_parts.append(f"Max value: <b>{html.escape(str(profile['max_value']))}</b>")
+        if range_parts:
+            lines.append(" · ".join(range_parts))
+        cardinality = []
+        if profile.get("distinct_count") is not None:
+            distinct = f"Distinct count: <b>{html.escape(str(profile['distinct_count']))}</b>"
+            if profile.get("distinct_percent") is not None:
+                distinct += f" (<b>{html.escape(str(profile['distinct_percent']))}%</b>)"
+            cardinality.append(distinct)
+        if profile.get("null_count") is not None:
+            nulls = f"Null count: <b>{html.escape(str(profile['null_count']))}</b>"
+            if profile.get("null_percent") is not None:
+                nulls += f" (<b>{html.escape(str(profile['null_percent']))}%</b>)"
+            cardinality.append(nulls)
+        if cardinality:
+            lines.append(" · ".join(cardinality))
+        return "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
+
     active = [row for row in guardrails if row.get("is_active", True)]
-    freshness = [row for row in active if str(row.get("guardrail_type") or "").lower() == "freshness"]
-    source_drift = [row for row in active if str(row.get("guardrail_type") or "").lower() == "source_drift"]
-    table_dq = [
+    advanced = [
         row for row in active
-        if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-        and not str(row.get("column_id") or "")
+        if not str(row.get("column_id") or "")
+        and str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+        and str(row.get("rule_type") or "") in {
+            "uniqueness", "column_relationship", "custom_expression"
+        }
+    ]
+    advanced_ids = {id(row) for row in advanced}
+    table_guardrails = [
+        row for row in active
+        if not str(row.get("column_id") or "") and id(row) not in advanced_ids
     ]
     column_guardrails = [row for row in active if str(row.get("column_id") or "")]
-    advanced = [
-        row for row in table_dq
-        if str(row.get("rule_type") or "") in {"uniqueness", "column_relationship", "custom_expression"}
-    ]
-    blocking = [row for row in active if str(row.get("action") or "").lower() == "block"]
-    required_count = sum(
-        1 for row in columns
-        if row.get("column_id") in required or row.get("column_name") in required
-    )
+    sensitive_by_column = {
+        str(row.get("column_id") or ""): row
+        for row in column_guardrails
+        if str(row.get("guardrail_type") or "").lower() == "sensitive_data"
+    }
+    rules_by_column: dict[str, list[dict[str, Any]]] = {}
+    for rule in column_guardrails:
+        if str(rule.get("guardrail_type") or "").lower() == "sensitive_data":
+            continue
+        rules_by_column.setdefault(str(rule.get("column_id") or ""), []).append(rule)
+
+    def sensitive_text(column_id: str) -> str:
+        rule = sensitive_by_column.get(column_id)
+        if not rule:
+            return "Not PII"
+        parameters = _parameters(rule)
+        pii_type = str(parameters.get("pii_type") or "direct").lower()
+        label = PII_LABELS.get(pii_type, pii_type.replace("_", " ").title())
+        treatment = str(parameters.get("treatment") or rule.get("rule_type") or "").replace("_", " ").title()
+        action = str(rule.get("action") or "Warn")
+        detail = f"{label} · {treatment}" if treatment else label
+        return f"{html.escape(detail)}<br><span style='color:#667085;'>{html.escape(action)}</span>"
+
+    def rules_text(column_id: str) -> str:
+        rows = rules_by_column.get(column_id, [])
+        if not rows:
+            return "<span style='color:#667085;'>None</span>"
+        return "".join(
+            "<div style='margin-bottom:5px;'><b>{}</b> · {}{}</div>".format(
+                html.escape(rule_label(rule)),
+                html.escape(str(rule.get("action") or "Warn")),
+                (
+                    "<br><span style='color:#667085;'>"
+                    + html.escape(parameter_text(rule))
+                    + "</span>"
+                    if parameter_text(rule) else ""
+                ),
+            )
+            for rule in rows
+        )
+
     column_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+        "<tr>"
+        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+        "</tr>".format(
             html.escape(str(row.get("column_name") or "")),
             html.escape(str(row.get("data_type") or "")),
+            profile_evidence(str(row.get("column_id") or "")),
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Description"), ""
+            )) or "<span style='color:#667085;'>—</span>",
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Classification"), ""
+            )) or "<span style='color:#667085;'>—</span>",
+            sensitive_text(str(row.get("column_id") or "")),
             "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
-            html.escape(description_by_column.get(str(row.get("column_id") or ""), "")),
+            rules_text(str(row.get("column_id") or "")),
         )
         for row in columns
     )
-    summary = (
-        "<h3>Contract summary</h3>"
-        "<div style='display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin:10px 0 16px;'>"
-        f"<div><b>{len(columns)}</b><br><span>Columns</span></div>"
-        f"<div><b>{required_count}</b><br><span>Required</span></div>"
-        f"<div><b>{len(active)}</b><br><span>Active guardrails</span></div>"
-        f"<div><b>{len(blocking)}</b><br><span>Blocking rules</span></div></div>"
-        "<p><b>Load strategy:</b> "
-        f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}"
-        " &nbsp; <b>Status:</b> "
-        f"{html.escape(str(contract.get('status') or '').upper())}</p>"
-        + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
-        + f"<p><b>Freshness:</b> {len(freshness)} configured &nbsp; "
-        f"<b>Source drift:</b> {len(source_drift)} configured &nbsp; "
-        f"<b>Column rules:</b> {len(column_guardrails)} &nbsp; "
-        f"<b>Advanced rules:</b> {len(advanced)}</p>"
-    )
     details = (
-        "<details><summary><b>Column definitions and rules</b> · "
-        f"{len(columns)} columns, {len(column_guardrails)} column rules</summary>"
-        "<table><thead><tr><th>Column</th><th>Datatype</th><th>Required</th><th>Description</th>"
-        f"</tr></thead><tbody>{column_rows}</tbody></table>"
-        f"<h4>Column guardrails</h4>{rule_list(column_guardrails)}</details>"
-        "<details><summary><b>Table guardrails</b> · "
-        f"{len(freshness) + len(source_drift)} configured</summary>"
-        f"<h4>Freshness</h4>{rule_list(freshness)}"
-        f"<h4>Source Drift</h4>{rule_list(source_drift)}</details>"
+        "<details open><summary><b>Table guardrails</b> · "
+        f"{len(table_guardrails)} configured</summary>{rule_list(table_guardrails)}</details>"
+        "<details open><summary><b>Column definitions and rules</b> · "
+        f"{len(columns)} columns, {len(column_guardrails)} column guardrails</summary>"
+        "<div style='overflow-x:auto;'>"
+        "<table style='width:100%;font-size:12px;'><thead><tr>"
+        "<th>Column</th><th>Datatype</th><th>Profile evidence</th><th>Description</th>"
+        "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
+        f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Advanced rules</b> · "
         f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
     )
-    return {"Review": summary + details}
+    return {"Review": details}
 
 def _manifest_html(payload: dict[str, Any]) -> str:
     """Render the human and exact JSON views from the same canonical dictionary."""
@@ -2901,7 +2984,9 @@ def widget_data_contract(
         # Manifest: current working contract plus changes since the last persisted draft.
         payload = refresh_manifest() or {}
         saved_payload = state.get("_saved_payload") or {}
-        sections = _manifest_sections(payload)
+        sections = _manifest_sections(
+            payload, column_profiles=runtime_context.get("column_profiles", {})
+        )
 
         def review_change_html() -> str:
             changes: list[str] = []
@@ -2987,7 +3072,9 @@ def widget_data_contract(
         def refresh_review() -> None:
             nonlocal payload
             payload = refresh_manifest() or {}
-            refreshed_sections = _manifest_sections(payload)
+            refreshed_sections = _manifest_sections(
+                payload, column_profiles=runtime_context.get("column_profiles", {})
+            )
             manifest_preview.value = refreshed_sections["Review"]
             change_preview.value = review_change_html()
         state["_refresh_review"] = refresh_review
