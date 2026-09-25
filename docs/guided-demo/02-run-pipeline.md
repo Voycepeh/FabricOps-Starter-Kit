@@ -53,11 +53,11 @@ CONTRACTS = widget_select_data_contract(spark_session=spark)
 ??? example "Show Data Contract selection output"
     ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
 
-This is expected. There is no Data Contract yet because Governance has not authored one. We will revisit this in [Step 04. Select and validate the Data Contract](04-run-pipeline-with-guardrails.md).
+The selector defaults every discovered source and target to **Enforce**. This is the normal pipeline path, so no mode change is required for the initial Guided Demo run.
 
-In Development, when no Data Contract is selected, guardrail checks return skipped instead of requiring you to comment them out.
+This is expected. There is no enforceable Data Contract yet because Governance has not authored and activated one. In Development, contract-backed checks therefore return skipped instead of requiring you to comment them out.
 
-This means the same 02_pipeline notebook can be used both before and after Governance is introduced.
+This means the same `02_pipeline` notebook and the same cloneable blocks work before and after Governance is introduced. Step 4 explicitly switches only the governed target to Validate mode; unrelated sources and targets keep their own Enforce behavior.
 
 ## 3. Read
 
@@ -238,6 +238,8 @@ Everything below uses those settings. You normally do not need to edit the Fabri
 ### Run the Write block
 
 `pipeline_write()` resolves whether the target is a Lakehouse or Warehouse and performs the physical publication through the appropriate FabricOps I/O function.
+
+The selector's default Enforce mode follows this existing path. Validate mode is optional and target-scoped; when selected in Step 4, the same Write block evaluates the frozen candidate and structurally skips `pipeline_write()` for that target only.
 
 ```python
 write_result = pipeline_write(

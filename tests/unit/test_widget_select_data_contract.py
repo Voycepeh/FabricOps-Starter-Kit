@@ -96,6 +96,8 @@ def test_selector_resolves_multiple_lineage_tables_and_preserves_roles(monkeypat
     ]
     assert state["tables"]["table-a"]["display_name"] == "Bronze / demo / orders"
     assert state["tables"]["table-b"]["display_name"] == "Silver / demo / curated_orders"
+    assert state["tables"]["table-a"]["mode"] == "enforce"
+    assert state["tables"]["table-b"]["mode"] == "enforce"
     state["set_mode"]("table-b", "validate", "contract-table-b", 2)
     assert context["data_contract_overrides"] == {}
     assert state["tables"]["table-a"]["mode"] == "enforce"

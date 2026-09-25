@@ -197,10 +197,12 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "freezing does not activate" in normalized["step_3"]
     assert "immutable data contract" in normalized["step_3"]
 
-    assert "# step 4. select and validate the data contract" in normalized["step_4"]
-    assert "select the immutable version" in normalized["step_4"]
+    assert "# step 4. validate the frozen data contract" in normalized["step_4"]
+    assert "select the exact frozen candidate version" in normalized["step_4"]
     assert "same `02_pipeline`" in step_4
     assert "do not edit a frozen version in place" in normalized["step_4"]
+    assert "defaults every table to **enforce**" in normalized["step_4"]
+    assert "cannot call `pipeline_write()`" in normalized["step_4"]
 
     assert "# step 5. link the data agreement and activate" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]
@@ -214,7 +216,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
     lifecycle_steps = (
         "author and freeze the data contract",
-        "select and validate the data contract",
+        "validate the frozen data contract",
         "link the data agreement and activate",
         "promote and run production",
     )
@@ -241,6 +243,20 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert "CONTRACT_MODE" not in source
     assert "VALIDATE_CONTRACTS" not in source
     assert source.count("widget_select_data_contract(spark_session=spark)") == 1
+
+
+def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validation():
+    """The existing walkthrough remains runnable without changing the selector default."""
+    step_2 = (ROOT / "docs/guided-demo/02-run-pipeline.md").read_text(encoding="utf-8")
+    step_4 = (ROOT / "docs/guided-demo/04-run-pipeline-with-guardrails.md").read_text(encoding="utf-8")
+
+    assert "defaults every discovered source and target to **Enforce**" in step_2
+    assert "no mode change is required for the initial Guided Demo run" in step_2
+    assert "same cloneable blocks" in step_2
+    assert "switches only the governed target to Validate mode" in step_2
+    assert "leave every source table in **Enforce** mode" in step_4
+    assert "Any other target left in Enforce mode" in step_4
+    assert "business target remains unchanged" in step_4
 
 
 def test_02_pipeline_target_validate_mode_structurally_excludes_business_writes():
