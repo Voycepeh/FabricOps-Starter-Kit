@@ -293,7 +293,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
-        "_pending_enrichment": {}, "_pending_guardrails": {}, "dirty": False,
+        "_pending_enrichment": {}, "_pending_guardrails": {}, "_pending_processing": {}, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -421,6 +421,7 @@ def widget_data_contract(
         state["dirty"] = bool(
             state["_pending_enrichment"].get(scope)
             or state["_pending_guardrails"].get(scope)
+            or state["_pending_processing"].get(scope)
             or state["_column_drafts"].get(scope)
         )
         refresh_scheduled_refresh(str(state["table_id"] or ""))
@@ -540,6 +541,26 @@ def widget_data_contract(
         refresh_manifest()
         return records
 
+    def stage_processing(processing: dict[str, Any]) -> dict[str, Any]:
+        """Stage Data Contract processing in widget session state without writing Metadata."""
+        current = state.get("current")
+        if not current or str(current["contract"].get("status") or "").lower() != "draft":
+            raise ValueError("Only a draft Data Contract version can edit processing.")
+        normalized = contracts.validated_processing(dict(processing))
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        pending = dict(normalized)
+        state["_pending_processing"][scope] = pending
+        source = str(current["contract"].get("processing_source") or "").strip()
+        if source != "catalogue" and normalized != contracts.contract_processing(current["contract"]):
+            source = "manual"
+        current["contract"]["processing_json"] = json.dumps(
+            normalized, sort_keys=True, separators=(",", ":")
+        )
+        current["contract"]["processing_source"] = source or "manual"
+        state["dirty"] = True
+        refresh_manifest()
+        return pending
+
     def save_data_contract_session() -> None:
         """Persist all staged draft changes once, then reload canonical state once."""
         current = state.get("current")
@@ -548,6 +569,7 @@ def widget_data_contract(
         scope = (str(current["contract_id"]), int(current["contract_version"]))
         enrichment_records = list(state["_pending_enrichment"].get(scope, {}).values())
         guardrail_records = list(state["_pending_guardrails"].get(scope, {}).values())
+        processing = state["_pending_processing"].get(scope)
         if enrichment_records:
             contracts.save_enrichment(
                 enrichment_records, config=config, env=env, spark_session=spark
@@ -556,8 +578,14 @@ def widget_data_contract(
             contracts.save_guardrails(
                 guardrail_records, config=config, env=env, spark_session=spark
             )
+        if processing is not None:
+            contracts.save_contract_processing(
+                draft=current["contract"], processing=processing,
+                config=config, env=env, spark_session=spark, context=resolved,
+            )
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
+        state["_pending_processing"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
@@ -572,6 +600,7 @@ def widget_data_contract(
         scope = (str(current["contract_id"]), int(current["contract_version"]))
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
+        state["_pending_processing"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
