@@ -280,6 +280,7 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
     assert '"sensitive_data_prompt"' in source
     assert '"grain_prompt"' in source
     assert '"pattern_prompt"' in source
+    assert '"business_rule_prompt"' in source
     assert '"dq_prompt"' not in source
     assert '"enabled": True' in source
     assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
