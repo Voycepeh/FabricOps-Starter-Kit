@@ -173,7 +173,7 @@ def _manifest_sections(
         return "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
 
     active = [row for row in guardrails if row.get("is_active", True)]
-    advanced = [
+    business_rules = [
         row for row in active
         if not str(row.get("column_id") or "")
         and str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -181,10 +181,10 @@ def _manifest_sections(
             "column_relationship", "custom_expression"
         }
     ]
-    advanced_ids = {id(row) for row in advanced}
+    business_rule_ids = {id(row) for row in business_rules}
     table_guardrails = [
         row for row in active
-        if not str(row.get("column_id") or "") and id(row) not in advanced_ids
+        if not str(row.get("column_id") or "") and id(row) not in business_rule_ids
     ]
     column_guardrails = [row for row in active if str(row.get("column_id") or "")]
     sensitive_by_column = {
@@ -258,7 +258,7 @@ def _manifest_sections(
         "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Business Rules</b> · "
-        f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
+        f"{len(business_rules)} configured</summary>{rule_list(business_rules)}</details>"
     )
     return {"Review": details}
 
