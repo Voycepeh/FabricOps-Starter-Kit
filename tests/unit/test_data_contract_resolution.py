@@ -50,7 +50,7 @@ def contract_row(
     contract_id="contract-a",
     contract_version=1,
     table_id="table-a",
-    status="active",
+    status="frozen",
     is_active=True,
 ):
     payload = {
@@ -147,7 +147,7 @@ def test_duplicate_exact_contract_versions_still_raise(monkeypatch):
         monkeypatch,
         [
             contract_row(status="frozen", is_active=False),
-            contract_row(status="superseded", is_active=False),
+            contract_row(status="frozen", is_active=False),
         ],
     )
 
