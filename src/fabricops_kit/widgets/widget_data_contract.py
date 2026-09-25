@@ -855,7 +855,7 @@ def widget_data_contract(
         table_classification.description = ""
         table_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         table_description_ai = widgets.HTML()
-        accept_table_description = widgets.Button(description="Accept", disabled=not editable)
+        accept_table_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
 
         # Table grain and row key: grain is descriptive Enrichment; selected key columns
@@ -1722,7 +1722,7 @@ def widget_data_contract(
         column_classification.description = ""
         column_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         column_description_ai = widgets.HTML()
-        accept_column_description = widgets.Button(description="Accept", disabled=not editable)
+        accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
         column_header = widgets.GridBox(
@@ -1803,7 +1803,7 @@ def widget_data_contract(
         dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         dq_usage = widgets.HTML()
         sensitive_ai = widgets.HTML()
-        accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
+        accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
@@ -1817,7 +1817,7 @@ def widget_data_contract(
             ),
         )
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
-        accept_dq_suggestion = widgets.Button(description="Accept selected suggestion", disabled=True)
+        accept_dq_suggestion = widgets.Button(description="Apply", disabled=True)
         dq_ai = widgets.HTML()
         for control in (
             table_description, table_classification,
@@ -2633,7 +2633,7 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def suggest_dq_clicked(_button: Any) -> None:
-            """Generate transient standard-rule advice and hydrate controls only on acceptance."""
+            """Generate transient standard-rule advice and hydrate controls only on apply."""
             try:
                 selected = selected_column()
                 profile_value = load_profile_context(str(selected.get("column_id") or ""))
@@ -2676,7 +2676,7 @@ def widget_data_contract(
                 dq_ai.value = "<p><b>Transient suggestions</b></p><ul>" + "".join(
                     f"<li>{html.escape(item['rule_type'])}: {html.escape(item['rationale'])}</li>"
                     for item in suggestions
-                ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
+                ) + "</ul><p>Select a suggestion and choose <b>Apply</b>. FabricOps copies only the canonical supported fields into the editor; you can still edit them before the final Data Contract save.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
                 state["_ai_suggestions"][suggestion_scope].pop("dq", None)
                 dq_suggestion.options = ()
