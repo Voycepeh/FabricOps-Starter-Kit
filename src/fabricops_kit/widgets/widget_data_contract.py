@@ -1545,6 +1545,12 @@ def widget_data_contract(
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
         sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
+        sensitive_help = widgets.HTML(
+            "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+            "Classify whether this column contains PII, record the reason, and choose how "
+            "the pipeline should treat the sensitive value.</div>"
+        )
+        sensitive_rule_preview = widgets.HTML()
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
@@ -1582,6 +1588,9 @@ def widget_data_contract(
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Accept suggestion", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
+        sensitive_ai_actions = shared.action_row(
+            widgets, [accept_sensitive, rerun_sensitive]
+        )
         suggest_dq = widgets.Button(
             description="Suggest rules",
             disabled=(
@@ -1815,6 +1824,53 @@ def widget_data_contract(
             for control in (bucket_bins, bucket_labels):
                 control.layout.display = "" if treatment == "bucket" else "none"
 
+        def refresh_sensitive_rule_preview(
+            _change: dict[str, Any] | None = None,
+        ) -> None:
+            pii_value = str(pii_type.value or "none")
+            if not sensitive_enabled.value or pii_value == "none":
+                sensitive_rule_preview.value = ""
+                return
+            pii_label = PII_LABELS.get(pii_value, pii_value)
+            treatment = str(sensitive_treatment.value or "")
+            action = (
+                "Block the pipeline run on failure."
+                if sensitive_block.value
+                else "Do not block the pipeline run on failure."
+            )
+            detail = ""
+            if treatment == "mask":
+                detail = (
+                    f" Preserve {html.escape(str(mask_start.value or '0'))} character(s) at the start "
+                    f"and {html.escape(str(mask_end.value or '0'))} at the end."
+                )
+            elif treatment == "bucket":
+                bins = str(bucket_bins.value or "").strip()
+                labels = str(bucket_labels.value or "").strip()
+                if bins:
+                    detail = f" Bucket boundaries: <code>{html.escape(bins)}</code>."
+                if labels:
+                    detail += f" Labels: <code>{html.escape(labels)}</code>."
+            reason = str(pii_reason.value or "").strip()
+            reason_line = (
+                f"<br><span style='color:#667085;'>Reason: {html.escape(reason)}</span>"
+                if reason else ""
+            )
+            sensitive_rule_preview.value = (
+                "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
+                "<b>ⓘ Rule</b><br>"
+                f"This column is assessed as <b>{html.escape(pii_label)}</b>. "
+                f"Treatment: <b>{html.escape(treatment)}</b>.{detail} {action}"
+                f"{reason_line}</div>"
+            )
+
+        for sensitive_control in (
+            sensitive_enabled, pii_type, pii_reason, sensitive_treatment, sensitive_block,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+        ):
+            sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
+
         sensitive_treatment.observe(update_sensitive_fields, names="value")
         def working_sensitive_changed(_change: dict[str, Any]) -> None:
             if hydrating["active"]:
@@ -1842,6 +1898,7 @@ def widget_data_contract(
 
         pii_type.observe(update_pii_fields, names="value")
         update_pii_fields()
+        refresh_sensitive_rule_preview()
 
         def column_changed(change: dict[str, Any]) -> None:
             old = str(change.get("old") or "")
@@ -2553,6 +2610,37 @@ def widget_data_contract(
             "Column definition", column_classification, column_description,
             column_description_ai, accept_column_description, rerun_column_description,
         )
+        sensitive_primary = widgets.VBox(
+            [
+                pii_type,
+                sensitive_treatment,
+                mask_start,
+                mask_end,
+                mask_character,
+                bucket_bins,
+                bucket_labels,
+                pii_reason,
+                sensitive_rule_preview,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        sensitive_ai_panel = widgets.VBox(
+            [sensitive_ai, sensitive_ai_actions],
+            layout=widgets.Layout(
+                width="100%", min_width="0", gap="8px",
+                padding="0 0 0 16px",
+                border_left="1px solid #e1e6eb",
+            ),
+        )
+        sensitive_editor = widgets.GridBox(
+            [sensitive_primary, sensitive_ai_panel],
+            layout=widgets.Layout(
+                width="100%",
+                grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                grid_gap="16px",
+                align_items="flex-start",
+            ),
+        )
         column_right = (
             column_header,
             datatype_choice,
@@ -2566,20 +2654,12 @@ def widget_data_contract(
                 widgets,
                 title="Sensitive Data",
                 children=[
+                    sensitive_help,
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
                         layout=checkbox_row_layout,
                     ),
-                    sensitive_ai,
-                    shared.action_row(widgets, [accept_sensitive, rerun_sensitive]),
-                    pii_type,
-                    pii_reason,
-                    sensitive_treatment,
-                    mask_start,
-                    mask_end,
-                    mask_character,
-                    bucket_bins,
-                    bucket_labels,
+                    sensitive_editor,
                 ],
             ),
             dq_panel,
