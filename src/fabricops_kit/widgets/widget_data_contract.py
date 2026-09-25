@@ -515,6 +515,9 @@ def widget_data_contract(
             config=config, env=env, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
+        state["_saved_payload"] = json.loads(
+            str(state["current"]["contract"].get("contract_payload_json") or "{}")
+        )
         scope = (str(chosen["contract_id"]), state["contract_version"])
         state["dirty"] = bool(
             state["_pending_enrichment"].get(scope)
@@ -1189,6 +1192,36 @@ def widget_data_contract(
             rendered_classification["value"] = classification
 
         table_classification.observe(refresh_table_summary, names="value")
+
+        def refresh_guardrail_summary() -> None:
+            active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
+            statuses = {
+                "Schema": any(str(rule.get("guardrail_type") or "").lower() == "schema" for rule in active)
+                or bool(required_columns),
+                "Freshness": bool(table_rules["freshness"]["enabled"].value),
+                "Sensitive Data": any(str(rule.get("guardrail_type") or "").lower() == "sensitive_data" for rule in active),
+                "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
+                "Data Quality": any(
+                    str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                    for rule in active
+                ),
+            }
+            summary = "".join(
+                "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
+                f"<span style='color:#666'>{html.escape(name)}</span>"
+                f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
+                for name, enabled in statuses.items()
+            )
+            start = "<div style='margin-top:6px;'>"
+            prefix, separator, remainder = table_summary.value.partition(start)
+            if separator:
+                _old, end, suffix = remainder.partition("</div>")
+                table_summary.value = prefix + start + summary + "</div>" + suffix
+
+        for rule_controls in table_rules.values():
+            rule_controls["enabled"].observe(
+                lambda _change: refresh_guardrail_summary(), names="value"
+            )
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -2206,6 +2239,7 @@ def widget_data_contract(
                 required_columns.discard(cid)
                 required_columns.discard(name)
             refresh_column_options()
+            refresh_guardrail_summary()
 
         def datatype_feedback(change: dict[str, Any]) -> None:
             if hydrating["active"] or not change.get("new"):
@@ -2475,9 +2509,87 @@ def widget_data_contract(
         view_content["Advanced"] = (advanced_left, advanced_right)
 
 
-        # Manifest: one scannable review page with expandable detail.
-        payload = state.get("manifest") or {}
+        # Manifest: current working contract plus changes since the last persisted draft.
+        payload = refresh_manifest() or {}
+        saved_payload = state.get("_saved_payload") or {}
         sections = _manifest_sections(payload)
+
+        def review_change_html() -> str:
+            changes: list[str] = []
+            old_table = dict(saved_payload.get("table") or {})
+            new_table = dict(payload.get("table") or {})
+            old_processing = old_table.get("processing") or {}
+            new_processing = new_table.get("processing") or {}
+            if old_processing != new_processing:
+                changes.append(
+                    "<li><b>Processing</b> changed from "
+                    f"<code>{html.escape(json.dumps(old_processing, sort_keys=True))}</code> to "
+                    f"<code>{html.escape(json.dumps(new_processing, sort_keys=True))}</code></li>"
+                )
+
+            def enrichment_map(doc: dict[str, Any]) -> dict[tuple[str, str], str]:
+                result: dict[tuple[str, str], str] = {}
+                enrichment = doc.get("enrichment") or {}
+                for item in [*(enrichment.get("table") or []), *(enrichment.get("columns") or [])]:
+                    result[(str(item.get("column_id") or ""), str(item.get("enrichment_type") or ""))] = str(item.get("value") or "")
+                return result
+
+            old_enrichment, new_enrichment = enrichment_map(saved_payload), enrichment_map(payload)
+            for key in sorted(set(old_enrichment) | set(new_enrichment)):
+                before, after = old_enrichment.get(key, ""), new_enrichment.get(key, "")
+                if before != after:
+                    target = key[0] or "Table"
+                    changes.append(
+                        f"<li><b>{html.escape(target)} · {html.escape(key[1])}</b>: "
+                        f"{html.escape(before or 'Not set')} → {html.escape(after or 'Not set')}</li>"
+                    )
+
+            old_columns = {
+                str(item.get("column_id") or ""): item
+                for item in old_table.get("columns", []) if item.get("column_id")
+            }
+            for item in new_table.get("columns", []):
+                cid = str(item.get("column_id") or "")
+                before = str(old_columns.get(cid, {}).get("data_type") or "")
+                after = str(item.get("data_type") or "")
+                if before and after and before != after:
+                    changes.append(
+                        f"<li><b>{html.escape(str(item.get('column_name') or cid))} datatype</b>: "
+                        f"{html.escape(before)} → {html.escape(after)}</li>"
+                    )
+
+            def active_rules(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
+                return {
+                    str(item.get("guardrail_rule_id") or item.get("rule_id") or ""): item
+                    for item in doc.get("guardrails", []) if item.get("is_active", True)
+                }
+            old_rules, new_rules = active_rules(saved_payload), active_rules(payload)
+            added = [rule for key, rule in new_rules.items() if key not in old_rules]
+            removed = [rule for key, rule in old_rules.items() if key not in new_rules]
+            changed = [
+                rule for key, rule in new_rules.items()
+                if key in old_rules and rule != old_rules[key]
+            ]
+            if added:
+                changes.append(f"<li><b>Guardrails</b>: +{len(added)} enabled configuration(s)</li>")
+            if removed:
+                changes.append(f"<li><b>Guardrails</b>: -{len(removed)} configuration(s)</li>")
+            if changed:
+                changes.append(f"<li><b>Guardrails</b>: {len(changed)} configuration(s) changed</li>")
+            if not changes:
+                return "<p style='color:#667085;'>No unsaved changes. Current draft matches the last save.</p>"
+            return (
+                "<div style='border-left:4px solid #0f6cbd;padding:10px 12px;background:#f5f9fd;'>"
+                "<b>Changes since last save</b><ul style='margin-bottom:0;'>"
+                + "".join(changes) + "</ul></div>"
+            )
+
+        current_summary = widgets.HTML(
+            "<div style='font-size:16px;font-weight:700;color:#172b4d;'>Current draft</div>"
+            "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+            "This is the complete contract that will replace the saved draft JSON.</div>"
+        )
+        change_preview = widgets.HTML(review_change_html())
         manifest_preview = widgets.HTML(
             value=sections["Review"],
             layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
@@ -2604,8 +2716,8 @@ def widget_data_contract(
         review_right = (
             shared.form_section(
                 widgets,
-                title="Contract manifest",
-                children=[manifest_preview],
+                title="Current contract",
+                children=[current_summary, change_preview, manifest_preview],
             ),
             shared.form_section(
                 widgets,
