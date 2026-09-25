@@ -207,89 +207,67 @@ def _profile_html(context: dict[str, Any]) -> str:
             return f"{value:,.3f}".rstrip("0").rstrip(".")
         return str(value)
 
-    def escaped(value: Any) -> str:
-        return html.escape(shown(value))
-
-    row_count = profile.get("row_count")
-    distinct_count = profile.get("distinct_count")
-    distinct_percent = profile.get("distinct_percent")
-    null_percent = profile.get("null_percent")
-    data_type = str(profile.get("data_type") or "").lower()
-    numeric = any(
-        marker in data_type
-        for marker in ("byte", "short", "int", "long", "float", "double", "decimal")
-    )
-    temporal = "date" in data_type or "timestamp" in data_type
-    boolean = "bool" in data_type
+    def bold_value(value: Any, suffix: str = "") -> str:
+        return f"<b>{html.escape(shown(value))}{suffix}</b>"
 
     facts = []
-    if row_count is not None:
-        facts.append(f"{escaped(row_count)} rows")
-    if distinct_count is not None:
-        distinct = f"{escaped(distinct_count)} distinct"
-        if distinct_percent is not None:
-            distinct += f" ({escaped(distinct_percent)}%)"
-        facts.append(distinct)
-    if null_percent is not None:
-        facts.append(f"{escaped(null_percent)}% missing")
+    for key, label, suffix in (
+        ("row_count", "Row count", ""),
+        ("distinct_count", "Distinct count", ""),
+        ("distinct_percent", "Distinct percent", "%"),
+        ("null_count", "Null count", ""),
+        ("null_percent", "Null percent", "%"),
+    ):
+        if profile.get(key) is not None:
+            facts.append(f"{label}: {bold_value(profile.get(key), suffix)}")
 
     lines = []
     if facts:
         lines.append(" · ".join(facts))
 
-    if temporal:
-        if profile.get("min_value") is not None or profile.get("max_value") is not None:
-            lines.append(
-                f"Observed: {escaped(profile.get('min_value'))} to "
-                f"{escaped(profile.get('max_value'))}"
-            )
-    elif numeric:
-        if profile.get("min_value") is not None or profile.get("max_value") is not None:
-            lines.append(
-                f"Range: {escaped(profile.get('min_value'))} to "
-                f"{escaped(profile.get('max_value'))}"
-            )
-        distribution = []
-        if profile.get("median_value") is not None:
-            distribution.append(f"Median {escaped(profile.get('median_value'))}")
-        if (
-            profile.get("percentile_25_value") is not None
-            and profile.get("percentile_75_value") is not None
-        ):
-            distribution.append(
-                "Middle 50% "
-                f"{escaped(profile.get('percentile_25_value'))} to "
-                f"{escaped(profile.get('percentile_75_value'))}"
-            )
-        if profile.get("mean_value") is not None:
-            distribution.append(f"Mean {escaped(profile.get('mean_value'))}")
-        if profile.get("stddev_value") is not None:
-            distribution.append(f"Std dev {escaped(profile.get('stddev_value'))}")
-        if distribution:
-            lines.append(" · ".join(distribution))
+    range_facts = []
+    if profile.get("min_value") is not None:
+        range_facts.append(f"Min value: {bold_value(profile.get('min_value'))}")
+    if profile.get("max_value") is not None:
+        range_facts.append(f"Max value: {bold_value(profile.get('max_value'))}")
+    if range_facts:
+        lines.append(" · ".join(range_facts))
+
+    distribution = []
+    for key, label in (
+        ("median_value", "Median value"),
+        ("percentile_25_value", "Percentile 25 value"),
+        ("percentile_75_value", "Percentile 75 value"),
+        ("mean_value", "Mean value"),
+        ("stddev_value", "Stddev value"),
+    ):
+        if profile.get(key) is not None:
+            distribution.append(f"{label}: {bold_value(profile.get(key))}")
+    if distribution:
+        lines.append(" · ".join(distribution))
 
     if values:
-        common = []
+        frequencies = []
         for item in values[:3]:
-            label = escaped(item.get("value"))
-            count = item.get("count")
-            percent = item.get("percent")
-            detail = []
-            if count is not None:
-                detail.append(escaped(count))
-            if percent is not None:
-                detail.append(f"{escaped(percent)}%")
-            common.append(f"{label} ({', '.join(detail)})" if detail else label)
-        prefix = "Values" if boolean else "Common values"
-        lines.append(f"{prefix}: " + ", ".join(common))
+            parts = []
+            if item.get("value") is not None:
+                parts.append(f"Value: {bold_value(item.get('value'))}")
+            if item.get("count") is not None:
+                parts.append(f"Count: {bold_value(item.get('count'))}")
+            if item.get("percent") is not None:
+                parts.append(f"Percent: {bold_value(item.get('percent'), '%')}")
+            if parts:
+                frequencies.append(" · ".join(parts))
+        lines.extend(frequencies)
     elif (
-        distinct_percent is not None
-        and float(distinct_percent) >= 80.0
-        and not temporal
+        profile.get("distinct_percent") is not None
+        and float(profile["distinct_percent"]) >= 80.0
+        and "date" not in str(profile.get("data_type") or "").lower()
+        and "timestamp" not in str(profile.get("data_type") or "").lower()
     ):
-        lines.append("Values are highly unique, so common value profiling was skipped.")
+        lines.append("Values are highly unique, so value frequency profiling was skipped.")
 
-    return "<p>" + "<br>".join(lines) + "</p>"
+    return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
 
 def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
     """Render normalized Scheduled Refresh discovery without exposing API details."""
