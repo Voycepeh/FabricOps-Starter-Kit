@@ -36,8 +36,8 @@ _ADVANCED_TYPES = (
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
     "uniqueness": "Require one column, or a table-level column combination, to be unique.",
-    "value_set": "Allow or block an explicit governed set of values.",
-    "range": "Apply independent inclusive or exclusive minimum and maximum bounds.",
+    "value_set": "Allowed Values checks whether a column value belongs to an approved governed set.",
+    "range": "Value Rules apply numeric or date conditions such as below, above, between, or outside bounds.",
     "pattern": "Require populated text to match a governed regular expression.",
     "column_relationship": "Compare two columns row by row with a controlled operator.",
     "custom_expression": "Evaluate a constrained project-authored PySpark boolean Column expression.",
@@ -821,7 +821,6 @@ def widget_data_contract(
         ]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
-        selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
@@ -1556,28 +1555,47 @@ def widget_data_contract(
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
         bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket boundaries (comma-separated)"))
         bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket labels (comma-separated)"))
-        dq_type = widgets.Select(
+        dq_type = widgets.ToggleButtons(
             options=[
                 ("Completeness", "completeness"),
                 ("Uniqueness", "uniqueness"),
-                ("Value Set", "value_set"),
-                ("Range", "range"),
+                ("Allowed Values", "value_set"),
+                ("Value Rules", "range"),
                 ("Pattern", "pattern"),
             ],
-            rows=5,
             disabled=not editable,
-            layout=selector_layout,
+            layout=widgets.Layout(width="100%"),
+        )
+        dq_catalogue = widgets.HTML(
+            "<div style='display:grid;grid-template-columns:repeat(5,minmax(135px,1fr));"
+            "gap:8px;margin-bottom:10px;'>"
+            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
+            "<b>Completeness</b><br><span style='color:#667085;font-size:12px;'>"
+            "How much of the column must be populated.</span></div>"
+            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
+            "<b>Uniqueness</b><br><span style='color:#667085;font-size:12px;'>"
+            "Whether populated values must be unique.</span></div>"
+            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
+            "<b>Allowed Values</b><br><span style='color:#667085;font-size:12px;'>"
+            "Which values are accepted or blocked.</span></div>"
+            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
+            "<b>Value Rules</b><br><span style='color:#667085;font-size:12px;'>"
+            "Numeric or date conditions such as above, below, or between.</span></div>"
+            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
+            "<b>Pattern</b><br><span style='color:#667085;font-size:12px;'>"
+            "Text structure enforced with a regular expression.</span></div>"
+            "</div>"
         )
         dq_help = widgets.HTML()
         dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
         dq_blank_missing = widgets.Checkbox(value=False, description="Treat blank/whitespace text as missing", disabled=not editable)
         dq_value_mode = widgets.Dropdown(options=("allow", "block"), disabled=not editable, **shared.widget_common(widgets, "Mode"))
-        dq_values = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Values (comma-separated)"))
-        dq_minimum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Minimum"))
-        dq_minimum_inclusive = widgets.Checkbox(value=True, description="Minimum inclusive", disabled=not editable)
-        dq_maximum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Maximum"))
-        dq_maximum_inclusive = widgets.Checkbox(value=True, description="Maximum inclusive", disabled=not editable)
-        dq_pattern = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Pattern"))
+        dq_values = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Allowed values (comma-separated)"))
+        dq_minimum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Lower bound"))
+        dq_minimum_inclusive = widgets.Checkbox(value=True, description="Include lower bound", disabled=not editable)
+        dq_maximum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Upper bound"))
+        dq_maximum_inclusive = widgets.Checkbox(value=True, description="Include upper bound", disabled=not editable)
+        dq_pattern = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Regular expression"))
         dq_parameter_controls = (
             dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
@@ -2576,30 +2594,41 @@ def widget_data_contract(
             column_option_style,
             column_select,
         )
-        dq_editor = widgets.VBox(
+        dq_primary = widgets.VBox(
             [
+                dq_catalogue,
+                dq_type,
                 dq_help,
-                dq_usage,
                 widgets.HBox(
                     [dq_enabled, dq_block],
                     layout=checkbox_row_layout,
                 ),
                 *dq_parameter_controls,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        dq_ai_panel = widgets.VBox(
+            [
+                widgets.HTML("<b>AI suggestion</b>"),
                 dq_suggestion,
                 dq_ai,
                 shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
             ],
-            layout=widgets.Layout(width="100%", gap="8px", padding="2px 0 0 0"),
+            layout=widgets.Layout(
+                width="100%", min_width="0", gap="8px",
+                padding="0 0 0 16px",
+                border_left="1px solid #e1e6eb",
+            ),
         )
         dq_panel = shared.form_section(
             widgets,
             title="Column data quality",
             children=[
                 widgets.GridBox(
-                    [dq_type, dq_editor],
+                    [dq_primary, dq_ai_panel],
                     layout=widgets.Layout(
                         width="100%",
-                        grid_template_columns="minmax(190px, 32fr) minmax(0, 68fr)",
+                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
                         grid_gap="16px",
                         align_items="flex-start",
                     ),
@@ -3112,7 +3141,7 @@ def widget_data_contract(
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
-            "dq_panel": dq_panel, "dq_editor": dq_editor,
+            "dq_panel": dq_panel, "dq_primary": dq_primary, "dq_ai_panel": dq_ai_panel,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
             "column_description_ai": column_description_ai,
             "accept_column_description": accept_column_description,
