@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -45,6 +46,32 @@ jobs:
 
       - name: Validate release navigation
         run: uv run python scripts/release_navigation.py --check
+
+      - name: Regenerate owned reference artifacts twice
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          export PYTHONPATH=src
+
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+          git diff --binary > "${RUNNER_TEMP}/generator-first.diff"
+
+          export FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+          git diff --binary > "${RUNNER_TEMP}/generator-second.diff"
+          cmp "${RUNNER_TEMP}/generator-first.diff" "${RUNNER_TEMP}/generator-second.diff"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             docs/reference/_data/public-function-call-flows.json             docs/reference/_data/generated-artifacts.json             docs/api/reference             docs/reference/index.md             docs/reference/function-call-graph.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate function reference artifacts"
+            git push origin HEAD:"${GITHUB_HEAD_REF}"
+          fi
 
       - name: Validate owned generated artifacts
         shell: bash
