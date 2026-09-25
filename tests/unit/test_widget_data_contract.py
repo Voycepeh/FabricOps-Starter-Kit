@@ -272,13 +272,16 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
-        "kind": "values",
+        "kind": "profile",
         "profile": {
+            "data_type": "long",
             "row_count": 10, "non_null_count": 9, "null_count": 1,
             "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
-            "min_value": "ORD-1", "max_value": "ORD-9",
+            "mean_value": 5.0, "stddev_value": 2.5,
+            "min_value": "1", "percentile_25_value": 3.0, "median_value": 5.0,
+            "percentile_75_value": 7.0, "max_value": "9",
         },
-        "values": [{"value": column_id, "count": 2}],
+        "values": [{"value": column_id, "count": 2, "percent": 20.0}],
     })
     display_module = types.SimpleNamespace(display=lambda *_args, **_kwargs: None)
     monkeypatch.setitem(
@@ -371,11 +374,34 @@ def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():
     assert "<demo>" not in rendered
 
 
-def test_profile_context_rendering_priority_and_escaping():
-    """Persisted frequencies, ranges, and unavailable states render distinctly."""
-    rendered = module._profile_html({"kind": "values", "values": [{"value": "<Ready>", "count": 3}]})
-    assert "Observed values" in rendered and "&lt;Ready&gt;" in rendered
-    assert "Observed range" in module._profile_html({"kind": "range", "min": 1, "max": 4})
+def test_profile_context_renders_compact_datatype_aware_evidence():
+    """Profile statistics and optional frequencies render as compact escaped text."""
+    numeric = module._profile_html({
+        "kind": "profile",
+        "profile": {
+            "data_type": "double", "row_count": 120, "null_percent": 0.0,
+            "distinct_count": 100, "distinct_percent": 83.333,
+            "mean_value": 237.42, "stddev_value": 281.16,
+            "min_value": "29.9", "percentile_25_value": 89.0,
+            "median_value": 149.0, "percentile_75_value": 399.0, "max_value": "1299.0",
+        },
+        "values": [{"value": "<Ready>", "count": 15, "percent": 12.5}],
+    })
+    assert "120 rows" in numeric
+    assert "Range: 29.9 to 1299.0" in numeric
+    assert "Median 149" in numeric and "Std dev 281.16" in numeric
+    assert "&lt;Ready&gt; (15, 12.5%)" in numeric
+
+    high_cardinality = module._profile_html({
+        "kind": "profile",
+        "profile": {
+            "data_type": "string", "row_count": 120, "null_percent": 0.0,
+            "distinct_count": 120, "distinct_percent": 100.0,
+        },
+        "values": [],
+    })
+    assert "highly unique" in high_cardinality
+    assert "common value profiling was skipped" in high_cardinality
     assert "No profile values available" in module._profile_html({"kind": "unavailable"})
 
 
@@ -1212,9 +1238,13 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
     assert column["profile_evidence"] == {
         "row_count": 10, "non_null_count": 9, "null_count": 1,
         "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
-        "min_value": "ORD-1", "max_value": "ORD-9",
+        "mean_value": 5.0, "stddev_value": 2.5,
+        "min_value": "1", "percentile_25_value": 3.0, "median_value": 5.0,
+        "percentile_75_value": 7.0, "max_value": "9",
     }
-    assert column["frequency_evidence"] == [{"value": "col-0", "count": 2}]
+    assert column["frequency_evidence"] == [
+        {"value": "col-0", "count": 2, "percent": 20.0}
+    ]
 
 
 def test_review_sections_separate_table_dq_categories_from_column_rules():
