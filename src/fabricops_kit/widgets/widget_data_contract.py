@@ -1889,14 +1889,26 @@ def widget_data_contract(
         dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
         dq_blank_missing = widgets.Checkbox(value=False, description="Treat blank/whitespace text as missing", disabled=not editable)
         dq_value_mode = widgets.Dropdown(options=("allow", "block"), disabled=not editable, **shared.widget_common(widgets, "Mode"))
+        dq_value_source = widgets.Dropdown(
+            options=(("Enter values", "inline"), ("Reference table column", "reference")),
+            disabled=not editable,
+            **shared.widget_common(widgets, "Value source"),
+        )
         dq_values = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Allowed values (comma-separated)"))
+        dq_reference_table_id = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Reference table_id")
+        )
+        dq_reference_column = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Reference column")
+        )
         dq_minimum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Lower bound"))
         dq_minimum_inclusive = widgets.Checkbox(value=True, description="Include lower bound", disabled=not editable)
         dq_maximum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Upper bound"))
         dq_maximum_inclusive = widgets.Checkbox(value=True, description="Include upper bound", disabled=not editable)
         dq_pattern = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Regular expression"))
         dq_parameter_controls = (
-            dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
+            dq_max_missing, dq_blank_missing, dq_value_mode, dq_value_source, dq_values,
+            dq_reference_table_id, dq_reference_column, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
         dq_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
@@ -1926,7 +1938,8 @@ def widget_data_contract(
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
-            dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
+            dq_max_missing, dq_value_mode, dq_value_source, dq_values,
+            dq_reference_table_id, dq_reference_column, dq_minimum, dq_maximum, dq_pattern,
         ):
             control.layout.width = "100%"
             control.layout.max_width = "560px"
@@ -1974,7 +1987,10 @@ def widget_data_contract(
             dq_max_missing.value = "0"
             dq_blank_missing.value = False
             dq_value_mode.value = "allow"
+            dq_value_source.value = "inline"
             dq_values.value = ""
+            dq_reference_table_id.value = ""
+            dq_reference_column.value = ""
             dq_minimum.value = ""
             dq_minimum_inclusive.value = True
             dq_maximum.value = ""
@@ -1994,7 +2010,12 @@ def widget_data_contract(
             dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
             dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
             dq_value_mode.value = str(params.get("mode") or "allow")
+            dq_value_source.value = (
+                "reference" if params.get("reference_table_id") else "inline"
+            )
             dq_values.value = ", ".join(map(str, params.get("values", [])))
+            dq_reference_table_id.value = str(params.get("reference_table_id") or "")
+            dq_reference_column.value = str(params.get("reference_column") or "")
             dq_minimum.value = "" if params.get("minimum") is None else str(params["minimum"])
             dq_minimum_inclusive.value = bool(params.get("minimum_inclusive", True))
             dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
@@ -2118,7 +2139,10 @@ def widget_data_contract(
             dq_usage.value = f"<p>{count} current configuration(s) use this rule type.</p>"
             visible = {
                 "completeness": {dq_max_missing, dq_blank_missing},
-                "value_set": {dq_value_mode, dq_values},
+                "value_set": {
+                    dq_value_mode, dq_value_source, dq_values,
+                    dq_reference_table_id, dq_reference_column,
+                },
                 "range": {dq_minimum, dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive},
                 "pattern": {dq_pattern},
             }[kind]
@@ -2132,8 +2156,16 @@ def widget_data_contract(
                 finally:
                     hydrating["active"] = False
 
+        def update_value_source(_change: dict[str, Any] | None = None) -> None:
+            is_reference = dq_value_source.value == "reference"
+            dq_values.layout.display = "none" if is_reference else ""
+            dq_reference_table_id.layout.display = "" if is_reference else "none"
+            dq_reference_column.layout.display = "" if is_reference else "none"
+
+        dq_value_source.observe(update_value_source, names="value")
         dq_type.observe(update_dq_help, names="value")
         update_dq_help()
+        update_value_source()
 
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
@@ -2707,10 +2739,25 @@ def widget_data_contract(
                         "treat_blank_as_missing": bool(dq_blank_missing.value),
                     })
                 elif kind == "value_set":
-                    values = [item.strip() for item in dq_values.value.split(",") if item.strip()]
-                    if not values:
-                        raise ValueError("value_set requires at least one configured value.")
-                    params.update({"mode": str(dq_value_mode.value), "values": values})
+                    params["mode"] = str(dq_value_mode.value)
+                    if dq_value_source.value == "reference":
+                        table_id = dq_reference_table_id.value.strip()
+                        reference_column = dq_reference_column.value.strip()
+                        if not table_id or not reference_column:
+                            raise ValueError(
+                                "Reference-backed Allowed Values requires table_id and column."
+                            )
+                        params.update({
+                            "reference_table_id": table_id,
+                            "reference_column": reference_column,
+                        })
+                    else:
+                        values = [
+                            item.strip() for item in dq_values.value.split(",") if item.strip()
+                        ]
+                        if not values:
+                            raise ValueError("value_set requires at least one configured value.")
+                        params["values"] = values
                 elif kind == "range":
                     if not dq_minimum.value.strip() and not dq_maximum.value.strip():
                         raise ValueError("range requires a minimum or maximum.")
