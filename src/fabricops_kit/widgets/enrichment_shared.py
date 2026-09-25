@@ -17,7 +17,9 @@ CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 _PROFILE_CONTEXT_FIELDS = (
     "row_count", "non_null_count", "null_count", "null_percent",
-    "distinct_count", "distinct_percent", "min_value", "max_value",
+    "distinct_count", "distinct_percent", "mean_value", "stddev_value",
+        "min_value", "percentile_25_value", "median_value",
+        "percentile_75_value", "max_value",
 )
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
