@@ -32,6 +32,7 @@ def build_ai_enrichment_context(
     metadata_level: str,
     existing_description: str,
     profile_rows: Any = (),
+    column_rows: Any = (),
 ) -> dict[str, Any]:
     """Build compact technical context for an Enrichment suggestion."""
     column_id = str(catalogue_row.get("column_id") or "")
@@ -40,12 +41,21 @@ def build_ai_enrichment_context(
         for row in _rows(profile_rows)
         if not column_id or str(row.get("column_id") or "") == column_id
     ]
+    columns = [
+        {
+            "column_name": str(row.get("column_name") or ""),
+            "data_type": str(row.get("data_type") or ""),
+        }
+        for row in _rows(column_rows)
+        if str(row.get("column_name") or "")
+    ]
     return {
         "metadata_level": str(metadata_level),
         "table_name": str(catalogue_row.get("table_name") or ""),
         "column_name": str(catalogue_row.get("column_name") or ""),
         "data_type": str(catalogue_row.get("data_type") or ""),
         "existing_description": str(existing_description or ""),
+        "table_columns": columns,
         "profile_evidence": profiles[:3],
     }
 
