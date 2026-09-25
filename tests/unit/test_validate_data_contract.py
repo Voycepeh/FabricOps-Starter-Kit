@@ -1,4 +1,4 @@
-"""Focused tests for exact Data Contract preflight validation."""
+"""Focused tests for exact Data Contract validation."""
 # ruff: noqa: D101, D102, D103
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ class Spark:
         return list(rows)
 
 
-def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed"):
+def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed", environment="prod"):
     writes = []
     contract = {
         "contract_id": "contract-a",
@@ -33,7 +33,11 @@ def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed"):
         "table_id": "table-a", "store": "Silver", "store_type": "lakehouse",
         "schema": "dbo", "table_name": "orders",
     }
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "prod", {"env": "prod"}))
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda: (object(), environment, {"env": environment}),
+    )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "activity-1"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: identity)
     monkeypatch.setattr(module, "resolve_data_contract_version", lambda *a, **k: contract)
@@ -51,12 +55,13 @@ def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed"):
     return writes
 
 
-def test_preflight_validates_frozen_inactive_exact_version_and_persists_identity(monkeypatch):
+@pytest.mark.parametrize("environment", ["dev", "prod"])
+def test_validate_mode_accepts_frozen_inactive_exact_version_and_persists_identity(monkeypatch, environment):
     rules = [
         {"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1},
         {"guardrail_type": "data_quality", "guardrail_rule_id": "dq-1", "guardrail_version": 1},
     ]
-    writes = _install(monkeypatch, rules=rules)
+    writes = _install(monkeypatch, rules=rules, environment=environment)
 
     result = validate_data_contract(
         table_id="table-a", contract_id="contract-a", contract_version=2,
@@ -66,12 +71,12 @@ def test_preflight_validates_frozen_inactive_exact_version_and_persists_identity
     assert result["can_activate"] is True
     assert result["failed_values"] == "caller-owned-details"
     assert (result["table_id"], result["contract_id"], result["contract_version"]) == ("table-a", "contract-a", 2)
-    assert result["environment_name"] == "prod"
-    assert all(write["execution_type"] == "preflight" for write in writes)
+    assert result["environment_name"] == environment
+    assert all(write["execution_type"] == "validate" for write in writes)
     assert all(write["table_id"] == "table-a" and write["contract_id"] == "contract-a" for write in writes)
 
 
-def test_block_failure_blocks_preflight_while_warn_failure_can_activate(monkeypatch):
+def test_block_failure_blocks_validation_while_warn_failure_can_activate(monkeypatch):
     rules = [{"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1}]
     _install(monkeypatch, rules=rules, schema_status="failed")
     blocked = validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
@@ -86,7 +91,7 @@ def test_block_failure_blocks_preflight_while_warn_failure_can_activate(monkeypa
     assert warned["warnings"] == 1
 
 
-def test_runtime_only_freshness_is_neither_passed_nor_activation_blocking(monkeypatch):
+def test_enforcement_only_freshness_is_neither_passed_nor_activation_blocking(monkeypatch):
     rules = [
         {"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1},
         {"guardrail_type": "data_quality", "guardrail_rule_id": "dq-1", "guardrail_version": 1},
@@ -98,16 +103,16 @@ def test_runtime_only_freshness_is_neither_passed_nor_activation_blocking(monkey
                                     dataframe=object(), spark_session=Spark(), verbose=False)
 
     assert result["passed"] == 2
-    assert result["runtime_only"] == 1
+    assert result["not_applicable"] == 1
     assert result["can_activate"] is True
     freshness = next(outcome for outcome in result["outcomes"] if outcome.get("guardrail_type") == "freshness")
-    assert freshness["status"] == "runtime_only"
-    assert freshness["preflight_applicability"] == "runtime_only"
-    assert freshness["reason_code"] == "standalone_preflight_context_unavailable"
-    assert writes[-1]["result"]["status"] == "runtime_only"
+    assert freshness["status"] == "not_applicable"
+    assert freshness["validation_applicability"] == "enforcement_only"
+    assert freshness["reason_code"] == "enforcement_context_required"
+    assert writes[-1]["result"]["status"] == "not_applicable"
 
 
-def test_prod_runtime_resolution_still_requires_active_contract(monkeypatch):
+def test_prod_enforcement_resolution_still_requires_active_contract(monkeypatch):
     called = []
     monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *a, **k: called.append(k) or {"status": "active"})
 
@@ -115,7 +120,7 @@ def test_prod_runtime_resolution_still_requires_active_contract(monkeypatch):
     assert called == [{"spark_session": None, "required": True}]
 
 
-def test_preflight_has_no_business_table_write_path():
+def test_validation_has_no_business_table_write_path():
     source = inspect.getsource(module)
 
     assert "pipeline_write(" not in source

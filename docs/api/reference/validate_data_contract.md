@@ -19,10 +19,10 @@ Validate one exact frozen Data Contract against target data without changing bus
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02A_data_contract_validation</span>
+<span class="reference-chip">02_pipeline</span>
 </p>
 
-**Used in notebooks:** `02A_data_contract_validation`
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -73,7 +73,7 @@ True
 | `dataframe` | `pyspark.sql.DataFrame` | No | Target data to evaluate. When omitted, the registered table is read. |
 | `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active Microsoft Fabric session. |
 | `run_id` | `str` | No | Validation execution identity. The Fabric activity identity is used when omitted. |
-| `verbose` | `bool` | No | Print one concise preflight summary when ``True``. |
+| `verbose` | `bool` | No | Print one concise validation summary when ``True``. |
 
 ## Returns
 
@@ -93,10 +93,10 @@ RuntimeError
 
 This Engineering/data-plane operation only reads business data. It writes
 aggregate outcomes to ``METADATA_GUARDRAIL_RESULTS`` with
-``execution_type='preflight'`` and never calls ``pipeline_write``. Schema
-and Data Quality use the same evaluator cores as normal runtime checks.
+``execution_type='validate'`` and never calls ``pipeline_write``. Schema
+and Data Quality use the same evaluator cores as normal enforcement checks.
 Freshness, Source Drift, and Sensitive Data are reported as
-``runtime_only`` because standalone preflight lacks the legitimate
+``not_applicable`` because validation lacks the legitimate enforcement
 pipeline observation or transformation context they require. This
 applicability state is neither a pass nor an activation blocker.
 

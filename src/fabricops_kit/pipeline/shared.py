@@ -1136,7 +1136,7 @@ def write_guardrail_result_row(
     table_id: str = "",
     contract_id: str = "",
     contract_version: int = 0,
-    execution_type: str = "runtime",
+    execution_type: str = "enforce",
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
     """Append one aggregate outcome for one exact contract and Guardrail revision."""
@@ -1151,6 +1151,9 @@ def write_guardrail_result_row(
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     audit = build_runtime_audit_fields(config=config, env=env)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
+    resolved_execution_type = str(execution_type or "enforce").strip().lower()
+    if resolved_execution_type not in {"enforce", "validate"}:
+        raise ValueError("execution_type must be 'enforce' or 'validate'.")
     payload = {
         key: value
         for key, value in result.items()
@@ -1163,7 +1166,7 @@ def write_guardrail_result_row(
         "table_id": str(table_id or result.get("table_id") or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
-        "execution_type": str(execution_type or "runtime").strip().lower(),
+        "execution_type": resolved_execution_type,
         "run_id": resolved_run_id,
         "environment_name": env,
         "status": str(result.get("status") or "not_run"),
@@ -3180,9 +3183,11 @@ def check_dq_runtime(
     rules_df: Any = None,
     contract_id: str = "",
     contract_version: int = 0,
-    execution_type: str = "runtime",
+    execution_type: str = "enforce",
 ) -> dict[str, Any]:
     """Evaluate governed DQ rules, persist summaries, and return failed values."""
+    if execution_type not in {"enforce", "validate"}:
+        raise ValueError("execution_type must be 'enforce' or 'validate'.")
     spark_session = getattr(dataframe, "sparkSession", None)
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         raise RuntimeError("check_dq requires a Spark DataFrame in the active Microsoft Fabric runtime.")

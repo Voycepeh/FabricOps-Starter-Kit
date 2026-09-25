@@ -200,7 +200,7 @@ def check_schema(
             table_id=table_id,
             contract_id=str(contract.get("contract_id") or ""),
             contract_version=int(contract.get("contract_version") or 0),
-            execution_type="runtime",
+            execution_type="enforce",
         )
     print_guardrail_result(
         "Schema",

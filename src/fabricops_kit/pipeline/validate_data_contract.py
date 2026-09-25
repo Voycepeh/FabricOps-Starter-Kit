@@ -47,7 +47,7 @@ def validate_data_contract(
         Validation execution identity. The Fabric activity identity is used
         when omitted.
     verbose : bool, default=True
-        Print one concise preflight summary when ``True``.
+        Print one concise validation summary when ``True``.
 
     Returns
     -------
@@ -68,10 +68,10 @@ def validate_data_contract(
     -----
     This Engineering/data-plane operation only reads business data. It writes
     aggregate outcomes to ``METADATA_GUARDRAIL_RESULTS`` with
-    ``execution_type='preflight'`` and never calls ``pipeline_write``. Schema
-    and Data Quality use the same evaluator cores as normal runtime checks.
+    ``execution_type='validate'`` and never calls ``pipeline_write``. Schema
+    and Data Quality use the same evaluator cores as normal enforcement checks.
     Freshness, Source Drift, and Sensitive Data are reported as
-    ``runtime_only`` because standalone preflight lacks the legitimate
+    ``not_applicable`` because validation lacks the legitimate enforcement
     pipeline observation or transformation context they require. This
     applicability state is neither a pass nor an activation blocker.
 
@@ -145,7 +145,7 @@ def validate_data_contract(
             schema_name=identity["schema"], guardrail_type="schema",
             rule_type=str(schema_result.get("rule_type") or ""), result=schema_result,
             table_id=table_id, contract_id=contract["contract_id"],
-            contract_version=int(contract["contract_version"]), execution_type="preflight",
+            contract_version=int(contract["contract_version"]), execution_type="validate",
         )
         outcomes.append(schema_result)
 
@@ -156,7 +156,7 @@ def validate_data_contract(
             store=identity["store"], store_type=identity["store_type"],
             schema_name=identity["schema"], run_id=effective_run_id, context=context,
             rules_df=spark.createDataFrame(dq_rules), contract_id=contract["contract_id"],
-            contract_version=int(contract["contract_version"]), execution_type="preflight",
+            contract_version=int(contract["contract_version"]), execution_type="validate",
         )
         failed_values = dq_result.get("failed_values")
         outcomes.extend(dq_result.get("checks") or [])
@@ -172,12 +172,12 @@ def validate_data_contract(
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
             "guardrail_type": guardrail_type,
-            "status": "runtime_only",
+            "status": "not_applicable",
             "can_continue": True,
-            "preflight_applicability": "runtime_only",
+            "validation_applicability": "enforcement_only",
             "severity": "warning" if str(rule.get("action") or "").casefold() == "warn" else "blocking",
-            "reason_code": "standalone_preflight_context_unavailable",
-            "reason": f"{guardrail_type} requires pipeline observation or transformation context.",
+            "reason_code": "enforcement_context_required",
+            "reason": f"{guardrail_type} requires enforcement pipeline context.",
         }
         write_guardrail_result_row(
             spark_session=spark, config=config, env=env, run_id=effective_run_id,
@@ -186,39 +186,39 @@ def validate_data_contract(
             schema_name=identity["schema"], guardrail_type=guardrail_type,
             rule_type=str(rule.get("rule_type") or ""), result=outcome,
             table_id=table_id, contract_id=contract["contract_id"],
-            contract_version=int(contract["contract_version"]), execution_type="preflight",
+            contract_version=int(contract["contract_version"]), execution_type="validate",
         )
         outcomes.append(outcome)
 
-    statuses = [str(item.get("status") or "runtime_only").lower() for item in outcomes]
+    statuses = [str(item.get("status") or "not_applicable").lower() for item in outcomes]
     passed = sum(status in {"pass", "passed"} for status in statuses)
     warnings = sum(status in {"warn", "warning"} for status in statuses)
     blocked = sum(status in {"fail", "failed", "block", "blocked"} for status in statuses)
-    runtime_only = sum(status == "runtime_only" for status in statuses)
+    not_applicable = sum(status == "not_applicable" for status in statuses)
     result = {
         "table_id": table_id,
         "contract_id": contract["contract_id"],
         "contract_version": int(contract["contract_version"]),
         "environment_name": env,
-        "execution_type": "preflight",
+        "execution_type": "validate",
         "run_id": effective_run_id,
         "rule_count": len(outcomes),
         "passed": passed,
         "warnings": warnings,
         "blocked": blocked,
-        "runtime_only": runtime_only,
+        "not_applicable": not_applicable,
         "can_activate": bool(outcomes) and blocked == 0,
         "status": "passed" if outcomes and blocked == 0 else "failed",
         "outcomes": outcomes,
         "failed_values": failed_values,
     }
     if verbose:
-        print("FabricOps Data Contract Preflight")
+        print("FabricOps Data Contract Validation")
         print(f"  Table {table_id}")
         print(f"  Contract {contract['contract_id']} v{contract['contract_version']} | Environment {env}")
         print(
             f"  Result {'PASS' if result['can_activate'] else 'BLOCK'} | "
-            f"passed={passed} warnings={warnings} blocked={blocked} runtime_only={runtime_only}"
+            f"passed={passed} warnings={warnings} blocked={blocked} not_applicable={not_applicable}"
         )
         print("  Business data was read only; aggregate evidence was written to METADATA_GUARDRAIL_RESULTS.")
     return result
