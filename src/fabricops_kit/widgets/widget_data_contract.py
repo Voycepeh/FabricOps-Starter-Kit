@@ -2044,8 +2044,24 @@ def widget_data_contract(
             )
             discard_contract_button = widgets.Button(description="Discard changes")
             freeze_button = widgets.Button(
-                description=f"Freeze v{row['contract_version']}",
+                description=f"Freeze v{row['contract_version']}…",
                 disabled=bool(state.get("dirty")),
+            )
+            freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
+            freeze_cancel = widgets.Button(description="Cancel")
+            freeze_confirm_button = widgets.Button(
+                description=f"Freeze v{row['contract_version']}",
+                button_style="danger",
+            )
+            freeze_confirm.children = (
+                widgets.HTML(
+                    f"<b>Freeze Data Contract v{row['contract_version']}?</b><br>"
+                    "This version will become immutable. Further changes require a new contract version."
+                ),
+                widgets.HBox(
+                    [freeze_cancel, freeze_confirm_button],
+                    layout=widgets.Layout(gap="8px"),
+                ),
             )
 
             def save_contract_clicked(_button: Any) -> None:
@@ -2061,13 +2077,22 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def freeze_clicked(_button: Any) -> None:
+                if state.get("dirty"):
+                    set_status("Save the Data Contract before freezing this version.", error=True)
+                    return
+                freeze_confirm.layout.display = ""
+
+            def freeze_cancel_clicked(_button: Any) -> None:
+                freeze_confirm.layout.display = "none"
+
+            def freeze_confirm_clicked(_button: Any) -> None:
                 try:
-                    if state.get("dirty"):
-                        raise ValueError("Save the Data Contract before freezing this version.")
+                    freeze_confirm_button.disabled = True
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
                 except (ValueError, RuntimeError) as exc:
+                    freeze_confirm_button.disabled = False
                     set_status(str(exc), error=True)
 
             def discard_contract_clicked(_button: Any) -> None:
@@ -2079,7 +2104,15 @@ def widget_data_contract(
             save_contract_button.on_click(save_contract_clicked)
             discard_contract_button.on_click(discard_contract_clicked)
             freeze_button.on_click(freeze_clicked)
-            actions.extend([save_contract_button, discard_contract_button, freeze_button])
+            freeze_cancel.on_click(freeze_cancel_clicked)
+            freeze_confirm_button.on_click(freeze_confirm_clicked)
+            actions.extend([
+                widgets.HBox(
+                    [save_contract_button, discard_contract_button, freeze_button],
+                    layout=widgets.Layout(gap="8px", align_items="center"),
+                ),
+                freeze_confirm,
+            ])
         else:
             agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
             agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
