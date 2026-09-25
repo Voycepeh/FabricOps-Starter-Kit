@@ -624,8 +624,8 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
 def _open_with_ai(widget_runtime, monkeypatch, *, captures=None):
     """Open one contract and explicitly opt in to scoped AI suggestions."""
     captures = _enable_ai(widget_runtime, monkeypatch, captures=captures)
-    state = widget_runtime["open"]()
-    state["_controls"]["run_with_ai"].click()
+    state = widget_runtime["start"]()
+    state["_controls"]["open_with_ai"].click()
     return state, captures
 
 
@@ -640,21 +640,16 @@ def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
 
 
 def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_runtime, monkeypatch):
-    """Opening is immediate; AI runs only after explicit opt-in for the selected contract."""
+    """Choose AI before opening; the editor then renders the complete contract."""
     captures = _enable_ai(widget_runtime, monkeypatch)
-    state = widget_runtime["open"]()
+    state = widget_runtime["start"]()
     controls = state["_controls"]
 
     assert captures["enrichment"] == []
     assert captures["sensitive"] == []
-    assert "Choose Run with AI suggestions" in controls["column_description_ai"].value
+    assert controls["selector_panel"].layout.display != "none"
 
-    controls["run_without_ai"].click()
-    assert captures["enrichment"] == []
-    assert captures["sensitive"] == []
-    assert "without AI" in state["message"]
-
-    state["_controls"]["run_with_ai"].click()
+    controls["open_with_ai"].click()
     controls = state["_controls"]
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
     assert len(captures["sensitive"]) == 1
@@ -662,6 +657,12 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert state["_ai_suggestions"]
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
+    assert controls["selector_panel"].layout.display == "none"
+    assert controls["editor_shell"].layout.display == ""
+    for label in ("Table", "Columns", "Advanced", "Review"):
+        controls["top_nav"].value = label
+        assert len(controls["left_pane"].children) > 0
+        assert len(controls["right_pane"].children) > 0
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
 
@@ -795,9 +796,9 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
         module, "suggest_sensitive_data",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
     )
-    state = widget_runtime["open"]()
+    state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
-    state["_controls"]["run_with_ai"].click()
+    state["_controls"]["open_with_ai"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
