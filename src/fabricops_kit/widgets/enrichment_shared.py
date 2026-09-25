@@ -456,13 +456,13 @@ def suggest_business_rule(
             + ", ".join(unknown_selected)
         )
 
-    instruction = f"""${prompt.strip()}
+    instruction = f"""{prompt.strip()}
 
 Business requirement:
-${business_requirement}
+{business_requirement}
 
 Relevant columns selected by Governance:
-${json.dumps(selected_columns)}
+{json.dumps(selected_columns)}
 
 Return JSON only as one object with rule_type, columns, parameters, rationale.
 Allowed rule_type values: column_relationship, custom_expression.
@@ -475,10 +475,10 @@ If Governance selected relevant columns, the proposal may use only those columns
 Do not convert a multi-column Business Rule into a single-column rule.
 
 Context:
-${json.dumps(context, sort_keys=True, default=str)}"""
+{json.dumps(context, sort_keys=True, default=str)}"""
     raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
-    if raw.startswith("~~~"):
-        raw = raw.removeprefix("~~~json").removeprefix("~~~").removesuffix("~~~").strip()
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
         candidate = json.loads(raw)
     except json.JSONDecodeError as exc:
