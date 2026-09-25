@@ -130,6 +130,15 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
         if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
         and not str(row.get("column_id") or "")
     ]
+    row_key_rule = next(
+        (row for row in table_dq if str(row.get("rule_type") or "") == "uniqueness"),
+        {},
+    )
+    row_key_columns = [str(name) for name in _parameters(row_key_rule).get("columns", [])]
+    table_grain = next((
+        str(row.get("value") or "") for row in enrichments.get("table", [])
+        if str(row.get("enrichment_type") or "") == "Grain"
+    ), "")
     column_guardrails = [row for row in active if str(row.get("column_id") or "")]
     advanced = [
         row for row in table_dq
@@ -161,6 +170,11 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
         " &nbsp; <b>Status:</b> "
         f"{html.escape(str(contract.get('status') or '').upper())}</p>"
         + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
+        + "<p><b>Grain:</b> "
+        + html.escape(table_grain or "Not defined")
+        + " &nbsp; <b>Row key:</b> "
+        + html.escape(", ".join(row_key_columns) or "Not defined")
+        + "</p>"
         + f"<p><b>Freshness:</b> {len(freshness)} configured &nbsp; "
         f"<b>Source drift:</b> {len(source_drift)} configured &nbsp; "
         f"<b>Column rules:</b> {len(column_guardrails)} &nbsp; "
@@ -176,6 +190,10 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
         f"{len(freshness) + len(source_drift)} configured</summary>"
         f"<h4>Freshness</h4>{rule_list(freshness)}"
         f"<h4>Source Drift</h4>{rule_list(source_drift)}</details>"
+        "<details><summary><b>Grain & Row Key</b></summary>"
+        f"<p><b>Grain:</b> {html.escape(table_grain or 'Not defined')}</p>"
+        f"<p><b>Row key:</b> {html.escape(', '.join(row_key_columns) or 'Not defined')}</p>"
+        f"{rule_list([row_key_rule] if row_key_rule else [])}</details>"
         "<details><summary><b>Advanced rules</b> · "
         f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
     )
