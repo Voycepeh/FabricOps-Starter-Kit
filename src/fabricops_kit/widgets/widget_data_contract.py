@@ -1499,7 +1499,9 @@ def widget_data_contract(
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
-        def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
+        def run_sensitive_ai(
+            column_id: str, *, force: bool = False, use_description_suggestion: bool = False
+        ) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not force and suggestions.get("sensitive_data"):
                 render_column_ai(column_id)
@@ -1507,8 +1509,9 @@ def widget_data_contract(
             selected = next(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
-            _description, classification = _column_editable_values(column_id)
-            description = _effective_ai_description(column_id)
+            description, classification = _column_editable_values(column_id)
+            if use_description_suggestion:
+                description = _effective_ai_description(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
@@ -1559,7 +1562,7 @@ def widget_data_contract(
                 render_column_ai(column_id)
                 return
             run_column_enrichment_ai(column_id)
-            run_sensitive_ai(column_id)
+            run_sensitive_ai(column_id, use_description_suggestion=True)
 
         def accept_description_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
@@ -1966,16 +1969,16 @@ def widget_data_contract(
         )
         view_content["Columns"] = (column_left, column_right)
 
+        if ai_mode == "with_ai":
+            run_table_ai()
+        else:
+            render_table_ai()
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
             render_column_ai(str(column_select.value))
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
-        if ai_mode == "with_ai":
-            run_table_ai()
-        else:
-            render_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
