@@ -767,6 +767,10 @@ def widget_data_contract(
                 width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb",
             ),
         )
+        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
+        compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
+        compact_rule_layout = widgets.Layout(width="560px", max_width="100%", gap="6px")
+
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
@@ -862,15 +866,18 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Freshness column"),
                 )
+                freshness_column.layout = compact_field_layout
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
                     **shared.widget_common(widgets, "Maximum age"),
                 )
+                maximum_age.layout = compact_text_layout
                 maximum_age_unit = widgets.Dropdown(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
                     **shared.widget_common(widgets, "Age unit"),
                 )
+                maximum_age_unit.layout = compact_field_layout
                 parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
             else:
                 partition_column = widgets.Dropdown(
@@ -879,12 +886,14 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
+                partition_column.layout = compact_field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
                     value=str(existing_parameters.get("change_column") or "") or None,
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change column"),
                 )
+                change_column.layout = compact_field_layout
                 parameter_controls = [partition_column, change_column]
                 if not str(table.get("load_strategy") or "").strip():
                     source_load_strategy = widgets.Dropdown(
@@ -893,6 +902,7 @@ def widget_data_contract(
                         disabled=not editable,
                         **shared.widget_common(widgets, "Source load strategy"),
                     )
+                    source_load_strategy.layout = compact_field_layout
                     parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
@@ -1060,7 +1070,10 @@ def widget_data_contract(
                     *table_rules["freshness"]["parameters"],
                     table_rules["freshness"]["block"],
                 ],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
             ),
             widgets.VBox(
                 [
@@ -1069,7 +1082,10 @@ def widget_data_contract(
                     *table_rules["source_drift"]["parameters"],
                     table_rules["source_drift"]["block"],
                 ],
-                layout=widgets.Layout(width="100%", gap="6px", padding="10px 12px", border="1px solid #dfe5eb"),
+                layout=widgets.Layout(
+                    width="560px", max_width="100%", gap="6px",
+                    padding="10px 12px", border="1px solid #dfe5eb",
+                ),
             ),
             widgets.HBox([table_save], layout=widgets.Layout(justify_content="flex-end")),
         )
