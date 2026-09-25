@@ -2165,11 +2165,17 @@ def widget_data_contract(
                 if is_required:
                     required_indexes.append(index)
             rules = "".join(
-                f".fabricops-contract-columns option:nth-child({index})"
+                f".fabricops-contract-columns option:nth-child({index}):not(:checked)"
                 "{color:#0f6cbd;font-weight:600;}"
                 for index in required_indexes
             )
-            column_option_style.value = f"<style>{rules}</style>"
+            column_option_style.value = (
+                "<style>"
+                + rules
+                + ".fabricops-contract-columns option:checked{"
+                "color:CanvasText !important;font-weight:600;}"
+                + "</style>"
+            )
 
         def refresh_column_options(*_args: Any) -> None:
             rebuild_column_options()
