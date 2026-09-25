@@ -734,16 +734,6 @@ def widget_data_contract(
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        run_with_ai = widgets.Button(
-            description="Run with AI suggestions",
-            button_style="info",
-            disabled=not editable or not bool(ai_enrichment.get("enabled")),
-        )
-        run_without_ai = widgets.Button(
-            description="Run without AI",
-            button_style="primary",
-            disabled=not editable,
-        )
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
 
