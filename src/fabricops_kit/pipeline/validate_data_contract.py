@@ -71,8 +71,9 @@ def validate_data_contract(
     ``execution_type='preflight'`` and never calls ``pipeline_write``. Schema
     and Data Quality use the same evaluator cores as normal runtime checks.
     Freshness, Source Drift, and Sensitive Data are reported as
-    ``not_evaluated`` because standalone preflight lacks the legitimate
-    pipeline observation or transformation context they require.
+    ``runtime_only`` because standalone preflight lacks the legitimate
+    pipeline observation or transformation context they require. This
+    applicability state is neither a pass nor an activation blocker.
 
     Examples
     --------
@@ -171,8 +172,9 @@ def validate_data_contract(
             "contract_id": contract["contract_id"],
             "contract_version": int(contract["contract_version"]),
             "guardrail_type": guardrail_type,
-            "status": "not_evaluated",
-            "can_continue": False,
+            "status": "runtime_only",
+            "can_continue": True,
+            "preflight_applicability": "runtime_only",
             "severity": "warning" if str(rule.get("action") or "").casefold() == "warn" else "blocking",
             "reason_code": "standalone_preflight_context_unavailable",
             "reason": f"{guardrail_type} requires pipeline observation or transformation context.",
@@ -188,11 +190,11 @@ def validate_data_contract(
         )
         outcomes.append(outcome)
 
-    statuses = [str(item.get("status") or "not_evaluated").lower() for item in outcomes]
+    statuses = [str(item.get("status") or "runtime_only").lower() for item in outcomes]
     passed = sum(status in {"pass", "passed"} for status in statuses)
     warnings = sum(status in {"warn", "warning"} for status in statuses)
     blocked = sum(status in {"fail", "failed", "block", "blocked"} for status in statuses)
-    not_evaluated = sum(status == "not_evaluated" for status in statuses)
+    runtime_only = sum(status == "runtime_only" for status in statuses)
     result = {
         "table_id": table_id,
         "contract_id": contract["contract_id"],
@@ -204,9 +206,9 @@ def validate_data_contract(
         "passed": passed,
         "warnings": warnings,
         "blocked": blocked,
-        "not_evaluated": not_evaluated,
-        "can_activate": bool(outcomes) and blocked == 0 and not_evaluated == 0,
-        "status": "passed" if outcomes and blocked == 0 and not_evaluated == 0 else "failed",
+        "runtime_only": runtime_only,
+        "can_activate": bool(outcomes) and blocked == 0,
+        "status": "passed" if outcomes and blocked == 0 else "failed",
         "outcomes": outcomes,
         "failed_values": failed_values,
     }
@@ -216,7 +218,7 @@ def validate_data_contract(
         print(f"  Contract {contract['contract_id']} v{contract['contract_version']} | Environment {env}")
         print(
             f"  Result {'PASS' if result['can_activate'] else 'BLOCK'} | "
-            f"passed={passed} warnings={warnings} blocked={blocked} not_evaluated={not_evaluated}"
+            f"passed={passed} warnings={warnings} blocked={blocked} runtime_only={runtime_only}"
         )
         print("  Business data was read only; aggregate evidence was written to METADATA_GUARDRAIL_RESULTS.")
     return result

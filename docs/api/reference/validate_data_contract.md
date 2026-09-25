@@ -14,7 +14,7 @@ Validate one exact frozen Data Contract against target data without changing bus
 
 `fabricops_kit/pipeline/validate_data_contract.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/validate_data_contract.py#L21-L222">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/validate_data_contract.py#L21-L224">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -96,8 +96,9 @@ aggregate outcomes to ``METADATA_GUARDRAIL_RESULTS`` with
 ``execution_type='preflight'`` and never calls ``pipeline_write``. Schema
 and Data Quality use the same evaluator cores as normal runtime checks.
 Freshness, Source Drift, and Sensitive Data are reported as
-``not_evaluated`` because standalone preflight lacks the legitimate
-pipeline observation or transformation context they require.
+``runtime_only`` because standalone preflight lacks the legitimate
+pipeline observation or transformation context they require. This
+applicability state is neither a pass nor an activation blocker.
 
 </div>
 

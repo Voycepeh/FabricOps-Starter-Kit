@@ -86,18 +86,25 @@ def test_block_failure_blocks_preflight_while_warn_failure_can_activate(monkeypa
     assert warned["warnings"] == 1
 
 
-def test_operational_rule_is_not_falsely_passed(monkeypatch):
-    rules = [{"guardrail_type": "freshness", "guardrail_rule_id": "fresh-1", "guardrail_version": 1, "action": "Warn"}]
+def test_runtime_only_freshness_is_neither_passed_nor_activation_blocking(monkeypatch):
+    rules = [
+        {"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1},
+        {"guardrail_type": "data_quality", "guardrail_rule_id": "dq-1", "guardrail_version": 1},
+        {"guardrail_type": "freshness", "guardrail_rule_id": "fresh-1", "guardrail_version": 1, "action": "Block"},
+    ]
     writes = _install(monkeypatch, rules=rules)
 
     result = validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                     dataframe=object(), spark_session=Spark(), verbose=False)
 
-    assert result["not_evaluated"] == 1
-    assert result["can_activate"] is False
-    assert result["outcomes"][0]["status"] == "not_evaluated"
-    assert result["outcomes"][0]["reason_code"] == "standalone_preflight_context_unavailable"
-    assert writes[0]["result"]["status"] == "not_evaluated"
+    assert result["passed"] == 2
+    assert result["runtime_only"] == 1
+    assert result["can_activate"] is True
+    freshness = next(outcome for outcome in result["outcomes"] if outcome.get("guardrail_type") == "freshness")
+    assert freshness["status"] == "runtime_only"
+    assert freshness["preflight_applicability"] == "runtime_only"
+    assert freshness["reason_code"] == "standalone_preflight_context_unavailable"
+    assert writes[-1]["result"]["status"] == "runtime_only"
 
 
 def test_prod_runtime_resolution_still_requires_active_contract(monkeypatch):
