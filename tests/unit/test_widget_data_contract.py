@@ -145,6 +145,12 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
+    for row in guardrails:
+        row.update({
+            "contract_id": "contract-orders",
+            "contract_version": 1,
+            "environment_name": "dev",
+        })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
         "status": "unavailable", "schedules": [],
@@ -351,7 +357,6 @@ def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_r
 
     assert controls["load_strategy"].disabled is False
     controls["load_strategy"].value = "append"
-    controls["table_save"].click()
     controls["top_nav"].value = "Manifest & Freeze"
     controls["save_data_contract"].click()
 
@@ -454,7 +459,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Refresh Frequency" in table_summary
     assert "Classification" in table_summary
     assert "Guardrails" in table_summary
-    assert controls["table_save"].description == "Apply Table Changes"
+    assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:4]] == [
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table metadata</div>",
@@ -468,7 +473,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(190px, 32fr) minmax(0, 68fr)"
     )
-    assert controls["save_column"].description == "Apply Column Changes"
+    assert "save_column" not in controls
+    assert "save_dq" not in controls
 
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
@@ -506,7 +512,6 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
     assert "No schedule configured" in state["_controls"]["pipeline_refresh"].value
 
     state["_controls"]["table_description"].value = "Still governed"
-    state["_controls"]["table_save"].click()
     assert widget_runtime["calls"]["enrichment"] == []
 
     state["_controls"]["save_data_contract"].click()
@@ -577,14 +582,13 @@ def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime)
     controls["column_select"].value = "col-0"
 
     controls["table_description"].value = "Saved table description"
-    controls["table_save"].click()
     state["_controls"]["column_select"].value = "col-1"
 
     assert state["_controls"]["column_description"].value == "Unsaved local description"
 
 
-def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_runtime):
-    """Final Data Contract save persists staged column state then reloads canonical values once."""
+def test_final_save_returns_to_selector_after_persisting_canonical_draft(widget_runtime):
+    """Final Data Contract save persists staged state and completes the authoring cycle."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -593,7 +597,6 @@ def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_r
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Canonical saved description"
     controls["pii_reason"].value = "Existing sensitive policy remains reviewed."
-    controls["save_column"].click()
 
     assert widget_runtime["calls"]["enrichment"] == []
     assert state["dirty"] is True
@@ -601,20 +604,20 @@ def test_final_save_clears_stale_local_draft_after_one_canonical_reload(widget_r
     state["_controls"]["save_data_contract"].click()
     assert widget_runtime["calls"]["enrichment"]
     assert state["dirty"] is False
-    assert state["_controls"]["column_description"].value == "Canonical saved description"
+    assert state["current"] is None
+    assert state["_controls"]["selector_panel"].layout.display != "none"
+    assert state["_controls"]["editor_shell"].layout.display == "none"
+    assert "draft saved" in state["message"]
 
 
-def test_section_actions_stage_without_writes_until_final_save(widget_runtime):
-    """Table and column Apply actions stay local; Review save persists once."""
+def test_live_edits_stage_without_writes_until_final_save(widget_runtime):
+    """Table and column edits stage locally; Review save persists once."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     controls["table_description"].value = "Governed orders"
-    controls["table_save"].click()
     controls["column_description"].value = "Canonical ID"
-    controls["save_column_enrichment"].click()
     controls["required"].value = False
-    controls["save_required"].click()
 
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
@@ -637,16 +640,14 @@ def test_section_actions_stage_without_writes_until_final_save(widget_runtime):
     assert "draft saved" in state["message"]
 
 
-def test_visible_apply_actions_stage_table_and_column_sections(widget_runtime):
-    """Visible section actions update session state without partial persistence."""
+def test_table_and_column_edits_stage_without_intermediate_actions(widget_runtime):
+    """Table and column edits update session state without partial persistence."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     controls["table_description"].value = "Unified table save"
-    controls["table_save"].click()
     controls["column_description"].value = "Unified column save"
     controls["pii_reason"].value = "Direct identifier for a person."
-    controls["save_column"].click()
 
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
@@ -664,7 +665,6 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
     controls = state["_controls"]
 
     controls["table_description"].value = "Unsaved table change"
-    controls["table_save"].click()
     assert state["dirty"] is True
     assert widget_runtime["calls"]["enrichment"] == []
 
@@ -677,30 +677,25 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
     assert "discarded" in state["message"]
 
 
-def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
+def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     """Guardrail editors stage normalized records and persist them only at final save."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     controls["table_guardrails"]["freshness"]["block"].value = False
-    controls["table_guardrails"]["freshness"]["save"].click()
-    controls["table_guardrails"]["source_drift"]["save"].click()
 
     controls["sensitive_enabled"].value = True
     controls["sensitive_treatment"].value = "tokenize"
     controls["pii_reason"].value = "The identifier directly associates an order with a person."
-    controls["save_sensitive"].click()
 
     controls["dq_type"].value = "completeness"
     controls["dq_blank_missing"].value = True
-    controls["save_dq"].click()
 
     controls["advanced_type"].value = "column_relationship"
     assert controls["advanced_enabled"].value is True
     assert controls["advanced_block"].value is False
     controls["advanced_columns"].value = ("column_0", "column_1")
     controls["advanced_block"].value = True
-    controls["advanced_save"].click()
 
     assert widget_runtime["calls"]["guardrails"] == []
     assert state["_pending_guardrails"]
@@ -765,7 +760,7 @@ def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
     controls = state["_controls"]
     assert controls["rerun_sensitive"].disabled is True
     assert controls["column_description"].disabled is False
-    assert controls["save_column_enrichment"].disabled is False
+    assert "save_column_enrichment" not in controls
     assert all(not drafts for drafts in state["_column_drafts"].values())
 
 
@@ -862,7 +857,6 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["dq_pattern"].value == "manual-pattern"
     assert widget_runtime["calls"]["guardrails"] == []
 
-    controls["save_sensitive"].click()
     assert widget_runtime["calls"]["guardrails"] == []
     controls["save_data_contract"].click()
     saved_sensitive = next(
@@ -1015,10 +1009,14 @@ def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
     controls["pii_reason"].value = ""
     before = len(widget_runtime["calls"]["guardrails"])
 
-    controls["save_sensitive"].click()
 
     assert len(widget_runtime["calls"]["guardrails"]) == before
-    assert "Explain why this column is Direct or Indirect PII." in state["message"]
+    assert any(
+        "Explain why this column is Direct or Indirect PII." in message
+        for message in state["_validation_errors"].values()
+    )
+    controls["save_data_contract"].click()
+    assert "Complete the current draft configuration before saving" in state["message"]
 
 
 def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):
@@ -1105,7 +1103,6 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
-    controls["save_column_enrichment"].click()
     assert widget_runtime["calls"]["enrichment"] == []
     assert state["_pending_enrichment"]
     controls["save_data_contract"].click()
@@ -1164,7 +1161,7 @@ def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
-    """New Freshness and Source Drift rules cannot be persisted with empty parameters."""
+    """New Freshness and Source Drift rules stage live and block final save while incomplete."""
     widget_runtime["guardrails"][:] = [
         rule for rule in widget_runtime["guardrails"]
         if rule["guardrail_type"] not in {"freshness", "source_drift"}
@@ -1173,14 +1170,15 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     freshness = state["_controls"]["table_guardrails"]["freshness"]
     freshness["enabled"].value = True
     before = len(widget_runtime["calls"]["guardrails"])
-    freshness["save"].click()
     assert len(widget_runtime["calls"]["guardrails"]) == before
-    assert "could not convert string to float" in state["message"]
+    assert any(
+        "could not convert string to float" in message
+        for message in state["_validation_errors"].values()
+    )
 
     freshness["parameters"][0].value = "column_1"
     freshness["parameters"][1].value = "6"
     freshness["parameters"][2].value = "hours"
-    freshness["save"].click()
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -1204,7 +1202,6 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "Applies when this table is used as a source in a downstream pipeline." in drift_section.children[1].value
     assert "previously consumed from this table has changed" in drift_section.children[1].value
 
-    drift["save"].click()
     staged_drift = next(
         record for records in state["_pending_guardrails"].values()
         for record in records.values()
@@ -1224,7 +1221,6 @@ def test_disabled_guardrail_is_preserved_in_draft_json(widget_runtime):
     freshness = controls["table_guardrails"]["freshness"]
 
     freshness["enabled"].value = False
-    freshness["save"].click()
     controls["save_data_contract"].click()
 
     saved = widget_runtime["calls"]["draft"][-1]
@@ -1244,11 +1240,12 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     controls["dq_type"].value = "completeness"
     controls["dq_max_missing"].value = "not-a-number"
 
-    controls["save_dq"].click()
 
     assert len(widget_runtime["calls"]["guardrails"]) == before
-    assert "could not convert string to float" in state["message"]
-    assert "#a4262c" in controls["status"].value
+    assert any(
+        "could not convert string to float" in message
+        for message in state["_validation_errors"].values()
+    )
 
 
 def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_runtime):
@@ -1263,7 +1260,6 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
     assert controls["dq_block"].value is False
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
-    controls["save_dq"].click()
     assert widget_runtime["calls"]["guardrails"] == []
     state["_controls"]["save_data_contract"].click()
     saved = next(
@@ -1379,7 +1375,6 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     assert controls["dq_maximum"].value == "100"
     assert controls["dq_maximum_inclusive"].value is False
     controls["dq_minimum"].value = "1"
-    controls["save_dq"].click()
     assert len(widget_runtime["calls"]["guardrails"]) == before
     controls["save_data_contract"].click()
 
@@ -1488,7 +1483,6 @@ def test_review_shows_changes_since_last_save(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["table_classification"].value = "Restricted"
-    controls["table_save"].click()
     controls["top_nav"].value = "Manifest & Freeze"
 
     assert "Changes since last save" in controls["manifest_preview"].value or state["dirty"]
