@@ -1066,9 +1066,11 @@ def widget_data_contract(
                         "<p style='margin:0;'>Freshness is the expected source-data arrival SLA; "
                         "it is independent of when Fabric schedules this notebook to run.</p>"
                     ),
-                    table_rules["freshness"]["enabled"],
+                    widgets.HBox(
+                        [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
                     *table_rules["freshness"]["parameters"],
-                    table_rules["freshness"]["block"],
                 ],
                 layout=widgets.Layout(
                     width="560px", max_width="100%", gap="6px",
@@ -1078,9 +1080,11 @@ def widget_data_contract(
             widgets.VBox(
                 [
                     widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
-                    table_rules["source_drift"]["enabled"],
+                    widgets.HBox(
+                        [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
                     *table_rules["source_drift"]["parameters"],
-                    table_rules["source_drift"]["block"],
                 ],
                 layout=widgets.Layout(
                     width="560px", max_width="100%", gap="6px",
