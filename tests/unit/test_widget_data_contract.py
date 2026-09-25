@@ -398,6 +398,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
     assert controls["advanced_type"].value == "uniqueness"
+    assert controls["advanced_enabled"].description == "Enabled"
+    assert controls["advanced_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -429,6 +431,10 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
+    assert controls["advanced_type"].layout.max_width == "560px"
+    assert controls["advanced_columns"].layout.height == "150px"
+    assert controls["advanced_enabled"].description == "Enabled"
+    assert controls["advanced_block"].description == "Block on failure"
     controls["top_nav"].value = "Review"
     assert controls["manifest_nav"] in controls["left_pane"].children
 
@@ -649,7 +655,10 @@ def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
     controls["save_dq"].click()
 
     controls["advanced_type"].value = "column_relationship"
+    assert controls["advanced_enabled"].value is True
+    assert controls["advanced_block"].value is False
     controls["advanced_columns"].value = ("column_0", "column_1")
+    controls["advanced_block"].value = True
     controls["advanced_save"].click()
 
     assert widget_runtime["calls"]["guardrails"] == []
@@ -668,6 +677,8 @@ def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
     assert any(
         record["rule_type"] == "column_relationship"
         and module._parameters(record)["columns"] == ["column_0", "column_1"]
+        and record["action"] == "Block"
+        and record["is_active"] is True
         for record in saved
     )
 
@@ -731,6 +742,8 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     controls = state["_controls"]
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
     assert len(captures["sensitive"]) == 1
+    assert captures["sensitive"][0]["table_description"] == "Suggested table description"
+    assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
     assert all(not drafts for drafts in state["_column_drafts"].values())
     assert state["_ai_suggestions"]
     assert "Suggested column description" in controls["column_description_ai"].value
@@ -782,6 +795,139 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     saved_parameters = module._parameters(saved_sensitive)
     assert saved_parameters["pii_type"] == "direct"
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
+
+
+def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runtime, monkeypatch):
+    """Dependent DQ advice sees fresh AI Description context without auto-accepting it."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    captured: list[dict[str, object]] = []
+
+    def dq(context, **_kwargs):
+        captured.append(context)
+        return []
+
+    monkeypatch.setattr(module, "suggest_dq_rules", dq)
+
+    assert controls["column_description"].value == "Order identifier"
+    controls["suggest_dq"].click()
+
+    assert captured
+    assert captured[0]["table_description"] == "Suggested table description"
+    assert captured[0]["columns"][0]["description"] == "Suggested column description"
+    assert controls["column_description"].value == "Order identifier"
+
+
+def test_manual_description_change_marks_dependent_ai_stale_and_requests_rerun(
+    widget_runtime, monkeypatch
+):
+    """Changing Description invalidates dependent AI advice without changing manual controls."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    state["_ai_suggestions"][scope]["dq"] = [{
+        "rule_type": "completeness",
+        "columns": ["column_0"],
+        "parameters": {},
+        "rationale": "old",
+        "selected": True,
+    }]
+    controls["dq_suggestion"].options = [("old", "0")]
+    controls["dq_suggestion"].disabled = False
+    controls["accept_dq_suggestion"].disabled = False
+
+    controls["column_description"].value = "Edited business description"
+
+    suggestions = state["_ai_suggestions"][scope]["columns"][column_id]
+    assert suggestions["description"]["stale"] is True
+    assert suggestions["sensitive_data"]["stale"] is True
+    assert "dq" not in state["_ai_suggestions"][scope]
+    assert controls["dq_suggestion"].options == ()
+    assert "Re-run suggestions" in controls["dq_ai"].value
+    assert "Needs refresh" in controls["sensitive_ai"].value
+
+
+def test_accepting_description_does_not_invalidate_matching_ai_context(
+    widget_runtime, monkeypatch
+):
+    """Accepting the exact AI Description keeps dependent advice current."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    controls["accept_column_description"].click()
+
+    suggestions = state["_ai_suggestions"][scope]["columns"][column_id]
+    assert suggestions["description"]["stale"] is False
+    assert suggestions["sensitive_data"]["stale"] is False
+
+
+def test_table_context_change_marks_loaded_sensitive_ai_stale(widget_runtime, monkeypatch):
+    """Table Description and Classification changes invalidate column-level dependent advice."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    scope = next(iter(state["_ai_suggestions"]))
+    column_id = str(controls["column_select"].value)
+
+    controls["table_classification"].value = "Restricted"
+
+    assert state["_ai_suggestions"][scope]["columns"][column_id]["sensitive_data"]["stale"] is True
+    assert "Needs refresh" in controls["sensitive_ai"].value
+
+
+def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
+    """A failed Description re-run must surface the error instead of an old suggestion."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    monkeypatch.setattr(
+        module,
+        "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+    )
+
+    controls["rerun_column_description"].click()
+
+    assert "AI Functions unavailable" in controls["column_description_ai"].value
+    assert controls["accept_column_description"].disabled is True
+
+
+def test_dq_failure_clears_previous_suggestions(widget_runtime, monkeypatch):
+    """A failed DQ re-run must not leave old AI suggestions selectable."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    monkeypatch.setattr(
+        module,
+        "suggest_dq_rules",
+        lambda *_args, **_kwargs: [{
+            "rule_type": "completeness",
+            "columns": ["column_0"],
+            "parameters": {
+                "maximum_missing_percent": 0,
+                "treat_blank_as_missing": False,
+            },
+            "rationale": "Required business field.",
+            "selected": True,
+        }],
+    )
+    controls["suggest_dq"].click()
+    assert controls["dq_suggestion"].options
+
+    monkeypatch.setattr(
+        module,
+        "suggest_dq_rules",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("DQ AI unavailable")),
+    )
+    controls["suggest_dq"].click()
+
+    assert controls["dq_suggestion"].options == ()
+    assert controls["dq_suggestion"].disabled is True
+    assert controls["accept_dq_suggestion"].disabled is True
+    assert "DQ AI unavailable" in controls["dq_ai"].value
 
 
 def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
@@ -850,12 +996,14 @@ def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, 
     """Explicit refresh reads unsaved Enrichment values without invoking save paths."""
     state, captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
+    controls["table_description"].value = "Current unsaved table description"
     controls["column_description"].value = "Current unsaved description"
     controls["column_classification"].value = "Restricted"
     controls["rerun_column_description"].click()
     controls["rerun_sensitive"].click()
 
     assert captures["enrichment"][-1]["existing_description"] == "Current unsaved description"
+    assert captures["sensitive"][-1]["table_description"] == "Current unsaved table description"
     sensitive_column = captures["sensitive"][-1]["columns"][0]
     assert sensitive_column["description"] == "Current unsaved description"
     assert sensitive_column["classification"] == "Restricted"

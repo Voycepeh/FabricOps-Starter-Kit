@@ -711,9 +711,9 @@ def widget_data_contract(
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
-        compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
-        column_names = [str(column.get("column_name") or "") for column in columns]
+        field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
+        selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
+        checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -859,15 +859,16 @@ def widget_data_contract(
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
                 )
-                ai_state["table"]["description"] = {
-                    "value": result["Description"], "stale": False
-                }
+                previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
+                new_value = str(result["Description"])
+                ai_state["table"]["description"] = {"value": new_value, "stale": False}
+                if previous_value and new_value != previous_value:
+                    mark_all_sensitive_stale()
+                    invalidate_dq_suggestions("Table Description suggestion changed.")
                 ai_errors.pop("table_enrichment", None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                ai_state["table"].setdefault(
-                    "description", {"error": message, "stale": False}
-                )
+                ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
             render_table_ai()
@@ -894,18 +895,18 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Freshness column"),
                 )
-                freshness_column.layout = compact_field_layout
+                freshness_column.layout = field_layout
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
                     **shared.widget_common(widgets, "Maximum age"),
                 )
-                maximum_age.layout = compact_text_layout
+                maximum_age.layout = field_layout
                 maximum_age_unit = widgets.Dropdown(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
                     **shared.widget_common(widgets, "Age unit"),
                 )
-                maximum_age_unit.layout = compact_field_layout
+                maximum_age_unit.layout = field_layout
                 parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
             else:
                 partition_column = widgets.Dropdown(
@@ -914,14 +915,14 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
-                partition_column.layout = compact_field_layout
+                partition_column.layout = field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
                     value=str(existing_parameters.get("change_column") or "") or None,
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change column"),
                 )
-                change_column.layout = compact_field_layout
+                change_column.layout = field_layout
                 parameter_controls = [partition_column, change_column]
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
@@ -1097,7 +1098,7 @@ def widget_data_contract(
                     ),
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     *table_rules["freshness"]["parameters"],
                 ],
@@ -1111,7 +1112,7 @@ def widget_data_contract(
                     widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     *table_rules["source_drift"]["parameters"],
                 ],
@@ -1138,11 +1139,11 @@ def widget_data_contract(
         )
         column_select = widgets.Select(
             options=column_options,
-            rows=14,
-            layout=widgets.Layout(width="100%", height="405px"),
+            rows=8,
+            layout=widgets.Layout(width="100%", height="250px"),
         )
         column_context = widgets.HTML()
-        profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="220px")
+        profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description_ai = widgets.HTML()
@@ -1174,7 +1175,7 @@ def widget_data_contract(
             ],
             rows=5,
             disabled=not editable,
-            layout=widgets.Layout(width="100%", height="175px"),
+            layout=selector_layout,
         )
         dq_help = widgets.HTML()
         dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
@@ -1215,6 +1216,16 @@ def widget_data_contract(
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
         accept_dq_suggestion = widgets.Button(description="Apply selected suggestion", disabled=True)
         dq_ai = widgets.HTML()
+        for control in (
+            table_description, table_classification,
+            column_description, column_classification,
+            pii_type, pii_reason, sensitive_treatment,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
@@ -1452,6 +1463,21 @@ def widget_data_contract(
                 )) or ""),
             )
 
+        def _effective_ai_description(column_id: str) -> str:
+            """Return the freshest Description context for dependent AI suggestions."""
+            description, _classification = _column_editable_values(column_id)
+            suggestion = ai_state["columns"].get(column_id, {}).get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or description)
+            return description
+
+        def _effective_table_ai_description() -> str:
+            """Return the freshest table Description context for dependent AI suggestions."""
+            suggestion = ai_state["table"].get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or table_description.value or "")
+            return str(table_description.value or "")
+
         def render_column_ai(column_id: str) -> None:
             suggestions = ai_state["columns"].get(column_id, {})
             if not ai_enrichment.get("enabled"):
@@ -1489,6 +1515,30 @@ def widget_data_contract(
             rerun_column_description.disabled = not available
             rerun_sensitive.disabled = not available
 
+        def invalidate_dq_suggestions(message: str) -> None:
+            """Clear DQ advice when any of its governed inputs change."""
+            if state["_ai_suggestions"][suggestion_scope].pop("dq", None) is not None:
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
+                dq_ai.value = (
+                    "<p><b>AI suggestions</b><br>"
+                    f"{html.escape(message)} Re-run suggestions to refresh them.</p>"
+                )
+
+        def mark_sensitive_stale(column_id: str) -> None:
+            """Mark one column's dependent Sensitive Data advice stale."""
+            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            if suggestion:
+                suggestion["stale"] = True
+
+        def mark_all_sensitive_stale() -> None:
+            """Mark all loaded column Sensitive Data suggestions stale."""
+            for column_suggestions in ai_state["columns"].values():
+                suggestion = column_suggestions.get("sensitive_data")
+                if suggestion:
+                    suggestion["stale"] = True
+
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not force and suggestions.get("description"):
@@ -1497,7 +1547,7 @@ def widget_data_contract(
             selected = next(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
-            description, _classification = _column_editable_values(column_id)
+            description, _ = _column_editable_values(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 result = suggest_enrichment(
@@ -1509,16 +1559,23 @@ def widget_data_contract(
                     ),
                     description_prompt=str(ai_enrichment.get("description_prompt") or ""),
                 )
-                suggestions["description"] = {"value": result["Description"], "stale": False}
+                previous_value = str(suggestions.get("description", {}).get("value") or "")
+                new_value = str(result["Description"])
+                suggestions["description"] = {"value": new_value, "stale": False}
+                if previous_value and new_value != previous_value:
+                    mark_sensitive_stale(column_id)
+                    invalidate_dq_suggestions("Description suggestion changed.")
                 ai_errors.pop((column_id, "enrichment"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                suggestions.setdefault("description", {"error": message, "stale": False})
+                suggestions["description"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "enrichment")] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
-        def run_sensitive_ai(column_id: str, *, force: bool = False) -> None:
+        def run_sensitive_ai(
+            column_id: str, *, force: bool = False, use_description_suggestion: bool = False
+        ) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not force and suggestions.get("sensitive_data"):
                 render_column_ai(column_id)
@@ -1527,6 +1584,8 @@ def widget_data_contract(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
             description, classification = _column_editable_values(column_id)
+            if use_description_suggestion:
+                description = _effective_ai_description(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
@@ -1537,7 +1596,11 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": table_description.value,
+                    "table_description": (
+                        _effective_table_ai_description()
+                        if use_description_suggestion
+                        else str(table_description.value or "")
+                    ),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
@@ -1577,7 +1640,7 @@ def widget_data_contract(
                 render_column_ai(column_id)
                 return
             run_column_enrichment_ai(column_id)
-            run_sensitive_ai(column_id)
+            run_sensitive_ai(column_id, use_description_suggestion=True)
 
         def accept_description_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
@@ -1609,26 +1672,63 @@ def widget_data_contract(
             lambda _button: run_sensitive_ai(str(column_select.value or ""), force=True)
         )
 
-        def description_changed(_change: dict[str, Any]) -> None:
+        def description_changed(change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
-            if suggestion:
-                suggestion["stale"] = True
+            suggestions = ai_state["columns"].get(column_id, {})
+            description_suggestion = suggestions.get("description")
+            new_value = str(change.get("new") or "")
+            if (
+                description_suggestion
+                and not description_suggestion.get("error")
+                and new_value == str(description_suggestion.get("value") or "")
+            ):
+                render_column_ai(column_id)
+                return
+            if description_suggestion:
+                description_suggestion["stale"] = True
+            mark_sensitive_stale(column_id)
+            invalidate_dq_suggestions("Description changed.")
             render_column_ai(column_id)
 
         def classification_changed(_change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
+            mark_sensitive_stale(column_id)
+            invalidate_dq_suggestions("Classification changed.")
+            render_column_ai(column_id)
+
+        def table_description_changed(change: dict[str, Any]) -> None:
+            suggestion = ai_state["table"].get("description")
+            new_value = str(change.get("new") or "")
+            if (
+                suggestion
+                and not suggestion.get("error")
+                and new_value == str(suggestion.get("value") or "")
+            ):
+                return
             if suggestion:
                 suggestion["stale"] = True
-            render_column_ai(column_id)
+            mark_all_sensitive_stale()
+            invalidate_dq_suggestions("Table Description changed.")
+            render_table_ai()
+            selected_id = str(column_select.value or "")
+            if selected_id:
+                render_column_ai(selected_id)
+
+        def table_classification_changed(_change: dict[str, Any]) -> None:
+            mark_all_sensitive_stale()
+            invalidate_dq_suggestions("Table Classification changed.")
+            selected_id = str(column_select.value or "")
+            if selected_id:
+                render_column_ai(selected_id)
 
         column_description.observe(description_changed, names="value")
         column_classification.observe(classification_changed, names="value")
+        table_description.observe(table_description_changed, names="value")
+        table_classification.observe(table_classification_changed, names="value")
 
         def save_column_enrichment_clicked(_button: Any) -> None:
             try:
@@ -1767,10 +1867,12 @@ def widget_data_contract(
                 profile = dict(profile_value.get("profile") or {})
                 context_payload = build_ai_dq_context({
                     "table_name": table.get("table_name"), "schema_name": table.get("schema_name"),
-                    "layer": table.get("layer"), "table_description": table_description.value,
+                    "layer": table.get("layer"), "table_description": _effective_table_ai_description(),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
-                        **selected, "description": column_description.value,
+                        **selected, "description": _effective_ai_description(
+                            str(selected.get("column_id") or "")
+                        ),
                         "classification": column_classification.value,
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
@@ -1797,6 +1899,10 @@ def widget_data_contract(
                     for item in suggestions
                 ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
         def accept_dq_clicked(_button: Any) -> None:
@@ -1872,7 +1978,7 @@ def widget_data_contract(
                 dq_help, dq_usage,
                 widgets.HBox(
                     [dq_enabled, dq_block],
-                    layout=widgets.Layout(gap="20px", align_items="center"),
+                    layout=checkbox_row_layout,
                 ),
                 *dq_parameter_controls,
                 suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
@@ -1927,7 +2033,7 @@ def widget_data_contract(
                     sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     sensitive_treatment, mask_start, mask_end, mask_character,
                     bucket_bins, bucket_labels,
@@ -1942,16 +2048,16 @@ def widget_data_contract(
         )
         view_content["Columns"] = (column_left, column_right)
 
+        if ai_mode == "with_ai":
+            run_table_ai()
+        else:
+            render_table_ai()
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
             render_column_ai(str(column_select.value))
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
-        if ai_mode == "with_ai":
-            run_table_ai()
-        else:
-            render_table_ai()
 
         # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
         advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
@@ -1963,10 +2069,21 @@ def widget_data_contract(
         advanced_operator = widgets.Dropdown(options=("=", "!=", ">", ">=", "<", "<="), disabled=not editable, **shared.widget_common(widgets, "Operator"))
         custom_expression = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "PySpark boolean Column expression", textarea=True))
         custom_description = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Description"))
-        advanced_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        advanced_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        advanced_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         advanced_help = widgets.HTML()
         advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
+        for control in (
+            advanced_type, advanced_saved, advanced_columns, advanced_operator,
+            custom_expression, custom_description,
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
+        advanced_type.layout.height = "120px"
+        advanced_saved.layout.height = "120px"
+        advanced_columns.layout.height = "150px"
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
             kind = str(advanced_type.value or "")
@@ -1993,7 +2110,8 @@ def widget_data_contract(
             advanced_operator.value = str(params.get("operator") or params.get("condition_operator") or "=")
             custom_expression.value = str(params.get("expression") or "")
             custom_description.value = str(params.get("description") or "")
-            advanced_action.value = str(rule.get("action") or "Warn")
+            advanced_enabled.value = bool(rule and rule.get("is_active", True))
+            advanced_block.value = str(rule.get("action") or "Warn") == "Block"
 
         def save_advanced_clicked(_button: Any) -> None:
             kind = str(advanced_type.value or "")
@@ -2014,7 +2132,9 @@ def widget_data_contract(
             existing = advanced_lookup.get(str(advanced_saved.value or ""), {})
             try:
                 stage_guardrails([guardrail_record(
-                    "data_quality", kind, params, action=str(advanced_action.value), existing=existing,
+                    "data_quality", kind, params,
+                    action="Block" if advanced_block.value else "Warn",
+                    existing=existing, active=advanced_enabled.value,
                 )])
                 set_status("Advanced Data Quality configuration staged locally.")
             except (ValueError, RuntimeError) as exc:
@@ -2037,7 +2157,7 @@ def widget_data_contract(
             advanced_operator,
             custom_expression,
             custom_description,
-            advanced_action,
+            widgets.HBox([advanced_enabled, advanced_block], layout=checkbox_row_layout),
             widgets.HBox([advanced_save], layout=widgets.Layout(justify_content="flex-start")),
         )
         view_content["Advanced"] = (advanced_left, advanced_right)
@@ -2047,7 +2167,7 @@ def widget_data_contract(
         payload = state.get("manifest") or {}
         sections = _manifest_sections(payload)
         manifest_nav = widgets.Select(options=list(sections), **shared.widget_common(widgets, "Section"))
-        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="500px")
+        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="360px")
 
         def manifest_section_changed(change: dict[str, Any]) -> None:
             manifest_preview.value = sections.get(str(change.get("new") or ""), "")
@@ -2212,7 +2332,8 @@ def widget_data_contract(
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
             "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
-            "advanced_columns": advanced_columns, "advanced_save": advanced_save,
+            "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,
+            "advanced_block": advanced_block, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
