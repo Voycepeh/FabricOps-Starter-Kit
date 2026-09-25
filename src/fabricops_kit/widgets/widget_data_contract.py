@@ -2164,6 +2164,7 @@ def widget_data_contract(
 
         dq_value_source.observe(update_value_source, names="value")
         dq_type.observe(update_dq_help, names="value")
+        dq_type.observe(update_value_source, names="value")
         update_dq_help()
         update_value_source()
 
