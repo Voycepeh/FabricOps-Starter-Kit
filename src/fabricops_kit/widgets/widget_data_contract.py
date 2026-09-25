@@ -15,24 +15,22 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.enrichment_shared import (
     PII_LABELS,
+    build_ai_business_rule_context,
     build_ai_dq_context,
     build_ai_enrichment_context,
     build_ai_sensitive_data_context,
     suggest_enrichment,
     suggest_grain_key,
     suggest_dq_rules,
+    suggest_business_rule,
     suggest_sensitive_data,
 )
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
-_TABS = ("Table", "Columns", "Advanced", "Manifest & Freeze")
+_TABS = ("Table", "Columns", "Business Rules", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
 _COLUMN_DQ_TYPES = ("completeness", "value_set", "range", "pattern")
-_ADVANCED_TYPES = (
-    ("Column relationship", "column_relationship"),
-    ("Custom expression", "custom_expression"),
-)
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
     "uniqueness": "Require one column, or a table-level column combination, to be unique.",
@@ -259,7 +257,7 @@ def _manifest_sections(
         "<th>Column</th><th>Datatype</th><th>Profile evidence</th><th>Description</th>"
         "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
-        "<details><summary><b>Advanced rules</b> · "
+        "<details><summary><b>Business Rules</b> · "
         f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
     )
     return {"Review": details}
@@ -3064,171 +3062,303 @@ def widget_data_contract(
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
 
-        # Advanced: controlled multi-column rule types, saved configurations, no raw JSON editor.
-        advanced_type = widgets.Select(options=_ADVANCED_TYPES, **shared.widget_common(widgets, "Rule type"))
-        advanced_saved = widgets.Select(**shared.widget_common(widgets, "Saved configurations"))
-        advanced_columns = widgets.SelectMultiple(
-            options=[(str(c.get("column_name") or ""), str(c.get("column_name") or "")) for c in columns],
-            disabled=not editable, **shared.widget_common(widgets, "Columns"),
+        # Business Rules: Governance states intent; FabricOps resolves deterministic Guardrails.
+        business_saved = widgets.Select(
+            **shared.widget_common(widgets, "Saved Business Rules")
         )
-        advanced_operator = widgets.Dropdown(options=("=", "!=", ">", ">=", "<", "<="), disabled=not editable, **shared.widget_common(widgets, "Operator"))
-        custom_expression = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "PySpark boolean Column expression", textarea=True))
-        custom_description = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Description"))
-        advanced_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
-        advanced_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
-        advanced_help = widgets.HTML()
-        advanced_lookup: dict[str, dict[str, Any]] = {}
-        advanced_new_rules: dict[str, dict[str, Any]] = {}
-        advanced_hydrating = {"active": False}
+        business_requirement = widgets.Textarea(
+            disabled=not editable,
+            placeholder="Describe what must be true",
+            **shared.widget_common(widgets, "Describe what must be true", textarea=True),
+        )
+        business_columns = widgets.SelectMultiple(
+            options=[
+                (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
+                for column in columns
+            ],
+            disabled=not editable,
+            **shared.widget_common(widgets, "Relevant columns (optional)"),
+        )
+        business_enabled = widgets.Checkbox(
+            value=True, description="Enabled", disabled=not editable
+        )
+        business_block = widgets.Checkbox(
+            description="Block on failure", disabled=not editable
+        )
+        business_examples = widgets.HTML(
+            "<div style='color:#667085;font-size:12px;line-height:1.6;'>"
+            "<b>Examples</b><br>"
+            "• End date must be after start date<br>"
+            "• When status is Approved, approved date is required<br>"
+            "• Total amount must equal quantity × unit price × (1 - discount)<br>"
+            "• Either email or mobile number must be present"
+            "</div>"
+        )
+        business_proposal = widgets.HTML(
+            "<p style='color:#667085;'>Describe a rule, optionally select the relevant columns, "
+            "then choose <b>Resolve rule</b>.</p>"
+        )
+        resolve_business_rule = widgets.Button(
+            description="Resolve rule",
+            disabled=not (
+                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
+            ),
+        )
+        apply_business_rule = widgets.Button(description="Apply", disabled=True)
+        business_lookup: dict[str, dict[str, Any]] = {}
+        business_resolved: dict[str, Any] = {}
+        business_hydrating = {"active": False}
+
         for control in (
-            advanced_type, advanced_saved, advanced_columns, advanced_operator,
-            custom_expression, custom_description,
+            business_saved, business_requirement, business_columns,
         ):
             control.layout.width = "100%"
-            control.layout.max_width = "560px"
+            control.layout.max_width = "760px"
             control.layout.min_width = "0"
-        advanced_type.layout.height = "120px"
-        advanced_saved.layout.height = "120px"
-        advanced_columns.layout.height = "150px"
+        business_saved.layout.height = "160px"
+        business_columns.layout.height = "130px"
+        business_requirement.layout.height = "100px"
 
-        def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
-            """Reset and deterministically hydrate the selected Advanced rule family."""
-            advanced_hydrating["active"] = True
-            try:
-                kind = str(advanced_type.value or "")
-                advanced_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
-                advanced_columns.layout.display = "none" if kind == "custom_expression" else ""
-                advanced_operator.layout.display = "" if kind == "column_relationship" else "none"
-                custom_expression.layout.display = "" if kind == "custom_expression" else "none"
-                custom_description.layout.display = "" if kind == "custom_expression" else "none"
-                matching = [
-                    r for r in session_guardrails()
-                    if str(r.get("rule_type") or "") == kind
-                ]
-                advanced_lookup.clear()
-                options = []
-                for rule in matching:
-                    label = ", ".join(map(str, _parameters(rule).get("columns", []))) or str(
-                        rule.get("rule_id") or "Configuration"
-                    )
-                    key = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or label)
-                    advanced_lookup[key] = rule
-                    options.append((label, key))
-                advanced_saved.options = ()
-                advanced_columns.value = ()
-                advanced_operator.value = "="
-                custom_expression.value = ""
-                custom_description.value = ""
-                advanced_enabled.value = False
-                advanced_block.value = False
-                advanced_saved.options = options
-                if options:
-                    advanced_saved.value = options[0][1]
-                    hydrate_advanced_saved({"new": advanced_saved.value})
-            finally:
-                advanced_hydrating["active"] = False
+        def business_rule_label(rule: Mapping[str, Any]) -> str:
+            params = _parameters(rule)
+            requirement = str(
+                params.get("business_requirement")
+                or params.get("description")
+                or ""
+            ).strip()
+            if requirement:
+                return requirement
+            kind = str(rule.get("rule_type") or "")
+            if kind == "column_relationship":
+                names = list(params.get("columns") or [])
+                if len(names) == 2:
+                    return f"{names[0]} {params.get('operator') or '='} {names[1]}"
+            return kind.replace("_", " ").title() or "Business Rule"
 
-        def hydrate_advanced_saved(change: dict[str, Any]) -> None:
-            previous = advanced_hydrating["active"]
-            advanced_hydrating["active"] = True
-            try:
-                rule = advanced_lookup.get(str(change.get("new") or ""), {})
-                params = _parameters(rule)
-                valid_columns = {value for _label, value in advanced_columns.options}
-                advanced_columns.value = tuple(
-                    name for name in params.get("columns", []) if name in valid_columns
+        def refresh_business_saved_options(selected: str | None = None) -> None:
+            business_lookup.clear()
+            options: list[tuple[str, str]] = [("New Business Rule", "")]
+            for rule in session_guardrails():
+                if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}:
+                    continue
+                if str(rule.get("column_id") or ""):
+                    continue
+                if str(rule.get("rule_type") or "") not in {
+                    "column_relationship", "custom_expression"
+                }:
+                    continue
+                key = str(rule.get("guardrail_rule_id") or "")
+                if not key:
+                    continue
+                business_lookup[key] = rule
+                options.append((business_rule_label(rule), key))
+            business_saved.options = options
+            option_values = {str(value) for _label, value in options}
+            business_saved.value = selected if selected in option_values else ""
+
+        def render_business_proposal(proposal: Mapping[str, Any] | None = None) -> None:
+            if not proposal:
+                business_proposal.value = (
+                    "<p style='color:#667085;'>Describe a rule, optionally select the relevant "
+                    "columns, then choose <b>Resolve rule</b>.</p>"
                 )
-                advanced_operator.value = str(
-                    params.get("operator") or params.get("condition_operator") or "="
-                )
-                custom_expression.value = str(params.get("expression") or "")
-                custom_description.value = str(params.get("description") or "")
-                advanced_enabled.value = bool(rule and rule.get("is_active", True))
-                advanced_block.value = str(rule.get("action") or "Warn") == "Block"
-            finally:
-                advanced_hydrating["active"] = previous
-
-        def sync_advanced(_change: dict[str, Any] | None = None) -> None:
-            if advanced_hydrating["active"] or not editable:
                 return
-            kind = str(advanced_type.value or "")
-            key = f"advanced.{kind}"
-            existing = (
-                advanced_lookup.get(str(advanced_saved.value or ""), {})
-                or advanced_new_rules.get(kind, {})
+            rule_type = str(proposal.get("rule_type") or "")
+            params = dict(proposal.get("parameters") or {})
+            rationale = str(proposal.get("rationale") or "").strip()
+            if rule_type == "column_relationship":
+                names = list(params.get("columns") or [])
+                expression = (
+                    f"{names[0]} {params.get('operator') or '='} {names[1]}"
+                    if len(names) == 2 else ""
+                )
+                heading = "Known FabricOps pattern: Column Relationship"
+                review = (
+                    "<span style='color:#107c10;font-weight:600;'>"
+                    "No Engineering review required</span>"
+                )
+            else:
+                expression = str(params.get("expression") or "")
+                heading = "Custom Expression"
+                review = (
+                    "<span style='color:#8a6d1d;font-weight:600;'>"
+                    "Engineering review required</span>"
+                )
+            rationale_html = (
+                "<br><span style='color:#667085;'>" + html.escape(rationale) + "</span>"
+                if rationale else ""
             )
-            if not existing and not advanced_enabled.value:
-                set_validation_error(key)
+            business_proposal.value = (
+                "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                "padding:10px 12px;font-size:12px;line-height:1.6;'>"
+                f"<b>{html.escape(heading)}</b><br>"
+                f"<code>{html.escape(expression)}</code><br>"
+                f"{review}{rationale_html}</div>"
+            )
+
+        def hydrate_business_saved(change: dict[str, Any] | None = None) -> None:
+            business_hydrating["active"] = True
+            try:
+                business_resolved.clear()
+                apply_business_rule.disabled = True
+                rule = business_lookup.get(str(business_saved.value or ""), {})
+                params = _parameters(rule)
+                requirement = str(
+                    params.get("business_requirement")
+                    or params.get("description")
+                    or ""
+                ).strip()
+                if not requirement and rule:
+                    requirement = business_rule_label(rule)
+                business_requirement.value = requirement
+                valid_columns = {value for _label, value in business_columns.options}
+                selected_columns = [
+                    str(name) for name in params.get("columns", [])
+                    if str(name) in valid_columns
+                ]
+                business_columns.value = tuple(selected_columns)
+                business_enabled.value = bool(
+                    not rule or rule.get("is_active", True)
+                )
+                business_block.value = str(rule.get("action") or "Warn") == "Block"
+                if rule:
+                    render_business_proposal({
+                        "rule_type": str(rule.get("rule_type") or ""),
+                        "parameters": params,
+                        "rationale": "Saved deterministic Guardrail.",
+                    })
+                else:
+                    render_business_proposal()
+            finally:
+                business_hydrating["active"] = False
+
+        def invalidate_business_proposal(_change: dict[str, Any] | None = None) -> None:
+            if business_hydrating["active"]:
+                return
+            business_resolved.clear()
+            apply_business_rule.disabled = True
+            render_business_proposal()
+
+        def resolve_business_rule_clicked(_button: Any) -> None:
+            try:
+                context_payload = build_ai_business_rule_context({
+                    "table_name": table.get("table_name"),
+                    "schema_name": table.get("schema_name"),
+                    "layer": table.get("layer"),
+                    "table_description": _effective_table_ai_description(),
+                    "table_classification": table_classification.value,
+                    "columns": [
+                        {
+                            **column,
+                            "description": _column_editable_values(
+                                str(column.get("column_id") or "")
+                            )[0],
+                            "classification": _column_editable_values(
+                                str(column.get("column_id") or "")
+                            )[1],
+                        }
+                        for column in columns
+                    ],
+                })
+                proposal = suggest_business_rule(
+                    context_payload,
+                    requirement=str(business_requirement.value or ""),
+                    relevant_columns=list(business_columns.value),
+                    prompt=str(ai_enrichment.get("business_rule_prompt") or ""),
+                )
+                business_resolved.clear()
+                business_resolved.update(proposal)
+                render_business_proposal(proposal)
+                apply_business_rule.disabled = False
+                set_validation_error("business_rule")
+            except (TypeError, ValueError, RuntimeError) as exc:
+                business_resolved.clear()
+                apply_business_rule.disabled = True
+                business_proposal.value = (
+                    f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
+                )
+                set_validation_error("business_rule", exc)
+
+        def apply_business_rule_clicked(_button: Any) -> None:
+            if not business_resolved:
                 return
             try:
-                params: dict[str, Any] = {"columns": list(advanced_columns.value)}
-                if kind == "uniqueness" and len(params["columns"]) < 2:
-                    raise ValueError("Composite uniqueness requires at least two columns.")
-                if kind == "column_relationship":
-                    if len(params["columns"]) != 2:
-                        raise ValueError("Column relationship requires exactly two columns.")
-                    params["operator"] = advanced_operator.value
-                elif kind == "custom_expression":
-                    expression = custom_expression.value.strip()
-                    if not expression:
-                        raise ValueError("Custom expression requires a PySpark boolean expression.")
-                    params = {
-                        "expression_language": "pyspark",
-                        "expression": expression,
-                        "description": custom_description.value.strip(),
-                    }
+                existing = business_lookup.get(str(business_saved.value or ""), {})
+                params = dict(business_resolved.get("parameters") or {})
                 record = guardrail_record(
-                    "data_quality", kind, params,
-                    action="Block" if advanced_block.value else "Warn",
-                    existing=existing, active=advanced_enabled.value,
+                    "data_quality",
+                    str(business_resolved["rule_type"]),
+                    params,
+                    action="Block" if business_block.value else "Warn",
+                    existing=existing,
+                    active=bool(business_enabled.value),
                 )
                 stage_guardrails([record])
-                if not advanced_saved.value:
-                    advanced_new_rules[kind] = record
-                set_validation_error(key)
+                refresh_business_saved_options(str(record["guardrail_rule_id"]))
+                business_resolved.clear()
+                apply_business_rule.disabled = True
+                set_validation_error("business_rule")
+                set_status(
+                    "Business Rule staged in the Data Contract. Save Data Contract to persist."
+                )
             except (TypeError, ValueError, RuntimeError) as exc:
-                set_validation_error(key, exc)
+                set_validation_error("business_rule", exc)
+                set_status(str(exc), error=True)
 
-        advanced_type.observe(hydrate_advanced_type, names="value")
-        advanced_saved.observe(hydrate_advanced_saved, names="value")
-        hydrate_advanced_type()
-        for control in (
-            advanced_columns, advanced_operator, custom_expression, custom_description,
-            advanced_enabled, advanced_block,
-        ):
-            control.observe(sync_advanced, names="value")
-        advanced_left = (
+        business_saved.observe(hydrate_business_saved, names="value")
+        business_requirement.observe(invalidate_business_proposal, names="value")
+        business_columns.observe(invalidate_business_proposal, names="value")
+        resolve_business_rule.on_click(resolve_business_rule_clicked)
+        apply_business_rule.on_click(apply_business_rule_clicked)
+        refresh_business_saved_options()
+        hydrate_business_saved()
+
+        business_ai_status = widgets.HTML(
+            "" if (
+                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
+            ) else (
+                "<div style='color:#667085;font-size:12px;'>"
+                "Open this contract with AI suggestions to resolve new Business Rules."
+                "</div>"
+            )
+        )
+        business_left = (
             widgets.HTML(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Advanced rules</div>"
+                "text-transform:uppercase;letter-spacing:.07em;'>Business Rules</div>"
                 "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Multi-column and custom Data Quality configurations.</div>"
+                "Column Rules validate individual fields. Business Rules validate how fields "
+                "work together.</div>"
             ),
-            advanced_type,
-            widgets.HTML(
-                "<div style='color:#253858;font-size:13px;font-weight:700;margin-top:8px;'>"
-                "Saved configurations</div>"
-            ),
-            advanced_saved,
+            business_saved,
         )
-        advanced_right = (
+        business_right = (
             shared.form_section(
                 widgets,
-                title="Configuration",
+                title="Business Rules",
                 children=[
-                    advanced_help,
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                        "State the business requirement in plain language. FabricOps resolves "
+                        "it to a known deterministic pattern when possible and falls back to a "
+                        "safe Custom Expression only when needed.</div>"
+                    ),
+                    business_requirement,
+                    business_columns,
+                    business_examples,
                     widgets.HBox(
-                        [advanced_enabled, advanced_block],
+                        [business_enabled, business_block],
                         layout=checkbox_row_layout,
                     ),
-                    advanced_columns,
-                    advanced_operator,
-                    custom_expression,
-                    custom_description,
+                    business_ai_status,
+                    business_proposal,
+                    shared.action_row(
+                        widgets, [resolve_business_rule, apply_business_rule]
+                    ),
                 ],
             ),
         )
-        view_content["Advanced"] = (advanced_left, advanced_right)
+        view_content["Business Rules"] = (business_left, business_right)
 
 
         # Manifest: current working contract plus changes since the last persisted draft.
@@ -3511,11 +3641,14 @@ def widget_data_contract(
             "suggest_dq": suggest_dq, "dq_ai": dq_ai,
             "dq_ai_instruction": dq_ai_instruction,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
-            "advanced_type": advanced_type, "advanced_saved": advanced_saved,
-            "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,
-            "advanced_block": advanced_block,
-            "advanced_operator": advanced_operator, "custom_expression": custom_expression,
-            "custom_description": custom_description,
+            "business_saved": business_saved,
+            "business_requirement": business_requirement,
+            "business_columns": business_columns,
+            "business_enabled": business_enabled,
+            "business_block": business_block,
+            "business_proposal": business_proposal,
+            "resolve_business_rule": resolve_business_rule,
+            "apply_business_rule": apply_business_rule,
             "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
