@@ -554,7 +554,9 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["advanced_block"].description == "Block on failure"
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
-    assert "Contract summary" in controls["manifest_preview"].value
+    assert "Table guardrails" in controls["manifest_preview"].value
+    assert "Column definitions and rules" in controls["manifest_preview"].value
+    assert "Advanced rules" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
