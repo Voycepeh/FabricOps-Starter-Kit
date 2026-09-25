@@ -448,60 +448,6 @@ def widget_data_contract(
         select(str(state["table_id"]), int(draft["contract_version"]))
         return draft
 
-    def reload_after_save(
-        message: str, *, clear_column_ids: tuple[str, ...] = (),
-    ) -> None:
-        current = state.get("current")
-        scope = (
-            (str(current["contract_id"]), int(current["contract_version"]))
-            if current else None
-        )
-
-        def clear_saved_column_drafts() -> None:
-            if scope is None:
-                return
-            drafts = state["_column_drafts"].setdefault(scope, {})
-            for column_id in clear_column_ids:
-                drafts.pop(str(column_id or "").strip(), None)
-
-        clear_saved_column_drafts()
-        select(str(state["table_id"]), int(state["contract_version"]))
-        render()
-        clear_saved_column_drafts()
-        set_status(message)
-
-    def save_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_enrichment(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Enrichment saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
-
-    def save_guardrails(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can be edited.")
-        saved = contracts.save_guardrails(records, config=config, env=env, spark_session=spark)
-        column_ids = {
-            str(record.get("column_id") or "").strip()
-            for record in records
-            if str(record.get("column_id") or "").strip()
-        }
-        reload_after_save(
-            "Guardrails saved and the canonical contract state was refreshed.",
-            clear_column_ids=tuple(column_ids),
-        )
-        return saved
-
     def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Stage Enrichment in widget session state without writing Metadata."""
         current = state.get("current")
@@ -654,8 +600,7 @@ def widget_data_contract(
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
-        freeze=freeze, activate=activate, save_enrichment=save_enrichment,
-        save_guardrails=save_guardrails, stage_enrichment=stage_enrichment,
+        freeze=freeze, activate=activate, stage_enrichment=stage_enrichment,
         stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
         discard_data_contract=discard_data_contract_session,
         load_profile_context=load_profile_context,
