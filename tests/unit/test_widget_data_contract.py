@@ -909,6 +909,46 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
 
+def test_dq_ai_is_scoped_to_pattern_and_range_and_forwards_instruction(
+    widget_runtime, monkeypatch
+):
+    """Only Pattern and Range expose AI assistance and user intent augments the prompt."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    captured: dict[str, object] = {}
+
+    def dq(_context, **kwargs):
+        captured.update(kwargs)
+        return [{
+            "rule_type": "pattern",
+            "columns": ["column_0"],
+            "parameters": {"pattern": "^P[0-9]{3}$"},
+            "rationale": "Matches the requested product ID shape.",
+            "selected": True,
+        }]
+
+    monkeypatch.setattr(module, "suggest_dq_rules", dq)
+
+    assert controls["dq_type"].value == "completeness"
+    assert controls["suggest_dq"].disabled is True
+    assert controls["dq_ai_instruction"].disabled is True
+
+    controls["dq_type"].value = "pattern"
+    assert controls["suggest_dq"].disabled is False
+    assert controls["dq_ai_instruction"].disabled is False
+
+    controls["dq_ai_instruction"].value = "Product IDs start with P followed by three digits."
+    controls["suggest_dq"].click()
+
+    assert "Product IDs start with P followed by three digits." in str(captured["prompt"])
+    controls["accept_dq_suggestion"].click()
+    assert controls["dq_pattern"].value == "^P[0-9]{3}$"
+
+    controls["dq_type"].value = "value_set"
+    assert controls["suggest_dq"].disabled is True
+    assert controls["dq_suggestion"].options == ()
+
+
 def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runtime, monkeypatch):
     """Dependent DQ advice sees fresh AI Description context without auto-accepting it."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
@@ -922,6 +962,7 @@ def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runti
     monkeypatch.setattr(module, "suggest_dq_rules", dq)
 
     assert controls["column_description"].value == "Order identifier"
+    controls["dq_type"].value = "pattern"
     controls["suggest_dq"].click()
 
     assert captured
@@ -1016,16 +1057,14 @@ def test_dq_failure_clears_previous_suggestions(widget_runtime, monkeypatch):
         module,
         "suggest_dq_rules",
         lambda *_args, **_kwargs: [{
-            "rule_type": "completeness",
+            "rule_type": "pattern",
             "columns": ["column_0"],
-            "parameters": {
-                "maximum_missing_percent": 0,
-                "treat_blank_as_missing": False,
-            },
-            "rationale": "Required business field.",
+            "parameters": {"pattern": "^ORD-[0-9]+$"},
+            "rationale": "Structured identifier.",
             "selected": True,
         }],
     )
+    controls["dq_type"].value = "pattern"
     controls["suggest_dq"].click()
     assert controls["dq_suggestion"].options
 
@@ -1322,6 +1361,7 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
 
     monkeypatch.setattr(module, "suggest_dq_rules", suggest)
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state["_controls"]["dq_type"].value = "pattern"
     state["_controls"]["suggest_dq"].click()
 
     column = captured["columns"][0]
@@ -1409,6 +1449,7 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
 
+    controls["dq_type"].value = "range"
     controls["suggest_dq"].click()
     assert len(widget_runtime["calls"]["guardrails"]) == before
     controls["accept_dq_suggestion"].click()
