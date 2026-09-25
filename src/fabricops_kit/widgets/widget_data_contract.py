@@ -802,9 +802,7 @@ def widget_data_contract(
                 ai_errors.pop("table_enrichment", None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                ai_state["table"].setdefault(
-                    "description", {"error": message, "stale": False}
-                )
+                ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
             render_table_ai()
@@ -1433,7 +1431,7 @@ def widget_data_contract(
             selected = next(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
-            description, _classification = _column_editable_values(column_id)
+            description, _ = _column_editable_values(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 result = suggest_enrichment(
@@ -1449,7 +1447,7 @@ def widget_data_contract(
                 ai_errors.pop((column_id, "enrichment"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
-                suggestions.setdefault("description", {"error": message, "stale": False})
+                suggestions["description"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "enrichment")] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
@@ -1733,6 +1731,10 @@ def widget_data_contract(
                     for item in suggestions
                 ) + "</ul><p>Select and edit a rule before the final Data Contract save; suggestions are never persisted automatically.</p>"
             except (TypeError, ValueError, RuntimeError) as exc:
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
                 dq_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
 
         def accept_dq_clicked(_button: Any) -> None:
