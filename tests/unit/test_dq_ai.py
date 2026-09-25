@@ -171,7 +171,45 @@ def test_business_rule_resolver_prefers_known_column_relationship():
         "operator": ">=",
         "business_requirement": "End date must be on or after start date.",
     }
-    assert "Always prefer column_relationship" in captured["prompt"]
+    assert "Resolve against every canonical FabricOps DQ pattern" in captured["prompt"]
+
+
+def test_business_rule_resolver_accepts_every_canonical_noncustom_pattern():
+    """Use Custom Expression only after every canonical DQ family has been considered."""
+    cases = [
+        ("completeness", ["status"], {
+            "maximum_missing_percent": 0,
+            "treat_blank_as_missing": True,
+        }),
+        ("uniqueness", ["start_date", "end_date"], {}),
+        ("value_set", ["status"], {"mode": "allow", "values": ["Open", "Closed"]}),
+        ("range", ["start_date"], {
+            "minimum": "2020-01-01",
+            "maximum": None,
+            "minimum_inclusive": True,
+            "maximum_inclusive": True,
+        }),
+        ("pattern", ["status"], {"pattern": "^[A-Za-z]+$"}),
+        ("column_relationship", ["end_date", "start_date"], {"operator": ">="}),
+    ]
+
+    for rule_type, columns, parameters in cases:
+        payload = {
+            "rule_type": rule_type,
+            "columns": columns,
+            "parameters": parameters,
+            "rationale": "Canonical FabricOps pattern.",
+        }
+        result = suggest_business_rule(
+            _business_context(),
+            requirement="Governed requirement.",
+            relevant_columns=columns,
+            prompt="Prefer known FabricOps patterns.",
+            invoke=lambda _prompt, value=payload: json.dumps(value),
+        )
+        assert result["rule_type"] == rule_type
+        assert result["engineering_review_required"] is False
+        assert result["parameters"]["columns"] == columns
 
 
 def test_business_rule_resolver_flags_custom_expression_for_engineering_review():
