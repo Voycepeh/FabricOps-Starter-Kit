@@ -706,6 +706,58 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
 
+def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
+    """A failed Description re-run must surface the error instead of an old suggestion."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    monkeypatch.setattr(
+        module,
+        "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+    )
+
+    controls["rerun_column_description"].click()
+
+    assert "AI Functions unavailable" in controls["column_description_ai"].value
+    assert controls["accept_column_description"].disabled is True
+
+
+def test_dq_failure_clears_previous_suggestions(widget_runtime, monkeypatch):
+    """A failed DQ re-run must not leave old AI suggestions selectable."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    monkeypatch.setattr(
+        module,
+        "suggest_dq_rules",
+        lambda *_args, **_kwargs: [{
+            "rule_type": "completeness",
+            "columns": ["column_0"],
+            "parameters": {
+                "maximum_missing_percent": 0,
+                "treat_blank_as_missing": False,
+            },
+            "rationale": "Required business field.",
+            "selected": True,
+        }],
+    )
+    controls["suggest_dq"].click()
+    assert controls["dq_suggestion"].options
+
+    monkeypatch.setattr(
+        module,
+        "suggest_dq_rules",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("DQ AI unavailable")),
+    )
+    controls["suggest_dq"].click()
+
+    assert controls["dq_suggestion"].options == ()
+    assert controls["dq_suggestion"].disabled is True
+    assert controls["accept_dq_suggestion"].disabled is True
+    assert "DQ AI unavailable" in controls["dq_ai"].value
+
+
 def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
     """Do not silently discard a reviewed Direct or Indirect PII assessment."""
     state = widget_runtime["open"]()
