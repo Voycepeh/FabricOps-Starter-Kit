@@ -3172,7 +3172,8 @@ def widget_data_contract(
                 if str(rule.get("column_id") or ""):
                     continue
                 if str(rule.get("rule_type") or "") not in {
-                    "column_relationship", "custom_expression"
+                    "completeness", "uniqueness", "value_set", "range", "pattern",
+                    "column_relationship", "custom_expression",
                 }:
                     continue
                 key = str(rule.get("guardrail_rule_id") or "")
@@ -3230,23 +3231,28 @@ def widget_data_contract(
             rule_type = str(proposal.get("rule_type") or "")
             params = dict(proposal.get("parameters") or {})
             rationale = str(proposal.get("rationale") or "").strip()
-            if rule_type == "column_relationship":
-                names = list(params.get("columns") or [])
-                expression = (
-                    f"{names[0]} {params.get('operator') or '='} {names[1]}"
-                    if len(names) == 2 else ""
-                )
-                heading = "Known FabricOps pattern: Column Relationship"
-                review = (
-                    "<span style='color:#107c10;font-weight:600;'>"
-                    "No Engineering review required</span>"
-                )
-            else:
+            if rule_type == "custom_expression":
                 expression = str(params.get("expression") or "")
                 heading = "Custom Expression"
                 review = (
                     "<span style='color:#8a6d1d;font-weight:600;'>"
                     "Engineering review required</span>"
+                )
+            else:
+                names = list(params.get("columns") or [])
+                if rule_type == "column_relationship" and len(names) == 2:
+                    expression = (
+                        f"{names[0]} {params.get('operator') or '='} {names[1]}"
+                    )
+                else:
+                    expression = ", ".join(str(name) for name in names)
+                heading = (
+                    "Known FabricOps pattern: "
+                    + rule_type.replace("_", " ").title()
+                )
+                review = (
+                    "<span style='color:#107c10;font-weight:600;'>"
+                    "No Engineering review required</span>"
                 )
             rationale_html = (
                 "<br><span style='color:#667085;'>" + html.escape(rationale) + "</span>"
