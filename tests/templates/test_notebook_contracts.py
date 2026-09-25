@@ -259,10 +259,11 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
     assert "business target remains unchanged" in step_4
 
 
-def test_02_pipeline_target_validate_mode_structurally_excludes_business_writes():
-    """Each target validates in one branch and can only publish in the enforce branch."""
+def test_02_pipeline_target_validate_mode_exits_before_business_write():
+    """Validate is a small pre-write gate; the normal enforce path stays flat and cloneable."""
     for index in (1, 2):
-        tree = ast.parse(_cell_by_id("02_pipeline.ipynb", f"write-{index}").source)
+        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        tree = ast.parse(block)
         mode_branch = next(
             node for node in tree.body
             if isinstance(node, ast.If)
@@ -272,22 +273,15 @@ def test_02_pipeline_target_validate_mode_structurally_excludes_business_writes(
             and node.test.left.value.id == "contract"
             and any(isinstance(value, ast.Constant) and value.value == "validate" for value in node.test.comparators)
         )
-        validate_calls = {
-            node.func.id for node in ast.walk(ast.Module(body=mode_branch.body, type_ignores=[]))
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        }
-        enforce_calls = {
-            node.func.id for node in ast.walk(ast.Module(body=mode_branch.orelse, type_ignores=[]))
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        }
-        assert "pipeline_write" not in validate_calls
-        assert "pipeline_write" in enforce_calls
-        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        validate_source = ast.unparse(ast.Module(body=mode_branch.body, type_ignores=[]))
+        assert 'CONTRACTS["validate"]' in validate_source
+        assert "notebookutils.notebook.exit" in validate_source
+        assert "pipeline_write" not in validate_source
+        assert mode_branch.orelse == []
         assert 'contract = CONTRACTS["tables"][target_table_id]' in block
-        assert 'validation_result = CONTRACTS["validate"](' in block
+        assert block.index("notebookutils.notebook.exit") < block.index("check_schema(")
+        assert block.index("check_guardrail_coverage(") < block.index("pipeline_write(")
         assert "_validate_data_contract" not in block
-        assert 'validation_result["validation_passed"]' in block
-
 
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
     """The default pipeline reads and profiles complete governed sources."""
