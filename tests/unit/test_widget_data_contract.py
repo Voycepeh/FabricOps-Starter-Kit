@@ -778,6 +778,10 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     controls["open_with_ai"].click()
     controls = state["_controls"]
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
+    assert captures["enrichment"][0]["table_columns"] == [
+        {"column_name": "column_0", "data_type": "long"},
+        {"column_name": "column_1", "data_type": "string"},
+    ]
     assert len(captures["sensitive"]) == 1
     assert captures["sensitive"][0]["table_description"] == "Suggested table description"
     assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
