@@ -1520,6 +1520,65 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     assert "Save Data Contract to persist" in state["message"]
 
 
+def test_custom_business_rule_requires_engineering_review_before_freeze(
+    widget_runtime, monkeypatch
+):
+    """Custom Expressions stage pending review and require an explicit engineer approval."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    def resolve(_context, **kwargs):
+        return {
+            "rule_type": "custom_expression",
+            "parameters": {
+                "expression_language": "pyspark",
+                "expression": '(F.col("status") != "Approved") | F.col("approved_date").isNotNull()',
+                "business_requirement": kwargs["requirement"],
+                "columns": ["column_0", "column_1"],
+                "engineering_review_required": True,
+            },
+            "business_requirement": kwargs["requirement"],
+            "rationale": "Conditional cross-column requirement.",
+            "engineering_review_required": True,
+        }
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    controls["business_requirement"].value = "Approved rows require an approved date."
+    controls["resolve_business_rule"].click()
+    controls["apply_business_rule"].click()
+
+    pending = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "custom_expression"
+    )
+    assert module._parameters(pending)["engineering_review_status"] == "pending"
+    assert controls["engineering_review_panel"].layout.display == ""
+    assert "Engineering review pending" in controls["engineering_review_status"].value
+
+    controls["approve_engineering_review"].click()
+    assert any(
+        "Engineering reviewer is required" in message
+        for message in state["_validation_errors"].values()
+    )
+
+    controls["engineering_reviewer"].value = "data.engineer@example.com"
+    controls["engineering_review_note"].value = "Expression and referenced columns reviewed."
+    controls["approve_engineering_review"].click()
+
+    approved = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "custom_expression"
+    )
+    params = module._parameters(approved)
+    assert params["engineering_review_status"] == "approved"
+    assert params["engineering_reviewed_by"] == "data.engineer@example.com"
+    assert params["engineering_review_note"] == "Expression and referenced columns reviewed."
+    assert "Engineering review approved" in controls["engineering_review_status"].value
+
+
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
     """Range stays deterministic: edit bounds directly and persist them on contract save."""
     state = widget_runtime["open"]()
