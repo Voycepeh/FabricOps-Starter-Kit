@@ -9,6 +9,7 @@ from fabricops_kit.pipeline.shared import (
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
     resolve_table_processing_definition,
+    validated_processing,
     print_guardrail_result,
 )
 
@@ -146,27 +147,18 @@ def check_source_drift(
         )
     else:
         payload = contract.get("contract_payload") or {}
-        guardrails = payload.get("guardrails") or []
-        source_drift_rule = next(
-            (
-                rule
-                for rule in guardrails
-                if str(rule.get("guardrail_type") or "").strip().lower() == "source_drift"
-                and rule.get("is_active") is not False
-            ),
-            None,
-        )
-        parameters = (source_drift_rule or {}).get("rule_parameters") or {}
-        source_load_strategy = str(parameters.get("load_strategy") or "").strip().lower()
-        if source_load_strategy not in {"overwrite", "append", "scd1", "scd2"}:
+        table_payload = payload.get("table") if isinstance(payload, dict) else None
+        processing = table_payload.get("processing") if isinstance(table_payload, dict) else None
+        try:
+            source_processing = validated_processing(processing)
+        except ValueError as exc:
             raise ValueError(
                 "Source Drift cannot determine the source load strategy. "
-                "This source has no FabricOps-written load strategy in the Catalogue; "
-                "set Source load strategy to overwrite, append, scd1, or scd2 "
-                "in the selected Data Contract Source Drift rule."
-            )
-        source_processing = {"load_strategy": source_load_strategy}
-        processing_origin = "Data Contract Source Drift rule"
+                "This source has no FabricOps-written load strategy in the Catalogue "
+                "and its selected Data Contract has no valid processing definition."
+            ) from exc
+        source_load_strategy = str(source_processing["load_strategy"]).lower()
+        processing_origin = "Data Contract"
     result = check_source_drift_for_target(
         source_table_id=str(source["table_id"]),
         target_table_id=str(target["table_id"]),
