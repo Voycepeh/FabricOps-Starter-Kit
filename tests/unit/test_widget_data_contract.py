@@ -330,9 +330,12 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
-    """Fallback processing stays editable and is saved on the exact draft."""
-    widget_runtime["contract"]["processing_json"] = '{"load_strategy":"overwrite"}'
-    widget_runtime["contract"]["processing_source"] = "previous_contract"
+    """Fallback processing stays editable and is saved inside the exact draft JSON."""
+    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    payload["table"]["processing"] = {"load_strategy": "overwrite"}
+    payload["table"]["processing_source"] = "previous_contract"
+    widget_runtime["contract"]["contract_payload_json"] = json.dumps(payload)
+
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -342,9 +345,12 @@ def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_r
     controls["top_nav"].value = "Review"
     controls["save_data_contract"].click()
 
-    assert widget_runtime["calls"]["processing"][-1] == {"load_strategy": "append"}
-    assert json.loads(widget_runtime["contract"]["processing_json"]) == {"load_strategy": "append"}
-    assert widget_runtime["contract"]["processing_source"] == "manual"
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert saved["table"]["processing"] == {"load_strategy": "append"}
+    assert saved["table"]["processing_source"] == "manual"
+    persisted = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    assert persisted["table"]["processing"] == {"load_strategy": "append"}
+    assert persisted["table"]["processing_source"] == "manual"
 
 
 def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():
