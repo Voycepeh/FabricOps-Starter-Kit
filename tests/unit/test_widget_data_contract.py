@@ -448,7 +448,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
-    assert controls["advanced_type"].value == "uniqueness"
+    assert controls["advanced_type"].value == "column_relationship"
+    assert tuple(controls["row_key_columns"].value) == ("customer_id", "order_date")
     assert controls["advanced_enabled"].description == "Enabled"
     assert controls["advanced_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
@@ -1331,7 +1332,7 @@ def test_review_sections_render_single_page_without_duplicate_column_rules():
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
-    assert "<b>Advanced rules</b> · 3 configured" in review
+    assert "<b>Advanced rules</b> · 2 configured" in review
     assert "<b>Column definitions and rules</b> · 0 columns, 1 column rules" in review
     assert review.count("<b>pattern</b>") == 1
 
