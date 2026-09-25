@@ -1325,3 +1325,61 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     assert state["current"]["contract"]["status"] == "frozen"
     assert state["current"]["contract"]["is_active"] is True
     assert "ACTIVE" in state["message"]
+
+
+def test_required_checkbox_updates_column_list_feedback_immediately(widget_runtime):
+    """Required state is visible in the left column list before final persistence."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+
+    assert not any(
+        label.rstrip().endswith("*")
+        for label, value in controls["column_select"].options
+        if value == "col-1"
+    )
+
+    controls["required"].value = True
+
+    label = next(
+        label for label, value in controls["column_select"].options if value == "col-1"
+    )
+    assert label.rstrip().endswith("*")
+    assert "#0f6cbd" in controls["column_option_style"].value
+    assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_table_classification_updates_left_summary_immediately(widget_runtime):
+    """Table classification feedback follows the staged editor value without a save."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    summary = controls["left_pane"].children[0]
+
+    assert "Internal" in summary.value
+    controls["table_classification"].value = "Restricted"
+    assert "Restricted" in summary.value
+    assert "Internal</div>" not in summary.value
+    assert widget_runtime["calls"]["enrichment"] == []
+
+
+def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
+    """Observed datatype drift stays red and does not silently replace the contract type."""
+    widget_runtime["catalogue"][1]["data_type"] = "string"
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert "Datatype drift detected" in controls["column_context"].value
+    assert "Contract: <b>long</b>" in controls["column_context"].value
+    assert "Observed: <b style='color:#a4262c'>string</b>" in controls["column_context"].value
+    assert controls["datatype_choice"].layout.display == ""
+    assert controls["datatype_choice"].value == "long"
+
+    controls["datatype_choice"].value = "string"
+
+    assert state["dirty"] is True
+    assert "Datatype: <b>string</b>" in controls["column_context"].value
+    assert controls["datatype_choice"].layout.display == "none"
+    payload = json.loads(state["current"]["contract"]["contract_payload_json"])
+    selected = next(item for item in payload["table"]["columns"] if item["column_id"] == "col-0")
+    assert selected["data_type"] == "string"
+    assert widget_runtime["calls"]["draft"] == []
