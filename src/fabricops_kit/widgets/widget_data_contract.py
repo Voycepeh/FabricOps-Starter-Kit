@@ -714,7 +714,6 @@ def widget_data_contract(
         column_names = [str(column.get("column_name") or "") for column in columns]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
-        compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
         selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
