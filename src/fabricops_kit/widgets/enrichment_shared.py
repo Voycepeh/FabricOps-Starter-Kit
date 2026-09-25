@@ -385,13 +385,6 @@ def _normalize_ai_dq_parameters(
 
 def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> None:
     """Reject malformed or executable AI-authored standard-rule parameters."""
-    expected = {
-        "completeness": {"maximum_missing_percent", "treat_blank_as_missing"},
-        "uniqueness": set(),
-        "value_set": {"mode", "values"},
-        "range": {"minimum", "maximum", "minimum_inclusive", "maximum_inclusive"},
-        "pattern": {"pattern"},
-    }[rule_type]
     if rule_type == "completeness":
         value = parameters.get("maximum_missing_percent")
         if not isinstance(value, (int, float)) or not 0 <= value <= 100 or not isinstance(parameters.get("treat_blank_as_missing"), bool):
