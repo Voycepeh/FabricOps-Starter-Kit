@@ -62,9 +62,12 @@ def _render(monkeypatch, rows, *, env="dev", pairs=None, overrides=None, active=
 
 def test_contract_options_are_table_scoped_immutable_and_newest_first():
     """Filter lifecycle states and unrelated tables."""
-    rows = [_row(2, status="superseded"), _row(4, status="draft"), _row(3, status="active"), _row(5), _row(6, status="rejected"), _row(99, table_id="table-b")]
+    rows = [
+        _row(2), _row(4, status="draft"), _row(3), _row(5),
+        _row(6, status="rejected"), _row(99, table_id="table-b"),
+    ]
     assert [row["contract_version"] for row in _contract_options(rows, "table-a")] == [5, 3, 2]
-    assert [row["contract_version"] for row in _validation_contract_options(rows, "table-a")] == [5]
+    assert [row["contract_version"] for row in _validation_contract_options(rows, "table-a")] == [5, 3, 2]
 
 
 def test_contract_review_uses_only_frozen_payload():
@@ -184,7 +187,10 @@ def test_missing_frozen_version_runs_unvalidated_in_development(monkeypatch):
 
 def test_production_supports_active_enforcement_and_frozen_validation_per_table(monkeypatch):
     """Production defaults to active enforcement but allows exact frozen validation."""
-    active = {"table-a": _row(3, status="active", active=True), "table-b": _row(2, table_id="table-b", status="active", active=True)}
+    active = {
+        "table-a": _row(3, active=True),
+        "table-b": _row(2, table_id="table-b", active=True),
+    }
     frozen = [_row(4), _row(5, table_id="table-b")]
     context, state = _render(monkeypatch, frozen, env="prod", overrides={"table-a": {"contract_id": "wrong", "contract_version": 99}}, active=active)
     assert context["data_contract_overrides"] == {}
