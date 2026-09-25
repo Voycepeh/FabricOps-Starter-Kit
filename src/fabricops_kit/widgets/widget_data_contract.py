@@ -1094,7 +1094,7 @@ def widget_data_contract(
                         "<br><span style='color:#667085;'>Example: if the pipeline runs at "
                         "2 Jan 2026 23:00, "
                         f"<code>MAX({html.escape(selected)})</code> must be on or after "
-                        f"{cutoff.strftime('%-d %b %Y %H:%M')}.</span></div>"
+                        f"{cutoff.day} {cutoff.strftime('%b %Y %H:%M')}.</span></div>"
                     )
 
                 for freshness_control in (
@@ -1138,6 +1138,8 @@ def widget_data_contract(
                     if str(rule.get("guardrail_type") or "").lower() == rule_kind
                     and not str(rule.get("column_id") or "")
                 ), {})
+                if rule_kind == "freshness" and not temporal_column_names:
+                    return old or None
                 if not enabled_control.value and not old:
                     return None
                 if not enabled_control.value:
