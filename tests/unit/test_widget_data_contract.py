@@ -1145,6 +1145,10 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
+    freshness_section = state["_controls"]["right_pane"].children[2]
+    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_section.children[1].value
+    assert "not when this table itself is written" in freshness_section.children[1].value
+
 
 def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
     """Tables without date or timestamp columns cannot author a Freshness rule."""
@@ -1189,8 +1193,17 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
 
     drift = state["_controls"]["table_guardrails"]["source_drift"]
     drift["enabled"].value = True
+    assert drift["parameters"][1].description == "Change tracking column"
     drift["parameters"][0].value = "column_0"
     drift["parameters"][1].value = "column_1"
+    drift_preview = drift["display"][-1].value
+    assert "last successfully consumed state for that downstream target" in drift_preview
+    assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
+
+    drift_section = state["_controls"]["right_pane"].children[3]
+    assert "Applies when this table is used as a source in a downstream pipeline." in drift_section.children[1].value
+    assert "previously consumed from this table has changed" in drift_section.children[1].value
+
     drift["save"].click()
     staged_drift = next(
         record for records in state["_pending_guardrails"].values()
