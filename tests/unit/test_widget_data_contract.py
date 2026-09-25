@@ -1083,5 +1083,6 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     assert module.DATA_CONTRACT_MANIFEST is not before
     state["_controls"]["activate"].click()
     assert widget_runtime["calls"]["activate"] == 1
-    assert state["current"]["contract"]["status"] == "active"
+    assert state["current"]["contract"]["status"] == "frozen"
+    assert state["current"]["contract"]["is_active"] is True
     assert "ACTIVE" in state["message"]
