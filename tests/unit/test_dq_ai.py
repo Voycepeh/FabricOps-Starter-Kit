@@ -56,6 +56,27 @@ def test_ai_dq_suggestions_preserve_all_structured_parameters_and_prompt():
     assert "Allowed rule_type values: completeness, value_set, range, pattern." in captured["prompt"]
 
 
+def test_ai_dq_ignores_noncanonical_extra_parameters():
+    """Ignore extra model-authored fields while preserving canonical DQ inputs."""
+    payload = [{
+        "rule_type": "pattern",
+        "columns": ["amount"],
+        "parameters": {
+            "pattern": "^[0-9]+$",
+            "case_sensitive": True,
+            "description": "Digits only",
+        },
+        "rationale": "Structured identifier.",
+        "selected": True,
+    }]
+
+    result = suggest_dq_rules(
+        _context(), prompt="configured", invoke=lambda _prompt: json.dumps(payload)
+    )
+
+    assert result[0]["parameters"] == {"pattern": "^[0-9]+$"}
+
+
 @pytest.mark.parametrize("rule_type", ["uniqueness", "column_relationship", "custom_expression", "compare", "required_when"])
 def test_ai_dq_rejects_nonstandard_families(rule_type):
     """Keep relationship and custom logic outside AI standard suggestions."""
