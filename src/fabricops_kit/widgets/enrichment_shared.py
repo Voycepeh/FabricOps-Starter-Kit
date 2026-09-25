@@ -477,7 +477,7 @@ Range: exactly one column; parameters minimum and/or maximum plus minimum_inclus
 Pattern: exactly one column; parameter pattern containing the governed regular expression.
 Column Relationship: exactly two different columns; parameter operator using =, !=, >, >=, <, or <=.
 Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
-A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), literals, comparisons, &, |, ~, and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, or arbitrary Python calls.
+A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), F.lit(...), literals, comparisons, &, |, ~, arithmetic (+, -, *, /, %), and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, arbitrary Python calls, exponentiation, floor division, or matrix multiplication.
 If Governance selected relevant columns, the proposal may use only those columns.
 Do not force a known pattern when it would weaken, broaden, or otherwise change the business requirement.
 
