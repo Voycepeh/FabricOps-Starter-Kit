@@ -1265,11 +1265,13 @@ def test_review_sections_separate_table_dq_categories_from_column_rules():
     sections = module._manifest_sections(payload)
 
     assert set(sections) == {"Review"}
-    assert "Composite Uniqueness" in sections["Table"]
-    assert "Column Relationships" in sections["Table"]
-    assert "Custom Expressions" in sections["Table"]
-    assert "pattern" not in sections["Table"]
-    assert "pattern" in sections["Columns"]
+    review = sections["Review"]
+    assert "Advanced rules" in review
+    assert "uniqueness" in review
+    assert "column_relationship" in review
+    assert "custom_expression" in review
+    assert "Column guardrails" in review
+    assert "pattern" in review
 
 
 def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(widget_runtime, monkeypatch):

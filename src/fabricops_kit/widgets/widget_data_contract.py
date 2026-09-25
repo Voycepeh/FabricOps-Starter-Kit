@@ -1213,6 +1213,12 @@ def widget_data_contract(
                 f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(str(table.get('schema_name') or ''))}</div>"
                 "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Refresh Frequency</div>"
+                f"<div style='font-weight:600;'>{html.escape(refresh_frequency)}</div></div>"
+                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
                 "<div style='margin-top:12px;'>"
@@ -1223,7 +1229,6 @@ def widget_data_contract(
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
-        render_table_summary()
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -1307,6 +1312,7 @@ def widget_data_contract(
             (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
         )
         required_columns = set(_parameters(required_rule).get("required_columns", []))
+        render_table_summary()
         saved_payload = json.loads(
             str(current["contract"].get("contract_payload_json") or "{}")
         )
@@ -1657,7 +1663,8 @@ def widget_data_contract(
                 hydrate_column(selected_id)
                 if str(top_nav.value) == "Columns":
                     load_selected_profile()
-                prepare_column_ai(selected_id)
+                if not state.get("_opening_with_ai"):
+                    prepare_column_ai(selected_id)
 
         column_select.observe(column_changed, names="value")
 
@@ -2618,16 +2625,15 @@ def widget_data_contract(
             manifest_preview.value = refreshed_sections["Review"]
             change_preview.value = review_change_html()
         state["_refresh_review"] = refresh_review
-        exact_json = shared.preview_region(
-            widgets, widgets.HTML(
-                f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
-            ), height="240px",
+        exact_json_content = widgets.HTML(
+            f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
         )
+        exact_json = shared.preview_region(widgets, exact_json_content, height="240px")
         refresh_review_base = refresh_review
 
         def refresh_review() -> None:
             refresh_review_base()
-            exact_json.children[0].value = (
+            exact_json_content.value = (
                 "<details><summary>Exact JSON manifest</summary><pre>"
                 + html.escape(_expose_manifest(payload))
                 + "</pre></details>"
