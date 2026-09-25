@@ -104,6 +104,50 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
     assert checks[0]["failed_count"] == failed
 
 
+def test_custom_expression_supports_safe_arithmetic_business_rule(spark_session):
+    """Evaluate arithmetic Business Rules without eval or arbitrary Python."""
+    df = spark_session.createDataFrame(
+        [
+            (100.0, 2.0, 50.0, 0.0),
+            (90.0, 2.0, 50.0, 0.1),
+            (80.0, 2.0, 50.0, 0.1),
+        ],
+        "total_amount double, quantity double, unit_price double, discount double",
+    )
+    rule = _rule(
+        "custom_expression",
+        columns=["total_amount", "quantity", "unit_price", "discount"],
+        expression_language="pyspark",
+        expression=(
+            'F.col("total_amount") == F.col("quantity") * F.col("unit_price") '
+            '* (F.lit(1) - F.col("discount"))'
+        ),
+    )
+
+    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+
+    assert checks[0]["failed_count"] == 1
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        'F.col("amount") ** F.lit(2) > F.lit(0)',
+        'F.col("amount") // F.lit(2) > F.lit(0)',
+    ],
+)
+def test_custom_expression_rejects_unapproved_arithmetic(expression):
+    """Keep the arithmetic grammar deliberately bounded."""
+    with pytest.raises(ValueError, match="unsupported"):
+        governance._validate_dq_rules([
+            _rule(
+                "custom_expression",
+                expression_language="pyspark",
+                expression=expression,
+            )
+        ])
+
+
 @pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "null_rate_below", "non_empty_string", "unique", "accepted_values", "not_in_values", "between", "regex_match", "value_when", "not_null", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "expression_true"])
 def test_legacy_or_external_rule_names_fail_validation(old_rule_type):
     """Verify legacy or external rule names fail validation."""
