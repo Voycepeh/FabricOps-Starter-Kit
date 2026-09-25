@@ -86,7 +86,7 @@ def create_contract_draft(
     if not table_rows:
         raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
     table = table_rows[-1]
-    columns = [
+    observed_columns = [
         _fields(row, ("column_id", "column_name", "data_type"))
         for row in current if row.get("column_id")
     ]
@@ -117,6 +117,20 @@ def create_contract_draft(
         if previous else None
     )
     seed = json.loads(json.dumps(previous_payload)) if isinstance(previous_payload, dict) else {}
+    previous_columns = {
+        str(item.get("column_id") or ""): dict(item)
+        for item in (seed.get("table", {}).get("columns", []) if seed else [])
+        if item.get("column_id")
+    }
+    columns = [
+        {
+            **column,
+            "data_type": str(previous_columns.get(str(column.get("column_id") or ""), {}).get(
+                "data_type"
+            ) or column.get("data_type") or ""),
+        }
+        for column in observed_columns
+    ]
 
     strategy = str(table.get("load_strategy") or "").strip()
     if strategy:
@@ -1152,7 +1166,29 @@ def assemble_contract_payload(
         raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
     table = table_rows[-1]
     columns = [row for row in current if row.get("column_id")]
-    column_docs = [_fields(row, ("column_id", "column_name", "data_type")) for row in columns]
+    observed_column_docs = [
+        _fields(row, ("column_id", "column_name", "data_type")) for row in columns
+    ]
+    draft_payload = _json_value(
+        draft.get("contract_payload_json"), field="contract_payload_json", default={}
+    )
+    draft_columns = {
+        str(item.get("column_id") or ""): dict(item)
+        for item in (
+            draft_payload.get("table", {}).get("columns", [])
+            if isinstance(draft_payload, dict) else []
+        )
+        if item.get("column_id")
+    }
+    column_docs = [
+        {
+            **column,
+            "data_type": str(draft_columns.get(str(column.get("column_id") or ""), {}).get(
+                "data_type"
+            ) or column.get("data_type") or ""),
+        }
+        for column in observed_column_docs
+    ]
     incomplete = [
         str(row.get("column_name") or row.get("column_id") or "<blank>")
         for row in column_docs
