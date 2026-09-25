@@ -24,7 +24,9 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
         rows.append({
             "table_id": "orders", "environment_name": "dev", "metadata_level": "column",
             "column_id": f"col-{index}", "column_name": f"column_{index}",
-            "data_type": "string" if index else "long", "is_active": True,
+            "data_type": (
+                "long" if index == 0 else "timestamp" if index == 1 else "string"
+            ), "is_active": True,
         })
     return rows
 
@@ -780,7 +782,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
     assert captures["enrichment"][0]["table_columns"] == [
         {"column_name": "column_0", "data_type": "long"},
-        {"column_name": "column_1", "data_type": "string"},
+        {"column_name": "column_1", "data_type": "timestamp"},
     ]
     assert len(captures["sensitive"]) == 1
     assert captures["sensitive"][0]["table_description"] == "Suggested table description"
@@ -1121,6 +1123,38 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
     )
     state = widget_runtime["open"]()
     assert state["_controls"]["rerun_sensitive"].disabled is True
+
+
+def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_runtime):
+    """Freshness authoring only offers temporal columns and translates controls into a rule."""
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+
+    options = [item[1] if isinstance(item, tuple) else item for item in freshness["parameters"][0].options]
+    assert options == ["", "column_1"]
+    assert freshness["parameters"][0].description == "Timestamp column"
+
+    freshness["enabled"].value = True
+    freshness["parameters"][0].value = "column_1"
+    freshness["parameters"][1].value = "24"
+    freshness["parameters"][2].value = "hours"
+
+    preview = freshness["display"][-1].value
+    assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
+    assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
+
+
+def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
+    """Tables without date or timestamp columns cannot author a Freshness rule."""
+    widget_runtime["catalogue"][2]["data_type"] = "string"
+
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+
+    assert freshness["enabled"].disabled is True
+    assert freshness["block"].disabled is True
+    assert freshness["parameters"][0].disabled is True
+    assert "No date or datetime columns are available" in freshness["display"][0].value
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
