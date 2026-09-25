@@ -462,7 +462,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:4]] == [
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table metadata</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
@@ -1407,26 +1407,45 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     assert "ACTIVE" in state["message"]
 
 
-def test_required_checkbox_updates_column_list_feedback_immediately(widget_runtime):
-    """Required state is visible in the left column list before final persistence."""
+def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
+    """Required state belongs in the fixed column header, not the navigation list."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_select"].value = "col-1"
 
-    assert not any(
-        label.rstrip().endswith("*")
-        for label, value in controls["column_select"].options
-        if value == "col-1"
+    label = next(
+        label for label, value in controls["column_select"].options if value == "col-1"
     )
+    assert label == "column_1"
 
     controls["required"].value = True
 
     label = next(
         label for label, value in controls["column_select"].options if value == "col-1"
     )
-    assert label.rstrip().endswith("*")
-    assert "#0f6cbd" in controls["column_option_style"].value
+    assert label == "column_1"
+    assert controls["column_header"].layout.grid_template_columns == "minmax(0, 1fr) 110px"
     assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_table_and_column_definitions_share_compact_layout(widget_runtime):
+    """Table and column definitions use the same compact aligned editor grid."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    expected = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+    assert controls["table_definition"].children[1].layout.grid_template_columns == expected
+    assert controls["column_definition"].children[1].layout.grid_template_columns == expected
+    assert controls["table_classification"].layout.width == "250px"
+    assert controls["column_classification"].layout.width == "250px"
+    assert controls["column_search"].layout.width == "100%"
+    assert controls["column_select"].layout.width == "100%"
+    assert all(
+        label == f"column_{index}"
+        for index, (label, _value) in enumerate(controls["column_select"].options)
+    )
+    assert "color:#0f6cbd;font-size:20px" in controls["column_context"].value
+    assert "Required:" not in controls["column_context"].value
 
 
 def test_table_classification_updates_left_summary_immediately(widget_runtime):
