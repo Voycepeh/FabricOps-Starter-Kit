@@ -27,7 +27,10 @@ _PROFILE_CONTEXT_FIELDS = (
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
 STANDARD_DQ_TYPES = frozenset({"completeness", "value_set", "range", "pattern"})
-BUSINESS_RULE_TYPES = frozenset({"column_relationship", "custom_expression"})
+BUSINESS_RULE_TYPES = frozenset({
+    "completeness", "uniqueness", "value_set", "range", "pattern",
+    "column_relationship", "custom_expression",
+})
 BUSINESS_RULE_OPERATORS = frozenset({"=", "!=", ">", ">=", "<", "<="})
 
 
@@ -465,14 +468,18 @@ Relevant columns selected by Governance:
 {json.dumps(selected_columns)}
 
 Return JSON only as one object with rule_type, columns, parameters, rationale.
-Allowed rule_type values: column_relationship, custom_expression.
-Always prefer column_relationship when the requirement is exactly a row-by-row comparison between two columns using =, !=, >, >=, <, or <=.
-Use custom_expression only when column_relationship cannot represent the requirement.
-For column_relationship, return exactly two known columns and parameters containing only operator.
-For custom_expression, return the known columns referenced by the rule and parameters containing expression_language="pyspark" and expression.
+Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, custom_expression.
+Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent the requirement without changing its meaning.
+Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
+Uniqueness: one or more columns; no rule-specific parameters.
+Value Set: exactly one column; parameters mode (allow or block) and non-empty values.
+Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
+Pattern: exactly one column; parameter pattern containing the governed regular expression.
+Column Relationship: exactly two different columns; parameter operator using =, !=, >, >=, <, or <=.
+Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
 A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), literals, comparisons, &, |, ~, and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, or arbitrary Python calls.
 If Governance selected relevant columns, the proposal may use only those columns.
-Do not convert a multi-column Business Rule into a single-column rule.
+Do not force a known pattern when it would weaken, broaden, or otherwise change the business requirement.
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
@@ -502,9 +509,27 @@ Context:
         raise ValueError("AI Business Rule proposal used a column outside the selected relevant columns.")
 
     parameters = dict(candidate.get("parameters") or {})
-    if rule_type == "column_relationship":
+    if rule_type in STANDARD_DQ_TYPES:
+        if len(normalized_columns) != 1:
+            raise ValueError(f"{rule_type} requires exactly one known column.")
+        canonical_parameters = _normalize_ai_dq_parameters(rule_type, parameters)
+        _validate_ai_dq_parameters(rule_type, canonical_parameters)
+        canonical_parameters.update({
+            "columns": normalized_columns,
+            "business_requirement": business_requirement,
+        })
+    elif rule_type == "uniqueness":
+        if parameters:
+            raise ValueError("Uniqueness proposal does not accept rule-specific parameters.")
+        canonical_parameters = {
+            "columns": normalized_columns,
+            "business_requirement": business_requirement,
+        }
+    elif rule_type == "column_relationship":
         if len(normalized_columns) != 2:
             raise ValueError("Column Relationship requires exactly two known columns.")
+        if normalized_columns[0] == normalized_columns[1]:
+            raise ValueError("Column Relationship requires two different columns.")
         operator = str(parameters.get("operator") or "").strip()
         if operator not in BUSINESS_RULE_OPERATORS:
             raise ValueError("Column Relationship proposal used an unsupported operator.")
