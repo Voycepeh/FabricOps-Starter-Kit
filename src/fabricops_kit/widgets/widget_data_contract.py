@@ -1981,11 +1981,9 @@ def widget_data_contract(
             available = (
                 editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
             )
-            sensitive_ai_panel.layout.display = "" if available else "none"
+            sensitive_ai_panel.layout.display = ""
             sensitive_editor.layout.grid_template_columns = (
                 "minmax(0, 68fr) minmax(240px, 32fr)"
-                if available
-                else "minmax(0, 1fr)"
             )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
@@ -2631,10 +2629,6 @@ def widget_data_contract(
         )
         sensitive_ai_panel = widgets.VBox(
             [
-                widgets.HTML(
-                    "<div style='color:#253858;font-size:13px;font-weight:600;'>"
-                    "AI suggestion</div>"
-                ),
                 sensitive_ai,
                 sensitive_ai_actions,
             ],
