@@ -3109,8 +3109,23 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if rtype == "value_set":
             if rule.get("mode") not in {"allow", "block"}:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' mode must be 'allow' or 'block'.")
-            if not isinstance(rule.get("values"), list) or not rule["values"]:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires a non-empty values list.")
+            reference_table_id = str(rule.get("reference_table_id") or "").strip()
+            reference_column = str(rule.get("reference_column") or "").strip()
+            has_reference = bool(reference_table_id or reference_column)
+            if has_reference:
+                if not reference_table_id or not reference_column:
+                    raise ValueError(
+                        f"DQ rule '{rule['rule_id']}' reference-backed value_set requires "
+                        "reference_table_id and reference_column."
+                    )
+                if rule.get("values") not in (None, []):
+                    raise ValueError(
+                        f"DQ rule '{rule['rule_id']}' cannot combine inline values with a reference."
+                    )
+            elif not isinstance(rule.get("values"), list) or not rule["values"]:
+                raise ValueError(
+                    f"DQ rule '{rule['rule_id']}' requires inline values or a reference table column."
+                )
         if rtype == "range":
             if rule.get("minimum") is None and rule.get("maximum") is None:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires minimum or maximum.")
@@ -3225,6 +3240,59 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
         )
     return _validate_dq_rules(rules)
 
+def _resolve_reference_value_sets(
+    rules: list[dict[str, Any]],
+    config,
+    env: str,
+    *,
+    spark_session,
+    context: Mapping[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Resolve reference-backed Allowed Values into the canonical runtime value list."""
+    resolved = []
+    runtime_context = dict(context or {})
+    for raw_rule in rules:
+        rule = dict(raw_rule)
+        table_id = str(rule.get("reference_table_id") or "").strip()
+        column = str(rule.get("reference_column") or "").strip()
+        if not table_id:
+            resolved.append(rule)
+            continue
+        identity = resolve_catalogue_table_identity(
+            config, env, table_id, spark_session=spark_session, context=runtime_context,
+        )
+        if identity["store_type"] == "lakehouse":
+            reference = read_lakehouse_table(
+                identity["table_name"], store=identity["store"], schema=identity.get("schema"),
+                spark_session=spark_session, context=runtime_context,
+            )
+        elif identity["store_type"] == "warehouse":
+            schema = str(identity.get("schema") or "").replace("]", "]]")
+            table = str(identity["table_name"]).replace("]", "]]")
+            reference = read_warehouse_query(
+                f"SELECT [{column.replace(']', ']]')}] FROM [{schema}].[{table}]",
+                store=identity["store"], spark_session=spark_session, context=runtime_context,
+            )
+        else:
+            raise ValueError(
+                f"Reference table {table_id!r} must resolve to a Lakehouse or Warehouse."
+            )
+        if column not in reference.columns:
+            raise ValueError(
+                f"Reference column {column!r} was not found in reference table {table_id!r}."
+            )
+        rule["values"] = [
+            row[0]
+            for row in reference.select(column).where(f"`{column}` IS NOT NULL").distinct().collect()
+        ]
+        if not rule["values"]:
+            raise ValueError(
+                f"Reference table {table_id!r} column {column!r} contains no allowed values."
+            )
+        resolved.append(rule)
+    return resolved
+
+
 def check_dq_runtime(
     dataframe,
     config,
@@ -3266,6 +3334,9 @@ def check_dq_runtime(
         []
         if isinstance(metadata_df, list) and not metadata_df
         else _load_active_dq_rules(metadata_df, table_id, env=env, dataset_name=dataset_name or None)
+    )
+    rules = _resolve_reference_value_sets(
+        rules, config, env, spark_session=spark_session, context=context,
     )
     checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
     result = _summarize_dq_guardrail(checks)
