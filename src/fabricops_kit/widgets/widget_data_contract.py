@@ -775,7 +775,6 @@ def widget_data_contract(
         )
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
-        compact_rule_layout = widgets.Layout(width="560px", max_width="100%", gap="6px")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
