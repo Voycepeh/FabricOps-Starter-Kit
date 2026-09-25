@@ -235,14 +235,15 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     """The contract configuration separates execution mode from environment."""
     source = _notebook_source("02_pipeline.ipynb")
     contracts = _cell_by_id("02_pipeline.ipynb", "contracts-heading").source
-    assert "enforces its selected contract and may write" in contracts
-    assert "validates an exact frozen candidate" in contracts
-    assert 'CONTRACT_MODE = "enforce"' in source
-    assert 'CONTRACT_MODE == "validate"' in source
+    assert "Enforce" in contracts
+    assert "Validate" in contracts
+    assert "exact frozen candidate picker" in contracts
+    assert "CONTRACT_MODE" not in source
+    assert "VALIDATE_CONTRACTS" not in source
     assert source.count("widget_select_data_contract(spark_session=spark)") == 1
 
 
-def test_02_pipeline_validate_mode_structurally_excludes_business_writes():
+def test_02_pipeline_target_validate_mode_structurally_excludes_business_writes():
     """Each target validates in one branch and can only publish in the enforce branch."""
     for index in (1, 2):
         tree = ast.parse(_cell_by_id("02_pipeline.ipynb", f"write-{index}").source)
@@ -250,8 +251,9 @@ def test_02_pipeline_validate_mode_structurally_excludes_business_writes():
             node for node in tree.body
             if isinstance(node, ast.If)
             and isinstance(node.test, ast.Compare)
-            and isinstance(node.test.left, ast.Name)
-            and node.test.left.id == "CONTRACT_MODE"
+            and isinstance(node.test.left, ast.Subscript)
+            and isinstance(node.test.left.value, ast.Name)
+            and node.test.left.value.id == "contract"
             and any(isinstance(value, ast.Constant) and value.value == "validate" for value in node.test.comparators)
         )
         validate_calls = {
@@ -262,9 +264,11 @@ def test_02_pipeline_validate_mode_structurally_excludes_business_writes():
             node.func.id for node in ast.walk(ast.Module(body=mode_branch.orelse, type_ignores=[]))
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         }
-        assert "validate_data_contract" in validate_calls
+        assert "_validate_data_contract" in validate_calls
         assert "pipeline_write" not in validate_calls
         assert "pipeline_write" in enforce_calls
+        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
+        assert 'contract = CONTRACTS["tables"][target_table_id]' in block
 
 
 def test_02_pipeline_is_full_read_and_full_profile_by_design():

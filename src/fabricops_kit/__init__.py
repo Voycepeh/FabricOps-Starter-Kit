@@ -39,7 +39,6 @@ from .pipeline import (
     resolve_table_id,
     profile_table,
     pipeline_write,
-    validate_data_contract,
 )
 
 ACCESS_EXPORTS = (
@@ -83,7 +82,6 @@ PIPELINE_EXPORTS = (
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",
-    "validate_data_contract",
 )
 
 WIDGET_EXPORTS = (

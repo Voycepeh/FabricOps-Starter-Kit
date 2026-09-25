@@ -8,8 +8,8 @@ import inspect
 
 import pytest
 
-from fabricops_kit import validate_data_contract
 from fabricops_kit.pipeline import shared
+from fabricops_kit.pipeline.validate_data_contract import _validate_data_contract
 
 pytestmark = pytest.mark.unit
 module = importlib.import_module("fabricops_kit.pipeline.validate_data_contract")
@@ -63,7 +63,7 @@ def test_validate_mode_accepts_frozen_inactive_exact_version_and_persists_identi
     ]
     writes = _install(monkeypatch, rules=rules, environment=environment)
 
-    result = validate_data_contract(
+    result = _validate_data_contract(
         table_id="table-a", contract_id="contract-a", contract_version=2,
         dataframe=object(), spark_session=Spark(), run_id="run-1", verbose=False,
     )
@@ -79,13 +79,13 @@ def test_validate_mode_accepts_frozen_inactive_exact_version_and_persists_identi
 def test_block_failure_blocks_validation_while_warn_failure_can_activate(monkeypatch):
     rules = [{"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1}]
     _install(monkeypatch, rules=rules, schema_status="failed")
-    blocked = validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
+    blocked = _validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                      dataframe=object(), spark_session=Spark(), verbose=False)
     assert blocked["can_activate"] is False
     assert blocked["blocked"] == 1
 
     _install(monkeypatch, rules=rules, schema_status="warning")
-    warned = validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
+    warned = _validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                     dataframe=object(), spark_session=Spark(), verbose=False)
     assert warned["can_activate"] is True
     assert warned["warnings"] == 1
@@ -99,7 +99,7 @@ def test_enforcement_only_freshness_is_neither_passed_nor_activation_blocking(mo
     ]
     writes = _install(monkeypatch, rules=rules)
 
-    result = validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
+    result = _validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                     dataframe=object(), spark_session=Spark(), verbose=False)
 
     assert result["passed"] == 2
@@ -125,3 +125,12 @@ def test_validation_has_no_business_table_write_path():
 
     assert "pipeline_write(" not in source
     assert "write_lakehouse_table" not in source
+
+
+def test_validation_service_is_internal_not_a_package_export():
+    """Keep contract validation orchestration behind the Pipeline template."""
+    import fabricops_kit
+    import fabricops_kit.pipeline
+
+    assert "validate_data_contract" not in fabricops_kit.__all__
+    assert "validate_data_contract" not in fabricops_kit.pipeline.__all__

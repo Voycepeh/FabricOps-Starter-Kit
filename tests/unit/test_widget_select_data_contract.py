@@ -9,7 +9,11 @@ import pytest
 
 import fabricops_kit.widgets.widget_select_data_contract as module
 from fabricops_kit.pipeline import shared as pipeline_shared
-from fabricops_kit.widgets.widget_select_data_contract import _contract_options, _contract_review
+from fabricops_kit.widgets.widget_select_data_contract import (
+    _contract_options,
+    _contract_review,
+    _validation_contract_options,
+)
 
 
 def _row(version: int, *, table_id: str = "table-a", status: str = "frozen", active: bool = False) -> dict:
@@ -60,6 +64,7 @@ def test_contract_options_are_table_scoped_immutable_and_newest_first():
     """Filter lifecycle states and unrelated tables."""
     rows = [_row(2, status="superseded"), _row(4, status="draft"), _row(3, status="active"), _row(5), _row(6, status="rejected"), _row(99, table_id="table-b")]
     assert [row["contract_version"] for row in _contract_options(rows, "table-a")] == [5, 3, 2]
+    assert [row["contract_version"] for row in _validation_contract_options(rows, "table-a")] == [5]
 
 
 def test_contract_review_uses_only_frozen_payload():
@@ -91,42 +96,39 @@ def test_selector_resolves_multiple_lineage_tables_and_preserves_roles(monkeypat
     ]
     assert state["tables"]["table-a"]["display_name"] == "Bronze / demo / orders"
     assert state["tables"]["table-b"]["display_name"] == "Silver / demo / curated_orders"
-    state["select"]("table-a", "contract-table-a", 3)
-    state["select"]("table-b", "contract-table-b", 2)
-    assert context["data_contract_overrides"] == {
-        "table-a": {"contract_id": "contract-table-a", "contract_version": 3},
-        "table-b": {"contract_id": "contract-table-b", "contract_version": 2},
-    }
+    state["set_mode"]("table-b", "validate", "contract-table-b", 2)
+    assert context["data_contract_overrides"] == {}
+    assert state["tables"]["table-a"]["mode"] == "enforce"
+    assert state["tables"]["table-b"]["mode"] == "validate"
+    assert state["tables"]["table-b"]["contract_version"] == 2
 
 
 def test_selection_isolated_and_unrelated_contracts_not_available(monkeypatch):
     """Prevent selection from leaking across table identities."""
     context, state = _render(monkeypatch, [_row(3), _row(9, table_id="unrelated"), _row(2, table_id="table-b")])
     with pytest.raises(ValueError, match="not linked"):
-        state["select"]("unrelated", "contract-unrelated", 9)
+        state["set_mode"]("unrelated", "validate", "contract-unrelated", 9)
     with pytest.raises(ValueError, match="not available"):
-        state["select"]("table-a", "contract-table-b", 2)
+        state["set_mode"]("table-b", "validate", "contract-table-a", 3)
     assert context["data_contract_overrides"] == {}
 
 
-def test_development_deselect_clears_contract_and_restores_skip(monkeypatch):
-    """Keep the No Data Contract option and runtime enforcement state aligned."""
-    context, state = _render(monkeypatch, [_row(2), _row(1, table_id="table-b")])
+def test_development_mode_switch_keeps_validation_candidate_out_of_enforcement(monkeypatch):
+    """A frozen validation candidate never becomes an enforcement override."""
+    context, state = _render(
+        monkeypatch, [_row(2), _row(1, table_id="table-b")], pairs=[("Target", "table-a")],
+    )
     monkeypatch.setattr(
         pipeline_shared, "resolve_data_contract_version",
         lambda *_args, **_kwargs: {"contract_id": "contract-table-a", "contract_version": 2},
     )
 
     assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
-    state["select"]("table-a", "contract-table-a", 2)
-    assert pipeline_shared.resolve_pipeline_data_contract(
-        object(), "dev", "table-a", context=context,
-    )["contract_version"] == 2
-
-    state["deselect"]("table-a")
+    state["set_mode"]("table-a", "validate", "contract-table-a", 2)
     assert pipeline_shared.resolve_pipeline_data_contract(object(), "dev", "table-a", context=context) is None
-    assert state["tables"]["table-a"]["selected"] is None
-    assert state["tables"]["table-a"]["review"] is None
+    assert state["tables"]["table-a"]["mode"] == "validate"
+    state["set_mode"]("table-a", "enforce")
+    assert state["tables"]["table-a"]["mode"] == "enforce"
     assert "table-a" not in state["resolved_contracts"]
 
 
@@ -151,18 +153,22 @@ def test_missing_frozen_version_runs_unvalidated_in_development(monkeypatch):
     assert state["tables"]["table-a"]["versions"] == []
     assert state["resolved_contracts"] == {}
     assert context["data_contract_overrides"] == {}
-    assert "running unvalidated" in state["message"]
+    assert "each table can enforce" in state["message"]
 
 
-def test_production_resolves_each_active_contract_and_ignores_overrides(monkeypatch):
-    """Resolve active Production versions and clear Development overrides."""
+def test_production_supports_active_enforcement_and_frozen_validation_per_table(monkeypatch):
+    """Production defaults to active enforcement but allows exact frozen validation."""
     active = {"table-a": _row(3, status="active", active=True), "table-b": _row(2, table_id="table-b", status="active", active=True)}
-    context, state = _render(monkeypatch, [], env="prod", overrides={"table-a": {"contract_id": "wrong", "contract_version": 99}}, active=active)
+    frozen = [_row(4), _row(5, table_id="table-b")]
+    context, state = _render(monkeypatch, frozen, env="prod", overrides={"table-a": {"contract_id": "wrong", "contract_version": 99}}, active=active)
     assert context["data_contract_overrides"] == {}
     assert state["resolved_contracts"]["table-a"]["contract_version"] == 3
     assert state["resolved_contracts"]["table-b"]["contract_version"] == 2
-    with pytest.raises(ValueError, match="resolved automatically"):
-        state["select"]("table-a", "contract-table-a", 3)
+    state["set_mode"]("table-b", "validate", "contract-table-b", 5)
+    assert state["tables"]["table-a"]["mode"] == "enforce"
+    assert state["tables"]["table-b"]["mode"] == "validate"
+    assert state["tables"]["table-b"]["contract_version"] == 5
+    assert context["data_contract_overrides"] == {}
 
 
 def test_production_zero_active_fails_clearly(monkeypatch):
@@ -173,6 +179,7 @@ def test_production_zero_active_fails_clearly(monkeypatch):
     context_obj = context
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: _Frame([]))
     monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: ([('Target', 'table-a')], {}))
     with pytest.raises(ValueError, match="exactly one active"):
         module.widget_select_data_contract(context=context)
@@ -205,6 +212,7 @@ def test_production_multiple_active_contracts_fail_with_context(monkeypatch):
     context_obj = context
     monkeypatch.setattr(module, "get_spark_session", lambda _spark=None: object())
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(module, "read_lakehouse_table", lambda *_args, **_kwargs: _Frame([]))
     monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: ([('Target', 'table-a')], {"notebook_name": "02_pipeline"}))
     with pytest.raises(RuntimeError, match="multiple active"):
         module.widget_select_data_contract(context=context)

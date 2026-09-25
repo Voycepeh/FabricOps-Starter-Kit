@@ -18,7 +18,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def validate_data_contract(
+def _validate_data_contract(
     *,
     table_id: str,
     contract_id: str,

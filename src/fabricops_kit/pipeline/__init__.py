@@ -10,7 +10,6 @@ from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_cove
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
-from fabricops_kit.pipeline.validate_data_contract import validate_data_contract
 
 __all__ = [
     "check_schema",
@@ -23,5 +22,4 @@ __all__ = [
     "resolve_table_id",
     "pipeline_write",
     "profile_table",
-    "validate_data_contract",
 ]
