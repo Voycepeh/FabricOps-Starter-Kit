@@ -1434,29 +1434,21 @@ def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
         assert advanced_block.value is False
 
 
-def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(widget_runtime, monkeypatch):
-    """Carry structured AI parameters through explicit acceptance, editing, and persistence."""
-    _enable_ai(widget_runtime, monkeypatch)
-    monkeypatch.setattr(module, "suggest_dq_rules", lambda *_args, **_kwargs: [{
-        "rule_type": "range", "columns": ["column_0"],
-        "parameters": {
-            "minimum": 0, "minimum_inclusive": True,
-            "maximum": 100, "maximum_inclusive": False,
-        },
-        "rationale": "A governed scale.", "selected": True,
-    }])
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
+    """Range stays deterministic: edit bounds directly and persist them on contract save."""
+    state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
 
     controls["dq_type"].value = "range"
     assert controls["suggest_dq"].disabled is True
-    assert len(widget_runtime["calls"]["guardrails"]) == before
-    controls["accept_dq_suggestion"].click()
-    assert controls["dq_type"].value == "range"
-    assert controls["dq_maximum"].value == "100"
-    assert controls["dq_maximum_inclusive"].value is False
+
+    controls["dq_enabled"].value = True
     controls["dq_minimum"].value = "1"
+    controls["dq_minimum_inclusive"].value = True
+    controls["dq_maximum"].value = "100"
+    controls["dq_maximum_inclusive"].value = False
+
     assert len(widget_runtime["calls"]["guardrails"]) == before
     controls["save_data_contract"].click()
 
@@ -1466,8 +1458,11 @@ def test_ai_range_suggestion_hydrates_edits_and_saves_without_parameter_loss(wid
     )
     assert saved["column_id"] == "col-0"
     assert module._parameters(saved) == {
-        "columns": ["column_0"], "minimum": "1", "minimum_inclusive": True,
-        "maximum": "100", "maximum_inclusive": False,
+        "columns": ["column_0"],
+        "minimum": "1",
+        "minimum_inclusive": True,
+        "maximum": "100",
+        "maximum_inclusive": False,
     }
 
 
