@@ -434,13 +434,13 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     controls = state["_controls"]
     assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_action"].value == "Block"
+    assert controls["dq_block"].value is True
 
     controls["column_select"].value = "col-1"
 
     assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_action"].value == "Warn"
+    assert controls["dq_block"].value is False
 
 
 def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime):
@@ -996,6 +996,8 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     state = widget_runtime["open"]()
     before = module.DATA_CONTRACT_MANIFEST
     state["_controls"]["freeze"].click()
+    assert widget_runtime["calls"]["freeze"] == 0
+    state["_controls"]["freeze_confirm"].click()
     assert widget_runtime["calls"]["freeze"] == 1
     assert state["current"]["contract"]["status"] == "frozen"
     assert state["_controls"]["table_description"].disabled is True
