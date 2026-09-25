@@ -918,6 +918,7 @@ def widget_data_contract(
             if suggest_grain.disabled:
                 return
             try:
+                render_grain_profile_evidence()
                 profile_rows = []
                 for column in columns:
                     cid = str(column.get("column_id") or "")
@@ -968,7 +969,7 @@ def widget_data_contract(
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
-        render_grain_profile_evidence()
+        grain_profile_evidence.value = "<div style='color:#667085;font-size:12px;'>Run Suggest grain & key to inspect profile evidence across the table.</div>"
 
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
@@ -3300,6 +3301,9 @@ def widget_data_contract(
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
+            "table_grain": table_grain, "row_key_columns": row_key_columns,
+            "row_key_block": row_key_block, "grain_profile_evidence": grain_profile_evidence,
+            "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
