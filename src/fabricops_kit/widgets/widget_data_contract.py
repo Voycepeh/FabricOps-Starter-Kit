@@ -1121,7 +1121,7 @@ def widget_data_contract(
                         existing_description=str(table_description.value or ""),
                         column_rows=columns,
                     ),
-                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -2273,7 +2273,7 @@ def widget_data_contract(
                         existing_description=description,
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
-                    description_prompt=str(ai_enrichment.get("description_prompt") or ""),
+                    description_prompt=str(ai_enrichment.get("column_description_prompt") or ""),
                 )
                 previous_value = str(suggestions.get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -2678,7 +2678,7 @@ def widget_data_contract(
                         "\nAdditional author instruction:\n" + user_instruction
                     )
                 prompt_value = (
-                    str(ai_enrichment.get("dq_prompt") or "").strip()
+                    str(ai_enrichment.get("pattern_prompt") or "").strip()
                     + "\n\n"
                     + family_instruction
                 )
