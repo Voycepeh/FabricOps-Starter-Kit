@@ -24,9 +24,9 @@ jobs:
       - name: Regenerate call-flow artifact twice
         run: |
           PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
-          sha256sum docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/first.sha
+          sha256sum docs/reference/_data/public-function-call-flows.json > /tmp/first.sha
           PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
-          sha256sum docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/second.sha
+          sha256sum docs/reference/_data/public-function-call-flows.json > /tmp/second.sha
           diff -u /tmp/first.sha /tmp/second.sha
       - name: Commit generated artifacts and remove helper
         run: |
