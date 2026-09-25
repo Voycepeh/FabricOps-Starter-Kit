@@ -149,8 +149,8 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Own one table-centric processing definition, Enrichment, and Guardrail snapshot; freeze the reviewed definition and link an exact Data Agreement version only when activating it for Production.",
-        "grain": "One Data Contract lifecycle version for one governed table; draft processing is persisted on the row, its payload becomes immutable when frozen, and its Data Agreement linkage is populated at activation.",
+        "purpose": "Own one table-centric governed definition in a single versioned JSON payload; edit the draft in place, freeze the reviewed definition, and link an exact Data Agreement version only when activating it for Production.",
+        "grain": "One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Null for draft/frozen versions; together with agreement_version, identifies the exact Agreement linked during activation."},
