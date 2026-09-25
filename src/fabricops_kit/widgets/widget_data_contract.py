@@ -93,111 +93,176 @@ def _latest(rows: list[dict[str, Any]], *identity: str) -> list[dict[str, Any]]:
     return list(selected.values())
 
 
-def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
-    """Build one scannable manifest review page with expandable rule detail."""
+def _manifest_sections(
+    payload: dict[str, Any],
+    *,
+    column_profiles: Mapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, str]:
+    """Build one scannable review page from table, column, and cross-column contract rules."""
     table = payload.get("table", {})
-    contract = payload.get("contract", {})
     enrichments = payload.get("enrichment", {})
     guardrails = payload.get("guardrails", [])
     columns = table.get("columns", [])
-    description_by_column = {
-        str(row.get("column_id") or ""): str(row.get("value") or "")
+    profiles = dict(column_profiles or {})
+
+    column_enrichment: dict[tuple[str, str], str] = {
+        (str(row.get("column_id") or ""), str(row.get("enrichment_type") or "")): str(
+            row.get("value") or ""
+        )
         for row in enrichments.get("columns", [])
-        if row.get("enrichment_type") == "Description"
     }
     required: set[str] = set()
     for rule in guardrails:
         if str(rule.get("guardrail_type") or "").lower() == "schema" and rule.get("is_active", True):
             required.update(_parameters(rule).get("required_columns", []))
 
+    def parameter_text(row: Mapping[str, Any]) -> str:
+        parts = []
+        for name, value in _parameters(row).items():
+            if value in (None, "", [], {}):
+                continue
+            if isinstance(value, list):
+                shown = ", ".join(str(item) for item in value)
+            elif isinstance(value, bool):
+                shown = "Yes" if value else "No"
+            else:
+                shown = str(value)
+            parts.append(f"{name.replace('_', ' ')}: {shown}")
+        return " · ".join(parts)
+
+    def rule_label(row: Mapping[str, Any]) -> str:
+        return str(row.get("rule_type") or row.get("guardrail_type") or "").replace("_", " ").title()
+
     def rule_list(rows: list[dict[str, Any]]) -> str:
         items = "".join(
-            "<li><b>{}</b> · {} · {} · {}</li>".format(
-                html.escape(str(row.get("rule_type") or row.get("guardrail_type") or "")),
-                html.escape(str(row.get("column_id") or "table")),
+            "<li><b>{}</b> · {}{}</li>".format(
+                html.escape(rule_label(row)),
                 html.escape(str(row.get("action") or "Warn")),
-                html.escape(json.dumps(_parameters(row), sort_keys=True, default=str)),
+                (
+                    " · " + html.escape(parameter_text(row))
+                    if parameter_text(row) else ""
+                ),
             )
             for row in rows
         ) or "<li>None configured</li>"
         return f"<ul>{items}</ul>"
 
+    def profile_evidence(column_id: str) -> str:
+        profile = dict(profiles.get(column_id) or {})
+        if not profile:
+            return "<span style='color:#667085;'>No profile available</span>"
+        lines = []
+        range_parts = []
+        if profile.get("min_value") is not None:
+            range_parts.append(f"Min value: <b>{html.escape(str(profile['min_value']))}</b>")
+        if profile.get("max_value") is not None:
+            range_parts.append(f"Max value: <b>{html.escape(str(profile['max_value']))}</b>")
+        if range_parts:
+            lines.append(" · ".join(range_parts))
+        cardinality = []
+        if profile.get("distinct_count") is not None:
+            distinct = f"Distinct count: <b>{html.escape(str(profile['distinct_count']))}</b>"
+            if profile.get("distinct_percent") is not None:
+                distinct += f" (<b>{html.escape(str(profile['distinct_percent']))}%</b>)"
+            cardinality.append(distinct)
+        if profile.get("null_count") is not None:
+            nulls = f"Null count: <b>{html.escape(str(profile['null_count']))}</b>"
+            if profile.get("null_percent") is not None:
+                nulls += f" (<b>{html.escape(str(profile['null_percent']))}%</b>)"
+            cardinality.append(nulls)
+        if cardinality:
+            lines.append(" · ".join(cardinality))
+        return "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
+
     active = [row for row in guardrails if row.get("is_active", True)]
-    freshness = [row for row in active if str(row.get("guardrail_type") or "").lower() == "freshness"]
-    source_drift = [row for row in active if str(row.get("guardrail_type") or "").lower() == "source_drift"]
-    table_dq = [
-        row for row in active
-        if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-        and not str(row.get("column_id") or "")
-    ]
-    row_key_rule = next(
-        (row for row in table_dq if str(row.get("rule_type") or "") == "uniqueness"),
-        {},
-    )
-    row_key_columns = [str(name) for name in _parameters(row_key_rule).get("columns", [])]
-    table_grain = next((
-        str(row.get("value") or "") for row in enrichments.get("table", [])
-        if str(row.get("enrichment_type") or "") == "Grain"
-    ), "")
-    column_guardrails = [row for row in active if str(row.get("column_id") or "")]
     advanced = [
-        row for row in table_dq
-        if str(row.get("rule_type") or "") in {"column_relationship", "custom_expression"}
+        row for row in active
+        if not str(row.get("column_id") or "")
+        and str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+        and str(row.get("rule_type") or "") in {
+            "column_relationship", "custom_expression"
+        }
     ]
-    blocking = [row for row in active if str(row.get("action") or "").lower() == "block"]
-    required_count = sum(
-        1 for row in columns
-        if row.get("column_id") in required or row.get("column_name") in required
-    )
+    advanced_ids = {id(row) for row in advanced}
+    table_guardrails = [
+        row for row in active
+        if not str(row.get("column_id") or "") and id(row) not in advanced_ids
+    ]
+    column_guardrails = [row for row in active if str(row.get("column_id") or "")]
+    sensitive_by_column = {
+        str(row.get("column_id") or ""): row
+        for row in column_guardrails
+        if str(row.get("guardrail_type") or "").lower() == "sensitive_data"
+    }
+    rules_by_column: dict[str, list[dict[str, Any]]] = {}
+    for rule in column_guardrails:
+        if str(rule.get("guardrail_type") or "").lower() == "sensitive_data":
+            continue
+        rules_by_column.setdefault(str(rule.get("column_id") or ""), []).append(rule)
+
+    def sensitive_text(column_id: str) -> str:
+        rule = sensitive_by_column.get(column_id)
+        if not rule:
+            return "Not PII"
+        parameters = _parameters(rule)
+        pii_type = str(parameters.get("pii_type") or "direct").lower()
+        label = PII_LABELS.get(pii_type, pii_type.replace("_", " ").title())
+        treatment = str(parameters.get("treatment") or rule.get("rule_type") or "").replace("_", " ").title()
+        action = str(rule.get("action") or "Warn")
+        detail = f"{label} · {treatment}" if treatment else label
+        return f"{html.escape(detail)}<br><span style='color:#667085;'>{html.escape(action)}</span>"
+
+    def rules_text(column_id: str) -> str:
+        rows = rules_by_column.get(column_id, [])
+        if not rows:
+            return "<span style='color:#667085;'>None</span>"
+        return "".join(
+            "<div style='margin-bottom:5px;'><b>{}</b> · {}{}</div>".format(
+                html.escape(rule_label(rule)),
+                html.escape(str(rule.get("action") or "Warn")),
+                (
+                    "<br><span style='color:#667085;'>"
+                    + html.escape(parameter_text(rule))
+                    + "</span>"
+                    if parameter_text(rule) else ""
+                ),
+            )
+            for rule in rows
+        )
+
     column_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+        "<tr>"
+        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+        "</tr>".format(
             html.escape(str(row.get("column_name") or "")),
             html.escape(str(row.get("data_type") or "")),
+            profile_evidence(str(row.get("column_id") or "")),
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Description"), ""
+            )) or "<span style='color:#667085;'>—</span>",
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Classification"), ""
+            )) or "<span style='color:#667085;'>—</span>",
+            sensitive_text(str(row.get("column_id") or "")),
             "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
-            html.escape(description_by_column.get(str(row.get("column_id") or ""), "")),
+            rules_text(str(row.get("column_id") or "")),
         )
         for row in columns
     )
-    summary = (
-        "<h3>Contract summary</h3>"
-        "<div style='display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin:10px 0 16px;'>"
-        f"<div><b>{len(columns)}</b><br><span>Columns</span></div>"
-        f"<div><b>{required_count}</b><br><span>Required</span></div>"
-        f"<div><b>{len(active)}</b><br><span>Active guardrails</span></div>"
-        f"<div><b>{len(blocking)}</b><br><span>Blocking rules</span></div></div>"
-        "<p><b>Load strategy:</b> "
-        f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}"
-        " &nbsp; <b>Status:</b> "
-        f"{html.escape(str(contract.get('status') or '').upper())}</p>"
-        + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
-        + "<p><b>Grain:</b> "
-        + html.escape(table_grain or "Not defined")
-        + " &nbsp; <b>Row key:</b> "
-        + html.escape(", ".join(row_key_columns) or "Not defined")
-        + "</p>"
-        + f"<p><b>Freshness:</b> {len(freshness)} configured &nbsp; "
-        f"<b>Source drift:</b> {len(source_drift)} configured &nbsp; "
-        f"<b>Column rules:</b> {len(column_guardrails)} &nbsp; "
-        f"<b>Advanced rules:</b> {len(advanced)}</p>"
-    )
     details = (
-        "<details><summary><b>Column definitions and rules</b> · "
-        f"{len(columns)} columns, {len(column_guardrails)} column rules</summary>"
-        "<table><thead><tr><th>Column</th><th>Datatype</th><th>Required</th><th>Description</th>"
-        f"</tr></thead><tbody>{column_rows}</tbody></table>"
-        f"<h4>Column guardrails</h4>{rule_list(column_guardrails)}</details>"
-        "<details><summary><b>Table guardrails</b> · "
-        f"{len(freshness) + len(source_drift)} configured</summary>"
-        f"<h4>Freshness</h4>{rule_list(freshness)}"
-        f"<h4>Source Drift</h4>{rule_list(source_drift)}</details>"
-        "<details><summary><b>Grain & Row Key</b></summary>"
-        f"<p><b>Grain:</b> {html.escape(table_grain or 'Not defined')}</p>"
-        f"<p><b>Row key:</b> {html.escape(', '.join(row_key_columns) or 'Not defined')}</p>"
-        f"{rule_list([row_key_rule] if row_key_rule else [])}</details>"
+        "<details open><summary><b>Table guardrails</b> · "
+        f"{len(table_guardrails)} configured</summary>{rule_list(table_guardrails)}</details>"
+        "<details open><summary><b>Column definitions and rules</b> · "
+        f"{len(columns)} columns, {len(column_guardrails)} column guardrails</summary>"
+        "<div style='overflow-x:auto;'>"
+        "<table style='width:100%;font-size:12px;'><thead><tr>"
+        "<th>Column</th><th>Datatype</th><th>Profile evidence</th><th>Description</th>"
+        "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
+        f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Advanced rules</b> · "
         f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
     )
-    return {"Review": summary + details}
+    return {"Review": details}
 
 def _manifest_html(payload: dict[str, Any]) -> str:
     """Render the human and exact JSON views from the same canonical dictionary."""
@@ -883,7 +948,9 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
-        row_key_columns.layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="120px")
+        row_key_columns.layout = widgets.Layout(
+            width="100%", max_width="560px", min_width="0", height="120px"
+        )
         row_key_block = widgets.Checkbox(
             value=str(existing_row_key.get("action") or "Block") == "Block",
             description="Block on duplicate row keys",
@@ -917,19 +984,21 @@ def widget_data_contract(
                 ))
             evidence.sort(reverse=True)
             rows = "".join(
-                "<li><code>{}</code> · <b>{:.3f}%</b> distinct · <b>{:.3f}%</b> missing{}</li>".format(
+                "<li><code>{}</code> · <b>{:.3f}%</b> distinct · "
+                "<b>{:.3f}%</b> missing{}</li>".format(
                     html.escape(name), distinct, missing,
-                    " · strong single-key candidate" if distinct >= 100.0 and missing <= 0.0 else "",
+                    " · strong single-key candidate"
+                    if distinct >= 100.0 and missing <= 0.0 else "",
                 )
                 for distinct, missing, name in evidence[:8]
             )
             grain_profile_evidence.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                 "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
-                + (rows or "<li>No profile evidence available.</li>") +
-                "</ul><span>Per-column distinctness can prove a single-column candidate, but it cannot "
-                "prove composite uniqueness. Composite keys are validated by the table-level uniqueness "
-                "guardrail during pipeline execution.</span></div>"
+                + (rows or "<li>No profile evidence available.</li>")
+                + "</ul><span>Per-column distinctness can prove a single-column candidate, but it "
+                "cannot prove composite uniqueness. Composite keys are validated by the table-level "
+                "uniqueness guardrail during pipeline execution.</span></div>"
             )
 
         def run_grain_ai(*_args: Any) -> None:
@@ -948,10 +1017,14 @@ def widget_data_contract(
                         "description": enrichment_value(
                             enrichments, "column", "Description", cid
                         ),
-                        **{name: profile.get(name) for name in (
-                            "row_count", "non_null_count", "null_count", "null_percent",
-                            "distinct_count", "distinct_percent",
-                        ) if profile.get(name) is not None},
+                        **{
+                            name: profile.get(name)
+                            for name in (
+                                "row_count", "non_null_count", "null_count", "null_percent",
+                                "distinct_count", "distinct_percent",
+                            )
+                            if profile.get(name) is not None
+                        },
                     })
                 suggestion = suggest_grain_key(
                     {
@@ -987,7 +1060,10 @@ def widget_data_contract(
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
-        grain_profile_evidence.value = "<div style='color:#667085;font-size:12px;'>Run Suggest grain & key to inspect profile evidence across the table.</div>"
+        grain_profile_evidence.value = (
+            "<div style='color:#667085;font-size:12px;'>"
+            "Run Suggest grain & key to inspect profile evidence across the table.</div>"
+        )
 
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
@@ -1369,7 +1445,8 @@ def widget_data_contract(
                 selected_keys = [str(name) for name in row_key_columns.value]
                 if existing_row_key or selected_keys:
                     stage_guardrails([guardrail_record(
-                        "data_quality", "uniqueness", {"columns": selected_keys or existing_row_key_columns},
+                        "data_quality", "uniqueness",
+                        {"columns": selected_keys or existing_row_key_columns},
                         existing=existing_row_key,
                         action="Block" if row_key_block.value else "Warn",
                         active=bool(selected_keys),
@@ -1418,29 +1495,6 @@ def widget_data_contract(
                     lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
                 )
 
-        active_guardrails = [rule for rule in guardrails if rule.get("is_active", True)]
-        guardrail_status = {
-            "Schema": any(
-                str(rule.get("guardrail_type") or "").lower() == "schema"
-                for rule in active_guardrails
-            ),
-            "Freshness": bool(table_rules["freshness"]["enabled"].value),
-            "Sensitive Data": any(
-                str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
-                for rule in active_guardrails
-            ),
-            "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
-            "Data Quality": any(
-                str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-                for rule in active_guardrails
-            ),
-        }
-        guardrail_status_html = "".join(
-            "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
-            f"<span style='color:#666'>{html.escape(name)}</span>"
-            f"<span style='font-size:12px;{'color:#0f6cbd;' if enabled else ''}'>{'Enabled' if enabled else 'Disabled'}</span></div>"
-            for name, enabled in guardrail_status.items()
-        )
         schedule_status = str(scheduled_refresh.get("status") or "unavailable")
         if schedule_status == "configured" and scheduled_refresh.get("schedules"):
             first_schedule = scheduled_refresh["schedules"][0]
@@ -1453,14 +1507,82 @@ def widget_data_contract(
         else:
             refresh_frequency = "Unavailable"
 
-        identity = widgets.HTML(
-            "<p><b>{}</b><br>Contract v{} · {}<br>Environment: {}<br>Store: {} · {}</p>".format(
-                html.escape(f"{table.get('schema_name') or ''}.{table.get('table_name') or state['table_id']}"),
-                html.escape(str(row.get("contract_version") or "")), html.escape(str(row.get("status") or "").upper()),
-                html.escape(env), html.escape(str(table.get("store_type") or "Metadata")),
-                html.escape(str(table.get("layer") or "")),
-            )
+        runtime_context = contracts.get_table_runtime_context(
+            config=config, env=env, spark_session=spark,
+            table_id=str(state.get("table_id") or ""),
         )
+
+        def context_timestamp(value: Any) -> str:
+            if isinstance(value, datetime):
+                return value.strftime("%d %b %Y, %H:%M")
+            text = str(value or "").strip()
+            if not text:
+                return "Unknown"
+            try:
+                parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                return parsed.strftime("%d %b %Y, %H:%M")
+            except ValueError:
+                return text
+
+        def runtime_context_html() -> str:
+            profile = runtime_context.get("latest_profile")
+            if profile:
+                environment_name = str(profile.get("environment_name") or "Unknown environment")
+                pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
+                committed_by = str(profile.get("committed_by") or "Unknown")
+                profile_html = (
+                    "<div style='margin-top:14px;'>"
+                    "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Latest profile</div>"
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(environment_name)} · "
+                    f"{html.escape(pipeline_name)}</div>"
+                    f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
+                    f"{html.escape(context_timestamp(profile.get('committed_at')))}</div></div>"
+                )
+            else:
+                profile_html = (
+                    "<div style='margin-top:14px;'>"
+                    "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Latest profile</div>"
+                    "<div style='color:#667085;font-size:12px;margin-top:3px;'>No profile available</div></div>"
+                )
+
+            writer_count = int(runtime_context.get("writer_count") or 0)
+            reader_count = int(runtime_context.get("reader_count") or 0)
+            writer_label = "writer" if writer_count == 1 else "writers"
+            reader_label = "reader" if reader_count == 1 else "readers"
+            lineage_rows = list(runtime_context.get("lineage") or [])
+            if lineage_rows:
+                rows_html = "".join(
+                    "<tr>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('environment_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('relationship') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
+                    "</tr>"
+                    for item in lineage_rows
+                )
+                detail_html = (
+                    "<details style='margin-top:5px;'>"
+                    "<summary style='cursor:pointer;color:#0f6cbd;font-size:12px;'>View lineage</summary>"
+                    "<div style='overflow-x:auto;margin-top:6px;'>"
+                    "<table style='border-collapse:collapse;width:100%;font-size:11px;'>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Environment</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Relationship</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
+                    f"<tbody>{rows_html}</tbody></table></div></details>"
+                )
+            else:
+                detail_html = "<div style='color:#667085;font-size:12px;margin-top:3px;'>No lineage recorded</div>"
+            return (
+                profile_html
+                + "<div style='margin-top:14px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Pipeline usage</div>"
+                f"<div style='font-weight:600;margin-top:3px;'>{writer_count} {writer_label} · "
+                f"{reader_count} {reader_label}</div>"
+                + detail_html
+                + "</div>"
+            )
+
         processing = contracts.contract_processing(row)
         load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
         pipeline_refresh = widgets.HTML(
@@ -1468,33 +1590,7 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        table_summary = widgets.HTML(
-                "<div style='background:#e7f5ef;border-left:4px solid #107c41;"
-                "border-radius:4px;padding:10px 11px;margin-bottom:12px;'>"
-                "<div style='color:#0b5d35;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Governed table</div>"
-                + identity.value
-                + "</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Contract</div>"
-                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
-                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Loading Strategy</div>"
-                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(load_strategy)}</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Refresh Frequency</div>"
-                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(refresh_frequency)}</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Classification</div>"
-                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
-                + f"{html.escape(str(table_classification.value or 'Not classified'))}</div>"
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Guardrails</div>"
-                + "<div style='margin-top:6px;'>" + guardrail_status_html + "</div>"
-        )
+        table_summary = widgets.HTML()
         table_left = (table_summary, change_table_button)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
@@ -1525,8 +1621,14 @@ def widget_data_contract(
             table_summary.value = (
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Table</div>"
-                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
-                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(str(table.get('schema_name') or ''))}</div>"
+                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
+                f"{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
+                f"{html.escape(str(table.get('schema_name') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
+                f"{html.escape(str(row.get('status') or '').upper())}</div>"
+                + runtime_context_html()
+                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
@@ -1600,9 +1702,9 @@ def widget_data_contract(
                 children=[
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;margin-bottom:8px;'>"
-                        "Define what one row represents, then select the column or smallest column combination "
-                        "that should uniquely identify that row. The selected key automatically becomes the "
-                        "table-level uniqueness guardrail.</div>"
+                        "Define what one row represents, then select the column or smallest column "
+                        "combination that should uniquely identify that row. The selected key "
+                        "automatically becomes the table-level uniqueness guardrail.</div>"
                     ),
                     table_grain,
                     row_key_columns,
@@ -3074,7 +3176,9 @@ def widget_data_contract(
         # Manifest: current working contract plus changes since the last persisted draft.
         payload = refresh_manifest() or {}
         saved_payload = state.get("_saved_payload") or {}
-        sections = _manifest_sections(payload)
+        sections = _manifest_sections(
+            payload, column_profiles=runtime_context.get("column_profiles", {})
+        )
 
         def review_change_html() -> str:
             changes: list[str] = []
@@ -3160,7 +3264,9 @@ def widget_data_contract(
         def refresh_review() -> None:
             nonlocal payload
             payload = refresh_manifest() or {}
-            refreshed_sections = _manifest_sections(payload)
+            refreshed_sections = _manifest_sections(
+                payload, column_profiles=runtime_context.get("column_profiles", {})
+            )
             manifest_preview.value = refreshed_sections["Review"]
             change_preview.value = review_change_html()
         state["_refresh_review"] = refresh_review
@@ -3283,23 +3389,8 @@ def widget_data_contract(
 
             activate_button.on_click(activate_clicked)
             actions.extend([agreement_id, agreement_version, activate_button])
-        review_left = (
-            widgets.HTML(
-                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Manifest</div>"
-                + "<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
-                + html.escape(
-                    f"{str(table.get('schema_name') or '')}.{str(table.get('table_name') or state.get('table_id') or '')}"
-                )
-                + "</div>"
-                + "<div style='color:#667085;font-size:12px;margin-top:5px;'>"
-                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
-            ),
-            widgets.HTML(
-                "<div style='color:#667085;font-size:12px;line-height:1.5;margin-top:8px;'>"
-                "Notebook variable<br><b style='color:#172b4d;'>DATA_CONTRACT_MANIFEST</b></div>"
-            ),
-        )
+        review_left = table_left
+
         review_right = (
             shared.form_section(
                 widgets,

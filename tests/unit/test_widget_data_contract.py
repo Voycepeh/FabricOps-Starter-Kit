@@ -279,6 +279,27 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "latest_profile": {
+            "profile_snapshot_id": "snapshot-prod",
+            "environment_name": "PROD",
+            "pipeline_name": "02_pipeline",
+            "committed_by": "voyce@example.com",
+            "committed_at": "2026-09-26T02:45:00",
+        },
+        "writer_count": 1,
+        "reader_count": 2,
+        "lineage": [
+            {
+                "environment_name": "DEV", "relationship": "Writer",
+                "pipeline_name": "02_pipeline", "last_seen": "2026-09-26T03:00:00",
+            },
+            {
+                "environment_name": "PROD", "relationship": "Reader",
+                "pipeline_name": "04_reporting", "last_seen": "2026-09-26T02:30:00",
+            },
+        ],
+    })
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
         "kind": "profile",
         "profile": {
@@ -456,8 +477,6 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert "read-only" in controls["pipeline_refresh"].value
 
 
-
-
 def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
     """Hydrate an existing table-level uniqueness rule into Grain & Row Key."""
     widget_runtime["guardrails"].append({
@@ -480,6 +499,7 @@ def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
     assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
     assert controls["row_key_block"].value is True
 
+
 def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
     state = widget_runtime["open"]()
@@ -491,7 +511,16 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         assert len(controls["right_pane"].children) > 0
 
     controls["top_nav"].value = "Table"
-    table_summary = controls["left_pane"].children[0].value
+    table_context = controls["left_pane"].children[0]
+    table_summary = table_context.value
+    assert "v1 · DRAFT" in table_summary
+    assert "Latest profile" in table_summary
+    assert "PROD · 02_pipeline" in table_summary
+    assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
+    assert "Pipeline usage" in table_summary
+    assert "1 writer · 2 readers" in table_summary
+    assert "View lineage" in table_summary
+    assert "04_reporting" in table_summary
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
     assert "Classification" in table_summary
@@ -524,7 +553,10 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["advanced_enabled"].description == "Enabled"
     assert controls["advanced_block"].description == "Block on failure"
     controls["top_nav"].value = "Manifest & Freeze"
-    assert "Contract summary" in controls["manifest_preview"].value
+    assert controls["left_pane"].children[0] is table_context
+    assert "Table guardrails" in controls["manifest_preview"].value
+    assert "Column definitions and rules" in controls["manifest_preview"].value
+    assert "Advanced rules" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
@@ -1337,29 +1369,77 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
     ]
 
 
-def test_review_sections_render_single_page_without_duplicate_column_rules():
-    """Render the single Review page with table, advanced, and column rule detail."""
+def test_review_sections_render_column_contract_table_with_profile_and_governance():
+    """Render table guardrails, rich column rows, then cross-column Advanced rules."""
     payload = {
-        "table": {"table_name": "orders", "schema_name": "sales", "columns": []},
+        "table": {
+            "table_name": "orders", "schema_name": "sales",
+            "columns": [
+                {
+                    "column_id": "col-1", "column_name": "customer_id",
+                    "data_type": "string",
+                },
+            ],
+        },
         "contract": {"contract_version": 1, "status": "draft"},
-        "enrichment": {"columns": []},
+        "enrichment": {
+            "columns": [
+                {
+                    "column_id": "col-1", "enrichment_type": "Description",
+                    "value": "Customer identifier",
+                },
+                {
+                    "column_id": "col-1", "enrichment_type": "Classification",
+                    "value": "Confidential",
+                },
+            ],
+        },
         "guardrails": [
+            {
+                "guardrail_type": "schema", "rule_type": "required_columns", "column_id": "",
+                "rule_parameters": {"required_columns": ["col-1"]},
+            },
             {"guardrail_type": "freshness", "rule_type": "freshness", "column_id": ""},
-            {"guardrail_type": "source_drift", "rule_type": "source_drift", "column_id": ""},
+            {
+                "guardrail_type": "sensitive_data", "rule_type": "mask", "column_id": "col-1",
+                "action": "Block",
+                "rule_parameters": {"pii_type": "direct", "treatment": "mask"},
+            },
+            {
+                "guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1",
+                "action": "Warn", "rule_parameters": {"pattern": "^CUS-[0-9]+$"},
+            },
             {"guardrail_type": "data_quality", "rule_type": "uniqueness", "column_id": ""},
             {"guardrail_type": "data_quality", "rule_type": "column_relationship", "column_id": ""},
             {"guardrail_type": "data_quality", "rule_type": "custom_expression", "column_id": ""},
-            {"guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1"},
         ],
     }
+    profiles = {
+        "col-1": {
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 120, "distinct_percent": 100.0,
+            "min_value": "CUS-001", "max_value": "CUS-120",
+        },
+    }
 
-    sections = module._manifest_sections(payload)
+    sections = module._manifest_sections(payload, column_profiles=profiles)
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
+    assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
+    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Advanced rules</b>")
     assert "<b>Advanced rules</b> · 2 configured" in review
-    assert "<b>Column definitions and rules</b> · 0 columns, 1 column rules" in review
-    assert review.count("<b>pattern</b>") == 1
+    assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
+    assert "Profile evidence" in review
+    assert "Min value: <b>CUS-001</b>" in review
+    assert "Max value: <b>CUS-120</b>" in review
+    assert "Distinct count: <b>120</b> (<b>100.0%</b>)" in review
+    assert "Null count: <b>0</b> (<b>0.0%</b>)" in review
+    assert "Customer identifier" in review
+    assert "Confidential" in review
+    assert "Direct PII · Mask" in review
+    assert "Required" in review and ">Yes<" in review
+    assert review.count("<b>Pattern</b>") == 1
 
 
 def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
