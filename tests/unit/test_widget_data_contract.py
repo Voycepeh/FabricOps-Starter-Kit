@@ -907,12 +907,14 @@ def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, 
     """Explicit refresh reads unsaved Enrichment values without invoking save paths."""
     state, captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
+    controls["table_description"].value = "Current unsaved table description"
     controls["column_description"].value = "Current unsaved description"
     controls["column_classification"].value = "Restricted"
     controls["rerun_column_description"].click()
     controls["rerun_sensitive"].click()
 
     assert captures["enrichment"][-1]["existing_description"] == "Current unsaved description"
+    assert captures["sensitive"][-1]["table_description"] == "Current unsaved table description"
     sensitive_column = captures["sensitive"][-1]["columns"][0]
     assert sensitive_column["description"] == "Current unsaved description"
     assert sensitive_column["classification"] == "Restricted"
