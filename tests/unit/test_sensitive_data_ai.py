@@ -121,6 +121,32 @@ def test_nested_column_context_is_normalized_to_known_column():
     assert result[0]["column_name"] == "EMAIL"
 
 
+def test_stringified_column_context_is_normalized_to_known_column():
+    """Accept Fabric AI output that stringifies the supplied column object."""
+    column = {
+        "classification": "",
+        "column_id": "email-id",
+        "column_name": "EMAIL",
+        "data_type": "string",
+        "description": "Email address",
+        "profile_evidence": {"row_count": 120},
+    }
+    candidate = {
+        "column": str(column),
+        "pii_type": "direct",
+        "reason": "Can contact a person.",
+        "treatment": "mask",
+        "action": "Block",
+        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
+    }
+
+    result = module.suggest_sensitive_data(
+        _context(), prompt="configured", invoke=_invoke([candidate])
+    )
+
+    assert result[0]["column_name"] == "EMAIL"
+
+
 def test_invalid_treatment_parameters_are_rejected():
     """Apply canonical Sensitive Data parameter validation to AI output."""
     candidate = {"column": "POSTAL_CODE", "pii_type": "indirect", "reason": "Location.",
