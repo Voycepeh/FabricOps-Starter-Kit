@@ -3141,7 +3141,7 @@ def widget_data_contract(
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
-            "dq_panel": dq_panel, "dq_editor": dq_editor,
+            "dq_panel": dq_panel, "dq_primary": dq_primary, "dq_ai_panel": dq_ai_panel,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,
             "column_description_ai": column_description_ai,
             "accept_column_description": accept_column_description,
