@@ -78,12 +78,12 @@ Use the current walkthrough store keys exactly as they appear in `00_env_config`
 
 | `FabricStore` key | Open this Fabric item | `kind` |
 | --- | --- | --- |
-| `metadata` | Governance → `metadata` | `lakehouse` |
-| `bronze` | Engineering Development → `bronze` | `lakehouse` |
-| `silver` | Engineering Development → `silver` | `lakehouse` |
-| `gold` | Engineering Development → `gold` | `warehouse` |
+| `Metadata` | Governance → `Metadata` | `lakehouse` |
+| `Bronze` | Engineering Development → `Bronze` | `lakehouse` |
+| `Silver` | Engineering Development → `Silver` | `lakehouse` |
+| `Gold` | Engineering Development → `Gold` | `warehouse` |
 
-The `workspace_id` is the same for `bronze`, `silver`, and `gold` because they are in the same Engineering Development workspace. The `metadata` Lakehouse uses the Governance workspace ID.
+You can rename the objects to whatever make sense, also for each environment you have in engineering you should have a corrosponding group of paths.
 
 ![Path config](../assets/00B/00_config_paths.png)
 
