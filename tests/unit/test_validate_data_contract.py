@@ -51,6 +51,10 @@ def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed", 
         "checks": [{"guardrail_rule_id": "dq-1", "status": dq_status}],
         "failed_values": "caller-owned-details", "run_id": "run-1",
     })
+    monkeypatch.setattr(module, "_check_sensitive_data_rules", lambda *a, **k: {
+        "checks": [{"guardrail_rule_id": "sensitive-1", "status": "passed", "can_continue": True}],
+        "support_mapping": "caller-owned-mapping",
+    })
     monkeypatch.setattr(module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
     return writes
 
@@ -89,6 +93,29 @@ def test_block_failure_fails_validation_while_warn_failure_preserves_success(mon
                                     dataframe=object(), spark_session=Spark(), verbose=False)
     assert warned["validation_passed"] is True
     assert warned["warnings"] == 1
+
+
+def test_sensitive_data_is_evaluated_for_exact_candidate(monkeypatch):
+    rules = [
+        {
+            "guardrail_type": "sensitive_data",
+            "guardrail_rule_id": "sensitive-1",
+            "guardrail_version": 1,
+            "action": "Block",
+        },
+    ]
+    _install(monkeypatch, rules=rules)
+
+    result = _validate_data_contract(
+        table_id="table-a", contract_id="contract-a", contract_version=2,
+        dataframe=object(), spark_session=Spark(), verbose=False,
+    )
+
+    assert result["validation_passed"] is True
+    assert result["passed"] == 1
+    assert result["not_applicable"] == 0
+    assert result["support_mapping"] == "caller-owned-mapping"
+
 
 
 def test_enforcement_only_freshness_is_neither_passed_nor_activation_blocking(monkeypatch):
