@@ -1174,12 +1174,19 @@ def widget_data_contract(
         )
         table_left = (table_summary, change_table_button)
 
+        rendered_classification = {
+            "value": str(table_classification.value or "Not classified")
+        }
+
         def refresh_table_summary(_change: dict[str, Any] | None = None) -> None:
             classification = str(table_classification.value or "Not classified")
+            old_value = html.escape(rendered_classification["value"])
             table_summary.value = table_summary.value.replace(
-                ">{}</div>".format(html.escape(str(enrichment_value(enrichments, "table", "Classification") or "Not classified"))),
-                ">{}</div>".format(html.escape(classification)),
+                f">{old_value}</div>",
+                f">{html.escape(classification)}</div>",
+                1,
             )
+            rendered_classification["value"] = classification
 
         table_classification.observe(refresh_table_summary, names="value")
         processing_hint_row = widgets.HBox(
@@ -1265,9 +1272,12 @@ def widget_data_contract(
             (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
         )
         required_columns = set(_parameters(required_rule).get("required_columns", []))
+        saved_payload = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        )
         contracted_columns = {
             str(item.get("column_id") or ""): dict(item)
-            for item in (current.get("payload", {}).get("table", {}).get("columns", []) or [])
+            for item in (saved_payload.get("table", {}).get("columns", []) or [])
             if item.get("column_id")
         }
         observed_types = {
