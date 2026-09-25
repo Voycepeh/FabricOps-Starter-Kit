@@ -16,7 +16,8 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
     rows = [{
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
-        "layer": "Silver", "is_active": True,
+        "layer": "Silver", "load_strategy": "append",
+        "load_strategy_parameters_json": "{}", "is_active": True,
         "_workspace_id": "workspace-id", "_notebook_id": "writer-notebook-id",
     }]
     for index in range(count):
@@ -110,7 +111,8 @@ def widget_runtime(monkeypatch):
     catalogue = _catalogue_rows()
     contract = {
         "contract_id": "contract-orders", "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev", "status": "draft", "is_active": False,
+        "environment_name": "dev", "processing_json": '{"load_strategy":"append"}',
+        "processing_source": "catalogue", "status": "draft", "is_active": False,
     }
     enrichment = [
         {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
@@ -121,13 +123,13 @@ def widget_runtime(monkeypatch):
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1","load_strategy":"append"}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
     ]
-    calls = {"enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    calls = {"enrichment": [], "guardrails": [], "processing": [], "freeze": 0, "activate": 0, "profiles": []}
     schedule = {
         "status": "unavailable", "schedules": [],
         "message": "Scheduled Refresh discovery is unavailable for this notebook.",
@@ -160,7 +162,7 @@ def widget_runtime(monkeypatch):
     def manifest():
         return {
             "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": contract["status"]},
-            "table": {**catalogue[0], "processing": {}, "columns": [dict(row) for row in catalogue[1:]]},
+            "table": {**catalogue[0], "processing": json.loads(contract["processing_json"]), "columns": [dict(row) for row in catalogue[1:]]},
             "enrichment": {
                 "table": [dict(row) for row in enrichment if not row.get("column_id")],
                 "columns": [dict(row) for row in enrichment if row.get("column_id")],
@@ -182,6 +184,13 @@ def widget_runtime(monkeypatch):
             guardrails[:] = [row for row in guardrails if row.get("guardrail_rule_id") != record.get("guardrail_rule_id")]
             guardrails.append(dict(record))
         return records
+
+    def save_contract_processing(*, draft, processing, **_kwargs):
+        calls["processing"].append(dict(processing))
+        contract["processing_json"] = json.dumps(processing, sort_keys=True, separators=(",", ":"))
+        if contract.get("processing_source") != "catalogue":
+            contract["processing_source"] = "manual"
+        return dict(contract)
 
     def freeze_contract(**_kwargs):
         calls["freeze"] += 1
@@ -217,6 +226,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "assemble_contract_payload", lambda **_kwargs: (manifest(), []))
     monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
     monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
+    monkeypatch.setattr(module.contracts, "save_contract_processing", save_contract_processing)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
     monkeypatch.setattr(module.contracts, "get_column_profile_context", lambda column_id, **_kwargs: calls["profiles"].append(column_id) or {
@@ -316,7 +326,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
-    assert controls["table_guardrails"]["source_drift"]["parameters"][2].value == "append"
+    assert len(controls["table_guardrails"]["source_drift"]["parameters"]) == 2
+    assert controls["load_strategy"].value == "append"
+    assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
     assert controls["advanced_type"].value == "uniqueness"
