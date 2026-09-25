@@ -947,6 +947,25 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert widget_runtime["calls"]["guardrails"]
 
 
+def test_disabled_guardrail_is_preserved_in_draft_json(widget_runtime):
+    """Disabled Guardrails stay in the draft JSON so they can be re-enabled later."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    freshness = controls["table_guardrails"]["freshness"]
+
+    freshness["enabled"].value = False
+    freshness["save"].click()
+    controls["save_data_contract"].click()
+
+    saved = widget_runtime["calls"]["draft"][-1]
+    rule = next(
+        item for item in saved["guardrails"]
+        if item.get("guardrail_rule_id") == "fresh"
+    )
+    assert rule["is_active"] is False
+    assert state["_controls"]["table_guardrails"]["freshness"]["enabled"].value is False
+
+
 def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtime):
     """Parameter conversion failures remain inside the widget error boundary."""
     state = widget_runtime["open"]()
