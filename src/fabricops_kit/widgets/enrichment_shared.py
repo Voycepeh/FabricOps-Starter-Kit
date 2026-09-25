@@ -66,28 +66,15 @@ def suggest_enrichment(
     context: dict[str, Any],
     *,
     description_prompt: str,
-    classification_prompt: str,
-    classification_labels: list[str],
     invoke: Any = None,
 ) -> dict[str, str]:
-    """Return transient AI suggestions constrained to configured labels."""
-    labels = [str(label).strip() for label in classification_labels if str(label).strip()]
-    if not labels:
-        raise ValueError("At least one configured Classification label is required for AI suggestions.")
-    if not str(description_prompt).strip() or not str(classification_prompt).strip():
-        raise ValueError("AI Enrichment description and classification prompts are required.")
+    """Return one transient AI Description suggestion."""
+    if not str(description_prompt).strip():
+        raise ValueError("An AI Enrichment description prompt is required.")
     call = invoke or _invoke_fabric_ai
     context_json = json.dumps(context, sort_keys=True, default=str)
     description = str(call(f"{description_prompt.strip()}\n\nContext:\n{context_json}")).strip()
-    classification_raw = str(call(
-        f"{classification_prompt.strip()}\n\nAllowed labels: {json.dumps(labels)}\n\nContext:\n{context_json}"
-    )).strip().strip("`\"'")
-    classification = next(
-        (label for label in labels if label.casefold() == classification_raw.casefold()), None
-    )
-    if classification is None:
-        raise ValueError("AI Classification suggestion was not one of the configured labels.")
-    return {"Description": description, "Classification": classification}
+    return {"Description": description}
 
 
 def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
