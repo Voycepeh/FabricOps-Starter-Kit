@@ -466,6 +466,10 @@ def widget_data_contract(
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
+        elif str(top_nav.value) == "Manifest & Freeze":
+            refresh_review = state.get("_refresh_review")
+            if callable(refresh_review):
+                refresh_review()
 
     top_nav.observe(apply_view, names="value")
 
@@ -1177,51 +1181,48 @@ def widget_data_contract(
         )
         table_left = (table_summary, change_table_button)
 
-        rendered_classification = {
-            "value": str(table_classification.value or "Not classified")
-        }
-
-        def refresh_table_summary(_change: dict[str, Any] | None = None) -> None:
-            classification = str(table_classification.value or "Not classified")
-            old_value = html.escape(rendered_classification["value"])
-            table_summary.value = table_summary.value.replace(
-                f">{old_value}</div>",
-                f">{html.escape(classification)}</div>",
-                1,
-            )
-            rendered_classification["value"] = classification
-
-        table_classification.observe(refresh_table_summary, names="value")
-
-        def refresh_guardrail_summary() -> None:
+        def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
+            selected_sensitive = bool(
+                "sensitive_enabled" in locals() and sensitive_enabled.value
+            )
+            selected_dq = bool("dq_enabled" in locals() and dq_enabled.value)
             statuses = {
-                "Schema": any(str(rule.get("guardrail_type") or "").lower() == "schema" for rule in active)
-                or bool(required_columns),
+                "Schema": bool(required_columns),
                 "Freshness": bool(table_rules["freshness"]["enabled"].value),
-                "Sensitive Data": any(str(rule.get("guardrail_type") or "").lower() == "sensitive_data" for rule in active),
+                "Sensitive Data": selected_sensitive or any(
+                    str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+                    for rule in active
+                ),
                 "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
-                "Data Quality": any(
+                "Data Quality": selected_dq or any(
                     str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
                     for rule in active
                 ),
             }
-            summary = "".join(
+            guardrail_html = "".join(
                 "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
                 f"<span style='color:#666'>{html.escape(name)}</span>"
                 f"<span style='font-size:12px'>{'Enabled' if enabled else 'Disabled'}</span></div>"
                 for name, enabled in statuses.items()
             )
-            start = "<div style='margin-top:6px;'>"
-            prefix, separator, remainder = table_summary.value.partition(start)
-            if separator:
-                _old, end, suffix = remainder.partition("</div>")
-                table_summary.value = prefix + start + summary + "</div>" + suffix
-
-        for rule_controls in table_rules.values():
-            rule_controls["enabled"].observe(
-                lambda _change: refresh_guardrail_summary(), names="value"
+            table_summary.value = (
+                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
+                "text-transform:uppercase;letter-spacing:.07em;'>Table</div>"
+                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(str(table.get('schema_name') or ''))}</div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
+                + guardrail_html + "</div>"
             )
+
+        table_classification.observe(render_table_summary, names="value")
+        for rule_controls in table_rules.values():
+            rule_controls["enabled"].observe(render_table_summary, names="value")
+        render_table_summary()
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
@@ -1612,6 +1613,14 @@ def widget_data_contract(
                 control.layout.display = "" if treatment == "bucket" else "none"
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
+        sensitive_enabled.observe(
+            lambda _change: None if hydrating["active"] else render_table_summary(),
+            names="value",
+        )
+        dq_enabled.observe(
+            lambda _change: None if hydrating["active"] else render_table_summary(),
+            names="value",
+        )
         update_sensitive_fields()
 
         def update_pii_fields(change: dict[str, Any] | None = None) -> None:
@@ -2239,7 +2248,7 @@ def widget_data_contract(
                 required_columns.discard(cid)
                 required_columns.discard(name)
             refresh_column_options()
-            refresh_guardrail_summary()
+            render_table_summary()
 
         def datatype_feedback(change: dict[str, Any]) -> None:
             if hydrating["active"] or not change.get("new"):
@@ -2594,11 +2603,30 @@ def widget_data_contract(
             value=sections["Review"],
             layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
         )
+
+        def refresh_review() -> None:
+            nonlocal payload
+            payload = refresh_manifest() or {}
+            refreshed_sections = _manifest_sections(payload)
+            manifest_preview.value = refreshed_sections["Review"]
+            change_preview.value = review_change_html()
+        state["_refresh_review"] = refresh_review
         exact_json = shared.preview_region(
             widgets, widgets.HTML(
                 f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
             ), height="240px",
         )
+        refresh_review_base = refresh_review
+
+        def refresh_review() -> None:
+            refresh_review_base()
+            exact_json.children[0].value = (
+                "<details><summary>Exact JSON manifest</summary><pre>"
+                + html.escape(_expose_manifest(payload))
+                + "</pre></details>"
+            )
+
+        state["_refresh_review"] = refresh_review
         actions: list[Any] = []
         save_contract_button = None
         discard_contract_button = None
