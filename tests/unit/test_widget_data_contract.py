@@ -312,6 +312,10 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["store"].value == "Silver"
     assert "Silver · Lakehouse" in [label for label, _value in controls["store"].options]
     assert controls["schema"].value == "sales"
+    selector = controls["selector_panel"].children[0]
+    assert [child.description for child in selector.children] == [
+        "Fabric store", "Schema", "Table", "Contract",
+    ]
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
