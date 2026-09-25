@@ -158,6 +158,9 @@ def check_freshness(
             guardrail_type="freshness",
             rule_type=str(result.get("rule_type") or ""),
             result=result,
+            table_id=table_id,
+            contract_id=str(freshness_rule.get("contract_id") or ""),
+            contract_version=int(freshness_rule.get("contract_version") or 0),
         )
     print_guardrail_result(
         "Freshness",

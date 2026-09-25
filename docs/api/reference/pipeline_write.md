@@ -279,7 +279,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
-<li><code>fabricops_kit.pipeline.shared._resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
@@ -291,6 +290,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>

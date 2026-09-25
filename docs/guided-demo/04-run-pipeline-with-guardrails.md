@@ -1,58 +1,55 @@
-# Step 4. Select and validate the Data Contract
+# Step 4. Validate the frozen Data Contract
 
-**Return to the same `02_pipeline`, select the frozen Data Contract version from Step 3, and rerun the real pipeline.**
+**Return to the same `02_pipeline`, choose Validate for the governed target, select the frozen version from Step 3, and evaluate the transformed target without publishing it.**
 
-Do not switch to a special Guardrail notebook. The point of this step is to show that Governance changes the behaviour of the same Engineering flow.
+The selector defaults every table to **Enforce**, so the normal Guided Demo flow remains unchanged until you explicitly put a target into **Validate** mode.
 
-## Select the frozen version
+## Select Validate for the target
 
-In Development, use the Data Contract selection section in `02_pipeline` to select the immutable version for the governed `table_id`.
+In the Data Contract selector at the top of `02_pipeline`:
 
-The contract context is now different from Step 2. The check functions that previously returned `skipped` can resolve the authored Guardrails and execute them against the real data flow.
+1. leave every source table in **Enforce** mode,
+2. choose **Validate** only for the target whose frozen candidate you are reviewing,
+3. select the exact frozen candidate version from Step 3.
+
+The frozen-version picker appears only for a target in Validate mode. The selector keeps the candidate identity with that target, so there is no separate contract dictionary to edit in the notebook.
 
 ## Add the Day 2 Orders rows
 
-Before this rerun, append `orders_incremental.csv` to `source.demo.orders` using the setup notebook from 0B.
+Before this run, append `orders_incremental.csv` to `source.demo.orders` using the setup notebook from 0B.
 
-The source now contains 132 rows instead of 120.
-
-This gives the validation run an observable data change rather than simply repeating the same input.
+The source now contains 132 rows instead of 120. This produces a changed transformed target for a meaningful candidate validation rather than merely repeating the original input.
 
 ## Rerun `02_pipeline`
 
-Run the same full Read → Transform → Write path.
+Run the same visible **Read → Transform → Write-block** sequence.
 
-Observe the contrast with Step 2:
+- The Read blocks continue enforcing their own current contract state.
+- Transform remains ordinary PySpark.
+- The selected target Write block reads `CONTRACTS["tables"][target_table_id]`.
+- Validate mode evaluates the transformed target against the exact frozen candidate and records aggregate evidence.
+- Validate is a small pre-write exit gate: it evaluates the exact frozen candidate, records the evidence, and exits the notebook before the existing Enforce checks and `pipeline_write()` path.
+- Enforce does not need a second branch. Its existing checks remain flat and stop naturally at the first blocking failure; only a successful Enforce run reaches `pipeline_write()`.
 
-| Step 2 | Step 4 |
+| Step 2 default | Step 4 selected target |
 | --- | --- |
-| No selected Data Contract | Frozen Data Contract selected |
-| Contract-backed checks safely skip | Authored Guardrails execute |
-| Development processing proposal drives the write | Selected contract validates and governs the processing definition |
-| 120-row Orders source | 132-row Orders source after Day 2 arrival |
+| Enforce mode | Validate mode |
+| Existing checks stop on the first blocking failure, then publish | Exact frozen candidate evaluation, then notebook exit |
+| No contract-backed rule before authoring | Applicable Schema, DQ, and Sensitive Data rules evaluate |
+| Target write is allowed only after checks pass | `pipeline_write()` is never reached |
 
-The source is still read in full. FabricOps has not turned the pipeline into a source-side incremental reader.
+## Review the validation result
 
-## Watch each Guardrail in context
+The target validation result identifies the exact table, contract version, environment, and run. Review:
 
-The notebook should make it easy to follow where each expectation belongs:
+- `validation_passed`,
+- passed, warning, and blocked counts,
+- `not_applicable` outcomes for Guardrails that require enforcement pipeline context,
+- caller-visible DQ failure details when present.
 
-- Freshness, Schema, and source DQ around each Read block,
-- target Schema and Sensitive Data before publication,
-- Source Drift for each exact source-to-target relationship,
-- target DQ before publication,
-- Guardrail coverage before the target write,
-- `pipeline_write()` only after the target is ready to publish.
+Sensitive Data is evaluated against the exact frozen candidate using the same treatment core as Enforce; any token support mapping remains caller-owned and is not persisted automatically. Freshness and Source Drift require enforcement observation context, so validation keeps those outcomes visible as `not_applicable` rather than falsely recording them as PASS.
 
-Warn outcomes can continue. Blocking outcomes should stop the governed publication according to the configured rule behaviour.
-
-## See the load strategy on changing data
-
-Because the Orders source changed between runs, inspect the persisted target after Step 4.
-
-An overwrite target should now represent the newly recomputed complete result. A target governed with append, SCD1, or SCD2 should reflect the semantics of that strategy and its configured parameters.
-
-This is why the walkthrough separates full source reads from target load strategy. They solve different problems.
+Only aggregate evidence is appended to `METADATA_GUARDRAIL_RESULTS` with `execution_type = validate`.
 
 ## Iterate if needed
 
@@ -61,13 +58,13 @@ If validation shows that the Governance definition is wrong or incomplete:
 1. return to `01_governance`,
 2. refine the draft definition,
 3. freeze a new immutable version,
-4. select that new version in Development,
+4. select that new target candidate in Validate mode,
 5. rerun `02_pipeline`.
 
 Do not edit a frozen version in place.
 
 ## Expected result
 
-You have now seen the same Engineering pipeline operate first without a Data Contract and then with a frozen Data Contract enforcing the Governance definition against changed real data.
+The exact frozen target contract has successful validation evidence for the Development environment, and the notebook exits at the validation gate before the business target can be written. This evidence is one prerequisite for the later Governance activation decision; it does not activate the contract by itself.
 
 **Next:** [Step 5. Link the Data Agreement and activate](05-create-data-contract.md)

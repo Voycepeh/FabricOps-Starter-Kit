@@ -12,9 +12,9 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:116`
+`fabricops_kit/widgets/widget_select_data_contract.py:125`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L116-L367">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L125-L472">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -47,7 +47,7 @@ def widget_select_data_contract(*, spark_session=None, context=None)
 <div class="reference-example-usage" markdown="1">
 
 >>> selection = widget_select_data_contract()
->>> selection["select"]("table-orders", "orders-contract", 3)
+>>> selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
 
 </div>
 
@@ -61,18 +61,20 @@ def widget_select_data_contract(*, spark_session=None, context=None)
 ## Returns
 
 dict
-    Notebook scope, role-preserving table states, table-scoped resolved
-    contracts, controls, and Development ``select`` and ``deselect`` callables.
+    Notebook scope, role-preserving table states, table-scoped execution
+    modes and contract identities, controls, a ``set_mode`` callable, and
+    a ``validate`` operation that evaluates the selected target candidate.
 
 ### Return interpretation
 
-Development selections are stored independently under each discovered table_id in data_contract_overrides; Production returns the read-only active mapping and ignores overrides.
+Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; the validate operation evaluates the selected frozen candidate later against the transformed target DataFrame.
 
 ## Raises / Errors
 
 ValueError
-    If notebook identity is missing, a requested version is unavailable,
-    or Production has no active contract for a Lineage-linked table.
+    If notebook identity is missing, a requested frozen version is
+    unavailable, or Production enforcement has no active contract for a
+    Lineage-linked table.
 RuntimeError
     If Production has multiple active versions for a lineage-linked table.
 
@@ -87,12 +89,12 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Development may independently select a frozen, active, or superseded
-immutable version for each Lineage-linked ``table_id`` and stores it in
-``data_contract_overrides``. Draft and rejected versions are excluded.
-An unselected Development table runs without contract-backed enforcement.
-Production ignores overrides, exposes no picker, and resolves exactly one
-active version per linked table. This widget never activates metadata.
+Every Lineage-linked source remains in ``enforce`` mode. Each target can
+independently use ``enforce`` or ``validate``. Enforce resolves the
+environment's enforceable contract without showing a version picker;
+Production requires exactly one active version. Target validation exposes
+only frozen candidates and never installs the candidate as an enforcement
+override. This widget never activates metadata.
 
 </div>
 

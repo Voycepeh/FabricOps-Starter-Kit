@@ -245,8 +245,8 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Store runtime Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here.",
-        "grain": "One runtime outcome for one Guardrail rule in one pipeline run.",
+        "purpose": "Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Existing Preview installations may require this table to be recreated or updated through metadata setup because FabricOps does not automatically migrate missing columns.",
+        "grain": "One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one configured Guardrail rule."},
@@ -1681,7 +1681,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Select notebook Data Contracts',
   'use_when': 'Use after baseline Lineage exists and before governed checks so Development selects immutable versions per Source/Target table and Production resolves active versions automatically.',
   'related_functions': ['widget_data_contract', 'pipeline_read', 'check_schema', 'check_freshness', 'check_source_drift', 'check_dq'],
-  'return_interpretation': 'Development selections are stored independently under each discovered table_id in data_contract_overrides; Production returns the read-only active mapping and ignores overrides.',
+  'return_interpretation': 'Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; the validate operation evaluates the selected frozen candidate later against the transformed target DataFrame.',
   'expanded_purpose': 'This read-only tool discovers Source and Target table IDs from METADATA_DATA_LINEAGE for the current notebook, workspace when available, and environment. Development exposes only immutable versions; Production exposes no picker and requires exactly one active linked contract per table.',
   'common_failure_causes': ['The current notebook identity or Lineage is missing.',
                             'A discovered table has no eligible immutable version.',

@@ -260,7 +260,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_activity</code></li>
 <li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
-<li><code>fabricops_kit.pipeline.shared._resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
@@ -273,6 +272,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_freshness_observation_column</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_observation_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>
