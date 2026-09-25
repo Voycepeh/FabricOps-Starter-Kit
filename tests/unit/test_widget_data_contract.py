@@ -1342,29 +1342,77 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
     ]
 
 
-def test_review_sections_render_single_page_without_duplicate_column_rules():
-    """Render the single Review page with table, advanced, and column rule detail."""
+def test_review_sections_render_column_contract_table_with_profile_and_governance():
+    """Render table guardrails, rich column rows, then cross-column Advanced rules."""
     payload = {
-        "table": {"table_name": "orders", "schema_name": "sales", "columns": []},
+        "table": {
+            "table_name": "orders", "schema_name": "sales",
+            "columns": [
+                {
+                    "column_id": "col-1", "column_name": "customer_id",
+                    "data_type": "string",
+                },
+            ],
+        },
         "contract": {"contract_version": 1, "status": "draft"},
-        "enrichment": {"columns": []},
+        "enrichment": {
+            "columns": [
+                {
+                    "column_id": "col-1", "enrichment_type": "Description",
+                    "value": "Customer identifier",
+                },
+                {
+                    "column_id": "col-1", "enrichment_type": "Classification",
+                    "value": "Confidential",
+                },
+            ],
+        },
         "guardrails": [
+            {
+                "guardrail_type": "schema", "rule_type": "required_columns", "column_id": "",
+                "rule_parameters": {"required_columns": ["col-1"]},
+            },
             {"guardrail_type": "freshness", "rule_type": "freshness", "column_id": ""},
-            {"guardrail_type": "source_drift", "rule_type": "source_drift", "column_id": ""},
+            {
+                "guardrail_type": "sensitive_data", "rule_type": "mask", "column_id": "col-1",
+                "action": "Block",
+                "rule_parameters": {"pii_type": "direct", "treatment": "mask"},
+            },
+            {
+                "guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1",
+                "action": "Warn", "rule_parameters": {"pattern": "^CUS-[0-9]+$"},
+            },
             {"guardrail_type": "data_quality", "rule_type": "uniqueness", "column_id": ""},
             {"guardrail_type": "data_quality", "rule_type": "column_relationship", "column_id": ""},
             {"guardrail_type": "data_quality", "rule_type": "custom_expression", "column_id": ""},
-            {"guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1"},
         ],
     }
+    profiles = {
+        "col-1": {
+            "row_count": 120, "null_count": 0, "null_percent": 0.0,
+            "distinct_count": 120, "distinct_percent": 100.0,
+            "min_value": "CUS-001", "max_value": "CUS-120",
+        },
+    }
 
-    sections = module._manifest_sections(payload)
+    sections = module._manifest_sections(payload, column_profiles=profiles)
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
+    assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
+    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Advanced rules</b>")
     assert "<b>Advanced rules</b> · 3 configured" in review
-    assert "<b>Column definitions and rules</b> · 0 columns, 1 column rules" in review
-    assert review.count("<b>pattern</b>") == 1
+    assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
+    assert "Profile evidence" in review
+    assert "Min value: <b>CUS-001</b>" in review
+    assert "Max value: <b>CUS-120</b>" in review
+    assert "Distinct count: <b>120</b> (<b>100.0%</b>)" in review
+    assert "Null count: <b>0</b> (<b>0.0%</b>)" in review
+    assert "Customer identifier" in review
+    assert "Confidential" in review
+    assert "Direct PII · Mask" in review
+    assert "Required" in review and ">Yes<" in review
+    assert review.count("<b>Pattern</b>") == 1
 
 
 def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
