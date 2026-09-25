@@ -625,7 +625,6 @@ def widget_data_contract(
     )
     contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
     selector = shared.form_grid(widgets, [
-        widgets.Text(value=env, disabled=True, **shared.widget_common(widgets, "Environment")),
         store_control, schema_control, table_control, contract_control,
     ])
 
