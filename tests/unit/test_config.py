@@ -1624,6 +1624,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         "enabled": True,
         "description_prompt": "describe",
         "sensitive_data_prompt": "sensitive rules",
+        "grain_prompt": GovernanceConfig().ai_enrichment["grain_prompt"],
         "dq_prompt": GovernanceConfig().ai_enrichment["dq_prompt"],
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
