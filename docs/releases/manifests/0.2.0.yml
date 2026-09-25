@@ -175,6 +175,12 @@ functions:
     live_since: 0.1.0
     rationale: Supported notebook setup flow included in the first FabricOps release before the Live read and write functions.
     introduced_in: 0.1.0
+  - name: widget_activate_data_contract
+    qualified_name: fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract
+    source_path: src/fabricops_kit/widgets/widget_activate_data_contract.py
+    documentation_path: docs/api/reference/widget_activate_data_contract.md
+    status: preview
+    introduced_in: 0.2.0
   - name: widget_author_data_contract
     qualified_name: fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract
     source_path: src/fabricops_kit/widgets/widget_author_data_contract.py
