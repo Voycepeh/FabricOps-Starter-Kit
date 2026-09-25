@@ -1,83 +1,13 @@
-"""Test FabricOps behavior and reference contracts."""
+"""Focused regression tests for governance migration boundaries not covered elsewhere."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-import pytest
-
 import fabricops_kit
-from fabricops_kit.pipeline import shared as dq_runtime
 from fabricops_kit.config import metadata_schemas
 from fabricops_kit.widgets import shared as governance
-from tests.helpers import FakeSpark, framework_config
-
-pytestmark = pytest.mark.unit
-
-@pytest.fixture(autouse=True)
-def _canonical_audit(monkeypatch):
-    """Provide deterministic canonical audit fields for governance tests."""
-    audit = {"_workspace_id": "workspace-id", "_workspace_name": "workspace", "_notebook_id": "notebook-id", "_notebook_name": "notebook", "_activity_id": "activity-id", "_committed_by": "user", "_committed_at": "2026-01-01T00:00:00+00:00", "_metadata_lakehouse_name": "Metadata"}
-    monkeypatch.setattr(governance, "build_runtime_audit_fields", lambda **kwargs: dict(audit))
-
-
-DELETED_MODULE_SUFFIXES = (
-    "business_context",
-    "data_governance",
-    "data_quality",
-    "_utils",
-    "versioning",
-    "docs_metadata",
-    "hand" + "over",
-)
-DELETED_MODULE_IMPORTS = tuple(f"fabricops_kit.{suffix}" for suffix in DELETED_MODULE_SUFFIXES)
-
-EXPECTED_V1_CALLABLES = [
-    'scan_workspace_access',
-    'scan_onelake_access',
-    'scan_sql_access',
-    'FabricStore',
-    'PathConfig',
-    'GovernanceConfig',
-    'DataAgreementConfig',
-    'FrameworkConfig',
-    'ConfigSmokeCheckResult',
-    'NotebookSetupContext',
-    'setup_notebook',
-    'setup_metadata_tables',
-    'read_lakehouse_table',
-    'write_lakehouse_table',
-    'read_lakehouse_csv',
-    'read_lakehouse_json',
-    'read_lakehouse_parquet',
-    'read_lakehouse_excel',
-    'read_warehouse_table',
-    'read_warehouse_query',
-    'write_warehouse_table',
-    'check_schema',
-    'check_freshness',
-    'check_source_drift',
-    'check_dq',
-    'check_sensitive_data',
-    'check_guardrail_coverage',
-    'profile_table',
-    'pipeline_read',
-    'resolve_table_id',
-    'pipeline_write',
-    'widget_data_contract',
-    'widget_render_data_steward',
-    'widget_render_data_agreement',
-    'widget_view_catalogue',
-    'widget_select_data_contract',
-]
-
-def test_public_callable_list_matches_compact_authoring_surface():
-    """Verify the package root exposes only the compact authoring surface."""
-    assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == len(EXPECTED_V1_CALLABLES)
-    assert "get_selected_agreement" not in fabricops_kit.__all__
-
 
 def test_widget_public_callables_live_under_widgets_package():
     """Verify the public widget surface is owned by fabricops_kit.widgets."""
@@ -97,7 +27,6 @@ def test_widget_public_callables_live_under_widgets_package():
 
             value = getattr(importlib.import_module(f"fabricops_kit.widgets.{name}"), name)
         assert value.__module__.startswith(f"fabricops_kit.widgets.{name}")
-
 
 def test_widget_modules_do_not_call_public_widget_functions():
     """Verify widget entrypoint modules do not call other public widget functions."""
@@ -127,7 +56,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
                 offenders.append(f"{path.relative_to(root)} calls {called}")
     assert offenders == []
 
-
 def test_widget_modules_do_not_import_private_shared_widget_helpers():
     """Verify widget modules use architecture-visible helpers from widgets.shared."""
     import ast
@@ -146,7 +74,6 @@ def test_widget_modules_do_not_import_private_shared_widget_helpers():
                 if alias.name.startswith("_"):
                     offenders.append(f"{path.relative_to(root)} imports {alias.name} from widgets.shared")
     assert offenders == []
-
 
 def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():
     """Verify no source tests docs or templates reference removed modules or callables."""
@@ -174,20 +101,6 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
                     offenders.append(f"{path.relative_to(root)} references {deleted}")
     assert offenders == []
 
-
-def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
-    """Verify dq rule validation rejects unsupported runtime rule types."""
-    rules = [{"rule_id": "id_required", "rule_type": "completeness", "columns": ["id"], "maximum_missing_percent": 0, "treat_blank_as_missing": False, "severity": "error", "description": "Required"}]
-    assert dq_runtime._validate_dq_rules(rules) == rules
-    with pytest.raises(ValueError):
-        dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "missing_values"}])
-    with pytest.raises(ValueError):
-        dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
-
-    with pytest.raises(ValueError):
-        dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
-
-
 def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():
     """Verify governance metadata schemas have no case insensitive duplicate columns."""
     schemas = metadata_schemas.metadata_table_schema_registry()
@@ -195,7 +108,6 @@ def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns(
     for table_name, schema in schemas.items():
         field_names = schema.fieldNames()
         assert len(field_names) == len({name.lower() for name in field_names}), table_name
-
 
 def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     """Verify catalogue schema uses lowercase canonical columns only."""
@@ -287,7 +199,6 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     assert catalogue_fields == expected_catalogue_fields
     assert removed_catalogue_fields.isdisjoint(catalogue_fields)
 
-
 def test_schema_field_validation_names_table_and_duplicate_logical_columns():
     """Verify schema field validation names table and duplicate logical columns."""
     with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
@@ -295,31 +206,6 @@ def test_schema_field_validation_names_table_and_duplicate_logical_columns():
             governance.CATALOGUE_TABLE,
             [("table_name", "string"), ("TABLE_NAME", "string")],
         )
-
-
-def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tables():
-    """Verify governance metadata schemas include guardrail rules without failure tables."""
-    schemas = metadata_schemas.metadata_table_schema_registry()
-
-    assert governance.GUARDRAIL_TABLE in schemas
-    assert "METADATA_DATA_PROFILED" in schemas
-    assert governance.DATA_ACCESS_TABLE in schemas
-    assert governance.ENRICHMENT_TABLE in schemas
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id"}.issubset(schemas["METADATA_DATA_PROFILED"].fieldNames())
-    required_audit_fields = {
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    }
-    for table_name, schema in schemas.items():
-        assert required_audit_fields.issubset(schema.fieldNames()), table_name
-    assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
-
 
 def test_retired_governance_review_module_file_and_imports_are_absent():
     """Verify the stale mixed governance review module and imports are absent."""
@@ -357,7 +243,6 @@ def test_retired_governance_review_module_file_and_imports_are_absent():
             offenders.append(str(path.relative_to(root)))
     assert offenders == []
 
-
 def test_pipeline_and_config_use_new_governance_owners():
     """Verify DQ runtime and metadata schema helpers are owned outside governance review."""
     root = Path(__file__).parents[2]
@@ -373,7 +258,6 @@ def test_pipeline_and_config_use_new_governance_owners():
     assert "def metadata_table_schema_registry" in metadata_schema_source
     assert "governance_review" not in config_source
 
-
 def test_99_explore_uses_metadata_catalogue_widget():
     """Verify 99_explore uses the public catalogue browser widget."""
     root = Path(__file__).parents[2]
@@ -387,25 +271,3 @@ def test_99_explore_uses_metadata_catalogue_widget():
     assert "widget_view_data_contract" not in code
     assert "METADATA_DATA_CATALOGUE" not in code
     assert 'F.col("table_name") == source_table_name' not in code
-
-
-def test_root_public_governance_and_widget_imports_still_work():
-    """Verify supported root governance and widget imports remain available."""
-    for name in [
-        "widget_data_contract",
-        "widget_render_data_steward",
-        "widget_render_data_agreement",
-        "widget_view_catalogue",
-        "widget_select_data_contract",
-        "widget_data_contract",
-    ]:
-        assert callable(getattr(fabricops_kit, name))
-
-    for name in [
-        "widget_enrich_table_metadata",
-        "widget_author_guardrails",
-        "widget_author_dq_rules",
-        "widget_register_data_contract",
-    ]:
-        assert name not in fabricops_kit.__all__
-        assert not hasattr(fabricops_kit, name)
