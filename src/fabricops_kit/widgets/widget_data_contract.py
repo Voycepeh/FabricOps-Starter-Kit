@@ -1285,14 +1285,82 @@ def widget_data_contract(
         else:
             refresh_frequency = "Unavailable"
 
-        identity = widgets.HTML(
-            "<p><b>{}</b><br>Contract v{} · {}<br>Environment: {}<br>Store: {} · {}</p>".format(
-                html.escape(f"{table.get('schema_name') or ''}.{table.get('table_name') or state['table_id']}"),
-                html.escape(str(row.get("contract_version") or "")), html.escape(str(row.get("status") or "").upper()),
-                html.escape(env), html.escape(str(table.get("store_type") or "Metadata")),
-                html.escape(str(table.get("layer") or "")),
-            )
+        runtime_context = contracts.get_table_runtime_context(
+            config=config, env=env, spark_session=spark,
+            table_id=str(state.get("table_id") or ""),
         )
+
+        def context_timestamp(value: Any) -> str:
+            if isinstance(value, datetime):
+                return value.strftime("%d %b %Y, %H:%M")
+            text = str(value or "").strip()
+            if not text:
+                return "Unknown"
+            try:
+                parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                return parsed.strftime("%d %b %Y, %H:%M")
+            except ValueError:
+                return text
+
+        def runtime_context_html() -> str:
+            profile = runtime_context.get("latest_profile")
+            if profile:
+                environment_name = str(profile.get("environment_name") or "Unknown environment")
+                pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
+                committed_by = str(profile.get("committed_by") or "Unknown")
+                profile_html = (
+                    "<div style='margin-top:14px;'>"
+                    "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Latest profile</div>"
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(environment_name)} · "
+                    f"{html.escape(pipeline_name)}</div>"
+                    f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
+                    f"{html.escape(context_timestamp(profile.get('committed_at')))}</div></div>"
+                )
+            else:
+                profile_html = (
+                    "<div style='margin-top:14px;'>"
+                    "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Latest profile</div>"
+                    "<div style='color:#667085;font-size:12px;margin-top:3px;'>No profile available</div></div>"
+                )
+
+            writer_count = int(runtime_context.get("writer_count") or 0)
+            reader_count = int(runtime_context.get("reader_count") or 0)
+            writer_label = "writer" if writer_count == 1 else "writers"
+            reader_label = "reader" if reader_count == 1 else "readers"
+            lineage_rows = list(runtime_context.get("lineage") or [])
+            if lineage_rows:
+                rows_html = "".join(
+                    "<tr>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('environment_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('relationship') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
+                    "</tr>"
+                    for item in lineage_rows
+                )
+                detail_html = (
+                    "<details style='margin-top:5px;'>"
+                    "<summary style='cursor:pointer;color:#0f6cbd;font-size:12px;'>View lineage</summary>"
+                    "<div style='overflow-x:auto;margin-top:6px;'>"
+                    "<table style='border-collapse:collapse;width:100%;font-size:11px;'>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Environment</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Relationship</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
+                    f"<tbody>{rows_html}</tbody></table></div></details>"
+                )
+            else:
+                detail_html = "<div style='color:#667085;font-size:12px;margin-top:3px;'>No lineage recorded</div>"
+            return (
+                profile_html
+                + "<div style='margin-top:14px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Pipeline usage</div>"
+                f"<div style='font-weight:600;margin-top:3px;'>{writer_count} {writer_label} · "
+                f"{reader_count} {reader_label}</div>"
+                + detail_html
+                + "</div>"
+            )
+
         processing = contracts.contract_processing(row)
         load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
         pipeline_refresh = widgets.HTML(
@@ -1300,33 +1368,7 @@ def widget_data_contract(
             f"{html.escape(load_strategy)}</div><br>"
             + _scheduled_refresh_html(scheduled_refresh)
         )
-        table_summary = widgets.HTML(
-                "<div style='background:#e7f5ef;border-left:4px solid #107c41;"
-                "border-radius:4px;padding:10px 11px;margin-bottom:12px;'>"
-                "<div style='color:#0b5d35;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Governed table</div>"
-                + identity.value
-                + "</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Contract</div>"
-                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
-                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Loading Strategy</div>"
-                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(load_strategy)}</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Refresh Frequency</div>"
-                + f"<div style='color:#172b4d;font-weight:600;margin-top:3px;'>{html.escape(refresh_frequency)}</div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;margin-top:13px;'>Classification</div>"
-                + "<div style='color:#172b4d;font-weight:600;margin-top:3px;'>"
-                + f"{html.escape(str(table_classification.value or 'Not classified'))}</div>"
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Guardrails</div>"
-                + "<div style='margin-top:6px;'>" + guardrail_status_html + "</div>"
-        )
+        table_summary = widgets.HTML()
         table_left = (table_summary, change_table_button)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
@@ -1357,8 +1399,14 @@ def widget_data_contract(
             table_summary.value = (
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Table</div>"
-                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
-                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(str(table.get('schema_name') or ''))}</div>"
+                f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
+                f"{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
+                f"{html.escape(str(table.get('schema_name') or ''))}</div>"
+                f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
+                f"{html.escape(str(row.get('status') or '').upper())}</div>"
+                + runtime_context_html()
+                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
@@ -3085,23 +3133,8 @@ def widget_data_contract(
 
             activate_button.on_click(activate_clicked)
             actions.extend([agreement_id, agreement_version, activate_button])
-        review_left = (
-            widgets.HTML(
-                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Manifest</div>"
-                + "<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
-                + html.escape(
-                    f"{str(table.get('schema_name') or '')}.{str(table.get('table_name') or state.get('table_id') or '')}"
-                )
-                + "</div>"
-                + "<div style='color:#667085;font-size:12px;margin-top:5px;'>"
-                + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
-            ),
-            widgets.HTML(
-                "<div style='color:#667085;font-size:12px;line-height:1.5;margin-top:8px;'>"
-                "Notebook variable<br><b style='color:#172b4d;'>DATA_CONTRACT_MANIFEST</b></div>"
-            ),
-        )
+        review_left = table_left
+
         review_right = (
             shared.form_section(
                 widgets,
