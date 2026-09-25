@@ -767,12 +767,6 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     controls["dq_type"].value = "completeness"
     controls["dq_blank_missing"].value = True
 
-    controls["advanced_type"].value = "column_relationship"
-    assert controls["advanced_enabled"].value is True
-    assert controls["advanced_block"].value is False
-    controls["advanced_columns"].value = ("column_0", "column_1")
-    controls["advanced_block"].value = True
-
     assert widget_runtime["calls"]["guardrails"] == []
     assert state["_pending_guardrails"]
 
@@ -1413,7 +1407,7 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
 
 
 def test_review_sections_render_column_contract_table_with_profile_and_governance():
-    """Render table guardrails, rich column rows, then cross-column Advanced rules."""
+    """Render table guardrails, rich column rows, then Business Rules."""
     payload = {
         "table": {
             "table_name": "orders", "schema_name": "sales",
@@ -1470,8 +1464,8 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert set(sections) == {"Review"}
     review = sections["Review"]
     assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
-    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Advanced rules</b>")
-    assert "<b>Advanced rules</b> · 2 configured" in review
+    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Business Rules</b>")
+    assert "<b>Business Rules</b> · 2 configured" in review
     assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
     assert "Profile evidence" in review
     assert "Min value: <b>CUS-001</b>" in review
@@ -1485,36 +1479,53 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert review.count("<b>Pattern</b>") == 1
 
 
-def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
-    """Advanced families without saved rules never inherit values from another family."""
-    state = widget_runtime["open"]()
+def test_business_rule_resolve_apply_stages_existing_guardrail_model(
+    widget_runtime, monkeypatch
+):
+    """Resolve natural-language intent and Apply it into normal staged Guardrail state."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    controls["top_nav"].value = "Advanced"
 
-    advanced_type = controls["advanced_type"]
-    advanced_saved = controls["advanced_saved"]
-    advanced_columns = controls["advanced_columns"]
-    advanced_operator = controls["advanced_operator"]
-    custom_expression = controls["custom_expression"]
-    custom_description = controls["custom_description"]
-    advanced_enabled = controls["advanced_enabled"]
-    advanced_block = controls["advanced_block"]
+    def resolve(_context, **kwargs):
+        assert kwargs["requirement"] == "End date must be on or after start date."
+        assert kwargs["relevant_columns"] == ["column_0", "column_1"]
+        return {
+            "rule_type": "column_relationship",
+            "columns": ["column_1", "column_0"],
+            "parameters": {
+                "columns": ["column_1", "column_0"],
+                "operator": ">=",
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "rationale": "Direct two-column comparison.",
+            "engineering_review_required": False,
+        }
 
-    advanced_type.value = "column_relationship"
-    advanced_columns.value = tuple(value for _label, value in advanced_columns.options[:2])
-    advanced_operator.value = "!="
-    advanced_enabled.value = True
-    advanced_block.value = True
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    controls["business_saved"].value = ""
+    controls["business_requirement"].value = "End date must be on or after start date."
+    controls["business_columns"].value = ("column_0", "column_1")
+    controls["resolve_business_rule"].click()
 
-    advanced_type.value = "custom_expression"
+    assert "Known FabricOps pattern: Column Relationship" in controls["business_proposal"].value
+    assert "No Engineering review required" in controls["business_proposal"].value
+    assert controls["apply_business_rule"].disabled is False
 
-    if not advanced_saved.options:
-        assert advanced_columns.value == ()
-        assert advanced_operator.value == "="
-        assert custom_expression.value == ""
-        assert custom_description.value == ""
-        assert advanced_enabled.value is False
-        assert advanced_block.value is False
+    controls["apply_business_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "column_relationship"
+        and module._parameters(record).get("business_requirement")
+        == "End date must be on or after start date."
+    )
+    assert staged["guardrail_type"] == "data_quality"
+    assert module._parameters(staged)["operator"] == ">="
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert "Save Data Contract to persist" in state["message"]
 
 
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
