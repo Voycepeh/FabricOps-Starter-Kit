@@ -380,6 +380,13 @@ DEFAULT_AI_ENRICHMENT = {
         "contractual requirements. Do not invent business rules, row keys, relationships, ranges, allowed "
         "values, or executable code. Return structured JSON only; final review belongs to Governance."
     ),
+    "business_rule_prompt": (
+        "Resolve one Governance-authored Business Rule into the smallest deterministic FabricOps Data Quality "
+        "rule that represents the stated requirement. Prefer an existing canonical FabricOps pattern whenever "
+        "one fits exactly. For this authoring surface the supported known pattern is column_relationship; use "
+        "custom_expression only when the requirement cannot be represented as that known pattern. Never invent "
+        "columns or business meaning. Return structured JSON only; final review belongs to Governance."
+    ),
 }
 
 
@@ -433,6 +440,9 @@ class GovernanceConfig:
             ).strip(),
             "grain_prompt": str(ai_enrichment.get("grain_prompt") or "").strip(),
             "pattern_prompt": str(ai_enrichment.get("pattern_prompt") or "").strip(),
+            "business_rule_prompt": str(
+                ai_enrichment.get("business_rule_prompt") or ""
+            ).strip(),
         })
         object.__setattr__(
             self,

@@ -4,7 +4,13 @@ import json
 
 import pytest
 
-from fabricops_kit.widgets.enrichment_shared import build_ai_dq_context, suggest_dq_rules, suggest_grain_key
+from fabricops_kit.widgets.enrichment_shared import (
+    build_ai_business_rule_context,
+    build_ai_dq_context,
+    suggest_business_rule,
+    suggest_dq_rules,
+    suggest_grain_key,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -120,3 +126,95 @@ def test_ai_grain_key_preserves_candidate_and_warns_about_composite_proof():
 
     assert suggest_grain_key(context, prompt="configured", invoke=invoke) == payload
     assert "cannot prove composite uniqueness" in captured["prompt"]
+
+
+def _business_context():
+    return build_ai_business_rule_context({
+        "table_name": "orders",
+        "schema_name": "sales",
+        "layer": "Silver",
+        "table_description": "One row per order",
+        "columns": [
+            {"column_name": "start_date", "data_type": "date", "description": "Start"},
+            {"column_name": "end_date", "data_type": "date", "description": "End"},
+            {"column_name": "status", "data_type": "string", "description": "Status"},
+        ],
+    })
+
+
+def test_business_rule_resolver_prefers_known_column_relationship():
+    """Resolve an exact two-column comparison to the canonical known pattern."""
+    captured = {}
+    payload = {
+        "rule_type": "column_relationship",
+        "columns": ["end_date", "start_date"],
+        "parameters": {"operator": ">="},
+        "rationale": "Direct row-by-row comparison.",
+    }
+
+    def invoke(prompt):
+        captured["prompt"] = prompt
+        return json.dumps(payload)
+
+    result = suggest_business_rule(
+        _business_context(),
+        requirement="End date must be on or after start date.",
+        relevant_columns=["start_date", "end_date"],
+        prompt="Prefer known FabricOps patterns.",
+        invoke=invoke,
+    )
+
+    assert result["rule_type"] == "column_relationship"
+    assert result["engineering_review_required"] is False
+    assert result["parameters"] == {
+        "columns": ["end_date", "start_date"],
+        "operator": ">=",
+        "business_requirement": "End date must be on or after start date.",
+    }
+    assert "Always prefer column_relationship" in captured["prompt"]
+
+
+def test_business_rule_resolver_flags_custom_expression_for_engineering_review():
+    """Keep custom logic in the existing DQ model while marking it for later review."""
+    payload = {
+        "rule_type": "custom_expression",
+        "columns": ["status", "end_date"],
+        "parameters": {
+            "expression_language": "pyspark",
+            "expression": '(F.col("status") != "Closed") | F.col("end_date").isNotNull()',
+        },
+        "rationale": "Conditional relationship.",
+    }
+
+    result = suggest_business_rule(
+        _business_context(),
+        requirement="When status is Closed, end date must be populated.",
+        relevant_columns=["status", "end_date"],
+        prompt="Prefer known FabricOps patterns.",
+        invoke=lambda _prompt: json.dumps(payload),
+    )
+
+    assert result["rule_type"] == "custom_expression"
+    assert result["engineering_review_required"] is True
+    assert result["parameters"]["engineering_review_required"] is True
+    assert result["parameters"]["business_requirement"] == (
+        "When status is Closed, end date must be populated."
+    )
+
+
+def test_business_rule_resolver_rejects_columns_outside_governance_selection():
+    """Relevant-column selection is a hard boundary for the AI proposal."""
+    payload = {
+        "rule_type": "column_relationship",
+        "columns": ["end_date", "status"],
+        "parameters": {"operator": ">="},
+    }
+
+    with pytest.raises(ValueError, match="outside the selected relevant columns"):
+        suggest_business_rule(
+            _business_context(),
+            requirement="End date must be on or after start date.",
+            relevant_columns=["start_date", "end_date"],
+            prompt="configured",
+            invoke=lambda _prompt: json.dumps(payload),
+        )

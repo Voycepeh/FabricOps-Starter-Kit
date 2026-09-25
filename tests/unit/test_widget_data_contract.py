@@ -163,6 +163,7 @@ def widget_runtime(monkeypatch):
         "sensitive_data_prompt": "configured sensitive prompt",
         "grain_prompt": "configured grain prompt",
         "pattern_prompt": "configured pattern prompt",
+        "business_rule_prompt": "configured business rule prompt",
     }
 
     def review(**_kwargs):
@@ -454,7 +455,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Advanced", "Manifest & Freeze")
+    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Business Rules", "Manifest & Freeze")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -471,10 +472,10 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
-    assert controls["advanced_type"].value == "column_relationship"
+    assert controls["business_saved"].value == ""
     assert controls["row_key_columns"].value == ()
-    assert controls["advanced_enabled"].description == "Enabled"
-    assert controls["advanced_block"].description == "Block on failure"
+    assert controls["business_enabled"].description == "Enabled"
+    assert controls["business_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -507,7 +508,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -548,17 +549,17 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    controls["top_nav"].value = "Advanced"
-    assert controls["advanced_type"] in controls["left_pane"].children
-    assert controls["advanced_type"].layout.max_width == "560px"
-    assert controls["advanced_columns"].layout.height == "150px"
-    assert controls["advanced_enabled"].description == "Enabled"
-    assert controls["advanced_block"].description == "Block on failure"
+    controls["top_nav"].value = "Business Rules"
+    assert controls["business_saved"] in controls["left_pane"].children
+    assert controls["business_requirement"].layout.max_width == "760px"
+    assert controls["business_columns"].layout.height == "130px"
+    assert controls["business_enabled"].description == "Enabled"
+    assert controls["business_block"].description == "Block on failure"
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
     assert "Table guardrails" in controls["manifest_preview"].value
     assert "Column definitions and rules" in controls["manifest_preview"].value
-    assert "Advanced rules" in controls["manifest_preview"].value
+    assert "Business Rules" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
@@ -766,12 +767,6 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     controls["dq_type"].value = "completeness"
     controls["dq_blank_missing"].value = True
 
-    controls["advanced_type"].value = "column_relationship"
-    assert controls["advanced_enabled"].value is True
-    assert controls["advanced_block"].value is False
-    controls["advanced_columns"].value = ("column_0", "column_1")
-    controls["advanced_block"].value = True
-
     assert widget_runtime["calls"]["guardrails"] == []
     assert state["_pending_guardrails"]
 
@@ -785,14 +780,6 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
         and module._parameters(record)["treat_blank_as_missing"] is True
         for record in saved
     )
-    assert any(
-        record["rule_type"] == "column_relationship"
-        and module._parameters(record)["columns"] == ["column_0", "column_1"]
-        and record["action"] == "Block"
-        and record["is_active"] is True
-        for record in saved
-    )
-
 
 def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
     """Enable deterministic AI responses for widget interaction tests."""
@@ -865,7 +852,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
-    for label in ("Table", "Columns", "Advanced", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -1412,7 +1399,7 @@ def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, 
 
 
 def test_review_sections_render_column_contract_table_with_profile_and_governance():
-    """Render table guardrails, rich column rows, then cross-column Advanced rules."""
+    """Render table guardrails, rich column rows, then Business Rules."""
     payload = {
         "table": {
             "table_name": "orders", "schema_name": "sales",
@@ -1469,8 +1456,8 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert set(sections) == {"Review"}
     review = sections["Review"]
     assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
-    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Advanced rules</b>")
-    assert "<b>Advanced rules</b> · 2 configured" in review
+    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Business Rules</b>")
+    assert "<b>Business Rules</b> · 2 configured" in review
     assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
     assert "Profile evidence" in review
     assert "Min value: <b>CUS-001</b>" in review
@@ -1484,36 +1471,53 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert review.count("<b>Pattern</b>") == 1
 
 
-def test_advanced_rule_family_switch_clears_stale_editor_values(widget_runtime):
-    """Advanced families without saved rules never inherit values from another family."""
-    state = widget_runtime["open"]()
+def test_business_rule_resolve_apply_stages_existing_guardrail_model(
+    widget_runtime, monkeypatch
+):
+    """Resolve natural-language intent and Apply it into normal staged Guardrail state."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    controls["top_nav"].value = "Advanced"
 
-    advanced_type = controls["advanced_type"]
-    advanced_saved = controls["advanced_saved"]
-    advanced_columns = controls["advanced_columns"]
-    advanced_operator = controls["advanced_operator"]
-    custom_expression = controls["custom_expression"]
-    custom_description = controls["custom_description"]
-    advanced_enabled = controls["advanced_enabled"]
-    advanced_block = controls["advanced_block"]
+    def resolve(_context, **kwargs):
+        assert kwargs["requirement"] == "End date must be on or after start date."
+        assert kwargs["relevant_columns"] == ["column_0", "column_1"]
+        return {
+            "rule_type": "column_relationship",
+            "columns": ["column_1", "column_0"],
+            "parameters": {
+                "columns": ["column_1", "column_0"],
+                "operator": ">=",
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "rationale": "Direct two-column comparison.",
+            "engineering_review_required": False,
+        }
 
-    advanced_type.value = "column_relationship"
-    advanced_columns.value = tuple(value for _label, value in advanced_columns.options[:2])
-    advanced_operator.value = "!="
-    advanced_enabled.value = True
-    advanced_block.value = True
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    controls["business_saved"].value = ""
+    controls["business_requirement"].value = "End date must be on or after start date."
+    controls["business_columns"].value = ("column_0", "column_1")
+    controls["resolve_business_rule"].click()
 
-    advanced_type.value = "custom_expression"
+    assert "Known FabricOps pattern: Column Relationship" in controls["business_proposal"].value
+    assert "No Engineering review required" in controls["business_proposal"].value
+    assert controls["apply_business_rule"].disabled is False
 
-    if not advanced_saved.options:
-        assert advanced_columns.value == ()
-        assert advanced_operator.value == "="
-        assert custom_expression.value == ""
-        assert custom_description.value == ""
-        assert advanced_enabled.value is False
-        assert advanced_block.value is False
+    controls["apply_business_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "column_relationship"
+        and module._parameters(record).get("business_requirement")
+        == "End date must be on or after start date."
+    )
+    assert staged["guardrail_type"] == "data_quality"
+    assert module._parameters(staged)["operator"] == ">="
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert "Save Data Contract to persist" in state["message"]
 
 
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
