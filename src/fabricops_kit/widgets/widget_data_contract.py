@@ -334,7 +334,7 @@ def widget_data_contract(
     top_nav = widgets.ToggleButtons(
         options=_TABS,
         value="Table",
-        layout=widgets.Layout(width="520px"),
+        layout=widgets.Layout(width="720px"),
     )
     left = widgets.VBox(
         layout=widgets.Layout(
@@ -1037,7 +1037,6 @@ def widget_data_contract(
             change_table_button,
         )
         table_right = (
-            ai_startup_controls,
             widgets.VBox(
                 [widgets.HTML("<div style='font-weight:600;'>Classification</div>"), table_classification],
                 layout=widgets.Layout(width="320px", max_width="100%", gap="6px"),
@@ -1877,21 +1876,6 @@ def widget_data_contract(
         )
         view_content["Columns"] = (column_left, column_right)
 
-        def run_with_ai_clicked(_button: Any) -> None:
-            state["_ai_mode"][suggestion_scope] = "with_ai"
-            render()
-            set_status(
-                "AI suggestions enabled for the selected table; columns are evaluated only when opened."
-            )
-
-        def run_without_ai_clicked(_button: Any) -> None:
-            state["_ai_mode"][suggestion_scope] = "without_ai"
-            render()
-            set_status("Contract opened without AI suggestions.")
-
-        run_with_ai.on_click(run_with_ai_clicked)
-        run_without_ai.on_click(run_without_ai_clicked)
-
         if column_options:
             column_select.value = column_options[0][1]
             hydrate_column(str(column_select.value))
@@ -2132,10 +2116,36 @@ def widget_data_contract(
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
 
-    open_button = widgets.Button(description="Open", button_style="primary")
+    open_with_ai_button = widgets.Button(
+        description="Open with AI suggestions",
+        button_style="info",
+        disabled=not bool(ai_enrichment.get("enabled")),
+        layout=widgets.Layout(width="220px"),
+    )
+    open_without_ai_button = widgets.Button(
+        description="Open without AI",
+        button_style="primary",
+        layout=widgets.Layout(width="220px"),
+    )
+    open_progress = widgets.HTML()
+    ai_availability = widgets.HTML(
+        "" if ai_enrichment.get("enabled") else
+        "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
+    )
     change_table_button = widgets.Button(description="Change table")
+    selector_actions = widgets.VBox(
+        [
+            widgets.HBox(
+                [open_with_ai_button, open_without_ai_button],
+                layout=widgets.Layout(width="100%", justify_content="center", gap="12px"),
+            ),
+            ai_availability,
+            open_progress,
+        ],
+        layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
+    )
     selector_panel = widgets.VBox(
-        [selector, widgets.HBox([open_button])],
+        [selector, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
@@ -2208,26 +2218,52 @@ def widget_data_contract(
         value = change.get("new")
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
-    def open_selected(_button: Any) -> None:
+    def open_selected(*, with_ai: bool) -> None:
         selected_table = str(state.get("pending_table_id") or "")
         selected_contract = contract_control.value
         if not selected_table or not selected_contract:
             set_status("Select a governed table and contract before opening.", error=True)
             return
+        open_with_ai_button.disabled = True
+        open_without_ai_button.disabled = True
+        open_progress.value = (
+            "<div style='width:440px;max-width:100%;'>"
+            "<div style='font-size:12px;margin-bottom:4px;'>Opening contract…</div>"
+            "<div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
+            "<div style='width:25%;height:100%;background:#2b88d8;'></div></div></div>"
+        )
         try:
             if selected_contract == "new":
                 state["table_id"] = selected_table
                 new_draft()
             else:
                 select(selected_table, int(selected_contract))
+            scope = (
+                str(state["current"]["contract_id"]),
+                int(state["current"]["contract_version"]),
+            )
+            state["_ai_mode"][scope] = "with_ai" if with_ai else "without_ai"
+            open_progress.value = (
+                "<div style='width:440px;max-width:100%;'>"
+                "<div style='font-size:12px;margin-bottom:4px;'>"
+                + ("Preparing AI suggestions…" if with_ai else "Loading editor…")
+                + "</div><div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
+                "<div style='width:70%;height:100%;background:#2b88d8;'></div></div></div>"
+            )
             render()
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
+            open_progress.value = ""
             set_status(
-                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}."
+                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}"
+                + (" with AI suggestions." if with_ai else " without AI.")
             )
-        except (ValueError, RuntimeError) as exc:
+        except Exception as exc:
+            open_progress.value = ""
             set_status(str(exc), error=True)
+        finally:
+            open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
+            open_without_ai_button.disabled = False
 
     def change_table(_button: Any) -> None:
         state["current"] = None
@@ -2238,7 +2274,8 @@ def widget_data_contract(
         selector_panel.layout.display = ""
         set_status("Select a governed table and contract.")
 
-    open_button.on_click(open_selected)
+    open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
+    open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
     change_table_button.on_click(change_table)
     store_control.observe(refresh_schema_options, names="value")
     schema_control.observe(refresh_table_options, names="value")
@@ -2267,7 +2304,9 @@ def widget_data_contract(
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
         "store": store_control, "schema": schema_control,
-        "open": open_button, "change_table": change_table_button,
+        "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
+        "open": open_without_ai_button, "open_progress": open_progress,
+        "change_table": change_table_button,
     })
     ip.display(page)
     return state
