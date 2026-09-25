@@ -1163,11 +1163,16 @@ def assemble_contract_payload(
     if not processing:
         raise ValueError("Data Contract draft must define a load strategy before it can be frozen.")
     payload = {
-        "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
+        "contract": {
+            "contract_id": contract_id,
+            "contract_version": contract_version,
+            "status": str(draft.get("status") or "draft").lower(),
+        },
         "table": {
             **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
             "columns": column_docs,
             "processing": processing,
+            "processing_source": contract_processing_source(draft),
             **({"scheduled_refresh": canonical_scheduled_refresh(scheduled_refresh)} if scheduled_refresh is not None else {}),
             "writer": {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
@@ -1202,37 +1207,32 @@ def freeze_contract(
     schema: str | None = None,
     scheduled_refresh: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Load, validate, assemble, and freeze one exact authoritative draft version."""
+    """Freeze one already-saved draft; its governed JSON becomes immutable."""
     from delta.tables import DeltaTable
-
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
+    if str(draft.get("environment_name") or "") != str(env):
+        raise ValueError("Draft environment_name must match the authoring environment.")
+    payload = _json_value(
+        draft.get("contract_payload_json"), field="contract_payload_json", default=None
+    )
+    if not isinstance(payload, dict):
+        raise ValueError("Save the Data Contract draft before freezing it.")
+    table = payload.get("table")
+    if not isinstance(table, dict) or str(table.get("table_id") or "") != str(draft.get("table_id") or ""):
+        raise ValueError("Saved Data Contract payload does not match the draft table_id.")
+    validated_processing(dict(table.get("processing") or {}))
+
     runtime_context = {"config": config, "env": env, **dict(context or {})}
-    tables = {
-        name: row_dicts(read_lakehouse_table(
-            name, store=store, schema=schema, spark_session=spark_session,
-            context=runtime_context,
-        ))
-        for name in CONTRACT_SOURCE_TABLES
-    }
-    validate_contract_draft(
-        draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
-        enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
-        environment_name=env,
-    )
-    payload, warnings = assemble_contract_payload(
-        draft=draft, tables=tables, environment_name=env,
-        scheduled_refresh=scheduled_refresh,
-    )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(
         DATA_CONTRACT_TABLE,
-        freeze_contract_record(draft=draft, payload=payload, audit=audit),
+        freeze_contract_record(draft=draft, audit=audit),
     )
     frame = spark_session.createDataFrame(
         [frozen], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]
     )
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+    _, _, _, path = resolve_configured_lakehouse_table(
         store,
         DATA_CONTRACT_TABLE,
         (
@@ -1253,4 +1253,7 @@ def freeze_contract(
         .whenMatchedUpdateAll()
         .execute()
     )
-    return {"contract": frozen, "payload": payload, "warnings": warnings}
+    frozen_payload = _json_value(
+        frozen.get("contract_payload_json"), field="contract_payload_json", default={}
+    )
+    return {"contract": frozen, "payload": frozen_payload, "warnings": []}
