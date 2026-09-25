@@ -10,6 +10,7 @@ from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
+import json
 import math
 from typing import Any
 import uuid
@@ -93,6 +94,12 @@ def create_contract_draft(
         raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple open drafts.")
     if drafts:
         return dict(drafts[0])
+    processing, processing_source = _initial_contract_processing(
+        table_id=str(table_id).strip(),
+        environment_name=env,
+        catalogue_rows=catalogue_rows,
+        contract_rows=owned,
+    )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
@@ -101,6 +108,8 @@ def create_contract_draft(
         "agreement_version": None,
         "table_id": str(table_id).strip(),
         "environment_name": env,
+        "processing_json": json.dumps(processing, sort_keys=True, separators=(",", ":")),
+        "processing_source": processing_source,
         "contract_payload_json": None,
         "status": "draft",
         "is_active": False,
@@ -188,6 +197,142 @@ def _latest(rows: Iterable[Mapping[str, Any]], identity: tuple[str, ...]) -> lis
         if current_rank is None or rank > current_rank:
             selected[key] = row
     return [selected[key] for key in sorted(selected)]
+
+
+def contract_processing(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the processing definition saved on one Data Contract row."""
+    raw = _json_value(record.get("processing_json"), field="processing_json", default=None)
+    if isinstance(raw, dict) and raw:
+        return validated_processing(raw)
+    payload = _json_value(
+        record.get("contract_payload_json"), field="contract_payload_json", default=None
+    )
+    processing = (
+        payload.get("table", {}).get("processing")
+        if isinstance(payload, dict) and isinstance(payload.get("table"), dict)
+        else None
+    )
+    return validated_processing(processing) if isinstance(processing, dict) and processing else {}
+
+
+def _initial_contract_processing(
+    *,
+    table_id: str,
+    environment_name: str,
+    catalogue_rows: Any,
+    contract_rows: Any,
+) -> tuple[dict[str, Any], str]:
+    """Resolve initial draft processing from scan, prior contract, then overwrite."""
+    table_candidates = [
+        row for row in row_dicts(catalogue_rows)
+        if str(row.get("table_id") or "") == table_id
+        and str(row.get("environment_name") or "") == environment_name
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+    ]
+    latest = _latest(table_candidates, ("table_id",))
+    if latest:
+        table = latest[-1]
+        strategy = str(table.get("load_strategy") or "").strip()
+        if strategy:
+            parameters = _json_value(
+                table.get("load_strategy_parameters_json"),
+                field="load_strategy_parameters_json",
+                default={},
+            )
+            if not isinstance(parameters, dict):
+                raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
+            return validated_processing({**parameters, "load_strategy": strategy}), "catalogue"
+
+    previous = sorted(
+        (
+            row for row in row_dicts(contract_rows)
+            if str(row.get("status") or "").lower() != "draft"
+        ),
+        key=lambda row: int(row.get("contract_version") or 0),
+        reverse=True,
+    )
+    for row in previous:
+        processing = contract_processing(row)
+        if processing:
+            return processing, "previous_contract"
+
+    return {"load_strategy": "overwrite"}, "default"
+
+
+def save_contract_processing(
+    *,
+    draft: Mapping[str, Any],
+    processing: Mapping[str, Any],
+    config: Any,
+    env: str,
+    spark_session: Any,
+    context: Mapping[str, Any] | None = None,
+    store: str = "Metadata",
+    schema: str | None = None,
+) -> dict[str, Any]:
+    """Persist editable processing on one exact Data Contract draft."""
+    contract_id, contract_version = validate_contract_identity(
+        draft.get("contract_id"), draft.get("contract_version")
+    )
+    if str(draft.get("status") or "").lower() != "draft":
+        raise ValueError("Only a draft Data Contract version can update processing.")
+    if str(draft.get("environment_name") or "") != str(env):
+        raise ValueError("Draft processing must stay in the authoring environment.")
+
+    normalized = validated_processing(dict(processing))
+    current = contract_processing(draft)
+    source = str(draft.get("processing_source") or "").strip() or "manual"
+    if source == "catalogue" and normalized != current:
+        raise ValueError("Catalogue-resolved processing is read-only in this Data Contract.")
+    if source != "catalogue" and normalized != current:
+        source = "manual"
+
+    runtime_context = {
+        "config": config, "env": env, **dict(context or {}),
+        "_fabricops_suppress_io_log": True,
+    }
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    change = {
+        "contract_id": contract_id,
+        "contract_version": contract_version,
+        "environment_name": env,
+        "processing_json": json.dumps(normalized, sort_keys=True, separators=(",", ":")),
+        "processing_source": source,
+        **audit,
+    }
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - Fabric dependency
+        raise RuntimeError("Delta Lake support is required to save Data Contract processing.") from exc
+    from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
+
+    frame = spark_session.createDataFrame([change])
+    _, _, _, path = resolve_configured_lakehouse_table(
+        store,
+        DATA_CONTRACT_TABLE,
+        metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
+        if store == "Metadata" else schema or configured_lakehouse_schema(config, env, store),
+        context=runtime_context,
+    )
+    update_set = {
+        "processing_json": "source.processing_json",
+        "processing_source": "source.processing_source",
+        **{name: f"source.{name}" for name in audit},
+    }
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(
+            frame.alias("source"),
+            "target.contract_id = source.contract_id "
+            "AND target.contract_version = source.contract_version "
+            "AND target.environment_name = source.environment_name",
+        )
+        .whenMatchedUpdate(set=update_set)
+        .execute()
+    )
+    return {**dict(draft), **change}
 
 
 def _json_safe(value: Any) -> Any:
@@ -918,33 +1063,14 @@ def assemble_contract_payload(
         item["rule_parameters"] = parameters
         guardrail_docs.append(item)
 
-    parameters = _json_value(table.get("load_strategy_parameters_json"), field="load_strategy_parameters_json", default={})
-    if not isinstance(parameters, dict):
-        raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
-    catalogue_load_strategy = str(table.get("load_strategy") or "").strip()
-    if catalogue_load_strategy:
-        try:
-            processing = validated_processing({**parameters, "load_strategy": catalogue_load_strategy})
-        except ValueError as exc:
-            raise ValueError(
-                f"Catalogue processing for table_id {table_id!r} is incomplete or invalid: {exc}"
-            ) from exc
-    else:
-        source_drift_rule = next(
-            (
-                rule for rule in guardrail_docs
-                if str(rule.get("guardrail_type") or "").strip().lower() == "source_drift"
-            ),
-            None,
-        )
-        source_load_strategy = str(
-            ((source_drift_rule or {}).get("rule_parameters") or {}).get("load_strategy") or ""
-        ).strip()
-        processing = (
-            {"load_strategy": source_load_strategy}
-            if source_load_strategy
-            else {}
-        )
+    try:
+        processing = contract_processing(draft)
+    except ValueError as exc:
+        raise ValueError(
+            f"Data Contract processing for table_id {table_id!r} is incomplete or invalid: {exc}"
+        ) from exc
+    if not processing:
+        raise ValueError("Data Contract draft must define a load strategy before it can be frozen.")
     payload = {
         "contract": {"contract_id": contract_id, "contract_version": contract_version, "status": "frozen"},
         "table": {
