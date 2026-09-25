@@ -178,23 +178,106 @@ def _manifest_html(payload: dict[str, Any]) -> str:
     )
 
 
-def _profile_html(profile: dict[str, Any]) -> str:
-    """Render escaped, read-only profile evidence."""
-    if profile.get("kind") == "values":
-        rows = "".join(
-            f"<tr><td>{html.escape(str(item.get('value')))}</td>"
-            f"<td>{html.escape(str(item.get('count')))}</td></tr>"
-            for item in profile.get("values", [])
-        )
-        return f"<h4>Observed values</h4><table>{rows}</table>"
-    if profile.get("kind") == "range":
-        return (
-            "<h4>Observed range</h4><p>Min &nbsp; "
-            f"{html.escape(str(profile.get('min')))}<br>Max &nbsp; "
-            f"{html.escape(str(profile.get('max')))}</p>"
-        )
-    return "<p>No profile values available.</p>"
+def _profile_html(context: dict[str, Any]) -> str:
+    """Render a compact datatype-aware summary of governed profile evidence."""
+    if context.get("kind") == "unavailable":
+        return "<p>No profile values available.</p>"
 
+    profile = dict(context.get("profile") or {})
+    values = list(context.get("values") or [])
+    if not profile:
+        return "<p>No profile values available.</p>"
+
+    def shown(value: Any) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, float):
+            return f"{value:,.3f}".rstrip("0").rstrip(".")
+        return str(value)
+
+    def escaped(value: Any) -> str:
+        return html.escape(shown(value))
+
+    row_count = profile.get("row_count")
+    distinct_count = profile.get("distinct_count")
+    distinct_percent = profile.get("distinct_percent")
+    null_percent = profile.get("null_percent")
+    data_type = str(profile.get("data_type") or "").lower()
+    numeric = any(
+        marker in data_type
+        for marker in ("byte", "short", "int", "long", "float", "double", "decimal")
+    )
+    temporal = "date" in data_type or "timestamp" in data_type
+    boolean = "bool" in data_type
+
+    facts = []
+    if row_count is not None:
+        facts.append(f"{escaped(row_count)} rows")
+    if distinct_count is not None:
+        distinct = f"{escaped(distinct_count)} distinct"
+        if distinct_percent is not None:
+            distinct += f" ({escaped(distinct_percent)}%)"
+        facts.append(distinct)
+    if null_percent is not None:
+        facts.append(f"{escaped(null_percent)}% missing")
+
+    lines = []
+    if facts:
+        lines.append(" · ".join(facts))
+
+    if temporal:
+        if profile.get("min_value") is not None or profile.get("max_value") is not None:
+            lines.append(
+                f"Observed: {escaped(profile.get('min_value'))} to "
+                f"{escaped(profile.get('max_value'))}"
+            )
+    elif numeric:
+        if profile.get("min_value") is not None or profile.get("max_value") is not None:
+            lines.append(
+                f"Range: {escaped(profile.get('min_value'))} to "
+                f"{escaped(profile.get('max_value'))}"
+            )
+        distribution = []
+        if profile.get("median_value") is not None:
+            distribution.append(f"Median {escaped(profile.get('median_value'))}")
+        if (
+            profile.get("percentile_25_value") is not None
+            and profile.get("percentile_75_value") is not None
+        ):
+            distribution.append(
+                "Middle 50% "
+                f"{escaped(profile.get('percentile_25_value'))} to "
+                f"{escaped(profile.get('percentile_75_value'))}"
+            )
+        if profile.get("mean_value") is not None:
+            distribution.append(f"Mean {escaped(profile.get('mean_value'))}")
+        if profile.get("stddev_value") is not None:
+            distribution.append(f"Std dev {escaped(profile.get('stddev_value'))}")
+        if distribution:
+            lines.append(" · ".join(distribution))
+
+    if values:
+        common = []
+        for item in values[:3]:
+            label = escaped(item.get("value"))
+            count = item.get("count")
+            percent = item.get("percent")
+            detail = []
+            if count is not None:
+                detail.append(escaped(count))
+            if percent is not None:
+                detail.append(f"{escaped(percent)}%")
+            common.append(f"{label} ({', '.join(detail)})" if detail else label)
+        prefix = "Values" if boolean else "Common values"
+        lines.append(f"{prefix}: " + ", ".join(common))
+    elif (
+        distinct_percent is not None
+        and float(distinct_percent) >= 80.0
+        and not temporal
+    ):
+        lines.append("Values are highly unique, so common value profiling was skipped.")
+
+    return "<p>" + "<br>".join(lines) + "</p>"
 
 def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
     """Render normalized Scheduled Refresh discovery without exposing API details."""
@@ -1915,10 +1998,16 @@ def widget_data_contract(
                         "classification": column_classification.value,
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
-                            "distinct_count", "distinct_percent", "min_value", "max_value",
+                            "distinct_count", "distinct_percent", "mean_value", "stddev_value",
+                            "min_value", "percentile_25_value", "median_value",
+                            "percentile_75_value", "max_value",
                         ) if profile.get(name) is not None},
                         "frequency_evidence": [
-                            {"value": item.get("value"), "count": item.get("count")}
+                            {
+                                "value": item.get("value"),
+                                "count": item.get("count"),
+                                "percent": item.get("percent"),
+                            }
                             for item in profile_value.get("values", [])[:10]
                         ],
                     }],
