@@ -81,7 +81,9 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
     """Build compact metadata-only evidence for Sensitive Data suggestions."""
     fields = (
         "row_count", "non_null_count", "null_count", "null_percent",
-        "distinct_count", "distinct_percent", "min_value", "max_value",
+        "distinct_count", "distinct_percent", "mean_value", "stddev_value",
+        "min_value", "percentile_25_value", "median_value",
+        "percentile_75_value", "max_value",
     )
     columns = []
     for row in state.get("catalogue_profile_rows", []):
