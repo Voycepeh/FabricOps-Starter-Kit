@@ -27,6 +27,8 @@ _PROFILE_CONTEXT_FIELDS = (
 PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
 STANDARD_DQ_TYPES = frozenset({"completeness", "value_set", "range", "pattern"})
+BUSINESS_RULE_TYPES = frozenset({"column_relationship", "custom_expression"})
+BUSINESS_RULE_OPERATORS = frozenset({"=", "!=", ">", ">=", "<", "<="})
 
 
 def build_ai_enrichment_context(
@@ -403,6 +405,146 @@ def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> No
             raise ValueError("AI pattern parameters are invalid.")
 
 
+def build_ai_business_rule_context(state: dict[str, Any]) -> dict[str, Any]:
+    """Build governed metadata context for one natural-language Business Rule."""
+    columns = []
+    for row in state.get("columns", []):
+        column_name = str(row.get("column_name") or "").strip()
+        if not column_name:
+            continue
+        columns.append({
+            "column_name": column_name,
+            "data_type": str(row.get("data_type") or ""),
+            "description": str(row.get("description") or ""),
+            "classification": str(row.get("classification") or ""),
+        })
+    return {
+        "table_name": str(state.get("table_name") or ""),
+        "schema_name": str(state.get("schema_name") or ""),
+        "layer": str(state.get("layer") or ""),
+        "table_description": str(state.get("table_description") or ""),
+        "table_classification": str(state.get("table_classification") or ""),
+        "columns": columns,
+    }
+
+
+def suggest_business_rule(
+    context: dict[str, Any],
+    *,
+    requirement: str,
+    relevant_columns: list[str] | tuple[str, ...] = (),
+    prompt: str,
+    invoke: Any = None,
+) -> dict[str, Any]:
+    """Resolve one natural-language Business Rule into a canonical Guardrail proposal."""
+    business_requirement = str(requirement or "").strip()
+    if not business_requirement:
+        raise ValueError("Describe what must be true before resolving a Business Rule.")
+    if not str(prompt).strip():
+        raise ValueError("An AI Business Rule prompt is required.")
+
+    allowed_columns = {
+        str(row.get("column_name") or "").strip()
+        for row in context.get("columns", [])
+        if str(row.get("column_name") or "").strip()
+    }
+    selected_columns = [str(name).strip() for name in relevant_columns if str(name).strip()]
+    unknown_selected = sorted(set(selected_columns).difference(allowed_columns))
+    if unknown_selected:
+        raise ValueError(
+            "Business Rule relevant columns contain unknown columns: "
+            + ", ".join(unknown_selected)
+        )
+
+    instruction = f"""${prompt.strip()}
+
+Business requirement:
+${business_requirement}
+
+Relevant columns selected by Governance:
+${json.dumps(selected_columns)}
+
+Return JSON only as one object with rule_type, columns, parameters, rationale.
+Allowed rule_type values: column_relationship, custom_expression.
+Always prefer column_relationship when the requirement is exactly a row-by-row comparison between two columns using =, !=, >, >=, <, or <=.
+Use custom_expression only when column_relationship cannot represent the requirement.
+For column_relationship, return exactly two known columns and parameters containing only operator.
+For custom_expression, return the known columns referenced by the rule and parameters containing expression_language="pyspark" and expression.
+A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), literals, comparisons, &, |, ~, and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, or arbitrary Python calls.
+If Governance selected relevant columns, the proposal may use only those columns.
+Do not convert a multi-column Business Rule into a single-column rule.
+
+Context:
+${json.dumps(context, sort_keys=True, default=str)}"""
+    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    if raw.startswith("~~~"):
+        raw = raw.removeprefix("~~~json").removeprefix("~~~").removesuffix("~~~").strip()
+    try:
+        candidate = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI Business Rule proposal was not valid JSON.") from exc
+    if not isinstance(candidate, dict):
+        raise ValueError("AI Business Rule proposal must be one JSON object.")
+
+    rule_type = str(candidate.get("rule_type") or "").strip()
+    if rule_type not in BUSINESS_RULE_TYPES:
+        raise ValueError(f"AI Business Rule proposal used unsupported rule_type {rule_type!r}.")
+
+    columns = candidate.get("columns")
+    if not isinstance(columns, list) or not columns:
+        raise ValueError("AI Business Rule proposal must reference at least one known column.")
+    normalized_columns = [str(name).strip() for name in columns]
+    if len(set(normalized_columns)) != len(normalized_columns):
+        raise ValueError("AI Business Rule proposal cannot repeat the same column.")
+    if any(name not in allowed_columns for name in normalized_columns):
+        raise ValueError("AI Business Rule proposal referenced an unknown column.")
+    if selected_columns and any(name not in selected_columns for name in normalized_columns):
+        raise ValueError("AI Business Rule proposal used a column outside the selected relevant columns.")
+
+    parameters = dict(candidate.get("parameters") or {})
+    if rule_type == "column_relationship":
+        if len(normalized_columns) != 2:
+            raise ValueError("Column Relationship requires exactly two known columns.")
+        operator = str(parameters.get("operator") or "").strip()
+        if operator not in BUSINESS_RULE_OPERATORS:
+            raise ValueError("Column Relationship proposal used an unsupported operator.")
+        canonical_parameters = {
+            "columns": normalized_columns,
+            "operator": operator,
+            "business_requirement": business_requirement,
+        }
+    else:
+        expression_language = str(parameters.get("expression_language") or "").strip().lower()
+        expression = str(parameters.get("expression") or "").strip()
+        if expression_language != "pyspark":
+            raise ValueError("Custom Expression proposal must use expression_language='pyspark'.")
+        if not expression:
+            raise ValueError("Custom Expression proposal requires a PySpark boolean expression.")
+        lowered = expression.lower()
+        forbidden = (
+            "import ", "exec(", "eval(", "__", "spark.sql", "udf(", "open(",
+            "subprocess", "requests.", "urllib", "os.", "sys.",
+        )
+        if any(token in lowered for token in forbidden):
+            raise ValueError("Custom Expression proposal contains unsupported executable content.")
+        canonical_parameters = {
+            "expression_language": "pyspark",
+            "expression": expression,
+            "business_requirement": business_requirement,
+            "columns": normalized_columns,
+            "engineering_review_required": True,
+        }
+
+    return {
+        "rule_type": rule_type,
+        "columns": normalized_columns,
+        "parameters": canonical_parameters,
+        "business_requirement": business_requirement,
+        "rationale": str(candidate.get("rationale") or "").strip(),
+        "engineering_review_required": rule_type == "custom_expression",
+    }
+
+
 def _rows(value: Any) -> list[dict[str, Any]]:
     """Return row-like values as dictionaries."""
     source = value.collect() if hasattr(value, "collect") else value
@@ -572,9 +714,11 @@ __all__ = [
     "catalogue_table_options",
     "build_ai_enrichment_context",
     "build_ai_dq_context",
+    "build_ai_business_rule_context",
     "latest_enrichment_values",
     "suggest_enrichment",
     "suggest_dq_rules",
+    "suggest_business_rule",
     "build_ai_sensitive_data_context",
     "suggest_sensitive_data",
     "PII_LABELS",
