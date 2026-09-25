@@ -256,7 +256,7 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
     assert "switches only the governed target to Validate mode" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
     assert "Enforce does not need a second branch" in step_4
-    assert "business target remains unchanged" in step_4
+    assert "business target can be written" in step_4
 
 
 def test_02_pipeline_target_validate_mode_exits_before_business_write():
