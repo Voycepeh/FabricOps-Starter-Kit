@@ -621,7 +621,7 @@ def get_contract_authoring_state(
     contract_version: int,
     contract: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Load the governance state needed by a contract editor without UI objects."""
+    """Load one exact Data Contract version for editing or review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
     context = _metadata_io_context(config, env)
     if contract is None:
@@ -654,6 +654,7 @@ def get_contract_authoring_state(
         if not matches:
             raise ValueError("The supplied Data Contract row does not match the requested version.")
         draft = matches[0]
+
     table_id = str(draft.get("table_id") or "")
     catalogue_frame = read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", store="Metadata",
@@ -665,25 +666,38 @@ def get_contract_authoring_state(
         f"table_id = {_sql_literal(table_id)}",
         f"environment_name = {_sql_literal(env)}",
     )
-    enrichment_rows = read_contract_records(
-        ENRICHMENT_TABLE, config=config, env=env, spark_session=spark_session,
-        contract_id=identity, contract_version=version,
+    payload = _json_value(
+        draft.get("contract_payload_json"), field="contract_payload_json", default=None
     )
-    guardrail_rows = read_contract_records(
-        GUARDRAIL_TABLE, config=config, env=env, spark_session=spark_session,
-        contract_id=identity, contract_version=version,
-    )
-    state = validate_contract_draft(
-        draft, catalogue_rows=catalogue_rows,
-        enrichment_rows=enrichment_rows, guardrail_rows=guardrail_rows,
+    if not isinstance(payload, dict):
+        raise ValueError("Data Contract version has no valid canonical payload.")
+    enrichment_rows, guardrail_rows = _payload_authoring_rows(
+        payload,
+        contract_id=identity,
+        contract_version=version,
         environment_name=env,
     )
+    state = {
+        "contract": dict(draft),
+        "contract_id": identity,
+        "contract_version": version,
+        "table_id": table_id,
+        "environment_name": env,
+        "catalogue_rows": [
+            row for row in row_dicts(catalogue_rows)
+            if str(row.get("environment_name") or "") == env
+            and str(row.get("table_id") or "") == table_id
+        ],
+        "enrichment": canonical_enrichment_state(enrichment_rows),
+        "guardrails": guardrail_rows,
+        "payload": payload,
+    }
     state["available_columns"] = [
         dict(row) for row in state["catalogue_rows"]
-        if str(row.get("metadata_level") or "").lower() == "column" and row.get("is_active") is not False
+        if str(row.get("metadata_level") or "").lower() == "column"
+        and row.get("is_active") is not False
     ]
     return state
-
 
 def list_contract_governance_state(
     *, config: Any, env: str, spark_session: Any
@@ -1031,17 +1045,33 @@ def validate_contract_draft(
     }
 
 
-def freeze_contract_record(*, draft: Mapping[str, Any], payload: Mapping[str, Any], audit: Mapping[str, Any]) -> dict[str, Any]:
-    """Build the immutable lifecycle update for one exact draft version."""
-    import json
-
+def freeze_contract_record(
+    *, draft: Mapping[str, Any], audit: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Freeze one saved draft without changing its governed definition."""
     validate_contract_identity(draft.get("contract_id"), draft.get("contract_version"))
     if str(draft.get("status") or "").lower() != "draft":
         raise ValueError("Only a draft Data Contract version can be frozen.")
-    if draft.get("contract_payload_json") not in (None, ""):
-        raise ValueError("Draft Data Contract version already has a canonical payload.")
-    return {**dict(draft), "contract_payload_json": json.dumps(dict(payload), sort_keys=True, separators=(",", ":"), ensure_ascii=False), "status": "frozen", "is_active": False, **dict(audit)}
-
+    payload = _json_value(
+        draft.get("contract_payload_json"), field="contract_payload_json", default=None
+    )
+    if not isinstance(payload, dict):
+        raise ValueError("Save the Data Contract draft before freezing it.")
+    payload = json.loads(json.dumps(payload))
+    payload["contract"] = {
+        "contract_id": str(draft["contract_id"]),
+        "contract_version": int(draft["contract_version"]),
+        "status": "frozen",
+    }
+    return {
+        **dict(draft),
+        "contract_payload_json": json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ),
+        "status": "frozen",
+        "is_active": False,
+        **dict(audit),
+    }
 
 def assemble_contract_payload(
     *,
