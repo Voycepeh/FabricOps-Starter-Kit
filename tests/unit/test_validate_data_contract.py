@@ -68,7 +68,7 @@ def test_validate_mode_accepts_frozen_inactive_exact_version_and_persists_identi
         dataframe=object(), spark_session=Spark(), run_id="run-1", verbose=False,
     )
 
-    assert result["can_activate"] is True
+    assert result["validation_passed"] is True
     assert result["failed_values"] == "caller-owned-details"
     assert (result["table_id"], result["contract_id"], result["contract_version"]) == ("table-a", "contract-a", 2)
     assert result["environment_name"] == environment
@@ -76,18 +76,18 @@ def test_validate_mode_accepts_frozen_inactive_exact_version_and_persists_identi
     assert all(write["table_id"] == "table-a" and write["contract_id"] == "contract-a" for write in writes)
 
 
-def test_block_failure_blocks_validation_while_warn_failure_can_activate(monkeypatch):
+def test_block_failure_fails_validation_while_warn_failure_preserves_success(monkeypatch):
     rules = [{"guardrail_type": "schema", "guardrail_rule_id": "schema-1", "guardrail_version": 1}]
     _install(monkeypatch, rules=rules, schema_status="failed")
     blocked = _validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                      dataframe=object(), spark_session=Spark(), verbose=False)
-    assert blocked["can_activate"] is False
+    assert blocked["validation_passed"] is False
     assert blocked["blocked"] == 1
 
     _install(monkeypatch, rules=rules, schema_status="warning")
     warned = _validate_data_contract(table_id="table-a", contract_id="contract-a", contract_version=2,
                                     dataframe=object(), spark_session=Spark(), verbose=False)
-    assert warned["can_activate"] is True
+    assert warned["validation_passed"] is True
     assert warned["warnings"] == 1
 
 
@@ -104,7 +104,7 @@ def test_enforcement_only_freshness_is_neither_passed_nor_activation_blocking(mo
 
     assert result["passed"] == 2
     assert result["not_applicable"] == 1
-    assert result["can_activate"] is True
+    assert result["validation_passed"] is True
     freshness = next(outcome for outcome in result["outcomes"] if outcome.get("guardrail_type") == "freshness")
     assert freshness["status"] == "not_applicable"
     assert freshness["validation_applicability"] == "enforcement_only"

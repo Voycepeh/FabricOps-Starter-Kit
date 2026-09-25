@@ -15,6 +15,7 @@ from fabricops_kit.config.shared import (
 )
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import resolve_active_data_contract
+from fabricops_kit.pipeline.validate_data_contract import _validate_data_contract
 from fabricops_kit.widgets.shared import (
     form_page,
     form_section,
@@ -136,7 +137,8 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     -------
     dict
         Notebook scope, role-preserving table states, table-scoped execution
-        modes and contract identities, controls, and a ``set_mode`` callable.
+        modes and contract identities, controls, a ``set_mode`` callable, and
+        a ``validate`` operation that evaluates the selected target candidate.
 
     Raises
     ------
@@ -364,7 +366,29 @@ def widget_select_data_contract(*, spark_session=None, context=None):
 
     for table_state in state["tables"].values():
         table_state["enforce_contract"] = table_state.get("selected")
+
+    def validate(
+        *, table_id: str, dataframe, spark_session=None,
+        run_id: str = "", verbose: bool = True,
+    ) -> dict[str, Any]:
+        """Validate the exact frozen candidate selected for one target table."""
+        if table_id not in state["tables"]:
+            raise ValueError("The selected table_id is not linked to the current notebook in METADATA_DATA_LINEAGE.")
+        table_state = state["tables"][table_id]
+        if table_state.get("mode") != "validate":
+            raise ValueError(f"Table {table_id!r} is not configured for validate mode.")
+        return _validate_data_contract(
+            table_id=table_id,
+            contract_id=str(table_state["contract_id"]),
+            contract_version=int(table_state["contract_version"]),
+            dataframe=dataframe,
+            spark_session=spark_session,
+            run_id=run_id,
+            verbose=verbose,
+        )
+
     state["set_mode"] = set_mode
+    state["validate"] = validate
     try:
         widgets = require_ipywidgets()
     except ModuleNotFoundError:

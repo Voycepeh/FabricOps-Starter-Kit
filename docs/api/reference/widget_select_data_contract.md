@@ -12,9 +12,9 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:124`
+`fabricops_kit/widgets/widget_select_data_contract.py:125`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L124-L448">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L125-L472">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -62,11 +62,12 @@ def widget_select_data_contract(*, spark_session=None, context=None)
 
 dict
     Notebook scope, role-preserving table states, table-scoped execution
-    modes and contract identities, controls, and a ``set_mode`` callable.
+    modes and contract identities, controls, a ``set_mode`` callable, and
+    a ``validate`` operation that evaluates the selected target candidate.
 
 ### Return interpretation
 
-Development selections are stored independently under each discovered table_id in data_contract_overrides; Production returns the read-only active mapping and ignores overrides.
+Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; the validate operation evaluates the selected frozen candidate later against the transformed target DataFrame.
 
 ## Raises / Errors
 

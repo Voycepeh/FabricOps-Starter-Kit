@@ -264,11 +264,13 @@ def test_02_pipeline_target_validate_mode_structurally_excludes_business_writes(
             node.func.id for node in ast.walk(ast.Module(body=mode_branch.orelse, type_ignores=[]))
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         }
-        assert "_validate_data_contract" in validate_calls
         assert "pipeline_write" not in validate_calls
         assert "pipeline_write" in enforce_calls
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
         assert 'contract = CONTRACTS["tables"][target_table_id]' in block
+        assert 'validation_result = CONTRACTS["validate"](' in block
+        assert "_validate_data_contract" not in block
+        assert 'validation_result["validation_passed"]' in block
 
 
 def test_02_pipeline_is_full_read_and_full_profile_by_design():

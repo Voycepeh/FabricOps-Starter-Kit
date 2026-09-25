@@ -132,6 +132,30 @@ def test_development_mode_switch_keeps_validation_candidate_out_of_enforcement(m
     assert "table-a" not in state["resolved_contracts"]
 
 
+def test_validation_operation_uses_selected_target_candidate(monkeypatch):
+    """Route later DataFrame validation through the selector's exact candidate state."""
+    _context, state = _render(
+        monkeypatch, [_row(2)], pairs=[("Target", "table-a")],
+    )
+    calls = []
+    monkeypatch.setattr(
+        module,
+        "_validate_data_contract",
+        lambda **kwargs: calls.append(kwargs) or {"validation_passed": True},
+    )
+    state["set_mode"]("table-a", "validate", "contract-table-a", 2)
+
+    result = state["validate"](
+        table_id="table-a", dataframe="target-df", spark_session="spark", run_id="run-1",
+    )
+
+    assert result == {"validation_passed": True}
+    assert calls == [{
+        "table_id": "table-a", "contract_id": "contract-table-a", "contract_version": 2,
+        "dataframe": "target-df", "spark_session": "spark", "run_id": "run-1", "verbose": True,
+    }]
+
+
 def test_initialization_and_deselect_clear_every_runtime_context(monkeypatch):
     """Clear stale overrides symmetrically across explicit, active, and default contexts."""
     explicit = {"data_contract_overrides": {"table-a": {"contract_id": "stale", "contract_version": 1}}}

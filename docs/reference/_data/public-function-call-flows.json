@@ -141,16 +141,6 @@
       "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
     },
     {
-      "function_name": "_validate_data_contract",
-      "inbound_source_references": [],
-      "qualified_name": "fabricops_kit.pipeline.validate_data_contract._validate_data_contract",
-      "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
-      "source_end_line": 224,
-      "source_path": "src/fabricops_kit/pipeline/validate_data_contract.py",
-      "source_start_line": 21,
-      "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
-    },
-    {
       "function_name": "catalogue_table_browser_state",
       "inbound_source_references": [],
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_browser_state",
@@ -11857,23 +11847,28 @@
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "internal_function",
-      "contract_display": "Internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
       "function_name": "_validate_data_contract",
       "function_type": "private_function",
-      "inbound_callers": [],
-      "inbound_source_references": [],
+      "inbound_callers": [
+        "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
+        "fabricops_kit.widgets.widget_select_data_contract::<module>"
+      ],
       "lifecycle_status": "internal",
-      "live_impact_level": "none",
+      "live_impact_level": "preview_only",
       "live_since": null,
-      "public_flow_reachable": false,
+      "public_flow_reachable": true,
       "qualified_name": "fabricops_kit.pipeline.validate_data_contract._validate_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 224,
+      "source_end_line": 210,
       "source_path": "src/fabricops_kit/pipeline/validate_data_contract.py",
       "source_start_line": 21,
       "supports_live_contract": false,
@@ -14901,9 +14896,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._clear_overrides",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 121,
+      "source_end_line": 122,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 99,
+      "source_start_line": 100,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14932,9 +14927,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._contract_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 46,
+      "source_end_line": 47,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 37,
+      "source_start_line": 38,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14961,9 +14956,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._contract_review",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 75,
+      "source_end_line": 76,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 57,
+      "source_start_line": 58,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -14990,9 +14985,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._row_dict",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 34,
+      "source_end_line": 35,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 33,
+      "source_start_line": 34,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -15019,9 +15014,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._set_override",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 96,
+      "source_end_line": 97,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 78,
+      "source_start_line": 79,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -15048,9 +15043,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._validation_contract_options",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 54,
+      "source_end_line": 55,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 49,
+      "source_start_line": 50,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -15080,9 +15075,9 @@
       "release_versions": [
         "0.2.0"
       ],
-      "source_end_line": 448,
+      "source_end_line": 472,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 124,
+      "source_start_line": 125,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -18471,16 +18466,20 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 3,
-      "direct_call_count": 19,
+      "depth": 7,
+      "direct_call_count": 20,
       "discontinued_in": null,
       "examples": ">>> selection = widget_select_data_contract()\n>>> selection[\"set_mode\"](\"table-orders\", \"validate\", \"orders-contract\", 3)",
       "files_touched": [
+        "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_table.py",
+        "src/fabricops_kit/io/read_warehouse_table.py",
         "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/io/write_lakehouse_table.py",
         "src/fabricops_kit/pipeline/shared.py",
+        "src/fabricops_kit/pipeline/validate_data_contract.py",
         "src/fabricops_kit/widgets/shared.py",
         "src/fabricops_kit/widgets/widget_select_data_contract.py"
       ],
@@ -18491,7 +18490,7 @@
       "live_critical_dependencies": [],
       "live_critical_dependency_count": 0,
       "live_since": null,
-      "max_depth": 3,
+      "max_depth": 7,
       "parameters": [
         {
           "description": "Spark session override.",
@@ -18516,8 +18515,8 @@
         {
           "evidence": [
             {
-              "depth": 3,
-              "width": 19
+              "depth": 7,
+              "width": 20
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -18535,19 +18534,19 @@
       "release_versions": [
         "0.2.0"
       ],
-      "returns_documentation": "dict\n    Notebook scope, role-preserving table states, table-scoped execution\n    modes and contract identities, controls, and a ``set_mode`` callable.",
-      "scope": 26,
+      "returns_documentation": "dict\n    Notebook scope, role-preserving table states, table-scoped execution\n    modes and contract identities, controls, a ``set_mode`` callable, and\n    a ``validate`` operation that evaluates the selected target candidate.",
+      "scope": 81,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_select_data_contract(*, spark_session=None, context=None)",
-      "source_end_line": 448,
+      "source_end_line": 472,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 124,
+      "source_start_line": 125,
       "summary": "Select immutable Data Contracts for every table linked to this notebook.",
-      "transitive_function_count": 26,
+      "transitive_function_count": 81,
       "usage_notes": "Every Lineage-linked source remains in ``enforce`` mode. Each target can\nindependently use ``enforce`` or ``validate``. Enforce resolves the\nenvironment's enforceable contract without showing a version picker;\nProduction requires exactly one active version. Target validation exposes\nonly frozen candidates and never installs the candidate as an enforcement\noverride. This widget never activates metadata.",
-      "width": 19
+      "width": 20
     },
     {
       "architecture_classification": "domain_public_api",
@@ -27152,9 +27151,18 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -27163,9 +27171,18 @@
       "violation_types": []
     },
     {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
+      "architecture_signal_details": [
+        "Calls foundational Fabric I/O."
+      ],
+      "architecture_signal_types": [
+        "Type 0"
+      ],
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -29281,6 +29298,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.validate_data_contract._validate_data_contract",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.widgets.shared.form_page",
       "caller_qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
       "violation_details": [],
@@ -29731,14 +29759,14 @@
     "fabricops_kit.widgets.widget_render_data_steward._steward_label"
   ],
   "summary": {
-    "defined_but_not_used_count": 28,
+    "defined_but_not_used_count": 27,
     "defined_function_count": 446,
     "detached_function_count": 43,
     "implicit_runtime_hook_count": 3,
     "public_function_count": 29,
-    "relationship_count": 937,
+    "relationship_count": 938,
     "source_referenced_function_count": 40,
-    "used_function_count": 375
+    "used_function_count": 376
   },
   "used_functions": [
     "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
@@ -30035,6 +30063,7 @@
     "fabricops_kit.pipeline.shared.stage_pipeline_write_observations",
     "fabricops_kit.pipeline.shared.validated_processing",
     "fabricops_kit.pipeline.shared.write_guardrail_result_row",
+    "fabricops_kit.pipeline.validate_data_contract._validate_data_contract",
     "fabricops_kit.widgets.enrichment_shared._rows",
     "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
     "fabricops_kit.widgets.enrichment_shared.build_ai_dq_context",

@@ -53,7 +53,7 @@ def _validate_data_contract(
     -------
     dict
         Exact contract, table, environment, and run identities; aggregate rule
-        counts; individual outcomes; and ``can_activate``. Failed-value
+        counts; individual outcomes; and ``validation_passed``. Failed-value
         DataFrames remain caller-visible and are never written to Metadata.
 
     Raises
@@ -74,20 +74,6 @@ def _validate_data_contract(
     ``not_applicable`` because validation lacks the legitimate enforcement
     pipeline observation or transformation context they require. This
     applicability state is neither a pass nor an activation blocker.
-
-    Examples
-    --------
-    >>> result = validate_data_contract(
-    ...     table_id="lakehouse||silver||dbo||orders",
-    ...     contract_id="4f41a6a0-79ce-4d56-9872-b6775de6bb55",
-    ...     contract_version=2,
-    ... )
-    >>> result["can_activate"]
-    True
-
-    See Also
-    --------
-    check_schema, check_dq
 
     """
     config, env, context = resolve_fabric_context()
@@ -207,7 +193,7 @@ def _validate_data_contract(
         "warnings": warnings,
         "blocked": blocked,
         "not_applicable": not_applicable,
-        "can_activate": bool(outcomes) and blocked == 0,
+        "validation_passed": bool(outcomes) and blocked == 0,
         "status": "passed" if outcomes and blocked == 0 else "failed",
         "outcomes": outcomes,
         "failed_values": failed_values,
@@ -217,7 +203,7 @@ def _validate_data_contract(
         print(f"  Table {table_id}")
         print(f"  Contract {contract['contract_id']} v{contract['contract_version']} | Environment {env}")
         print(
-            f"  Result {'PASS' if result['can_activate'] else 'BLOCK'} | "
+            f"  Result {'PASS' if result['validation_passed'] else 'BLOCK'} | "
             f"passed={passed} warnings={warnings} blocked={blocked} not_applicable={not_applicable}"
         )
         print("  Business data was read only; aggregate evidence was written to METADATA_GUARDRAIL_RESULTS.")
