@@ -2736,6 +2736,11 @@ def widget_data_contract(
             control.observe(sync_dq, names="value")
 
         def refresh_dq_ai_controls(_change: dict[str, Any] | None = None) -> None:
+            if _change and _change.get("old") != _change.get("new"):
+                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
+                dq_suggestion.options = ()
+                dq_suggestion.disabled = True
+                accept_dq_suggestion.disabled = True
             supported = str(dq_type.value or "") in {"pattern", "range"}
             available = bool(
                 editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
