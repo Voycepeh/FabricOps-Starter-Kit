@@ -1386,6 +1386,21 @@ def widget_data_contract(
                 )) or ""),
             )
 
+        def _effective_ai_description(column_id: str) -> str:
+            """Return the freshest Description context for dependent AI suggestions."""
+            description, _classification = _column_editable_values(column_id)
+            suggestion = ai_state["columns"].get(column_id, {}).get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or description)
+            return description
+
+        def _effective_table_ai_description() -> str:
+            """Return the freshest table Description context for dependent AI suggestions."""
+            suggestion = ai_state["table"].get("description", {})
+            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
+                return str(suggestion.get("value") or table_description.value or "")
+            return str(table_description.value or "")
+
         def render_column_ai(column_id: str) -> None:
             suggestions = ai_state["columns"].get(column_id, {})
             if not ai_enrichment.get("enabled"):
@@ -1460,7 +1475,8 @@ def widget_data_contract(
             selected = next(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
-            description, classification = _column_editable_values(column_id)
+            _description, classification = _column_editable_values(column_id)
+            description = _effective_ai_description(column_id)
             try:
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
@@ -1471,7 +1487,7 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": table_description.value,
+                    "table_description": _effective_table_ai_description(),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
@@ -1701,10 +1717,12 @@ def widget_data_contract(
                 profile = dict(profile_value.get("profile") or {})
                 context_payload = build_ai_dq_context({
                     "table_name": table.get("table_name"), "schema_name": table.get("schema_name"),
-                    "layer": table.get("layer"), "table_description": table_description.value,
+                    "layer": table.get("layer"), "table_description": _effective_table_ai_description(),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
-                        **selected, "description": column_description.value,
+                        **selected, "description": _effective_ai_description(
+                            str(selected.get("column_id") or "")
+                        ),
                         "classification": column_classification.value,
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
