@@ -686,7 +686,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
     assert controls["sensitive_treatment"].value == "mask"
-    assert controls["sensitive_action"].value == "Block"
+    assert controls["sensitive_block"].value is True
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
@@ -894,7 +894,7 @@ def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_run
     controls["dq_type"].value = "pattern"
 
     assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
-    assert controls["dq_action"].value == "Warn"
+    assert controls["dq_block"].value is False
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     controls["save_dq"].click()
     assert widget_runtime["calls"]["guardrails"] == []
