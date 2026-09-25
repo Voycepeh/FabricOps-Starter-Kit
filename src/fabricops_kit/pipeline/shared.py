@@ -1879,6 +1879,8 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
     for raw in rules:
         if not isinstance(raw, dict):
             raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
+        if raw.get("is_active", True) is False:
+            continue
         params = raw.get("rule_parameters") or {}
         if not isinstance(params, dict):
             raise ValueError("Active Data Contract Guardrail rule_parameters must be an object.")
