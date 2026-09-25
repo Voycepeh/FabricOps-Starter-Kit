@@ -273,9 +273,14 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
 
     assert "AIPromptConfig" not in source
     assert "ai_prompt_config" not in source
-    assert '"description_prompt"' in source
+    assert '"table_description_prompt"' in source
+    assert '"column_description_prompt"' in source
+    assert '"description_prompt"' not in source
     assert '"classification_prompt"' not in source
     assert '"sensitive_data_prompt"' in source
+    assert '"grain_prompt"' in source
+    assert '"pattern_prompt"' in source
+    assert '"dq_prompt"' not in source
     assert '"enabled": True' in source
     assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
     assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
@@ -1615,17 +1620,20 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         sensitivity_labels=[" Public ", "Restricted"],
         ai_enrichment={
             "enabled": True,
-            "description_prompt": " describe ",
+            "table_description_prompt": " describe table ",
+            "column_description_prompt": " describe column ",
             "sensitive_data_prompt": " sensitive rules ",
+            "pattern_prompt": " pattern rules ",
         },
     )
     assert config.sensitivity_labels == ["Public", "Restricted"]
     assert config.ai_enrichment == {
         "enabled": True,
-        "description_prompt": "describe",
+        "table_description_prompt": "describe table",
+        "column_description_prompt": "describe column",
         "sensitive_data_prompt": "sensitive rules",
         "grain_prompt": GovernanceConfig().ai_enrichment["grain_prompt"],
-        "dq_prompt": GovernanceConfig().ai_enrichment["dq_prompt"],
+        "pattern_prompt": "pattern rules",
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
     default_prompt = GovernanceConfig().ai_enrichment["sensitive_data_prompt"]
