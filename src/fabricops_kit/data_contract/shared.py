@@ -315,7 +315,7 @@ def _payload_authoring_rows(
             separators=(",", ":"),
             default=str,
         )
-        row["is_active"] = True
+        row["is_active"] = bool(item.get("is_active", True))
         guardrail_rows.append(row)
     return enrichment_rows, guardrail_rows
 
@@ -1175,9 +1175,8 @@ def assemble_contract_payload(
     )
     guardrail_docs = []
     for row in guardrails:
-        if row.get("is_active") is not True:
-            continue
         item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "action", "severity"))
+        item["is_active"] = bool(row.get("is_active", True))
         parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
         if not isinstance(parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")
@@ -1226,7 +1225,7 @@ def assemble_contract_payload(
     described = {str(row.get("column_id")) for row in enrichment_docs if row.get("enrichment_type") == "Description"}
     if any(str(row.get("column_id")) not in described for row in column_docs):
         warnings.append("One or more column descriptions are missing.")
-    if not guardrail_docs:
+    if not any(row.get("is_active", True) for row in guardrail_docs):
         warnings.append("No active Guardrails are configured.")
     return payload, warnings
 
