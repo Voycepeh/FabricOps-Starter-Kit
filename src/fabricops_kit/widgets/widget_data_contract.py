@@ -836,6 +836,10 @@ def widget_data_contract(
             options=_CLASSIFICATIONS, value=enrichment_value(enrichments, "table", "Classification"),
             disabled=not editable, **shared.widget_common(widgets, "Classification"),
         )
+        table_description.description = ""
+        table_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
+        table_classification.description = ""
+        table_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
@@ -929,19 +933,19 @@ def widget_data_contract(
 
         def render_table_ai() -> None:
             if not ai_enrichment.get("enabled"):
-                table_description_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
+                table_description_ai.value = "<p>Disabled in 00_env_config.</p>"
             elif not editable:
-                table_description_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
+                table_description_ai.value = "<p>Not run for review-only versions.</p>"
             elif ai_mode != "with_ai":
                 message = (
                     "Skipped for this contract session."
                     if ai_mode == "without_ai"
                     else "Choose Run with AI suggestions above."
                 )
-                table_description_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
+                table_description_ai.value = f"<p>{message}</p>"
             else:
                 table_description_ai.value = _suggestion_html(
-                    "Description", ai_state["table"].get("description")
+                    "Description", ai_state["table"].get("description"), show_heading=False
                 )
             available = (
                 editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
@@ -1370,31 +1374,57 @@ def widget_data_contract(
             ],
             layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
         )
-        table_ai_row = widgets.HBox(
-            [
-                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
-                widgets.VBox(
-                    [
-                        table_description_ai,
-                        shared.action_row(
-                            widgets, [accept_table_description, rerun_table_description]
+        def definition_section(
+            title: str,
+            classification: Any,
+            description: Any,
+            suggestion: Any,
+            accept_button: Any,
+            rerun_button: Any,
+        ) -> Any:
+            """Render the same compact Definition editor for table and column scope."""
+            suggestion_box = widgets.VBox(
+                [
+                    suggestion,
+                    shared.action_row(widgets, [accept_button, rerun_button]),
+                ],
+                layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
+            )
+            return shared.form_section(
+                widgets,
+                title=title,
+                children=[
+                    widgets.GridBox(
+                        [
+                            widgets.HTML("<b>Classification</b>"),
+                            classification,
+                            widgets.HTML(""),
+                            widgets.HTML("<b>Description</b>"),
+                            description,
+                            suggestion_box,
+                        ],
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns=(
+                                "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+                            ),
+                            grid_gap="10px 16px",
+                            align_items="flex-start",
                         ),
-                    ],
-                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
-                ),
-            ],
-            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
+                    ),
+                ],
+            )
+
+        table_definition = definition_section(
+            "Table definition",
+            table_classification,
+            table_description,
+            table_description_ai,
+            accept_table_description,
+            rerun_table_description,
         )
         table_right = (
-            shared.form_section(
-                widgets,
-                title="Table metadata",
-                children=[
-                    table_classification,
-                    table_description,
-                    table_ai_row,
-                ],
-            ),
+            table_definition,
             shared.form_section(
                 widgets,
                 title="Processing",
@@ -1478,22 +1508,37 @@ def widget_data_contract(
         column_option_style = widgets.HTML()
         column_search = widgets.Text(
             placeholder="Search columns",
-            layout=widgets.Layout(width="100%"),
+            layout=widgets.Layout(width="100%", min_width="0", max_width="100%"),
         )
         column_select = widgets.Select(
             options=(),
             rows=8,
-            layout=widgets.Layout(width="100%", height="250px"),
+            layout=widgets.Layout(
+                width="100%", min_width="0", max_width="100%", height="250px"
+            ),
         )
         column_select.add_class("fabricops-contract-columns")
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
+        column_description.description = ""
+        column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
+        column_classification.description = ""
+        column_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         column_description_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Accept", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
+        column_header = widgets.GridBox(
+            [column_context, required],
+            layout=widgets.Layout(
+                width="100%",
+                grid_template_columns="minmax(0, 1fr) 110px",
+                grid_gap="12px",
+                align_items="start",
+            ),
+        )
         datatype_choice = widgets.Dropdown(
             options=(), disabled=not editable,
             **shared.widget_common(widgets, "Contract datatype"),
@@ -1647,13 +1692,17 @@ def widget_data_contract(
             observed_type = str(selected.get("data_type") or "")
             contract_type = str(contracted_types.get(column_id) or observed_type)
             mismatch = bool(contract_type and observed_type and contract_type != observed_type)
+            column_name = html.escape(str(selected.get("column_name") or ""))
             if mismatch:
                 column_context.value = (
-                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
-                    "<p><span style='color:#a4262c;font-weight:700;'>Datatype drift detected</span><br>"
+                    "<div style='min-height:54px;'>"
+                    f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
+                    "<div style='color:#a4262c;font-size:12px;font-weight:700;margin-top:3px;'>"
+                    "Datatype drift detected</div>"
+                    f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
                     f"Contract: <b>{html.escape(contract_type)}</b> · "
-                    f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b><br>"
-                    "Choose which datatype this draft should govern before saving.</p>"
+                    f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b></div>"
+                    "</div>"
                 )
                 datatype_choice.options = (
                     (f"Keep contract · {contract_type}", contract_type),
@@ -1663,9 +1712,11 @@ def widget_data_contract(
                 datatype_choice.layout.display = ""
             else:
                 column_context.value = (
-                    f"<h4>{html.escape(str(selected.get('column_name') or ''))}</h4>"
-                    f"<p>Datatype: <b>{html.escape(contract_type or observed_type)}</b><br>"
-                    f"Required: <b>{'Yes' if column_id in required_columns or selected.get('column_name') in required_columns else 'No'}</b></p>"
+                    "<div style='min-height:54px;'>"
+                    f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
+                    f"<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+                    f"{html.escape(contract_type or observed_type)}</div>"
+                    "</div>"
                 )
                 datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
                 datatype_choice.value = contract_type or observed_type
@@ -1813,14 +1864,20 @@ def widget_data_contract(
 
         column_select.observe(column_changed, names="value")
 
-        def _suggestion_html(label: str, suggestion: dict[str, Any] | None) -> str:
+        def _suggestion_html(
+            label: str,
+            suggestion: dict[str, Any] | None,
+            *,
+            show_heading: bool = True,
+        ) -> str:
+            heading = "<b>AI suggestion</b><br>" if show_heading else ""
             if not suggestion:
-                return "<p><b>AI suggestion</b><br><span style=\"color:#666\">Preparing…</span></p>"
+                return f"<p>{heading}<span style=\"color:#666\">Preparing…</span></p>"
             stale = " · <b>Needs refresh</b>" if suggestion.get("stale") else ""
             error = suggestion.get("error")
             if error:
                 return (
-                    "<p><b>AI suggestion</b><br><span style=\"color:#a4262c\">"
+                    f"<p>{heading}<span style=\"color:#a4262c\">"
                     f"{html.escape(str(error))}</span></p>"
                 )
             value = suggestion.get("value")
@@ -1833,7 +1890,8 @@ def widget_data_contract(
                 )
             else:
                 value = html.escape(str(value or ""))
-            return f"<p><b>AI suggestion</b>{stale}<br>{value}</p>"
+            stale_prefix = stale if show_heading else ("<b>Needs refresh</b><br>" if stale else "")
+            return f"<p>{heading}{stale_prefix}{value}</p>"
 
         def _column_editable_values(column_id: str) -> tuple[str, str]:
             if str(column_select.value or "") == column_id:
@@ -1866,24 +1924,22 @@ def widget_data_contract(
         def render_column_ai(column_id: str) -> None:
             suggestions = ai_state["columns"].get(column_id, {})
             if not ai_enrichment.get("enabled"):
-                disabled_message = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
-                column_description_ai.value = disabled_message
-                sensitive_ai.value = disabled_message
+                column_description_ai.value = "<p>Disabled in 00_env_config.</p>"
+                sensitive_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
             elif not editable:
-                review_message = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
-                column_description_ai.value = review_message
-                sensitive_ai.value = review_message
+                column_description_ai.value = "<p>Not run for review-only versions.</p>"
+                sensitive_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
             elif ai_mode != "with_ai":
                 message = (
                     "Skipped for this contract session."
                     if ai_mode == "without_ai"
                     else "Choose Run with AI suggestions on the Table tab."
                 )
-                column_description_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
+                column_description_ai.value = f"<p>{message}</p>"
                 sensitive_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
             else:
                 column_description_ai.value = _suggestion_html(
-                    "Description", suggestions.get("description")
+                    "Description", suggestions.get("description"), show_heading=False
                 )
                 sensitive_ai.value = _suggestion_html(
                     "Sensitive Data", suggestions.get("sensitive_data")
@@ -2354,33 +2410,17 @@ def widget_data_contract(
         accept_dq_suggestion.on_click(accept_dq_clicked)
         def rebuild_column_options() -> None:
             nonlocal column_options
-            column_options = []
-            required_indexes = []
-            for index, column in enumerate(columns, start=1):
-                cid = str(column.get("column_id") or "")
-                name = str(column.get("column_name") or "")
-                contract_type = str(contracted_types.get(cid) or column.get("data_type") or "")
-                observed_type = str(observed_types.get(cid) or "")
-                is_required = cid in required_columns or name in required_columns
-                drift = contract_type != observed_type
-                marker = " *" if is_required else ""
-                drift_marker = f"  → {observed_type}" if drift else ""
-                column_options.append(
-                    (f"{name}    {contract_type}{drift_marker}{marker}", cid)
+            column_options = [
+                (
+                    str(column.get("column_name") or ""),
+                    str(column.get("column_id") or ""),
                 )
-                if is_required:
-                    required_indexes.append(index)
-            rules = "".join(
-                f".fabricops-contract-columns option:nth-child({index}):not(:checked)"
-                "{color:#0f6cbd;font-weight:600;}"
-                for index in required_indexes
-            )
+                for column in columns
+            ]
             column_option_style.value = (
                 "<style>"
-                + rules
-                + ".fabricops-contract-columns option:checked{"
-                "color:CanvasText !important;font-weight:600;}"
-                + "</style>"
+                ".fabricops-contract-columns option:checked{font-weight:600;}"
+                "</style>"
             )
 
         def refresh_column_options(*_args: Any) -> None:
@@ -2444,8 +2484,7 @@ def widget_data_contract(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Columns</div>"
                 "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Select one column to review metadata, profile evidence, Sensitive Data, "
-                "and Data Quality rules.</div>"
+                "Select a column to review its details and rules.</div>"
             ),
             column_search,
             column_option_style,
@@ -2481,46 +2520,18 @@ def widget_data_contract(
                 ),
             ],
         )
-        column_schema_row = widgets.HBox(
-            [
-                widgets.HTML(
-                    "<div style='color:#253858;font-size:13px;font-weight:600;'>Schema</div>",
-                    layout=widgets.Layout(width="150px", min_width="150px"),
-                ),
-                widgets.VBox(
-                    [required, datatype_choice],
-                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
-                ),
-            ],
-            layout=widgets.Layout(width="100%", gap="12px", align_items="center"),
-        )
-        column_ai_row = widgets.HBox(
-            [
-                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
-                widgets.VBox(
-                    [
-                        column_description_ai,
-                        shared.action_row(
-                            widgets, [accept_column_description, rerun_column_description]
-                        ),
-                    ],
-                    layout=widgets.Layout(width="560px", max_width="100%", gap="6px"),
-                ),
-            ],
-            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
+        column_definition = definition_section(
+            "Column definition",
+            column_classification,
+            column_description,
+            column_description_ai,
+            accept_column_description,
+            rerun_column_description,
         )
         column_right = (
-            column_context,
-            shared.form_section(
-                widgets,
-                title="Column definition",
-                children=[
-                    column_schema_row,
-                    column_classification,
-                    column_description,
-                    column_ai_row,
-                ],
-            ),
+            column_header,
+            datatype_choice,
+            column_definition,
             shared.form_section(
                 widgets,
                 title="Profile evidence",
@@ -2936,6 +2947,7 @@ def widget_data_contract(
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
+            "table_definition": table_definition,
             "table_save": table_save, "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
             "processing_source": processing_source_hint,
@@ -2951,6 +2963,7 @@ def widget_data_contract(
             "rerun_table_description": rerun_table_description,
             "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
+            "column_header": column_header, "column_definition": column_definition,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
