@@ -141,6 +141,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_data_contract",
+        "widget_activate_data_contract",
     }
 
     assert required_functions <= {
