@@ -2,7 +2,8 @@
 
 __all__ = [
     "widget_view_catalogue",
-    "widget_data_contract",\n    "widget_activate_data_contract",
+    "widget_data_contract",
+    "widget_activate_data_contract",
     "widget_select_data_contract",
     "widget_render_data_agreement",
     "widget_render_data_steward",
