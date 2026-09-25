@@ -158,9 +158,11 @@ def widget_runtime(monkeypatch):
     }
     ai_enrichment = {
         "enabled": False,
-        "description_prompt": "configured description prompt",
+        "table_description_prompt": "configured table description prompt",
+        "column_description_prompt": "configured column description prompt",
         "sensitive_data_prompt": "configured sensitive prompt",
-        "dq_prompt": "configured DQ prompt",
+        "grain_prompt": "configured grain prompt",
+        "pattern_prompt": "configured pattern prompt",
     }
 
     def review(**_kwargs):
