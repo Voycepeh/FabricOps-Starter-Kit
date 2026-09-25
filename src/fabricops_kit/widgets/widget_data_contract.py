@@ -1250,29 +1250,6 @@ def widget_data_contract(
                     lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
                 )
 
-        active_guardrails = [rule for rule in guardrails if rule.get("is_active", True)]
-        guardrail_status = {
-            "Schema": any(
-                str(rule.get("guardrail_type") or "").lower() == "schema"
-                for rule in active_guardrails
-            ),
-            "Freshness": bool(table_rules["freshness"]["enabled"].value),
-            "Sensitive Data": any(
-                str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
-                for rule in active_guardrails
-            ),
-            "Source Drift": bool(table_rules["source_drift"]["enabled"].value),
-            "Data Quality": any(
-                str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-                for rule in active_guardrails
-            ),
-        }
-        guardrail_status_html = "".join(
-            "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
-            f"<span style='color:#666'>{html.escape(name)}</span>"
-            f"<span style='font-size:12px;{'color:#0f6cbd;' if enabled else ''}'>{'Enabled' if enabled else 'Disabled'}</span></div>"
-            for name, enabled in guardrail_status.items()
-        )
         schedule_status = str(scheduled_refresh.get("status") or "unavailable")
         if schedule_status == "configured" and scheduled_refresh.get("schedules"):
             first_schedule = scheduled_refresh["schedules"][0]
