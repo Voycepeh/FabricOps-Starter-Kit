@@ -45,8 +45,7 @@ def _portable_python_source(source: str) -> str | None:
     if any(line.lstrip().startswith("%%") for line in lines):
         return None
     portable_lines = [line for line in lines if not line.lstrip().startswith(("%", "!"))]
-    return "
-".join(portable_lines).strip() or "pass"
+    return "\n".join(portable_lines).strip() or "pass"
 
 
 def _parse_code_cell(path: Path, cell_index: int, source: str) -> ast.Module | None:
@@ -118,8 +117,7 @@ def test_template_notebook_fabricops_public_references_exist(notebook_path: Path
 
 def _notebook_source(notebook_name: str) -> str:
     notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
-    return "
-".join(cell.source for cell in notebook.cells)
+    return "\n".join(cell.source for cell in notebook.cells)
 
 
 def test_official_governance_workflow_inventory():
@@ -296,8 +294,7 @@ def test_02_pipeline_target_validate_mode_exits_before_business_write():
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
     """The default pipeline reads and profiles complete governed sources."""
     source = _notebook_source("02_pipeline.ipynb")
-    code = "
-".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    code = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert "full refresh pipeline template" in source.lower()
     assert "full read → transform → full overwrite" in source
     assert code.count('READ_MODE = "full"') == 3
@@ -505,8 +502,7 @@ def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
 def test_02B_incremental_append_pipeline_is_target_aware_and_mixed_mode():
     """The 02B variant keeps one incremental driver and one full supporting source."""
     source = _notebook_source("02B_incremental_append_pipeline.ipynb")
-    code = "
-".join(
+    code = "\n".join(
         source
         for _, source in _code_cells(NOTEBOOK_DIR / "02B_incremental_append_pipeline.ipynb")
     )
