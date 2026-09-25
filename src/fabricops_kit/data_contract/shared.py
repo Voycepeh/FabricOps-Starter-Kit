@@ -852,6 +852,7 @@ def get_table_runtime_context(
         default=None,
     )
     latest_profile = None
+    latest_profile_rows: list[dict[str, Any]] = []
     if latest_profile_row is not None:
         latest_profile = {
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
@@ -864,6 +865,33 @@ def get_table_runtime_context(
             "committed_by": str(latest_profile_row.get("_committed_by") or ""),
             "committed_at": latest_profile_row.get("_committed_at"),
         }
+        snapshot_id = str(latest_profile_row.get("profile_snapshot_id") or "")
+        if snapshot_id:
+            latest_profile_rows = [
+                row for row in profiled
+                if str(row.get("profile_snapshot_id") or "") == snapshot_id
+            ]
+        else:
+            latest_profile_rows = [
+                row for row in profiled
+                if str(row.get("environment_name") or "")
+                == str(latest_profile_row.get("environment_name") or "")
+                and str(row.get("_committed_at") or "")
+                == str(latest_profile_row.get("_committed_at") or "")
+                and str(row.get("_activity_id") or "")
+                == str(latest_profile_row.get("_activity_id") or "")
+            ]
+
+    profile_fields = (
+        "data_type", "row_count", "null_count", "null_percent",
+        "distinct_count", "distinct_percent", "min_value", "max_value",
+    )
+    column_profiles = {
+        str(row.get("column_id")): {
+            name: row.get(name) for name in profile_fields if row.get(name) is not None
+        }
+        for row in latest_profile_rows if str(row.get("column_id") or "")
+    }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for row in table_rows("METADATA_DATA_LINEAGE"):
@@ -910,6 +938,7 @@ def get_table_runtime_context(
     }
     return {
         "latest_profile": latest_profile,
+        "column_profiles": column_profiles,
         "writer_count": len(writers),
         "reader_count": len(readers),
         "lineage": lineage,
