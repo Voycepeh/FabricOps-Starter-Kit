@@ -388,18 +388,30 @@ def test_profile_context_renders_compact_datatype_aware_evidence():
     numeric = module._profile_html({
         "kind": "profile",
         "profile": {
-            "data_type": "double", "row_count": 120, "null_percent": 0.0,
-            "distinct_count": 100, "distinct_percent": 83.333,
+            "data_type": "double", "row_count": 120, "null_count": 0,
+            "null_percent": 0.0, "distinct_count": 100, "distinct_percent": 83.333,
             "mean_value": 237.42, "stddev_value": 281.16,
             "min_value": "29.9", "percentile_25_value": 89.0,
             "median_value": 149.0, "percentile_75_value": 399.0, "max_value": "1299.0",
         },
         "values": [{"value": "<Ready>", "count": 15, "percent": 12.5}],
     })
-    assert "120 rows" in numeric
-    assert "Range: 29.9 to 1299.0" in numeric
-    assert "Median 149" in numeric and "Std dev 281.16" in numeric
-    assert "&lt;Ready&gt; (15, 12.5%)" in numeric
+    assert "Row count: <b>120</b>" in numeric
+    assert "Distinct count: <b>100</b>" in numeric
+    assert "Distinct percent: <b>83.333%</b>" in numeric
+    assert "Null count: <b>0</b>" in numeric
+    assert "Null percent: <b>0%</b>" in numeric
+    assert "Min value: <b>29.9</b>" in numeric
+    assert "Max value: <b>1299.0</b>" in numeric
+    assert "Median value: <b>149</b>" in numeric
+    assert "Percentile 25 value: <b>89</b>" in numeric
+    assert "Percentile 75 value: <b>399</b>" in numeric
+    assert "Mean value: <b>237.42</b>" in numeric
+    assert "Stddev value: <b>281.16</b>" in numeric
+    assert "Value: <b>&lt;Ready&gt;</b>" in numeric
+    assert "Count: <b>15</b>" in numeric
+    assert "Percent: <b>12.5%</b>" in numeric
+    assert "<b>Row count</b>" not in numeric
 
     high_cardinality = module._profile_html({
         "kind": "profile",
@@ -410,7 +422,7 @@ def test_profile_context_renders_compact_datatype_aware_evidence():
         "values": [],
     })
     assert "highly unique" in high_cardinality
-    assert "common value profiling was skipped" in high_cardinality
+    assert "value frequency profiling was skipped" in high_cardinality
     assert "No profile values available" in module._profile_html({"kind": "unavailable"})
 
 
@@ -462,7 +474,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:4]] == [
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table metadata</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
@@ -1407,26 +1419,45 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     assert "ACTIVE" in state["message"]
 
 
-def test_required_checkbox_updates_column_list_feedback_immediately(widget_runtime):
-    """Required state is visible in the left column list before final persistence."""
+def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
+    """Required state belongs in the fixed column header, not the navigation list."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_select"].value = "col-1"
 
-    assert not any(
-        label.rstrip().endswith("*")
-        for label, value in controls["column_select"].options
-        if value == "col-1"
+    label = next(
+        label for label, value in controls["column_select"].options if value == "col-1"
     )
+    assert label == "column_1"
 
     controls["required"].value = True
 
     label = next(
         label for label, value in controls["column_select"].options if value == "col-1"
     )
-    assert label.rstrip().endswith("*")
-    assert "#0f6cbd" in controls["column_option_style"].value
+    assert label == "column_1"
+    assert controls["column_header"].layout.grid_template_columns == "minmax(0, 1fr) 110px"
     assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_table_and_column_definitions_share_compact_layout(widget_runtime):
+    """Table and column definitions use the same compact aligned editor grid."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    expected = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+    assert controls["table_definition"].children[1].layout.grid_template_columns == expected
+    assert controls["column_definition"].children[1].layout.grid_template_columns == expected
+    assert controls["table_classification"].layout.width == "250px"
+    assert controls["column_classification"].layout.width == "250px"
+    assert controls["column_search"].layout.width == "100%"
+    assert controls["column_select"].layout.width == "100%"
+    assert all(
+        label == f"column_{index}"
+        for index, (label, _value) in enumerate(controls["column_select"].options)
+    )
+    assert "color:#0f6cbd;font-size:20px" in controls["column_context"].value
+    assert "Required:" not in controls["column_context"].value
 
 
 def test_table_classification_updates_left_summary_immediately(widget_runtime):
@@ -1457,7 +1488,8 @@ def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
     controls["datatype_choice"].value = "string"
 
     assert state["dirty"] is True
-    assert "Datatype: <b>string</b>" in controls["column_context"].value
+    assert "Datatype drift detected" not in controls["column_context"].value
+    assert ">string</div>" in controls["column_context"].value
     assert controls["datatype_choice"].layout.display == "none"
     payload = json.loads(state["current"]["contract"]["contract_payload_json"])
     selected = next(item for item in payload["table"]["columns"] if item["column_id"] == "col-0")
