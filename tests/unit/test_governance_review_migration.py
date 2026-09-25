@@ -5,9 +5,22 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import fabricops_kit
 from fabricops_kit.config import metadata_schemas
 from fabricops_kit.widgets import shared as governance
+
+DELETED_MODULE_SUFFIXES = (
+    "business_context",
+    "data_governance",
+    "data_quality",
+    "_utils",
+    "versioning",
+    "docs_metadata",
+    "hand" + "over",
+)
+
 
 def test_widget_public_callables_live_under_widgets_package():
     """Verify the public widget surface is owned by fabricops_kit.widgets."""
