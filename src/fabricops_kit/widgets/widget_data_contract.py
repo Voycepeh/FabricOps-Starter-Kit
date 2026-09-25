@@ -629,6 +629,8 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
+        if state.get("dirty"):
+            raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
             draft=current["contract"], config=config, env=env,
             spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
