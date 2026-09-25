@@ -1966,15 +1966,20 @@ def widget_data_contract(
                     context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or "")
                 )
                 if len(result) != 1:
-                    raise ValueError("AI Sensitive Data response must assess the selected column once.")
+                    selected_name = str(selected.get("column_name") or column_id)
+                    raise ValueError(
+                        f"No Sensitive Data assessment matched {selected_name!r}."
+                    )
                 suggestions["sensitive_data"] = {**result[0], "stale": False}
                 ai_errors.pop((column_id, "sensitive_data"), None)
             except (TypeError, ValueError, RuntimeError) as exc:
                 message = str(exc)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "sensitive_data")] = message
+                selected_name = str(selected.get("column_name") or column_id)
                 set_status(
-                    f"Sensitive Data AI unavailable for this column: {message}", warning=True
+                    f"Sensitive Data AI suggestion skipped for {selected_name}: {message}",
+                    warning=True,
                 )
             render_column_ai(column_id)
 
