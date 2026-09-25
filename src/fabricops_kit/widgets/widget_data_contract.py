@@ -93,11 +93,12 @@ def _latest(rows: list[dict[str, Any]], *identity: str) -> list[dict[str, Any]]:
 
 
 def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
-    """Build bounded, human-readable manifest review sections."""
+    """Build one scannable manifest review page with expandable rule detail."""
     table = payload.get("table", {})
     contract = payload.get("contract", {})
     enrichments = payload.get("enrichment", {})
     guardrails = payload.get("guardrails", [])
+    columns = table.get("columns", [])
     description_by_column = {
         str(row.get("column_id") or ""): str(row.get("value") or "")
         for row in enrichments.get("columns", [])
@@ -107,22 +108,14 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
     for rule in guardrails:
         if str(rule.get("guardrail_type") or "").lower() == "schema" and rule.get("is_active", True):
             required.update(_parameters(rule).get("required_columns", []))
-    column_rows = "".join(
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-            html.escape(str(row.get("column_name") or "")),
-            html.escape(str(row.get("data_type") or "")),
-            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
-            html.escape(description_by_column.get(str(row.get("column_id") or ""), "")),
-        )
-        for row in table.get("columns", [])
-    )
+
     def rule_list(rows: list[dict[str, Any]]) -> str:
         items = "".join(
             "<li><b>{}</b> · {} · {} · {}</li>".format(
-            html.escape(str(row.get("rule_type") or row.get("guardrail_type") or "")),
-            html.escape(str(row.get("column_id") or "table")),
-            html.escape(str(row.get("action") or "Warn")),
-            html.escape(json.dumps(_parameters(row), sort_keys=True, default=str)),
+                html.escape(str(row.get("rule_type") or row.get("guardrail_type") or "")),
+                html.escape(str(row.get("column_id") or "table")),
+                html.escape(str(row.get("action") or "Warn")),
+                html.escape(json.dumps(_parameters(row), sort_keys=True, default=str)),
             )
             for row in rows
         ) or "<li>None configured</li>"
@@ -137,37 +130,55 @@ def _manifest_sections(payload: dict[str, Any]) -> dict[str, str]:
         and not str(row.get("column_id") or "")
     ]
     column_guardrails = [row for row in active if str(row.get("column_id") or "")]
-    composite = [row for row in table_dq if str(row.get("rule_type") or "") == "uniqueness"]
-    relationships = [row for row in table_dq if str(row.get("rule_type") or "") == "column_relationship"]
-    custom = [row for row in table_dq if str(row.get("rule_type") or "") == "custom_expression"]
-    return {
-        "Identity": (
-            f"<h3>Identity</h3><p><b>{html.escape(str(table.get('schema_name') or ''))}."
-            f"{html.escape(str(table.get('table_name') or ''))}</b></p>"
-            f"<p>Contract v{html.escape(str(contract.get('contract_version') or ''))} · "
-            f"{html.escape(str(contract.get('status') or '').upper())}</p>"
-        ),
-        "Table": (
-            "<h3>Table</h3><p><b>Load strategy:</b> "
-            f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}</p>"
-            + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
-            + f"<h4>Freshness</h4>{rule_list(freshness)}"
-            + f"<h4>Source Drift</h4>{rule_list(source_drift)}"
-            + f"<h4>Data Quality · Composite Uniqueness</h4>{rule_list(composite)}"
-            + f"<h4>Data Quality · Column Relationships</h4>{rule_list(relationships)}"
-            + f"<h4>Data Quality · Custom Expressions</h4>{rule_list(custom)}"
-        ),
-        "Columns": (
-            "<h3>Columns</h3><table><thead><tr><th>Column</th><th>Datatype</th>"
-            f"<th>Required</th><th>Description</th></tr></thead><tbody>{column_rows}</tbody></table>"
-            f"<h4>Column Guardrails</h4>{rule_list(column_guardrails)}"
-        ),
-        "Lifecycle / Agreement state": (
-            "<h3>Lifecycle / Agreement state</h3><p>Status: "
-            f"<b>{html.escape(str(contract.get('status') or '').upper())}</b></p>"
-        ),
-    }
-
+    advanced = [
+        row for row in table_dq
+        if str(row.get("rule_type") or "") in {"uniqueness", "column_relationship", "custom_expression"}
+    ]
+    blocking = [row for row in active if str(row.get("action") or "").lower() == "block"]
+    required_count = sum(
+        1 for row in columns
+        if row.get("column_id") in required or row.get("column_name") in required
+    )
+    column_rows = "".join(
+        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            html.escape(str(row.get("column_name") or "")),
+            html.escape(str(row.get("data_type") or "")),
+            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
+            html.escape(description_by_column.get(str(row.get("column_id") or ""), "")),
+        )
+        for row in columns
+    )
+    summary = (
+        "<h3>Contract summary</h3>"
+        "<div style='display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin:10px 0 16px;'>"
+        f"<div><b>{len(columns)}</b><br><span>Columns</span></div>"
+        f"<div><b>{required_count}</b><br><span>Required</span></div>"
+        f"<div><b>{len(active)}</b><br><span>Active guardrails</span></div>"
+        f"<div><b>{len(blocking)}</b><br><span>Blocking rules</span></div></div>"
+        "<p><b>Load strategy:</b> "
+        f"{html.escape(str(table.get('processing', {}).get('load_strategy') or 'Not configured').upper())}"
+        " &nbsp; <b>Status:</b> "
+        f"{html.escape(str(contract.get('status') or '').upper())}</p>"
+        + _scheduled_refresh_html(table.get("scheduled_refresh", {}))
+        + f"<p><b>Freshness:</b> {len(freshness)} configured &nbsp; "
+        f"<b>Source drift:</b> {len(source_drift)} configured &nbsp; "
+        f"<b>Column rules:</b> {len(column_guardrails)} &nbsp; "
+        f"<b>Advanced rules:</b> {len(advanced)}</p>"
+    )
+    details = (
+        "<details><summary><b>Column definitions and rules</b> · "
+        f"{len(columns)} columns, {len(column_guardrails)} column rules</summary>"
+        "<table><thead><tr><th>Column</th><th>Datatype</th><th>Required</th><th>Description</th>"
+        f"</tr></thead><tbody>{column_rows}</tbody></table>"
+        f"<h4>Column guardrails</h4>{rule_list(column_guardrails)}</details>"
+        "<details><summary><b>Table guardrails</b> · "
+        f"{len(freshness) + len(source_drift)} configured</summary>"
+        f"<h4>Freshness</h4>{rule_list(freshness)}"
+        f"<h4>Source Drift</h4>{rule_list(source_drift)}</details>"
+        "<details><summary><b>Advanced rules</b> · "
+        f"{len(advanced)} configured</summary>{rule_list(advanced)}</details>"
+    )
+    return {"Review": summary + details}
 
 def _manifest_html(payload: dict[str, Any]) -> str:
     """Render the human and exact JSON views from the same canonical dictionary."""
@@ -2246,17 +2257,13 @@ def widget_data_contract(
         view_content["Advanced"] = (advanced_left, advanced_right)
 
 
-        # Manifest: compact navigation and bounded selected-section review.
+        # Manifest: one scannable review page with expandable detail.
         payload = state.get("manifest") or {}
         sections = _manifest_sections(payload)
-        manifest_nav = widgets.Select(options=list(sections), **shared.widget_common(widgets, "Section"))
-        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="360px")
-
-        def manifest_section_changed(change: dict[str, Any]) -> None:
-            manifest_preview.value = sections.get(str(change.get("new") or ""), "")
-
-        manifest_nav.observe(manifest_section_changed, names="value")
-        manifest_preview.value = sections.get(str(manifest_nav.value or ""), "")
+        manifest_preview = widgets.HTML(
+            value=sections["Review"],
+            layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+        )
         exact_json = shared.preview_region(
             widgets, widgets.HTML(
                 f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
@@ -2370,11 +2377,7 @@ def widget_data_contract(
                 + "</div>"
                 + "<div style='color:#667085;font-size:12px;margin-top:5px;'>"
                 + f"v{row['contract_version']} · {html.escape(str(row.get('status') or '').upper())}</div>"
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='color:#667085;font-size:10px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Sections</div>"
             ),
-            manifest_nav,
             widgets.HTML(
                 "<div style='color:#667085;font-size:12px;line-height:1.5;margin-top:8px;'>"
                 "Notebook variable<br><b style='color:#172b4d;'>DATA_CONTRACT_MANIFEST</b></div>"
