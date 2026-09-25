@@ -1134,7 +1134,7 @@ def widget_data_contract(
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
-        sensitive_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
@@ -1166,7 +1166,8 @@ def widget_data_contract(
             dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
-        dq_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        dq_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         dq_usage = widgets.HTML()
         save_column_enrichment = widgets.Button(description="Apply enrichment", button_style="primary", disabled=not editable)
         save_column = widgets.Button(
@@ -1210,7 +1211,7 @@ def widget_data_contract(
                 "pii_type": pii_type.value,
                 "pii_reason": pii_reason.value,
                 "sensitive_treatment": sensitive_treatment.value,
-                "sensitive_action": sensitive_action.value,
+                "sensitive_block": sensitive_block.value,
                 "mask_start": mask_start.value,
                 "mask_end": mask_end.value,
                 "mask_character": mask_character.value,
@@ -1218,7 +1219,8 @@ def widget_data_contract(
                 "bucket_labels": bucket_labels.value,
                 "dq_type": dq_type.value,
                 "dq_parameters": [control.value for control in dq_parameter_controls],
-                "dq_action": dq_action.value,
+                "dq_enabled": dq_enabled.value,
+                "dq_block": dq_block.value,
             }
 
         def hydrate_dq_family(column_id: str, kind: str) -> None:
@@ -1232,7 +1234,8 @@ def widget_data_contract(
             dq_maximum.value = ""
             dq_maximum_inclusive.value = True
             dq_pattern.value = ""
-            dq_action.value = "Warn"
+            dq_enabled.value = False
+            dq_block.value = False
             rule = next((
                 row for row in guardrails
                 if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -1251,7 +1254,8 @@ def widget_data_contract(
             dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
             dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
             dq_pattern.value = str(params.get("pattern") or "")
-            dq_action.value = str(rule.get("action") or "Warn")
+            dq_enabled.value = bool(rule and rule.get("is_active", True))
+            dq_block.value = str(rule.get("action") or "Warn") == "Block"
 
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
@@ -1272,7 +1276,7 @@ def widget_data_contract(
             pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
             sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
             sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
-            sensitive_action.value = str(sensitive.get("action") or "Warn")
+            sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
             mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
             mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
             mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
@@ -1297,7 +1301,7 @@ def widget_data_contract(
                 pii_type.value = pending["pii_type"]
                 pii_reason.value = pending["pii_reason"]
                 sensitive_treatment.value = pending["sensitive_treatment"]
-                sensitive_action.value = pending["sensitive_action"]
+                sensitive_block.value = pending["sensitive_block"]
                 mask_start.value = pending["mask_start"]
                 mask_end.value = pending["mask_end"]
                 mask_character.value = pending["mask_character"]
@@ -1306,7 +1310,8 @@ def widget_data_contract(
                 dq_type.value = pending["dq_type"]
                 for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
                     control.value = value
-                dq_action.value = pending["dq_action"]
+                dq_enabled.value = pending["dq_enabled"]
+                dq_block.value = pending["dq_block"]
             profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
             hydrating["active"] = False
 
@@ -1362,7 +1367,7 @@ def widget_data_contract(
             if not is_pii:
                 sensitive_enabled.value = False
             sensitive_treatment.disabled = not editable or not is_pii
-            sensitive_action.disabled = not editable or not is_pii
+            sensitive_block.disabled = not editable or not is_pii
             update_sensitive_fields()
 
         pii_type.observe(update_pii_fields, names="value")
@@ -1563,7 +1568,7 @@ def widget_data_contract(
             pii_reason.value = str(suggestion["reason"])
             sensitive_enabled.value = suggestion["pii_type"] != "none"
             sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
-            sensitive_action.value = str(suggestion.get("action") or "Warn")
+            sensitive_block.value = str(suggestion.get("action") or "Warn") == "Block"
             parameters = suggestion.get("parameters", {})
             mask_start.value = str(parameters.get("preserve_start", 0))
             mask_end.value = str(parameters.get("preserve_end", 0))
@@ -1678,7 +1683,8 @@ def widget_data_contract(
                 })
             return guardrail_record(
                 "sensitive_data", str(sensitive_treatment.value), parameters, column_id=cid,
-                action=str(sensitive_action.value), existing=existing, active=sensitive_enabled.value,
+                action="Block" if sensitive_block.value else "Warn",
+                existing=existing, active=sensitive_enabled.value,
             )
 
         def save_sensitive_clicked(_button: Any) -> None:
@@ -1722,7 +1728,8 @@ def widget_data_contract(
                 existing = next((r for r in session_guardrails() if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"} and str(r.get("column_id") or "") == cid and str(r.get("rule_type") or "") == kind), {})
                 stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
-                    action=str(dq_action.value), existing=existing,
+                    action="Block" if dq_block.value else "Warn",
+                    existing=existing, active=dq_enabled.value,
                 )])
                 set_status("Data Quality rule staged locally.")
             except (TypeError, ValueError, RuntimeError) as exc:
@@ -1837,7 +1844,12 @@ def widget_data_contract(
         )
         dq_editor = widgets.VBox(
             [
-                dq_help, dq_usage, *dq_parameter_controls, dq_action,
+                dq_help, dq_usage,
+                widgets.HBox(
+                    [dq_enabled, dq_block],
+                    layout=widgets.Layout(gap="20px", align_items="center"),
+                ),
+                *dq_parameter_controls,
                 suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
             ],
             layout=widgets.Layout(width="100%", gap="6px", padding="8px 0 0 0"),
@@ -1888,8 +1900,12 @@ def widget_data_contract(
                 [
                     widgets.HTML("<div style='font-weight:600;'>Sensitive Data</div>"),
                     sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
-                    sensitive_enabled, sensitive_treatment, mask_start, mask_end, mask_character,
-                    bucket_bins, bucket_labels, sensitive_action,
+                    widgets.HBox(
+                        [sensitive_enabled, sensitive_block],
+                        layout=widgets.Layout(gap="20px", align_items="center"),
+                    ),
+                    sensitive_treatment, mask_start, mask_end, mask_character,
+                    bucket_bins, bucket_labels,
                 ],
                 layout=widgets.Layout(
                     width="100%", gap="6px", padding="10px 12px",
@@ -2118,7 +2134,7 @@ def widget_data_contract(
             "pii_type": pii_type, "pii_reason": pii_reason,
             "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
             "rerun_sensitive": rerun_sensitive,
-            "sensitive_action": sensitive_action, "mask_start": mask_start,
+            "sensitive_block": sensitive_block, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
             "save_sensitive": save_sensitive,
@@ -2127,7 +2143,8 @@ def widget_data_contract(
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
-            "dq_pattern": dq_pattern, "suggest_dq": suggest_dq, "dq_ai": dq_ai,
+            "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
+            "suggest_dq": suggest_dq, "dq_ai": dq_ai,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
             "dq_action": dq_action, "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
