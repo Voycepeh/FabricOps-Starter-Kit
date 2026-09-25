@@ -1522,7 +1522,11 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": _effective_table_ai_description(),
+                    "table_description": (
+                        _effective_table_ai_description()
+                        if use_description_suggestion
+                        else str(table_description.value or "")
+                    ),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
