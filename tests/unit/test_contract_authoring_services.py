@@ -73,6 +73,7 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _name, row: row)
     monkeypatch.setattr(service, "write_lakehouse_table", lambda frame, *_args, **_kwargs: writes.append(frame))
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
+
     first = service.create_contract_draft(
         table_id="orders", config=object(), env="dev", spark_session=spark,
     )
@@ -80,46 +81,73 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     second = service.create_contract_draft(
         table_id="orders", config=object(), env="dev", spark_session=spark,
     )
+
+    payload = json.loads(first["contract_payload_json"])
     assert first == second
     assert first["agreement_id"] is None
     assert first["agreement_version"] is None
     assert first["contract_id"] == service.contract_lifecycle_id("orders", "dev")
-    assert json.loads(first["processing_json"]) == {"load_strategy": "overwrite"}
-    assert first["processing_source"] == "default"
+    assert first["status"] == "draft"
+    assert payload["contract"]["status"] == "draft"
+    assert payload["table"]["processing"] == {"load_strategy": "overwrite"}
+    assert payload["table"]["processing_source"] == "default"
     assert len(writes) == 1
 
 
-def test_initial_contract_processing_prefers_catalogue_then_previous_contract_then_default():
-    """New versions prefer current Engineering scan, then prior contract, then overwrite."""
+def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
+    """New drafts prefer a current scan and otherwise inherit the frozen JSON."""
+    lifecycle_id = service.contract_lifecycle_id("orders", "dev")
+    previous_payload = {
+        "contract": {"contract_id": lifecycle_id, "contract_version": 1, "status": "frozen"},
+        "table": {
+            "table_id": "orders",
+            "processing": {"load_strategy": "scd1", "key_columns": ["id"]},
+            "processing_source": "manual",
+            "columns": [],
+        },
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    }
+    frozen = {
+        "contract_id": lifecycle_id, "contract_version": 1, "table_id": "orders",
+        "environment_name": "dev", "status": "frozen", "is_active": True,
+        "contract_payload_json": json.dumps(previous_payload),
+    }
     catalogue = [{
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
-        "load_strategy": "append", "load_strategy_parameters_json": "{}", "is_active": True,
+        "load_strategy": None, "load_strategy_parameters_json": "{}", "is_active": True,
     }]
-    previous = [{
-        "contract_id": "c", "contract_version": 2, "environment_name": "dev",
-        "status": "frozen", "processing_json": '{"load_strategy":"scd1","key_columns":["id"]}',
-    }]
+    rows = [frozen]
+    writes = []
 
-    processing, source = service._initial_contract_processing(
-        table_id="orders", environment_name="dev",
-        catalogue_rows=catalogue, contract_rows=previous,
-    )
-    assert processing == {"load_strategy": "append"}
-    assert source == "catalogue"
+    def read(name, **_kwargs):
+        return catalogue if name == "METADATA_DATA_CATALOGUE" else rows
 
-    processing, source = service._initial_contract_processing(
-        table_id="orders", environment_name="dev",
-        catalogue_rows=[{**catalogue[0], "load_strategy": None}], contract_rows=previous,
-    )
-    assert processing == {"load_strategy": "scd1", "key_columns": ["id"]}
-    assert source == "previous_contract"
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
+    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _name, row: row)
+    monkeypatch.setattr(service, "write_lakehouse_table", lambda frame, *_args, **_kwargs: writes.append(frame))
+    spark = type("Spark", (), {"createDataFrame": lambda self, values, schema=None: values})()
 
-    processing, source = service._initial_contract_processing(
-        table_id="orders", environment_name="dev",
-        catalogue_rows=[{**catalogue[0], "load_strategy": None}], contract_rows=[],
+    inherited = service.create_contract_draft(
+        table_id="orders", config=object(), env="dev", spark_session=spark,
     )
-    assert processing == {"load_strategy": "overwrite"}
-    assert source == "default"
+    inherited_payload = json.loads(inherited["contract_payload_json"])
+    assert inherited["contract_version"] == 2
+    assert inherited_payload["table"]["processing"] == {
+        "load_strategy": "scd1", "key_columns": ["id"]
+    }
+    assert inherited_payload["table"]["processing_source"] == "previous_contract"
+
+    rows[:] = [frozen]
+    catalogue[0]["load_strategy"] = "append"
+    scanned = service.create_contract_draft(
+        table_id="orders", config=object(), env="dev", spark_session=spark,
+    )
+    scanned_payload = json.loads(scanned["contract_payload_json"])
+    assert scanned_payload["table"]["processing"] == {"load_strategy": "append"}
+    assert scanned_payload["table"]["processing_source"] == "catalogue"
 
 
 @pytest.mark.parametrize("contract_id,version", [("", 1), ("c", 0), ("c", "bad")])
@@ -172,8 +200,24 @@ def test_draft_validation_returns_only_owned_governance_rows():
 def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
     """The same contract identity in another environment cannot leak into state."""
     contracts = [
-        {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "dev-t", "environment_name": "dev", "status": "draft"},
-        {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "prod-t", "environment_name": "prod", "status": "draft"},
+        {
+            "contract_id": "c", "contract_version": 2, "agreement_id": None,
+            "agreement_version": None, "table_id": "dev-t", "environment_name": "dev",
+            "status": "draft", "contract_payload_json": json.dumps({
+                "contract": {"contract_id": "c", "contract_version": 2, "status": "draft"},
+                "table": {"table_id": "dev-t", "processing": {"load_strategy": "overwrite"}},
+                "enrichment": {"table": [], "columns": []}, "guardrails": [],
+            }),
+        },
+        {
+            "contract_id": "c", "contract_version": 2, "agreement_id": None,
+            "agreement_version": None, "table_id": "prod-t", "environment_name": "prod",
+            "status": "draft", "contract_payload_json": json.dumps({
+                "contract": {"contract_id": "c", "contract_version": 2, "status": "draft"},
+                "table": {"table_id": "prod-t", "processing": {"load_strategy": "overwrite"}},
+                "enrichment": {"table": [], "columns": []}, "guardrails": [],
+            }),
+        },
     ]
     tables = {
         service.DATA_CONTRACT_TABLE: contracts,
@@ -220,15 +264,28 @@ def test_guardrail_save_uses_metadata_target(monkeypatch):
     assert writes[0][1]["schema"] == "governance"
 
 
-def test_freeze_record_is_immutable_payload_transition():
-    """Freezing serializes the payload and closes the draft."""
+def test_freeze_record_locks_saved_payload_without_version_churn():
+    """Freezing changes lifecycle state on the already-saved draft JSON."""
+    draft_payload = {
+        "contract": {"contract_id": "c", "contract_version": 1, "status": "draft"},
+        "table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}},
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    }
     frozen = service.freeze_contract_record(
-        draft={"contract_id": "c", "contract_version": 1, "environment_name": "dev", "status": "draft", "contract_payload_json": None},
-        payload={"contract": {"contract_id": "c", "contract_version": 1}}, audit={"_activity_id": "freeze"},
+        draft={
+            "contract_id": "c", "contract_version": 1, "environment_name": "dev",
+            "status": "draft", "contract_payload_json": json.dumps(draft_payload),
+        },
+        audit={"_activity_id": "freeze"},
     )
+    payload = json.loads(frozen["contract_payload_json"])
     assert frozen["status"] == "frozen"
     assert frozen["is_active"] is False
-    assert '"contract_id":"c"' in frozen["contract_payload_json"]
+    assert payload["contract"] == {
+        "contract_id": "c", "contract_version": 1, "status": "frozen"
+    }
+    assert payload["table"]["processing"] == {"load_strategy": "overwrite"}
 
 
 def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
@@ -349,7 +406,16 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     draft = {
         "contract_id": "contract-orders", "contract_version": 1,
         "table_id": "orders", "environment_name": "dev", "status": "draft",
-        "processing_json": '{"load_strategy":"append"}', "processing_source": "catalogue",
+        "contract_payload_json": json.dumps({
+            "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": "draft"},
+            "table": {
+                "table_id": "orders",
+                "processing": {"load_strategy": "append"},
+                "processing_source": "catalogue",
+            },
+            "enrichment": {"table": [], "columns": []},
+            "guardrails": [],
+        }),
     }
     tables = {
         "METADATA_DATA_CATALOGUE": [{
