@@ -488,3 +488,76 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
         {"value": "106.75", "count": 40, "percent": 33.333},
         {"value": "113.15", "count": 30, "percent": 25.0},
     ]
+
+def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_lineage(monkeypatch):
+    """Summarize one logical table across environments without duplicating deployed pipelines."""
+    profiled = [
+        {
+            "profile_id": "profile-dev", "profile_snapshot_id": "snapshot-dev",
+            "table_id": "orders", "column_id": "amount", "environment_name": "DEV",
+            "_notebook_name": "02_pipeline", "_committed_by": "dev@example.com",
+            "_committed_at": "2026-09-26T01:00:00", "_activity_id": "dev-profile",
+        },
+        {
+            "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "table_id": "orders", "column_id": "amount", "environment_name": "PROD",
+            "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
+            "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
+        },
+    ]
+    lineage = [
+        {
+            "lineage_id": "dev-writer-old", "table_id": "orders", "environment_name": "DEV",
+            "pipeline_role": "target", "_notebook_name": "02_pipeline",
+            "_committed_at": "2026-09-25T10:00:00", "_activity_id": "1",
+        },
+        {
+            "lineage_id": "dev-writer-new", "table_id": "orders", "environment_name": "DEV",
+            "pipeline_role": "target", "_notebook_name": "02_pipeline",
+            "_committed_at": "2026-09-26T03:00:00", "_activity_id": "2",
+        },
+        {
+            "lineage_id": "prod-writer", "table_id": "orders", "environment_name": "PROD",
+            "pipeline_role": "target", "_notebook_name": "02_pipeline",
+            "_committed_at": "2026-09-26T02:00:00", "_activity_id": "3",
+        },
+        {
+            "lineage_id": "prod-reader", "table_id": "orders", "environment_name": "PROD",
+            "pipeline_role": "source", "_notebook_name": "04_reporting",
+            "_committed_at": "2026-09-26T02:30:00", "_activity_id": "4",
+        },
+    ]
+
+    def read(name, **_kwargs):
+        if name == "METADATA_DATA_PROFILED":
+            return profiled
+        if name == "METADATA_DATA_LINEAGE":
+            return lineage
+        raise AssertionError(name)
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+
+    context = service.get_table_runtime_context(
+        config=object(), env="dev", spark_session=object(), table_id="orders"
+    )
+
+    assert context["latest_profile"] == {
+        "profile_snapshot_id": "snapshot-prod",
+        "environment_name": "PROD",
+        "pipeline_name": "02_pipeline",
+        "committed_by": "prod@example.com",
+        "committed_at": "2026-09-26T02:45:00",
+    }
+    assert context["writer_count"] == 1
+    assert context["reader_count"] == 1
+    assert len(context["lineage"]) == 3
+    assert {
+        (row["environment_name"], row["relationship"], row["pipeline_name"], row["last_seen"])
+        for row in context["lineage"]
+    } == {
+        ("DEV", "Writer", "02_pipeline", "2026-09-26T03:00:00"),
+        ("PROD", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
+        ("PROD", "Reader", "04_reporting", "2026-09-26T02:30:00"),
+    }
+
