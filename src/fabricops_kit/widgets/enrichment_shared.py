@@ -265,7 +265,7 @@ def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = Non
 Return JSON only with grain, key_columns, and rationale.
 key_columns must contain only supplied column names and may be empty when no defensible key is evident.
 A single column with 100% observed distinctness and zero missing values is strong profile evidence.
-Do not claim that a composite key is proven unique from per-column distinctness alone; composite selections are candidates until the uniqueness guardrail validates them on table data.
+Per-column distinctness cannot prove composite uniqueness; composite selections are candidates until the uniqueness guardrail validates them on table data.
 Do not invent columns or business meaning unsupported by the governed metadata.
 
 Context:
