@@ -212,6 +212,54 @@ def test_business_rule_resolver_accepts_every_canonical_noncustom_pattern():
         assert result["parameters"]["columns"] == columns
 
 
+@pytest.mark.parametrize(
+    ("rule_type", "requirement", "parameters"),
+    [
+        (
+            "conditional_completeness",
+            "When status is Approved, end date must be populated.",
+            {
+                "condition_operator": "=",
+                "condition_value": "Approved",
+                "treat_blank_as_missing": True,
+            },
+        ),
+        (
+            "conditional_values",
+            "When status is Closed, end date must be one of the governed values.",
+            {
+                "condition_operator": "=",
+                "condition_value": "Closed",
+                "mode": "allow",
+                "values": ["2026-01-01"],
+            },
+        ),
+    ],
+)
+def test_business_rule_resolver_prefers_known_conditional_patterns(
+    rule_type, requirement, parameters
+):
+    """Do not send known conditional patterns to Custom Expression review."""
+    payload = {
+        "rule_type": rule_type,
+        "columns": ["status", "end_date"],
+        "parameters": parameters,
+        "rationale": "Known conditional pattern.",
+    }
+
+    result = suggest_business_rule(
+        _business_context(),
+        requirement=requirement,
+        relevant_columns=["status", "end_date"],
+        prompt="Prefer known FabricOps patterns.",
+        invoke=lambda _prompt: json.dumps(payload),
+    )
+
+    assert result["rule_type"] == rule_type
+    assert result["engineering_review_required"] is False
+    assert result["parameters"]["business_requirement"] == requirement
+
+
 def test_business_rule_resolver_flags_custom_expression_for_engineering_review():
     """Keep custom logic in the existing DQ model while marking it for later review."""
     payload = {
