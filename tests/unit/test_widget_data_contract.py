@@ -483,8 +483,11 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
-        "minmax(190px, 32fr) minmax(0, 68fr)"
+        "minmax(0, 68fr) minmax(240px, 32fr)"
     )
+    assert [label for label, _value in controls["dq_type"].options] == [
+        "Completeness", "Uniqueness", "Allowed Values", "Value Rules", "Pattern",
+    ]
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
