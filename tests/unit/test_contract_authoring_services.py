@@ -441,3 +441,50 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
 
     assert payload["table"]["processing"]["load_strategy"] == "append"
     assert payload["table"]["scheduled_refresh"] == schedule
+
+
+def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
+    """Hydrate top values from the canonical profiled-frequency schema."""
+    profiled = [{
+        "profile_id": "profile-1", "profile_snapshot_id": "snapshot-1",
+        "table_id": "orders", "column_id": "amount", "environment_name": "dev",
+        "data_type": "double", "row_count": 120, "non_null_count": 120,
+        "null_count": 0, "null_percent": 0.0, "distinct_count": 3,
+        "distinct_percent": 2.5, "mean_value": 109.95, "stddev_value": 3.1,
+        "min_value": "106.75", "percentile_25_value": 106.75,
+        "median_value": 109.95, "percentile_75_value": 113.15, "max_value": "113.15",
+        "_committed_at": "2026-09-25T10:00:00",
+    }]
+    frequency = [
+        {
+            "profile_id": "profile-1", "value": "109.95",
+            "frequency_count": 50, "frequency_percent": 41.667, "frequency_rank": 1,
+        },
+        {
+            "profile_id": "profile-1", "value": "106.75",
+            "frequency_count": 40, "frequency_percent": 33.333, "frequency_rank": 2,
+        },
+        {
+            "profile_id": "profile-1", "value": "113.15",
+            "frequency_count": 30, "frequency_percent": 25.0, "frequency_rank": 3,
+        },
+    ]
+
+    def read(name, **_kwargs):
+        return frequency if name == "METADATA_DATA_PROFILED_FREQUENCY" else profiled
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+
+    context = service.get_column_profile_context(
+        config=object(), env="dev", spark_session=object(),
+        table_id="orders", column_id="amount",
+    )
+
+    assert context["kind"] == "profile"
+    assert context["profile"]["median_value"] == 109.95
+    assert context["values"] == [
+        {"value": "109.95", "count": 50, "percent": 41.667},
+        {"value": "106.75", "count": 40, "percent": 33.333},
+        {"value": "113.15", "count": 30, "percent": 25.0},
+    ]
