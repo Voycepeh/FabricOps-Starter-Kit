@@ -1204,7 +1204,10 @@ GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
 STANDARD_DQ_RULE_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
-TABLE_DQ_RULE_TYPES = ("column_relationship", "custom_expression")
+TABLE_DQ_RULE_TYPES = (
+    "column_relationship", "conditional_completeness", "conditional_values",
+    "custom_expression",
+)
 DQ_RULE_TYPES = [*STANDARD_DQ_RULE_TYPES, *TABLE_DQ_RULE_TYPES]
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
@@ -3089,6 +3092,8 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             require_columns(rule, minimum=1)
         elif rtype == "column_relationship":
             require_columns(rule, count=2)
+        elif rtype in {"conditional_completeness", "conditional_values"}:
+            require_columns(rule, count=2)
         elif rtype == "custom_expression":
             rule.setdefault("columns", [])
 
@@ -3118,6 +3123,25 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires two different columns.")
             if str(rule.get("operator") or "") not in DQ_COMPARISON_OPERATORS:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported operator.")
+        if rtype in {"conditional_completeness", "conditional_values"}:
+            if rule["columns"][0] == rule["columns"][1]:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires two different columns.")
+            if str(rule.get("condition_operator") or "") not in {"=", "!="}:
+                raise ValueError(
+                    f"DQ rule '{rule['rule_id']}' condition_operator must be '=' or '!='."
+                )
+            if "condition_value" not in rule:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_value.")
+        if rtype == "conditional_completeness":
+            if not isinstance(rule.get("treat_blank_as_missing"), bool):
+                raise ValueError(
+                    f"DQ rule '{rule['rule_id']}' requires boolean treat_blank_as_missing."
+                )
+        if rtype == "conditional_values":
+            if rule.get("mode") not in {"allow", "block"}:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' mode must be 'allow' or 'block'.")
+            if not isinstance(rule.get("values"), list) or not rule["values"]:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires a non-empty values list.")
         if rtype == "custom_expression":
             if str(rule.get("expression_language") or "").lower() != "pyspark":
                 raise ValueError(f"DQ rule '{rule['rule_id']}' expression_language must be 'pyspark'.")
@@ -3474,6 +3498,23 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         if rule["operator"] in {">", ">=", "<", "<="}:
             one_null = left.isNull() != right.isNull()
             failed = one_null | (left.isNotNull() & right.isNotNull() & failed)
+    elif rtype in {"conditional_completeness", "conditional_values"}:
+        condition_column = F.col(cols[0])
+        condition_value = F.lit(rule["condition_value"])
+        condition = compare(condition_column, rule["condition_operator"], condition_value)
+        target_column = F.col(cols[1])
+        if rtype == "conditional_completeness":
+            target_failed = (
+                empty_string(cols[1])
+                if rule["treat_blank_as_missing"]
+                else target_column.isNull()
+            )
+        else:
+            contained = target_column.isin(list(rule["values"]))
+            target_failed = target_column.isNotNull() & (
+                contained if rule["mode"] == "block" else ~contained
+            )
+        failed = condition & target_failed
     elif rtype == "custom_expression":
         try:
             passed = _custom_expression_column(rule["expression"], F)

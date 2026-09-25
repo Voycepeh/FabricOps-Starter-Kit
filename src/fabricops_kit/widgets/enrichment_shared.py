@@ -29,7 +29,8 @@ PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not P
 STANDARD_DQ_TYPES = frozenset({"completeness", "value_set", "range", "pattern"})
 BUSINESS_RULE_TYPES = frozenset({
     "completeness", "uniqueness", "value_set", "range", "pattern",
-    "column_relationship", "custom_expression",
+    "column_relationship", "conditional_completeness", "conditional_values",
+    "custom_expression",
 })
 BUSINESS_RULE_OPERATORS = frozenset({"=", "!=", ">", ">=", "<", "<="})
 
@@ -468,7 +469,7 @@ Relevant columns selected by Governance:
 {json.dumps(selected_columns)}
 
 Return JSON only as one object with rule_type, columns, parameters, rationale.
-Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, custom_expression.
+Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, conditional_completeness, conditional_values, custom_expression.
 Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent the requirement without changing its meaning.
 Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
 Uniqueness: one or more columns; no rule-specific parameters.
@@ -476,6 +477,8 @@ Value Set: exactly one column; parameters mode (allow or block) and non-empty va
 Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
 Pattern: exactly one column; parameter pattern containing the governed regular expression.
 Column Relationship: exactly two different columns; parameter operator using =, !=, >, >=, <, or <=.
+Conditional Completeness: exactly two columns, condition column then required target column; parameters condition_operator (= or !=), condition_value, and treat_blank_as_missing.
+Conditional Values: exactly two columns, condition column then target column; parameters condition_operator (= or !=), condition_value, mode (allow or block), and non-empty values.
 Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
 A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), F.lit(...), literals, comparisons, &, |, ~, arithmetic (+, -, *, /, %), and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, arbitrary Python calls, exponentiation, floor division, or matrix multiplication.
 If Governance selected relevant columns, the proposal may use only those columns.
@@ -538,6 +541,37 @@ Context:
             "operator": operator,
             "business_requirement": business_requirement,
         }
+    elif rule_type in {"conditional_completeness", "conditional_values"}:
+        if len(normalized_columns) != 2 or normalized_columns[0] == normalized_columns[1]:
+            raise ValueError(f"{rule_type} requires exactly two different known columns.")
+        condition_operator = str(parameters.get("condition_operator") or "").strip()
+        if condition_operator not in {"=", "!="}:
+            raise ValueError(f"{rule_type} condition_operator must be '=' or '!='.")
+        if "condition_value" not in parameters:
+            raise ValueError(f"{rule_type} requires condition_value.")
+        canonical_parameters = {
+            "columns": normalized_columns,
+            "condition_operator": condition_operator,
+            "condition_value": parameters["condition_value"],
+            "business_requirement": business_requirement,
+        }
+        if rule_type == "conditional_completeness":
+            if not isinstance(parameters.get("treat_blank_as_missing"), bool):
+                raise ValueError(
+                    "conditional_completeness requires boolean treat_blank_as_missing."
+                )
+            canonical_parameters["treat_blank_as_missing"] = parameters[
+                "treat_blank_as_missing"
+            ]
+        else:
+            if parameters.get("mode") not in {"allow", "block"}:
+                raise ValueError("conditional_values mode must be 'allow' or 'block'.")
+            if not isinstance(parameters.get("values"), list) or not parameters["values"]:
+                raise ValueError("conditional_values requires a non-empty values list.")
+            canonical_parameters.update({
+                "mode": parameters["mode"],
+                "values": list(parameters["values"]),
+            })
     else:
         expression_language = str(parameters.get("expression_language") or "").strip().lower()
         expression = str(parameters.get("expression") or "").strip()

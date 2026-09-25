@@ -3173,7 +3173,8 @@ def widget_data_contract(
                     continue
                 if str(rule.get("rule_type") or "") not in {
                     "completeness", "uniqueness", "value_set", "range", "pattern",
-                    "column_relationship", "custom_expression",
+                    "column_relationship", "conditional_completeness",
+                    "conditional_values", "custom_expression",
                 }:
                     continue
                 key = str(rule.get("guardrail_rule_id") or "")

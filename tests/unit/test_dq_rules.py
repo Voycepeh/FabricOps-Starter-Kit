@@ -148,6 +148,53 @@ def test_custom_expression_rejects_unapproved_arithmetic(expression):
         ])
 
 
+def test_conditional_completeness_only_applies_when_condition_matches(spark_session):
+    """Require a target value only for rows matching the governed condition."""
+    df = spark_session.createDataFrame(
+        [
+            ("Approved", "2026-01-01"),
+            ("Approved", None),
+            ("Draft", None),
+        ],
+        "status string, approved_date string",
+    )
+    rule = _rule(
+        "conditional_completeness",
+        columns=["status", "approved_date"],
+        condition_operator="=",
+        condition_value="Approved",
+        treat_blank_as_missing=True,
+    )
+
+    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+
+    assert checks[0]["failed_count"] == 1
+
+
+def test_conditional_values_only_applies_when_condition_matches(spark_session):
+    """Enforce a governed value domain only for matching rows."""
+    df = spark_session.createDataFrame(
+        [
+            ("SG", "SGD"),
+            ("SG", "USD"),
+            ("US", "USD"),
+        ],
+        "country string, currency string",
+    )
+    rule = _rule(
+        "conditional_values",
+        columns=["country", "currency"],
+        condition_operator="=",
+        condition_value="SG",
+        mode="allow",
+        values=["SGD"],
+    )
+
+    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+
+    assert checks[0]["failed_count"] == 1
+
+
 @pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "null_rate_below", "non_empty_string", "unique", "accepted_values", "not_in_values", "between", "regex_match", "value_when", "not_null", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "expression_true"])
 def test_legacy_or_external_rule_names_fail_validation(old_rule_type):
     """Verify legacy or external rule names fail validation."""
