@@ -810,6 +810,112 @@ def build_contract_manifest(
     )
 
 
+
+def get_table_runtime_context(
+    *, config: Any, env: str, spark_session: Any, table_id: str
+) -> dict[str, Any]:
+    """Return latest profile provenance and cross-environment pipeline usage for one table."""
+    table_identity = str(table_id or "").strip()
+    if not table_identity:
+        raise ValueError("table_id is required to load table runtime context.")
+    context = _metadata_io_context(config, env)
+
+    def table_rows(table_name: str) -> list[dict[str, Any]]:
+        try:
+            frame = read_lakehouse_table(
+                table_name, store="Metadata",
+                schema=metadata_table_physical_schema(config, table_name),
+                context=context, spark_session=spark_session,
+            )
+        except Exception as exc:
+            if any(
+                marker in str(exc).lower()
+                for marker in ("not found", "does not exist", "path does not exist")
+            ):
+                return []
+            raise
+        return [
+            row for row in row_dicts(_scoped_rows(
+                frame, f"table_id = {_sql_literal(table_identity)}"
+            ))
+            if str(row.get("table_id") or "") == table_identity
+        ]
+
+    profiled = table_rows("METADATA_DATA_PROFILED")
+    latest_profile_row = max(
+        profiled,
+        key=lambda row: (
+            str(row.get("_committed_at") or ""),
+            str(row.get("_activity_id") or ""),
+            str(row.get("profile_snapshot_id") or ""),
+        ),
+        default=None,
+    )
+    latest_profile = None
+    if latest_profile_row is not None:
+        latest_profile = {
+            "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
+            "environment_name": str(latest_profile_row.get("environment_name") or ""),
+            "pipeline_name": str(
+                latest_profile_row.get("_notebook_name")
+                or latest_profile_row.get("_notebook_id")
+                or ""
+            ),
+            "committed_by": str(latest_profile_row.get("_committed_by") or ""),
+            "committed_at": latest_profile_row.get("_committed_at"),
+        }
+
+    grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in table_rows("METADATA_DATA_LINEAGE"):
+        raw_role = str(row.get("pipeline_role") or "").strip().lower()
+        relationship = "Writer" if raw_role == "target" else "Reader" if raw_role == "source" else ""
+        if not relationship:
+            continue
+        pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
+        environment_name = str(row.get("environment_name") or "").strip()
+        key = (environment_name, relationship, pipeline_name)
+        previous = grouped.get(key)
+        rank = (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or ""))
+        previous_rank = (
+            str(previous.get("last_seen") or ""),
+            str(previous.get("_activity_id") or ""),
+        ) if previous else None
+        if previous_rank is None or rank >= previous_rank:
+            grouped[key] = {
+                "environment_name": environment_name,
+                "relationship": relationship,
+                "pipeline_name": pipeline_name or "Unknown pipeline",
+                "last_seen": row.get("_committed_at"),
+                "_activity_id": str(row.get("_activity_id") or ""),
+            }
+
+    lineage = [
+        {name: value for name, value in row.items() if name != "_activity_id"}
+        for row in sorted(
+            grouped.values(),
+            key=lambda row: (
+                str(row.get("environment_name") or ""),
+                str(row.get("relationship") or ""),
+                str(row.get("pipeline_name") or "").casefold(),
+            ),
+        )
+    ]
+    writers = {
+        str(row.get("pipeline_name") or "")
+        for row in lineage if row.get("relationship") == "Writer"
+    }
+    readers = {
+        str(row.get("pipeline_name") or "")
+        for row in lineage if row.get("relationship") == "Reader"
+    }
+    return {
+        "latest_profile": latest_profile,
+        "writer_count": len(writers),
+        "reader_count": len(readers),
+        "lineage": lineage,
+    }
+
+
 def get_column_profile_context(
     *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
 ) -> dict[str, Any]:
