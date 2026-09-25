@@ -1603,6 +1603,9 @@ def widget_data_contract(
             control.layout.width = "100%"
             control.layout.max_width = "560px"
             control.layout.min_width = "0"
+        for classification in (table_classification, column_classification):
+            classification.layout.width = "250px"
+            classification.layout.max_width = "100%"
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
