@@ -141,6 +141,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_data_contract",
+        "widget_activate_data_contract",
     }
 
     assert required_functions <= {
@@ -157,7 +158,8 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'mode="explore"' not in source
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
-    assert source.count("widget_data_contract(spark_session=spark)") == 2
+    assert source.count("widget_data_contract(spark_session=spark)") == 1
+    assert source.count("widget_activate_data_contract(spark_session=spark)") == 1
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
@@ -178,7 +180,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "widget_select_data_contract" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
     assert "widget_select_data_contract" not in activation_cell
-    assert "widget_data_contract(" in activation_cell
+    assert "widget_activate_data_contract(" in activation_cell
     assert "widget_select_data_contract" not in source
     assert "METADATA_SCHEMA" not in source
 
