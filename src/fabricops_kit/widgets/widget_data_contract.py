@@ -2122,8 +2122,6 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
-            "run_with_ai": run_with_ai, "run_without_ai": run_without_ai,
-            "ai_startup_note": ai_startup_note,
             "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
             "profile_context": profile_context, "column_description": column_description,
@@ -2149,7 +2147,7 @@ def widget_data_contract(
             "dq_pattern": dq_pattern, "dq_enabled": dq_enabled, "dq_block": dq_block,
             "suggest_dq": suggest_dq, "dq_ai": dq_ai,
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
-            "dq_action": dq_action, "save_dq": save_dq,
+            "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
             "advanced_columns": advanced_columns, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
@@ -2157,7 +2155,8 @@ def widget_data_contract(
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
-            "freeze": next((control for control in actions if getattr(control, "description", "").startswith("Freeze")), None),
+            "freeze": freeze_button if editable else None,
+            "freeze_confirm": freeze_confirm_button if editable else None,
             "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
 
