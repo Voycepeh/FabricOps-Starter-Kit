@@ -1,6 +1,6 @@
 # Data Quality rules
 
-FabricOps supports **7 lightweight DQ rule types** in `METADATA_GUARDRAIL`: four column-level standard families, one table-level row-key uniqueness rule, and two explicitly authored Advanced families.
+FabricOps supports **9 lightweight DQ rule types** in `METADATA_GUARDRAIL`: four column-level standard families, one table-level row-key uniqueness rule, three structured cross-column or conditional families, and one constrained custom-expression escape hatch.
 
 ## Architecture boundary
 
@@ -9,6 +9,7 @@ FabricOps supports **7 lightweight DQ rule types** in `METADATA_GUARDRAIL`: four
 | Column DQ | [`completeness`](completeness.md), [`value_set`](value-set.md), [`range`](range.md), [`pattern`](pattern.md) | Structured, deterministic, manually editable, and safe for conservative AI suggestion. |
 | Grain & Row Key | [`uniqueness`](uniqueness.md) | Table-level uniqueness derived from the selected single or composite row key. Profile evidence can suggest candidates; pipeline validation proves the configured key against table data. |
 | Table relationship DQ | [`column_relationship`](column-relationship.md) | Human-authored, structured cross-column row validation; FabricOps does not infer business relationships. |
+| Conditional Business Rules | [`conditional_completeness`](conditional-completeness.md), [`conditional_values`](conditional-values.md) | Structured conditional rules resolved from Business Rule requirements before falling back to custom logic. Each uses one condition column and one target column. |
 | Business Rules escape hatch | [`custom_expression`](custom-expression.md) | Natural-language Business Rules that do not resolve to a known FabricOps pattern use constrained PySpark boolean `Column` logic and require Engineering review before freeze. |
 | Transform | Project code | Persisted derived business or validation columns. FabricOps never automatically persists an `is_valid_*` column. |
 
