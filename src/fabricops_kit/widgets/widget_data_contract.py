@@ -393,7 +393,7 @@ def widget_data_contract(
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
-        "dirty": False,
+        "_column_dq_selection": {}, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {
         "status": "unavailable", "schedules": [],
@@ -639,10 +639,13 @@ def widget_data_contract(
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
+        state["_column_dq_selection"].pop(scope, None)
         state["dirty"] = False
-        select(str(state["table_id"]), int(state["contract_version"]))
-        render()
-        set_status("Data Contract draft saved.")
+        return_to_selector = state.get("_return_to_selector")
+        if callable(return_to_selector):
+            return_to_selector("Data Contract draft saved. Select a governed table and contract.")
+        else:
+            set_status("Data Contract draft saved.")
 
     def discard_data_contract_session() -> None:
         """Discard staged changes for the selected contract and reload canonical state."""
@@ -653,6 +656,7 @@ def widget_data_contract(
         state["_pending_enrichment"].pop(scope, None)
         state["_pending_guardrails"].pop(scope, None)
         state["_column_drafts"].pop(scope, None)
+        state["_column_dq_selection"].pop(scope, None)
         state["dirty"] = False
         select(str(state["table_id"]), int(state["contract_version"]))
         render()
@@ -1598,6 +1602,9 @@ def widget_data_contract(
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
         )
+        selected_dq_by_column: dict[str, str] = state["_column_dq_selection"].setdefault(
+            draft_scope, {}
+        )
 
         def selected_column() -> dict[str, Any]:
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
@@ -1714,7 +1721,12 @@ def widget_data_contract(
                 and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
                 and rule.get("is_active", True)
             ]
-            dq_type.value = configured[0] if configured else _COLUMN_DQ_TYPES[0]
+            preferred_dq = selected_dq_by_column.get(column_id)
+            dq_type.value = (
+                preferred_dq
+                if preferred_dq in _COLUMN_DQ_TYPES
+                else configured[0] if configured else _COLUMN_DQ_TYPES[0]
+            )
             hydrate_dq_family(column_id, str(dq_type.value))
             hydrated_column_snapshots[column_id] = column_editor_snapshot()
             pending = unsaved_columns.get(column_id)
@@ -1754,6 +1766,9 @@ def widget_data_contract(
 
         def update_dq_help(change: dict[str, Any] | None = None) -> None:
             kind = str(dq_type.value or "")
+            selected_id = str(column_select.value or "")
+            if selected_id and not hydrating["active"]:
+                selected_dq_by_column[selected_id] = kind
             count = sum(
                 1 for rule in session_guardrails()
                 if str(rule.get("rule_type") or "") == kind and rule.get("is_active", True)
@@ -3242,14 +3257,19 @@ def widget_data_contract(
             open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
             open_without_ai_button.disabled = False
 
-    def change_table(_button: Any) -> None:
+    def return_to_selector(message: str) -> None:
         state["current"] = None
         state["manifest"] = None
         state["table_id"] = None
         state["contract_version"] = None
         editor_shell.layout.display = "none"
         selector_panel.layout.display = ""
-        set_status("Select a governed table and contract.")
+        set_status(message)
+
+    state["_return_to_selector"] = return_to_selector
+
+    def change_table(_button: Any) -> None:
+        return_to_selector("Select a governed table and contract.")
 
     open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
     open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
