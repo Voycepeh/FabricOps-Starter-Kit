@@ -320,6 +320,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["sensitive_enabled"].value is True
     assert controls["dq_type"].value == "completeness"
     assert controls["advanced_type"].value == "uniqueness"
+    assert controls["advanced_enabled"].description == "Enabled"
+    assert controls["advanced_block"].description == "Block on failure"
     assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
     assert "read-only" in controls["pipeline_refresh"].value
 
@@ -351,6 +353,10 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
     controls["top_nav"].value = "Advanced"
     assert controls["advanced_type"] in controls["left_pane"].children
+    assert controls["advanced_type"].layout.max_width == "560px"
+    assert controls["advanced_columns"].layout.height == "150px"
+    assert controls["advanced_enabled"].description == "Enabled"
+    assert controls["advanced_block"].description == "Block on failure"
     controls["top_nav"].value = "Review"
     assert controls["manifest_nav"] in controls["left_pane"].children
 
@@ -571,7 +577,10 @@ def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
     controls["save_dq"].click()
 
     controls["advanced_type"].value = "column_relationship"
+    assert controls["advanced_enabled"].value is True
+    assert controls["advanced_block"].value is False
     controls["advanced_columns"].value = ("column_0", "column_1")
+    controls["advanced_block"].value = True
     controls["advanced_save"].click()
 
     assert widget_runtime["calls"]["guardrails"] == []
@@ -590,6 +599,8 @@ def test_guardrail_apply_actions_stage_then_final_save_persists(widget_runtime):
     assert any(
         record["rule_type"] == "column_relationship"
         and module._parameters(record)["columns"] == ["column_0", "column_1"]
+        and record["action"] == "Block"
+        and record["is_active"] is True
         for record in saved
     )
 

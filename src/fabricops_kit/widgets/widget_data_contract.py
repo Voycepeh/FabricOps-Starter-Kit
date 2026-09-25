@@ -734,8 +734,9 @@ def widget_data_contract(
         )
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
-        compact_text_layout = widgets.Layout(width="220px", max_width="100%", min_width="0")
+        field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
+        selector_layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height="150px")
+        checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -833,18 +834,18 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Freshness column"),
                 )
-                freshness_column.layout = compact_field_layout
+                freshness_column.layout = field_layout
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""), disabled=not editable,
                     **shared.widget_common(widgets, "Maximum age"),
                 )
-                maximum_age.layout = compact_text_layout
+                maximum_age.layout = field_layout
                 maximum_age_unit = widgets.Dropdown(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"), disabled=not editable,
                     **shared.widget_common(widgets, "Age unit"),
                 )
-                maximum_age_unit.layout = compact_field_layout
+                maximum_age_unit.layout = field_layout
                 parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
             else:
                 partition_column = widgets.Dropdown(
@@ -853,14 +854,14 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
-                partition_column.layout = compact_field_layout
+                partition_column.layout = field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
                     value=str(existing_parameters.get("change_column") or "") or None,
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change column"),
                 )
-                change_column.layout = compact_field_layout
+                change_column.layout = field_layout
                 parameter_controls = [partition_column, change_column]
                 if not str(table.get("load_strategy") or "").strip():
                     source_load_strategy = widgets.Dropdown(
@@ -869,7 +870,7 @@ def widget_data_contract(
                         disabled=not editable,
                         **shared.widget_common(widgets, "Source load strategy"),
                     )
-                    source_load_strategy.layout = compact_field_layout
+                    source_load_strategy.layout = field_layout
                     parameter_controls.append(source_load_strategy)
             save = widgets.Button(description=f"Apply {title}", disabled=not editable)
 
@@ -1034,7 +1035,7 @@ def widget_data_contract(
                     ),
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     *table_rules["freshness"]["parameters"],
                 ],
@@ -1048,7 +1049,7 @@ def widget_data_contract(
                     widgets.HTML("<div style='font-weight:600;'>Source Drift</div>"),
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     *table_rules["source_drift"]["parameters"],
                 ],
@@ -1075,11 +1076,11 @@ def widget_data_contract(
         )
         column_select = widgets.Select(
             options=column_options,
-            rows=14,
-            layout=widgets.Layout(width="100%", height="405px"),
+            rows=8,
+            layout=widgets.Layout(width="100%", height="250px"),
         )
         column_context = widgets.HTML()
-        profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="220px")
+        profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description_ai = widgets.HTML()
@@ -1111,7 +1112,7 @@ def widget_data_contract(
             ],
             rows=5,
             disabled=not editable,
-            layout=widgets.Layout(width="100%", height="175px"),
+            layout=selector_layout,
         )
         dq_help = widgets.HTML()
         dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
@@ -1152,6 +1153,16 @@ def widget_data_contract(
         dq_suggestion = widgets.Select(options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions"))
         accept_dq_suggestion = widgets.Button(description="Apply selected suggestion", disabled=True)
         dq_ai = widgets.HTML()
+        for control in (
+            table_description, table_classification,
+            column_description, column_classification,
+            pii_type, pii_reason, sensitive_treatment,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
@@ -1903,7 +1914,7 @@ def widget_data_contract(
                 dq_help, dq_usage,
                 widgets.HBox(
                     [dq_enabled, dq_block],
-                    layout=widgets.Layout(gap="20px", align_items="center"),
+                    layout=checkbox_row_layout,
                 ),
                 *dq_parameter_controls,
                 suggest_dq, dq_suggestion, accept_dq_suggestion, dq_ai, save_dq,
@@ -1958,7 +1969,7 @@ def widget_data_contract(
                     sensitive_ai, accept_sensitive, rerun_sensitive, pii_type, pii_reason,
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
-                        layout=widgets.Layout(gap="20px", align_items="center"),
+                        layout=checkbox_row_layout,
                     ),
                     sensitive_treatment, mask_start, mask_end, mask_character,
                     bucket_bins, bucket_labels,
@@ -1994,10 +2005,21 @@ def widget_data_contract(
         advanced_operator = widgets.Dropdown(options=("=", "!=", ">", ">=", "<", "<="), disabled=not editable, **shared.widget_common(widgets, "Operator"))
         custom_expression = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "PySpark boolean Column expression", textarea=True))
         custom_description = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Description"))
-        advanced_action = widgets.Dropdown(options=("Warn", "Block"), disabled=not editable, **shared.widget_common(widgets, "On failure"))
+        advanced_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
+        advanced_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         advanced_help = widgets.HTML()
         advanced_save = widgets.Button(description="Apply configuration", button_style="primary", disabled=not editable)
         advanced_lookup: dict[str, dict[str, Any]] = {}
+        for control in (
+            advanced_type, advanced_saved, advanced_columns, advanced_operator,
+            custom_expression, custom_description,
+        ):
+            control.layout.width = "100%"
+            control.layout.max_width = "560px"
+            control.layout.min_width = "0"
+        advanced_type.layout.height = "120px"
+        advanced_saved.layout.height = "120px"
+        advanced_columns.layout.height = "150px"
 
         def hydrate_advanced_type(change: dict[str, Any] | None = None) -> None:
             kind = str(advanced_type.value or "")
@@ -2024,7 +2046,8 @@ def widget_data_contract(
             advanced_operator.value = str(params.get("operator") or params.get("condition_operator") or "=")
             custom_expression.value = str(params.get("expression") or "")
             custom_description.value = str(params.get("description") or "")
-            advanced_action.value = str(rule.get("action") or "Warn")
+            advanced_enabled.value = bool(rule and rule.get("is_active", True))
+            advanced_block.value = str(rule.get("action") or "Warn") == "Block"
 
         def save_advanced_clicked(_button: Any) -> None:
             kind = str(advanced_type.value or "")
@@ -2045,7 +2068,9 @@ def widget_data_contract(
             existing = advanced_lookup.get(str(advanced_saved.value or ""), {})
             try:
                 stage_guardrails([guardrail_record(
-                    "data_quality", kind, params, action=str(advanced_action.value), existing=existing,
+                    "data_quality", kind, params,
+                    action="Block" if advanced_block.value else "Warn",
+                    existing=existing, active=advanced_enabled.value,
                 )])
                 set_status("Advanced Data Quality configuration staged locally.")
             except (ValueError, RuntimeError) as exc:
@@ -2068,7 +2093,7 @@ def widget_data_contract(
             advanced_operator,
             custom_expression,
             custom_description,
-            advanced_action,
+            widgets.HBox([advanced_enabled, advanced_block], layout=checkbox_row_layout),
             widgets.HBox([advanced_save], layout=widgets.Layout(justify_content="flex-start")),
         )
         view_content["Advanced"] = (advanced_left, advanced_right)
@@ -2078,7 +2103,7 @@ def widget_data_contract(
         payload = state.get("manifest") or {}
         sections = _manifest_sections(payload)
         manifest_nav = widgets.Select(options=list(sections), **shared.widget_common(widgets, "Section"))
-        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="500px")
+        manifest_preview = shared.preview_region(widgets, widgets.HTML(), height="360px")
 
         def manifest_section_changed(change: dict[str, Any]) -> None:
             manifest_preview.value = sections.get(str(change.get("new") or ""), "")
@@ -2235,7 +2260,8 @@ def widget_data_contract(
             "dq_suggestion": dq_suggestion, "accept_dq_suggestion": accept_dq_suggestion,
             "save_dq": save_dq,
             "advanced_type": advanced_type, "advanced_saved": advanced_saved,
-            "advanced_columns": advanced_columns, "advanced_save": advanced_save,
+            "advanced_columns": advanced_columns, "advanced_enabled": advanced_enabled,
+            "advanced_block": advanced_block, "advanced_save": advanced_save,
             "advanced_operator": advanced_operator, "custom_expression": custom_expression,
             "custom_description": custom_description,
             "manifest_nav": manifest_nav, "manifest_preview": manifest_preview,
