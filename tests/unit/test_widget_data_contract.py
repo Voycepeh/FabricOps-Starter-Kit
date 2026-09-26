@@ -1889,6 +1889,28 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "CUS-001<br>CUS-120" in fallback
 
 
+def test_column_authored_dq_rule_appears_in_shared_dq_rules_list(
+    widget_runtime, monkeypatch
+):
+    """Column DQ edits hydrate the DQ Rules page from the same staged draft state."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    controls["top_nav"].value = "Columns"
+    controls["dq_family_controls"]["completeness"]["enabled"].value = True
+
+    controls["top_nav"].value = "DQ Rules"
+    labels = [label for label, _value in controls["business_saved"].options]
+
+    assert any("Completeness" in label and "column_0" in label for label in labels)
+    assert any(
+        record.get("rule_type") == "completeness"
+        and record.get("column_id") == "col-0"
+        for records in state["_pending_guardrails"].values()
+        for record in records.values()
+    )
+
+
 def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     widget_runtime, monkeypatch
 ):
