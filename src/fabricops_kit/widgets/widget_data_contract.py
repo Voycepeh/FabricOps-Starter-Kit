@@ -1742,6 +1742,59 @@ def widget_data_contract(
                 ],
             )
 
+        def guardrail_section(
+            title: str,
+            *,
+            banner_title: str,
+            banner_detail: str,
+            description: str,
+            primary_children: list[Any],
+            ai_children: list[Any] | None = None,
+        ) -> Any:
+            """Render every Guardrail with one consistent primary/assistant layout."""
+            banner = widgets.HTML(
+                "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
+                f"<b>{html.escape(banner_title)}</b>"
+                f"<br><span style='color:#667085;'>{html.escape(banner_detail)}</span></div>"
+            )
+            primary = widgets.VBox(
+                [
+                    banner,
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:4px;'>"
+                        + html.escape(description)
+                        + "</div>"
+                    ),
+                    *primary_children,
+                ],
+                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            )
+            assistant = widgets.VBox(
+                list(ai_children or []),
+                layout=widgets.Layout(
+                    width="100%", min_width="0", gap="8px",
+                    padding="0 0 0 16px",
+                    border_left="1px solid #e1e6eb",
+                ),
+            )
+            return shared.form_section(
+                widgets,
+                title=title,
+                children=[
+                    widgets.GridBox(
+                        [primary, assistant],
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                            grid_gap="16px",
+                            align_items="flex-start",
+                        ),
+                    ),
+                ],
+            )
+
         table_definition = definition_section(
             "Table definition", table_classification, table_description,
             table_description_ai, accept_table_description, rerun_table_description,
@@ -1786,21 +1839,19 @@ def widget_data_contract(
                     *processing_parameter_controls,
                 ],
             ),
-            shared.form_section(
-                widgets,
-                title="Freshness",
-                children=[
-                    widgets.HTML(
-                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
-                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
-                        "<br><span style='color:#667085;'>This rule is checked when the table is "
-                        "consumed as an input, not when this table itself is written.</span></div>"
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Check whether the source has received sufficiently recent data. "
-                        "Freshness uses the latest value in the selected timestamp column "
-                        "relative to the pipeline run time.</div>"
-                    ),
+            guardrail_section(
+                "Freshness",
+                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_detail=(
+                    "This rule is checked when the table is consumed as an input, "
+                    "not when this table itself is written."
+                ),
+                description=(
+                    "Check whether the source has received sufficiently recent data. "
+                    "Freshness uses the latest value in the selected timestamp column "
+                    "relative to the pipeline run time."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
                         layout=checkbox_row_layout,
@@ -1808,20 +1859,18 @@ def widget_data_contract(
                     *table_rules["freshness"]["display"],
                 ],
             ),
-            shared.form_section(
-                widgets,
-                title="Source Drift",
-                children=[
-                    widgets.HTML(
-                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
-                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
-                        "<br><span style='color:#667085;'>This rule is checked when the table is "
-                        "consumed as an input, not when this table itself is written.</span></div>"
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Check whether data that was previously consumed from this table has "
-                        "changed when the same source data is read again.</div>"
-                    ),
+            guardrail_section(
+                "Source Drift",
+                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_detail=(
+                    "This rule is checked when the table is consumed as an input, "
+                    "not when this table itself is written."
+                ),
+                description=(
+                    "Check whether data that was previously consumed from this table has "
+                    "changed when the same source data is read again."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
                         layout=checkbox_row_layout,
@@ -3029,20 +3078,19 @@ def widget_data_contract(
                 border_left="1px solid #e1e6eb",
             ),
         )
-        dq_panel = shared.form_section(
-            widgets,
-            title="Column data quality",
-            children=[
-                widgets.GridBox(
-                    [dq_primary, dq_ai_panel],
-                    layout=widgets.Layout(
-                        width="100%",
-                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                        grid_gap="16px",
-                        align_items="flex-start",
-                    ),
-                ),
-            ],
+        dq_panel = guardrail_section(
+            "Column data quality",
+            banner_title="Applies when this governed column is validated or enforced in a pipeline.",
+            banner_detail=(
+                "FabricOps evaluates active deterministic Data Quality rules before a governed "
+                "write is allowed to continue."
+            ),
+            description=(
+                "Choose the rule family that describes the column expectation, configure it, "
+                "and review the resulting deterministic rule."
+            ),
+            primary_children=[dq_primary],
+            ai_children=list(dq_ai_panel.children),
         )
         column_definition = definition_section(
             "Column definition", column_classification, column_description,
@@ -3088,17 +3136,25 @@ def widget_data_contract(
                 title="Profile evidence",
                 children=[profile_context],
             ),
-            shared.form_section(
-                widgets,
-                title="Sensitive Data",
-                children=[
-                    sensitive_help,
+            guardrail_section(
+                "Sensitive Data",
+                banner_title="Applies before this governed table is written.",
+                banner_detail=(
+                    "FabricOps applies the selected deterministic treatment to this column "
+                    "before the governed write proceeds."
+                ),
+                description=(
+                    "Classify whether this column contains PII, record the reason, and choose "
+                    "how the pipeline should treat the sensitive value."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
                         layout=checkbox_row_layout,
                     ),
-                    sensitive_editor,
+                    sensitive_primary,
                 ],
+                ai_children=list(sensitive_ai_panel.children),
             ),
             dq_panel,
         )
