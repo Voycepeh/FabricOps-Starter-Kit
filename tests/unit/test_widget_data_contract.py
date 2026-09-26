@@ -777,6 +777,28 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
 
 
+def test_required_column_marker_and_checkbox_alignment_refresh_live(widget_runtime):
+    """Required state stays visible in the column list and uses compact checkbox alignment."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    labels = [label for label, _value in controls["column_select"].options]
+    assert labels[0] == "column_0 *"
+    assert labels[1] == "column_1"
+    assert "fabricops-column-required" in controls["required"]._dom_classes
+    assert controls["required"].layout.width == "auto"
+
+    controls["required"].value = False
+    labels = [label for label, _value in controls["column_select"].options]
+    assert labels[0] == "column_0"
+
+    controls["required"].value = True
+    labels = [label for label, _value in controls["column_select"].options]
+    assert labels[0] == "column_0 *"
+    assert "option:nth-child(1)" in controls["column_option_style"].value
+    assert "color:#0f6cbd" in controls["column_option_style"].value
+
+
 def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widget_runtime):
     """Selecting an unconfigured column must not retain another column's DQ values."""
     state = widget_runtime["open"]()
