@@ -1174,7 +1174,8 @@ def widget_data_contract(
         accept_grain.on_click(accept_grain_ai)
         grain_profile_evidence.value = (
             "<div style='color:#667085;font-size:12px;'>"
-"Engineering profile evidence is used to preselect the row key; AI only suggests the grain wording.</div>"
+            "Engineering profile evidence is used to preselect the row key; "
+            "AI only suggests the grain wording.</div>"
         )
 
         processing = contracts.contract_processing(row)
@@ -1748,11 +1749,11 @@ def widget_data_contract(
                 + runtime_context_html()
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
-                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Grain</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Row Key</div>"
                 f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
@@ -1767,6 +1768,7 @@ def widget_data_contract(
                 + guardrail_html + "</div>"
             )
 
+        table_grain.observe(render_table_summary, names="value")
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
@@ -1873,8 +1875,8 @@ def widget_data_contract(
             table_description_ai, accept_table_description, rerun_table_description,
         )
         grain_definition = shared.form_section(
-                widgets,
-                title="Grain & Row Key",
+            widgets,
+            title="Grain & Row Key",
                 children=[
                     widgets.GridBox(
                         [
