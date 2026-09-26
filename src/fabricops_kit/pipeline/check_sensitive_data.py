@@ -161,7 +161,7 @@ def _bucket_column(dataframe, *, column_name, parameters):
 
 
 
-def _check_sensitive_data_rules(
+def check_sensitive_data_rules(
     dataframe,
     *,
     rules: list[dict[str, Any]],
@@ -399,7 +399,7 @@ def check_sensitive_data(
         if str(row.get("guardrail_type") or "").strip().lower() == "sensitive_data"
         and row.get("is_active", True) is not False
     ]
-    result = _check_sensitive_data_rules(
+    result = check_sensitive_data_rules(
         dataframe,
         rules=rules,
         identity=identity,
