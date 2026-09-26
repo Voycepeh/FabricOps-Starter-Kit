@@ -127,6 +127,26 @@ def check_freshness(
     )
     if freshness_rule is None:
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
+    if str(freshness_rule.get("rule_type") or "").strip().lower() == "skip":
+        result = freshness_check_core(
+            [],
+            rules_df=rules_df,
+            environment_name=env,
+            table_id=table_id,
+        )
+        print_guardrail_result(
+            "Freshness",
+            result,
+            verbose=verbose,
+            table_id=table_id,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+            context=context,
+        )
+        if verbose:
+            print("  No refresh is expected for this source; freshness age evaluation skipped.")
+        return result
     evidence = get_current_freshness_evidence(
         environment_name=env,
         activity_id=str(audit["_activity_id"]),
