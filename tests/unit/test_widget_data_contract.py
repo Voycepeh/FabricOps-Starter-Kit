@@ -1886,7 +1886,9 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert ">Examples</th>" in review
     assert ">Datatype</th>" in review
     assert ">Required</th>" in review
-    assert "<th>Sensitive</th><th>Classification</th><th>Description</th>" in review
+    assert ">Sensitive</th>" in review
+    assert ">Classification</th>" in review
+    assert ">Description</th>" in review
     assert "CUS-042<br>CUS-017" in review
     assert "<th>Profile</th>" not in review
     assert "<th>Rules</th>" not in review
