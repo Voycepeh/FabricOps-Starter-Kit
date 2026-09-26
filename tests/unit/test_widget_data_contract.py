@@ -159,6 +159,12 @@ def widget_runtime(monkeypatch):
             "environment_name": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    class ScheduleState(dict):
+        def update(self, *args, **kwargs):
+            super().update(*args, **kwargs)
+            catalogue[0]["scheduled_refresh_json"] = json.dumps(self)
+
+    schedule = ScheduleState(json.loads(catalogue[0]["scheduled_refresh_json"]))
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -333,7 +339,8 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "guardrails": guardrails, "ai_enrichment": ai_enrichment,
+        "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
+        "ai_enrichment": ai_enrichment,
     }
 
 
@@ -542,8 +549,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "Block on failure"
-    assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
-    assert "read-only" in controls["pipeline_refresh"].value
+    table_summary = controls["left_pane"].children[0].value
+    assert "Refresh Frequency" in table_summary
+    assert "Daily · 08:00" in table_summary
 
 
 def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
@@ -639,9 +647,9 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "<b>Business Rules</b>" in controls["manifest_preview"].value
 
 
-def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
-    """Operational context shows every read-only schedule without adding an editor."""
-    widget_runtime["schedule"].update({
+def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_runtime):
+    """Operational context shows the writer-captured schedule in the table summary."""
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps({
         "status": "configured",
         "schedules": [
             {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "Asia/Singapore"},
@@ -650,19 +658,22 @@ def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runt
     })
 
     state = widget_runtime["open"]()
-    rendered = state["_controls"]["pipeline_refresh"].value
+    rendered = state["_controls"]["left_pane"].children[0].value
 
-    assert "Daily · 08:00 · Asia/Singapore" in rendered
-    assert "Weekly · 09:30 · UTC · Disabled" in rendered
-    assert "Discovered from Fabric · read-only" in rendered
-    assert not hasattr(state["_controls"]["pipeline_refresh"], "on_submit")
+    assert "Refresh Frequency" in rendered
+    assert "Daily · 08:00" in rendered
+    assert "pipeline_refresh" not in state["_controls"]
 
 
 def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
     """No Fabric schedule remains non-fatal and canonical save records stay unchanged."""
-    widget_runtime["schedule"].update({"status": "not_configured", "schedules": []})
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps(
+        {"status": "not_configured", "schedules": []}
+    )
     state = widget_runtime["open"]()
-    assert "No schedule configured" in state["_controls"]["pipeline_refresh"].value
+    rendered = state["_controls"]["left_pane"].children[0].value
+    assert "Refresh Frequency" in rendered
+    assert "Not configured" in rendered
 
     state["_controls"]["table_description"].value = "Still governed"
     assert widget_runtime["calls"]["enrichment"] == []
@@ -1155,7 +1166,7 @@ def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runti
     controls["suggest_dq"].click()
 
     assert captured
-    assert captured[0]["table_description"] == "Suggested table description"
+    assert captured[0]["table_description"] == "Orders table"
     assert captured[0]["columns"][0]["description"] == "Suggested column description"
     assert controls["column_description"].value == "Order identifier"
 
@@ -1360,6 +1371,10 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     widget_runtime["ai_enrichment"]["enabled"] = True
     monkeypatch.setattr(
         module, "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+    )
+    monkeypatch.setattr(
+        module, "suggest_grain_key",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
     )
     monkeypatch.setattr(

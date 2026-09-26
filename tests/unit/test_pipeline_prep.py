@@ -669,6 +669,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
             "source": "data_contract",
             "contract_id": "contract-id",
         },
+        scheduled_refresh={"status": "not_configured", "schedules": []},
         audit=_audit(),
         config={},
         env="dev",
