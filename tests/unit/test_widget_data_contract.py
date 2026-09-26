@@ -1882,7 +1882,8 @@ def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
         label for label, value in controls["column_select"].options if value == "col-1"
     )
     assert label == "column_1"
-    assert controls["column_header"].children[1] is controls["required"]\n    assert controls["column_header"].layout.align_items == "flex-start"
+    assert controls["column_header"].children[1] is controls["required"]
+    assert controls["column_header"].layout.align_items == "flex-start"
     assert widget_runtime["calls"]["guardrails"] == []
 
 
