@@ -590,10 +590,17 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
+    assert "Classification" in table_summary
+    assert "Grain" in table_summary
+    assert "Row Key" in table_summary
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
-    assert "Classification" in table_summary
     assert "Guardrails" in table_summary
+    assert table_summary.index("Classification") < table_summary.index("Grain")
+    assert table_summary.index("Grain") < table_summary.index("Row Key")
+    assert table_summary.index("Row Key") < table_summary.index("Loading Strategy")
+    assert table_summary.index("Loading Strategy") < table_summary.index("Refresh Frequency")
+    assert table_summary.index("Refresh Frequency") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:5]] == [
