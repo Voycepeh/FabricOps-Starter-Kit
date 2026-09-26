@@ -1949,11 +1949,6 @@ def widget_data_contract(
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
         sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
-        sensitive_help = widgets.HTML(
-            "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-            "Classify whether this column contains PII, record the reason, and choose how "
-            "the pipeline should treat the sensitive value.</div>"
-        )
         sensitive_rule_preview = widgets.HTML()
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
@@ -3116,15 +3111,6 @@ def widget_data_contract(
                 width="100%", min_width="0", gap="8px",
                 padding="0 0 0 16px",
                 border_left="1px solid #e1e6eb",
-            ),
-        )
-        sensitive_editor = widgets.GridBox(
-            [sensitive_primary, sensitive_ai_panel],
-            layout=widgets.Layout(
-                width="100%",
-                grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                grid_gap="16px",
-                align_items="flex-start",
             ),
         )
         column_right = (
