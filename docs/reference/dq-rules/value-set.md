@@ -1,34 +1,61 @@
 # value_set
 
-Checks one column against an explicit governed set.
+## What this rule does
 
-## Use it when
+Checks one column against an explicit governed set of allowed or blocked values.
 
-Use `value_set` when Governance explicitly defines which values are allowed or blocked.
+## When to use it
 
-Examples:
+Use for controlled domains such as statuses, categories, codes, and flags.
 
-- "Status must be Open, Closed, or Pending."
-- "Country code must not be UNKNOWN or N/A."
+## Data applicability
 
-## Do not use it when
-
-- The values merely appeared in profiling or frequency evidence. Observed values are not automatically contractual.
-- The allowed values apply only under another condition: use [`conditional_values`](conditional-values.md).
-- The requirement is numeric or date bounds: use [`range`](range.md).
+Single categorical or code-like columns with a deliberately governed value domain.
 
 ## Parameters
 
-- `columns`: exactly one target column.
-- `mode`: `allow` or `block`.
-- `values`: non-empty explicit governed list.
-
-## Examples
-
-```json
-{"rule_type":"value_set","columns":["status"],"mode":"allow","values":["Open","Closed","Pending"]}
+```yaml
+rule_type: value_set
+columns: ["status"]
+mode: allow
+values: ["Open", "Closed"]
 ```
 
+## Example rule definition
+
 ```json
-{"rule_type":"value_set","columns":["country"],"mode":"block","values":["UNKNOWN","N/A"]}
+{"rule_type":"value_set","columns":["status"],"mode":"allow","values":["Open","Closed"]}
 ```
+
+## Sample input data
+
+| record_id | status |
+|---|---|
+| 1 | Open |
+| 2 | Closed |
+| 3 | Pending |
+
+## Rows that pass
+
+| record_id | status | Why |
+|---|---|---|
+| 1 | Open | Value is explicitly allowed. |
+| 2 | Closed | Value is explicitly allowed. |
+
+## Rows that fail
+
+| record_id | status | Why |
+|---|---|---|
+| 3 | Pending | Value is not in the governed allowed set. |
+
+## Notes
+
+- `mode=allow` permits only listed values.
+- `mode=block` rejects listed values.
+- Frequency-profile values are evidence only. Do not automatically turn observed values into a governed value set.
+
+## Related rules
+
+- [`conditional_values`](conditional-values.md)
+- [`range`](range.md)
+- [`pattern`](pattern.md)
