@@ -287,15 +287,15 @@ Explore practical FabricOps capabilities in action. Each solution will link to a
 <div class="fabricops-feature-grid">
   <a class="fabricops-feature-card" href="guided-demo/03-enrich-guardrails/">
     <span class="fabricops-feature-card__eyebrow">Governance</span>
-    <h3 class="fabricops-feature-card__title">Business Rules → DQ Rules</h3>
-    <p class="fabricops-feature-card__copy">Write a business rule in plain language, resolve it into a supported deterministic DQ rule, then review and apply it to the Data Contract.</p>
+    <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
+    <p class="fabricops-feature-card__copy">Write a business rule in plain language. FabricOps translates it into a reviewable, enforceable Data Quality rule.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
   <a class="fabricops-feature-card" href="notebook-templates/">
     <span class="fabricops-feature-card__eyebrow">Engineering</span>
-    <h3 class="fabricops-feature-card__title">Reusable Read / Write Blocks</h3>
-    <p class="fabricops-feature-card__copy">Clone standard Read and Write blocks in `02_pipeline`, change the source or target configuration, and keep transformation logic as normal PySpark.</p>
+    <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
+    <p class="fabricops-feature-card__copy">Use profile evidence and AI to help author descriptions, grain and row keys, sensitive-data handling, patterns, and other Data Contract metadata.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
