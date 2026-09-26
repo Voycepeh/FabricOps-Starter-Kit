@@ -407,10 +407,21 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
-    assert controls["change_table"].description == "Discard changes & exit"
+    assert controls["change_table"].description == "Exit"
     assert controls["table_exit_row"].layout.justify_content == "center"
 
     controls["change_table"].click()
+    assert state["current"] is not None
+    assert state["dirty"] is True
+    assert controls["table_exit_confirm"].layout.display != "none"
+
+    controls["cancel_exit"].click()
+    assert controls["table_exit_confirm"].layout.display == "none"
+    assert state["current"] is not None
+    assert state["dirty"] is True
+
+    controls["change_table"].click()
+    controls["confirm_exit_discard"].click()
     assert state["current"] is None
     assert state["table_id"] is None
     assert state["dirty"] is False
