@@ -1005,6 +1005,7 @@ def widget_data_contract(
         ]
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
+        checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
         visible_tabs = _TABS if ai_visible else tuple(
             tab for tab in _TABS if tab != "Business Rules"
@@ -4412,7 +4413,6 @@ def widget_data_contract(
         except Exception as exc:
             open_progress.value = ""
             set_status(str(exc), error=True)
-            raise
         finally:
             state["_opening_with_ai"] = False
             open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
