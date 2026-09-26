@@ -908,8 +908,12 @@ def get_table_runtime_context(
         )
         for row in frequency_rows:
             column_id = str(row.get("column_id") or "")
-            if column_id in column_profiles and "example_value" not in column_profiles[column_id]:
-                column_profiles[column_id]["example_value"] = row.get("value")
+            if column_id not in column_profiles:
+                continue
+            examples = column_profiles[column_id].setdefault("example_values", [])
+            value = row.get("value")
+            if value not in (None, "") and value not in examples and len(examples) < 3:
+                examples.append(value)
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for row in table_rows("METADATA_DATA_LINEAGE"):
