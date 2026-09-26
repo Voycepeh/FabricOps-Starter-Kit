@@ -387,6 +387,16 @@ def test_manifest_review_shows_business_rule_lifecycle_state():
     assert "Engineering review: Not required" in review
 
 
+def test_select_rejects_missing_explicit_contract_version(widget_runtime):
+    """An explicit contract version never silently falls back to another version."""
+    state = widget_runtime["start"]()
+
+    with pytest.raises(ValueError, match="Data Contract v99 was not found"):
+        state["select"]("orders", 99)
+
+    assert state["current"] is None
+
+
 def test_selector_is_explicit_and_pending_selection_cannot_change_active_contract(widget_runtime):
     """The editor stays inactive until Open and Change table deactivates the current contract."""
     state = widget_runtime["start"]()
@@ -2067,8 +2077,8 @@ def test_uncaptured_schedule_is_not_misreported_and_blocks_freeze(widget_runtime
     assert "Run the writer pipeline before freezing" in state["message"]
 
 
-def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):
-    """Lifecycle actions reload exact state, refresh manifest, and close immutable editors."""
+def test_freeze_refreshes_manifest_and_keeps_activation_out_of_authoring(widget_runtime):
+    """Freeze reloads lifecycle state while immutable authoring stays review-only."""
     state = widget_runtime["open"]()
     before = module.DATA_CONTRACT_MANIFEST
     state["_controls"]["freeze"].click()
@@ -2076,13 +2086,12 @@ def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtim
     state["_controls"]["freeze_confirm"].click()
     assert widget_runtime["calls"]["freeze"] == 1
     assert state["current"]["contract"]["status"] == "frozen"
+    assert state["contracts"][0]["status"] == "frozen"
     assert state["_controls"]["table_description"].disabled is True
     assert module.DATA_CONTRACT_MANIFEST is not before
-    state["_controls"]["activate"].click()
-    assert widget_runtime["calls"]["activate"] == 1
-    assert state["current"]["contract"]["status"] == "frozen"
-    assert state["current"]["contract"]["is_active"] is True
-    assert "ACTIVE" in state["message"]
+    assert "activate" not in state
+    assert "activate" not in state["_controls"]
+    assert widget_runtime["calls"]["activate"] == 0
 
 
 def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
