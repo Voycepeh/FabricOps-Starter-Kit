@@ -97,7 +97,17 @@ def suggest_enrichment(
         raise ValueError("An AI Enrichment description prompt is required.")
     call = invoke or _invoke_fabric_ai
     context_json = json.dumps(context, sort_keys=True, default=str)
-    description = str(call(f"{description_prompt.strip()}\n\nContext:\n{context_json}")).strip()
+    guidance = ""
+    if str(context.get("metadata_level") or "") == "table":
+        guidance = (
+            "\n\nWrite a concise business description of what the dataset represents and what it supports. "
+            "Use grain and classification as context. Do not list or paraphrase columns. "
+            "Do not mention technical or operational metadata. Do not repeat the grain verbatim. "
+            "Do not explain the classification itself."
+        )
+    description = str(
+        call(f"{description_prompt.strip()}{guidance}\n\nContext:\n{context_json}")
+    ).strip()
     return {"Description": description}
 
 
@@ -291,36 +301,60 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
 
 
 def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> dict[str, Any]:
-    """Return one transient table-grain and row-key suggestion."""
+    """Return one transient grain wording suggestion grounded by profiled key evidence."""
     if not str(prompt).strip():
-        raise ValueError("An AI Grain & Row Key prompt is required.")
+        raise ValueError("An AI Grain prompt is required.")
     allowed_columns = {
         str(row.get("column_name") or "") for row in context.get("columns", [])
         if str(row.get("column_name") or "")
     }
+    candidates = [
+        candidate for candidate in context.get("profile_key_candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    key_columns: list[str] = []
+    for candidate in candidates:
+        columns = [str(name) for name in candidate.get("columns", [])]
+        if columns and all(name in allowed_columns for name in columns):
+            key_columns = columns
+            break
+    if not key_columns:
+        single_candidates = [
+            str(row.get("column_name") or "")
+            for row in context.get("columns", [])
+            if str(row.get("column_name") or "") in allowed_columns
+            and float(row.get("distinct_percent") or 0) >= 100.0
+            and float(row.get("null_percent") or 0) <= 0.0
+        ]
+        if single_candidates:
+            key_columns = [single_candidates[0]]
+
     instruction = f"""{prompt.strip()}
 
-Return JSON only with grain, key_columns, and rationale.
-key_columns must contain only supplied column names and may be empty when no defensible key is evident.
-A single column with 100% observed distinctness and zero missing values is strong profile evidence.
-Per-column distinctness cannot prove composite uniqueness; composite selections are candidates until the uniqueness guardrail validates them on table data.
-Do not invent columns or business meaning unsupported by the governed metadata.
+The row-key candidate has already been determined deterministically from Engineering profiling evidence.
+Do not choose, replace, expand, or reinterpret the key columns.
+Your task is only to describe what one row represents in concise business language.
+Do not enumerate the table schema, repeat technical metadata, or describe operational FabricOps fields.
+Use the supplied key only as structural evidence for the row grain.
+Return JSON only with grain and rationale.
+
+Profiled row-key candidate:
+{json.dumps(key_columns, default=str)}
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
         candidate = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError("AI Grain & Row Key suggestion was not valid JSON.") from exc
+        raise ValueError("AI Grain suggestion was not valid JSON.") from exc
     if not isinstance(candidate, dict):
-        raise ValueError("AI Grain & Row Key suggestion must be a JSON object.")
-    key_columns = candidate.get("key_columns", [])
-    if not isinstance(key_columns, list) or any(str(name) not in allowed_columns for name in key_columns):
-        raise ValueError("AI Grain & Row Key suggestion contains an unknown key column.")
+        raise ValueError("AI Grain suggestion must be a JSON object.")
     return {
         "grain": str(candidate.get("grain") or "").strip(),
-        "key_columns": [str(name) for name in key_columns],
+        "key_columns": key_columns,
         "rationale": str(candidate.get("rationale") or "").strip(),
     }
 

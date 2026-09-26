@@ -740,6 +740,9 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be saved.")
         scope = (str(current["contract_id"]), int(current["contract_version"]))
+        prepare_save = state.get("_prepare_data_contract_save")
+        if callable(prepare_save):
+            prepare_save()
         payload = refresh_manifest()
         if payload is None:
             raise ValueError("Data Contract draft has no payload to save.")
@@ -978,6 +981,23 @@ def widget_data_contract(
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
+        raw_profile_key_candidates = table.get("profile_key_candidates_json") or "[]"
+        if isinstance(raw_profile_key_candidates, str):
+            try:
+                raw_profile_key_candidates = json.loads(raw_profile_key_candidates or "[]")
+            except json.JSONDecodeError:
+                raw_profile_key_candidates = []
+        profile_key_candidates = [
+            dict(candidate)
+            for candidate in raw_profile_key_candidates
+            if isinstance(candidate, Mapping)
+            and candidate.get("columns")
+            and all(str(name) in column_names for name in candidate.get("columns", []))
+        ] if isinstance(raw_profile_key_candidates, list) else []
+        profiled_key_columns = (
+            [str(name) for name in profile_key_candidates[0].get("columns", [])]
+            if profile_key_candidates else []
+        )
         temporal_column_names = [
             str(column.get("column_name") or "")
             for column in columns
@@ -1036,7 +1056,7 @@ def widget_data_contract(
         ]
         row_key_columns = widgets.SelectMultiple(
             options=column_names,
-            value=tuple(existing_row_key_columns),
+            value=tuple(existing_row_key_columns or profiled_key_columns),
             disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
@@ -1051,7 +1071,7 @@ def widget_data_contract(
         grain_profile_evidence = widgets.HTML()
         grain_ai = widgets.HTML()
         suggest_grain = widgets.Button(
-            description="Suggest grain & key",
+            description="Suggest grain",
             disabled=(
                 not editable or not ai_enrichment.get("enabled") or ai_mode != "with_ai"
             ),
@@ -1059,6 +1079,22 @@ def widget_data_contract(
         accept_grain = widgets.Button(description="Apply", disabled=True)
 
         def render_grain_profile_evidence() -> None:
+            if profile_key_candidates:
+                rows = "".join(
+                    "<li><code>{}</code> · <b>{}%</b> unique · no missing key values</li>".format(
+                        html.escape(" + ".join(str(name) for name in candidate.get("columns", []))),
+                        html.escape(str(candidate.get("uniqueness_percent") or 100)),
+                    )
+                    for candidate in profile_key_candidates[:8]
+                )
+                grain_profile_evidence.value = (
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "<b>Engineering profile evidence</b><ul style='margin:5px 0 0 18px;'>"
+                    + rows
+                    + "</ul><span>The smallest proven candidate is preselected as the row key. "
+                    "Governance defines the business grain; the frozen contract later enforces the selected key.</span></div>"
+                )
+                return
             evidence = []
             for column in columns:
                 cid = str(column.get("column_id") or "")
@@ -1079,7 +1115,7 @@ def widget_data_contract(
                 "<li><code>{}</code> · <b>{:.3f}%</b> distinct · "
                 "<b>{:.3f}%</b> missing{}</li>".format(
                     html.escape(name), distinct, missing,
-                    " · strong single-key candidate"
+                    " · proven single-column candidate"
                     if distinct >= 100.0 and missing <= 0.0 else "",
                 )
                 for distinct, missing, name in evidence[:8]
@@ -1088,9 +1124,8 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                 "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
                 + (rows or "<li>No profile evidence available.</li>")
-                + "</ul><span>Per-column distinctness can prove a single-column candidate, but it "
-                "cannot prove composite uniqueness. Composite keys are validated by the table-level "
-                "uniqueness guardrail during pipeline execution.</span></div>"
+                + "</ul><span>Composite key discovery is produced by Engineering profiling. "
+                "This fallback only shows existing per-column profile evidence.</span></div>"
             )
 
         def run_grain_ai(*_args: Any) -> None:
@@ -1123,17 +1158,19 @@ def widget_data_contract(
                         "table_name": str(table.get("table_name") or ""),
                         "schema_name": str(table.get("schema_name") or ""),
                         "table_description": str(table_description.value or ""),
+                        "table_classification": str(table_classification.value or ""),
+                        "profile_key_candidates": profile_key_candidates,
                         "columns": profile_rows,
                     },
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
                 )
                 ai_state["table"]["grain_key"] = suggestion
-                key_text = ", ".join(suggestion["key_columns"]) or "No key suggested"
+                key_text = ", ".join(suggestion["key_columns"]) or "No profiled key candidate"
                 grain_ai.value = (
                     "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                     "padding:9px 11px;font-size:12px;line-height:1.5;'>"
                     f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
-                    f"<b>Suggested row key:</b> {html.escape(key_text)}<br>"
+                    f"<b>Profiled row key:</b> {html.escape(key_text)}<br>"
                     f"<span style='color:#667085;'>{html.escape(suggestion['rationale'])}</span></div>"
                 )
                 accept_grain.disabled = False
@@ -1145,16 +1182,13 @@ def widget_data_contract(
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
-            allowed = set(column_names)
-            row_key_columns.value = tuple(
-                name for name in suggestion.get("key_columns", []) if name in allowed
-            )
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
         grain_profile_evidence.value = (
             "<div style='color:#667085;font-size:12px;'>"
-            "Run Suggest grain & key to inspect profile evidence across the table.</div>"
+            "Engineering profile evidence is used to preselect the row key; "
+            "AI only suggests the grain wording.</div>"
         )
 
         processing = contracts.contract_processing(row)
@@ -1282,13 +1316,19 @@ def widget_data_contract(
             try:
                 if state.get("_opening_with_ai"):
                     set_open_progress("Generating table description…", 50)
+                description_context = build_ai_enrichment_context(
+                    table,
+                    metadata_level="table",
+                    existing_description=str(table_description.value or ""),
+                    column_rows=columns,
+                )
+                grain_suggestion = ai_state["table"].get("grain_key") or {}
+                description_context["grain"] = str(
+                    table_grain.value or grain_suggestion.get("grain") or ""
+                )
+                description_context["classification"] = str(table_classification.value or "")
                 result = suggest_enrichment(
-                    build_ai_enrichment_context(
-                        table,
-                        metadata_level="table",
-                        existing_description=str(table_description.value or ""),
-                        column_rows=columns,
-                    ),
+                    description_context,
                     description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
@@ -1572,6 +1612,12 @@ def widget_data_contract(
         for control in (table_description, table_classification, table_grain):
             control.observe(sync_table_enrichment, names="value")
         row_key_columns.observe(sync_row_key, names="value")
+
+        def prepare_data_contract_save() -> None:
+            """Persist the currently displayed row-key choice when final Save is deliberate."""
+            sync_row_key()
+
+        state["_prepare_data_contract_save"] = prepare_data_contract_save
         row_key_block.observe(sync_row_key, names="value")
         for control in (load_strategy_control, *processing_parameter_controls):
             control.observe(sync_table_processing, names="value")
@@ -1717,11 +1763,11 @@ def widget_data_contract(
                 + runtime_context_html()
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
-                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Grain</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Row Key</div>"
                 f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
@@ -1736,6 +1782,7 @@ def widget_data_contract(
                 + guardrail_html + "</div>"
             )
 
+        table_grain.observe(render_table_summary, names="value")
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
@@ -1841,11 +1888,9 @@ def widget_data_contract(
             "Table definition", table_classification, table_description,
             table_description_ai, accept_table_description, rerun_table_description,
         )
-        table_right = (
-            table_definition,
-            shared.form_section(
-                widgets,
-                title="Grain & Row Key",
+        grain_definition = shared.form_section(
+            widgets,
+            title="Grain & Row Key",
                 children=[
                     widgets.GridBox(
                         [
@@ -1896,7 +1941,10 @@ def widget_data_contract(
                         ),
                     ),
                 ],
-            ),
+            )
+        table_right = (
+            grain_definition,
+            table_definition,
             shared.form_section(
                 widgets,
                 title="Processing",
@@ -3214,7 +3262,12 @@ def widget_data_contract(
         view_content["Columns"] = (column_left, column_right)
 
         if ai_mode == "with_ai":
-            run_table_ai()
+            if not str(table_grain.value or "").strip():
+                run_grain_ai()
+            if not str(table_description.value or "").strip():
+                run_table_ai()
+            else:
+                render_table_ai()
         else:
             render_table_ai()
         if column_options:

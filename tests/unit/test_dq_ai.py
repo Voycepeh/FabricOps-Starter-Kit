@@ -104,28 +104,37 @@ def test_ai_dq_rejects_unknown_columns_composite_and_malformed_parameters():
             suggest_dq_rules(_context(), prompt="configured", invoke=lambda _prompt, value=payload: json.dumps(value))
 
 
-def test_ai_grain_key_preserves_candidate_and_warns_about_composite_proof():
-    """Keep grain/key advice transient and distinguish profile evidence from validation."""
+def test_ai_grain_uses_profiled_key_without_asking_model_to_choose_it():
+    """Keep key discovery deterministic and ask AI only for business grain wording."""
     context = {
         "table_name": "orders",
+        "profile_key_candidates": [{
+            "columns": ["order_id", "line_id"],
+            "uniqueness_percent": 100.0,
+            "null_count": 0,
+        }],
         "columns": [
-            {"column_name": "order_id", "distinct_percent": 100.0, "null_percent": 0.0},
+            {"column_name": "order_id", "distinct_percent": 50.0, "null_percent": 0.0},
             {"column_name": "line_id", "distinct_percent": 20.0, "null_percent": 0.0},
         ],
     }
     captured = {}
     payload = {
-        "grain": "One row per order line",
-        "key_columns": ["order_id", "line_id"],
-        "rationale": "Candidate composite key",
+        "grain": "One row represents a single product line within an order.",
+        "rationale": "The profiled key indicates order-line grain.",
     }
 
     def invoke(prompt):
         captured["prompt"] = prompt
         return json.dumps(payload)
 
-    assert suggest_grain_key(context, prompt="configured", invoke=invoke) == payload
-    assert "cannot prove composite uniqueness" in captured["prompt"]
+    result = suggest_grain_key(context, prompt="configured", invoke=invoke)
+
+    assert result["grain"] == payload["grain"]
+    assert result["key_columns"] == ["order_id", "line_id"]
+    assert result["rationale"] == payload["rationale"]
+    assert "already been determined deterministically" in captured["prompt"]
+    assert "Do not choose, replace, expand, or reinterpret the key columns." in captured["prompt"]
 
 
 def _business_context():

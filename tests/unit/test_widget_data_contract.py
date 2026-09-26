@@ -601,22 +601,22 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
     assert "Guardrails" in table_summary
-    assert table_summary.index("Classification") < table_summary.index("Grain")
-    assert table_summary.index("Grain") < table_summary.index("Row Key")
+    assert table_summary.index("Grain") < table_summary.index("Classification")
+    assert table_summary.index("Classification") < table_summary.index("Row Key")
     assert table_summary.index("Row Key") < table_summary.index("Loading Strategy")
     assert table_summary.index("Loading Strategy") < table_summary.index("Refresh Frequency")
     assert table_summary.index("Refresh Frequency") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:5]] == [
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Grain &amp; Row Key</div>",
+        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
     ]
 
-    grain_section = controls["right_pane"].children[1]
+    grain_section = controls["right_pane"].children[0]
     assert len(grain_section.children[1].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
@@ -861,12 +861,22 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
 def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
     """Enable deterministic AI responses for widget interaction tests."""
     widget_runtime["ai_enrichment"]["enabled"] = True
-    captures = captures if captures is not None else {"enrichment": [], "sensitive": []}
+    captures = captures if captures is not None else {"enrichment": [], "sensitive": [], "grain": []}
 
     def enrichment(context, **_kwargs):
         captures["enrichment"].append(context)
         level = context["metadata_level"]
         return {"Description": f"Suggested {level} description"}
+
+    def grain(context, **_kwargs):
+        captures["grain"].append(context)
+        candidates = context.get("profile_key_candidates") or []
+        key_columns = list(candidates[0].get("columns", [])) if candidates else ["column_0"]
+        return {
+            "grain": "One row represents a single order line.",
+            "key_columns": key_columns,
+            "rationale": "Grounded in Engineering profile evidence.",
+        }
 
     def sensitive(context, **_kwargs):
         captures["sensitive"].append(context)
@@ -881,6 +891,7 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
         }]
 
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
+    monkeypatch.setattr(module, "suggest_grain_key", grain)
     monkeypatch.setattr(module, "suggest_sensitive_data", sensitive)
     return captures
 
@@ -915,21 +926,19 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
 
     controls["open_with_ai"].click()
     controls = state["_controls"]
-    assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
-    assert captures["enrichment"][0]["table_columns"] == [
-        {"column_name": "column_0", "data_type": "long"},
-        {"column_name": "column_1", "data_type": "timestamp"},
-    ]
+    assert len(captures["enrichment"]) == 1  # existing table Description is reused; current column is suggested
+    assert captures["enrichment"][0]["metadata_level"] == "column"
     assert len(captures["sensitive"]) == 1
-    assert captures["sensitive"][0]["table_description"] == "Suggested table description"
+    assert captures["sensitive"][0]["table_description"] == "Orders table"
     assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
     assert all(not drafts for drafts in state["_column_drafts"].values())
     assert state["_ai_suggestions"]
+    assert captures["grain"]
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
-    grain_section = controls["right_pane"].children[1]
+    grain_section = controls["right_pane"].children[0]
     assert grain_section.children[1].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
@@ -955,9 +964,63 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert widget_runtime["calls"]["guardrails"] == []
 
 
+
+def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_runtime, monkeypatch):
+    """Consume Engineering key evidence without asking AI to choose the key."""
+    widget_runtime["catalogue"][0]["profile_key_candidates_json"] = json.dumps([{
+        "columns": ["column_0", "column_1"],
+        "column_count": 2,
+        "row_count": 120,
+        "distinct_count": 120,
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }])
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
+    assert captures["grain"][0]["profile_key_candidates"][0]["columns"] == [
+        "column_0", "column_1"
+    ]
+    assert "Engineering profile evidence" in controls["grain_profile_evidence"].value
+    assert "Profiled row key" in controls["grain_ai"].value
+    assert widget_runtime["calls"]["guardrails"] == []
+
+    controls["save_data_contract"].click()
+    saved_uniqueness = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "uniqueness"
+    )
+    assert module._parameters(saved_uniqueness)["columns"] == ["column_0", "column_1"]
+
+
+def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
+    """Generate Description after Grain and use manual Classification as context."""
+    widget_runtime["enrichment"][:] = [
+        row for row in widget_runtime["enrichment"]
+        if not (
+            not row.get("column_id")
+            and row.get("enrichment_type") in {"Description", "Grain"}
+        )
+    ]
+    _state, captures = _open_with_ai(widget_runtime, monkeypatch)
+
+    table_context = captures["enrichment"][0]
+    assert table_context["grain"] == "One row represents a single order line."
+    assert table_context["classification"] == "Internal"
+    assert captures["grain"]
+
+
 def test_ai_open_reports_granular_progress(widget_runtime, monkeypatch):
     """Slow AI startup reports the real stage before each blocking suggestion call."""
     widget_runtime["ai_enrichment"]["enabled"] = True
+    widget_runtime["enrichment"][:] = [
+        row for row in widget_runtime["enrichment"]
+        if not (
+            not row.get("column_id")
+            and row.get("enrichment_type") in {"Description", "Grain"}
+        )
+    ]
     progress = []
     state = widget_runtime["start"]()
 
@@ -977,6 +1040,15 @@ def test_ai_open_reports_granular_progress(widget_runtime, monkeypatch):
         }]
 
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
+    monkeypatch.setattr(
+        module,
+        "suggest_grain_key",
+        lambda *_args, **_kwargs: {
+            "grain": "One row represents a single order line.",
+            "key_columns": ["column_0"],
+            "rationale": "Profile grounded.",
+        },
+    )
     monkeypatch.setattr(module, "suggest_sensitive_data", sensitive)
 
     state["_controls"]["open_with_ai"].click()
