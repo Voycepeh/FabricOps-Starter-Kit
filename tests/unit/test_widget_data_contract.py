@@ -1020,6 +1020,7 @@ def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
     controls["dq_type"].value = "pattern"
     assert controls["suggest_dq"].disabled is False
     assert controls["dq_ai_instruction"].disabled is False
+    assert controls["dq_ai_instruction"].description == "Pattern instruction"
 
     controls["dq_ai_instruction"].value = "Product IDs start with P followed by three digits."
     controls["suggest_dq"].click()
