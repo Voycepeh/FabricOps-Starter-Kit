@@ -4,17 +4,34 @@
 
 `02_pipeline` has already created and profiled the real target. Governance now authors against that canonical `table_id`, reviews the evidence, defines what the table means and what must be true, then freezes the exact version Engineering will validate in Step 4.
 
-!!! warning "Using the AI authoring features requires Fabric AI Functions"
-    FabricOps can author Data Contracts without AI. The deterministic editors remain available when AI is disabled.
+!!! warning "Enable Fabric AI Functions for the full Data Contract authoring experience"
+    FabricOps can author, freeze, validate, activate, and enforce Data Contracts without AI. The deterministic Governance and runtime paths do not depend on a model.
 
-    To use **AI suggestions**, confirm all of the following before continuing:
+    **However, the advanced natural-language Business Rule translator requires Fabric AI Functions.** This is the main AI-assisted capability in the Data Contract workspace: Governance writes what must be true in plain language, FabricOps translates that intent into the smallest supported deterministic Data Quality rule, and a human reviews the result before it enters the contract.
+
+    AI also assists with Description, Grain & Row Key, Sensitive Data, and Pattern authoring.
+
+    To use these **AI-assisted authoring features**, confirm all of the following before continuing:
 
     1. In the Fabric Admin portal, **Users can use Copilot and other features powered by Azure OpenAI** is enabled for the relevant users or capacity.
     2. The workspace runs on a Fabric capacity and region supported by [Fabric AI Functions](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview). AI Functions require Fabric Runtime 1.3 or later and an eligible paid capacity.
     3. If your capacity region requires cross-geo processing, the corresponding Fabric tenant setting is enabled.
     4. `GOVERNANCE_CONFIG.ai_enrichment.enabled` is set to `True` in `00_env_config`.
 
-    If your organisation does not permit Fabric AI Functions, keep AI Enrichment disabled. You can still complete this step manually; AI only proposes authoring state and never performs Governance approval.
+    If your organisation does not permit Fabric AI Functions, keep AI Enrichment disabled. You can still complete the core lifecycle manually, but the natural-language **Business Rule → DQ rule** translation and the other AI-assisted suggestions will be unavailable. AI only proposes authoring state and never performs Governance approval.
+
+!!! tip "AI highlight — turn business intent into a deterministic DQ rule"
+    The **Business Rules** tab is the clearest example of how FabricOps uses AI without making runtime Governance probabilistic.
+
+    Governance can write requirements such as:
+
+    > Total amount must equal quantity × unit price × (1 - discount)
+
+    FabricOps asks AI to interpret the intent, then resolves it into the smallest supported deterministic rule shape. Known patterns are preferred first, including **Uniqueness**, **Column Relationship**, **Conditional Completeness**, and **Conditional Values**. Only requirements that cannot be represented faithfully by a known pattern fall back to a constrained **Custom Expression**.
+
+    The proposed rule is still only authoring state. Governance reviews it, applies it, saves the Data Contract, and freezes the version. Engineering then enforces the resulting deterministic Guardrail through the normal pipeline.
+
+    **AI interprets the requirement. FabricOps owns the rule model and deterministic enforcement.**
 
 ## 1. Select the governed table
 
@@ -36,6 +53,20 @@ The current workspace is organised into four tabs:
 | **Manifest & Freeze** | The complete contract manifest, validation state, Save Data Contract, and Freeze lifecycle actions. |
 
 Treat these tabs as one contract. They are different views of the same governed definition for one `table_id` and contract version.
+
+### Where AI appears in the workspace
+
+AI is deliberately concentrated at authoring points where interpretation is useful:
+
+| Authoring area | AI-assisted capability | Governance remains responsible for |
+| --- | --- | --- |
+| **Table Description** | Suggest a concise description from governed metadata and profile context. | Review or rewrite the description. |
+| **Grain & Row Key** | Suggest what one row represents and a defensible key candidate. | Confirm the grain and key; runtime uniqueness still validates the data. |
+| **Sensitive Data** | Assess Direct PII, Indirect PII, or Not PII and propose a deterministic treatment. | Review the rationale, treatment, parameters, and Warn or Block action. |
+| **Pattern** | Translate a natural-language text-format requirement into a regular expression. | Review the resulting Pattern rule. |
+| **Business Rules** | **Translate plain-language business intent into a supported deterministic DQ rule.** | **Review the interpretation and approve what enters the contract.** |
+
+The Business Rule translator is the most important of these capabilities because it lets Governance work in business language without introducing an AI-dependent runtime. Once reviewed and saved, the resulting Guardrail is a normal deterministic FabricOps rule.
 
 ## 3. Define the table
 
@@ -112,11 +143,13 @@ These rules should stay understandable and deterministic. Do not encode a large,
 
 AI is useful where interpretation is genuinely needed. Pattern can use an AI suggestion when enabled; the other simple column rules remain normal governed inputs.
 
-## 5. Add cross-column Business Rules
+## 5. Use AI to translate Business Rules into DQ rules
 
 Open **Business Rules** for requirements that are not naturally a single-column rule.
 
-Write the business requirement in plain language and, when useful, select the relevant columns. With AI enabled, **Resolve rule** maps that intent to the smallest supported deterministic FabricOps DQ rule.
+This is the main AI-assisted authoring experience in Step 3.
+
+Write the business requirement in plain language and, when useful, select the relevant columns. Choose **Resolve rule** and FabricOps uses AI to interpret the requirement, then maps that intent to the smallest supported deterministic FabricOps DQ rule.
 
 Examples include:
 
@@ -124,6 +157,10 @@ Examples include:
 * when status is Approved, approved date is required
 * total amount must equal quantity × unit price × (1 - discount)
 * either email or mobile number must be present
+
+The important boundary is:
+
+**business language → AI interpretation → FabricOps rule model → human review → deterministic enforcement**
 
 FabricOps first tries the known DQ patterns, including Uniqueness, Column Relationship, Conditional Completeness, and Conditional Values. When none can represent the requirement faithfully, it can propose a constrained PySpark Custom Expression.
 
