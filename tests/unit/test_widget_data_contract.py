@@ -159,7 +159,12 @@ def widget_runtime(monkeypatch):
             "environment_name": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
-    schedule = {"status": "unavailable", "schedules": []}
+    class ScheduleState(dict):
+        def update(self, *args, **kwargs):
+            super().update(*args, **kwargs)
+            catalogue[0]["scheduled_refresh_json"] = json.dumps(self)
+
+    schedule = ScheduleState(json.loads(catalogue[0]["scheduled_refresh_json"]))
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -276,7 +281,6 @@ def widget_runtime(monkeypatch):
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
-    monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
