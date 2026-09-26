@@ -1,7 +1,5 @@
 # Generate Enforceable Data Quality Rules from Business Rules
 
-This page showcases one FabricOps capability. For the end-to-end Governance and Engineering lifecycle it fits into, see [How FabricOps Works](../how-fabricops-works.md).
-
 Write a business rule in plain language. FabricOps translates it into a reviewable, enforceable Data Quality rule.
 
 ## How it works
