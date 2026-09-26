@@ -1311,7 +1311,7 @@ def widget_data_contract(
                     [
                         widgets.HTML(
                             "<div style='width:150px;padding-top:7px;'>"
-                            "Data must have received data within</div>",
+                            "Maximum age</div>",
                             layout=widgets.Layout(width="150px", min_width="150px"),
                         ),
                         maximum_age,
