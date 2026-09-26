@@ -93,6 +93,16 @@ Repeat the same Environment setup in every workspace that will run FabricOps not
 
 Use the same FabricOps wheel version in each workspace so Governance, Development, Production, and Consumer are running the same package version during the Guided Demo.
 
+## Optional: enable Fabric AI Functions for AI-assisted Governance
+
+FabricOps does not require AI to author or enforce Data Contracts. The AI-assisted authoring controls in Step 3 are optional.
+
+If you want to use them, ask your Fabric administrator to confirm **Users can use Copilot and other features powered by Azure OpenAI** is enabled for the relevant users or capacity. Fabric AI Functions also require a supported Fabric region, Fabric Runtime 1.3 or later, and an eligible paid capacity. Depending on the capacity region, your organisation might also need to allow cross-geo processing.
+
+See [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and [Copilot and Agent tenant settings](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot).
+
+You will enable or disable the FabricOps authoring integration itself through `GOVERNANCE_CONFIG.ai_enrichment.enabled` in `00_env_config`.
+
 ## Expected result
 
 You now have:
