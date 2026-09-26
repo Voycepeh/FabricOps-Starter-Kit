@@ -3478,6 +3478,29 @@ def widget_data_contract(
             ),
         )
         apply_business_rule = widgets.Button(description="Apply", disabled=True)
+        delete_business_rule = widgets.Button(
+            description="Delete rule", disabled=True, button_style="danger"
+        )
+        confirm_delete_business_rule = widgets.Button(
+            description="Confirm delete", disabled=not editable, button_style="danger"
+        )
+        cancel_delete_business_rule = widgets.Button(
+            description="Cancel", disabled=not editable
+        )
+        delete_business_rule_status = widgets.HTML()
+        delete_business_rule_confirm = widgets.VBox(
+            [
+                delete_business_rule_status,
+                shared.action_row(
+                    widgets, [confirm_delete_business_rule, cancel_delete_business_rule]
+                ),
+            ],
+            layout=widgets.Layout(
+                width="100%", gap="6px", padding="8px 10px",
+                border="1px solid #e1e6eb",
+            ),
+        )
+        delete_business_rule_confirm.layout.display = "none"
         engineering_reviewer = widgets.Text(
             disabled=not editable,
             placeholder="Engineer name or identifier",
@@ -3558,6 +3581,10 @@ def widget_data_contract(
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
             business_saved.value = selected if selected in option_values else ""
+
+        def hide_business_delete_confirmation() -> None:
+            delete_business_rule_confirm.layout.display = "none"
+            delete_business_rule_status.value = ""
 
         def engineering_review_state(rule: Mapping[str, Any]) -> tuple[bool, str]:
             if str(rule.get("rule_type") or "") != "custom_expression":
@@ -3646,7 +3673,9 @@ def widget_data_contract(
             try:
                 business_resolved.clear()
                 apply_business_rule.disabled = True
+                hide_business_delete_confirmation()
                 rule = business_lookup.get(str(business_saved.value or ""), {})
+                delete_business_rule.disabled = not editable or not bool(rule)
                 params = _parameters(rule)
                 requirement = str(
                     params.get("business_requirement")
@@ -3794,6 +3823,45 @@ def widget_data_contract(
                 set_validation_error("business_rule", exc)
                 set_status(str(exc), error=True)
 
+        def request_delete_business_rule_clicked(_button: Any) -> None:
+            rule = business_lookup.get(str(business_saved.value or ""), {})
+            if not editable or not rule:
+                return
+            delete_business_rule_status.value = (
+                "<div style='color:#a4262c;font-weight:600;'>Delete this Business Rule?</div>"
+                "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+                "The rule will be removed from the current draft. "
+                "Save the Data Contract to persist the deletion.</div>"
+            )
+            delete_business_rule_confirm.layout.display = ""
+
+        def cancel_delete_business_rule_clicked(_button: Any) -> None:
+            hide_business_delete_confirmation()
+
+        def confirm_delete_business_rule_clicked(_button: Any) -> None:
+            key = str(business_saved.value or "")
+            rule = business_lookup.get(key, {})
+            if not editable or not key or not rule:
+                hide_business_delete_confirmation()
+                return
+            current["guardrails"] = [
+                row for row in current.get("guardrails", [])
+                if str(row.get("guardrail_rule_id") or "") != key
+            ]
+            scope = (str(current["contract_id"]), int(current["contract_version"]))
+            state["_pending_guardrails"].get(scope, {}).pop(key, None)
+            state["dirty"] = True
+            business_resolved.clear()
+            apply_business_rule.disabled = True
+            refresh_manifest()
+            render_table_summary()
+            refresh_business_saved_options()
+            hydrate_business_saved()
+            set_validation_error("business_rule")
+            set_status(
+                "Business Rule deletion staged. Save Data Contract to persist."
+            )
+
         def approve_engineering_review_clicked(_button: Any) -> None:
             try:
                 rule = business_lookup.get(str(business_saved.value or ""), {})
@@ -3834,6 +3902,9 @@ def widget_data_contract(
         business_columns.observe(invalidate_business_proposal, names="value")
         resolve_business_rule.on_click(resolve_business_rule_clicked)
         apply_business_rule.on_click(apply_business_rule_clicked)
+        delete_business_rule.on_click(request_delete_business_rule_clicked)
+        confirm_delete_business_rule.on_click(confirm_delete_business_rule_clicked)
+        cancel_delete_business_rule.on_click(cancel_delete_business_rule_clicked)
         approve_engineering_review.on_click(approve_engineering_review_clicked)
         refresh_business_saved_options()
         hydrate_business_saved()
@@ -3847,6 +3918,8 @@ def widget_data_contract(
                 "</div>"
             ),
             business_saved,
+            delete_business_rule,
+            delete_business_rule_confirm,
         )
         business_primary = widgets.VBox(
             [
@@ -4222,6 +4295,10 @@ def widget_data_contract(
             "business_proposal": business_proposal,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
+            "delete_business_rule": delete_business_rule,
+            "delete_business_rule_confirm": delete_business_rule_confirm,
+            "confirm_delete_business_rule": confirm_delete_business_rule,
+            "cancel_delete_business_rule": cancel_delete_business_rule,
             "engineering_review_panel": engineering_review_panel,
             "engineering_review_status": engineering_review_status,
             "engineering_reviewer": engineering_reviewer,
