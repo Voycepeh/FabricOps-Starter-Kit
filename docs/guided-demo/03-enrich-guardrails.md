@@ -2,6 +2,8 @@
 
 **Return to `01_governance`, review the generated contract against the profiled table, then freeze the version Engineering will validate in Step 4.**
 
+Freezing creates an **immutable Data Contract** candidate for validation. Freezing does not activate it for Production.
+
 !!! warning "Optional: enable Fabric AI Functions"
     FabricOps does not require AI. AI-assisted authoring is optional.
 
