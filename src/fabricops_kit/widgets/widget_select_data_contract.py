@@ -455,7 +455,7 @@ def widget_select_data_contract(*, spark_session=None, context=None):
 
         mode_control.observe(render, names="value")
         version_control.observe(render, names="value")
-        controls[table_id] = {"mode": mode_control, "version": version_control}
+        controls[table_id] = {"mode": mode_control, "version": version_control, "preview": preview}
         role_label = "Read" if role.lower() == "source" else "Write"
         table_name = table_state["display_name"]
 
