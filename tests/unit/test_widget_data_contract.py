@@ -1287,8 +1287,9 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
     freshness_section = state["_controls"]["right_pane"].children[3]
-    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_section.children[1].value
-    assert "not when this table itself is written" in freshness_section.children[1].value
+    freshness_primary = freshness_section.children[1].children[0]
+    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_primary.children[0].value
+    assert "not when this table itself is written" in freshness_primary.children[0].value
 
 
 def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
@@ -1343,8 +1344,9 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
     drift_section = state["_controls"]["right_pane"].children[4]
-    assert "Applies when this table is used as a source in a downstream pipeline." in drift_section.children[1].value
-    assert "previously consumed from this table has changed" in drift_section.children[1].value
+    drift_primary = drift_section.children[1].children[0]
+    assert "Applies when this table is used as a source in a downstream pipeline." in drift_primary.children[0].value
+    assert "previously consumed from this table has changed" in drift_primary.children[1].value
 
     staged_drift = next(
         record for records in state["_pending_guardrails"].values()
