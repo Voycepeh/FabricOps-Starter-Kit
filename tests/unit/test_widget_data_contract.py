@@ -596,7 +596,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
     controls["top_nav"].value = "Business Rules"
     assert controls["business_saved"] in controls["left_pane"].children
-    assert controls["business_requirement"].layout.max_width == "760px"
+    assert controls["business_ai_panel"].layout.display == "none"
+    assert controls["business_requirement"] not in controls["right_pane"].children[0].children[1].children
     assert controls["business_columns"].layout.height == "130px"
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "Block on failure"
@@ -906,6 +907,9 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
+    controls["top_nav"].value = "Business Rules"
+    assert controls["business_ai_panel"].layout.display != "none"
+    assert controls["business_requirement"] in controls["business_ai_panel"].children
     for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
