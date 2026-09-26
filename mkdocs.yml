@@ -21,6 +21,11 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
+  - Featured Solutions:
+      - AI-assisted Data Contract Authoring: solutions/ai-assisted-data-contract-authoring.md
+      - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md
+      - Plug-and-Play, Environment-aware Data Pipelines: solutions/environment-aware-data-pipelines.md
+      - Scan Effective Data Access: solutions/effective-data-access.md
   - Guided Demo:
       - Overview: guided-demo.md
       - "0A - Prepare Fabric Artifacts": guided-demo/00A-setup-fabric-artifacts.md
