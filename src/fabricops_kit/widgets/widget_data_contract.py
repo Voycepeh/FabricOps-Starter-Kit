@@ -958,6 +958,12 @@ def widget_data_contract(
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
+        visible_tabs = _TABS if ai_visible else tuple(
+            tab for tab in _TABS if tab != "Business Rules"
+        )
+        top_nav.options = visible_tabs
+        if str(top_nav.value) not in visible_tabs:
+            top_nav.value = "Table"
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -3204,6 +3210,7 @@ def widget_data_contract(
             placeholder="Example: End date must be after start date",
             **shared.widget_common(widgets, "Business requirement"),
         )
+        business_requirement.description = ""
         business_columns = widgets.SelectMultiple(
             options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
@@ -3212,12 +3219,18 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Relevant columns (optional)"),
         )
+        business_columns.description = ""
         business_enabled = widgets.Checkbox(
             value=True, description="Enabled", disabled=not editable
         )
         business_block = widgets.Checkbox(
             description="Block on failure", disabled=not editable
         )
+        business_rule_controls = widgets.HBox(
+            [business_enabled, business_block],
+            layout=checkbox_row_layout,
+        )
+        business_rule_controls.layout.display = "none"
         business_examples = widgets.HTML(
             "<div style='color:#667085;font-size:12px;line-height:1.6;'>"
             "<b>Examples</b><br>"
@@ -3357,11 +3370,12 @@ def widget_data_contract(
 
         def render_business_proposal(proposal: Mapping[str, Any] | None = None) -> None:
             if not proposal:
+                business_rule_controls.layout.display = "none"
                 business_proposal.value = (
-                    "<p style='color:#667085;'>Describe a rule, optionally select the relevant "
-                    "columns, then choose <b>Resolve rule</b>.</p>"
+                    "<p style='color:#667085;'>No Data Quality rule has been resolved yet.</p>"
                 )
                 return
+            business_rule_controls.layout.display = ""
             rule_type = str(proposal.get("rule_type") or "")
             params = dict(proposal.get("parameters") or {})
             rationale = str(proposal.get("rationale") or "").strip()
@@ -3601,8 +3615,8 @@ def widget_data_contract(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Business Rules</div>"
                 "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Column Rules validate individual fields. Business Rules validate how fields "
-                "work together.</div>"
+                "Generate enforceable Data Quality rules from plain-language business rules."
+                "</div>"
             ),
             business_saved,
         )
@@ -3613,10 +3627,7 @@ def widget_data_contract(
                     "Review the resolved deterministic rule and choose whether it is active "
                     "and whether failure should block the pipeline.</div>"
                 ),
-                widgets.HBox(
-                    [business_enabled, business_block],
-                    layout=checkbox_row_layout,
-                ),
+                business_rule_controls,
                 business_proposal,
                 engineering_review_panel,
             ],
@@ -3628,11 +3639,12 @@ def widget_data_contract(
                     widgets.HTML("<b>AI assistant</b>"),
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Describe the requirement briefly. FabricOps resolves it to a known "
-                        "deterministic pattern when possible and uses a Custom Expression only "
-                        "when needed.</div>"
+                        "Write a business rule in plain language. FabricOps translates it into "
+                        "a reviewable, enforceable Data Quality rule.</div>"
                     ),
+                    widgets.HTML("<b>Business rule</b>"),
                     business_requirement,
+                    widgets.HTML("<b>Relevant columns (optional)</b>"),
                     business_columns,
                     business_examples,
                     shared.action_row(
@@ -3662,8 +3674,17 @@ def widget_data_contract(
         business_right = (
             shared.form_section(
                 widgets,
-                title="Business Rules",
-                children=[business_content],
+                title="Generate Enforceable Data Quality Rules from Business Rules",
+                children=[
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:8px;'>This page showcases one FabricOps capability. "
+                        "For the end-to-end Governance and Engineering lifecycle it fits into, "
+                        "see <a href='https://voycepeh.github.io/FabricOps-Starter-Kit/"
+                        "how-fabricops-works/' target='_blank'>How FabricOps Works</a>.</div>"
+                    ),
+                    business_content,
+                ],
             ),
         )
         view_content["Business Rules"] = (business_left, business_right)
@@ -3978,6 +3999,7 @@ def widget_data_contract(
             "business_primary": business_primary,
             "business_enabled": business_enabled,
             "business_block": business_block,
+            "business_rule_controls": business_rule_controls,
             "business_proposal": business_proposal,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
