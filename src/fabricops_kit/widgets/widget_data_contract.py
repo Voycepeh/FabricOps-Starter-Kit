@@ -1879,11 +1879,10 @@ def widget_data_contract(
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
-        column_header = widgets.GridBox(
+        column_header = widgets.VBox(
             [column_context, required],
             layout=widgets.Layout(
-                width="100%", grid_template_columns="minmax(0, 1fr) 110px",
-                grid_gap="12px", align_items="flex-start",
+                width="100%", min_width="0", gap="4px", align_items="flex-start",
             ),
         )
         datatype_choice = widgets.Dropdown(
