@@ -756,7 +756,7 @@ def widget_data_contract(
         refresh_manifest()
         return normalized
 
-    def save_data_contract_session() -> None:
+    def save_data_contract_session(*, return_to_selector_after: bool = True) -> None:
         """Overwrite the selected draft JSON once, then reload canonical state once."""
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
@@ -782,10 +782,14 @@ def widget_data_contract(
         state["_column_drafts"].pop(scope, None)
         state["_column_dq_selection"].pop(scope, None)
         state["dirty"] = False
-        return_to_selector = state.get("_return_to_selector")
-        if callable(return_to_selector):
-            return_to_selector("Data Contract draft saved. Select a governed table and contract.")
+        if return_to_selector_after:
+            return_to_selector = state.get("_return_to_selector")
+            if callable(return_to_selector):
+                return_to_selector("Data Contract draft saved. Select a governed table and contract.")
+            else:
+                set_status("Data Contract draft saved.")
         else:
+            select(str(state["table_id"]), int(state["contract_version"]))
             set_status("Data Contract draft saved.")
 
     def discard_data_contract_session() -> None:
@@ -3499,9 +3503,14 @@ def widget_data_contract(
                     "how the pipeline should treat the sensitive value."
                 ),
                 primary_children=[
-                    widgets.HBox(
+                    widgets.GridBox(
                         [sensitive_enabled, sensitive_block],
-                        layout=checkbox_row_layout,
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
                     ),
                     sensitive_primary,
                 ],
@@ -4217,10 +4226,13 @@ def widget_data_contract(
         discard_contract_button = None
         if editable:
             save_contract_button = widgets.Button(
-                description="Save Data Contract",
-                button_style="primary",
+                description="Save and exit",
+                button_style="success",
             )
-            discard_contract_button = widgets.Button(description="Discard changes")
+            discard_contract_button = widgets.Button(
+                description="Discard changes",
+                button_style="danger",
+            )
             pending_engineering_review = any(
                 str(rule.get("rule_type") or "") == "custom_expression"
                 and rule.get("is_active", True)
@@ -4231,19 +4243,15 @@ def widget_data_contract(
             )
             freeze_button = widgets.Button(
                 description=f"Freeze v{row['contract_version']}…",
-                disabled=bool(state.get("dirty")) or pending_engineering_review,
+                button_style="primary",
+                disabled=pending_engineering_review,
             )
             freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
             freeze_cancel = widgets.Button(description="Cancel")
-            freeze_confirm_button = widgets.Button(
-                description=f"Freeze v{row['contract_version']}",
-                button_style="danger",
-            )
+            freeze_confirm_message = widgets.HTML()
+            freeze_confirm_button = widgets.Button(button_style="danger")
             freeze_confirm.children = (
-                widgets.HTML(
-                    f"<b>Freeze Data Contract v{row['contract_version']}?</b><br>"
-                    "This version will become immutable. Further changes require a new contract version."
-                ),
+                freeze_confirm_message,
                 widgets.HBox(
                     [freeze_cancel, freeze_confirm_button],
                     layout=widgets.Layout(gap="8px"),
@@ -4270,9 +4278,6 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def freeze_clicked(_button: Any) -> None:
-                if state.get("dirty"):
-                    set_status("Save the Data Contract before freezing this version.", error=True)
-                    return
                 pending_review = any(
                     str(rule.get("rule_type") or "") == "custom_expression"
                     and rule.get("is_active", True)
@@ -4287,6 +4292,19 @@ def widget_data_contract(
                         error=True,
                     )
                     return
+                if state.get("dirty"):
+                    freeze_confirm_message.value = (
+                        f"<b>Save and freeze Data Contract v{row['contract_version']}?</b><br>"
+                        "Your staged changes will be saved first, then this version will become immutable. "
+                        "Further changes require a new contract version."
+                    )
+                    freeze_confirm_button.description = f"Save & Freeze v{row['contract_version']}"
+                else:
+                    freeze_confirm_message.value = (
+                        f"<b>Freeze Data Contract v{row['contract_version']}?</b><br>"
+                        "This version will become immutable. Further changes require a new contract version."
+                    )
+                    freeze_confirm_button.description = f"Freeze v{row['contract_version']}"
                 freeze_confirm.layout.display = ""
 
             def freeze_cancel_clicked(_button: Any) -> None:
@@ -4295,10 +4313,25 @@ def widget_data_contract(
             def freeze_confirm_clicked(_button: Any) -> None:
                 try:
                     freeze_confirm_button.disabled = True
+                    if state.get("dirty"):
+                        errors = state["_validation_errors"]
+                        if errors:
+                            first_error = next(iter(errors.values()))
+                            raise ValueError(
+                                "Complete the current draft configuration before freezing: "
+                                f"{first_error}"
+                            )
+                        scope = (str(current["contract_id"]), int(current["contract_version"]))
+                        retained_columns = state["_column_drafts"].get(scope, {})
+                        if retained_columns:
+                            raise ValueError(
+                                "Complete the retained Column edits before freezing the Data Contract."
+                            )
+                        save_data_contract_session(return_to_selector_after=False)
                     freeze()
                     render()
                     set_status(f"Data Contract v{row['contract_version']} is FROZEN.")
-                except (ValueError, RuntimeError) as exc:
+                except (TypeError, ValueError, RuntimeError) as exc:
                     freeze_confirm_button.disabled = False
                     set_status(str(exc), error=True)
 
