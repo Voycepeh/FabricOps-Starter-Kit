@@ -598,6 +598,10 @@ def widget_data_contract(
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
+        if selected_view == "DQ Rules":
+            refresh_dq_rules = state.get("_refresh_dq_rules")
+            if callable(refresh_dq_rules):
+                refresh_dq_rules()
         if selected_view == "Columns":
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
@@ -3860,7 +3864,7 @@ def widget_data_contract(
                 business_active_saved["rule_id"] = key if rule else ""
                 delete_business_rule.disabled = not editable or not bool(rule)
                 if not rule:
-                    if int(business_proposal_select.value or -1) < 0:
+                    if int(business_proposal_select.value) if business_proposal_select.value is not None else -1 < 0:
                         render_business_proposal()
                     return
                 business_proposal_select.value = -1
@@ -3875,7 +3879,7 @@ def widget_data_contract(
         ) -> None:
             if business_hydrating["active"]:
                 return
-            index = int(business_proposal_select.value or -1)
+            index = int(business_proposal_select.value) if business_proposal_select.value is not None else -1
             if index < 0 or index >= len(business_resolved):
                 if not business_active_saved["rule_id"]:
                     render_business_proposal()
@@ -3897,7 +3901,7 @@ def widget_data_contract(
         ) -> None:
             if business_hydrating["active"]:
                 return
-            index = int(business_proposal_select.value or -1)
+            index = int(business_proposal_select.value) if business_proposal_select.value is not None else -1
             if 0 <= index < len(business_resolved):
                 business_resolved[index]["_enabled"] = bool(business_enabled.value)
                 business_resolved[index]["_block"] = bool(business_block.value)
@@ -4032,7 +4036,7 @@ def widget_data_contract(
                     )
                     return
 
-                index = int(business_proposal_select.value or -1)
+                index = int(business_proposal_select.value) if business_proposal_select.value is not None else -1
                 if index < 0 or index >= len(business_resolved):
                     return
                 proposal = dict(business_resolved[index])
@@ -4238,6 +4242,7 @@ def widget_data_contract(
         )
         refresh_business_saved_options()
         refresh_resolved_options()
+        state["_refresh_dq_rules"] = refresh_business_saved_options
 
         business_ai_panel = widgets.VBox(
             [
