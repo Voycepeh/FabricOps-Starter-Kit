@@ -3946,10 +3946,15 @@ def widget_data_contract(
                 return result
 
             old_enrichment, new_enrichment = enrichment_map(saved_payload), enrichment_map(payload)
+            column_names = {
+                str(item.get("column_id") or ""): str(item.get("column_name") or "Column")
+                for item in [*(old_table.get("columns") or []), *(new_table.get("columns") or [])]
+                if item.get("column_id")
+            }
             for key in sorted(set(old_enrichment) | set(new_enrichment)):
                 before, after = old_enrichment.get(key, ""), new_enrichment.get(key, "")
                 if before != after:
-                    target = key[0] or "Table"
+                    target = column_names.get(key[0], "Column") if key[0] else "Table"
                     changes.append(
                         f"<li><b>{html.escape(target)} · {html.escape(key[1])}</b>: "
                         f"{html.escape(before or 'Not set')} → {html.escape(after or 'Not set')}</li>"
@@ -3996,8 +4001,7 @@ def widget_data_contract(
             )
 
         current_summary = widgets.HTML(
-            "<div style='font-size:16px;font-weight:700;color:#172b4d;'>Current draft</div>"
-            "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+            "<div style='color:#667085;font-size:12px;'>"
             "This is the complete contract that will replace the saved draft JSON.</div>"
         )
         change_preview = widgets.HTML(review_change_html())
@@ -4148,10 +4152,9 @@ def widget_data_contract(
         review_left = table_left
 
         review_right = (
-            shared.form_section(
-                widgets,
-                title="Current contract",
-                children=[current_summary, change_preview, manifest_preview],
+            widgets.VBox(
+                [current_summary, change_preview, manifest_preview],
+                layout=widgets.Layout(width="100%", gap="8px"),
             ),
             shared.form_section(
                 widgets,
