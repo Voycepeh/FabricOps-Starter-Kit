@@ -1156,6 +1156,7 @@ def widget_data_contract(
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
+            render_table_summary()
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
@@ -1627,6 +1628,7 @@ def widget_data_contract(
                     enrichment_record("table", "Grain", table_grain.value),
                 ])
                 set_validation_error("table.enrichment")
+                render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("table.enrichment", exc)
 
@@ -1644,6 +1646,7 @@ def widget_data_contract(
                         active=bool(selected_keys),
                     )])
                 set_validation_error("table.row_key")
+                render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("table.row_key", exc)
 
