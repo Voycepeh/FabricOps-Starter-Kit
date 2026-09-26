@@ -836,6 +836,9 @@ def _catalogue_dataframe_from_profiled(
     table_name: str,
     load_strategy: str | None = None,
     load_strategy_parameters_json: str | None = None,
+    writer_workspace_id: str | None = None,
+    writer_notebook_id: str | None = None,
+    writer_notebook_name: str | None = None,
     scheduled_refresh_json: str | None = None,
     profile_key_candidates_json: str | None = None,
     source_fields: Sequence[tuple[str, str]] | None = None,
@@ -881,6 +884,9 @@ def _catalogue_dataframe_from_profiled(
                 "data_type": None,
                 "load_strategy": load_strategy,
                 "load_strategy_parameters_json": load_strategy_parameters_json,
+                "writer_workspace_id": writer_workspace_id,
+                "writer_notebook_id": writer_notebook_id,
+                "writer_notebook_name": writer_notebook_name,
                 "scheduled_refresh_json": scheduled_refresh_json,
                 "profile_key_candidates_json": profile_key_candidates_json,
             },
@@ -900,6 +906,9 @@ def _catalogue_dataframe_from_profiled(
                     "data_type": data_type,
                     "load_strategy": None,
                     "load_strategy_parameters_json": None,
+                    "writer_workspace_id": None,
+                    "writer_notebook_id": None,
+                    "writer_notebook_name": None,
                     "scheduled_refresh_json": None,
                     "profile_key_candidates_json": None,
                 },
@@ -948,6 +957,15 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
                 "load_strategy_parameters_json": (
                     "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
+                ),
+                "writer_workspace_id": (
+                    "coalesce(source.writer_workspace_id, target.writer_workspace_id)"
+                ),
+                "writer_notebook_id": (
+                    "coalesce(source.writer_notebook_id, target.writer_notebook_id)"
+                ),
+                "writer_notebook_name": (
+                    "coalesce(source.writer_notebook_name, target.writer_notebook_name)"
                 ),
                 "scheduled_refresh_json": (
                     "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
@@ -1253,6 +1271,9 @@ def profile_table(
             layer=identity["store"], schema_name=identity["schema"],
             table_name=identity["table_name"], load_strategy=None,
             load_strategy_parameters_json=None,
+            writer_workspace_id=None,
+            writer_notebook_id=None,
+            writer_notebook_name=None,
             scheduled_refresh_json=None,
             profile_key_candidates_json=json.dumps(
                 profile_key_candidates, sort_keys=True, separators=(",", ":"), ensure_ascii=False
