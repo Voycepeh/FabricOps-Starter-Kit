@@ -1027,13 +1027,18 @@ def test_grain_row_key_updates_left_summary_for_manual_and_ai_apply(widget_runti
 
 def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_runtime, monkeypatch):
     """Hydrate left-side Table values changed from Processing and Business Rules editors."""
+    widget_runtime["guardrails"][:] = [
+        rule for rule in widget_runtime["guardrails"]
+        if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}
+    ]
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
-    controls["load_strategy"].value = "append"
+    controls["load_strategy"].value = "scd1"
     table_summary = controls["left_pane"].children[0].value
     assert "Load strategy" in table_summary
-    assert "APPEND" in table_summary
+    assert "SCD1" in table_summary
+    assert "Data Quality</span><span" not in table_summary
 
     monkeypatch.setattr(
         module,
@@ -1057,7 +1062,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     controls["top_nav"].value = "Table"
     table_summary = controls["left_pane"].children[0].value
     assert "Data Quality" in table_summary
-    assert "Enabled" in table_summary
+    assert "Data Quality</span><span style='font-size:12px;color:#0f6cbd;'>Enabled</span>" in table_summary
 
 
 def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
