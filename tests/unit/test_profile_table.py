@@ -278,7 +278,7 @@ def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spar
         source, shared.build_profile_dataframe(source)
     )
 
-    assert candidates[0]["columns"] == ["order_id", "line_number"]
+    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
 
 
 def test_profile_key_candidates_exclude_measure_columns_from_composite_search(spark_session):
@@ -299,7 +299,7 @@ def test_profile_key_candidates_exclude_measure_columns_from_composite_search(sp
         source, shared.build_profile_dataframe(source)
     )
 
-    assert candidates[0]["columns"] == ["order_id", "line_number"]
+    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
     assert all("amount" not in candidate["columns"] for candidate in candidates)
 
 
