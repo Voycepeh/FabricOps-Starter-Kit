@@ -308,8 +308,8 @@ Explore practical FabricOps capabilities in action. Each solution will link to a
 
   <a class="fabricops-feature-card" href="guided-demo/">
     <span class="fabricops-feature-card__eyebrow">Deployment</span>
-    <h3 class="fabricops-feature-card__title">Reusable Engineering Notebook Stack</h3>
-    <p class="fabricops-feature-card__copy">Reuse the FabricOps engineering notebook flow across projects: environment setup, pipeline execution, contract validation, and promotion, with shared Read and Write patterns and config-driven Dev, Test, and Prod resolution.</p>
+    <h3 class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</h3>
+    <p class="fabricops-feature-card__copy">Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 </div>
