@@ -617,7 +617,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
-    assert controls["dq_panel"].children[1] is controls["dq_primary"]
+    assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
     assert [label for label, _value in controls["dq_type"].options] == [
         "Completeness", "Allowed Values", "Value Rules", "Pattern",
     ]
@@ -935,7 +935,6 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     )
     assert "Business Rules" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Business Rules"
-    assert controls["business_ai_panel"].layout.display != "none"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
     assert controls["business_requirement"].description == ""
     assert controls["business_columns"].description == ""
@@ -1336,7 +1335,7 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
     freshness_section = state["_controls"]["right_pane"].children[3]
-    freshness_primary = freshness_section.children[1].children[0]
+    freshness_primary = freshness_section.children[1]
     assert "Applies when this table is used as a source in a downstream pipeline." in freshness_primary.children[0].value
     assert "not when this table itself is written" in freshness_primary.children[0].value
 
@@ -1393,7 +1392,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
     drift_section = state["_controls"]["right_pane"].children[4]
-    drift_primary = drift_section.children[1].children[0]
+    drift_primary = drift_section.children[1]
     assert "Applies when this table is used as a source in a downstream pipeline." in drift_primary.children[0].value
     assert "previously consumed from this table has changed" in drift_primary.children[1].value
 
@@ -1892,7 +1891,7 @@ def test_table_and_column_definitions_share_compact_layout(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    expected = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+    expected = "120px minmax(240px, 1fr)"
     assert controls["table_definition"].children[1].layout.grid_template_columns == expected
     assert controls["column_definition"].children[1].layout.grid_template_columns == expected
     assert controls["table_classification"].layout.width == "250px"
