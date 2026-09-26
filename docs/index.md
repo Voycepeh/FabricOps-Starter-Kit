@@ -132,6 +132,89 @@
   background: var(--md-accent-fg-color--transparent);
 }
 
+
+.fabricops-feature-intro {
+  max-width: 48rem;
+  margin: -0.2rem 0 0.9rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.fabricops-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.9rem 0 1.7rem;
+}
+
+.fabricops-feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 10.5rem;
+  padding: 0.9rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.55rem;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 0.1rem 0.35rem rgba(0, 0, 0, 0.035);
+  color: var(--md-default-fg-color) !important;
+  text-decoration: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.fabricops-feature-card:hover,
+.fabricops-feature-card:focus {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 0.25rem 0.8rem rgba(15, 143, 131, 0.1);
+  transform: translateY(-0.06rem);
+}
+
+.fabricops-feature-card__eyebrow {
+  margin-bottom: 0.45rem;
+  color: var(--md-primary-fg-color);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fabricops-feature-card__title {
+  margin: 0 0 0.35rem;
+  color: var(--md-default-fg-color);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.fabricops-feature-card__copy {
+  margin: 0 0 0.8rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.fabricops-feature-card__cta {
+  margin-top: auto;
+  color: var(--md-primary-fg-color);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.fabricops-feature-card__cta::after {
+  content: " →";
+}
+
+@media screen and (max-width: 980px) {
+  .fabricops-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media screen and (max-width: 560px) {
+  .fabricops-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media screen and (max-width: 900px) {
   .fabricops-home-quicklinks {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -171,18 +254,18 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 </video>
 
 <div class="fabricops-home-primary">
-  <a class="fabricops-home-action" href="how-fabricops-works/">
+  <a class="fabricops-home-action" href="solutions/effective-data-access/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"></path><path d="M14 3.5v4h4M9 12h6M9 15.5h6"></path></svg>
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
-      <span class="fabricops-home-action__body">See the operating model, Governance ↔ Engineering loop, Data Contracts, and Production path.</span>
+      <span class="fabricops-home-action__body">Understand the end-to-end operating model: how Governance and Engineering work together from contract authoring through validation, activation, promotion, and Production use.</span>
     </span>
     <span class="fabricops-home-action__arrow" aria-hidden="true">→</span>
   </a>
 
-  <a class="fabricops-home-action" href="guided-demo/">
+  <a class="fabricops-home-action" href="solutions/environment-aware-data-pipelines/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="12" cy="11" r="2"></circle><circle cx="19" cy="5" r="2"></circle><path d="M6.5 16.7 10.5 12.5M13.5 9.7 17.5 6.3"></path></svg>
     </span>
@@ -191,6 +274,43 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
       <span class="fabricops-home-action__body">Run the workflow yourself with practical actions, screenshots, and expected results.</span>
     </span>
     <span class="fabricops-home-action__arrow" aria-hidden="true">→</span>
+  </a>
+</div>
+
+
+## Featured Solutions
+
+<p class="fabricops-feature-intro">
+Explore the key capabilities FabricOps provides within that operating model. Each solution focuses on one capability, with a dedicated walkthrough, implementation context, and a short screen recording to be added.
+</p>
+
+<div class="fabricops-feature-grid">
+  <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/">
+    <span class="fabricops-feature-card__eyebrow">Governance</span>
+    <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
+    <p class="fabricops-feature-card__copy">Write a business rule in plain language. FabricOps translates it into a reviewable, enforceable Data Quality rule.</p>
+    <span class="fabricops-feature-card__cta">Explore solution</span>
+  </a>
+
+  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/">
+    <span class="fabricops-feature-card__eyebrow">Engineering</span>
+    <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
+    <p class="fabricops-feature-card__copy">Use profile evidence and AI to help author descriptions, grain and row keys, sensitive-data handling, patterns, and other Data Contract metadata.</p>
+    <span class="fabricops-feature-card__cta">Explore solution</span>
+  </a>
+
+  <a class="fabricops-feature-card" href="how-fabricops-works/">
+    <span class="fabricops-feature-card__eyebrow">Access Governance</span>
+    <h3 class="fabricops-feature-card__title">Scan Effective Data Access</h3>
+    <p class="fabricops-feature-card__copy">Resolve who actually has access to your tables by scanning workspace roles, direct item access, OneLake security roles, and SQL endpoint grants.</p>
+    <span class="fabricops-feature-card__cta">Explore solution</span>
+  </a>
+
+  <a class="fabricops-feature-card" href="guided-demo/">
+    <span class="fabricops-feature-card__eyebrow">Deployment</span>
+    <h3 class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</h3>
+    <p class="fabricops-feature-card__copy">Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.</p>
+    <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 </div>
 

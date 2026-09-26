@@ -1,6 +1,6 @@
 # FabricOps Guided Demo
 
-**Use the Guided Demo to run the FabricOps operating flow in Microsoft Fabric from setup through governed Production consumption.**
+**Run the FabricOps operating model yourself in Microsoft Fabric, from initial setup through governed Production consumption.**
 
 `00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then walk through the same lifecycle described in [How FabricOps Works](how-fabricops-works.md).
 
