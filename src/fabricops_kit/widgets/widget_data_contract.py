@@ -855,15 +855,19 @@ def widget_data_contract(
     selector = shared.form_grid(widgets, [
         store_control, schema_control, table_control, contract_control,
     ])
+    selector.layout.grid_template_columns = "repeat(2, minmax(0, 1fr))"
     selector.add_class("fabricops-data-contract-selector")
     selector_width_style = widgets.HTML(
         value=(
             "<style>"
             ".fabricops-data-contract-selector .widget-inline-hbox:not(.widget-checkbox){"
-            "grid-template-columns:92px minmax(0,1fr);max-width:none;}"
+            "grid-template-columns:92px minmax(0,1fr);width:100%;max-width:none;}"
             ".fabricops-data-contract-selector "
             ".widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
             "width:92px;min-width:92px;max-width:92px;}"
+            ".fabricops-data-contract-selector .widget-dropdown,"
+            ".fabricops-data-contract-selector .widget-dropdown select{"
+            "width:100%;min-width:0;max-width:none !important;}"
             "</style>"
         )
     )
