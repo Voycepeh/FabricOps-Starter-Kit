@@ -550,8 +550,8 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "Block on failure"
     table_summary = controls["left_pane"].children[0].value
-    assert "Refresh Frequency" in table_summary
-    assert "Daily · 08:00" in table_summary
+    assert "Scheduled refresh" in table_summary
+    assert "Daily · 08:00 · Asia/Singapore" in table_summary
 
 
 def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
@@ -606,14 +606,14 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Classification" in table_summary
     assert "Grain" in table_summary
     assert "Row Key" in table_summary
-    assert "Loading Strategy" in table_summary
-    assert "Refresh Frequency" in table_summary
+    assert "Load strategy" in table_summary
+    assert "Scheduled refresh" in table_summary
     assert "Guardrails" in table_summary
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
-    assert table_summary.index("Row Key") < table_summary.index("Loading Strategy")
-    assert table_summary.index("Loading Strategy") < table_summary.index("Refresh Frequency")
-    assert table_summary.index("Refresh Frequency") < table_summary.index("Guardrails")
+    assert table_summary.index("Row Key") < table_summary.index("Load strategy")
+    assert table_summary.index("Load strategy") < table_summary.index("Scheduled refresh")
+    assert table_summary.index("Scheduled refresh") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:5]] == [
@@ -660,8 +660,10 @@ def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_ru
     state = widget_runtime["open"]()
     rendered = state["_controls"]["left_pane"].children[0].value
 
-    assert "Refresh Frequency" in rendered
-    assert "Daily · 08:00" in rendered
+    assert "Scheduled refresh" in rendered
+    assert "Daily · 08:00 · Asia/Singapore" in rendered
+    assert "Weekly · 09:30 · UTC · Disabled" in rendered
+    assert rendered.index("Daily · 08:00 · Asia/Singapore") < rendered.index("Weekly · 09:30 · UTC · Disabled")
     assert "pipeline_refresh" not in state["_controls"]
 
 
@@ -672,7 +674,7 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
     )
     state = widget_runtime["open"]()
     rendered = state["_controls"]["left_pane"].children[0].value
-    assert "Refresh Frequency" in rendered
+    assert "Scheduled refresh" in rendered
     assert "Not configured" in rendered
 
     state["_controls"]["table_description"].value = "Still governed"
@@ -1950,8 +1952,8 @@ def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widge
         }],
     }
     summary = state["_controls"]["left_pane"].children[0].value
-    assert "Refresh Frequency" in summary
-    assert "Daily · 08:00" in summary
+    assert "Scheduled refresh" in summary
+    assert "Daily · 08:00 · Asia/Singapore" in summary
 
 
 def test_uncaptured_schedule_is_not_misreported_and_blocks_freeze(widget_runtime):
