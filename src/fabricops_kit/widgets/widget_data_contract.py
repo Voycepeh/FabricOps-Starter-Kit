@@ -513,7 +513,7 @@ def widget_data_contract(
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "dirty": False,
     }
-    scheduled_refresh: dict[str, Any] = {"status": "not_configured", "schedules": []}
+    scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
     state["scheduled_refresh"] = scheduled_refresh
     contract_schedule = dict(scheduled_refresh)
 
@@ -523,14 +523,16 @@ def widget_data_contract(
         )
         raw_value = str(table_row.get("scheduled_refresh_json") or "").strip()
         try:
-            captured = json.loads(raw_value) if raw_value else {"status": "not_configured", "schedules": []}
+            captured = json.loads(raw_value) if raw_value else {"status": "uncaptured", "schedules": []}
         except json.JSONDecodeError as exc:
             raise ValueError("Catalogue scheduled_refresh_json is invalid.") from exc
         if not isinstance(captured, Mapping):
             raise ValueError("Catalogue scheduled_refresh_json must contain an object.")
         status_value = str(captured.get("status") or "").strip().lower()
-        if status_value not in {"configured", "not_configured"}:
-            raise ValueError("Catalogue Scheduled Refresh status must be configured or not_configured.")
+        if status_value not in {"configured", "not_configured", "uncaptured"}:
+            raise ValueError(
+                "Catalogue Scheduled Refresh status must be configured, not_configured, or uncaptured."
+            )
         normalized = {
             "status": status_value,
             "schedules": list(captured.get("schedules") or []),
@@ -1578,6 +1580,8 @@ def widget_data_contract(
                 refresh_frequency = f"{refresh_frequency} · {schedule_times}"
         elif schedule_status == "not_configured":
             refresh_frequency = "Not configured"
+        elif schedule_status == "uncaptured":
+            refresh_frequency = "Not captured"
         else:
             refresh_frequency = "Unavailable"
 
@@ -1659,11 +1663,6 @@ def widget_data_contract(
 
         processing = contracts.contract_processing(row)
         load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
-        pipeline_refresh = widgets.HTML(
-            "<div><b>Load strategy</b><br>"
-            f"{html.escape(load_strategy)}</div><br>"
-            + _scheduled_refresh_html(scheduled_refresh)
-        )
         table_summary = widgets.HTML()
         table_left = (table_summary, table_exit_row, table_exit_confirm)
 
@@ -3972,7 +3971,6 @@ def widget_data_contract(
             "key_columns": key_columns_control,
             "effective_column": effective_column_control,
             "tracked_columns": tracked_columns_control,
-            "pipeline_refresh": pipeline_refresh,
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
