@@ -46,9 +46,9 @@ For each governed column, review the physical definition and examples, then auth
 
 Profile statistics are evidence only. They do not become contract requirements unless Governance authors a rule from them.
 
-## 4. Business Rules
+## 4. DQ Rules
 
-Open **Business Rules** for cross column requirements or rules that are easier to express in business language.
+Open **DQ Rules** when AI is enabled to describe requirements in business language. FabricOps resolves the governed table context into one or more atomic enforceable DQ rules; the same draft list also includes rules authored directly from the Columns page.
 
 With AI enabled, describe the requirement and resolve it into a deterministic FabricOps Data Quality rule. Review the result before applying it.
 
