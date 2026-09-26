@@ -187,32 +187,22 @@ def _manifest_sections(
             items.append("<li>" + "<br>".join(details) + "</li>")
         return "<ul>" + "".join(items) + "</ul>"
 
-    def profile_evidence(column_id: str) -> str:
+    def example_values(column_id: str) -> str:
         profile = dict(profiles.get(column_id) or {})
-        if not profile:
-            return "<span style='color:#667085;'>No profile available</span>"
-        lines = []
-        range_parts = []
-        if profile.get("min_value") is not None:
-            range_parts.append(f"Min value: <b>{html.escape(str(profile['min_value']))}</b>")
-        if profile.get("max_value") is not None:
-            range_parts.append(f"Max value: <b>{html.escape(str(profile['max_value']))}</b>")
-        if range_parts:
-            lines.append(" · ".join(range_parts))
-        cardinality = []
-        if profile.get("distinct_count") is not None:
-            distinct = f"Distinct count: <b>{html.escape(str(profile['distinct_count']))}</b>"
-            if profile.get("distinct_percent") is not None:
-                distinct += f" (<b>{html.escape(str(profile['distinct_percent']))}%</b>)"
-            cardinality.append(distinct)
-        if profile.get("null_count") is not None:
-            nulls = f"Null count: <b>{html.escape(str(profile['null_count']))}</b>"
-            if profile.get("null_percent") is not None:
-                nulls += f" (<b>{html.escape(str(profile['null_percent']))}%</b>)"
-            cardinality.append(nulls)
-        if cardinality:
-            lines.append(" · ".join(cardinality))
-        return "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
+        values = [
+            value for value in list(profile.get("example_values") or [])
+            if value not in (None, "")
+        ][:3]
+        if not values:
+            fallback = []
+            for name in ("min_value", "max_value"):
+                value = profile.get(name)
+                if value not in (None, "") and value not in fallback:
+                    fallback.append(value)
+            values = fallback[:2]
+        if not values:
+            return "<span style='color:#667085;'>—</span>"
+        return "<br>".join(html.escape(str(value)) for value in values)
 
     active = [row for row in guardrails if row.get("is_active", True)]
     business_rules = [
@@ -252,55 +242,83 @@ def _manifest_sections(
         detail = f"{label} · {treatment}" if treatment else label
         return f"{html.escape(detail)}<br><span style='color:#667085;'>{html.escape(action)}</span>"
 
-    def rules_text(column_id: str) -> str:
-        rows = rules_by_column.get(column_id, [])
-        if not rows:
-            return "<span style='color:#667085;'>None</span>"
-        return "".join(
-            "<div style='margin-bottom:5px;'><b>{}</b> · {}{}</div>".format(
-                html.escape(rule_label(rule)),
-                html.escape(str(rule.get("action") or "Warn")),
-                (
-                    "<br><span style='color:#667085;'>"
-                    + html.escape(parameter_text(rule))
-                    + "</span>"
-                    if parameter_text(rule) else ""
-                ),
+    def column_rule_list() -> str:
+        if not rules_by_column and not sensitive_by_column:
+            return "<ul><li>None configured</li></ul>"
+        items = []
+        column_names = {
+            str(row.get("column_id") or ""): str(row.get("column_name") or "")
+            for row in columns
+        }
+        for column_id in sorted(set(rules_by_column) | set(sensitive_by_column)):
+            name = column_names.get(column_id, column_id or "Unknown column")
+            rules = []
+            sensitive = sensitive_by_column.get(column_id)
+            if sensitive:
+                rules.append(
+                    "<div><b>Sensitive Data</b> · "
+                    + sensitive_text(column_id)
+                    + "</div>"
+                )
+            rules.extend(
+                "<div><b>{}</b> · {}{}</div>".format(
+                    html.escape(rule_label(rule)),
+                    html.escape(str(rule.get("action") or "Warn")),
+                    (
+                        "<br><span style='color:#667085;'>"
+                        + html.escape(parameter_text(rule))
+                        + "</span>"
+                        if parameter_text(rule) else ""
+                    ),
+                )
+                for rule in rules_by_column.get(column_id, [])
             )
-            for rule in rows
-        )
+            items.append(
+                "<li><b>" + html.escape(name) + "</b><div style='margin-top:4px;'>"
+                + "".join(rules) + "</div></li>"
+            )
+        return "<ul>" + "".join(items) + "</ul>"
 
     column_rows = "".join(
         "<tr>"
-        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
         "</tr>".format(
             html.escape(str(row.get("column_name") or "")),
+            example_values(str(row.get("column_id") or "")),
             html.escape(str(row.get("data_type") or "")),
-            profile_evidence(str(row.get("column_id") or "")),
-            html.escape(column_enrichment.get(
-                (str(row.get("column_id") or ""), "Description"), ""
-            )) or "<span style='color:#667085;'>—</span>",
+            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
+            sensitive_text(str(row.get("column_id") or "")),
             html.escape(column_enrichment.get(
                 (str(row.get("column_id") or ""), "Classification"), ""
             )) or "<span style='color:#667085;'>—</span>",
-            sensitive_text(str(row.get("column_id") or "")),
-            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
-            rules_text(str(row.get("column_id") or "")),
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Description"), ""
+            )) or "<span style='color:#667085;'>—</span>",
         )
         for row in columns
     )
+    guardrail_count = len(table_guardrails) + len(column_guardrails) + len(business_rules)
+    guardrail_sections = (
+        "<div style='margin-top:8px;'><b>Table</b>"
+        + rule_list(table_guardrails)
+        + "</div>"
+        "<div style='margin-top:8px;'><b>Columns</b>"
+        + column_rule_list()
+        + "</div>"
+        "<div style='margin-top:8px;'><b>Business Rules</b>"
+        + business_rule_list(business_rules)
+        + "</div>"
+    )
     details = (
-        "<details open><summary><b>Table guardrails</b> · "
-        f"{len(table_guardrails)} configured</summary>{rule_list(table_guardrails)}</details>"
-        "<details open><summary><b>Column definitions and rules</b> · "
-        f"{len(columns)} columns, {len(column_guardrails)} column guardrails</summary>"
+        "<details open><summary><b>Column definitions</b> · "
+        f"{len(columns)} columns</summary>"
         "<div style='overflow-x:auto;'>"
         "<table style='width:100%;font-size:12px;'><thead><tr>"
-        "<th>Column</th><th>Datatype</th><th>Profile evidence</th><th>Description</th>"
-        "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
+        "<th>Column</th><th>Examples</th><th>Datatype</th><th>Required</th>"
+        "<th>Sensitive</th><th>Classification</th><th>Description</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
-        "<details><summary><b>Business Rules</b> · "
-        f"{len(business_rules)} configured</summary>{business_rule_list(business_rules)}</details>"
+        "<details><summary><b>Guardrails</b> · "
+        f"{guardrail_count} configured</summary>{guardrail_sections}</details>"
     )
     return {"Review": details}
 
@@ -842,10 +860,14 @@ def widget_data_contract(
         value=(
             "<style>"
             ".fabricops-data-contract-selector .widget-inline-hbox:not(.widget-checkbox){"
-            "grid-template-columns:92px minmax(0,1fr);max-width:none;}"
+            "grid-template-columns:92px minmax(0,1fr);width:100%;max-width:none;}"
             ".fabricops-data-contract-selector "
             ".widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
             "width:92px;min-width:92px;max-width:92px;}"
+            ".fabricops-data-contract-selector .widget-dropdown{"
+            "width:100% !important;min-width:0;max-width:none !important;}"
+            ".fabricops-data-contract-selector .widget-dropdown select{"
+            "width:100% !important;min-width:0;max-width:none !important;box-sizing:border-box;}"
             "</style>"
         )
     )
@@ -957,6 +979,13 @@ def widget_data_contract(
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
+        ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
+        visible_tabs = _TABS if ai_visible else tuple(
+            tab for tab in _TABS if tab != "Business Rules"
+        )
+        top_nav.options = visible_tabs
+        if str(top_nav.value) not in visible_tabs:
+            top_nav.value = "Table"
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -977,13 +1006,14 @@ def widget_data_contract(
 
         # Table grain and row key: grain is descriptive Enrichment; selected key columns
         # create one table-level uniqueness guardrail.
-        table_grain = widgets.Textarea(
+        table_grain = widgets.Text(
             value=enrichment_value(enrichments, "table", "Grain"), disabled=not editable,
             placeholder="Example: One row per order line",
-            **shared.widget_common(widgets, "Row grain", textarea=True),
+            **shared.widget_common(widgets, "Row grain"),
         )
-        table_grain.description = ""
-        table_grain.layout = widgets.Layout(width="100%", min_width="0", height="80px")
+        table_grain.layout = widgets.Layout(
+            width="100%", max_width="560px", min_width="0"
+        )
         existing_row_key = next((
             rule for rule in guardrails
             if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -1311,7 +1341,7 @@ def widget_data_contract(
                     [
                         widgets.HTML(
                             "<div style='width:150px;padding-top:7px;'>"
-                            "Data must have received data within</div>",
+                            "Maximum age</div>",
                             layout=widgets.Layout(width="150px", min_width="150px"),
                         ),
                         maximum_age,
@@ -1599,15 +1629,15 @@ def widget_data_contract(
 
             writer_count = int(runtime_context.get("writer_count") or 0)
             reader_count = int(runtime_context.get("reader_count") or 0)
-            writer_label = "writer" if writer_count == 1 else "writers"
-            reader_label = "reader" if reader_count == 1 else "readers"
+            writer_label = "write" if writer_count == 1 else "writes"
+            reader_label = "read" if reader_count == 1 else "reads"
             lineage_rows = list(runtime_context.get("lineage") or [])
             if lineage_rows:
                 rows_html = "".join(
                     "<tr>"
                     f"<td style='padding:5px 8px;'>{html.escape(str(item.get('environment_name') or ''))}</td>"
-                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('relationship') or ''))}</td>"
                     f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(('Read' if str(item.get('relationship') or '').lower() in {'reader', 'read'} else 'Write' if str(item.get('relationship') or '').lower() in {'writer', 'write'} else str(item.get('relationship') or '')))}</td>"
                     f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
                     "</tr>"
                     for item in lineage_rows
@@ -1617,9 +1647,9 @@ def widget_data_contract(
                     "<summary style='cursor:pointer;color:#0f6cbd;font-size:12px;'>View lineage</summary>"
                     "<div style='overflow-x:auto;margin-top:6px;'>"
                     "<table style='border-collapse:collapse;width:100%;font-size:11px;'>"
-                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Environment</th>"
-                    "<th style='text-align:left;padding:5px 8px;'>Relationship</th>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Env</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Role</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
                     f"<tbody>{rows_html}</tbody></table></div></details>"
                 )
@@ -1643,7 +1673,7 @@ def widget_data_contract(
             + _scheduled_refresh_html(scheduled_refresh)
         )
         table_summary = widgets.HTML()
-        table_left = (table_summary, change_table_button)
+        table_left = (table_summary, table_exit_row, table_exit_confirm)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
@@ -1682,12 +1712,6 @@ def widget_data_contract(
                 + runtime_context_html()
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
-                "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Refresh Frequency</div>"
-                f"<div style='font-weight:600;'>{html.escape(refresh_frequency)}</div></div>"
-                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Classification</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
                 "<div style='margin-top:12px;'>"
@@ -1696,6 +1720,12 @@ def widget_data_contract(
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Row Key</div>"
                 f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
+                f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
+                "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Refresh Frequency</div>"
+                f"<div style='font-weight:600;'>{html.escape(refresh_frequency)}</div></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
                 + guardrail_html + "</div>"
@@ -1719,28 +1749,88 @@ def widget_data_contract(
             accept_button: Any,
             rerun_button: Any,
         ) -> Any:
-            suggestion_box = widgets.VBox(
-                [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
-                layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
-            )
-            return shared.form_section(
-                widgets,
-                title=title,
-                children=[
-                    widgets.GridBox(
-                        [
-                            widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
-                            widgets.HTML("<b>Description</b>"), description, suggestion_box,
-                        ],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
-                            grid_gap="10px 16px",
-                            align_items="flex-start",
-                        ),
+            if ai_visible:
+                suggestion_box = widgets.VBox(
+                    [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
+                    layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
+                )
+                content = widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
+                        widgets.HTML("<b>Description</b>"), description, suggestion_box,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
                     ),
-                ],
+                )
+            else:
+                content = widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification,
+                        widgets.HTML("<b>Description</b>"), description,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="120px minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
+                    ),
+                )
+            return shared.form_section(widgets, title=title, children=[content])
+
+        def guardrail_section(
+            title: str,
+            *,
+            banner_title: str,
+            banner_detail: str,
+            description: str,
+            primary_children: list[Any],
+            ai_children: list[Any] | None = None,
+        ) -> Any:
+            """Render every Guardrail with one consistent primary/assistant layout."""
+            banner = widgets.HTML(
+                "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
+                f"<b>{html.escape(banner_title)}</b>"
+                f"<br><span style='color:#667085;'>{html.escape(banner_detail)}</span></div>"
             )
+            primary = widgets.VBox(
+                [
+                    banner,
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:4px;'>"
+                        + html.escape(description)
+                        + "</div>"
+                    ),
+                    *primary_children,
+                ],
+                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            )
+            if ai_visible:
+                assistant = widgets.VBox(
+                    list(ai_children or []),
+                    layout=widgets.Layout(
+                        width="100%", min_width="0", gap="8px",
+                        padding="0 0 0 16px",
+                        border_left="1px solid #e1e6eb",
+                    ),
+                )
+                content = widgets.GridBox(
+                    [primary, assistant],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                        grid_gap="16px",
+                        align_items="flex-start",
+                    ),
+                )
+            else:
+                content = primary
+            return shared.form_section(widgets, title=title, children=[content])
 
         table_definition = definition_section(
             "Table definition", table_classification, table_description,
@@ -1752,27 +1842,52 @@ def widget_data_contract(
                 widgets,
                 title="Grain & Row Key",
                 children=[
-                    widgets.HTML(
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;margin-bottom:8px;'>"
-                        "Define what one row represents, then select the column or smallest column "
-                        "combination that should uniquely identify that row. The selected key "
-                        "automatically becomes the table-level uniqueness guardrail.</div>"
-                    ),
-                    table_grain,
-                    row_key_columns,
-                    row_key_block,
-                    grain_profile_evidence,
                     widgets.GridBox(
                         [
-                            widgets.VBox([grain_ai], layout=widgets.Layout(width="100%")),
                             widgets.VBox(
-                                [shared.action_row(widgets, [suggest_grain, accept_grain])],
-                                layout=widgets.Layout(width="100%"),
+                                [
+                                    widgets.HTML(
+                                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                                        "margin-bottom:4px;'>Define what one row represents, then "
+                                        "select the column or smallest column combination that should "
+                                        "uniquely identify that row. The selected key automatically "
+                                        "becomes the table-level uniqueness guardrail.</div>"
+                                    ),
+                                    table_grain,
+                                    row_key_columns,
+                                    row_key_block,
+                                ],
+                                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+                            ),
+                            *(
+                                [
+                                    widgets.VBox(
+                                        [
+                                            widgets.HTML("<b>AI suggestion</b>"),
+                                            grain_ai,
+                                            grain_profile_evidence,
+                                            shared.action_row(
+                                                widgets, [suggest_grain, accept_grain]
+                                            ),
+                                        ],
+                                        layout=widgets.Layout(
+                                            width="100%", min_width="0", gap="8px",
+                                            padding="0 0 0 16px",
+                                            border_left="1px solid #e1e6eb",
+                                        ),
+                                    )
+                                ]
+                                if ai_visible else []
                             ),
                         ],
                         layout=widgets.Layout(
-                            width="100%", grid_template_columns="minmax(0,1fr) auto",
-                            grid_gap="12px", align_items="flex-start",
+                            width="100%",
+                            grid_template_columns=(
+                                "minmax(0, 68fr) minmax(240px, 32fr)"
+                                if ai_visible else "minmax(0, 1fr)"
+                            ),
+                            grid_gap="16px",
+                            align_items="flex-start",
                         ),
                     ),
                 ],
@@ -1786,21 +1901,19 @@ def widget_data_contract(
                     *processing_parameter_controls,
                 ],
             ),
-            shared.form_section(
-                widgets,
-                title="Freshness",
-                children=[
-                    widgets.HTML(
-                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
-                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
-                        "<br><span style='color:#667085;'>This rule is checked when the table is "
-                        "consumed as an input, not when this table itself is written.</span></div>"
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Check whether the source has received sufficiently recent data. "
-                        "Freshness uses the latest value in the selected timestamp column "
-                        "relative to the pipeline run time.</div>"
-                    ),
+            guardrail_section(
+                "Freshness",
+                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_detail=(
+                    "This rule is checked when the table is consumed as an input, "
+                    "not when this table itself is written."
+                ),
+                description=(
+                    "Check whether the source has received sufficiently recent data. "
+                    "Freshness uses the latest value in the selected timestamp column "
+                    "relative to the pipeline run time."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
                         layout=checkbox_row_layout,
@@ -1808,20 +1921,18 @@ def widget_data_contract(
                     *table_rules["freshness"]["display"],
                 ],
             ),
-            shared.form_section(
-                widgets,
-                title="Source Drift",
-                children=[
-                    widgets.HTML(
-                        "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
-                        "padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>Applies when this table is used as a source in a downstream pipeline.</b>"
-                        "<br><span style='color:#667085;'>This rule is checked when the table is "
-                        "consumed as an input, not when this table itself is written.</span></div>"
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Check whether data that was previously consumed from this table has "
-                        "changed when the same source data is read again.</div>"
-                    ),
+            guardrail_section(
+                "Source Drift",
+                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_detail=(
+                    "This rule is checked when the table is consumed as an input, "
+                    "not when this table itself is written."
+                ),
+                description=(
+                    "Check whether data that was previously consumed from this table has "
+                    "changed when the same source data is read again."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
                         layout=checkbox_row_layout,
@@ -1879,11 +1990,10 @@ def widget_data_contract(
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable)
-        column_header = widgets.GridBox(
+        column_header = widgets.VBox(
             [column_context, required],
             layout=widgets.Layout(
-                width="100%", grid_template_columns="minmax(0, 1fr) 110px",
-                grid_gap="12px", align_items="flex-start",
+                width="100%", min_width="0", gap="4px", align_items="flex-start",
             ),
         )
         datatype_choice = widgets.Dropdown(
@@ -1901,11 +2011,6 @@ def widget_data_contract(
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
         sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
-        sensitive_help = widgets.HTML(
-            "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-            "Classify whether this column contains PII, record the reason, and choose how "
-            "the pipeline should treat the sensitive value.</div>"
-        )
         sensitive_rule_preview = widgets.HTML()
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
@@ -1962,13 +2067,13 @@ def widget_data_contract(
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
         )
-        dq_ai_instruction = widgets.Textarea(
+        dq_ai_instruction = widgets.Text(
             value="",
             disabled=True,
-            placeholder="Optional: describe the text pattern you want FabricOps to translate into a regular expression.",
-            **shared.widget_common(widgets, "Additional instruction", textarea=True),
+            placeholder="Example: Product IDs start with P followed by three digits",
+            **shared.widget_common(widgets, "Pattern instruction"),
         )
-        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0", height="72px")
+        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0")
         suggest_dq = widgets.Button(description="Suggest", disabled=True)
         dq_suggestion = widgets.Select(
             options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions")
@@ -3030,20 +3135,19 @@ def widget_data_contract(
                 border_left="1px solid #e1e6eb",
             ),
         )
-        dq_panel = shared.form_section(
-            widgets,
-            title="Column data quality",
-            children=[
-                widgets.GridBox(
-                    [dq_primary, dq_ai_panel],
-                    layout=widgets.Layout(
-                        width="100%",
-                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                        grid_gap="16px",
-                        align_items="flex-start",
-                    ),
-                ),
-            ],
+        dq_panel = guardrail_section(
+            "Column data quality",
+            banner_title="Applies when this governed column is validated or enforced in a pipeline.",
+            banner_detail=(
+                "FabricOps evaluates active deterministic Data Quality rules before a governed "
+                "write is allowed to continue."
+            ),
+            description=(
+                "Choose the rule family that describes the column expectation, configure it, "
+                "and review the resulting deterministic rule."
+            ),
+            primary_children=[dq_primary],
+            ai_children=list(dq_ai_panel.children),
         )
         column_definition = definition_section(
             "Column definition", column_classification, column_description,
@@ -3071,15 +3175,6 @@ def widget_data_contract(
                 border_left="1px solid #e1e6eb",
             ),
         )
-        sensitive_editor = widgets.GridBox(
-            [sensitive_primary, sensitive_ai_panel],
-            layout=widgets.Layout(
-                width="100%",
-                grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                grid_gap="16px",
-                align_items="flex-start",
-            ),
-        )
         column_right = (
             column_header,
             datatype_choice,
@@ -3089,17 +3184,25 @@ def widget_data_contract(
                 title="Profile evidence",
                 children=[profile_context],
             ),
-            shared.form_section(
-                widgets,
-                title="Sensitive Data",
-                children=[
-                    sensitive_help,
+            guardrail_section(
+                "Sensitive Data",
+                banner_title="Applies before this governed table is written.",
+                banner_detail=(
+                    "FabricOps applies the selected deterministic treatment to this column "
+                    "before the governed write proceeds."
+                ),
+                description=(
+                    "Classify whether this column contains PII, record the reason, and choose "
+                    "how the pipeline should treat the sensitive value."
+                ),
+                primary_children=[
                     widgets.HBox(
                         [sensitive_enabled, sensitive_block],
                         layout=checkbox_row_layout,
                     ),
-                    sensitive_editor,
+                    sensitive_primary,
                 ],
+                ai_children=list(sensitive_ai_panel.children),
             ),
             dq_panel,
         )
@@ -3120,11 +3223,12 @@ def widget_data_contract(
         business_saved = widgets.Select(
             **shared.widget_common(widgets, "Saved Business Rules")
         )
-        business_requirement = widgets.Textarea(
+        business_requirement = widgets.Text(
             disabled=not editable,
-            placeholder="Describe what must be true",
-            **shared.widget_common(widgets, "Describe what must be true", textarea=True),
+            placeholder="Example: End date must be after start date",
+            **shared.widget_common(widgets, "Business requirement"),
         )
+        business_requirement.description = ""
         business_columns = widgets.SelectMultiple(
             options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
@@ -3133,12 +3237,18 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Relevant columns (optional)"),
         )
+        business_columns.description = ""
         business_enabled = widgets.Checkbox(
             value=True, description="Enabled", disabled=not editable
         )
         business_block = widgets.Checkbox(
             description="Block on failure", disabled=not editable
         )
+        business_rule_controls = widgets.HBox(
+            [business_enabled, business_block],
+            layout=checkbox_row_layout,
+        )
+        business_rule_controls.layout.display = "none"
         business_examples = widgets.HTML(
             "<div style='color:#667085;font-size:12px;line-height:1.6;'>"
             "<b>Examples</b><br>"
@@ -3190,15 +3300,15 @@ def widget_data_contract(
         business_resolved: dict[str, Any] = {}
         business_hydrating = {"active": False}
 
-        for control in (
-            business_saved, business_requirement, business_columns,
-        ):
-            control.layout.width = "100%"
-            control.layout.max_width = "760px"
-            control.layout.min_width = "0"
+        business_saved.layout.width = "100%"
+        business_saved.layout.max_width = "760px"
+        business_saved.layout.min_width = "0"
         business_saved.layout.height = "160px"
+        business_requirement.layout.width = "100%"
+        business_requirement.layout.min_width = "0"
+        business_columns.layout.width = "100%"
+        business_columns.layout.min_width = "0"
         business_columns.layout.height = "130px"
-        business_requirement.layout.height = "100px"
         engineering_review_note.layout.height = "80px"
 
         def business_rule_label(rule: Mapping[str, Any]) -> str:
@@ -3278,11 +3388,12 @@ def widget_data_contract(
 
         def render_business_proposal(proposal: Mapping[str, Any] | None = None) -> None:
             if not proposal:
+                business_rule_controls.layout.display = "none"
                 business_proposal.value = (
-                    "<p style='color:#667085;'>Describe a rule, optionally select the relevant "
-                    "columns, then choose <b>Resolve rule</b>.</p>"
+                    "<p style='color:#667085;'>No Data Quality rule has been resolved yet.</p>"
                 )
                 return
+            business_rule_controls.layout.display = ""
             rule_type = str(proposal.get("rule_type") or "")
             params = dict(proposal.get("parameters") or {})
             rationale = str(proposal.get("rationale") or "").strip()
@@ -3517,49 +3628,80 @@ def widget_data_contract(
         refresh_business_saved_options()
         hydrate_business_saved()
 
-        business_ai_status = widgets.HTML(
-            "" if (
-                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
-            ) else (
-                "<div style='color:#667085;font-size:12px;'>"
-                "Open this contract with AI suggestions to resolve new Business Rules."
-                "</div>"
-            )
-        )
         business_left = (
             widgets.HTML(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
                 "text-transform:uppercase;letter-spacing:.07em;'>Business Rules</div>"
                 "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Column Rules validate individual fields. Business Rules validate how fields "
-                "work together.</div>"
+                "Generate enforceable Data Quality rules from plain-language business rules."
+                "</div>"
             ),
             business_saved,
         )
-        business_right = (
-            shared.form_section(
-                widgets,
-                title="Business Rules",
-                children=[
+        business_primary = widgets.VBox(
+            [
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "Review the resolved deterministic rule and choose whether it is active "
+                    "and whether failure should block the pipeline.</div>"
+                ),
+                business_rule_controls,
+                business_proposal,
+                engineering_review_panel,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        if ai_visible:
+            business_ai_panel = widgets.VBox(
+                [
+                    widgets.HTML("<b>AI assistant</b>"),
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "State the business requirement in plain language. FabricOps resolves "
-                        "it to a known deterministic pattern when possible and falls back to a "
-                        "safe Custom Expression only when needed.</div>"
+                        "Write a business rule in plain language. FabricOps translates it into "
+                        "a reviewable, enforceable Data Quality rule.</div>"
                     ),
+                    widgets.HTML("<b>Business rule</b>"),
                     business_requirement,
+                    widgets.HTML("<b>Relevant columns (optional)</b>"),
                     business_columns,
                     business_examples,
-                    widgets.HBox(
-                        [business_enabled, business_block],
-                        layout=checkbox_row_layout,
-                    ),
-                    business_ai_status,
-                    business_proposal,
-                    engineering_review_panel,
                     shared.action_row(
                         widgets, [resolve_business_rule, apply_business_rule]
                     ),
+                ],
+                layout=widgets.Layout(
+                    width="100%", min_width="0", gap="8px",
+                    padding="0 0 0 16px",
+                    border_left="1px solid #e1e6eb",
+                ),
+            )
+            business_content = widgets.GridBox(
+                [business_primary, business_ai_panel],
+                layout=widgets.Layout(
+                    width="100%",
+                    grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                    grid_gap="16px",
+                    align_items="flex-start",
+                ),
+            )
+        else:
+            business_ai_panel = widgets.VBox(
+                layout=widgets.Layout(display="none")
+            )
+            business_content = business_primary
+        business_right = (
+            shared.form_section(
+                widgets,
+                title="Generate Enforceable Data Quality Rules from Business Rules",
+                children=[
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:8px;'>This page showcases one FabricOps capability. "
+                        "For the end-to-end Governance and Engineering lifecycle it fits into, "
+                        "see <a href='https://voycepeh.github.io/FabricOps-Starter-Kit/"
+                        "how-fabricops-works/' target='_blank'>How FabricOps Works</a>.</div>"
+                    ),
+                    business_content,
                 ],
             ),
         )
@@ -3871,8 +4013,11 @@ def widget_data_contract(
             "business_saved": business_saved,
             "business_requirement": business_requirement,
             "business_columns": business_columns,
+            "business_ai_panel": business_ai_panel,
+            "business_primary": business_primary,
             "business_enabled": business_enabled,
             "business_block": business_block,
+            "business_rule_controls": business_rule_controls,
             "business_proposal": business_proposal,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
@@ -3917,7 +4062,36 @@ def widget_data_contract(
         "" if ai_enrichment.get("enabled") else
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
     )
-    change_table_button = widgets.Button(description="Change table")
+    change_table_button = widgets.Button(
+        description="Exit",
+        layout=widgets.Layout(width="120px"),
+    )
+    confirm_exit_discard = widgets.Button(
+        description="Discard & exit",
+        button_style="danger",
+    )
+    cancel_exit = widgets.Button(description="Cancel")
+    table_exit_confirm = widgets.VBox(
+        [
+            widgets.HTML(
+                "<div style='font-size:12px;line-height:1.5;text-align:center;'>"
+                "<b>Discard unsaved changes?</b><br>"
+                "<span style='color:#667085;'>Your staged Data Contract changes will be lost.</span>"
+                "</div>"
+            ),
+            widgets.HBox(
+                [cancel_exit, confirm_exit_discard],
+                layout=widgets.Layout(width="100%", justify_content="center", gap="8px"),
+            ),
+        ],
+        layout=widgets.Layout(
+            width="100%", display="none", gap="8px", margin="8px 0 0 0"
+        ),
+    )
+    table_exit_row = widgets.HBox(
+        [change_table_button],
+        layout=widgets.Layout(width="100%", justify_content="center"),
+    )
     selector_actions = widgets.VBox(
         [
             widgets.HBox(
@@ -4057,11 +4231,25 @@ def widget_data_contract(
     state["_return_to_selector"] = return_to_selector
 
     def change_table(_button: Any) -> None:
+        if state.get("dirty"):
+            table_exit_confirm.layout.display = ""
+            return
         return_to_selector("Select a governed table and contract.")
+
+    def cancel_exit_clicked(_button: Any) -> None:
+        table_exit_confirm.layout.display = "none"
+
+    def confirm_exit_clicked(_button: Any) -> None:
+        table_exit_confirm.layout.display = "none"
+        if state.get("current"):
+            discard_data_contract_session()
+        return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
 
     open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
     open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
     change_table_button.on_click(change_table)
+    cancel_exit.on_click(cancel_exit_clicked)
+    confirm_exit_discard.on_click(confirm_exit_clicked)
     store_control.observe(refresh_schema_options, names="value")
     schema_control.observe(refresh_table_options, names="value")
     table_control.observe(table_changed, names="value")
@@ -4092,6 +4280,10 @@ def widget_data_contract(
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
         "change_table": change_table_button,
+        "table_exit_row": table_exit_row,
+        "table_exit_confirm": table_exit_confirm,
+        "confirm_exit_discard": confirm_exit_discard,
+        "cancel_exit": cancel_exit,
     })
     ip.display(page)
     return state

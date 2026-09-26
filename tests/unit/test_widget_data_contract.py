@@ -405,11 +405,29 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
 
+    controls["table_description"].value = "Unsaved edit"
+    assert state["dirty"] is True
+    assert controls["change_table"].description == "Exit"
+    assert controls["table_exit_row"].layout.justify_content == "center"
+
     controls["change_table"].click()
+    assert state["current"] is not None
+    assert state["dirty"] is True
+    assert controls["table_exit_confirm"].layout.display != "none"
+
+    controls["cancel_exit"].click()
+    assert controls["table_exit_confirm"].layout.display == "none"
+    assert state["current"] is not None
+    assert state["dirty"] is True
+
+    controls["change_table"].click()
+    controls["confirm_exit_discard"].click()
     assert state["current"] is None
     assert state["table_id"] is None
+    assert state["dirty"] is False
     assert controls["selector_panel"].layout.display == ""
     assert controls["editor_shell"].layout.display == "none"
+    assert "Unsaved changes discarded" in state["message"]
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
@@ -498,7 +516,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Business Rules", "Manifest & Freeze")
+    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Manifest & Freeze")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -551,7 +569,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -564,13 +582,25 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "PROD · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
-    assert "1 writer · 2 readers" in table_summary
+    assert "1 write · 2 reads" in table_summary
     assert "View lineage" in table_summary
+    assert ">Env</th>" in table_summary
+    assert ">Pipeline</th>" in table_summary
+    assert ">Role</th>" in table_summary
+    assert ">Write</td>" in table_summary
+    assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
+    assert "Classification" in table_summary
+    assert "Grain" in table_summary
+    assert "Row Key" in table_summary
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
-    assert "Classification" in table_summary
     assert "Guardrails" in table_summary
+    assert table_summary.index("Classification") < table_summary.index("Grain")
+    assert table_summary.index("Grain") < table_summary.index("Row Key")
+    assert table_summary.index("Row Key") < table_summary.index("Loading Strategy")
+    assert table_summary.index("Loading Strategy") < table_summary.index("Refresh Frequency")
+    assert table_summary.index("Refresh Frequency") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:5]] == [
@@ -581,28 +611,27 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
     ]
 
+    grain_section = controls["right_pane"].children[1]
+    assert len(grain_section.children[1].children) == 1
+    assert controls["table_grain"].layout.max_width == "560px"
+
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
-    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
-        "minmax(0, 68fr) minmax(240px, 32fr)"
-    )
+    assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
     assert [label for label, _value in controls["dq_type"].options] == [
         "Completeness", "Allowed Values", "Value Rules", "Pattern",
     ]
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    controls["top_nav"].value = "Business Rules"
-    assert controls["business_saved"] in controls["left_pane"].children
-    assert controls["business_requirement"].layout.max_width == "760px"
-    assert controls["business_columns"].layout.height == "130px"
-    assert controls["business_enabled"].description == "Enabled"
-    assert controls["business_block"].description == "Block on failure"
+    assert "Business Rules" not in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
-    assert "Table guardrails" in controls["manifest_preview"].value
-    assert "Column definitions and rules" in controls["manifest_preview"].value
-    assert "Business Rules" in controls["manifest_preview"].value
+    assert "Column definitions" in controls["manifest_preview"].value
+    assert "Guardrails" in controls["manifest_preview"].value
+    assert "<b>Table</b>" in controls["manifest_preview"].value
+    assert "<b>Columns</b>" in controls["manifest_preview"].value
+    assert "<b>Business Rules</b>" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
@@ -895,6 +924,24 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
+    grain_section = controls["right_pane"].children[1]
+    assert grain_section.children[1].layout.grid_template_columns == (
+        "minmax(0, 68fr) minmax(240px, 32fr)"
+    )
+    assert len(grain_section.children[1].children) == 2
+    controls["top_nav"].value = "Columns"
+    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
+        "minmax(0, 68fr) minmax(240px, 32fr)"
+    )
+    assert "Business Rules" in tuple(controls["top_nav"].options)
+    controls["top_nav"].value = "Business Rules"
+    assert controls["business_requirement"] in controls["business_ai_panel"].children
+    assert controls["business_requirement"].description == ""
+    assert controls["business_columns"].description == ""
+    assert controls["business_rule_controls"].layout.display == "none"
+    business_section = controls["right_pane"].children[0]
+    assert "Generate Enforceable Data Quality Rules from Business Rules" in business_section.children[0].value
+    assert "How FabricOps Works" in business_section.children[1].value
     for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
@@ -1000,6 +1047,7 @@ def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
     controls["dq_type"].value = "pattern"
     assert controls["suggest_dq"].disabled is False
     assert controls["dq_ai_instruction"].disabled is False
+    assert controls["dq_ai_instruction"].description == "Pattern instruction"
 
     controls["dq_ai_instruction"].value = "Product IDs start with P followed by three digits."
     controls["suggest_dq"].click()
@@ -1287,8 +1335,9 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
     freshness_section = state["_controls"]["right_pane"].children[3]
-    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_section.children[1].value
-    assert "not when this table itself is written" in freshness_section.children[1].value
+    freshness_primary = freshness_section.children[1]
+    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_primary.children[0].value
+    assert "not when this table itself is written" in freshness_primary.children[0].value
 
 
 def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
@@ -1343,8 +1392,9 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
     drift_section = state["_controls"]["right_pane"].children[4]
-    assert "Applies when this table is used as a source in a downstream pipeline." in drift_section.children[1].value
-    assert "previously consumed from this table has changed" in drift_section.children[1].value
+    drift_primary = drift_section.children[1]
+    assert "Applies when this table is used as a source in a downstream pipeline." in drift_primary.children[0].value
+    assert "previously consumed from this table has changed" in drift_primary.children[1].value
 
     staged_drift = next(
         record for records in state["_pending_guardrails"].values()
@@ -1491,6 +1541,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "min_value": "CUS-001", "max_value": "CUS-120",
+            "example_values": ["CUS-042", "CUS-017"],
         },
     }
 
@@ -1498,20 +1549,30 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
-    assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
-    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Business Rules</b>")
-    assert "<b>Business Rules</b> · 2 configured" in review
-    assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
-    assert "Profile evidence" in review
-    assert "Min value: <b>CUS-001</b>" in review
-    assert "Max value: <b>CUS-120</b>" in review
-    assert "Distinct count: <b>120</b> (<b>100.0%</b>)" in review
-    assert "Null count: <b>0</b> (<b>0.0%</b>)" in review
+    assert review.index("<b>Column definitions</b>") < review.index("<b>Guardrails</b>")
+    assert "<b>Column definitions</b> · 1 columns" in review
+    assert "<b>Guardrails</b> · 7 configured" in review
+    assert "<th>Column</th><th>Examples</th><th>Datatype</th><th>Required</th>" in review
+    assert "<th>Sensitive</th><th>Classification</th><th>Description</th>" in review
+    assert "CUS-042<br>CUS-017" in review
+    assert "<th>Profile</th>" not in review
+    assert "<th>Rules</th>" not in review
+    assert "<b>Table</b>" in review
+    assert "<b>Columns</b>" in review
+    assert "<b>Business Rules</b>" in review
     assert "Customer identifier" in review
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
     assert "Required" in review and ">Yes<" in review
     assert review.count("<b>Pattern</b>") == 1
+
+    fallback = module._manifest_sections(
+        payload,
+        column_profiles={
+            "col-1": {"min_value": "CUS-001", "max_value": "CUS-120"},
+        },
+    )["Review"]
+    assert "CUS-001<br>CUS-120" in fallback
 
 
 def test_business_rule_resolve_apply_stages_existing_guardrail_model(
@@ -1820,7 +1881,8 @@ def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
         label for label, value in controls["column_select"].options if value == "col-1"
     )
     assert label == "column_1"
-    assert controls["column_header"].layout.grid_template_columns == "minmax(0, 1fr) 110px"
+    assert controls["column_header"].children[1] is controls["required"]
+    assert controls["column_header"].layout.align_items == "flex-start"
     assert widget_runtime["calls"]["guardrails"] == []
 
 
@@ -1829,7 +1891,7 @@ def test_table_and_column_definitions_share_compact_layout(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    expected = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+    expected = "120px minmax(240px, 1fr)"
     assert controls["table_definition"].children[1].layout.grid_template_columns == expected
     assert controls["column_definition"].children[1].layout.grid_template_columns == expected
     assert controls["table_classification"].layout.width == "250px"
