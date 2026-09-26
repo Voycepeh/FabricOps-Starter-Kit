@@ -336,6 +336,49 @@ def widget_runtime(monkeypatch):
     }
 
 
+def test_manifest_review_shows_business_rule_lifecycle_state():
+    """Keep Business Rule intent and Engineering review visible outside raw JSON."""
+    payload = {
+        "table": {"columns": []},
+        "enrichment": {"columns": []},
+        "guardrails": [
+            {
+                "guardrail_type": "data_quality",
+                "rule_type": "custom_expression",
+                "action": "Block",
+                "is_active": True,
+                "rule_parameters": {
+                    "business_requirement": "Total amount must equal the calculated amount",
+                    "columns": ["TOTAL_AMOUNT", "QUANTITY", "UNIT_PRICE"],
+                    "expression": "F.col('TOTAL_AMOUNT') == F.col('QUANTITY') * F.col('UNIT_PRICE')",
+                    "engineering_review_required": True,
+                    "engineering_review_status": "approved",
+                    "engineering_reviewed_by": "engineer@example.com",
+                },
+            },
+            {
+                "guardrail_type": "data_quality",
+                "rule_type": "column_relationship",
+                "action": "Warn",
+                "is_active": True,
+                "rule_parameters": {
+                    "business_requirement": "End date must be after start date",
+                    "columns": ["END_DATE", "START_DATE"],
+                    "operator": ">=",
+                },
+            },
+        ],
+    }
+
+    review = widget_module._manifest_sections(payload)["Review"]
+
+    assert "Total amount must equal the calculated amount" in review
+    assert "Expression:" in review
+    assert "Engineering review: Approved by engineer@example.com" in review
+    assert "End date must be after start date" in review
+    assert "Engineering review: Not required" in review
+
+
 def test_selector_is_explicit_and_pending_selection_cannot_change_active_contract(widget_runtime):
     """The editor stays inactive until Open and Change table deactivates the current contract."""
     state = widget_runtime["start"]()
