@@ -2217,49 +2217,85 @@ def widget_data_contract(
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
         bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket boundaries (comma-separated)"))
         bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket labels (comma-separated)"))
-        dq_type = widgets.ToggleButtons(
+        dq_type = widgets.Dropdown(
             options=[
                 ("Completeness", "completeness"),
                 ("Allowed Values", "value_set"),
                 ("Value Rules", "range"),
                 ("Pattern", "pattern"),
             ],
+            value="pattern",
+            disabled=True,
+            layout=widgets.Layout(display="none"),
+        )
+
+        def dq_checkbox(label: str) -> Any:
+            return widgets.Checkbox(description=label, disabled=not editable)
+
+        dq_max_missing = widgets.Text(
+            value="0", disabled=not editable,
+            **shared.widget_common(widgets, "Maximum missing %"),
+        )
+        dq_blank_missing = widgets.Checkbox(
+            value=False, description="Treat blank/whitespace text as missing",
             disabled=not editable,
-            layout=widgets.Layout(width="100%"),
         )
-        dq_catalogue = widgets.HTML(
-            "<div style='display:grid;grid-template-columns:repeat(4,minmax(135px,1fr));"
-            "gap:8px;margin-bottom:10px;'>"
-            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
-            "<b>Completeness</b><br><span style='color:#667085;font-size:12px;'>"
-            "How much of the column must be populated.</span></div>"
-            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
-            "<b>Allowed Values</b><br><span style='color:#667085;font-size:12px;'>"
-            "Which values are accepted or blocked.</span></div>"
-            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
-            "<b>Value Rules</b><br><span style='color:#667085;font-size:12px;'>"
-            "Numeric or date conditions such as above, below, or between.</span></div>"
-            "<div style='border:1px solid #dfe3e8;border-radius:6px;padding:9px 10px;'>"
-            "<b>Pattern</b><br><span style='color:#667085;font-size:12px;'>"
-            "Text structure enforced with a regular expression.</span></div>"
-            "</div>"
+        dq_value_mode = widgets.Dropdown(
+            options=("allow", "block"), disabled=not editable,
+            **shared.widget_common(widgets, "Mode"),
         )
-        dq_help = widgets.HTML()
-        dq_max_missing = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum missing %"))
-        dq_blank_missing = widgets.Checkbox(value=False, description="Treat blank/whitespace text as missing", disabled=not editable)
-        dq_value_mode = widgets.Dropdown(options=("allow", "block"), disabled=not editable, **shared.widget_common(widgets, "Mode"))
-        dq_values = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Allowed values (comma-separated)"))
-        dq_minimum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Lower bound"))
-        dq_minimum_inclusive = widgets.Checkbox(value=True, description="Include lower bound", disabled=not editable)
-        dq_maximum = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Upper bound"))
-        dq_maximum_inclusive = widgets.Checkbox(value=True, description="Include upper bound", disabled=not editable)
-        dq_pattern = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Regular expression"))
+        dq_values = widgets.Text(
+            disabled=not editable,
+            **shared.widget_common(widgets, "Allowed values (comma-separated)"),
+        )
+        dq_minimum = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Lower bound")
+        )
+        dq_minimum_inclusive = widgets.Checkbox(
+            value=True, description="Include lower bound", disabled=not editable
+        )
+        dq_maximum = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Upper bound")
+        )
+        dq_maximum_inclusive = widgets.Checkbox(
+            value=True, description="Include upper bound", disabled=not editable
+        )
+        dq_pattern = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Regular expression")
+        )
+
+        dq_family_controls = {
+            "completeness": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (dq_max_missing, dq_blank_missing),
+            },
+            "value_set": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (dq_value_mode, dq_values),
+            },
+            "range": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (
+                    dq_minimum, dq_minimum_inclusive,
+                    dq_maximum, dq_maximum_inclusive,
+                ),
+            },
+            "pattern": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (dq_pattern,),
+            },
+        }
         dq_parameter_controls = (
             dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
-        dq_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
-        dq_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
+        # Compatibility aliases point at Pattern because Pattern is the only AI-assisted family.
+        dq_enabled = dq_family_controls["pattern"]["enabled"]
+        dq_block = dq_family_controls["pattern"]["block"]
         dq_usage = widgets.HTML()
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
@@ -2297,15 +2333,22 @@ def widget_data_contract(
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
             draft_scope, {}
         )
-        selected_dq_by_column: dict[str, str] = state["_column_dq_selection"].setdefault(
-            draft_scope, {}
-        )
 
         def selected_column() -> dict[str, Any]:
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
         hydrating = {"active": False}
         hydrated_column_snapshots: dict[str, dict[str, Any]] = {}
+
+        def dq_snapshot() -> dict[str, dict[str, Any]]:
+            return {
+                kind: {
+                    "enabled": bool(controls["enabled"].value),
+                    "block": bool(controls["block"].value),
+                    "parameters": [control.value for control in controls["parameters"]],
+                }
+                for kind, controls in dq_family_controls.items()
+            }
 
         def column_editor_snapshot() -> dict[str, Any]:
             return {
@@ -2322,25 +2365,22 @@ def widget_data_contract(
                 "mask_character": mask_character.value,
                 "bucket_bins": bucket_bins.value,
                 "bucket_labels": bucket_labels.value,
-                "dq_type": dq_type.value,
-                "dq_parameters": [control.value for control in dq_parameter_controls],
-                "dq_enabled": dq_enabled.value,
-                "dq_block": dq_block.value,
+                "dq": dq_snapshot(),
             }
 
         def hydrate_dq_family(column_id: str, kind: str) -> None:
-            """Hydrate one column/family pair without borrowing another rule's parameters."""
-            dq_max_missing.value = "0"
-            dq_blank_missing.value = False
-            dq_value_mode.value = "allow"
-            dq_values.value = ""
-            dq_minimum.value = ""
-            dq_minimum_inclusive.value = True
-            dq_maximum.value = ""
-            dq_maximum_inclusive.value = True
-            dq_pattern.value = ""
-            dq_enabled.value = False
-            dq_block.value = False
+            """Hydrate one column/family pair into its always-visible editor."""
+            controls = dq_family_controls[kind]
+            defaults = {
+                "completeness": ("0", False),
+                "value_set": ("allow", ""),
+                "range": ("", True, "", True),
+                "pattern": ("",),
+            }[kind]
+            for control, value in zip(controls["parameters"], defaults, strict=True):
+                control.value = value
+            controls["enabled"].value = False
+            controls["block"].value = False
             rule = next((
                 row for row in session_guardrails()
                 if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -2350,17 +2390,27 @@ def widget_data_contract(
             if not rule:
                 return
             params = _parameters(rule)
-            dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
-            dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
-            dq_value_mode.value = str(params.get("mode") or "allow")
-            dq_values.value = ", ".join(map(str, params.get("values", [])))
-            dq_minimum.value = "" if params.get("minimum") is None else str(params["minimum"])
-            dq_minimum_inclusive.value = bool(params.get("minimum_inclusive", True))
-            dq_maximum.value = "" if params.get("maximum") is None else str(params["maximum"])
-            dq_maximum_inclusive.value = bool(params.get("maximum_inclusive", True))
-            dq_pattern.value = str(params.get("pattern") or "")
-            dq_enabled.value = bool(rule and rule.get("is_active", True))
-            dq_block.value = str(rule.get("action") or "Warn") == "Block"
+            values = {
+                "completeness": (
+                    str(params.get("maximum_missing_percent", 0)),
+                    bool(params.get("treat_blank_as_missing", False)),
+                ),
+                "value_set": (
+                    str(params.get("mode") or "allow"),
+                    ", ".join(map(str, params.get("values", []))),
+                ),
+                "range": (
+                    "" if params.get("minimum") is None else str(params["minimum"]),
+                    bool(params.get("minimum_inclusive", True)),
+                    "" if params.get("maximum") is None else str(params["maximum"]),
+                    bool(params.get("maximum_inclusive", True)),
+                ),
+                "pattern": (str(params.get("pattern") or ""),),
+            }[kind]
+            for control, value in zip(controls["parameters"], values, strict=True):
+                control.value = value
+            controls["enabled"].value = bool(rule.get("is_active", True))
+            controls["block"].value = str(rule.get("action") or "Warn") == "Block"
 
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
@@ -2415,20 +2465,8 @@ def widget_data_contract(
                 mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
                 bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
                 bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
-                configured = [
-                    str(rule.get("rule_type") or "") for rule in live_guardrails
-                    if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-                    and str(rule.get("column_id") or "") == column_id
-                    and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
-                    and rule.get("is_active", True)
-                ]
-                preferred_dq = selected_dq_by_column.get(column_id)
-                dq_type.value = (
-                    preferred_dq
-                    if preferred_dq in _COLUMN_DQ_TYPES
-                    else configured[0] if configured else _COLUMN_DQ_TYPES[0]
-                )
-                hydrate_dq_family(column_id, str(dq_type.value))
+                for kind in _COLUMN_DQ_TYPES:
+                    hydrate_dq_family(column_id, kind)
                 hydrated_column_snapshots[column_id] = column_editor_snapshot()
                 pending = unsaved_columns.get(column_id)
                 if pending:
@@ -2445,11 +2483,16 @@ def widget_data_contract(
                     mask_character.value = pending["mask_character"]
                     bucket_bins.value = pending["bucket_bins"]
                     bucket_labels.value = pending["bucket_labels"]
-                    dq_type.value = pending["dq_type"]
-                    for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
-                        control.value = value
-                    dq_enabled.value = pending["dq_enabled"]
-                    dq_block.value = pending["dq_block"]
+                    for kind, values in pending.get("dq", {}).items():
+                        controls = dq_family_controls.get(kind)
+                        if not controls:
+                            continue
+                        controls["enabled"].value = bool(values.get("enabled"))
+                        controls["block"].value = bool(values.get("block"))
+                        for control, value in zip(
+                            controls["parameters"], values.get("parameters", []), strict=False
+                        ):
+                            control.value = value
                 profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
             finally:
                 hydrating["active"] = False
@@ -2466,35 +2509,6 @@ def widget_data_contract(
 
         state["_load_selected_profile"] = load_selected_profile
 
-        def update_dq_help(change: dict[str, Any] | None = None) -> None:
-            kind = str(dq_type.value or "")
-            selected_id = str(column_select.value or "")
-            if selected_id and not hydrating["active"]:
-                selected_dq_by_column[selected_id] = kind
-            count = sum(
-                1 for rule in session_guardrails()
-                if str(rule.get("rule_type") or "") == kind and rule.get("is_active", True)
-            )
-            dq_help.value = f"<p>{html.escape(_DQ_HELP[kind])}</p>"
-            dq_usage.value = f"<p>{count} current configuration(s) use this rule type.</p>"
-            visible = {
-                "completeness": {dq_max_missing, dq_blank_missing},
-                "value_set": {dq_value_mode, dq_values},
-                "range": {dq_minimum, dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive},
-                "pattern": {dq_pattern},
-            }[kind]
-            for control in dq_parameter_controls:
-                control.layout.display = "" if control in visible else "none"
-            selected_id = str(column_select.value or "")
-            if selected_id and not hydrating["active"]:
-                hydrating["active"] = True
-                try:
-                    hydrate_dq_family(selected_id, kind)
-                finally:
-                    hydrating["active"] = False
-
-        dq_type.observe(update_dq_help, names="value")
-        update_dq_help()
 
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
@@ -2560,11 +2574,15 @@ def widget_data_contract(
         def working_dq_changed(_change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
-            state["_working_dq_enabled"] = bool(dq_enabled.value)
+            state["_working_dq_enabled"] = any(
+                bool(controls["enabled"].value)
+                for controls in dq_family_controls.values()
+            )
             render_table_summary()
 
         sensitive_enabled.observe(working_sensitive_changed, names="value")
-        dq_enabled.observe(working_dq_changed, names="value")
+        for controls in dq_family_controls.values():
+            controls["enabled"].observe(working_dq_changed, names="value")
         update_sensitive_fields()
 
         def update_pii_fields(change: dict[str, Any] | None = None) -> None:
@@ -3041,13 +3059,13 @@ def widget_data_contract(
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(key, exc)
 
-        def sync_dq(_change: dict[str, Any] | None = None) -> None:
+        def sync_dq_family(kind: str) -> None:
             if hydrating["active"] or not editable:
                 return
             cid = str(column_select.value or "")
             if not cid:
                 return
-            kind = str(dq_type.value)
+            controls = dq_family_controls[kind]
             key = f"column.{cid}.dq.{kind}"
             try:
                 selected = selected_column()
@@ -3057,9 +3075,9 @@ def widget_data_contract(
                     and str(r.get("column_id") or "") == cid
                     and str(r.get("rule_type") or "") == kind
                 ), {})
-                if not existing and not dq_enabled.value:
+                if not existing and not controls["enabled"].value:
                     set_validation_error(key)
-                    mark_column_hydrated("dq_type", "dq_parameters", "dq_enabled", "dq_block")
+                    mark_column_hydrated("dq")
                     return
                 params: dict[str, Any] = {"columns": [str(selected.get("column_name") or cid)]}
                 if kind == "completeness":
@@ -3087,11 +3105,11 @@ def widget_data_contract(
                     params["pattern"] = dq_pattern.value
                 stage_guardrails([guardrail_record(
                     "data_quality", kind, params, column_id=cid,
-                    action="Block" if dq_block.value else "Warn",
-                    existing=existing, active=dq_enabled.value,
+                    action="Block" if controls["block"].value else "Warn",
+                    existing=existing, active=controls["enabled"].value,
                 )])
                 set_validation_error(key)
-                mark_column_hydrated("dq_type", "dq_parameters", "dq_enabled", "dq_block")
+                mark_column_hydrated("dq")
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(key, exc)
 
@@ -3172,8 +3190,8 @@ def widget_data_contract(
             if dq_suggestion.value in (None, ""):
                 return
             suggestion = suggestions[int(dq_suggestion.value)]
-            dq_type.value = suggestion["rule_type"]
-            dq_enabled.value = True
+            dq_type.value = "pattern"
+            dq_family_controls["pattern"]["enabled"].value = True
             params = suggestion["parameters"]
             dq_max_missing.value = str(params.get("maximum_missing_percent", 0))
             dq_blank_missing.value = bool(params.get("treat_blank_as_missing", False))
@@ -3193,8 +3211,14 @@ def widget_data_contract(
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
         ):
             control.observe(sync_sensitive, names="value")
-        for control in (dq_type, *dq_parameter_controls, dq_enabled, dq_block):
-            control.observe(sync_dq, names="value")
+        for kind, controls in dq_family_controls.items():
+            for control in (
+                controls["enabled"], controls["block"], *controls["parameters"]
+            ):
+                control.observe(
+                    lambda _change, family=kind: sync_dq_family(family),
+                    names="value",
+                )
 
         def refresh_dq_ai_controls(_change: dict[str, Any] | None = None) -> None:
             if _change and _change.get("old") != _change.get("new"):
@@ -3231,7 +3255,6 @@ def widget_data_contract(
 
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
-        dq_type.observe(refresh_dq_ai_controls, names="value")
         refresh_dq_ai_controls()
         def rebuild_column_options() -> None:
             nonlocal column_options
@@ -3312,33 +3335,95 @@ def widget_data_contract(
             column_option_style,
             column_select,
         )
+        def dq_family_section(
+            title: str, kind: str, description: str, *, ai: bool = False
+        ) -> Any:
+            controls = dq_family_controls[kind]
+            primary = widgets.VBox(
+                [
+                    widgets.HTML(
+                        f"<div style='font-size:13px;color:#667085;line-height:1.5;'>"
+                        f"{html.escape(description)}</div>"
+                    ),
+                    widgets.GridBox(
+                        [controls["enabled"], controls["block"]],
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
+                    ),
+                    *controls["parameters"],
+                ],
+                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            )
+            children = [widgets.HTML(f"<h4 style='margin:0 0 8px 0;'>{html.escape(title)}</h4>")]
+            if ai:
+                children.append(
+                    widgets.GridBox(
+                        [
+                            primary,
+                            widgets.VBox(
+                                [
+                                    widgets.HTML("<b>AI suggestion</b>"),
+                                    dq_ai_instruction,
+                                    dq_suggestion,
+                                    dq_ai,
+                                    shared.action_row(
+                                        widgets, [suggest_dq, accept_dq_suggestion]
+                                    ),
+                                ],
+                                layout=widgets.Layout(
+                                    width="100%", min_width="0", gap="8px",
+                                    padding="0 0 0 16px",
+                                    border_left="1px solid #e1e6eb",
+                                ),
+                            ),
+                        ],
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                            grid_gap="16px",
+                            align_items="flex-start",
+                        ),
+                    )
+                )
+            else:
+                children.append(primary)
+            return widgets.VBox(
+                children,
+                layout=widgets.Layout(
+                    width="100%",
+                    min_width="0",
+                    gap="4px",
+                    padding="14px 0",
+                    border_bottom="1px solid #e1e6eb",
+                ),
+            )
+
         dq_primary = widgets.VBox(
             [
-                dq_catalogue,
-                dq_type,
-                dq_help,
-                widgets.HBox(
-                    [dq_enabled, dq_block],
-                    layout=checkbox_row_layout,
+                dq_family_section(
+                    "Completeness", "completeness",
+                    "Limit missing values, with explicit blank-text handling.",
                 ),
-                *dq_parameter_controls,
+                dq_family_section(
+                    "Allowed Values", "value_set",
+                    "Choose which governed values are accepted or blocked.",
+                ),
+                dq_family_section(
+                    "Value Rules", "range",
+                    "Set deterministic lower and upper bounds for numeric or date values.",
+                ),
+                dq_family_section(
+                    "Pattern", "pattern",
+                    "Enforce text structure with a regular expression.", ai=True,
+                ),
             ],
-            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            layout=widgets.Layout(width="100%", min_width="0", gap="0"),
         )
-        dq_ai_panel = widgets.VBox(
-            [
-                widgets.HTML("<b>AI assistant</b>"),
-                dq_ai_instruction,
-                dq_suggestion,
-                dq_ai,
-                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
-            ],
-            layout=widgets.Layout(
-                width="100%", min_width="0", gap="8px",
-                padding="0 0 0 16px",
-                border_left="1px solid #e1e6eb",
-            ),
-        )
+        dq_ai_panel = widgets.VBox([], layout=widgets.Layout(display="none"))
         dq_panel = guardrail_section(
             "Column data quality",
             banner_title="Applies when this governed column is validated or enforced in a pipeline.",
@@ -3347,11 +3432,10 @@ def widget_data_contract(
                 "write is allowed to continue."
             ),
             description=(
-                "Choose the rule family that describes the column expectation, configure it, "
-                "and review the resulting deterministic rule."
+                "Configure each deterministic rule directly. Pattern also supports optional "
+                "AI assistance for translating a human instruction into a regular expression."
             ),
             primary_children=[dq_primary],
-            ai_children=list(dq_ai_panel.children),
         )
         column_definition = definition_section(
             "Column definition", column_classification, column_description,
