@@ -21,12 +21,6 @@
 }
 </style>
 
-The FabricOps overview video introduces the story. This page goes deeper into how the pieces fit together and why the workflow is structured this way.
-
-The [Featured Solutions](index.md#featured-solutions) are different. They zoom into individual capabilities inside this operating model, such as AI-assisted Data Contract authoring, translating Business Rules into enforceable Data Quality rules, environment-aware pipelines, and effective data access scanning.
-
-[Want to run the lifecycle yourself? Follow the Guided Demo.](guided-demo.md)
-
 <div class="fabricops-section-block" markdown>
 
 ## What problem is FabricOps solving?

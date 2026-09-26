@@ -1,7 +1,5 @@
 # Plug-and-Play, Environment-aware Data Pipelines
 
-This page showcases one FabricOps capability. For the end-to-end Governance and Engineering lifecycle it fits into, see [How FabricOps Works](../how-fabricops-works.md).
-
 Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
 
 ## What is reusable
