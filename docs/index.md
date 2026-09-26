@@ -287,29 +287,29 @@ Explore practical FabricOps capabilities in action. Each solution will link to a
 <div class="fabricops-feature-grid">
   <a class="fabricops-feature-card" href="guided-demo/03-enrich-guardrails/">
     <span class="fabricops-feature-card__eyebrow">Governance</span>
-    <h3 class="fabricops-feature-card__title">AI-powered Data Contracts</h3>
-    <p class="fabricops-feature-card__copy">Translate plain-language business requirements into governed, deterministic Data Quality rules with human review.</p>
+    <h3 class="fabricops-feature-card__title">Business Rules → DQ Rules</h3>
+    <p class="fabricops-feature-card__copy">Write a business rule in plain language, resolve it into a supported deterministic DQ rule, then review and apply it to the Data Contract.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
   <a class="fabricops-feature-card" href="notebook-templates/">
     <span class="fabricops-feature-card__eyebrow">Engineering</span>
-    <h3 class="fabricops-feature-card__title">Composable Pipeline Blocks</h3>
-    <p class="fabricops-feature-card__copy">Reuse standard Read and Write patterns while keeping project transformation logic as normal PySpark.</p>
+    <h3 class="fabricops-feature-card__title">Reusable Read / Write Blocks</h3>
+    <p class="fabricops-feature-card__copy">Clone standard Read and Write blocks in `02_pipeline`, change the source or target configuration, and keep transformation logic as normal PySpark.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
   <a class="fabricops-feature-card" href="how-fabricops-works/">
     <span class="fabricops-feature-card__eyebrow">Access Governance</span>
-    <h3 class="fabricops-feature-card__title">Governed Access Intelligence</h3>
-    <p class="fabricops-feature-card__copy">Inspect effective access across combined grants and governed security relationships instead of isolated permissions.</p>
+    <h3 class="fabricops-feature-card__title">Effective Access Scanner</h3>
+    <p class="fabricops-feature-card__copy">Scan combined grants and security relationships to understand the effective access a user actually has.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
   <a class="fabricops-feature-card" href="guided-demo/">
     <span class="fabricops-feature-card__eyebrow">Deployment</span>
-    <h3 class="fabricops-feature-card__title">Environment-aware Delivery</h3>
-    <p class="fabricops-feature-card__copy">Promote the same config-driven notebooks across environments with Fabric deployment pipelines and logical store resolution.</p>
+    <h3 class="fabricops-feature-card__title">Config-driven Dev / Test / Prod</h3>
+    <p class="fabricops-feature-card__copy">Run the same notebooks across Development, Test, and Production while configuration resolves the correct Fabric items during deployment.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 </div>
