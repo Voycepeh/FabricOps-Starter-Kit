@@ -1159,11 +1159,7 @@ def widget_data_contract(
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
-        grain_profile_evidence.value = (
-            "<div style='color:#667085;font-size:12px;'>"
-            "Engineering profile evidence is used to preselect the row key; "
-            "AI only suggests the grain wording.</div>"
-        )
+        render_grain_profile_evidence()
 
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
