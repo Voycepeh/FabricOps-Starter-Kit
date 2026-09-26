@@ -96,7 +96,7 @@ _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 _CURRENT_TABLE_IDENTITIES: dict[str, dict[str, str | None]] = {}
 
 
-def _display_table_identity(
+def display_table_identity(
     table_id: str,
     *,
     config: Any | None = None,
@@ -147,7 +147,7 @@ def print_guardrail_result(
     def _display_label(value: str | None) -> str | None:
         if not value:
             return None
-        return _display_table_identity(
+        return display_table_identity(
             value,
             config=config,
             env=env,
