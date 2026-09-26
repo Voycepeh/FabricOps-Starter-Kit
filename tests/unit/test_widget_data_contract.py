@@ -111,6 +111,13 @@ def widget_runtime(monkeypatch):
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
+    catalogue[0]["scheduled_refresh_json"] = json.dumps({
+        "status": "configured",
+        "schedules": [{
+            "enabled": True, "frequency": "daily", "times": ["08:00"],
+            "timezone": "Asia/Singapore",
+        }],
+    })
     contract_payload = {
         "contract": {
             "contract_id": "contract-orders", "contract_version": 1, "status": "draft",
@@ -152,10 +159,6 @@ def widget_runtime(monkeypatch):
             "environment_name": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
-    schedule = {
-        "status": "unavailable", "schedules": [],
-        "message": "Scheduled Refresh discovery is unavailable for this notebook.",
-    }
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -272,7 +275,6 @@ def widget_runtime(monkeypatch):
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
-    monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
@@ -331,8 +333,7 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "guardrails": guardrails, "schedule": schedule,
-        "ai_enrichment": ai_enrichment,
+        "guardrails": guardrails, "ai_enrichment": ai_enrichment,
     }
 
 
@@ -1848,6 +1849,35 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
         "maximum": "100",
         "maximum_inclusive": False,
     }
+
+
+def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widget_runtime):
+    """Governance consumes writer-captured Scheduled Refresh from Catalogue."""
+    state = widget_runtime["open"]()
+
+    assert state["scheduled_refresh"] == {
+        "status": "configured",
+        "schedules": [{
+            "enabled": True, "frequency": "daily", "times": ["08:00"],
+            "timezone": "Asia/Singapore",
+        }],
+    }
+    summary = state["_controls"]["left_pane"].children[0].value
+    assert "Refresh Frequency" in summary
+    assert "Daily · 08:00" in summary
+
+
+def test_uncaptured_schedule_is_not_misreported_and_blocks_freeze(widget_runtime):
+    """A profiled-only Catalogue row is not equivalent to no configured schedule."""
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = None
+    state = widget_runtime["open"]()
+
+    assert state["scheduled_refresh"] == {"status": "uncaptured", "schedules": []}
+    assert "Not captured" in state["_controls"]["left_pane"].children[0].value
+    state["_controls"]["freeze"].click()
+    state["_controls"]["freeze_confirm"].click()
+    assert widget_runtime["calls"]["freeze"] == 0
+    assert "Run the writer pipeline before freezing" in state["message"]
 
 
 def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):

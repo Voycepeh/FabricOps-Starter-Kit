@@ -190,6 +190,70 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     assert "4. Frequency profile → calculated" in output
 
 
+
+def test_profile_key_candidates_prefer_smallest_unique_single_column(spark_session):
+    """Return proven single-column keys without testing wider combinations."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [(1, "A"), (2, "A"), (3, "B")],
+        ["order_line_id", "status"],
+    )
+
+    candidates = module._spark_profile_key_candidates(
+        source, shared.build_profile_dataframe(source)
+    )
+
+    assert candidates == [{
+        "columns": ["order_line_id"],
+        "column_count": 1,
+        "row_count": 3,
+        "distinct_count": 3,
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }]
+
+
+def test_profile_key_candidates_find_smallest_composite_key(spark_session):
+    """Test pairs only when no single column is unique and stop at the first valid width."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [(1, "A"), (1, "B"), (2, "A"), (2, "B")],
+        ["order_id", "product_id"],
+    )
+
+    candidates = module._spark_profile_key_candidates(
+        source, shared.build_profile_dataframe(source)
+    )
+
+    assert candidates == [{
+        "columns": ["order_id", "product_id"],
+        "column_count": 2,
+        "row_count": 4,
+        "distinct_count": 4,
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }]
+
+
+def test_profile_key_candidates_ignore_fabricops_operational_metadata(spark_session):
+    """Do not let unique FabricOps audit fields become business-grain candidates."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [(1, "A", "activity-1"), (1, "B", "activity-2"), (2, "A", "activity-3"), (2, "B", "activity-4")],
+        ["order_id", "product_id", "_activity_id"],
+    )
+
+    candidates = module._spark_profile_key_candidates(
+        source, shared.build_profile_dataframe(source)
+    )
+
+    assert candidates[0]["columns"] == ["order_id", "product_id"]
+    assert all("_activity_id" not in candidate["columns"] for candidate in candidates)
+
+
 def test_warehouse_percentile_query_isolated_per_numeric_column():
     """Keep each ordered percentile scope isolated for Fabric Warehouse compatibility."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")

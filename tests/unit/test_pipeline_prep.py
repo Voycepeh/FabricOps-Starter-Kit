@@ -274,6 +274,11 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     monkeypatch.setattr(write_module, "_target_has_activity", lambda **kwargs: False)
     monkeypatch.setattr(shared_module, "stage_pipeline_write_observations", lambda value: [])
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
+    monkeypatch.setattr(
+        write_module,
+        "_writer_scheduled_refresh",
+        lambda **_kwargs: {"status": "not_configured", "schedules": []},
+    )
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     return identity, context
 
@@ -353,6 +358,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
 
     assert result == {"table_id": identity["table_id"]}
     assert persisted[0]["spark_session"] is spark
+    assert persisted[0]["scheduled_refresh"] == {"status": "not_configured", "schedules": []}
     assert events[0] == writer
     assert events[1][0] == "metadata"
     assert events[1][1]["source_table_ids"] == ["source-a", "source-b"]
@@ -369,7 +375,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     assert "3. Scope → full dataset" in output
     assert "4. Audit + ownership → runtime audit fields applied; writer ownership validated" in output
     assert f"5. Physical publication → write_{store_type}_table" in output
-    assert "6. Catalogue → resolved load strategy and parameters persisted" in output
+    assert "6. Catalogue → load strategy and Scheduled Refresh persisted" in output
     assert "7. Success metadata → Lineage and accepted Source Observation state committed" in output
 
 

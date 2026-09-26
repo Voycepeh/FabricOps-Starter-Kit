@@ -10,7 +10,6 @@ from typing import Any, Mapping
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.data_contract import shared as contracts
-from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.enrichment_shared import (
@@ -411,7 +410,7 @@ def _profile_html(context: dict[str, Any]) -> str:
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
 
 def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
-    """Render normalized Scheduled Refresh discovery without exposing API details."""
+    """Render normalized writer Scheduled Refresh metadata from Catalogue."""
     status = str(discovery.get("status") or "unavailable")
     schedules = discovery.get("schedules") or []
     if status == "not_configured":
@@ -433,7 +432,7 @@ def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
         detail = "<ul style=\"margin:4px 0 0 18px;\">" + "".join(rows) + "</ul>"
     return (
         "<div><b>Scheduled refresh</b><br>"
-        f"{detail}<br><span style=\"color:#666;font-size:12px;\">Discovered from Fabric · read-only</span></div>"
+        f"{detail}<br><span style=\"color:#666;font-size:12px;\">Captured by writer pipeline · read-only</span></div>"
     )
 
 
@@ -514,39 +513,37 @@ def widget_data_contract(
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "dirty": False,
     }
-    scheduled_refresh: dict[str, Any] = {
-        "status": "unavailable", "schedules": [],
-        "message": "Scheduled Refresh discovery requires a governed writer notebook identity.",
-    }
+    scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
     state["scheduled_refresh"] = scheduled_refresh
-    contract_schedule = {
-        "status": str(scheduled_refresh.get("status") or "unavailable"),
-        "schedules": list(scheduled_refresh.get("schedules") or []),
-    }
+    contract_schedule = {"status": "unavailable", "schedules": []}
 
     def refresh_scheduled_refresh(selected_table: str) -> None:
         table_row = next(
             (item for item in table_rows if str(item.get("table_id") or "") == selected_table), {}
         )
-        writer_item_id = str(table_row.get("_notebook_id") or "").strip()
-        if writer_item_id:
-            discovered = discover_scheduled_refresh(
-                context=dict(resolved or {}),
-                workspace_id=str(table_row.get("_workspace_id") or "") or None,
-                item_id=writer_item_id,
+        raw_value = str(table_row.get("scheduled_refresh_json") or "").strip()
+        try:
+            captured = json.loads(raw_value) if raw_value else {"status": "uncaptured", "schedules": []}
+        except json.JSONDecodeError as exc:
+            raise ValueError("Catalogue scheduled_refresh_json is invalid.") from exc
+        if not isinstance(captured, Mapping):
+            raise ValueError("Catalogue scheduled_refresh_json must contain an object.")
+        status_value = str(captured.get("status") or "").strip().lower()
+        if status_value not in {"configured", "not_configured", "uncaptured"}:
+            raise ValueError(
+                "Catalogue Scheduled Refresh status must be configured, not_configured, or uncaptured."
             )
-        else:
-            discovered = {
-                "status": "unavailable", "schedules": [],
-                "message": "The governed writer notebook identity is unavailable.",
-            }
+        normalized = {
+            "status": status_value,
+            "schedules": list(captured.get("schedules") or []),
+        }
         scheduled_refresh.clear()
-        scheduled_refresh.update(discovered)
+        scheduled_refresh.update(normalized)
         contract_schedule.clear()
-        contract_schedule.update({
-            "status": str(discovered.get("status") or "unavailable"),
-            "schedules": list(discovered.get("schedules") or []),
-        })
+        contract_schedule.update(
+            normalized if status_value != "uncaptured"
+            else {"status": "unavailable", "schedules": []}
+        )
 
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
@@ -800,6 +797,11 @@ def widget_data_contract(
 
     def freeze() -> dict[str, Any]:
         current = state.get("current")
+        if str(scheduled_refresh.get("status") or "") == "uncaptured":
+            raise ValueError(
+                "Scheduled Refresh has not been captured by the writer pipeline. "
+                "Run the writer pipeline before freezing this Data Contract."
+            )
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
         if state.get("dirty"):
@@ -1594,6 +1596,8 @@ def widget_data_contract(
                 refresh_frequency = f"{refresh_frequency} · {schedule_times}"
         elif schedule_status == "not_configured":
             refresh_frequency = "Not configured"
+        elif schedule_status == "uncaptured":
+            refresh_frequency = "Not captured"
         else:
             refresh_frequency = "Unavailable"
 
@@ -1673,13 +1677,6 @@ def widget_data_contract(
                 + "</div>"
             )
 
-        processing = contracts.contract_processing(row)
-        load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
-        pipeline_refresh = widgets.HTML(
-            "<div><b>Load strategy</b><br>"
-            f"{html.escape(load_strategy)}</div><br>"
-            + _scheduled_refresh_html(scheduled_refresh)
-        )
         table_summary = widgets.HTML()
         table_left = (table_summary, table_exit_row, table_exit_confirm)
 
@@ -3988,7 +3985,6 @@ def widget_data_contract(
             "key_columns": key_columns_control,
             "effective_column": effective_column_control,
             "tracked_columns": tracked_columns_control,
-            "pipeline_refresh": pipeline_refresh,
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
