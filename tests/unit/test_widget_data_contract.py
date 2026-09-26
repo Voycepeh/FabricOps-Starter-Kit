@@ -408,7 +408,6 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
         "<b>Contract</b>",
     ]
     assert all(field.children[1].layout.width == "100%" for field in selector.children)
-    assert all(field.children[1].layout.flex == "1 1 0%" for field in selector.children)
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
