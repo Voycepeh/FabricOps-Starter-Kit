@@ -1349,6 +1349,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Refresh expectation"),
                 )
+                refresh_expectation.description = ""
                 refresh_expectation.layout = field_layout
                 configured_freshness_column = str(
                     existing_parameters.get("freshness_column") or ""
@@ -1363,6 +1364,7 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     **shared.widget_common(widgets, "Timestamp column"),
                 )
+                freshness_column.description = ""
                 freshness_column.layout = field_layout
                 expected_refresh_frequency = widgets.Text(
                     value=str(existing_parameters.get("expected_refresh_frequency") or ""),
@@ -1511,6 +1513,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
+                partition_column.description = ""
                 partition_column.layout = field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
@@ -1518,6 +1521,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change tracking column"),
                 )
+                change_column.description = ""
                 change_column.layout = field_layout
                 source_drift_rule_preview = widgets.HTML()
 
