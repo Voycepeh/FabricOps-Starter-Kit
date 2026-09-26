@@ -42,7 +42,8 @@ _PROFILE_EXCLUDED_NAMES = {
     "_row_hash", "pipeline_ts", "ingested_at_utc", "notebook_name", "loaded_by",
     "p_bucket", "sample_bucket", "row_ingest_id", "ingest_run_id", "pipeline_run_id",
     "loaded_at", "run_ingest_id", "_fabricops_run_id", "_fabricops_pipeline_name",
-    "_fabricops_created_at",
+    "_fabricops_created_at", "_activity_id", "_committed_at", "_committed_by",
+    "_notebook_id", "_workspace_id", "_workspace_name", "_metadata_lakehouse_name",
 }
 _PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
 _KEY_CANDIDATE_MAX_COLUMNS = 8
