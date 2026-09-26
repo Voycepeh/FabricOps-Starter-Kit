@@ -301,8 +301,8 @@ Explore practical FabricOps capabilities in action. Each solution will link to a
 
   <a class="fabricops-feature-card" href="how-fabricops-works/">
     <span class="fabricops-feature-card__eyebrow">Access Governance</span>
-    <h3 class="fabricops-feature-card__title">Effective Access Scanner</h3>
-    <p class="fabricops-feature-card__copy">Scan combined grants and security relationships to understand the effective access a user actually has.</p>
+    <h3 class="fabricops-feature-card__title">Scan Effective Data Access</h3>
+    <p class="fabricops-feature-card__copy">Resolve who actually has access to your tables by scanning workspace roles, direct item access, OneLake security roles, and SQL endpoint grants.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
