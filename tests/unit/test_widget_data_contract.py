@@ -276,7 +276,6 @@ def widget_runtime(monkeypatch):
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
-    monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
@@ -325,6 +324,9 @@ def widget_runtime(monkeypatch):
         types.SimpleNamespace(display=display_module, get_ipython=lambda: None),
     )
     def start():
+        catalogue[0]["scheduled_refresh_json"] = json.dumps(
+            schedule, sort_keys=True, separators=(",", ":")
+        )
         return module.widget_data_contract(table_id="orders", contract_version=1)
 
     def open_widget():
