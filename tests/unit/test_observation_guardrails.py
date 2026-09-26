@@ -296,6 +296,32 @@ def test_observation_capture_without_source_drift_is_optional(monkeypatch) -> No
     assert shared.capture_source_observation(table_id="source-a", dataframe=[]) is None
 
 
+def test_static_source_skips_freshness_evidence_capture(monkeypatch) -> None:
+    """No-refresh-expected sources do not require or capture a freshness timestamp."""
+    rule = {
+        "guardrail_type": "freshness",
+        "table_id": "source-a",
+        "is_active": True,
+        "rule_type": "skip",
+        "rule_parameters_json": '{"refresh_expectation":"static"}',
+        "action": "Warn",
+        "guardrail_rule_id": "freshness-static",
+        "guardrail_version": 1,
+    }
+    _configure_observation_capture(monkeypatch, [rule])
+    monkeypatch.setattr(
+        shared,
+        "resolve_freshness_observation_column",
+        lambda _rule: (_ for _ in ()).throw(AssertionError("Freshness column was resolved")),
+    )
+
+    assert shared.capture_source_observation(table_id="source-a", dataframe=[]) is None
+    with pytest.raises(ValueError, match="No current freshness evidence"):
+        shared.get_current_freshness_evidence(
+            environment_name="dev", activity_id="run-1", table_id="source-a"
+        )
+
+
 def test_freshness_capture_uses_freshness_rule_column(monkeypatch) -> None:
     rule = _freshness_rule("arrived_at")
     _configure_observation_capture(monkeypatch, [rule])
