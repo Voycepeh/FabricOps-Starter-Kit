@@ -1,37 +1,62 @@
 # completeness
 
+## What this rule does
+
 Checks whether one column is populated within an allowed missing threshold.
 
-## Use it when
+## When to use it
 
-Use `completeness` when the requirement is about presence: a column must always be populated, or may be missing only up to an accepted percentage.
+Use when a field is mandatory, or when a small amount of missing data is acceptable but should stay below a governed threshold.
 
-Examples:
+## Data applicability
 
-- "Customer ID must always be populated."
-- "Email may be missing in no more than 5% of rows."
-- "Blank customer names should count as missing."
-
-## Do not use it when
-
-- The column must be unique: use [`uniqueness`](uniqueness.md).
-- Values must come from an approved set: use [`value_set`](value-set.md).
-- The column is required only under another condition: use [`conditional_completeness`](conditional-completeness.md).
+Single columns where missingness is meaningful. `treat_blank_as_missing` controls whether blank or whitespace text counts as missing.
 
 ## Parameters
 
-- `columns`: exactly one target column.
-- `maximum_missing_percent`: allowed missing percentage from 0 through 100.
-- `treat_blank_as_missing`: whether blank or whitespace text counts as missing.
+```yaml
+rule_type: completeness
+columns: ["customer_id"]
+maximum_missing_percent: 0
+treat_blank_as_missing: true
+```
 
-## Example
+## Example rule definition
 
 ```json
 {"rule_type":"completeness","columns":["customer_id"],"maximum_missing_percent":0,"treat_blank_as_missing":true}
 ```
 
-"At least 95% of rows must contain an email" becomes:
+## Sample input data
 
-```json
-{"rule_type":"completeness","columns":["email"],"maximum_missing_percent":5,"treat_blank_as_missing":true}
-```
+| row_id | customer_id |
+|---|---|
+| 1 | C001 |
+| 2 | C002 |
+| 3 | null |
+| 4 | " " |
+
+## Rows that pass
+
+| row_id | customer_id | Why |
+|---|---|---|
+| 1 | C001 | Value is present. |
+| 2 | C002 | Value is present. |
+
+## Rows that fail
+
+| row_id | customer_id | Why |
+|---|---|---|
+| 3 | null | Missing value. |
+| 4 | " " | Blank counts as missing because `treat_blank_as_missing=true`. |
+
+## Notes
+
+- Set `maximum_missing_percent=0` for a required field.
+- Use a higher threshold when limited missingness is acceptable.
+- If requiredness depends on another column, use [`conditional_completeness`](conditional-completeness.md).
+
+## Related rules
+
+- [`conditional_completeness`](conditional-completeness.md)
+- [`uniqueness`](uniqueness.md)
