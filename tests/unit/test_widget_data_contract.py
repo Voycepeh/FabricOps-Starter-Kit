@@ -145,7 +145,7 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","expected_refresh_frequency":1,"expected_refresh_unit":"days","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
@@ -1419,10 +1419,13 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
 
     freshness["enabled"].value = True
     freshness["parameters"][0].value = "column_1"
-    freshness["parameters"][1].value = "24"
+    freshness["parameters"][1].value = "6"
     freshness["parameters"][2].value = "hours"
+    freshness["parameters"][3].value = "24"
+    freshness["parameters"][4].value = "hours"
 
     preview = freshness["display"][-1].value
+    assert "Expected source refresh: <b>6 hours</b>." in preview
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
@@ -1462,8 +1465,10 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     )
 
     freshness["parameters"][0].value = "column_1"
-    freshness["parameters"][1].value = "6"
-    freshness["parameters"][2].value = "hours"
+    freshness["parameters"][1].value = "1"
+    freshness["parameters"][2].value = "days"
+    freshness["parameters"][3].value = "6"
+    freshness["parameters"][4].value = "hours"
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -1471,7 +1476,11 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "freshness"
     )
     assert module._parameters(staged) == {
-        "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
+        "freshness_column": "column_1",
+        "expected_refresh_frequency": 1.0,
+        "expected_refresh_unit": "days",
+        "maximum_age": 6.0,
+        "maximum_age_unit": "hours",
     }
 
     drift = state["_controls"]["table_guardrails"]["source_drift"]
