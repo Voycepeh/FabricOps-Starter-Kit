@@ -8,6 +8,7 @@ from fabricops_kit.io import read_lakehouse_table
 
 import json
 import math
+from itertools import combinations
 from typing import Any, Mapping, Sequence
 from uuid import NAMESPACE_URL, uuid5
 
@@ -44,6 +45,9 @@ _PROFILE_EXCLUDED_NAMES = {
     "_fabricops_created_at",
 }
 _PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
+_KEY_CANDIDATE_MAX_COLUMNS = 8
+_KEY_CANDIDATE_MAX_SIZE = 3
+_KEY_CANDIDATE_MAX_RESULTS = 8
 _WAREHOUSE_NUMERIC_TYPES = {
     "bigint", "decimal", "float", "int", "money", "numeric", "real",
     "smallint", "smallmoney", "tinyint",
@@ -294,6 +298,132 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
             store=str(identity["store"]), spark_session=spark_session, context=io_context,
         ).select(*FREQUENCY_PROFILE_COLUMNS)
     return profile, frequency, all_columns
+
+
+
+def _eligible_key_candidate_rows(statistical_profile: Any) -> list[dict[str, Any]]:
+    """Return null-free, non-technical profile rows ordered by key usefulness."""
+    rows = []
+    for row in statistical_profile.select(
+        "COLUMN_NAME", "ROW_COUNT", "NULL_COUNT", "DISTINCT_COUNT"
+    ).collect():
+        name = str(row["COLUMN_NAME"])
+        if (
+            name in _PROFILE_EXCLUDED_NAMES
+            or any(name.startswith(prefix) for prefix in _PROFILE_EXCLUDED_PREFIXES)
+        ):
+            continue
+        row_count = int(row["ROW_COUNT"] or 0)
+        null_count = int(row["NULL_COUNT"] or 0)
+        distinct_count = int(row["DISTINCT_COUNT"] or 0)
+        if row_count <= 0 or null_count != 0:
+            continue
+        rows.append({
+            "column_name": name,
+            "row_count": row_count,
+            "distinct_count": distinct_count,
+        })
+    rows.sort(key=lambda item: (-int(item["distinct_count"]), str(item["column_name"]).casefold()))
+    return rows
+
+
+def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[str, Any]:
+    """Return one deterministic proven key-candidate evidence record."""
+    return {
+        "columns": [str(column) for column in columns],
+        "column_count": len(columns),
+        "row_count": int(row_count),
+        "distinct_count": int(row_count),
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }
+
+
+def _spark_profile_key_candidates(
+    dataframe: Any, statistical_profile: Any
+) -> list[dict[str, Any]]:
+    """Discover the smallest null-free unique keys from one complete Spark table."""
+    rows = _eligible_key_candidate_rows(statistical_profile)
+    if not rows:
+        return []
+    row_count = int(rows[0]["row_count"])
+    singles = [
+        _key_candidate_payload([row["column_name"]], row_count=row_count)
+        for row in rows
+        if int(row["distinct_count"]) == row_count
+    ]
+    if singles:
+        return singles[:_KEY_CANDIDATE_MAX_RESULTS]
+
+    shortlist = [row["column_name"] for row in rows[:_KEY_CANDIDATE_MAX_COLUMNS]]
+    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(shortlist)) + 1):
+        matches = []
+        for columns in combinations(shortlist, size):
+            if int(dataframe.select(*columns).dropDuplicates().count()) == row_count:
+                matches.append(_key_candidate_payload(columns, row_count=row_count))
+                if len(matches) >= _KEY_CANDIDATE_MAX_RESULTS:
+                    break
+        if matches:
+            return matches
+    return []
+
+
+def _warehouse_profile_key_candidates(
+    identity: Mapping[str, Any],
+    statistical_profile: Any,
+    *,
+    spark_session: Any,
+    context: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Discover the smallest null-free unique keys with Warehouse SQL pushdown."""
+    rows = _eligible_key_candidate_rows(statistical_profile)
+    if not rows:
+        return []
+    row_count = int(rows[0]["row_count"])
+    singles = [
+        _key_candidate_payload([row["column_name"]], row_count=row_count)
+        for row in rows
+        if int(row["distinct_count"]) == row_count
+    ]
+    if singles:
+        return singles[:_KEY_CANDIDATE_MAX_RESULTS]
+
+    source = (
+        f"{_sql_identifier(str(identity['schema']))}."
+        f"{_sql_identifier(str(identity['table_name']))}"
+    )
+    shortlist = [row["column_name"] for row in rows[:_KEY_CANDIDATE_MAX_COLUMNS]]
+    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(shortlist)) + 1):
+        matches = []
+        for columns in combinations(shortlist, size):
+            projected = ", ".join(_sql_identifier(column) for column in columns)
+            query = (
+                "SELECT COUNT_BIG(*) AS DISTINCT_COUNT FROM "
+                f"(SELECT DISTINCT {projected} FROM {source}) AS fabricops_key_candidate"
+            )
+            values = read_warehouse_query(
+                query,
+                store=str(identity["store"]),
+                spark_session=spark_session,
+                context=io_context,
+            ).collect()
+            if values:
+                value = values[0]
+                mapped = value.asDict(recursive=True) if hasattr(value, "asDict") else dict(value)
+                distinct_count = int(
+                    next(
+                        (item for key, item in mapped.items() if str(key).upper() == "DISTINCT_COUNT"),
+                        0,
+                    ) or 0
+                )
+                if distinct_count == row_count:
+                    matches.append(_key_candidate_payload(columns, row_count=row_count))
+                    if len(matches) >= _KEY_CANDIDATE_MAX_RESULTS:
+                        break
+        if matches:
+            return matches
+    return []
 
 
 def _require_non_empty_string(value: Any, name: str) -> str:
@@ -705,6 +835,7 @@ def _catalogue_dataframe_from_profiled(
     table_name: str,
     load_strategy: str | None = None,
     load_strategy_parameters_json: str | None = None,
+    profile_key_candidates_json: str | None = None,
     source_fields: Sequence[tuple[str, str]] | None = None,
 ):
     """Return one table row and one row for each observed column asset."""
@@ -748,6 +879,7 @@ def _catalogue_dataframe_from_profiled(
                 "data_type": None,
                 "load_strategy": load_strategy,
                 "load_strategy_parameters_json": load_strategy_parameters_json,
+                "profile_key_candidates_json": profile_key_candidates_json,
             },
         )
     ]
@@ -765,6 +897,7 @@ def _catalogue_dataframe_from_profiled(
                     "data_type": data_type,
                     "load_strategy": None,
                     "load_strategy_parameters_json": None,
+                    "profile_key_candidates_json": None,
                 },
             )
         )
@@ -812,6 +945,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "load_strategy_parameters_json": (
                     "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
                 ),
+                "profile_key_candidates_json": "source.profile_key_candidates_json",
                 "last_profiled_at": "source.last_profiled_at",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
@@ -1023,6 +1157,7 @@ def profile_table(
         spark_session = dataframe.sparkSession
     if spark_session is None:
         spark_session = get_spark_session()
+    profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:
         statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
             identity, spark_session=spark_session, context=context,
@@ -1030,6 +1165,10 @@ def profile_table(
             threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n,
         )
         warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
+        if identity is not None:
+            profile_key_candidates = _warehouse_profile_key_candidates(
+                identity, statistical_profile, spark_session=spark_session, context=context
+            )
     else:
         statistical_profile = build_profile_dataframe(dataframe)
         selected_columns = _selected_frequency_columns(
@@ -1040,6 +1179,8 @@ def profile_table(
             frequency_profile = build_frequency_distribution_dataframe(
                 dataframe, columns=selected_columns, top_n=frequency_top_n
             )
+        if identity is not None:
+            profile_key_candidates = _spark_profile_key_candidates(dataframe, statistical_profile)
 
     frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
     print("3. Statistical profile → calculated")
@@ -1104,7 +1245,11 @@ def profile_table(
             profiled_df, source_df=dataframe, store_type=identity["store_kind"],
             layer=identity["store"], schema_name=identity["schema"],
             table_name=identity["table_name"], load_strategy=None,
-            load_strategy_parameters_json=None, source_fields=warehouse_fields,
+            load_strategy_parameters_json=None,
+            profile_key_candidates_json=json.dumps(
+                profile_key_candidates, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ),
+            source_fields=warehouse_fields,
         )
         _upsert_catalogue_identities(
             catalogue_df=catalogue_df, config=config, env=env, spark_session=spark_session,
