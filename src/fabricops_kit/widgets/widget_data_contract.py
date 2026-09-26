@@ -1608,8 +1608,8 @@ def widget_data_contract(
                 rows_html = "".join(
                     "<tr>"
                     f"<td style='padding:5px 8px;'>{html.escape(str(item.get('environment_name') or ''))}</td>"
-                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('relationship') or ''))}</td>"
                     f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(('Read' if str(item.get('relationship') or '').lower() in {'reader', 'read'} else 'Write' if str(item.get('relationship') or '').lower() in {'writer', 'write'} else str(item.get('relationship') or '')))}</td>"
                     f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
                     "</tr>"
                     for item in lineage_rows
@@ -1619,9 +1619,9 @@ def widget_data_contract(
                     "<summary style='cursor:pointer;color:#0f6cbd;font-size:12px;'>View lineage</summary>"
                     "<div style='overflow-x:auto;margin-top:6px;'>"
                     "<table style='border-collapse:collapse;width:100%;font-size:11px;'>"
-                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Environment</th>"
-                    "<th style='text-align:left;padding:5px 8px;'>Relationship</th>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Env</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Role</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
                     f"<tbody>{rows_html}</tbody></table></div></details>"
                 )
