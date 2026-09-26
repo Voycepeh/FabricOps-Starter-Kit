@@ -1038,7 +1038,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     table_summary = controls["left_pane"].children[0].value
     assert "Load strategy" in table_summary
     assert "SCD1" in table_summary
-    assert "Data Quality</span><span" not in table_summary
+    assert "Data Quality</span><span style='font-size:12px;'>Disabled</span>" in table_summary
 
     monkeypatch.setattr(
         module,
