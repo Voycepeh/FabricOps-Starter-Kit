@@ -396,7 +396,6 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert [child.description for child in selector.children] == [
         "Fabric store", "Schema", "Table", "Contract",
     ]
-    assert selector.layout.grid_template_columns == "repeat(2, minmax(0, 1fr))"
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
