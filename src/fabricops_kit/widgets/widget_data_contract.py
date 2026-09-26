@@ -2296,7 +2296,6 @@ def widget_data_contract(
         # Compatibility aliases point at Pattern because Pattern is the only AI-assisted family.
         dq_enabled = dq_family_controls["pattern"]["enabled"]
         dq_block = dq_family_controls["pattern"]["block"]
-        dq_usage = widgets.HTML()
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
