@@ -1540,7 +1540,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "min_value": "CUS-001", "max_value": "CUS-120",
-            "example_value": "CUS-042",
+            "example_values": ["CUS-042", "CUS-017"],
         },
     }
 
@@ -1548,22 +1548,30 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
 
     assert set(sections) == {"Review"}
     review = sections["Review"]
-    assert review.index("<b>Table guardrails</b>") < review.index("<b>Column definitions and rules</b>")
-    assert review.index("<b>Column definitions and rules</b>") < review.index("<b>Business Rules</b>")
-    assert "<b>Business Rules</b> · 2 configured" in review
-    assert "<b>Column definitions and rules</b> · 1 columns, 2 column guardrails" in review
-    assert "<th>Column</th><th>Example</th><th>Datatype</th><th>Required</th>" in review
-    assert "<th>Sensitive</th><th>Classification</th><th>Description</th><th>Profile</th><th>Rules</th>" in review
-    assert "CUS-042" in review
-    assert "<details><summary>Profile</summary>" in review
-    assert "Min <b>CUS-001</b><br>Max <b>CUS-120</b>" in review
-    assert "Distinct <b>120</b> <span style='color:#667085;'>(100.0%)</span>" in review
-    assert "Null <b>0</b> <span style='color:#667085;'>(0.0%)</span>" in review
+    assert review.index("<b>Column definitions</b>") < review.index("<b>Guardrails</b>")
+    assert "<b>Column definitions</b> · 1 columns" in review
+    assert "<b>Guardrails</b> · 7 configured" in review
+    assert "<th>Column</th><th>Examples</th><th>Datatype</th><th>Required</th>" in review
+    assert "<th>Sensitive</th><th>Classification</th><th>Description</th>" in review
+    assert "CUS-042<br>CUS-017" in review
+    assert "<th>Profile</th>" not in review
+    assert "<th>Rules</th>" not in review
+    assert "<b>Table</b>" in review
+    assert "<b>Columns</b>" in review
+    assert "<b>Business Rules</b>" in review
     assert "Customer identifier" in review
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
     assert "Required" in review and ">Yes<" in review
     assert review.count("<b>Pattern</b>") == 1
+
+    fallback = module._manifest_sections(
+        payload,
+        column_profiles={
+            "col-1": {"min_value": "CUS-001", "max_value": "CUS-120"},
+        },
+    )["Review"]
+    assert "CUS-001<br>CUS-120" in fallback
 
 
 def test_business_rule_resolve_apply_stages_existing_guardrail_model(
