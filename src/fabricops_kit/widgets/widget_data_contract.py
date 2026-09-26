@@ -1086,7 +1086,7 @@ def widget_data_contract(
                 )
                 grain_profile_evidence.value = (
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "<b>Engineering profile evidence</b><ul style='margin:5px 0 0 18px;'>"
+                    "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
                     + rows
                     + "</ul><span>The smallest proven candidate is preselected as the row key. "
                     "Governance defines the business grain; the frozen contract later enforces the selected key.</span></div>"
@@ -1094,7 +1094,7 @@ def widget_data_contract(
                 return
             grain_profile_evidence.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                "<b>Engineering profile evidence</b><br>"
+                "<b>Profile evidence</b><br>"
                 "No row key suggestion available from the latest profile. "
                 "Select a row key manually if this table has one.</div>"
             )
@@ -1144,8 +1144,11 @@ def widget_data_contract(
                     "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                     "padding:9px 11px;font-size:12px;line-height:1.5;'>"
                     f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
-                    f"<b>Profiled row key:</b> {html.escape(key_text)}<br>"
-                    f"<span style='color:#667085;'>{html.escape(suggestion['rationale'])}</span></div>"
+                    f"<b>Profiled row key:</b> {html.escape(key_text)}"
+                    "<details style='margin-top:5px;color:#667085;'>"
+                    "<summary style='cursor:pointer;'>Why this suggestion?</summary>"
+                    f"<div style='margin-top:4px;'>{html.escape(suggestion['rationale'])}</div>"
+                    "</details></div>"
                 )
                 accept_grain.disabled = False
             except (TypeError, ValueError, RuntimeError) as exc:
@@ -1156,6 +1159,7 @@ def widget_data_contract(
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
+            render_table_summary()
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
@@ -1627,6 +1631,7 @@ def widget_data_contract(
                     enrichment_record("table", "Grain", table_grain.value),
                 ])
                 set_validation_error("table.enrichment")
+                render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("table.enrichment", exc)
 
@@ -1644,6 +1649,7 @@ def widget_data_contract(
                         active=bool(selected_keys),
                     )])
                 set_validation_error("table.row_key")
+                render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("table.row_key", exc)
 
@@ -2001,6 +2007,7 @@ def widget_data_contract(
                                     ),
                                     table_grain,
                                     row_key_columns,
+                                    grain_profile_evidence,
                                     row_key_block,
                                 ],
                                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
@@ -2011,7 +2018,6 @@ def widget_data_contract(
                                         [
                                             widgets.HTML("<b>AI suggestion</b>"),
                                             grain_ai,
-                                            grain_profile_evidence,
                                             shared.action_row(
                                                 widgets, [suggest_grain, accept_grain]
                                             ),

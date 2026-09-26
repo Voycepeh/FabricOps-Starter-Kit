@@ -1009,6 +1009,8 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
     assert len(grain_section.children[1].children) == 2
+    grain_primary = grain_section.children[1].children[0]
+    assert controls["grain_profile_evidence"] in grain_primary.children
     controls["top_nav"].value = "Columns"
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
@@ -1062,8 +1064,10 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
     assert captures["grain"][0]["profile_key_candidates"][0]["columns"] == [
         "column_0", "column_1"
     ]
-    assert "Engineering profile evidence" in controls["grain_profile_evidence"].value
+    assert "Profile evidence" in controls["grain_profile_evidence"].value
     assert "Profiled row key" in controls["grain_ai"].value
+    assert "<details" in controls["grain_ai"].value
+    assert "Why this suggestion?" in controls["grain_ai"].value
     assert widget_runtime["calls"]["guardrails"] == []
 
     controls["save_data_contract"].click()
