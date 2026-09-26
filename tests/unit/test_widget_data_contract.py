@@ -2155,8 +2155,8 @@ def test_freeze_refreshes_manifest_and_keeps_activation_out_of_authoring(widget_
     assert widget_runtime["calls"]["activate"] == 0
 
 
-def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
-    """Required state belongs in the fixed column header, not the navigation list."""
+def test_column_selector_marks_required_columns_and_aligns_checkbox(widget_runtime):
+    """Required state stays visible in navigation and the header checkbox stays compact."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_select"].value = "col-1"
@@ -2171,9 +2171,13 @@ def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
     label = next(
         label for label, value in controls["column_select"].options if value == "col-1"
     )
-    assert label == "column_1"
+    assert label == "column_1 *"
+    assert "option:nth-child(2)" in controls["column_option_style"].value
+    assert "color:#0f6cbd" in controls["column_option_style"].value
     assert controls["column_header"].children[1] is controls["required"]
     assert controls["column_header"].layout.align_items == "flex-start"
+    assert "fabricops-column-required" in controls["required"]._dom_classes
+    assert controls["required"].layout.width == "auto"
     assert widget_runtime["calls"]["guardrails"] == []
 
 
@@ -2189,10 +2193,10 @@ def test_table_and_column_definitions_share_compact_layout(widget_runtime):
     assert controls["column_classification"].layout.width == "250px"
     assert controls["column_search"].layout.width == "100%"
     assert controls["column_select"].layout.width == "100%"
-    assert all(
-        label == f"column_{index}"
-        for index, (label, _value) in enumerate(controls["column_select"].options)
-    )
+    assert [label for label, _value in controls["column_select"].options] == [
+        "column_0 *",
+        "column_1",
+    ]
     assert "color:#0f6cbd;font-size:20px" in controls["column_context"].value
     assert "Required:" not in controls["column_context"].value
 

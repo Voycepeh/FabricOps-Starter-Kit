@@ -2123,15 +2123,8 @@ def widget_data_contract(
         }
         column_options: list[tuple[str, str]] = []
         column_option_style = widgets.HTML()
-        column_search = widgets.Text(
-            placeholder="Search columns",
-            layout=widgets.Layout(width="100%", min_width="0", max_width="100%"),
-        )
-        column_select = widgets.Select(
-            options=(),
-            rows=8,
-            layout=widgets.Layout(width="100%", min_width="0", max_width="100%", height="250px"),
-        )
+        column_search = widgets.Text(placeholder="Search columns", layout=widgets.Layout(width="100%", min_width="0", max_width="100%"))
+        column_select = widgets.Select(options=(), rows=8, layout=widgets.Layout(width="100%", min_width="0", max_width="100%", height="250px"))
         column_select.add_class("fabricops-contract-columns")
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
@@ -2144,12 +2137,11 @@ def widget_data_contract(
         column_description_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
-        required = widgets.Checkbox(description="Required", disabled=not editable)
+        required = widgets.Checkbox(description="Required", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
+        required.add_class("fabricops-column-required")
         column_header = widgets.VBox(
             [column_context, required],
-            layout=widgets.Layout(
-                width="100%", min_width="0", gap="4px", align_items="flex-start",
-            ),
+            layout=widgets.Layout(width="100%", min_width="0", gap="4px", align_items="flex-start"),
         )
         datatype_choice = widgets.Dropdown(
             options=(), disabled=not editable,
@@ -3191,12 +3183,12 @@ def widget_data_contract(
         def rebuild_column_options() -> None:
             nonlocal column_options
             column_options = [
-                (str(column.get("column_name") or ""), str(column.get("column_id") or ""))
+                (
+                    f"{str(column.get('column_name') or '')}{' *' if str(column.get('column_id') or '') in required_columns or str(column.get('column_name') or '') in required_columns else ''}",
+                    str(column.get("column_id") or ""),
+                )
                 for column in columns
             ]
-            column_option_style.value = (
-                "<style>.fabricops-contract-columns option:checked{font-weight:600;}</style>"
-            )
 
         def refresh_column_options(*_args: Any) -> None:
             rebuild_column_options()
@@ -3206,6 +3198,8 @@ def widget_data_contract(
                 option for option in column_options
                 if not query or query in str(option[0]).casefold()
             ]
+            required_option_rules = "".join(f".fabricops-contract-columns option:nth-child({index}){{color:#0f6cbd;font-weight:600;}}" for index, (label, _value) in enumerate(filtered, start=1) if str(label).endswith(" *"))
+            column_option_style.value = "<style>.fabricops-contract-columns option:checked{font-weight:600;}" + required_option_rules + ".fabricops-form .fabricops-column-required{display:flex!important;grid-template-columns:none!important;width:auto!important;max-width:none!important;align-items:center!important;margin:0!important;}.fabricops-form .fabricops-column-required>.widget-label{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;}</style>"
             column_select.options = filtered
             values = [str(value) for _label, value in filtered]
             if current_value in values:
