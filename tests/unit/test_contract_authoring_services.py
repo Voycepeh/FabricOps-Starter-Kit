@@ -503,7 +503,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             "table_id": "orders", "column_id": "amount", "environment_name": "PROD",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
-            "min_value": "29.9", "max_value": "438.6",
+            "min_value": "29.9", "max_value": "438.6", "example_value": "109.95",
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
             "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
         },
@@ -539,9 +539,24 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
     ]
 
+    frequency = [
+        {
+            "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "table_id": "orders", "column_id": "amount", "value": "109.95",
+            "frequency_count": 50, "frequency_rank": 1,
+        },
+        {
+            "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "table_id": "orders", "column_id": "customer_id", "value": "C001",
+            "frequency_count": 1, "frequency_rank": 1,
+        },
+    ]
+
     def read(name, **_kwargs):
         if name == "METADATA_DATA_PROFILED":
             return profiled
+        if name == "METADATA_DATA_PROFILED_FREQUENCY":
+            return frequency
         if name == "METADATA_DATA_LINEAGE":
             return lineage
         raise AssertionError(name)
@@ -569,6 +584,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         "customer_id": {
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
+            "example_value": "C001",
         },
     }
     assert context["writer_count"] == 1
