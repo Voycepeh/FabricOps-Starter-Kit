@@ -3407,23 +3407,52 @@ def widget_data_contract(
                     })
                     params.pop("engineering_reviewed_by", None)
                     params.pop("engineering_review_note", None)
+                resolved_type = str(business_resolved["rule_type"])
+                resolved_columns = [str(value) for value in params.get("columns") or []]
+                column_rule_id = ""
+                if resolved_type in _COLUMN_DQ_TYPES and len(resolved_columns) == 1:
+                    column_rule_id = next((
+                        str(column.get("column_id") or "")
+                        for column in columns
+                        if str(column.get("column_name") or "") == resolved_columns[0]
+                    ), "")
+                    if not column_rule_id:
+                        raise ValueError(
+                            "Resolved single-column Business Rule does not match a governed column."
+                        )
+                    existing = next((
+                        rule for rule in session_guardrails()
+                        if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                        and str(rule.get("column_id") or "") == column_rule_id
+                        and str(rule.get("rule_type") or "") == resolved_type
+                    ), {})
                 record = guardrail_record(
                     "data_quality",
-                    str(business_resolved["rule_type"]),
+                    resolved_type,
                     params,
+                    column_id=column_rule_id,
                     action="Block" if business_block.value else "Warn",
                     existing=existing,
                     active=bool(business_enabled.value),
                 )
                 stage_guardrails([record])
-                refresh_business_saved_options(str(record["guardrail_rule_id"]))
+                if column_rule_id:
+                    selected_dq_by_column[column_rule_id] = resolved_type
+                    refresh_business_saved_options()
+                    set_status(
+                        "Business Rule resolved to a Column Rule and staged on "
+                        f"{resolved_columns[0]}. Open Columns to review it before saving."
+                    )
+                else:
+                    refresh_business_saved_options(str(record["guardrail_rule_id"]))
                 business_resolved.clear()
                 apply_business_rule.disabled = True
                 set_validation_error("business_rule")
                 render_engineering_review(record)
-                set_status(
-                    "Business Rule staged in the Data Contract. Save Data Contract to persist."
-                )
+                if not column_rule_id:
+                    set_status(
+                        "Business Rule staged in the Data Contract. Save Data Contract to persist."
+                    )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("business_rule", exc)
                 set_status(str(exc), error=True)
