@@ -894,20 +894,43 @@ def get_table_runtime_context(
     }
     latest_snapshot_id = str((latest_profile or {}).get("profile_snapshot_id") or "")
     if latest_snapshot_id:
+        profile_columns = {
+            str(row.get("profile_id") or ""): str(row.get("column_id") or "")
+            for row in latest_profile_rows
+            if str(row.get("profile_id") or "") and str(row.get("column_id") or "")
+        }
+        try:
+            frequency_frame = read_lakehouse_table(
+                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
+                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
+                context=context, spark_session=spark_session,
+            )
+            frequency_rows = row_dicts(_scoped_rows(
+                frequency_frame,
+                f"profile_snapshot_id = {_sql_literal(latest_snapshot_id)}",
+            ))
+        except Exception as exc:
+            if any(
+                marker in str(exc).lower()
+                for marker in ("not found", "does not exist", "path does not exist")
+            ):
+                frequency_rows = []
+            else:
+                raise
         frequency_rows = [
-            row for row in table_rows("METADATA_DATA_PROFILED_FREQUENCY")
-            if str(row.get("profile_snapshot_id") or row.get("profile_id") or "")
-            == latest_snapshot_id
+            row for row in frequency_rows
+            if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
+            and str(row.get("profile_id") or "") in profile_columns
         ]
         frequency_rows.sort(
             key=lambda row: (
-                str(row.get("column_id") or ""),
+                profile_columns.get(str(row.get("profile_id") or ""), ""),
                 int(row.get("frequency_rank") or 2_147_483_647),
                 -int(row.get("frequency_count") or 0),
             )
         )
         for row in frequency_rows:
-            column_id = str(row.get("column_id") or "")
+            column_id = profile_columns.get(str(row.get("profile_id") or ""), "")
             if column_id not in column_profiles:
                 continue
             examples = column_profiles[column_id].setdefault("example_values", [])
