@@ -1086,7 +1086,7 @@ def widget_data_contract(
                 )
                 grain_profile_evidence.value = (
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "<b>Engineering profile evidence</b><ul style='margin:5px 0 0 18px;'>"
+                    "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
                     + rows
                     + "</ul><span>The smallest proven candidate is preselected as the row key. "
                     "Governance defines the business grain; the frozen contract later enforces the selected key.</span></div>"
@@ -1094,7 +1094,7 @@ def widget_data_contract(
                 return
             grain_profile_evidence.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                "<b>Engineering profile evidence</b><br>"
+                "<b>Profile evidence</b><br>"
                 "No row key suggestion available from the latest profile. "
                 "Select a row key manually if this table has one.</div>"
             )
@@ -2007,6 +2007,7 @@ def widget_data_contract(
                                     ),
                                     table_grain,
                                     row_key_columns,
+                                    grain_profile_evidence,
                                     row_key_block,
                                 ],
                                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
@@ -2017,7 +2018,6 @@ def widget_data_contract(
                                         [
                                             widgets.HTML("<b>AI suggestion</b>"),
                                             grain_ai,
-                                            grain_profile_evidence,
                                             shared.action_row(
                                                 widgets, [suggest_grain, accept_grain]
                                             ),
