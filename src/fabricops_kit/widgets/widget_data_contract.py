@@ -1376,19 +1376,6 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="120px"),
                 )
-                expected_refresh_row = widgets.HBox(
-                    [
-                        widgets.HTML(
-                            "<div style='width:150px;padding-top:7px;'>Expected refresh</div>",
-                            layout=widgets.Layout(width="150px", min_width="150px"),
-                        ),
-                        expected_refresh_frequency,
-                        expected_refresh_unit,
-                    ],
-                    layout=widgets.Layout(
-                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
-                    ),
-                )
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""),
                     disabled=not editable or not temporal_column_names,
@@ -1400,18 +1387,26 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="120px"),
                 )
-                freshness_age_row = widgets.HBox(
+                freshness_grid = widgets.GridBox(
                     [
-                        widgets.HTML(
-                            "<div style='width:150px;padding-top:7px;'>"
-                            "Maximum age</div>",
-                            layout=widgets.Layout(width="150px", min_width="150px"),
-                        ),
+                        widgets.HTML("<div style='padding-top:7px;'>Refresh expectation</div>"),
+                        refresh_expectation,
+                        widgets.HTML(""),
+                        widgets.HTML("<div style='padding-top:7px;'>Timestamp column</div>"),
+                        freshness_column,
+                        widgets.HTML(""),
+                        widgets.HTML("<div style='padding-top:7px;'>Expected refresh</div>"),
+                        expected_refresh_frequency,
+                        expected_refresh_unit,
+                        widgets.HTML("<div style='padding-top:7px;'>Maximum age</div>"),
                         maximum_age,
                         maximum_age_unit,
                     ],
                     layout=widgets.Layout(
-                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
+                        width="100%",
+                        grid_template_columns="180px minmax(180px, 1fr) 180px",
+                        grid_gap="8px 10px",
+                        align_items="flex-start",
                     ),
                 )
                 freshness_rule_preview = widgets.HTML()
@@ -1506,11 +1501,8 @@ def widget_data_contract(
                     maximum_age_unit,
                 ]
                 display_controls = [
-                    refresh_expectation,
                     freshness_unavailable,
-                    freshness_column,
-                    expected_refresh_row,
-                    freshness_age_row,
+                    freshness_grid,
                     freshness_rule_preview,
                 ]
             else:
@@ -1559,10 +1551,23 @@ def widget_data_contract(
                         refresh_source_drift_rule_preview, names="value"
                     )
                 refresh_source_drift_rule_preview()
+                source_drift_grid = widgets.GridBox(
+                    [
+                        widgets.HTML("<div style='padding-top:7px;'>Partition column</div>"),
+                        partition_column,
+                        widgets.HTML("<div style='padding-top:7px;'>Change tracking column</div>"),
+                        change_column,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="180px minmax(180px, 1fr)",
+                        grid_gap="8px 10px",
+                        align_items="flex-start",
+                    ),
+                )
                 parameter_controls = [partition_column, change_column]
                 display_controls = [
-                    partition_column,
-                    change_column,
+                    source_drift_grid,
                     source_drift_rule_preview,
                 ]
 
@@ -1903,36 +1908,39 @@ def widget_data_contract(
             accept_button: Any,
             rerun_button: Any,
         ) -> Any:
+            primary = widgets.VBox(
+                [
+                    widgets.HTML("<b>Classification</b>"),
+                    classification,
+                    widgets.HTML("<b>Description</b>"),
+                    description,
+                ],
+                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            )
             if ai_visible:
-                suggestion_box = widgets.VBox(
-                    [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
-                    layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
-                )
-                content = widgets.GridBox(
+                assistant = widgets.VBox(
                     [
-                        widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
-                        widgets.HTML("<b>Description</b>"), description, suggestion_box,
+                        widgets.HTML("<b>AI suggestion</b>"),
+                        suggestion,
+                        shared.action_row(widgets, [accept_button, rerun_button]),
                     ],
                     layout=widgets.Layout(
+                        width="100%", min_width="0", gap="8px",
+                        padding="0 0 0 16px",
+                        border_left="1px solid #e1e6eb",
+                    ),
+                )
+                content = widgets.GridBox(
+                    [primary, assistant],
+                    layout=widgets.Layout(
                         width="100%",
-                        grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
-                        grid_gap="10px 16px",
+                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                        grid_gap="16px",
                         align_items="flex-start",
                     ),
                 )
             else:
-                content = widgets.GridBox(
-                    [
-                        widgets.HTML("<b>Classification</b>"), classification,
-                        widgets.HTML("<b>Description</b>"), description,
-                    ],
-                    layout=widgets.Layout(
-                        width="100%",
-                        grid_template_columns="120px minmax(240px, 1fr)",
-                        grid_gap="10px 16px",
-                        align_items="flex-start",
-                    ),
-                )
+                content = primary
             return shared.form_section(widgets, title=title, children=[content])
 
         def guardrail_section(
@@ -2069,9 +2077,14 @@ def widget_data_contract(
                     "relative to the pipeline run time."
                 ),
                 primary_children=[
-                    widgets.HBox(
+                    widgets.GridBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=checkbox_row_layout,
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
                     ),
                     *table_rules["freshness"]["display"],
                 ],
@@ -2088,9 +2101,14 @@ def widget_data_contract(
                     "changed when the same source data is read again."
                 ),
                 primary_children=[
-                    widgets.HBox(
+                    widgets.GridBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=checkbox_row_layout,
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
                     ),
                     *table_rules["source_drift"]["display"],
                 ],
