@@ -1445,6 +1445,9 @@ def widget_data_contract(
 
                 def refresh_freshness_rule_preview(
                     _change: dict[str, Any] | None = None,
+                    *,
+                    enabled_control: Any = enabled,
+                    block_control: Any = block,
                 ) -> None:
                     static_source = str(refresh_expectation.value or "") == "static"
                     freshness_column.disabled = not editable or static_source or not temporal_column_names
@@ -1452,8 +1455,8 @@ def widget_data_contract(
                     expected_refresh_unit.disabled = not editable or static_source or not temporal_column_names
                     maximum_age.disabled = not editable or static_source or not temporal_column_names
                     maximum_age_unit.disabled = not editable or static_source or not temporal_column_names
-                    enabled.disabled = not editable
-                    block.disabled = not editable or static_source
+                    enabled_control.disabled = not editable
+                    block_control.disabled = not editable or static_source
                     if static_source:
                         freshness_unavailable.value = ""
                         freshness_rule_preview.value = (
@@ -1555,10 +1558,12 @@ def widget_data_contract(
 
                 def refresh_source_drift_rule_preview(
                     _change: dict[str, Any] | None = None,
+                    *,
+                    enabled_control: Any = enabled,
                 ) -> None:
                     partition = str(partition_column.value or "").strip()
                     change = str(change_column.value or "").strip()
-                    if not enabled.value or not partition or not change:
+                    if not enabled_control.value or not partition or not change:
                         source_drift_rule_preview.value = ""
                         return
                     source_drift_rule_preview.value = (
