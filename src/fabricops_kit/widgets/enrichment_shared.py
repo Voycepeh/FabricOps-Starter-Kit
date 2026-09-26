@@ -472,7 +472,7 @@ Return JSON only as one object with rule_type, columns, parameters, rationale.
 Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, conditional_completeness, conditional_values, custom_expression.
 Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent the requirement without changing its meaning.
 Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
-Uniqueness: one or more columns; no rule-specific parameters.
+Uniqueness: one or more columns; no rule-specific parameters. This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a Business Rule. Grain is a separate singular table definition authored in the Table workspace.
 Value Set: exactly one column; parameters mode (allow or block) and non-empty values.
 Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
 Pattern: exactly one column; parameter pattern containing the governed regular expression.
