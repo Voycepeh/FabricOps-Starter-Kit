@@ -806,7 +806,7 @@ def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime)
 
 
 def test_final_save_returns_to_selector_after_persisting_canonical_draft(widget_runtime):
-    """Final Data Contract save persists staged state and completes the authoring cycle."""
+    """Save and exit persists staged state and returns to the table selector."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -826,6 +826,26 @@ def test_final_save_returns_to_selector_after_persisting_canonical_draft(widget_
     assert state["_controls"]["selector_panel"].layout.display != "none"
     assert state["_controls"]["editor_shell"].layout.display == "none"
     assert "draft saved" in state["message"]
+
+
+def test_freeze_dirty_draft_prompts_save_and_freeze(widget_runtime):
+    """Freeze stays clickable with edits and saves the draft only after confirmation."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["table_description"].value = "Ready to freeze"
+    assert state["dirty"] is True
+    assert controls["freeze"].disabled is False
+
+    controls["freeze"].click()
+    assert controls["freeze_confirm"].description == "Save & Freeze v1"
+
+    controls["freeze_confirm"].click()
+
+    assert len(widget_runtime["calls"]["draft"]) == 1
+    assert widget_runtime["calls"]["freeze"] == 1
+    assert widget_runtime["contract"]["status"] == "frozen"
+    assert "FROZEN" in state["message"]
 
 
 def test_live_edits_stage_without_writes_until_final_save(widget_runtime):
