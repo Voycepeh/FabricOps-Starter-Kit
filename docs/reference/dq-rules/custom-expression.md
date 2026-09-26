@@ -1,9 +1,62 @@
 # custom_expression
 
-Provides the advanced escape hatch for project-owned row-level business logic. The expression language is `pyspark`; expressions must produce a boolean Spark `Column`. FabricOps accepts only a constrained, side-effect-free grammar built from `F.col`, `F.lit`, comparisons, `&`, `|`, `~`, arithmetic (`+`, `-`, `*`, `/`, `%`), and an explicit method whitelist: `isNull`, `isNotNull`, `isin`, `rlike`, `contains`, `startswith`, and `endswith`. Method arguments must be literal values. It never uses unrestricted `eval`, Python UDFs, imports, or arbitrary function calls. Governance authors the requirement in the Business Rules tab. When FabricOps resolves it to `custom_expression`, the rule is staged with Engineering review pending. An engineer must review the resolved expression, record their reviewer identity, and approve it before the Data Contract can be frozen.
+## What this rule does
 
-```json
-{"rule_type":"custom_expression","expression_language":"pyspark","expression":"(F.col(\"status\") != \"Closed\") | F.col(\"closed_date\").isNotNull()","description":"Closed records require a close date"}
+Evaluates a constrained PySpark boolean expression and fails rows where the expression is false.
+
+## When to use it
+
+Use only when no smaller structured FabricOps rule can represent the governance requirement without changing its meaning.
+
+## Data applicability
+
+Row-level business logic that genuinely requires a boolean expression after the named rule types have been ruled out.
+
+## Parameters
+
+```yaml
+rule_type: custom_expression
+expression_language: pyspark
+expression: 'F.col("total_amount") == F.col("quantity") * F.col("unit_price") * (F.lit(1) - F.col("discount"))'
 ```
 
-Arithmetic supports governed row-level formulas such as `TOTAL_AMOUNT == QUANTITY * UNIT_PRICE * (1 - DISCOUNT)`. Exponentiation and floor division are not accepted. `true` passes and `false` fails. FabricOps records results and applies Warn/Block and row tagging, but does not persist a validation column.
+## Example rule definition
+
+```json
+{"rule_type":"custom_expression","expression_language":"pyspark","expression":"F.col(\"total_amount\") == F.col(\"quantity\") * F.col(\"unit_price\") * (F.lit(1) - F.col(\"discount\"))","description":"Total amount must equal quantity times unit price after discount"}
+```
+
+## Sample input data
+
+| order_id | quantity | unit_price | discount | total_amount |
+|---|---:|---:|---:|---:|
+| A001 | 2 | 50 | 0.0 | 100 |
+| A002 | 2 | 50 | 0.1 | 90 |
+| A003 | 2 | 50 | 0.1 | 80 |
+
+## Rows that pass
+
+| order_id | Why |
+|---|---|
+| A001 | Formula evaluates true. |
+| A002 | Formula evaluates true. |
+
+## Rows that fail
+
+| order_id | Why |
+|---|---|
+| A003 | Expected total is 90, not 80. |
+
+## Notes
+
+- Do not use this merely because a requirement involves multiple columns.
+- First consider `uniqueness`, `column_relationship`, `conditional_completeness`, and `conditional_values`.
+- Observed profile values must not be encoded as literal allowed combinations unless Governance explicitly defines them.
+- The expression grammar is constrained and side-effect free; FabricOps does not use unrestricted `eval`, Python UDFs, imports, or arbitrary calls.
+- Engineering review is required before freeze.
+
+## Related rules
+
+- [`column_relationship`](column-relationship.md)
+- [`conditional_completeness`](conditional-completeness.md)
+- [`conditional_values`](conditional-values.md)
