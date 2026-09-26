@@ -1,6 +1,11 @@
 """Focused contracts for the Data Contract activation gate."""
 
-from fabricops_kit.widgets.widget_activate_data_contract import _latest_validation
+import inspect
+
+from fabricops_kit.widgets.widget_activate_data_contract import (
+    _latest_validation,
+    widget_activate_data_contract,
+)
 
 
 def _row(*, run_id: str, status: str, can_continue: bool, severity: str, committed_at: str):
@@ -54,3 +59,17 @@ def test_latest_validation_blocks_latest_failed_run():
     )
     assert result["validated"] is False
     assert result["blocked"] == 1
+
+
+def test_activation_widget_uses_compact_three_step_confirmation_flow():
+    """Keep activation compact and require an explicit confirmation prompt."""
+    source = inspect.getsource(widget_activate_data_contract)
+
+    assert 'grid_template_columns="repeat(3, minmax(0, 1fr))"' in source
+    assert 'title="1 · Contract"' in source
+    assert 'title="2 · Data Agreement"' in source
+    assert 'title="3 · Review & activate"' in source
+    assert "widgets.Checkbox(" not in source
+    assert "confirmation_prompt.layout.display = \"flex\"" in source
+    assert "confirm_activation.on_click(perform_activation)" in source
+    assert "activate.on_click(on_activate)" in source
