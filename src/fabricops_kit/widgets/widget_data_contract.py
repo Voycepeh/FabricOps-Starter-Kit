@@ -837,6 +837,18 @@ def widget_data_contract(
     selector = shared.form_grid(widgets, [
         store_control, schema_control, table_control, contract_control,
     ])
+    selector.add_class("fabricops-data-contract-selector")
+    selector_width_style = widgets.HTML(
+        value=(
+            "<style>"
+            ".fabricops-data-contract-selector .widget-inline-hbox:not(.widget-checkbox){"
+            "grid-template-columns:92px minmax(0,1fr);max-width:none;}"
+            ".fabricops-data-contract-selector "
+            ".widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
+            "width:92px;min-width:92px;max-width:92px;}"
+            "</style>"
+        )
+    )
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         current = state["current"]
@@ -1760,7 +1772,7 @@ def widget_data_contract(
                         ],
                         layout=widgets.Layout(
                             width="100%", grid_template_columns="minmax(0,1fr) auto",
-                            grid_gap="12px", align_items="start",
+                            grid_gap="12px", align_items="flex-start",
                         ),
                     ),
                 ],
@@ -1871,7 +1883,7 @@ def widget_data_contract(
             [column_context, required],
             layout=widgets.Layout(
                 width="100%", grid_template_columns="minmax(0, 1fr) 110px",
-                grid_gap="12px", align_items="start",
+                grid_gap="12px", align_items="flex-start",
             ),
         )
         datatype_choice = widgets.Dropdown(
@@ -3918,7 +3930,7 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
     )
     selector_panel = widgets.VBox(
-        [selector, selector_actions],
+        [selector, selector_width_style, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
