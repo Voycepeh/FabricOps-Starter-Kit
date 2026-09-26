@@ -8,8 +8,8 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_table
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data_rules
 from fabricops_kit.pipeline.shared import (
+    check_sensitive_data_rules,
     check_dq_runtime,
     contract_guardrail_rows,
     resolve_catalogue_table_identity,
