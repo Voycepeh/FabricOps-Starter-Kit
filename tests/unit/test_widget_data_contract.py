@@ -2269,6 +2269,18 @@ def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
     assert widget_runtime["calls"]["guardrails"] == []
 
 
+def test_manifest_description_is_truncated_and_expandable(widget_runtime):
+    """Column descriptions stay compact without squeezing the review table."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Manifest & Freeze"
+
+    manifest = controls["manifest_preview"].value
+    assert "table-layout:fixed" in manifest
+    assert "text-overflow:ellipsis" in manifest
+    assert "Click to expand" in manifest
+
+
 def test_review_shows_changes_since_last_save(widget_runtime):
     """Review compares the working contract with the persisted draft baseline."""
     state = widget_runtime["open"]()
