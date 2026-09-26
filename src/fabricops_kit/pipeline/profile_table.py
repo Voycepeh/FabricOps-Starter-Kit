@@ -836,6 +836,7 @@ def _catalogue_dataframe_from_profiled(
     table_name: str,
     load_strategy: str | None = None,
     load_strategy_parameters_json: str | None = None,
+    scheduled_refresh_json: str | None = None,
     profile_key_candidates_json: str | None = None,
     source_fields: Sequence[tuple[str, str]] | None = None,
 ):
@@ -880,6 +881,7 @@ def _catalogue_dataframe_from_profiled(
                 "data_type": None,
                 "load_strategy": load_strategy,
                 "load_strategy_parameters_json": load_strategy_parameters_json,
+                "scheduled_refresh_json": scheduled_refresh_json,
                 "profile_key_candidates_json": profile_key_candidates_json,
             },
         )
@@ -898,6 +900,7 @@ def _catalogue_dataframe_from_profiled(
                     "data_type": data_type,
                     "load_strategy": None,
                     "load_strategy_parameters_json": None,
+                    "scheduled_refresh_json": None,
                     "profile_key_candidates_json": None,
                 },
             )
@@ -945,6 +948,9 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
                 "load_strategy_parameters_json": (
                     "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
+                ),
+                "scheduled_refresh_json": (
+                    "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
                 ),
                 "profile_key_candidates_json": "source.profile_key_candidates_json",
                 "last_profiled_at": "source.last_profiled_at",
@@ -1247,6 +1253,7 @@ def profile_table(
             layer=identity["store"], schema_name=identity["schema"],
             table_name=identity["table_name"], load_strategy=None,
             load_strategy_parameters_json=None,
+            scheduled_refresh_json=None,
             profile_key_candidates_json=json.dumps(
                 profile_key_candidates, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             ),
