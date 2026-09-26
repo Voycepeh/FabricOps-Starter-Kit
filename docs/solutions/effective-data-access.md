@@ -1,7 +1,5 @@
 # Scan Effective Data Access
 
-This page showcases one FabricOps capability. For the end-to-end Governance and Engineering lifecycle it fits into, see [How FabricOps Works](../how-fabricops-works.md).
-
 Resolve who actually has access to your tables by scanning workspace roles, direct item access, OneLake security roles, and SQL endpoint grants.
 
 ## What it resolves
