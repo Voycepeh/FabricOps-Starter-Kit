@@ -51,7 +51,7 @@ def _install(monkeypatch, *, rules, schema_status="passed", dq_status="passed", 
         "checks": [{"guardrail_rule_id": "dq-1", "status": dq_status}],
         "failed_values": "caller-owned-details", "run_id": "run-1",
     })
-    monkeypatch.setattr(module, "_check_sensitive_data_rules", lambda *a, **k: {
+    monkeypatch.setattr(module, "check_sensitive_data_rules", lambda *a, **k: {
         "checks": [{"guardrail_rule_id": "sensitive-1", "status": "passed", "can_continue": True}],
         "support_mapping": "caller-owned-mapping",
     })

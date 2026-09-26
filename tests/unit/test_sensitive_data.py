@@ -6,6 +6,7 @@ import json
 import pytest
 
 module = import_module("fabricops_kit.pipeline.check_sensitive_data")
+shared = import_module("fabricops_kit.pipeline.shared")
 
 
 def _rule(*, treatment="tokenize", action="Block", column_name="email", version=2,
@@ -29,7 +30,7 @@ def _runtime(monkeypatch, rules, writes):
         "store": "unified", "schema": "dbo",
     })
     monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *_a, **_k: rules)
-    monkeypatch.setattr(module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs["result"]))
+    monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs["result"]))
 
 
 def test_development_without_selected_contract_skips_without_catalogue(monkeypatch, spark_session):
