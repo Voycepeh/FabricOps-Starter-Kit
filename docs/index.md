@@ -308,8 +308,8 @@ Explore practical FabricOps capabilities in action. Each solution will link to a
 
   <a class="fabricops-feature-card" href="guided-demo/">
     <span class="fabricops-feature-card__eyebrow">Deployment</span>
-    <h3 class="fabricops-feature-card__title">Config-driven Dev / Test / Prod</h3>
-    <p class="fabricops-feature-card__copy">Run the same notebooks across Development, Test, and Production while configuration resolves the correct Fabric items during deployment.</p>
+    <h3 class="fabricops-feature-card__title">Reusable Engineering Notebook Stack</h3>
+    <p class="fabricops-feature-card__copy">Reuse the FabricOps engineering notebook flow across projects: environment setup, pipeline execution, contract validation, and promotion, with shared Read and Write patterns and config-driven Dev, Test, and Prod resolution.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 </div>
