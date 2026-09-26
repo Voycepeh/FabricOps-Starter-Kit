@@ -154,27 +154,26 @@ def widget_activate_data_contract(
         disabled=True,
         icon="check",
     )
-    confirm = widgets.Checkbox(
-        value=False,
-        description="",
-        indent=False,
-        layout=widgets.Layout(width="24px", min_width="24px"),
+    confirmation_text = widgets.HTML()
+    cancel_confirmation = widgets.Button(description="Cancel")
+    confirm_activation = widgets.Button(
+        description="Activate for Production",
+        button_style="primary",
+        icon="check",
     )
-    confirm_text = widgets.HTML(
-        value=(
-            "<div style='font-size:13px;line-height:1.45;'>"
-            "I confirm this validated contract should become the governed "
-            "Production definition.</div>"
-        ),
-        layout=widgets.Layout(width="100%", min_width="0"),
-    )
-    confirm_row = widgets.HBox(
-        [confirm, confirm_text],
+    confirmation_prompt = widgets.VBox(
+        [
+            confirmation_text,
+            shared.action_row(widgets, [cancel_confirmation, confirm_activation]),
+        ],
         layout=widgets.Layout(
             width="100%",
             min_width="0",
-            align_items="flex-start",
-            gap="8px",
+            max_width="560px",
+            display="none",
+            border="1px solid #c7d2e0",
+            padding="14px",
+            gap="10px",
         ),
     )
 
@@ -225,19 +224,14 @@ def widget_activate_data_contract(
         if not selected:
             state.update(contract_id=None, contract_version=None, validation=None)
             validation_view.value = (
-                "<div style='background:#f6f8fa;border-left:4px solid #98a2b3;"
-                "padding:10px 12px;font-size:12px;line-height:1.55;'>"
-                "<b>Engineering validation</b><br>"
-                "<span style='color:#667085;'>Select a frozen contract version to load "
-                "the latest exact-version validation evidence.</span></div>"
+                "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
+                "Select a frozen version to load validation.</div>"
             )
             review_view.value = (
-                "<div style='background:#f6f8fa;border-left:4px solid #98a2b3;"
-                "padding:10px 12px;font-size:12px;line-height:1.55;'>"
-                "<b>Activation review</b><br>"
-                "<span style='color:#667085;'>Select a frozen contract version and "
-                "Data Agreement.</span></div>"
+                "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
+                "Select a frozen contract and Data Agreement.</div>"
             )
+            confirmation_prompt.layout.display = "none"
             activate.disabled = True
             return
 
@@ -261,25 +255,19 @@ def widget_activate_data_contract(
 
         if validation["validated"]:
             validation_view.value = (
-                "<div style='background:#f1fbf4;border-left:4px solid #107c10;"
-                "padding:10px 12px;font-size:12px;line-height:1.55;'>"
-                "<b>Engineering validation</b><br>"
-                "<span style='color:#107c10;font-weight:700;'>Validated ✓</span> · "
-                f"run {html.escape(validation['run_id'])} · "
-                f"{len(validation['rows'])} result(s) · "
+                "<div style='font-size:12px;line-height:1.45;'>"
+                "<span style='color:#107c10;font-weight:700;'>✓ Validated</span> · "
+                f"{html.escape(validation['run_id'])} · "
                 f"{validation['warnings']} warning(s)</div>"
             )
         else:
             validation_view.value = (
-                "<div style='background:#fff5f5;border-left:4px solid #a4262c;"
-                "padding:10px 12px;font-size:12px;line-height:1.55;'>"
-                "<b>Engineering validation</b><br>"
+                "<div style='font-size:12px;line-height:1.45;'>"
                 "<span style='color:#a4262c;font-weight:700;'>Activation blocked</span> · "
                 + (
-                    f"latest run {html.escape(validation['run_id'])} has "
                     f"{validation['blocked']} blocking failure(s)"
                     if validation["run_id"]
-                    else "no validation evidence exists for this exact frozen version"
+                    else "no exact-version validation"
                 )
                 + "</div>"
             )
@@ -289,22 +277,14 @@ def widget_activate_data_contract(
             if agreement else "Not selected"
         )
         review_view.value = (
-            "<div style='background:#f5f9fd;border-left:4px solid #0f6cbd;"
-            "padding:12px 14px;font-size:12px;line-height:1.6;'>"
-            "<div style='font-size:13px;font-weight:700;color:#172b4d;'>Activation review</div>"
-            "<div style='margin-top:6px;'>"
-            f"<b>Table</b> · {html.escape(table_labels.get(str(table_select.value), str(table_select.value)))}<br>"
-            f"<b>Contract</b> · v{version} · Frozen<br>"
-            f"<b>Data Agreement</b> · {agreement_text}"
+            "<div style='font-size:12px;line-height:1.55;'>"
+            f"<b>{html.escape(table_labels.get(str(table_select.value), str(table_select.value)))}</b><br>"
+            f"Contract v{version} · Frozen<br>"
+            f"{agreement_text}"
             "</div>"
-            "<div style='color:#667085;margin-top:8px;'>"
-            "Activation changes the governed Production definition only. "
-            "It does not promote or deploy <code>02_pipeline</code>."
-            "</div></div>"
         )
-        activate.disabled = not (
-            validation["validated"] and agreement and confirm.value
-        )
+        confirmation_prompt.layout.display = "none"
+        activate.disabled = not (validation["validated"] and agreement)
 
     def refresh_contracts(change: Any = None) -> None:
         selected_table = str(table_select.value or "")
@@ -320,6 +300,25 @@ def widget_activate_data_contract(
 
     def on_activate(_: Any) -> None:
         if activate.disabled or not contract_select.value or not agreement_select.value:
+            return
+        _, version = contract_select.value
+        agreement_id_value, agreement_version_value = agreement_select.value
+        confirmation_text.value = (
+            "<div style='font-size:13px;line-height:1.5;'>"
+            "<b>Activate Data Contract?</b><br>"
+            f"Make <b>{html.escape(table_labels.get(str(table_select.value), str(table_select.value)))}</b> "
+            f"contract v{version} the governed Production definition linked to "
+            f"<b>{html.escape(str(agreement_id_value))} · v{html.escape(str(agreement_version_value))}</b>."
+            "</div>"
+        )
+        confirmation_prompt.layout.display = "flex"
+
+    def cancel_activation(_: Any) -> None:
+        confirmation_prompt.layout.display = "none"
+
+    def perform_activation(_: Any) -> None:
+        if activate.disabled or not contract_select.value or not agreement_select.value:
+            confirmation_prompt.layout.display = "none"
             return
         contract_id_value, version = contract_select.value
         agreement_id_value, agreement_version_value = agreement_select.value
@@ -342,7 +341,7 @@ def widget_activate_data_contract(
                 f"Data Contract v{version} is now the governed Production definition."
             )
             activate.disabled = True
-            confirm.value = False
+            confirmation_prompt.layout.display = "none"
         except Exception as exc:
             status.value = (
                 "<span style='color:#a4262c;font-weight:600;'>Activation failed:</span> "
@@ -352,28 +351,40 @@ def widget_activate_data_contract(
     table_select.observe(refresh_contracts, names="value")
     contract_select.observe(refresh_review, names="value")
     agreement_select.observe(refresh_review, names="value")
-    confirm.observe(refresh_review, names="value")
     activate.on_click(on_activate)
+    cancel_confirmation.on_click(cancel_activation)
+    confirm_activation.on_click(perform_activation)
     agreement_select.options = agreement_options()
     agreement_select.value = None
     refresh_contracts()
 
-    candidate_grid = widgets.GridBox(
-        [table_select, contract_select],
+    activation_actions = shared.action_row(widgets, [activate])
+    activation_flow = widgets.GridBox(
+        [
+            shared.form_section(
+                widgets,
+                title="1 · Contract",
+                children=[table_select, contract_select, validation_view],
+            ),
+            shared.form_section(
+                widgets,
+                title="2 · Data Agreement",
+                children=[agreement_select],
+            ),
+            shared.form_section(
+                widgets,
+                title="3 · Review & activate",
+                children=[review_view, activation_actions, status],
+            ),
+        ],
         layout=widgets.Layout(
             width="100%",
             min_width="0",
-            grid_template_columns="repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
-            grid_gap="12px 24px",
-            align_items="flex-start",
+            grid_template_columns="repeat(3, minmax(0, 1fr))",
+            grid_gap="12px",
+            align_items="start",
         ),
     )
-    agreement_help = widgets.HTML(
-        "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
-        "Link the exact governed agreement version that authorizes this Production contract."
-        "</div>"
-    )
-    activation_actions = shared.action_row(widgets, [activate])
 
     page = shared.form_page(
         widgets,
@@ -382,23 +393,7 @@ def widget_activate_data_contract(
             "Link an exact Data Agreement version and activate a validated frozen "
             "contract for Production."
         ),
-        children=[
-            shared.form_section(
-                widgets,
-                title="1 · Activation candidate",
-                children=[candidate_grid, validation_view],
-            ),
-            shared.form_section(
-                widgets,
-                title="2 · Data Agreement",
-                children=[agreement_select, agreement_help],
-            ),
-            shared.form_section(
-                widgets,
-                title="3 · Final review",
-                children=[review_view, confirm_row, activation_actions, status],
-            ),
-        ],
+        children=[activation_flow, confirmation_prompt],
     )
     ip.display(page)
     state["widget"] = page
