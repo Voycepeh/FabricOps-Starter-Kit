@@ -4145,9 +4145,14 @@ def widget_data_contract(
             ],
         ]
         values = [item[1] if isinstance(item, tuple) else item for item in options]
-        table_control.value = None
-        table_control.options = options
-        table_control.value = pending if pending in values else ""
+        state["_selector_refreshing"] = True
+        try:
+            table_control.value = None
+            table_control.options = options
+            table_control.value = pending if pending in values else ""
+        finally:
+            state["_selector_refreshing"] = False
+        table_changed({"new": table_control.value})
 
     def refresh_schema_options(*_args: Any) -> None:
         selected_store = str(store_control.value or "")
@@ -4167,6 +4172,8 @@ def widget_data_contract(
         refresh_table_options()
 
     def table_changed(change: dict[str, Any]) -> None:
+        if state.get("_selector_refreshing"):
+            return
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
