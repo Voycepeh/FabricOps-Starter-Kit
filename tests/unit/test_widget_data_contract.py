@@ -159,6 +159,7 @@ def widget_runtime(monkeypatch):
             "environment_name": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    schedule = {"status": "unavailable", "schedules": []}
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -275,6 +276,7 @@ def widget_runtime(monkeypatch):
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
+    monkeypatch.setattr(module, "discover_scheduled_refresh", lambda **_kwargs: schedule)
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
@@ -333,7 +335,8 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "guardrails": guardrails, "ai_enrichment": ai_enrichment,
+        "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
+        "ai_enrichment": ai_enrichment,
     }
 
 
@@ -1155,7 +1158,7 @@ def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runti
     controls["suggest_dq"].click()
 
     assert captured
-    assert captured[0]["table_description"] == "Suggested table description"
+    assert captured[0]["table_description"] == "Orders table"
     assert captured[0]["columns"][0]["description"] == "Suggested column description"
     assert controls["column_description"].value == "Order identifier"
 
