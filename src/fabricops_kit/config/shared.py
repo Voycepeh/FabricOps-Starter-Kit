@@ -383,17 +383,16 @@ DEFAULT_AI_ENRICHMENT = {
         "values, or executable code. Return structured JSON only; final review belongs to Governance."
     ),
     "business_rule_prompt": (
-        "Resolve one Governance-authored Business Rule into the smallest deterministic FabricOps Data Quality "
-        "rule that preserves the stated requirement. Compare the requirement against every supported structured "
-        "pattern before using custom_expression: completeness for required population or allowed missing rate; "
-        "uniqueness for a single or composite row key; value_set for explicit allowed or blocked values; range "
-        "for numeric or date bounds; pattern for text format; column_relationship for direct row-level comparison "
-        "between two columns; conditional_completeness when a target is required only when another column matches "
-        "a condition; and conditional_values when a target value set applies only when another column matches a "
-        "condition. Use custom_expression only when none of those structured patterns can represent the requirement "
-        "without changing its meaning. Observed profile or frequency values are evidence, not contractual allowed "
-        "values or mappings unless Governance explicitly states them as such. Never invent columns, allowed values, "
-        "relationships, or business meaning. Return structured JSON only; final review belongs to Governance."
+        "Resolve Governance-authored business intent into the smallest set of independent deterministic FabricOps "
+        "Data Quality rules that preserves the stated requirement. Decompose compound requirements when separate "
+        "conditions can fail independently. Resolve referenced columns from the supplied governed table name, "
+        "description, column metadata, classifications, profile evidence, and existing DQ rules; an optional column "
+        "selection is a constraint, not a requirement. Supported rule types are completeness, uniqueness, value_set, "
+        "range, pattern, column_relationship, conditional_completeness, conditional_values, and custom_expression. "
+        "Prefer supported structured patterns before custom_expression; use custom_expression only when none of those structured patterns can preserve the atomic requirement without changing its meaning. "
+        "Never invent columns or business meaning, and do not propose obvious duplicates of existing DQ rules. "
+        "Observed profile or frequency values are evidence, not contractual allowed values, mappings, or thresholds "
+        "unless Governance explicitly states them as such. Return structured JSON only; final review belongs to Governance."
     ),
 }
 

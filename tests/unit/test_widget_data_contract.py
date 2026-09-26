@@ -690,14 +690,14 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    assert "Business Rules" not in tuple(controls["top_nav"].options)
+    assert "DQ Rules" not in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
     assert "Column definitions" in controls["manifest_preview"].value
     assert "Guardrails" in controls["manifest_preview"].value
     assert "<b>Table</b>" in controls["manifest_preview"].value
     assert "<b>Columns</b>" in controls["manifest_preview"].value
-    assert "<b>Business Rules</b>" in controls["manifest_preview"].value
+    assert "<b>DQ Rules</b>" in controls["manifest_preview"].value
 
 
 def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_runtime):
@@ -1034,16 +1034,16 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
-    assert "Business Rules" in tuple(controls["top_nav"].options)
-    controls["top_nav"].value = "Business Rules"
+    assert "DQ Rules" in tuple(controls["top_nav"].options)
+    controls["top_nav"].value = "DQ Rules"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
     assert controls["business_requirement"].description == ""
     assert controls["business_columns"].description == ""
     assert controls["business_rule_controls"].layout.display == "none"
-    business_section = controls["right_pane"].children[0]
-    assert "Generate Enforceable Data Quality Rules from Business Rules" in business_section.children[0].value
-    assert "How FabricOps Works" in business_section.children[1].value
-    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
+    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr) minmax(0, 1fr)"
+    assert "Author DQ Rules" in controls["left_pane"].children[0].children[0].value
+    assert "Review &amp; Add DQ Rules" in controls["right_pane"].children[0].children[0].value
+    for label in ("Table", "Columns", "DQ Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -1133,17 +1133,18 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     monkeypatch.setattr(
         module,
         "suggest_business_rule",
-        lambda *_args, **_kwargs: {
+        lambda *_args, **_kwargs: [{
             "rule_type": "column_relationship",
+            "columns": ["column_0", "column_1"],
             "parameters": {
                 "columns": ["column_0", "column_1"],
                 "operator": "=",
                 "business_requirement": "Columns must match.",
             },
             "rationale": "Deterministic relationship.",
-        },
+        }],
     )
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     controls["business_requirement"].value = "Columns must match."
     controls["business_columns"].value = ("column_0", "column_1")
     controls["resolve_business_rule"].click()
@@ -1161,7 +1162,7 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
     """Delete removes only the selected draft Business Rule after explicit confirmation."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
 
     controls["business_saved"].value = "advanced"
     assert controls["delete_business_rule"].disabled is False
@@ -1183,7 +1184,7 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
         for row in state["current"]["guardrails"]
     )
     assert state["dirty"] is True
-    assert "Business Rule deletion staged" in state["message"]
+    assert "DQ Rule deletion staged" in state["message"]
 
     controls["save_data_contract"].click()
     assert not any(
@@ -1894,7 +1895,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "<th>Rules</th>" not in review
     assert "<b>Table</b>" in review
     assert "<b>Columns</b>" in review
-    assert "<b>Business Rules</b>" in review
+    assert "<b>DQ Rules</b>" in review
     assert "Customer identifier" in review
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
@@ -1910,6 +1911,22 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "CUS-001<br>CUS-120" in fallback
 
 
+def test_column_authored_dq_rule_appears_in_shared_dq_rules_list(
+    widget_runtime, monkeypatch
+):
+    """Column DQ edits hydrate the DQ Rules page from the same staged draft state."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    controls["top_nav"].value = "Columns"
+    controls["dq_family_controls"]["completeness"]["enabled"].value = True
+
+    controls["top_nav"].value = "DQ Rules"
+    labels = [label for label, _value in controls["business_saved"].options]
+
+    assert any("Completeness" in label and "column_0" in label for label in labels)
+
+
 def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     widget_runtime, monkeypatch
 ):
@@ -1920,7 +1937,7 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     def resolve(_context, **kwargs):
         assert kwargs["requirement"] == "End date must be on or after start date."
         assert kwargs["relevant_columns"] == ["column_0", "column_1"]
-        return {
+        return [{
             "rule_type": "column_relationship",
             "columns": ["column_1", "column_0"],
             "parameters": {
@@ -1931,17 +1948,17 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
             "business_requirement": kwargs["requirement"],
             "rationale": "Direct two-column comparison.",
             "engineering_review_required": False,
-        }
+        }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     controls["business_saved"].value = ""
     controls["business_requirement"].value = "End date must be on or after start date."
     controls["business_columns"].value = ("column_0", "column_1")
     controls["resolve_business_rule"].click()
 
-    assert "Known FabricOps pattern: Column Relationship" in controls["business_proposal"].value
-    assert "No Engineering review required" in controls["business_proposal"].value
+    assert "Column Relationship" in controls["business_proposal"].value
+    assert "column_1, column_0" in controls["business_proposal"].value
     assert controls["apply_business_rule"].disabled is False
 
     controls["apply_business_rule"].click()
@@ -1970,7 +1987,7 @@ def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch)
 
     def resolve(_context, **kwargs):
         requirement = kwargs["requirement"]
-        return {
+        return [{
             "rule_type": "column_relationship",
             "parameters": {
                 "columns": ["column_1", "column_0"],
@@ -1979,10 +1996,10 @@ def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch)
             },
             "business_requirement": requirement,
             "engineering_review_required": False,
-        }
+        }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     for requirement in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2016,7 +2033,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
 
     def resolve(_context, **kwargs):
         columns = next(cols for requirement, cols in requirements if requirement == kwargs["requirement"])
-        return {
+        return [{
             "rule_type": "uniqueness",
             "parameters": {
                 "columns": columns,
@@ -2024,10 +2041,10 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
             },
             "business_requirement": kwargs["requirement"],
             "engineering_review_required": False,
-        }
+        }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     for requirement, columns in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2054,7 +2071,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     controls = state["_controls"]
 
     def resolve(_context, **kwargs):
-        return {
+        return [{
             "rule_type": "completeness",
             "parameters": {
                 "columns": ["column_0"],
@@ -2064,10 +2081,10 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
             },
             "business_requirement": kwargs["requirement"],
             "engineering_review_required": False,
-        }
+        }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     controls["business_requirement"].value = "Order identifier is always required."
     controls["business_columns"].value = ("column_0",)
     controls["resolve_business_rule"].click()
@@ -2081,12 +2098,12 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
         == "Order identifier is always required."
     )
     assert staged["column_id"] == "col-0"
-    assert controls["business_saved"].value == ""
+    assert controls["business_saved"].value
 
     controls["top_nav"].value = "Columns"
     assert controls["dq_max_missing"].value == "0"
     assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
-    assert "resolved to a Column Rule" in state["message"]
+    assert "DQ Rule added to the current draft" in state["message"]
 
 
 def test_custom_business_rule_requires_engineering_review_before_freeze(
@@ -2097,7 +2114,7 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
     controls = state["_controls"]
 
     def resolve(_context, **kwargs):
-        return {
+        return [{
             "rule_type": "custom_expression",
             "parameters": {
                 "expression_language": "pyspark",
@@ -2109,10 +2126,10 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
             "business_requirement": kwargs["requirement"],
             "rationale": "Conditional cross-column requirement.",
             "engineering_review_required": True,
-        }
+        }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "DQ Rules"
     controls["business_requirement"].value = "Approved rows require an approved date."
     controls["resolve_business_rule"].click()
     controls["apply_business_rule"].click()

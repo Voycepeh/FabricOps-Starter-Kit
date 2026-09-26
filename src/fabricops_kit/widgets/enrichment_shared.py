@@ -444,18 +444,50 @@ def _validate_ai_dq_parameters(rule_type: str, parameters: dict[str, Any]) -> No
 
 
 def build_ai_business_rule_context(state: dict[str, Any]) -> dict[str, Any]:
-    """Build governed metadata context for one natural-language Business Rule."""
+    """Build governed metadata and DQ context for natural-language rule authoring."""
     columns = []
     for row in state.get("columns", []):
         column_name = str(row.get("column_name") or "").strip()
         if not column_name:
             continue
-        columns.append({
+        profile = dict(row.get("profile") or {})
+        profile_evidence = {
+            name: profile.get(name)
+            for name in _PROFILE_CONTEXT_FIELDS
+            if profile.get(name) is not None
+        }
+        examples = [
+            value for value in profile.get("example_values", [])
+            if value not in (None, "")
+        ][:3]
+        if examples:
+            profile_evidence["example_values"] = examples
+        column = {
             "column_name": column_name,
             "data_type": str(row.get("data_type") or ""),
             "description": str(row.get("description") or ""),
             "classification": str(row.get("classification") or ""),
+        }
+        if profile_evidence:
+            column["profile"] = profile_evidence
+        columns.append(column)
+
+    existing_dq_rules = []
+    for row in state.get("existing_dq_rules", []):
+        rule_type = str(row.get("rule_type") or "").strip()
+        rule_columns = [
+            str(name).strip()
+            for name in row.get("columns", [])
+            if str(name).strip()
+        ]
+        if not rule_type or not rule_columns:
+            continue
+        existing_dq_rules.append({
+            "rule_type": rule_type,
+            "columns": rule_columns,
+            "parameters": dict(row.get("parameters") or {}),
         })
+
     return {
         "table_name": str(state.get("table_name") or ""),
         "schema_name": str(state.get("schema_name") or ""),
@@ -463,6 +495,7 @@ def build_ai_business_rule_context(state: dict[str, Any]) -> dict[str, Any]:
         "table_description": str(state.get("table_description") or ""),
         "table_classification": str(state.get("table_classification") or ""),
         "columns": columns,
+        "existing_dq_rules": existing_dq_rules,
     }
 
 
@@ -473,11 +506,11 @@ def suggest_business_rule(
     relevant_columns: list[str] | tuple[str, ...] = (),
     prompt: str,
     invoke: Any = None,
-) -> dict[str, Any]:
-    """Resolve one natural-language Business Rule into a canonical Guardrail proposal."""
+) -> list[dict[str, Any]]:
+    """Resolve natural-language business intent into one or more atomic Guardrails."""
     business_requirement = str(requirement or "").strip()
     if not business_requirement:
-        raise ValueError("Describe what must be true before resolving a Business Rule.")
+        raise ValueError("Describe what must be true before generating DQ Rules.")
     if not str(prompt).strip():
         raise ValueError("An AI Business Rule prompt is required.")
 
@@ -486,11 +519,13 @@ def suggest_business_rule(
         for row in context.get("columns", [])
         if str(row.get("column_name") or "").strip()
     }
-    selected_columns = [str(name).strip() for name in relevant_columns if str(name).strip()]
+    selected_columns = [
+        str(name).strip() for name in relevant_columns if str(name).strip()
+    ]
     unknown_selected = sorted(set(selected_columns).difference(allowed_columns))
     if unknown_selected:
         raise ValueError(
-            "Business Rule relevant columns contain unknown columns: "
+            "DQ Rule column constraint contains unknown columns: "
             + ", ".join(unknown_selected)
         )
 
@@ -499,14 +534,18 @@ def suggest_business_rule(
 Business requirement:
 {business_requirement}
 
-Relevant columns selected by Governance:
+Optional column constraint selected by Governance:
 {json.dumps(selected_columns)}
 
-Return JSON only as one object with rule_type, columns, parameters, rationale.
+Return JSON only as an array containing one or more atomic rule objects.
+Each object must contain requirement, rule_type, columns, parameters, and rationale.
+Decompose compound requirements into the smallest independent enforceable rules. One condition that can fail independently should be one rule.
+Resolve business-language column references against the governed table and column context. If the optional column constraint is empty, infer the required columns from the full governed context. If it is populated, use only those columns.
+Do not invent columns. Do not return a rule that is already represented in existing_dq_rules.
 Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, conditional_completeness, conditional_values, custom_expression.
-Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent the requirement without changing its meaning.
+Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent that atomic requirement without changing its meaning.
 Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
-Uniqueness: one or more columns; no rule-specific parameters. This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a Business Rule. Grain is a separate singular table definition authored in the Table workspace.
+Uniqueness: one or more columns; no rule-specific parameters. This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a DQ Rule. Grain is a separate singular table definition authored in the Table workspace.
 Value Set: exactly one column; parameters mode (allow or block) and non-empty values.
 Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
 Pattern: exactly one column; parameter pattern containing the governed regular expression.
@@ -515,8 +554,8 @@ Conditional Completeness: exactly two columns, condition column then required ta
 Conditional Values: exactly two columns, condition column then target column; parameters condition_operator (= or !=), condition_value, mode (allow or block), and non-empty values.
 Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
 A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), F.lit(...), literals, comparisons, &, |, ~, arithmetic (+, -, *, /, %), and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, arbitrary Python calls, exponentiation, floor division, or matrix multiplication.
-If Governance selected relevant columns, the proposal may use only those columns.
-Do not force a known pattern when it would weaken, broaden, or otherwise change the business requirement.
+Observed profile and frequency values are evidence, not automatic contractual requirements. Never turn observed values into allowed values, mappings, or thresholds unless the business requirement explicitly states them.
+Do not force a known pattern when it would weaken, broaden, or otherwise change the atomic requirement.
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
@@ -524,119 +563,170 @@ Context:
     if raw.startswith("```"):
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
-        candidate = json.loads(raw)
+        candidates = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError("AI Business Rule proposal was not valid JSON.") from exc
-    if not isinstance(candidate, dict):
-        raise ValueError("AI Business Rule proposal must be one JSON object.")
+        raise ValueError("AI DQ Rule proposal was not valid JSON.") from exc
+    if not isinstance(candidates, list) or not candidates:
+        raise ValueError("AI DQ Rule proposal must be a non-empty JSON array.")
 
-    rule_type = str(candidate.get("rule_type") or "").strip()
-    if rule_type not in BUSINESS_RULE_TYPES:
-        raise ValueError(f"AI Business Rule proposal used unsupported rule_type {rule_type!r}.")
+    resolved: list[dict[str, Any]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError("Every AI DQ Rule proposal must be one JSON object.")
 
-    columns = candidate.get("columns")
-    if not isinstance(columns, list) or not columns:
-        raise ValueError("AI Business Rule proposal must reference at least one known column.")
-    normalized_columns = [str(name).strip() for name in columns]
-    if len(set(normalized_columns)) != len(normalized_columns):
-        raise ValueError("AI Business Rule proposal cannot repeat the same column.")
-    if any(name not in allowed_columns for name in normalized_columns):
-        raise ValueError("AI Business Rule proposal referenced an unknown column.")
-    if selected_columns and any(name not in selected_columns for name in normalized_columns):
-        raise ValueError("AI Business Rule proposal used a column outside the selected relevant columns.")
+        atomic_requirement = str(
+            candidate.get("requirement") or business_requirement
+        ).strip()
+        rule_type = str(candidate.get("rule_type") or "").strip()
+        if rule_type not in BUSINESS_RULE_TYPES:
+            raise ValueError(
+                f"AI DQ Rule proposal used unsupported rule_type {rule_type!r}."
+            )
 
-    parameters = dict(candidate.get("parameters") or {})
-    if rule_type in STANDARD_DQ_TYPES:
-        if len(normalized_columns) != 1:
-            raise ValueError(f"{rule_type} requires exactly one known column.")
-        canonical_parameters = _normalize_ai_dq_parameters(rule_type, parameters)
-        _validate_ai_dq_parameters(rule_type, canonical_parameters)
-        canonical_parameters.update({
-            "columns": normalized_columns,
-            "business_requirement": business_requirement,
-        })
-    elif rule_type == "uniqueness":
-        if parameters:
-            raise ValueError("Uniqueness proposal does not accept rule-specific parameters.")
-        canonical_parameters = {
-            "columns": normalized_columns,
-            "business_requirement": business_requirement,
-        }
-    elif rule_type == "column_relationship":
-        if len(normalized_columns) != 2:
-            raise ValueError("Column Relationship requires exactly two known columns.")
-        if normalized_columns[0] == normalized_columns[1]:
-            raise ValueError("Column Relationship requires two different columns.")
-        operator = str(parameters.get("operator") or "").strip()
-        if operator not in BUSINESS_RULE_OPERATORS:
-            raise ValueError("Column Relationship proposal used an unsupported operator.")
-        canonical_parameters = {
-            "columns": normalized_columns,
-            "operator": operator,
-            "business_requirement": business_requirement,
-        }
-    elif rule_type in {"conditional_completeness", "conditional_values"}:
-        if len(normalized_columns) != 2 or normalized_columns[0] == normalized_columns[1]:
-            raise ValueError(f"{rule_type} requires exactly two different known columns.")
-        condition_operator = str(parameters.get("condition_operator") or "").strip()
-        if condition_operator not in {"=", "!="}:
-            raise ValueError(f"{rule_type} condition_operator must be '=' or '!='.")
-        if "condition_value" not in parameters:
-            raise ValueError(f"{rule_type} requires condition_value.")
-        canonical_parameters = {
-            "columns": normalized_columns,
-            "condition_operator": condition_operator,
-            "condition_value": parameters["condition_value"],
-            "business_requirement": business_requirement,
-        }
-        if rule_type == "conditional_completeness":
-            if not isinstance(parameters.get("treat_blank_as_missing"), bool):
-                raise ValueError(
-                    "conditional_completeness requires boolean treat_blank_as_missing."
-                )
-            canonical_parameters["treat_blank_as_missing"] = parameters[
-                "treat_blank_as_missing"
-            ]
-        else:
-            if parameters.get("mode") not in {"allow", "block"}:
-                raise ValueError("conditional_values mode must be 'allow' or 'block'.")
-            if not isinstance(parameters.get("values"), list) or not parameters["values"]:
-                raise ValueError("conditional_values requires a non-empty values list.")
+        columns = candidate.get("columns")
+        if not isinstance(columns, list) or not columns:
+            raise ValueError(
+                "AI DQ Rule proposal must reference at least one known column."
+            )
+        normalized_columns = [str(name).strip() for name in columns]
+        if len(set(normalized_columns)) != len(normalized_columns):
+            raise ValueError("AI DQ Rule proposal cannot repeat the same column.")
+        if any(name not in allowed_columns for name in normalized_columns):
+            raise ValueError("AI DQ Rule proposal referenced an unknown column.")
+        if selected_columns and any(
+            name not in selected_columns for name in normalized_columns
+        ):
+            raise ValueError(
+                "AI DQ Rule proposal used a column outside the selected constraint."
+            )
+
+        parameters = dict(candidate.get("parameters") or {})
+        if rule_type in STANDARD_DQ_TYPES:
+            if len(normalized_columns) != 1:
+                raise ValueError(f"{rule_type} requires exactly one known column.")
+            canonical_parameters = _normalize_ai_dq_parameters(rule_type, parameters)
+            _validate_ai_dq_parameters(rule_type, canonical_parameters)
             canonical_parameters.update({
-                "mode": parameters["mode"],
-                "values": list(parameters["values"]),
+                "columns": normalized_columns,
+                "business_requirement": atomic_requirement,
             })
-    else:
-        expression_language = str(parameters.get("expression_language") or "").strip().lower()
-        expression = str(parameters.get("expression") or "").strip()
-        if expression_language != "pyspark":
-            raise ValueError("Custom Expression proposal must use expression_language='pyspark'.")
-        if not expression:
-            raise ValueError("Custom Expression proposal requires a PySpark boolean expression.")
-        lowered = expression.lower()
-        forbidden = (
-            "import ", "exec(", "eval(", "__", "spark.sql", "udf(", "open(",
-            "subprocess", "requests.", "urllib", "os.", "sys.",
-        )
-        if any(token in lowered for token in forbidden):
-            raise ValueError("Custom Expression proposal contains unsupported executable content.")
-        canonical_parameters = {
-            "expression_language": "pyspark",
-            "expression": expression,
-            "business_requirement": business_requirement,
+        elif rule_type == "uniqueness":
+            if parameters:
+                raise ValueError(
+                    "Uniqueness proposal does not accept rule-specific parameters."
+                )
+            canonical_parameters = {
+                "columns": normalized_columns,
+                "business_requirement": atomic_requirement,
+            }
+        elif rule_type == "column_relationship":
+            if len(normalized_columns) != 2:
+                raise ValueError(
+                    "Column Relationship requires exactly two known columns."
+                )
+            if normalized_columns[0] == normalized_columns[1]:
+                raise ValueError(
+                    "Column Relationship requires two different columns."
+                )
+            operator = str(parameters.get("operator") or "").strip()
+            if operator not in BUSINESS_RULE_OPERATORS:
+                raise ValueError(
+                    "Column Relationship proposal used an unsupported operator."
+                )
+            canonical_parameters = {
+                "columns": normalized_columns,
+                "operator": operator,
+                "business_requirement": atomic_requirement,
+            }
+        elif rule_type in {"conditional_completeness", "conditional_values"}:
+            if (
+                len(normalized_columns) != 2
+                or normalized_columns[0] == normalized_columns[1]
+            ):
+                raise ValueError(
+                    f"{rule_type} requires exactly two different known columns."
+                )
+            condition_operator = str(
+                parameters.get("condition_operator") or ""
+            ).strip()
+            if condition_operator not in {"=", "!="}:
+                raise ValueError(
+                    f"{rule_type} condition_operator must be '=' or '!='."
+                )
+            if "condition_value" not in parameters:
+                raise ValueError(f"{rule_type} requires condition_value.")
+            canonical_parameters = {
+                "columns": normalized_columns,
+                "condition_operator": condition_operator,
+                "condition_value": parameters["condition_value"],
+                "business_requirement": atomic_requirement,
+            }
+            if rule_type == "conditional_completeness":
+                if not isinstance(parameters.get("treat_blank_as_missing"), bool):
+                    raise ValueError(
+                        "conditional_completeness requires boolean "
+                        "treat_blank_as_missing."
+                    )
+                canonical_parameters["treat_blank_as_missing"] = parameters[
+                    "treat_blank_as_missing"
+                ]
+            else:
+                if parameters.get("mode") not in {"allow", "block"}:
+                    raise ValueError(
+                        "conditional_values mode must be 'allow' or 'block'."
+                    )
+                if (
+                    not isinstance(parameters.get("values"), list)
+                    or not parameters["values"]
+                ):
+                    raise ValueError(
+                        "conditional_values requires a non-empty values list."
+                    )
+                canonical_parameters.update({
+                    "mode": parameters["mode"],
+                    "values": list(parameters["values"]),
+                })
+        else:
+            expression_language = str(
+                parameters.get("expression_language") or ""
+            ).strip().lower()
+            expression = str(parameters.get("expression") or "").strip()
+            if expression_language != "pyspark":
+                raise ValueError(
+                    "Custom Expression proposal must use "
+                    "expression_language='pyspark'."
+                )
+            if not expression:
+                raise ValueError(
+                    "Custom Expression proposal requires a PySpark boolean expression."
+                )
+            lowered = expression.lower()
+            forbidden = (
+                "import ", "exec(", "eval(", "__", "spark.sql", "udf(", "open(",
+                "subprocess", "requests.", "urllib", "os.", "sys.",
+            )
+            if any(token in lowered for token in forbidden):
+                raise ValueError(
+                    "Custom Expression proposal contains unsupported executable content."
+                )
+            canonical_parameters = {
+                "expression_language": "pyspark",
+                "expression": expression,
+                "business_requirement": atomic_requirement,
+                "columns": normalized_columns,
+                "engineering_review_required": True,
+            }
+
+        resolved.append({
+            "rule_type": rule_type,
             "columns": normalized_columns,
-            "engineering_review_required": True,
-        }
+            "parameters": canonical_parameters,
+            "business_requirement": atomic_requirement,
+            "rationale": str(candidate.get("rationale") or "").strip(),
+            "engineering_review_required": rule_type == "custom_expression",
+        })
 
-    return {
-        "rule_type": rule_type,
-        "columns": normalized_columns,
-        "parameters": canonical_parameters,
-        "business_requirement": business_requirement,
-        "rationale": str(candidate.get("rationale") or "").strip(),
-        "engineering_review_required": rule_type == "custom_expression",
-    }
-
+    return resolved
 
 def _rows(value: Any) -> list[dict[str, Any]]:
     """Return row-like values as dictionaries."""
