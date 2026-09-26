@@ -564,8 +564,13 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "PROD · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
-    assert "1 writer · 2 readers" in table_summary
+    assert "1 write · 2 reads" in table_summary
     assert "View lineage" in table_summary
+    assert ">Env</th>" in table_summary
+    assert ">Pipeline</th>" in table_summary
+    assert ">Role</th>" in table_summary
+    assert ">Write</td>" in table_summary
+    assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
