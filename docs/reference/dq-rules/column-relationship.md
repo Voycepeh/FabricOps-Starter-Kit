@@ -1,30 +1,60 @@
 # column_relationship
 
-Compares two different columns on the same row with `=`, `!=`, `>`, `>=`, `<`, or `<=`.
+## What this rule does
 
-## Use it when
+Compares two different columns on the same row using `=`, `!=`, `>`, `>=`, `<`, or `<=`.
 
-Use `column_relationship` when the business requirement is a direct row-level comparison between two columns.
+## When to use it
 
-Examples:
+Use for direct row-level comparisons such as date ordering, amount comparisons, or paired identifiers.
 
-- "End date must be on or after start date."
-- "Credits earned cannot exceed credits attempted."
-- "Source ID must equal target ID."
+## Data applicability
 
-## Do not use it when
+Exactly two columns that can be compared meaningfully on the same row.
 
-- A column or column combination must be unique: use [`uniqueness`](uniqueness.md).
-- One column is required only when another has a specific value: use [`conditional_completeness`](conditional-completeness.md).
-- A target column has an allowed set only under a condition: use [`conditional_values`](conditional-values.md).
-- One column determines another across rows, such as `product_id → product_name`. This rule compares values within a row; it does not validate functional dependency across rows.
+## Parameters
 
-## Null behavior
+```yaml
+rule_type: column_relationship
+columns: ["end_date", "start_date"]
+operator: ">="
+```
 
-Both-null values pass equality. One-null ordered comparisons fail.
-
-## Example
+## Example rule definition
 
 ```json
 {"rule_type":"column_relationship","columns":["end_date","start_date"],"operator":">="}
 ```
+
+## Sample input data
+
+| record_id | start_date | end_date |
+|---|---|---|
+| 1 | 2026-01-01 | 2026-01-03 |
+| 2 | 2026-01-05 | 2026-01-05 |
+| 3 | 2026-01-10 | 2026-01-08 |
+
+## Rows that pass
+
+| record_id | Why |
+|---|---|
+| 1 | End date is after start date. |
+| 2 | End date equals start date and `>=` allows equality. |
+
+## Rows that fail
+
+| record_id | Why |
+|---|---|
+| 3 | End date is before start date. |
+
+## Notes
+
+- This compares values within each row.
+- It does not validate uniqueness or functional dependency across rows.
+- Both-null values pass equality; one-null ordered comparisons fail.
+
+## Related rules
+
+- [`uniqueness`](uniqueness.md)
+- [`conditional_completeness`](conditional-completeness.md)
+- [`conditional_values`](conditional-values.md)
