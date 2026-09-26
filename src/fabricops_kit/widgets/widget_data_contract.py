@@ -743,6 +743,9 @@ def widget_data_contract(
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be saved.")
         scope = (str(current["contract_id"]), int(current["contract_version"]))
+        prepare_save = state.get("_prepare_data_contract_save")
+        if callable(prepare_save):
+            prepare_save()
         payload = refresh_manifest()
         if payload is None:
             raise ValueError("Data Contract draft has no payload to save.")
@@ -1599,6 +1602,12 @@ def widget_data_contract(
         for control in (table_description, table_classification, table_grain):
             control.observe(sync_table_enrichment, names="value")
         row_key_columns.observe(sync_row_key, names="value")
+
+        def prepare_data_contract_save() -> None:
+            """Persist the currently displayed row-key choice when final Save is deliberate."""
+            sync_row_key()
+
+        state["_prepare_data_contract_save"] = prepare_data_contract_save
         row_key_block.observe(sync_row_key, names="value")
         for control in (load_strategy_control, *processing_parameter_controls):
             control.observe(sync_table_processing, names="value")
