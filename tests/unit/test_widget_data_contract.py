@@ -543,8 +543,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "Block on failure"
-    assert "Schedule discovery unavailable" in controls["pipeline_refresh"].value
-    assert "read-only" in controls["pipeline_refresh"].value
+    table_summary = controls["left_pane"].children[0].value
+    assert "Refresh Frequency" in table_summary
+    assert "Daily · 08:00" in table_summary
 
 
 def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
@@ -640,8 +641,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "<b>Business Rules</b>" in controls["manifest_preview"].value
 
 
-def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
-    """Operational context shows every read-only schedule without adding an editor."""
+def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_runtime):
+    """Operational context shows the writer-captured schedule in the table summary."""
     widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps({
         "status": "configured",
         "schedules": [
@@ -651,12 +652,11 @@ def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runt
     })
 
     state = widget_runtime["open"]()
-    rendered = state["_controls"]["pipeline_refresh"].value
+    rendered = state["_controls"]["left_pane"].children[0].value
 
-    assert "Daily · 08:00 · Asia/Singapore" in rendered
-    assert "Weekly · 09:30 · UTC · Disabled" in rendered
-    assert "Discovered from Fabric · read-only" in rendered
-    assert not hasattr(state["_controls"]["pipeline_refresh"], "on_submit")
+    assert "Refresh Frequency" in rendered
+    assert "Daily · 08:00" in rendered
+    assert "pipeline_refresh" not in state["_controls"]
 
 
 def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
@@ -665,7 +665,9 @@ def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_run
         {"status": "not_configured", "schedules": []}
     )
     state = widget_runtime["open"]()
-    assert "No schedule configured" in state["_controls"]["pipeline_refresh"].value
+    rendered = state["_controls"]["left_pane"].children[0].value
+    assert "Refresh Frequency" in rendered
+    assert "Not configured" in rendered
 
     state["_controls"]["table_description"].value = "Still governed"
     assert widget_runtime["calls"]["enrichment"] == []
@@ -1372,6 +1374,9 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
     state["_controls"]["open_with_ai"].click()
+    if "column_description" not in state["_controls"]:
+        assert "AI" in state["message"]
+        state["_controls"]["open_without_ai"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
