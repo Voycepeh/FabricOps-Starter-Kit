@@ -516,7 +516,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Business Rules", "Manifest & Freeze")
+    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Manifest & Freeze")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -569,7 +569,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
+    for label in ("Table", "Columns", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -624,13 +624,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    controls["top_nav"].value = "Business Rules"
-    assert controls["business_saved"] in controls["left_pane"].children
-    assert controls["business_ai_panel"].layout.display == "none"
-    assert controls["business_requirement"] not in controls["right_pane"].children[0].children[1].children
-    assert controls["business_columns"].layout.height == "130px"
-    assert controls["business_enabled"].description == "Enabled"
-    assert controls["business_block"].description == "Block on failure"
+    assert "Business Rules" not in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Manifest & Freeze"
     assert controls["left_pane"].children[0] is table_context
     assert "Table guardrails" in controls["manifest_preview"].value
@@ -937,9 +931,16 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["dq_panel"].children[1].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
+    assert "Business Rules" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Business Rules"
     assert controls["business_ai_panel"].layout.display != "none"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
+    assert controls["business_requirement"].description == ""
+    assert controls["business_columns"].description == ""
+    assert controls["business_rule_controls"].layout.display == "none"
+    business_section = controls["right_pane"].children[0]
+    assert "Generate Enforceable Data Quality Rules from Business Rules" in business_section.children[0].value
+    assert "How FabricOps Works" in business_section.children[1].value
     for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
