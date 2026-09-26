@@ -841,35 +841,43 @@ def widget_data_contract(
         for name, store in configured_stores.items()
         if str(name).strip().lower() != "metadata"
     ]
-    store_control = widgets.Dropdown(
-        options=store_options, **shared.widget_common(widgets, "Fabric store"),
+    selector_dropdown_layout = widgets.Layout(
+        width="auto", min_width="0", max_width="none", flex="1 1 0%",
     )
-    schema_control = widgets.Dropdown(
-        options=[], **shared.widget_common(widgets, "Schema"),
-    )
+    store_control = widgets.Dropdown(options=store_options, layout=selector_dropdown_layout)
+    schema_control = widgets.Dropdown(options=[], layout=selector_dropdown_layout)
     table_control = widgets.Dropdown(
-        options=[("Select governed table", "")],
-        **shared.widget_common(widgets, "Table"),
+        options=[("Select governed table", "")], layout=selector_dropdown_layout,
     )
-    contract_control = widgets.Dropdown(**shared.widget_common(widgets, "Contract"))
-    selector = shared.form_grid(widgets, [
-        store_control, schema_control, table_control, contract_control,
-    ])
-    selector.add_class("fabricops-data-contract-selector")
-    selector_width_style = widgets.HTML(
-        value=(
-            "<style>"
-            ".fabricops-data-contract-selector .widget-inline-hbox:not(.widget-checkbox){"
-            "grid-template-columns:92px minmax(0,1fr);width:100%;max-width:none;}"
-            ".fabricops-data-contract-selector "
-            ".widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
-            "width:92px;min-width:92px;max-width:92px;}"
-            ".fabricops-data-contract-selector .widget-dropdown{"
-            "width:100% !important;min-width:0;max-width:none !important;}"
-            ".fabricops-data-contract-selector .widget-dropdown select{"
-            "width:100% !important;min-width:0;max-width:none !important;box-sizing:border-box;}"
-            "</style>"
+    contract_control = widgets.Dropdown(layout=selector_dropdown_layout)
+
+    def selector_field(label: str, control: Any) -> Any:
+        return widgets.HBox(
+            [
+                widgets.HTML(
+                    f"<span style='display:block;width:92px'>{html.escape(label)}</span>",
+                    layout=widgets.Layout(width="92px", min_width="92px"),
+                ),
+                control,
+            ],
+            layout=widgets.Layout(
+                width="100%", min_width="0", align_items="center", gap="8px",
+            ),
         )
+
+    selector = widgets.GridBox(
+        [
+            selector_field("Fabric store", store_control),
+            selector_field("Schema", schema_control),
+            selector_field("Table", table_control),
+            selector_field("Contract", contract_control),
+        ],
+        layout=widgets.Layout(
+            width="100%",
+            grid_template_columns="repeat(4, minmax(0, 1fr))",
+            grid_gap="16px 24px",
+            overflow="visible",
+        ),
     )
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -4104,7 +4112,7 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
     )
     selector_panel = widgets.VBox(
-        [selector, selector_width_style, selector_actions],
+        [selector, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
@@ -4128,15 +4136,17 @@ def widget_data_contract(
             if str(row.get("layer") or "") == selected_store
             and str(row.get("schema_name") or "") == selected_schema
         ]
-        table_control.options = [
+        pending = str(state.get("pending_table_id") or "")
+        options = [
             ("Select governed table", ""),
             *[
                 (str(row.get("table_name") or row.get("table_id")), str(row["table_id"]))
                 for row in rows
             ],
         ]
-        pending = str(state.get("pending_table_id") or "")
-        values = [item[1] if isinstance(item, tuple) else item for item in table_control.options]
+        values = [item[1] if isinstance(item, tuple) else item for item in options]
+        table_control.value = None
+        table_control.options = options
         table_control.value = pending if pending in values else ""
 
     def refresh_schema_options(*_args: Any) -> None:
@@ -4146,12 +4156,13 @@ def widget_data_contract(
             for row in table_rows
             if str(row.get("layer") or "") == selected_store
         ))
-        schema_control.options = schemas
         pending_row = next(
             (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
             None,
         )
         preferred = str((pending_row or {}).get("schema_name") or "")
+        schema_control.value = None
+        schema_control.options = schemas
         schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
         refresh_table_options()
 
@@ -4159,13 +4170,15 @@ def widget_data_contract(
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
-        contract_control.options = [
+        options = [
             *[(f"v{row['contract_version']} · {str(row.get('status') or '').title()}", str(row["contract_version"])) for row in matches],
             ("New draft", "new"),
         ]
         preferred = state.get("pending_contract_version")
         preferred_value = str(preferred) if preferred is not None else None
         available = [str(row["contract_version"]) for row in matches]
+        contract_control.value = None
+        contract_control.options = options
         if preferred_value in available:
             contract_control.value = preferred_value
         elif matches:

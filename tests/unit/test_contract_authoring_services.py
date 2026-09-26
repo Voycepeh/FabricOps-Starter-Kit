@@ -542,13 +542,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     frequency = [
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "amount", "value": "109.95",
-            "frequency_count": 50, "frequency_rank": 1,
+            "value": "109.95", "frequency_count": 50, "frequency_rank": 1,
         },
         {
             "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "customer_id", "value": "C001",
-            "frequency_count": 1, "frequency_rank": 1,
+            "value": "C001", "frequency_count": 1, "frequency_rank": 1,
         },
     ]
 
