@@ -1007,6 +1007,24 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
     assert module._parameters(saved_uniqueness)["columns"] == ["column_0", "column_1"]
 
 
+def test_grain_row_key_updates_left_summary_for_manual_and_ai_apply(widget_runtime, monkeypatch):
+    """Keep the left summary in sync with row-key selection and Grain AI Apply."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    controls["row_key_columns"].value = ("column_1",)
+    table_summary = controls["left_pane"].children[0].value
+    assert "Row Key" in table_summary
+    assert "column_1" in table_summary
+
+    controls["accept_grain"].click()
+    assert controls["table_grain"].value == "One row represents a single order line."
+    assert tuple(controls["row_key_columns"].value) == ("column_0",)
+    table_summary = controls["left_pane"].children[0].value
+    assert "One row represents a single order line." in table_summary
+    assert "column_0" in table_summary
+
+
 def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
     """Generate Description after Grain and use manual Classification as context."""
     widget_runtime["enrichment"][:] = [
