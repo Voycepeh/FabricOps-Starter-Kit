@@ -957,6 +957,7 @@ def widget_data_contract(
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
+        ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
         table_description = widgets.Textarea(
@@ -977,13 +978,14 @@ def widget_data_contract(
 
         # Table grain and row key: grain is descriptive Enrichment; selected key columns
         # create one table-level uniqueness guardrail.
-        table_grain = widgets.Textarea(
+        table_grain = widgets.Text(
             value=enrichment_value(enrichments, "table", "Grain"), disabled=not editable,
             placeholder="Example: One row per order line",
-            **shared.widget_common(widgets, "Row grain", textarea=True),
+            **shared.widget_common(widgets, "Row grain"),
         )
-        table_grain.description = ""
-        table_grain.layout = widgets.Layout(width="100%", min_width="0", height="80px")
+        table_grain.layout = widgets.Layout(
+            width="100%", max_width="560px", min_width="0"
+        )
         existing_row_key = next((
             rule for rule in guardrails
             if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
@@ -1719,28 +1721,37 @@ def widget_data_contract(
             accept_button: Any,
             rerun_button: Any,
         ) -> Any:
-            suggestion_box = widgets.VBox(
-                [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
-                layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
-            )
-            return shared.form_section(
-                widgets,
-                title=title,
-                children=[
-                    widgets.GridBox(
-                        [
-                            widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
-                            widgets.HTML("<b>Description</b>"), description, suggestion_box,
-                        ],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
-                            grid_gap="10px 16px",
-                            align_items="flex-start",
-                        ),
+            if ai_visible:
+                suggestion_box = widgets.VBox(
+                    [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
+                    layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
+                )
+                content = widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
+                        widgets.HTML("<b>Description</b>"), description, suggestion_box,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
                     ),
-                ],
-            )
+                )
+            else:
+                content = widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification,
+                        widgets.HTML("<b>Description</b>"), description,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="120px minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
+                    ),
+                )
+            return shared.form_section(widgets, title=title, children=[content])
 
         def guardrail_section(
             title: str,
@@ -1771,29 +1782,27 @@ def widget_data_contract(
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
-            assistant = widgets.VBox(
-                list(ai_children or []),
-                layout=widgets.Layout(
-                    width="100%", min_width="0", gap="8px",
-                    padding="0 0 0 16px",
-                    border_left="1px solid #e1e6eb",
-                ),
-            )
-            return shared.form_section(
-                widgets,
-                title=title,
-                children=[
-                    widgets.GridBox(
-                        [primary, assistant],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                            grid_gap="16px",
-                            align_items="flex-start",
-                        ),
+            if ai_visible:
+                assistant = widgets.VBox(
+                    list(ai_children or []),
+                    layout=widgets.Layout(
+                        width="100%", min_width="0", gap="8px",
+                        padding="0 0 0 16px",
+                        border_left="1px solid #e1e6eb",
                     ),
-                ],
-            )
+                )
+                content = widgets.GridBox(
+                    [primary, assistant],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                        grid_gap="16px",
+                        align_items="flex-start",
+                    ),
+                )
+            else:
+                content = primary
+            return shared.form_section(widgets, title=title, children=[content])
 
         table_definition = definition_section(
             "Table definition", table_classification, table_description,
@@ -1805,27 +1814,52 @@ def widget_data_contract(
                 widgets,
                 title="Grain & Row Key",
                 children=[
-                    widgets.HTML(
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;margin-bottom:8px;'>"
-                        "Define what one row represents, then select the column or smallest column "
-                        "combination that should uniquely identify that row. The selected key "
-                        "automatically becomes the table-level uniqueness guardrail.</div>"
-                    ),
-                    table_grain,
-                    row_key_columns,
-                    row_key_block,
-                    grain_profile_evidence,
                     widgets.GridBox(
                         [
-                            widgets.VBox([grain_ai], layout=widgets.Layout(width="100%")),
                             widgets.VBox(
-                                [shared.action_row(widgets, [suggest_grain, accept_grain])],
-                                layout=widgets.Layout(width="100%"),
+                                [
+                                    widgets.HTML(
+                                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                                        "margin-bottom:4px;'>Define what one row represents, then "
+                                        "select the column or smallest column combination that should "
+                                        "uniquely identify that row. The selected key automatically "
+                                        "becomes the table-level uniqueness guardrail.</div>"
+                                    ),
+                                    table_grain,
+                                    row_key_columns,
+                                    row_key_block,
+                                ],
+                                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+                            ),
+                            *(
+                                [
+                                    widgets.VBox(
+                                        [
+                                            widgets.HTML("<b>AI suggestion</b>"),
+                                            grain_ai,
+                                            grain_profile_evidence,
+                                            shared.action_row(
+                                                widgets, [suggest_grain, accept_grain]
+                                            ),
+                                        ],
+                                        layout=widgets.Layout(
+                                            width="100%", min_width="0", gap="8px",
+                                            padding="0 0 0 16px",
+                                            border_left="1px solid #e1e6eb",
+                                        ),
+                                    )
+                                ]
+                                if ai_visible else []
                             ),
                         ],
                         layout=widgets.Layout(
-                            width="100%", grid_template_columns="minmax(0,1fr) auto",
-                            grid_gap="12px", align_items="flex-start",
+                            width="100%",
+                            grid_template_columns=(
+                                "minmax(0, 68fr) minmax(240px, 32fr)"
+                                if ai_visible else "minmax(0, 1fr)"
+                            ),
+                            grid_gap="16px",
+                            align_items="flex-start",
                         ),
                     ),
                 ],
