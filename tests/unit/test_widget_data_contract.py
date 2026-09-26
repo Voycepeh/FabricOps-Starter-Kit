@@ -1544,10 +1544,18 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
 
-    assert freshness["parameters"][0].description == "Refresh expectation"
-    options = [item[1] if isinstance(item, tuple) else item for item in freshness["parameters"][1].options]
+    freshness_grid = freshness["display"][1]
+    assert [freshness_grid.children[index].value for index in (0, 3, 6, 9)] == [
+        "<div style='padding-top:7px;'>Refresh expectation</div>",
+        "<div style='padding-top:7px;'>Timestamp column</div>",
+        "<div style='padding-top:7px;'>Expected refresh</div>",
+        "<div style='padding-top:7px;'>Maximum age</div>",
+    ]
+    options = [
+        item[1] if isinstance(item, tuple) else item
+        for item in freshness["parameters"][1].options
+    ]
     assert options == ["", "column_1"]
-    assert freshness["parameters"][1].description == "Timestamp column"
 
     freshness["enabled"].value = True
     freshness["parameters"][0].value = "recurring"
@@ -1647,7 +1655,11 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
 
     drift = state["_controls"]["table_guardrails"]["source_drift"]
     drift["enabled"].value = True
-    assert drift["parameters"][1].description == "Change tracking column"
+    drift_grid = drift["display"][0]
+    assert [drift_grid.children[index].value for index in (0, 2)] == [
+        "<div style='padding-top:7px;'>Partition column</div>",
+        "<div style='padding-top:7px;'>Change tracking column</div>",
+    ]
     drift["parameters"][0].value = "column_0"
     drift["parameters"][1].value = "column_1"
     drift_preview = drift["display"][-1].value
@@ -2177,14 +2189,20 @@ def test_column_selector_stays_name_only_when_required_changes(widget_runtime):
     assert widget_runtime["calls"]["guardrails"] == []
 
 
-def test_table_and_column_definitions_share_compact_layout(widget_runtime):
-    """Table and column definitions use the same compact aligned editor grid."""
-    state = widget_runtime["open"]()
+def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
+    """Table Description uses the same primary/AI split as Grain & Row Key."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
-    expected = "120px minmax(240px, 1fr)"
-    assert controls["table_definition"].children[1].layout.grid_template_columns == expected
-    assert controls["column_definition"].children[1].layout.grid_template_columns == expected
+    expected_ai_grid = "minmax(0, 68fr) minmax(240px, 32fr)"
+    table_content = controls["table_definition"].children[1]
+    grain_content = controls["right_pane"].children[0].children[1]
+    assert table_content.layout.grid_template_columns == expected_ai_grid
+    assert grain_content.layout.grid_template_columns == expected_ai_grid
+    assert table_content.children[1].children[0].value == "<b>AI suggestion</b>"
+
+    expected_column_grid = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+    assert controls["column_definition"].children[1].layout.grid_template_columns == expected_column_grid
     assert controls["table_classification"].layout.width == "250px"
     assert controls["column_classification"].layout.width == "250px"
     assert controls["column_search"].layout.width == "100%"
