@@ -1647,3 +1647,21 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     assert all(term in default_prompt for term in ("tokenize", "mask", "bucket", "remove"))
     assert "information classification" in default_prompt
     assert "raw values" in default_prompt
+
+    business_prompt = GovernanceConfig().ai_enrichment["business_rule_prompt"]
+    assert all(
+        rule_type in business_prompt
+        for rule_type in (
+            "completeness",
+            "uniqueness",
+            "value_set",
+            "range",
+            "pattern",
+            "column_relationship",
+            "conditional_completeness",
+            "conditional_values",
+            "custom_expression",
+        )
+    )
+    assert "evidence, not contractual" in business_prompt
+    assert "only when none of those structured patterns" in business_prompt
