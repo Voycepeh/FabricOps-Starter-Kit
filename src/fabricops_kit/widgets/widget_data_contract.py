@@ -1669,8 +1669,6 @@ def widget_data_contract(
                 + "</div>"
             )
 
-        processing = contracts.contract_processing(row)
-        load_strategy = str(processing.get("load_strategy") or "overwrite").upper()
         table_summary = widgets.HTML()
         table_left = (table_summary, table_exit_row, table_exit_confirm)
 
