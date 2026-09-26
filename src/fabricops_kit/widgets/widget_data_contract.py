@@ -1673,10 +1673,6 @@ def widget_data_contract(
             + _scheduled_refresh_html(scheduled_refresh)
         )
         table_summary = widgets.HTML()
-        table_exit_row = widgets.HBox(
-            [change_table_button],
-            layout=widgets.Layout(width="100%", justify_content="center"),
-        )
         table_left = (table_summary, table_exit_row, table_exit_confirm)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
@@ -4091,6 +4087,10 @@ def widget_data_contract(
         layout=widgets.Layout(
             width="100%", display="none", gap="8px", margin="8px 0 0 0"
         ),
+    )
+    table_exit_row = widgets.HBox(
+        [change_table_button],
+        layout=widgets.Layout(width="100%", justify_content="center"),
     )
     selector_actions = widgets.VBox(
         [
