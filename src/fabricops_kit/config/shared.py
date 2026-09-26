@@ -389,8 +389,8 @@ DEFAULT_AI_ENRICHMENT = {
         "description, column metadata, classifications, profile evidence, and existing DQ rules; an optional column "
         "selection is a constraint, not a requirement. Supported rule types are completeness, uniqueness, value_set, "
         "range, pattern, column_relationship, conditional_completeness, conditional_values, and custom_expression. "
-        "Prefer supported structured patterns before custom_expression, "
-        "never invent columns or business meaning, and do not propose obvious duplicates of existing DQ rules. "
+        "Prefer supported structured patterns before custom_expression; use custom_expression only when none of those structured patterns can preserve the atomic requirement without changing its meaning. "
+        "Never invent columns or business meaning, and do not propose obvious duplicates of existing DQ rules. "
         "Observed profile or frequency values are evidence, not contractual allowed values, mappings, or thresholds "
         "unless Governance explicitly states them as such. Return structured JSON only; final review belongs to Governance."
     ),
