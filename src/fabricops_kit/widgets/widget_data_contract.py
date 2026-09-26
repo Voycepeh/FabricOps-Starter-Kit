@@ -847,7 +847,7 @@ def widget_data_contract(
         if str(name).strip().lower() != "metadata"
     ]
     selector_dropdown_layout = widgets.Layout(
-        width="auto", min_width="0", max_width="none", flex="1 1 0%",
+        width="100%", min_width="0", max_width="100%",
     )
     store_control = widgets.Dropdown(options=store_options, layout=selector_dropdown_layout)
     schema_control = widgets.Dropdown(options=[], layout=selector_dropdown_layout)
@@ -857,16 +857,13 @@ def widget_data_contract(
     contract_control = widgets.Dropdown(layout=selector_dropdown_layout)
 
     def selector_field(label: str, control: Any) -> Any:
-        return widgets.HBox(
+        return widgets.VBox(
             [
-                widgets.HTML(
-                    f"<span style='display:block;width:92px'>{html.escape(label)}</span>",
-                    layout=widgets.Layout(width="92px", min_width="92px"),
-                ),
+                widgets.HTML(f"<b>{html.escape(label)}</b>"),
                 control,
             ],
             layout=widgets.Layout(
-                width="100%", min_width="0", align_items="center", gap="8px",
+                width="100%", min_width="0", align_items="stretch", gap="4px",
             ),
         )
 
