@@ -979,6 +979,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
+        "profile_key_candidates_json",
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
