@@ -3195,10 +3195,10 @@ def widget_data_contract(
         business_saved = widgets.Select(
             **shared.widget_common(widgets, "Saved Business Rules")
         )
-        business_requirement = widgets.Textarea(
+        business_requirement = widgets.Text(
             disabled=not editable,
-            placeholder="Describe what must be true",
-            **shared.widget_common(widgets, "Describe what must be true", textarea=True),
+            placeholder="Example: End date must be after start date",
+            **shared.widget_common(widgets, "Business requirement"),
         )
         business_columns = widgets.SelectMultiple(
             options=[
@@ -3265,15 +3265,15 @@ def widget_data_contract(
         business_resolved: dict[str, Any] = {}
         business_hydrating = {"active": False}
 
-        for control in (
-            business_saved, business_requirement, business_columns,
-        ):
-            control.layout.width = "100%"
-            control.layout.max_width = "760px"
-            control.layout.min_width = "0"
+        business_saved.layout.width = "100%"
+        business_saved.layout.max_width = "760px"
+        business_saved.layout.min_width = "0"
         business_saved.layout.height = "160px"
+        business_requirement.layout.width = "100%"
+        business_requirement.layout.min_width = "0"
+        business_columns.layout.width = "100%"
+        business_columns.layout.min_width = "0"
         business_columns.layout.height = "130px"
-        business_requirement.layout.height = "100px"
         engineering_review_note.layout.height = "80px"
 
         def business_rule_label(rule: Mapping[str, Any]) -> str:
@@ -3592,15 +3592,6 @@ def widget_data_contract(
         refresh_business_saved_options()
         hydrate_business_saved()
 
-        business_ai_status = widgets.HTML(
-            "" if (
-                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
-            ) else (
-                "<div style='color:#667085;font-size:12px;'>"
-                "Open this contract with AI suggestions to resolve new Business Rules."
-                "</div>"
-            )
-        )
         business_left = (
             widgets.HTML(
                 "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
@@ -3611,31 +3602,64 @@ def widget_data_contract(
             ),
             business_saved,
         )
-        business_right = (
-            shared.form_section(
-                widgets,
-                title="Business Rules",
-                children=[
+        business_primary = widgets.VBox(
+            [
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "Review the resolved deterministic rule and choose whether it is active "
+                    "and whether failure should block the pipeline.</div>"
+                ),
+                widgets.HBox(
+                    [business_enabled, business_block],
+                    layout=checkbox_row_layout,
+                ),
+                business_proposal,
+                engineering_review_panel,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        if ai_visible:
+            business_ai_panel = widgets.VBox(
+                [
+                    widgets.HTML("<b>AI assistant</b>"),
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "State the business requirement in plain language. FabricOps resolves "
-                        "it to a known deterministic pattern when possible and falls back to a "
-                        "safe Custom Expression only when needed.</div>"
+                        "Describe the requirement briefly. FabricOps resolves it to a known "
+                        "deterministic pattern when possible and uses a Custom Expression only "
+                        "when needed.</div>"
                     ),
                     business_requirement,
                     business_columns,
                     business_examples,
-                    widgets.HBox(
-                        [business_enabled, business_block],
-                        layout=checkbox_row_layout,
-                    ),
-                    business_ai_status,
-                    business_proposal,
-                    engineering_review_panel,
                     shared.action_row(
                         widgets, [resolve_business_rule, apply_business_rule]
                     ),
                 ],
+                layout=widgets.Layout(
+                    width="100%", min_width="0", gap="8px",
+                    padding="0 0 0 16px",
+                    border_left="1px solid #e1e6eb",
+                ),
+            )
+            business_content = widgets.GridBox(
+                [business_primary, business_ai_panel],
+                layout=widgets.Layout(
+                    width="100%",
+                    grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                    grid_gap="16px",
+                    align_items="flex-start",
+                ),
+            )
+        else:
+            business_ai_panel = widgets.VBox(
+                layout=widgets.Layout(display="none")
+            )
+            business_content = business_primary
+        business_right = (
+            shared.form_section(
+                widgets,
+                title="Business Rules",
+                children=[business_content],
             ),
         )
         view_content["Business Rules"] = (business_left, business_right)
@@ -3946,6 +3970,8 @@ def widget_data_contract(
             "business_saved": business_saved,
             "business_requirement": business_requirement,
             "business_columns": business_columns,
+            "business_ai_panel": business_ai_panel,
+            "business_primary": business_primary,
             "business_enabled": business_enabled,
             "business_block": business_block,
             "business_proposal": business_proposal,
