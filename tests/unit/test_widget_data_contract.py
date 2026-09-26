@@ -596,8 +596,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Loading Strategy" in table_summary
     assert "Refresh Frequency" in table_summary
     assert "Guardrails" in table_summary
-    assert table_summary.index("Classification") < table_summary.index("Grain")
-    assert table_summary.index("Grain") < table_summary.index("Row Key")
+    assert table_summary.index("Grain") < table_summary.index("Classification")
+    assert table_summary.index("Classification") < table_summary.index("Row Key")
     assert table_summary.index("Row Key") < table_summary.index("Loading Strategy")
     assert table_summary.index("Loading Strategy") < table_summary.index("Refresh Frequency")
     assert table_summary.index("Refresh Frequency") < table_summary.index("Guardrails")
@@ -921,16 +921,14 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
 
     controls["open_with_ai"].click()
     controls = state["_controls"]
-    assert len(captures["enrichment"]) == 2  # selected table plus currently opened column
-    assert captures["enrichment"][0]["table_columns"] == [
-        {"column_name": "column_0", "data_type": "long"},
-        {"column_name": "column_1", "data_type": "timestamp"},
-    ]
+    assert len(captures["enrichment"]) == 1  # existing table Description is reused; current column is suggested
+    assert captures["enrichment"][0]["metadata_level"] == "column"
     assert len(captures["sensitive"]) == 1
-    assert captures["sensitive"][0]["table_description"] == "Suggested table description"
+    assert captures["sensitive"][0]["table_description"] == "Orders table"
     assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
     assert all(not drafts for drafts in state["_column_drafts"].values())
     assert state["_ai_suggestions"]
+    assert captures["grain"]
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
@@ -1003,6 +1001,13 @@ def test_table_description_ai_uses_grain_and_manual_classification(widget_runtim
 def test_ai_open_reports_granular_progress(widget_runtime, monkeypatch):
     """Slow AI startup reports the real stage before each blocking suggestion call."""
     widget_runtime["ai_enrichment"]["enabled"] = True
+    widget_runtime["enrichment"][:] = [
+        row for row in widget_runtime["enrichment"]
+        if not (
+            not row.get("column_id")
+            and row.get("enrichment_type") in {"Description", "Grain"}
+        )
+    ]
     progress = []
     state = widget_runtime["start"]()
 
