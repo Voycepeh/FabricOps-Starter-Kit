@@ -53,11 +53,8 @@ jobs:
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/first-generator.diff
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/second-generator.diff
-          diff -u /tmp/first-generator.diff /tmp/second-generator.diff
 
       - name: Upload regenerated references
         uses: actions/upload-artifact@v4
