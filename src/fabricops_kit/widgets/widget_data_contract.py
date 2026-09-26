@@ -3410,7 +3410,11 @@ def widget_data_contract(
                 resolved_type = str(business_resolved["rule_type"])
                 resolved_columns = [str(value) for value in params.get("columns") or []]
                 column_rule_id = ""
-                if resolved_type in _COLUMN_DQ_TYPES and len(resolved_columns) == 1:
+                if resolved_type == "uniqueness":
+                    # Uniqueness is repeatable. Grain & Row Key is a separate, singular
+                    # semantic declaration authored on the Table tab.
+                    existing = {}
+                elif resolved_type in _COLUMN_DQ_TYPES and len(resolved_columns) == 1:
                     column_rule_id = next((
                         str(column.get("column_id") or "")
                         for column in columns
