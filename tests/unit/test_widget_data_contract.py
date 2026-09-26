@@ -1605,6 +1605,53 @@ def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch)
     } == set(requirements)
 
 
+def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
+    widget_runtime, monkeypatch
+):
+    """Repeatable uniqueness constraints stay separate from the singular Grain & Row Key."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["row_key_columns"].value = ("column_0",)
+
+    requirements = [
+        ("column_0 must be unique.", ["column_0"]),
+        ("column_0 and column_1 together must also be unique.", ["column_0", "column_1"]),
+    ]
+
+    def resolve(_context, **kwargs):
+        columns = next(cols for requirement, cols in requirements if requirement == kwargs["requirement"])
+        return {
+            "rule_type": "uniqueness",
+            "parameters": {
+                "columns": columns,
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "engineering_review_required": False,
+        }
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    for requirement, columns in requirements:
+        controls["business_saved"].value = ""
+        controls["business_requirement"].value = requirement
+        controls["business_columns"].value = tuple(columns)
+        controls["resolve_business_rule"].click()
+        controls["apply_business_rule"].click()
+
+    staged_uniqueness = [
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "uniqueness"
+        and module._parameters(record).get("business_requirement")
+    ]
+    assert len(staged_uniqueness) == 2
+    assert {tuple(module._parameters(record)["columns"]) for record in staged_uniqueness} == {
+        ("column_0",), ("column_0", "column_1"),
+    }
+    assert controls["row_key_columns"].value == ("column_0",)
+
+
 def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkeypatch):
     """A simple resolved rule belongs to Columns and hydrates its normal DQ editor."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
