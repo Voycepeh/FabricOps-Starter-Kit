@@ -1862,7 +1862,10 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert review.index("<b>Column definitions</b>") < review.index("<b>Guardrails</b>")
     assert "<b>Column definitions</b> · 1 columns" in review
     assert "<b>Guardrails</b> · 7 configured" in review
-    assert "<th>Column</th><th>Examples</th><th>Datatype</th><th>Required</th>" in review
+    assert ">Column</th>" in review
+    assert ">Examples</th>" in review
+    assert ">Datatype</th>" in review
+    assert ">Required</th>" in review
     assert "<th>Sensitive</th><th>Classification</th><th>Description</th>" in review
     assert "CUS-042<br>CUS-017" in review
     assert "<th>Profile</th>" not in review
@@ -2301,6 +2304,18 @@ def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
     assert "Freshness" in summary.value
     assert "Disabled" in summary.value
     assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_manifest_description_is_truncated_and_expandable(widget_runtime):
+    """Column descriptions stay compact without squeezing the review table."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Manifest & Freeze"
+
+    manifest = controls["manifest_preview"].value
+    assert "table-layout:fixed" in manifest
+    assert "text-overflow:ellipsis" in manifest
+    assert "Click to expand" in manifest
 
 
 def test_review_shows_changes_since_last_save(widget_runtime):
