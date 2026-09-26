@@ -319,11 +319,11 @@ def test_key_candidate_evidence_distinguishes_resolved_and_unresolved():
     unresolved = module._key_candidate_evidence([])
 
     assert resolved["status"] == "resolved"
-    assert resolved["max_columns_tested"] == 3
+    assert resolved["max_combination_width"] == 3
     assert resolved["candidates"][0]["columns"] == ["order_id", "line_number"]
     assert unresolved == {
         "status": "unresolved",
-        "max_columns_tested": 3,
+        "max_combination_width": 3,
         "candidates": [],
     }
 
