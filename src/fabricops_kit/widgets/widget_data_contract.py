@@ -1362,6 +1362,21 @@ def widget_data_contract(
             parameter_controls: list[Any] = []
             display_controls: list[Any] = []
             if kind == "freshness":
+                refresh_expectation = widgets.Dropdown(
+                    options=[
+                        ("Recurring", "recurring"),
+                        ("No refresh expected", "static"),
+                    ],
+                    value=(
+                        "static"
+                        if str(existing.get("rule_type") or "").lower() == "skip"
+                        or str(existing_parameters.get("refresh_expectation") or "").lower() == "static"
+                        else "recurring"
+                    ),
+                    disabled=not editable,
+                    **shared.widget_common(widgets, "Refresh expectation"),
+                )
+                refresh_expectation.layout = field_layout
                 configured_freshness_column = str(
                     existing_parameters.get("freshness_column") or ""
                 )
@@ -1431,19 +1446,34 @@ def widget_data_contract(
                 def refresh_freshness_rule_preview(
                     _change: dict[str, Any] | None = None,
                 ) -> None:
+                    static_source = str(refresh_expectation.value or "") == "static"
+                    freshness_column.disabled = not editable or static_source or not temporal_column_names
+                    expected_refresh_frequency.disabled = not editable or static_source or not temporal_column_names
+                    expected_refresh_unit.disabled = not editable or static_source or not temporal_column_names
+                    maximum_age.disabled = not editable or static_source or not temporal_column_names
+                    maximum_age_unit.disabled = not editable or static_source or not temporal_column_names
+                    enabled.disabled = not editable
+                    block.disabled = not editable or static_source
+                    if static_source:
+                        freshness_unavailable.value = ""
+                        freshness_rule_preview.value = (
+                            "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
+                            "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
+                            "<b>ⓘ Source expectation</b><br>"
+                            "No refresh is expected for this source. Freshness age checks are skipped."
+                            "<br><span style='color:#667085;'>Use Source Drift separately if an unexpected "
+                            "change to this static source should be detected.</span></div>"
+                        )
+                        return
                     if not temporal_column_names:
                         freshness_unavailable.value = (
                             "<div style='color:#b42318;font-size:12px;font-weight:600;"
                             "margin:4px 0 8px;'>No date or datetime columns are available. "
-                            "Freshness cannot be configured for this table.</div>"
+                            "Recurring freshness cannot be configured for this table.</div>"
                         )
                         freshness_rule_preview.value = ""
-                        enabled.disabled = True
-                        block.disabled = True
                         return
                     freshness_unavailable.value = ""
-                    enabled.disabled = not editable
-                    block.disabled = not editable
                     selected = str(freshness_column.value or "").strip()
                     raw_expected = str(expected_refresh_frequency.value or "").strip()
                     expected_unit = str(expected_refresh_unit.value or "days")
@@ -1484,12 +1514,14 @@ def widget_data_contract(
                     )
 
                 for freshness_control in (
-                    enabled, freshness_column, expected_refresh_frequency, expected_refresh_unit,
+                    enabled, refresh_expectation, freshness_column,
+                    expected_refresh_frequency, expected_refresh_unit,
                     maximum_age, maximum_age_unit
                 ):
                     freshness_control.observe(refresh_freshness_rule_preview, names="value")
                 refresh_freshness_rule_preview()
                 parameter_controls = [
+                    refresh_expectation,
                     freshness_column,
                     expected_refresh_frequency,
                     expected_refresh_unit,
@@ -1497,6 +1529,7 @@ def widget_data_contract(
                     maximum_age_unit,
                 ]
                 display_controls = [
+                    refresh_expectation,
                     freshness_unavailable,
                     freshness_column,
                     expected_refresh_row,
@@ -1564,22 +1597,29 @@ def widget_data_contract(
                     if str(rule.get("guardrail_type") or "").lower() == rule_kind
                     and not str(rule.get("column_id") or "")
                 ), {})
-                if rule_kind == "freshness" and not temporal_column_names:
-                    return old or None
                 if not enabled_control.value and not old:
                     return None
                 if not enabled_control.value:
                     parameters = _parameters(old)
                 elif rule_kind == "freshness":
-                    raw_expected = str(controls[1].value or "").strip()
-                    raw_age = str(controls[3].value or "").strip()
-                    parameters = {
-                        "freshness_column": str(controls[0].value or "").strip(),
-                        "expected_refresh_frequency": float(raw_expected),
-                        "expected_refresh_unit": str(controls[2].value or "days"),
-                        "maximum_age": float(raw_age),
-                        "maximum_age_unit": str(controls[4].value or "days"),
-                    }
+                    expectation = str(controls[0].value or "recurring")
+                    if expectation == "static":
+                        parameters = {"refresh_expectation": "static"}
+                    else:
+                        if not temporal_column_names:
+                            raise ValueError(
+                                "Recurring Freshness requires at least one date or datetime column."
+                            )
+                        raw_expected = str(controls[2].value or "").strip()
+                        raw_age = str(controls[4].value or "").strip()
+                        parameters = {
+                            "refresh_expectation": "recurring",
+                            "freshness_column": str(controls[1].value or "").strip(),
+                            "expected_refresh_frequency": float(raw_expected),
+                            "expected_refresh_unit": str(controls[3].value or "days"),
+                            "maximum_age": float(raw_age),
+                            "maximum_age_unit": str(controls[5].value or "days"),
+                        }
                 else:
                     parameters = {
                         "partition_column": str(controls[0].value or "").strip(),
@@ -1588,8 +1628,13 @@ def widget_data_contract(
                 if enabled_control.value and any(value in {"", None} for value in parameters.values()):
                     raise ValueError(f"{rule_title} requires all governed configuration fields.")
                 return guardrail_record(
-                    rule_kind, rule_kind, parameters, existing=old,
-                    action="Block" if block_control.value else "Warn", active=enabled_control.value,
+                    rule_kind,
+                    "skip" if rule_kind == "freshness" and parameters.get("refresh_expectation") == "static"
+                    else rule_kind,
+                    parameters,
+                    existing=old,
+                    action="Block" if block_control.value else "Warn",
+                    active=enabled_control.value,
                 )
 
             table_rules[kind] = {
