@@ -1350,6 +1350,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Refresh expectation"),
                 )
+                refresh_expectation.description = ""
                 refresh_expectation.layout = field_layout
                 configured_freshness_column = str(
                     existing_parameters.get("freshness_column") or ""
@@ -1364,6 +1365,7 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     **shared.widget_common(widgets, "Timestamp column"),
                 )
+                freshness_column.description = ""
                 freshness_column.layout = field_layout
                 expected_refresh_frequency = widgets.Text(
                     value=str(existing_parameters.get("expected_refresh_frequency") or ""),
@@ -1376,19 +1378,6 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="120px"),
                 )
-                expected_refresh_row = widgets.HBox(
-                    [
-                        widgets.HTML(
-                            "<div style='width:150px;padding-top:7px;'>Expected refresh</div>",
-                            layout=widgets.Layout(width="150px", min_width="150px"),
-                        ),
-                        expected_refresh_frequency,
-                        expected_refresh_unit,
-                    ],
-                    layout=widgets.Layout(
-                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
-                    ),
-                )
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""),
                     disabled=not editable or not temporal_column_names,
@@ -1400,18 +1389,26 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="120px"),
                 )
-                freshness_age_row = widgets.HBox(
+                freshness_grid = widgets.GridBox(
                     [
-                        widgets.HTML(
-                            "<div style='width:150px;padding-top:7px;'>"
-                            "Maximum age</div>",
-                            layout=widgets.Layout(width="150px", min_width="150px"),
-                        ),
+                        widgets.HTML("<div style='padding-top:7px;'>Refresh expectation</div>"),
+                        refresh_expectation,
+                        widgets.HTML(""),
+                        widgets.HTML("<div style='padding-top:7px;'>Timestamp column</div>"),
+                        freshness_column,
+                        widgets.HTML(""),
+                        widgets.HTML("<div style='padding-top:7px;'>Expected refresh</div>"),
+                        expected_refresh_frequency,
+                        expected_refresh_unit,
+                        widgets.HTML("<div style='padding-top:7px;'>Maximum age</div>"),
                         maximum_age,
                         maximum_age_unit,
                     ],
                     layout=widgets.Layout(
-                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
+                        width="100%",
+                        grid_template_columns="180px minmax(180px, 1fr) 180px",
+                        grid_gap="8px 10px",
+                        align_items="flex-start",
                     ),
                 )
                 freshness_rule_preview = widgets.HTML()
@@ -1506,11 +1503,8 @@ def widget_data_contract(
                     maximum_age_unit,
                 ]
                 display_controls = [
-                    refresh_expectation,
                     freshness_unavailable,
-                    freshness_column,
-                    expected_refresh_row,
-                    freshness_age_row,
+                    freshness_grid,
                     freshness_rule_preview,
                 ]
             else:
@@ -1520,6 +1514,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
+                partition_column.description = ""
                 partition_column.layout = field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
@@ -1527,6 +1522,7 @@ def widget_data_contract(
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change tracking column"),
                 )
+                change_column.description = ""
                 change_column.layout = field_layout
                 source_drift_rule_preview = widgets.HTML()
 
@@ -1559,10 +1555,23 @@ def widget_data_contract(
                         refresh_source_drift_rule_preview, names="value"
                     )
                 refresh_source_drift_rule_preview()
+                source_drift_grid = widgets.GridBox(
+                    [
+                        widgets.HTML("<div style='padding-top:7px;'>Partition column</div>"),
+                        partition_column,
+                        widgets.HTML("<div style='padding-top:7px;'>Change tracking column</div>"),
+                        change_column,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="180px minmax(180px, 1fr)",
+                        grid_gap="8px 10px",
+                        align_items="flex-start",
+                    ),
+                )
                 parameter_controls = [partition_column, change_column]
                 display_controls = [
-                    partition_column,
-                    change_column,
+                    source_drift_grid,
                     source_drift_rule_preview,
                 ]
 
@@ -1986,9 +1995,43 @@ def widget_data_contract(
                 content = primary
             return shared.form_section(widgets, title=title, children=[content])
 
-        table_definition = definition_section(
-            "Table definition", table_classification, table_description,
-            table_description_ai, accept_table_description, rerun_table_description,
+        table_definition_primary = widgets.VBox(
+            [
+                widgets.HTML("<b>Classification</b>"),
+                table_classification,
+                widgets.HTML("<b>Description</b>"),
+                table_description,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        if ai_visible:
+            table_definition_assistant = widgets.VBox(
+                [
+                    widgets.HTML("<b>AI suggestion</b>"),
+                    table_description_ai,
+                    shared.action_row(
+                        widgets, [accept_table_description, rerun_table_description]
+                    ),
+                ],
+                layout=widgets.Layout(
+                    width="100%", min_width="0", gap="8px",
+                    padding="0 0 0 16px",
+                    border_left="1px solid #e1e6eb",
+                ),
+            )
+            table_definition_content = widgets.GridBox(
+                [table_definition_primary, table_definition_assistant],
+                layout=widgets.Layout(
+                    width="100%",
+                    grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                    grid_gap="16px",
+                    align_items="flex-start",
+                ),
+            )
+        else:
+            table_definition_content = table_definition_primary
+        table_definition = shared.form_section(
+            widgets, title="Table definition", children=[table_definition_content]
         )
         grain_definition = shared.form_section(
             widgets,
@@ -2069,9 +2112,14 @@ def widget_data_contract(
                     "relative to the pipeline run time."
                 ),
                 primary_children=[
-                    widgets.HBox(
+                    widgets.GridBox(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=checkbox_row_layout,
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
                     ),
                     *table_rules["freshness"]["display"],
                 ],
@@ -2088,9 +2136,14 @@ def widget_data_contract(
                     "changed when the same source data is read again."
                 ),
                 primary_children=[
-                    widgets.HBox(
+                    widgets.GridBox(
                         [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=checkbox_row_layout,
+                        layout=widgets.Layout(
+                            width="100%",
+                            grid_template_columns="repeat(2, minmax(160px, max-content))",
+                            grid_gap="8px 20px",
+                            align_items="center",
+                        ),
                     ),
                     *table_rules["source_drift"]["display"],
                 ],
