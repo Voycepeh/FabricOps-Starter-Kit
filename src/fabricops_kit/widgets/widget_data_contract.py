@@ -4412,6 +4412,7 @@ def widget_data_contract(
         except Exception as exc:
             open_progress.value = ""
             set_status(str(exc), error=True)
+            raise
         finally:
             state["_opening_with_ai"] = False
             open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
