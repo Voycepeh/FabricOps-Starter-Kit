@@ -19,9 +19,11 @@
 }
 </style>
 
-The FabricOps overview video introduces the story. This page goes deeper into how the pieces fit together and why the workflow is structured this way.
+The FabricOps overview video introduces the story. This page explains the **end-to-end operating model**: how Governance and Engineering work together from contract authoring through validation, activation, promotion, and Production use.
 
-[Want to run it yourself? Follow the Guided Demo.](guided-demo.md)
+The [Featured Solutions](index.md#featured-solutions) are different. They zoom into individual capabilities inside this operating model, such as AI-assisted Data Contract authoring, translating Business Rules into enforceable Data Quality rules, environment-aware pipelines, and effective data access scanning.
+
+[Want to run the lifecycle yourself? Follow the Guided Demo.](guided-demo.md)
 
 <div class="fabricops-section-block" markdown>
 
