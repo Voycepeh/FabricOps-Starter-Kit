@@ -1645,7 +1645,11 @@ def widget_data_contract(
             + _scheduled_refresh_html(scheduled_refresh)
         )
         table_summary = widgets.HTML()
-        table_left = (table_summary, change_table_button)
+        table_exit_row = widgets.HBox(
+            [change_table_button],
+            layout=widgets.Layout(width="100%", justify_content="center"),
+        )
+        table_left = (table_summary, table_exit_row)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
@@ -4018,7 +4022,10 @@ def widget_data_contract(
         "" if ai_enrichment.get("enabled") else
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
     )
-    change_table_button = widgets.Button(description="Change table")
+    change_table_button = widgets.Button(
+        description="Discard changes & exit",
+        layout=widgets.Layout(width="180px"),
+    )
     selector_actions = widgets.VBox(
         [
             widgets.HBox(
@@ -4158,7 +4165,9 @@ def widget_data_contract(
     state["_return_to_selector"] = return_to_selector
 
     def change_table(_button: Any) -> None:
-        return_to_selector("Select a governed table and contract.")
+        if state.get("current"):
+            discard_data_contract_session()
+        return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
 
     open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
     open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
@@ -4193,6 +4202,7 @@ def widget_data_contract(
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
         "change_table": change_table_button,
+        "table_exit_row": table_exit_row,
     })
     ip.display(page)
     return state
