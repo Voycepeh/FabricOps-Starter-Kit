@@ -85,6 +85,7 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
+        "scheduled_refresh_json",
         "profile_key_candidates_json",
         "first_profiled_at",
         "last_profiled_at",
