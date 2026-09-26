@@ -1772,7 +1772,7 @@ def widget_data_contract(
                         ],
                         layout=widgets.Layout(
                             width="100%", grid_template_columns="minmax(0,1fr) auto",
-                            grid_gap="12px", align_items="start",
+                            grid_gap="12px", align_items="flex-start",
                         ),
                     ),
                 ],
@@ -1883,7 +1883,7 @@ def widget_data_contract(
             [column_context, required],
             layout=widgets.Layout(
                 width="100%", grid_template_columns="minmax(0, 1fr) 110px",
-                grid_gap="12px", align_items="start",
+                grid_gap="12px", align_items="flex-start",
             ),
         )
         datatype_choice = widgets.Dropdown(
