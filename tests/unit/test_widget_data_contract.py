@@ -145,7 +145,7 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","expected_refresh_frequency":1,"expected_refresh_unit":"days","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
@@ -1415,16 +1415,21 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
 
-    options = [item[1] if isinstance(item, tuple) else item for item in freshness["parameters"][0].options]
+    assert freshness["parameters"][0].description == "Refresh expectation"
+    options = [item[1] if isinstance(item, tuple) else item for item in freshness["parameters"][1].options]
     assert options == ["", "column_1"]
-    assert freshness["parameters"][0].description == "Timestamp column"
+    assert freshness["parameters"][1].description == "Timestamp column"
 
     freshness["enabled"].value = True
-    freshness["parameters"][0].value = "column_1"
-    freshness["parameters"][1].value = "24"
-    freshness["parameters"][2].value = "hours"
+    freshness["parameters"][0].value = "recurring"
+    freshness["parameters"][1].value = "column_1"
+    freshness["parameters"][2].value = "6"
+    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][4].value = "24"
+    freshness["parameters"][5].value = "hours"
 
     preview = freshness["display"][-1].value
+    assert "Expected source refresh: <b>6 hours</b>." in preview
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
@@ -1434,17 +1439,44 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "not when this table itself is written" in freshness_primary.children[0].value
 
 
-def test_freshness_is_unavailable_without_temporal_columns(widget_runtime):
-    """Tables without date or timestamp columns cannot author a Freshness rule."""
+def test_static_source_does_not_require_temporal_columns(widget_runtime):
+    """A static source can explicitly declare that no refresh is expected."""
     widget_runtime["catalogue"][2]["data_type"] = "string"
 
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
 
-    assert freshness["enabled"].disabled is True
+    freshness["enabled"].value = True
+    freshness["parameters"][0].value = "static"
+
+    assert freshness["parameters"][0].disabled is False
+    assert freshness["parameters"][1].disabled is True
     assert freshness["block"].disabled is True
-    assert freshness["parameters"][0].disabled is True
-    assert "No date or datetime columns are available" in freshness["display"][0].value
+    assert "No refresh is expected for this source" in freshness["display"][-1].value
+    assert "Source Drift" in freshness["display"][-1].value
+
+
+def test_static_freshness_stages_skip_rule(widget_runtime):
+    """Static source expectation persists as an explicit skip Freshness rule."""
+    widget_runtime["guardrails"][:] = [
+        rule for rule in widget_runtime["guardrails"]
+        if rule["guardrail_type"] != "freshness"
+    ]
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+
+    freshness["enabled"].value = True
+    freshness["parameters"][0].value = "static"
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_type") == "freshness"
+    )
+    assert staged["rule_type"] == "skip"
+    assert module._parameters(staged) == {"refresh_expectation": "static"}
+    assert "Expected source refresh" in state["_controls"]["left_pane"].children[0].value
+    assert "No refresh expected" in state["_controls"]["left_pane"].children[0].value
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
@@ -1463,9 +1495,12 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         for message in state["_validation_errors"].values()
     )
 
-    freshness["parameters"][0].value = "column_1"
-    freshness["parameters"][1].value = "6"
-    freshness["parameters"][2].value = "hours"
+    freshness["parameters"][0].value = "recurring"
+    freshness["parameters"][1].value = "column_1"
+    freshness["parameters"][2].value = "1"
+    freshness["parameters"][3].value = "days"
+    freshness["parameters"][4].value = "6"
+    freshness["parameters"][5].value = "hours"
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -1473,7 +1508,12 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "freshness"
     )
     assert module._parameters(staged) == {
-        "freshness_column": "column_1", "maximum_age": 6.0, "maximum_age_unit": "hours",
+        "refresh_expectation": "recurring",
+        "freshness_column": "column_1",
+        "expected_refresh_frequency": 1.0,
+        "expected_refresh_unit": "days",
+        "maximum_age": 6.0,
+        "maximum_age_unit": "hours",
     }
 
     drift = state["_controls"]["table_guardrails"]["source_drift"]

@@ -58,9 +58,27 @@ def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
     table = payload["table"]
     guardrails = payload.get("guardrails") or []
     counts: dict[str, int] = {}
+    expected_refresh = None
     for rule in guardrails:
         kind = str(rule.get("guardrail_type") or "unspecified")
         counts[kind] = counts.get(kind, 0) + 1
+        if kind.lower() == "freshness" and rule.get("is_active", True):
+            parameters = rule.get("rule_parameters") or {}
+            if isinstance(parameters, dict):
+                if (
+                    str(rule.get("rule_type") or "").lower() == "skip"
+                    or str(parameters.get("refresh_expectation") or "").lower() == "static"
+                ):
+                    expected_refresh = {"mode": "static"}
+                else:
+                    frequency = parameters.get("expected_refresh_frequency")
+                    unit = parameters.get("expected_refresh_unit")
+                    if frequency not in (None, "") and unit:
+                        expected_refresh = {
+                            "mode": "recurring",
+                            "frequency": frequency,
+                            "unit": str(unit),
+                        }
     return {
         "contract_version": int(row["contract_version"]),
         "status": str(row.get("status") or ""),
@@ -70,6 +88,7 @@ def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
         "guardrails": counts,
         "guardrail_details": guardrails,
         "processing": table.get("processing"),
+        "expected_refresh": expected_refresh,
     }
 
 
@@ -439,15 +458,34 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                     contract_id, version = current_version.value.split("\n", 1)
                     set_mode(current_table, "validate", contract_id, int(version))
                     current_preview.value = f"<b>Validate</b> · Data Contract v{version} · Frozen"
+                current_preview.value += source_expectation_html()
                 status.value = ""
             except ValueError as exc:
                 status.value = html.escape(str(exc))
 
         mode_control.observe(render, names="value")
         version_control.observe(render, names="value")
-        controls[table_id] = {"mode": mode_control, "version": version_control}
+        controls[table_id] = {"mode": mode_control, "version": version_control, "preview": preview}
         role_label = "Read" if role.lower() == "source" else "Write"
         table_name = table_state["display_name"]
+
+        def source_expectation_html(
+            *, current_role: str = role, current_table_id: str = table_id
+        ) -> str:
+            if current_role.lower() != "source":
+                return ""
+            review = state["tables"][current_table_id].get("review") or {}
+            expected = review.get("expected_refresh")
+            if not expected:
+                return "<br><span style='color:#667085;'>Expected refresh: Not defined</span>"
+            if expected.get("mode") == "static":
+                return "<br><span style='color:#667085;'>Expected refresh: <b>No refresh expected</b></span>"
+            value = expected.get("frequency")
+            shown = str(int(value)) if isinstance(value, float) and value.is_integer() else str(value)
+            return (
+                "<br><span style='color:#667085;'>Expected refresh: "
+                f"<b>{html.escape(shown)} {html.escape(str(expected.get('unit') or ''))}</b></span>"
+            )
         short_table_id = f"{table_id[:8]}…{table_id[-6:]}" if len(table_id) > 18 else table_id
         sections.extend([
             widgets.HTML(value=(

@@ -78,6 +78,37 @@ def test_contract_review_uses_only_frozen_payload():
     assert "agreement" not in review
 
 
+def test_contract_review_hydrates_source_refresh_expectations():
+    """Expose recurring and static source refresh expectations from frozen Freshness rules."""
+    recurring = _row(4)
+    recurring_payload = json.loads(recurring["contract_payload_json"])
+    recurring_payload["guardrails"].append({
+        "guardrail_type": "freshness",
+        "rule_type": "freshness",
+        "is_active": True,
+        "rule_parameters": {
+            "refresh_expectation": "recurring",
+            "expected_refresh_frequency": 6,
+            "expected_refresh_unit": "hours",
+        },
+    })
+    recurring["contract_payload_json"] = json.dumps(recurring_payload)
+    assert _contract_review(recurring)["expected_refresh"] == {
+        "mode": "recurring", "frequency": 6, "unit": "hours",
+    }
+
+    static = _row(5)
+    static_payload = json.loads(static["contract_payload_json"])
+    static_payload["guardrails"].append({
+        "guardrail_type": "freshness",
+        "rule_type": "skip",
+        "is_active": True,
+        "rule_parameters": {"refresh_expectation": "static"},
+    })
+    static["contract_payload_json"] = json.dumps(static_payload)
+    assert _contract_review(static)["expected_refresh"] == {"mode": "static"}
+
+
 def test_selector_resolves_multiple_lineage_tables_and_preserves_roles(monkeypatch):
     """Discover and independently select every notebook Lineage table."""
     rows = [_row(3), _row(2, table_id="table-b")]
