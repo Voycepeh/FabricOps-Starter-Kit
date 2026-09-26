@@ -459,10 +459,12 @@ def widget_select_data_contract(*, spark_session=None, context=None):
         role_label = "Read" if role.lower() == "source" else "Write"
         table_name = table_state["display_name"]
 
-        def source_expectation_html() -> str:
-            if role.lower() != "source":
+        def source_expectation_html(
+            *, current_role: str = role, current_table_id: str = table_id
+        ) -> str:
+            if current_role.lower() != "source":
                 return ""
-            review = state["tables"][table_id].get("review") or {}
+            review = state["tables"][current_table_id].get("review") or {}
             expected = review.get("expected_refresh")
             if not expected:
                 return "<br><span style='color:#667085;'>Expected refresh: Not defined</span>"
