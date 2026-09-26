@@ -145,6 +145,48 @@ def _manifest_sections(
         ) or "<li>None configured</li>"
         return f"<ul>{items}</ul>"
 
+    def business_rule_list(rows: list[dict[str, Any]]) -> str:
+        if not rows:
+            return "<ul><li>None configured</li></ul>"
+        items = []
+        for row in rows:
+            params = _parameters(row)
+            requirement = str(
+                params.get("business_requirement") or params.get("description") or ""
+            ).strip()
+            columns = [str(value) for value in params.get("columns") or []]
+            kind = str(row.get("rule_type") or "")
+            review_required = (
+                kind == "custom_expression"
+                and bool(params.get("engineering_review_required", True))
+            )
+            review_status = str(
+                params.get("engineering_review_status") or "pending"
+            ).replace("_", " ").title()
+            details = [
+                f"<b>{html.escape(requirement or rule_label(row))}</b>",
+                html.escape(rule_label(row)),
+                html.escape(str(row.get("action") or "Warn")),
+            ]
+            if columns:
+                details.append("Columns: " + html.escape(", ".join(columns)))
+            if kind == "custom_expression" and params.get("expression"):
+                details.append(
+                    "Expression: <code>"
+                    + html.escape(str(params["expression"]))
+                    + "</code>"
+                )
+            if review_required:
+                reviewer = str(params.get("engineering_reviewed_by") or "").strip()
+                review = "Engineering review: " + html.escape(review_status)
+                if reviewer and review_status.lower() == "approved":
+                    review += " by " + html.escape(reviewer)
+                details.append(review)
+            else:
+                details.append("Engineering review: Not required")
+            items.append("<li>" + "<br>".join(details) + "</li>")
+        return "<ul>" + "".join(items) + "</ul>"
+
     def profile_evidence(column_id: str) -> str:
         profile = dict(profiles.get(column_id) or {})
         if not profile:
@@ -258,7 +300,7 @@ def _manifest_sections(
         "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Business Rules</b> · "
-        f"{len(business_rules)} configured</summary>{rule_list(business_rules)}</details>"
+        f"{len(business_rules)} configured</summary>{business_rule_list(business_rules)}</details>"
     )
     return {"Review": details}
 
