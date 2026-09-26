@@ -4,21 +4,19 @@
 
 `02_pipeline` has already created and profiled the real target. Governance now authors against that canonical `table_id`, reviews the evidence, defines what the table means and what must be true, then freezes the exact version Engineering will validate in Step 4.
 
-!!! warning "Enable Fabric AI Functions for the full Data Contract authoring experience"
-    FabricOps can author, freeze, validate, activate, and enforce Data Contracts without AI. The deterministic Governance and runtime paths do not depend on a model.
+!!! warning "Enable Fabric AI Functions for AI-assisted authoring"
+    FabricOps does not require AI. Data Contracts can still be authored, frozen, validated, activated, and enforced without it.
 
-    **However, the advanced natural-language Business Rule translator requires Fabric AI Functions.** This is the main AI-assisted capability in the Data Contract workspace: Governance writes what must be true in plain language, FabricOps translates that intent into the smallest supported deterministic Data Quality rule, and a human reviews the result before it enters the contract.
+    Fabric AI Functions enable the optional AI-assisted features in Step 3, including **Business Rule → Data Quality rule** translation, Description, Grain & Row Key, Sensitive Data, and Pattern suggestions.
 
-    AI also assists with Description, Grain & Row Key, Sensitive Data, and Pattern authoring.
+    Before using them, confirm:
 
-    To use these **AI-assisted authoring features**, confirm all of the following before continuing:
+    1. **Copilot and Azure OpenAI features** are enabled in the Fabric Admin portal.
+    2. Your Fabric region, runtime, and capacity meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview).
+    3. Cross-geo processing is enabled if required.
+    4. `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    1. In the Fabric Admin portal, **Users can use Copilot and other features powered by Azure OpenAI** is enabled for the relevant users or capacity.
-    2. The workspace runs on a Fabric capacity and region supported by [Fabric AI Functions](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview). AI Functions require Fabric Runtime 1.3 or later and an eligible paid capacity.
-    3. If your capacity region requires cross-geo processing, the corresponding Fabric tenant setting is enabled.
-    4. `GOVERNANCE_CONFIG.ai_enrichment.enabled` is set to `True` in `00_env_config`.
-
-    If your organisation does not permit Fabric AI Functions, keep AI Enrichment disabled. You can still complete the core lifecycle manually, but the natural-language **Business Rule → DQ rule** translation and the other AI-assisted suggestions will be unavailable. AI only proposes authoring state and never performs Governance approval.
+    AI only proposes changes. **Governance still reviews and approves them.**
 
 !!! tip "AI highlight — turn business intent into a deterministic DQ rule"
     The **Business Rules** tab is the clearest example of how FabricOps uses AI without making runtime Governance probabilistic.
@@ -39,11 +37,11 @@ Open `01_governance`, run the setup cells, and select the target produced in Ste
 
 Use the Catalogue and latest profiling evidence to confirm that you are authoring against the intended physical table. The profile is evidence for Governance decisions, not part of the Data Contract payload.
 
-## 2. Open the unified Data Contract workspace
+## 2. Open the Data Contract editor
 
 Run `widget_data_contract()`.
 
-The current workspace is organised into four tabs:
+The Data Contract editor is organised into four tabs:
 
 | Tab | What you author or review |
 | --- | --- |
@@ -54,7 +52,7 @@ The current workspace is organised into four tabs:
 
 Treat these tabs as one contract. They are different views of the same governed definition for one `table_id` and contract version.
 
-### Where AI appears in the workspace
+### Where AI appears
 
 AI is deliberately concentrated at authoring points where interpretation is useful:
 
@@ -106,7 +104,7 @@ Enable these only when they represent real requirements.
 
 Open **Columns** and work through the columns that matter for the demo.
 
-The left side keeps the selected column and physical context visible. The right side combines authoring with the latest profile evidence so Governance can make a decision without leaving the contract workspace.
+The left side keeps the selected column and physical context visible. The right side combines authoring with the latest profile evidence so Governance can make a decision without leaving the editor.
 
 ### Column definition and Schema
 
