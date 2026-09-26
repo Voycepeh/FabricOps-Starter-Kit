@@ -132,6 +132,88 @@
   background: var(--md-accent-fg-color--transparent);
 }
 
+
+.fabricops-feature-intro {
+  max-width: 48rem;
+  margin: -0.2rem 0 1rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.fabricops-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.7rem;
+}
+
+.fabricops-feature-card {
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.6rem;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.fabricops-feature-card__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--md-primary-fg-color) 7%, var(--md-default-bg-color)), var(--md-default-bg-color));
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.fabricops-feature-card__play {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 9%, var(--md-default-bg-color));
+  color: var(--md-primary-fg-color);
+  font-size: 1rem;
+}
+
+.fabricops-feature-card__status {
+  position: absolute;
+  left: 0.8rem;
+  bottom: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-default-bg-color) 88%, transparent);
+  color: var(--md-default-fg-color--light);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fabricops-feature-card__body {
+  padding: 0.9rem 1rem 1rem;
+}
+
+.fabricops-feature-card__title {
+  margin: 0 0 0.35rem;
+  color: var(--md-default-fg-color);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.fabricops-feature-card__copy {
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+@media screen and (max-width: 760px) {
+  .fabricops-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media screen and (max-width: 900px) {
   .fabricops-home-quicklinks {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -192,6 +274,59 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
     </span>
     <span class="fabricops-home-action__arrow" aria-hidden="true">→</span>
   </a>
+</div>
+
+
+## See FabricOps in action
+
+<p class="fabricops-feature-intro">
+Short feature walkthroughs will show how FabricOps works in real Microsoft Fabric workflows. These recordings are coming next.
+</p>
+
+<div class="fabricops-feature-grid">
+  <article class="fabricops-feature-card">
+    <div class="fabricops-feature-card__media" aria-label="AI-assisted Data Contracting video placeholder">
+      <span class="fabricops-feature-card__play" aria-hidden="true">▶</span>
+      <span class="fabricops-feature-card__status">Screen recording coming soon</span>
+    </div>
+    <div class="fabricops-feature-card__body">
+      <h3 class="fabricops-feature-card__title">AI-assisted Data Contracting</h3>
+      <p class="fabricops-feature-card__copy">Turn plain-language business requirements into reviewable, deterministic Data Quality rules, then save and freeze them into a governed Data Contract.</p>
+    </div>
+  </article>
+
+  <article class="fabricops-feature-card">
+    <div class="fabricops-feature-card__media" aria-label="Clonable pipeline building blocks video placeholder">
+      <span class="fabricops-feature-card__play" aria-hidden="true">▶</span>
+      <span class="fabricops-feature-card__status">Screen recording coming soon</span>
+    </div>
+    <div class="fabricops-feature-card__body">
+      <h3 class="fabricops-feature-card__title">Clonable Pipeline Building Blocks</h3>
+      <p class="fabricops-feature-card__copy">Reuse standard Read and Write blocks in <code>02_pipeline</code>, change only the small configuration surface, and keep project transformation logic as normal PySpark.</p>
+    </div>
+  </article>
+
+  <article class="fabricops-feature-card">
+    <div class="fabricops-feature-card__media" aria-label="Composite access rights scanner video placeholder">
+      <span class="fabricops-feature-card__play" aria-hidden="true">▶</span>
+      <span class="fabricops-feature-card__status">Screen recording coming soon</span>
+    </div>
+    <div class="fabricops-feature-card__body">
+      <h3 class="fabricops-feature-card__title">Composite Access Rights Scanner</h3>
+      <p class="fabricops-feature-card__copy">Inspect effective access across combined grants and governed security relationships instead of relying on a single simplistic permission view.</p>
+    </div>
+  </article>
+
+  <article class="fabricops-feature-card">
+    <div class="fabricops-feature-card__media" aria-label="Environment-aware deployment video placeholder">
+      <span class="fabricops-feature-card__play" aria-hidden="true">▶</span>
+      <span class="fabricops-feature-card__status">Screen recording coming soon</span>
+    </div>
+    <div class="fabricops-feature-card__body">
+      <h3 class="fabricops-feature-card__title">Environment-aware Deployment</h3>
+      <p class="fabricops-feature-card__copy">Promote the same config-driven notebooks through Fabric deployment pipelines while logical store names resolve the correct Development, Test, and Production resources.</p>
+    </div>
+  </article>
 </div>
 
 ## Explore FabricOps
