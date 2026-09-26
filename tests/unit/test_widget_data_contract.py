@@ -339,7 +339,7 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "enrichment": enrichment, "guardrails": guardrails,
+        "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
         "ai_enrichment": ai_enrichment,
     }
 
