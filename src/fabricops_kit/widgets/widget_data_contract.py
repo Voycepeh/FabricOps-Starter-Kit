@@ -1640,12 +1640,12 @@ def widget_data_contract(
                 frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
                 times = ", ".join(str(value) for value in schedule.get("times") or [])
                 timezone = str(schedule.get("timezone") or "UTC")
-                enabled = "" if schedule.get("enabled", True) else " · Disabled"
+                schedule_state = "" if schedule.get("enabled", True) else " · Disabled"
                 parts = [frequency]
                 if times:
                     parts.append(times)
                 parts.append(timezone)
-                refresh_lines.append(" · ".join(parts) + enabled)
+                refresh_lines.append(" · ".join(parts) + schedule_state)
             refresh_frequency = "<br>".join(html.escape(line) for line in refresh_lines)
         elif schedule_status == "not_configured":
             refresh_frequency = "Not configured"
