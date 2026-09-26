@@ -1182,6 +1182,12 @@ def widget_data_contract(
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
+            suggested_keys = tuple(
+                str(name) for name in suggestion.get("key_columns", [])
+                if str(name) in column_names
+            )
+            if suggested_keys:
+                row_key_columns.value = suggested_keys
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
@@ -1905,6 +1911,7 @@ def widget_data_contract(
             )
 
         table_grain.observe(render_table_summary, names="value")
+        row_key_columns.observe(render_table_summary, names="value")
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
