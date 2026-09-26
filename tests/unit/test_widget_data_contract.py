@@ -781,15 +781,14 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     """Selecting an unconfigured column must not retain another column's DQ values."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    assert controls["dq_type"].value == "completeness"
+    families = controls["dq_family_controls"]
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_block"].value is True
+    assert families["completeness"]["block"].value is True
 
     controls["column_select"].value = "col-1"
 
-    assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_block"].value is False
+    assert families["completeness"]["block"].value is False
 
 
 def test_unsaved_column_edits_survive_an_unrelated_save_rerender(widget_runtime):
@@ -1754,17 +1753,16 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     )
 
 
-def test_column_dq_family_change_hydrates_its_own_saved_configuration(widget_runtime):
-    """Keep multiple rules on one column independently editable and update the matching record."""
+def test_column_dq_families_hydrate_independently(widget_runtime):
+    """Keep multiple rules on one column visible, independently editable, and correctly staged."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    assert controls["dq_type"].value == "completeness"
+    families = controls["dq_family_controls"]
     assert controls["dq_max_missing"].value == "0"
-
-    controls["dq_type"].value = "pattern"
-
+    assert families["completeness"]["block"].value is True
     assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
-    assert controls["dq_block"].value is False
+    assert families["pattern"]["block"].value is False
+
     controls["dq_pattern"].value = "^ORDER-[0-9]+$"
     assert widget_runtime["calls"]["guardrails"] == []
     state["_controls"]["save_data_contract"].click()
@@ -2061,9 +2059,8 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     assert controls["business_saved"].value == ""
 
     controls["top_nav"].value = "Columns"
-    assert controls["dq_type"].value == "completeness"
     assert controls["dq_max_missing"].value == "0"
-    assert controls["dq_enabled"].value is True
+    assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
     assert "resolved to a Column Rule" in state["message"]
 
 
@@ -2135,7 +2132,7 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
     controls["dq_type"].value = "range"
     assert controls["suggest_dq"].disabled is True
 
-    controls["dq_enabled"].value = True
+    controls["dq_family_controls"]["range"]["enabled"].value = True
     controls["dq_minimum"].value = "1"
     controls["dq_minimum_inclusive"].value = True
     controls["dq_maximum"].value = "100"
