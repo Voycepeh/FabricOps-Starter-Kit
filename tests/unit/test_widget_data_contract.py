@@ -581,11 +581,13 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
         "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
     ]
 
+    grain_section = controls["right_pane"].children[1]
+    assert len(grain_section.children[1].children) == 1
+    assert controls["table_grain"].layout.max_width == "560px"
+
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
-    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
-        "minmax(0, 68fr) minmax(240px, 32fr)"
-    )
+    assert controls["dq_panel"].children[1] is controls["dq_primary"]
     assert [label for label, _value in controls["dq_type"].options] == [
         "Completeness", "Allowed Values", "Value Rules", "Pattern",
     ]
@@ -895,6 +897,15 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
+    grain_section = controls["right_pane"].children[1]
+    assert grain_section.children[1].layout.grid_template_columns == (
+        "minmax(0, 68fr) minmax(240px, 32fr)"
+    )
+    assert len(grain_section.children[1].children) == 2
+    controls["top_nav"].value = "Columns"
+    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
+        "minmax(0, 68fr) minmax(240px, 32fr)"
+    )
     for label in ("Table", "Columns", "Business Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
