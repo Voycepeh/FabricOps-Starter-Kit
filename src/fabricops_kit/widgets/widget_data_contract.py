@@ -4166,9 +4166,13 @@ def widget_data_contract(
             None,
         )
         preferred = str((pending_row or {}).get("schema_name") or "")
-        schema_control.value = None
-        schema_control.options = schemas
-        schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        state["_selector_refreshing"] = True
+        try:
+            schema_control.value = None
+            schema_control.options = schemas
+            schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        finally:
+            state["_selector_refreshing"] = False
         refresh_table_options()
 
     def table_changed(change: dict[str, Any]) -> None:
