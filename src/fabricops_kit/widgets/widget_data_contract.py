@@ -187,32 +187,36 @@ def _manifest_sections(
             items.append("<li>" + "<br>".join(details) + "</li>")
         return "<ul>" + "".join(items) + "</ul>"
 
+    def example_value(column_id: str) -> str:
+        profile = dict(profiles.get(column_id) or {})
+        value = profile.get("example_value")
+        return (
+            html.escape(str(value))
+            if value not in (None, "")
+            else "<span style='color:#667085;'>—</span>"
+        )
+
     def profile_evidence(column_id: str) -> str:
         profile = dict(profiles.get(column_id) or {})
         if not profile:
             return "<span style='color:#667085;'>No profile available</span>"
         lines = []
-        range_parts = []
         if profile.get("min_value") is not None:
-            range_parts.append(f"Min value: <b>{html.escape(str(profile['min_value']))}</b>")
+            lines.append(f"Min <b>{html.escape(str(profile['min_value']))}</b>")
         if profile.get("max_value") is not None:
-            range_parts.append(f"Max value: <b>{html.escape(str(profile['max_value']))}</b>")
-        if range_parts:
-            lines.append(" · ".join(range_parts))
-        cardinality = []
+            lines.append(f"Max <b>{html.escape(str(profile['max_value']))}</b>")
         if profile.get("distinct_count") is not None:
-            distinct = f"Distinct count: <b>{html.escape(str(profile['distinct_count']))}</b>"
+            shown = f"Distinct <b>{html.escape(str(profile['distinct_count']))}</b>"
             if profile.get("distinct_percent") is not None:
-                distinct += f" (<b>{html.escape(str(profile['distinct_percent']))}%</b>)"
-            cardinality.append(distinct)
+                shown += f" <span style='color:#667085;'>({html.escape(str(profile['distinct_percent']))}%)</span>"
+            lines.append(shown)
         if profile.get("null_count") is not None:
-            nulls = f"Null count: <b>{html.escape(str(profile['null_count']))}</b>"
+            shown = f"Null <b>{html.escape(str(profile['null_count']))}</b>"
             if profile.get("null_percent") is not None:
-                nulls += f" (<b>{html.escape(str(profile['null_percent']))}%</b>)"
-            cardinality.append(nulls)
-        if cardinality:
-            lines.append(" · ".join(cardinality))
-        return "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
+                shown += f" <span style='color:#667085;'>({html.escape(str(profile['null_percent']))}%)</span>"
+            lines.append(shown)
+        content = "<br>".join(lines) or "<span style='color:#667085;'>No profile values available</span>"
+        return f"<details><summary>Profile</summary><div style='margin-top:5px;'>{content}</div></details>"
 
     active = [row for row in guardrails if row.get("is_active", True)]
     business_rules = [
@@ -256,7 +260,7 @@ def _manifest_sections(
         rows = rules_by_column.get(column_id, [])
         if not rows:
             return "<span style='color:#667085;'>None</span>"
-        return "".join(
+        content = "".join(
             "<div style='margin-bottom:5px;'><b>{}</b> · {}{}</div>".format(
                 html.escape(rule_label(rule)),
                 html.escape(str(rule.get("action") or "Warn")),
@@ -269,22 +273,24 @@ def _manifest_sections(
             )
             for rule in rows
         )
+        return f"<details><summary>{len(rows)} rule{'s' if len(rows) != 1 else ''}</summary>{content}</details>"
 
     column_rows = "".join(
         "<tr>"
-        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+        "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
         "</tr>".format(
             html.escape(str(row.get("column_name") or "")),
+            example_value(str(row.get("column_id") or "")),
             html.escape(str(row.get("data_type") or "")),
-            profile_evidence(str(row.get("column_id") or "")),
-            html.escape(column_enrichment.get(
-                (str(row.get("column_id") or ""), "Description"), ""
-            )) or "<span style='color:#667085;'>—</span>",
+            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
+            sensitive_text(str(row.get("column_id") or "")),
             html.escape(column_enrichment.get(
                 (str(row.get("column_id") or ""), "Classification"), ""
             )) or "<span style='color:#667085;'>—</span>",
-            sensitive_text(str(row.get("column_id") or "")),
-            "Yes" if row.get("column_id") in required or row.get("column_name") in required else "No",
+            html.escape(column_enrichment.get(
+                (str(row.get("column_id") or ""), "Description"), ""
+            )) or "<span style='color:#667085;'>—</span>",
+            profile_evidence(str(row.get("column_id") or "")),
             rules_text(str(row.get("column_id") or "")),
         )
         for row in columns
@@ -296,8 +302,8 @@ def _manifest_sections(
         f"{len(columns)} columns, {len(column_guardrails)} column guardrails</summary>"
         "<div style='overflow-x:auto;'>"
         "<table style='width:100%;font-size:12px;'><thead><tr>"
-        "<th>Column</th><th>Datatype</th><th>Profile evidence</th><th>Description</th>"
-        "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
+        "<th>Column</th><th>Example</th><th>Datatype</th><th>Required</th>"
+        "<th>Sensitive</th><th>Classification</th><th>Description</th><th>Profile</th><th>Rules</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Business Rules</b> · "
         f"{len(business_rules)} configured</summary>{business_rule_list(business_rules)}</details>"
