@@ -370,7 +370,7 @@ def test_manifest_review_shows_business_rule_lifecycle_state():
         ],
     }
 
-    review = widget_module._manifest_sections(payload)["Review"]
+    review = module._manifest_sections(payload)["Review"]
 
     assert "Total amount must equal the calculated amount" in review
     assert "Expression:" in review
