@@ -393,9 +393,13 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert "Metadata · Lakehouse" not in store_labels
     assert controls["schema"].value == "sales"
     selector = controls["selector_panel"].children[0]
-    assert [child.description for child in selector.children] == [
-        "Fabric store", "Schema", "Table", "Contract",
+    assert [field.children[0].value for field in selector.children] == [
+        "<span style='display:block;width:92px'>Fabric store</span>",
+        "<span style='display:block;width:92px'>Schema</span>",
+        "<span style='display:block;width:92px'>Table</span>",
+        "<span style='display:block;width:92px'>Contract</span>",
     ]
+    assert all(field.children[1].layout.flex == "1 1 0%" for field in selector.children)
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
