@@ -1144,8 +1144,11 @@ def widget_data_contract(
                     "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                     "padding:9px 11px;font-size:12px;line-height:1.5;'>"
                     f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
-                    f"<b>Profiled row key:</b> {html.escape(key_text)}<br>"
-                    f"<span style='color:#667085;'>{html.escape(suggestion['rationale'])}</span></div>"
+                    f"<b>Profiled row key:</b> {html.escape(key_text)}"
+                    "<details style='margin-top:5px;color:#667085;'>"
+                    "<summary style='cursor:pointer;'>Why this suggestion?</summary>"
+                    f"<div style='margin-top:4px;'>{html.escape(suggestion['rationale'])}</div>"
+                    "</details></div>"
                 )
                 accept_grain.disabled = False
             except (TypeError, ValueError, RuntimeError) as exc:
