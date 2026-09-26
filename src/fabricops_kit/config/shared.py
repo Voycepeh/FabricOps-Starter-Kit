@@ -347,9 +347,11 @@ class PathConfig:
 DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
     "table_description_prompt": (
-        "Write a concise business description for the selected table using only the supplied FabricOps "
-        "Catalogue identity, existing description, column names, and datatypes. Treat metadata as evidence "
-        "rather than business truth, do not invent unsupported meaning, and return only the proposed description."
+        "Write a concise business description of what the selected table represents and supports using only "
+        "the supplied FabricOps context. Use the table name, grain, classification, and meaningful business "
+        "columns as context. Do not list or paraphrase columns, mention datatypes, summarize the schema, or use "
+        "phrasing such as 'contains fields' or 'contains columns'. Treat metadata as evidence rather than business "
+        "truth, do not invent unsupported meaning, and return only the proposed description."
     ),
     "column_description_prompt": (
         "Write a concise business description for the selected column using only the supplied FabricOps "
