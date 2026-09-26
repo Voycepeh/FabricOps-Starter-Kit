@@ -1,4 +1,4 @@
-"""Unified Data Contract governance authoring, review, freeze, and activation widget."""
+"""Unified Data Contract governance authoring, review, and freeze widget."""
 
 from __future__ import annotations
 
@@ -629,10 +629,20 @@ def widget_data_contract(
         if not matches:
             state["current"] = None
             return None
-        chosen = next(
-            (row for row in matches if int(row.get("contract_version") or 0) == int(version or 0)),
-            matches[0],
-        )
+        if version is None:
+            chosen = matches[0]
+        else:
+            chosen = next(
+                (
+                    row for row in matches
+                    if int(row.get("contract_version") or 0) == int(version)
+                ),
+                None,
+            )
+            if chosen is None:
+                raise ValueError(
+                    f"Data Contract v{int(version)} was not found for table {state['table_id']}."
+                )
         state["contract_version"] = int(chosen["contract_version"])
         state["current"] = contracts.get_contract_review_state(
             config=config, env=env, spark_session=spark,
@@ -813,26 +823,16 @@ def widget_data_contract(
             draft=current["contract"], config=config, env=env,
             spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
         )
-        select(str(state["table_id"]), int(state["contract_version"]))
-        return result
-
-    def activate(agreement_id: str, agreement_version: str) -> dict[str, Any]:
-        current = state.get("current")
-        if not current:
-            raise ValueError("Select an exact frozen Data Contract version before activation.")
-        row = current["contract"]
-        result = contracts.activate_contract_version(
-            config=config, env=env, table_id=str(row["table_id"]),
-            contract_id=str(row["contract_id"]), contract_version=int(row["contract_version"]),
-            agreement_id=agreement_id, agreement_version=agreement_version,
-            spark_session=spark, context={"config": config, "env": env, **dict(resolved or {})},
+        latest = contracts.list_contract_governance_state(
+            config=config, env=env, spark_session=spark,
         )
+        state["contracts"] = latest["contracts"]
         select(str(state["table_id"]), int(state["contract_version"]))
         return result
 
     state.update(
         select=select, new_draft=new_draft, refresh_manifest=refresh_manifest,
-        freeze=freeze, activate=activate, stage_enrichment=stage_enrichment,
+        freeze=freeze, stage_enrichment=stage_enrichment,
         stage_guardrails=stage_guardrails, save_data_contract=save_data_contract_session,
         discard_data_contract=discard_data_contract_session,
         load_profile_context=load_profile_context,
@@ -4117,23 +4117,12 @@ def widget_data_contract(
                 freeze_confirm,
             ])
         else:
-            agreement_id = widgets.Text(**shared.widget_common(widgets, "Data Agreement ID"))
-            agreement_version = widgets.Text(**shared.widget_common(widgets, "Agreement version"))
-            activate_button = widgets.Button(
-                description="Activate for Production",
-                disabled=str(row.get("status") or "").lower() != "frozen" or row.get("is_active") is True,
-            )
-
-            def activate_clicked(_button: Any) -> None:
-                try:
-                    activate(agreement_id.value, agreement_version.value)
-                    render()
-                    set_status(f"Data Contract v{row['contract_version']} is ACTIVE for Production.")
-                except (ValueError, RuntimeError) as exc:
-                    set_status(str(exc), error=True)
-
-            activate_button.on_click(activate_clicked)
-            actions.extend([agreement_id, agreement_version, activate_button])
+            actions.append(widgets.HTML(
+                "<div style='color:#667085;font-size:12px;'>"
+                "Frozen contracts are review-only here. Complete exact-version validation, "
+                "Data Agreement selection, and Production activation in the Activation widget."
+                "</div>"
+            ))
         review_left = table_left
 
         review_right = (
@@ -4464,7 +4453,7 @@ def widget_data_contract(
     render()
     page = shared.form_page(
         widgets, title="Data Contract",
-        description="Select, author, review, freeze, and activate one governed table contract.",
+        description="Select, author, review, and freeze one governed table contract.",
         children=[selector_panel, editor_shell, status],
     )
     state["_controls"].update({
