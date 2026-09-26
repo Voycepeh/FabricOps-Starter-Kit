@@ -106,6 +106,9 @@ def _persist_target_processing(
             "load_strategy_parameters_json": json.dumps(
                 parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             ),
+            "writer_workspace_id": audit["_workspace_id"],
+            "writer_notebook_id": audit["_notebook_id"],
+            "writer_notebook_name": audit["_notebook_name"],
             "scheduled_refresh_json": json.dumps(
                 scheduled_refresh, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             ),
@@ -142,6 +145,9 @@ def _persist_target_processing(
                 "table_name": "source.table_name",
                 "load_strategy": "source.load_strategy",
                 "load_strategy_parameters_json": "source.load_strategy_parameters_json",
+                "writer_workspace_id": "source.writer_workspace_id",
+                "writer_notebook_id": "source.writer_notebook_id",
+                "writer_notebook_name": "source.writer_notebook_name",
                 "scheduled_refresh_json": "source.scheduled_refresh_json",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
