@@ -1830,6 +1830,28 @@ def widget_data_contract(
                     for rule in active
                 ),
             }
+            freshness_controls = table_rules["freshness"]
+            source_refresh_expectation = "Not defined"
+            if freshness_controls["enabled"].value:
+                freshness_parameters = freshness_controls["parameters"]
+                expectation_mode = str(freshness_parameters[0].value or "recurring")
+                if expectation_mode == "static":
+                    source_refresh_expectation = "No refresh expected"
+                else:
+                    frequency = str(freshness_parameters[2].value or "").strip()
+                    unit = str(freshness_parameters[3].value or "").strip()
+                    if frequency and unit:
+                        try:
+                            numeric_frequency = float(frequency)
+                            shown_frequency = (
+                                str(int(numeric_frequency))
+                                if numeric_frequency.is_integer()
+                                else str(numeric_frequency)
+                            )
+                        except ValueError:
+                            shown_frequency = frequency
+                        source_refresh_expectation = f"{shown_frequency} {unit}"
+
             guardrail_html = "".join(
                 "<div style='display:flex;justify-content:space-between;gap:12px;padding:3px 0'>"
                 f"<span style='color:#666'>{html.escape(name)}</span>"
@@ -1863,6 +1885,9 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Refresh Frequency</div>"
                 f"<div style='font-weight:600;'>{html.escape(refresh_frequency)}</div></div>"
                 "<div style='margin-top:12px;'>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Expected source refresh</div>"
+                f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
+                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
                 + guardrail_html + "</div>"
             )
@@ -1871,6 +1896,8 @@ def widget_data_contract(
         table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
+        for freshness_control in table_rules["freshness"]["parameters"]:
+            freshness_control.observe(render_table_summary, names="value")
         processing_hint_row = widgets.HBox(
             [
                 widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
