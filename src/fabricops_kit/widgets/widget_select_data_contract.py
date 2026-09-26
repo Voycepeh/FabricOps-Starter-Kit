@@ -65,10 +65,20 @@ def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
         if kind.lower() == "freshness" and rule.get("is_active", True):
             parameters = rule.get("rule_parameters") or {}
             if isinstance(parameters, dict):
-                frequency = parameters.get("expected_refresh_frequency")
-                unit = parameters.get("expected_refresh_unit")
-                if frequency not in (None, "") and unit:
-                    expected_refresh = {"frequency": frequency, "unit": str(unit)}
+                if (
+                    str(rule.get("rule_type") or "").lower() == "skip"
+                    or str(parameters.get("refresh_expectation") or "").lower() == "static"
+                ):
+                    expected_refresh = {"mode": "static"}
+                else:
+                    frequency = parameters.get("expected_refresh_frequency")
+                    unit = parameters.get("expected_refresh_unit")
+                    if frequency not in (None, "") and unit:
+                        expected_refresh = {
+                            "mode": "recurring",
+                            "frequency": frequency,
+                            "unit": str(unit),
+                        }
     return {
         "contract_version": int(row["contract_version"]),
         "status": str(row.get("status") or ""),
@@ -468,6 +478,8 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             expected = review.get("expected_refresh")
             if not expected:
                 return "<br><span style='color:#667085;'>Expected refresh: Not defined</span>"
+            if expected.get("mode") == "static":
+                return "<br><span style='color:#667085;'>Expected refresh: <b>No refresh expected</b></span>"
             value = expected.get("frequency")
             shown = str(int(value)) if isinstance(value, float) and value.is_integer() else str(value)
             return (
