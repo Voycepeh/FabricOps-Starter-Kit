@@ -4133,7 +4133,10 @@ def capture_source_observation(
     )
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
 
-    if freshness_rule is not None:
+    if (
+        freshness_rule is not None
+        and str(_catalogue_value(freshness_rule, "rule_type") or "").strip().lower() != "skip"
+    ):
         freshness_column = resolve_freshness_observation_column(freshness_rule)
         freshness_frame = dataframe
         if freshness_frame is None and source_type == "warehouse":
