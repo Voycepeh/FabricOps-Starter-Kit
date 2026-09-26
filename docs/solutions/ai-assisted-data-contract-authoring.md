@@ -1,7 +1,5 @@
 # AI-assisted Data Contract Authoring
 
-This page showcases one FabricOps capability. For the end-to-end Governance and Engineering lifecycle it fits into, see [How FabricOps Works](../how-fabricops-works.md).
-
 FabricOps uses profile evidence and Microsoft Fabric AI Functions to assist Data Contract authoring without making Governance approval or runtime enforcement AI-dependent.
 
 ## What it helps author
