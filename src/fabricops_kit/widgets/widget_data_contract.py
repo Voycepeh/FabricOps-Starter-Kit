@@ -290,9 +290,19 @@ def _manifest_sections(
             html.escape(column_enrichment.get(
                 (str(row.get("column_id") or ""), "Classification"), ""
             )) or "<span style='color:#667085;'>—</span>",
-            html.escape(column_enrichment.get(
-                (str(row.get("column_id") or ""), "Description"), ""
-            )) or "<span style='color:#667085;'>—</span>",
+            (
+                "<details style='max-width:220px;'>"
+                "<summary style='display:block;cursor:pointer;overflow:hidden;text-overflow:ellipsis;"
+                "white-space:nowrap;max-width:220px;' title='Click to expand'>"
+                + html.escape(column_enrichment.get(
+                    (str(row.get("column_id") or ""), "Description"), ""
+                ))
+                + "</summary></details>"
+                if column_enrichment.get(
+                    (str(row.get("column_id") or ""), "Description"), ""
+                )
+                else "<span style='color:#667085;'>—</span>"
+            ),
         )
         for row in columns
     )
@@ -312,9 +322,11 @@ def _manifest_sections(
         "<details open><summary><b>Column definitions</b> · "
         f"{len(columns)} columns</summary>"
         "<div style='overflow-x:auto;'>"
-        "<table style='width:100%;font-size:12px;'><thead><tr>"
-        "<th>Column</th><th>Examples</th><th>Datatype</th><th>Required</th>"
-        "<th>Sensitive</th><th>Classification</th><th>Description</th>"
+        "<table style='width:100%;font-size:12px;table-layout:fixed;'><thead><tr>"
+        "<th style='width:18%;'>Column</th><th style='width:18%;'>Examples</th>"
+        "<th style='width:11%;'>Datatype</th><th style='width:10%;'>Required</th>"
+        "<th style='width:12%;'>Sensitive</th><th style='width:13%;'>Classification</th>"
+        "<th style='width:18%;'>Description</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Guardrails</b> · "
         f"{guardrail_count} configured</summary>{guardrail_sections}</details>"
