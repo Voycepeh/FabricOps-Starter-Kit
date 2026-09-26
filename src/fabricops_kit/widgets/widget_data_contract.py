@@ -1376,6 +1376,30 @@ def widget_data_contract(
                     **shared.widget_common(widgets, "Timestamp column"),
                 )
                 freshness_column.layout = field_layout
+                expected_refresh_frequency = widgets.Text(
+                    value=str(existing_parameters.get("expected_refresh_frequency") or ""),
+                    disabled=not editable or not temporal_column_names,
+                    layout=widgets.Layout(width="150px", min_width="100px"),
+                )
+                expected_refresh_unit = widgets.Dropdown(
+                    options=("minutes", "hours", "days"),
+                    value=str(existing_parameters.get("expected_refresh_unit") or "days"),
+                    disabled=not editable or not temporal_column_names,
+                    layout=widgets.Layout(width="150px", min_width="120px"),
+                )
+                expected_refresh_row = widgets.HBox(
+                    [
+                        widgets.HTML(
+                            "<div style='width:150px;padding-top:7px;'>Expected refresh</div>",
+                            layout=widgets.Layout(width="150px", min_width="150px"),
+                        ),
+                        expected_refresh_frequency,
+                        expected_refresh_unit,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%", gap="10px", align_items="flex-start", flex_flow="row wrap"
+                    ),
+                )
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""),
                     disabled=not editable or not temporal_column_names,
@@ -1421,17 +1445,20 @@ def widget_data_contract(
                     enabled.disabled = not editable
                     block.disabled = not editable
                     selected = str(freshness_column.value or "").strip()
+                    raw_expected = str(expected_refresh_frequency.value or "").strip()
+                    expected_unit = str(expected_refresh_unit.value or "days")
                     raw_age = str(maximum_age.value or "").strip()
                     unit = str(maximum_age_unit.value or "days")
-                    if not enabled.value or not selected or not raw_age:
+                    if not enabled.value or not selected or not raw_expected or not raw_age:
                         freshness_rule_preview.value = ""
                         return
                     try:
+                        expected = float(raw_expected)
                         age = float(raw_age)
                     except ValueError:
                         freshness_rule_preview.value = ""
                         return
-                    if age <= 0:
+                    if expected <= 0 or age <= 0:
                         freshness_rule_preview.value = ""
                         return
                     shown_age = str(int(age)) if age.is_integer() else str(age)
@@ -1446,6 +1473,8 @@ def widget_data_contract(
                         "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                         "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
                         "<b>ⓘ Rule</b><br>"
+                        f"Expected source refresh: <b>{html.escape(str(int(expected)) if expected.is_integer() else str(expected))} "
+                        f"{html.escape(expected_unit)}</b>.<br>"
                         f"The latest <code>{html.escape(selected)}</code> must be within "
                         f"<b>{html.escape(shown_age)} {html.escape(unit)}</b> of the pipeline run."
                         "<br><span style='color:#667085;'>Example: if the pipeline runs at "
@@ -1455,14 +1484,22 @@ def widget_data_contract(
                     )
 
                 for freshness_control in (
-                    enabled, freshness_column, maximum_age, maximum_age_unit
+                    enabled, freshness_column, expected_refresh_frequency, expected_refresh_unit,
+                    maximum_age, maximum_age_unit
                 ):
                     freshness_control.observe(refresh_freshness_rule_preview, names="value")
                 refresh_freshness_rule_preview()
-                parameter_controls = [freshness_column, maximum_age, maximum_age_unit]
+                parameter_controls = [
+                    freshness_column,
+                    expected_refresh_frequency,
+                    expected_refresh_unit,
+                    maximum_age,
+                    maximum_age_unit,
+                ]
                 display_controls = [
                     freshness_unavailable,
                     freshness_column,
+                    expected_refresh_row,
                     freshness_age_row,
                     freshness_rule_preview,
                 ]
@@ -1534,11 +1571,14 @@ def widget_data_contract(
                 if not enabled_control.value:
                     parameters = _parameters(old)
                 elif rule_kind == "freshness":
-                    raw_age = str(controls[1].value or "").strip()
+                    raw_expected = str(controls[1].value or "").strip()
+                    raw_age = str(controls[3].value or "").strip()
                     parameters = {
                         "freshness_column": str(controls[0].value or "").strip(),
+                        "expected_refresh_frequency": float(raw_expected),
+                        "expected_refresh_unit": str(controls[2].value or "days"),
                         "maximum_age": float(raw_age),
-                        "maximum_age_unit": str(controls[2].value or "days"),
+                        "maximum_age_unit": str(controls[4].value or "days"),
                     }
                 else:
                     parameters = {
