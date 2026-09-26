@@ -1,33 +1,60 @@
 # uniqueness
 
-Checks the configured table row key for duplicate values or duplicate column combinations.
+## What this rule does
 
-## Use it when
+Checks that one column, or one combination of columns, uniquely identifies rows.
 
-Use `uniqueness` when one column or one combination of columns must uniquely identify rows.
+## When to use it
 
-Examples:
+Use for single-column keys or composite business grain.
 
-- "Order ID must be unique."
-- "Order ID and line number together must uniquely identify each row."
-- "No duplicate combinations of academic year, student ID, and module code."
+## Data applicability
 
-FabricOps authors this rule from **Grain & Row Key** on the Table tab. A composite key is stored as one table-level rule and is never split into independent per-column uniqueness checks.
+One or more columns that together define row identity.
 
-## Do not use it when
+## Parameters
 
-- Each value must merely be populated: use [`completeness`](completeness.md).
-- Two columns must compare on each row: use [`column_relationship`](column-relationship.md).
-- The requirement is that one value determines another value, such as `product_id → product_name`. Composite uniqueness does not prove that functional dependency.
+```yaml
+rule_type: uniqueness
+columns: ["order_id", "line_id"]
+```
 
-## Profile evidence
-
-A column observed at 100% distinct with no missing values is a strong single-key candidate. Per-column profile statistics cannot prove composite uniqueness, so the configured rule validates the selected combination against table data during pipeline execution.
-
-Observed example values are evidence only. They must not be converted into hard-coded allowed pairs unless Governance explicitly defines those pairs as the requirement.
-
-## Example
+## Example rule definition
 
 ```json
 {"rule_type":"uniqueness","columns":["order_id","line_id"]}
 ```
+
+## Sample input data
+
+| order_id | line_id | product |
+|---|---:|---|
+| A100 | 1 | Pen |
+| A100 | 2 | Book |
+| A101 | 1 | Bag |
+| A100 | 1 | Eraser |
+
+## Rows that pass
+
+| order_id | line_id | Why |
+|---|---:|---|
+| A100 | 2 | Combination appears once. |
+| A101 | 1 | Combination appears once. |
+
+## Rows that fail
+
+| order_id | line_id | Why |
+|---|---:|---|
+| A100 | 1 | Combination appears more than once. |
+
+## Notes
+
+- Composite uniqueness is one table-level rule, not separate uniqueness checks per column.
+- Profile distinctness can suggest a key candidate, but runtime validation proves uniqueness.
+- `product_id + product_name` being unique does **not** prove `product_id → product_name`; that is a different relationship.
+- Observed example pairs must not be converted into hard-coded allowed mappings unless Governance explicitly defines them.
+
+## Related rules
+
+- [`completeness`](completeness.md)
+- [`column_relationship`](column-relationship.md)
