@@ -892,6 +892,24 @@ def get_table_runtime_context(
         }
         for row in latest_profile_rows if str(row.get("column_id") or "")
     }
+    latest_snapshot_id = str((latest_profile or {}).get("profile_snapshot_id") or "")
+    if latest_snapshot_id:
+        frequency_rows = [
+            row for row in table_rows("METADATA_DATA_PROFILED_FREQUENCY")
+            if str(row.get("profile_snapshot_id") or row.get("profile_id") or "")
+            == latest_snapshot_id
+        ]
+        frequency_rows.sort(
+            key=lambda row: (
+                str(row.get("column_id") or ""),
+                int(row.get("frequency_rank") or 2_147_483_647),
+                -int(row.get("frequency_count") or 0),
+            )
+        )
+        for row in frequency_rows:
+            column_id = str(row.get("column_id") or "")
+            if column_id in column_profiles and "example_value" not in column_profiles[column_id]:
+                column_profiles[column_id]["example_value"] = row.get("value")
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for row in table_rows("METADATA_DATA_LINEAGE"):
