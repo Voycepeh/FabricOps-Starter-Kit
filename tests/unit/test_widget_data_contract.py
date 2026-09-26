@@ -402,12 +402,12 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["schema"].value == "sales"
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
-        "<span style='display:block;width:92px'>Fabric store</span>",
-        "<span style='display:block;width:92px'>Schema</span>",
-        "<span style='display:block;width:92px'>Table</span>",
-        "<span style='display:block;width:92px'>Contract</span>",
+        "<b>Fabric store</b>",
+        "<b>Schema</b>",
+        "<b>Table</b>",
+        "<b>Contract</b>",
     ]
-    assert all(field.children[1].layout.flex == "1 1 0%" for field in selector.children)
+    assert all(field.children[1].layout.width == "100%" for field in selector.children)
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
