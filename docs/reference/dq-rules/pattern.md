@@ -1,27 +1,61 @@
 # pattern
 
-Checks populated text in one column against a regular expression.
+## What this rule does
 
-## Use it when
+Checks populated text against a regular expression.
 
-Use `pattern` when the requirement is about text shape or format.
+## When to use it
 
-Examples:
+Use for emails, codes, identifiers, postcodes, and other structured text.
 
-- "Email must have an approved email format."
-- "Product code must follow AAA-9999."
-- "Postal code must contain six digits."
+## Data applicability
 
-## Do not use it when
+Single text or string-castable columns with a known textual format.
 
-- The requirement is an explicit list of values: use [`value_set`](value-set.md).
-- The requirement is numeric or date bounds: use [`range`](range.md).
-- The requirement compares two columns: use [`column_relationship`](column-relationship.md).
+## Parameters
 
-Observed sample strings may help infer a proposed regex, but they are evidence only and must not be treated as the full permitted domain.
+```yaml
+rule_type: pattern
+columns: ["email"]
+pattern: "^[^@]+@[^@]+\\.[^@]+$"
+```
 
-## Example
+## Example rule definition
 
 ```json
 {"rule_type":"pattern","columns":["email"],"pattern":"^[^@]+@[^@]+\\.[^@]+$"}
 ```
+
+## Sample input data
+
+| staff_id | email |
+|---|---|
+| S001 | amy@nus.edu.sg |
+| S002 | ben.lee@company.com |
+| S003 | charlie.company.com |
+| S004 | diana@ |
+
+## Rows that pass
+
+| staff_id | email | Why |
+|---|---|---|
+| S001 | amy@nus.edu.sg | Matches the pattern. |
+| S002 | ben.lee@company.com | Matches the pattern. |
+
+## Rows that fail
+
+| staff_id | email | Why |
+|---|---|---|
+| S003 | charlie.company.com | Missing `@`. |
+| S004 | diana@ | Missing domain after `@`. |
+
+## Notes
+
+- Pattern checks format, not whether the value is required.
+- Combine with `completeness` when the column must also be populated.
+- Sample strings may guide a regex suggestion but do not define the full allowed domain.
+
+## Related rules
+
+- [`completeness`](completeness.md)
+- [`value_set`](value-set.md)
