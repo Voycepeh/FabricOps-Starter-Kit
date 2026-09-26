@@ -1368,15 +1368,16 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
         lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
     )
     monkeypatch.setattr(
+        module, "suggest_grain_key",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+    )
+    monkeypatch.setattr(
         module, "suggest_sensitive_data",
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("malformed AI response")),
     )
     state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
     state["_controls"]["open_with_ai"].click()
-    if "column_description" not in state["_controls"]:
-        assert "AI" in state["message"]
-        state["_controls"]["open_without_ai"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
