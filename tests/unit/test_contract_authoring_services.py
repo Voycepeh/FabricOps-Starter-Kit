@@ -580,11 +580,12 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
             "min_value": "29.9", "max_value": "438.6",
+            "example_values": ["109.95"],
         },
         "customer_id": {
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
-            "example_value": "C001",
+            "example_values": ["C001"],
         },
     }
     assert context["writer_count"] == 1
