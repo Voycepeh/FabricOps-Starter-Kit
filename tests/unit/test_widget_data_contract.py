@@ -336,6 +336,49 @@ def widget_runtime(monkeypatch):
     }
 
 
+def test_manifest_review_shows_business_rule_lifecycle_state():
+    """Keep Business Rule intent and Engineering review visible outside raw JSON."""
+    payload = {
+        "table": {"columns": []},
+        "enrichment": {"columns": []},
+        "guardrails": [
+            {
+                "guardrail_type": "data_quality",
+                "rule_type": "custom_expression",
+                "action": "Block",
+                "is_active": True,
+                "rule_parameters": {
+                    "business_requirement": "Total amount must equal the calculated amount",
+                    "columns": ["TOTAL_AMOUNT", "QUANTITY", "UNIT_PRICE"],
+                    "expression": "F.col('TOTAL_AMOUNT') == F.col('QUANTITY') * F.col('UNIT_PRICE')",
+                    "engineering_review_required": True,
+                    "engineering_review_status": "approved",
+                    "engineering_reviewed_by": "engineer@example.com",
+                },
+            },
+            {
+                "guardrail_type": "data_quality",
+                "rule_type": "column_relationship",
+                "action": "Warn",
+                "is_active": True,
+                "rule_parameters": {
+                    "business_requirement": "End date must be after start date",
+                    "columns": ["END_DATE", "START_DATE"],
+                    "operator": ">=",
+                },
+            },
+        ],
+    }
+
+    review = module._manifest_sections(payload)["Review"]
+
+    assert "Total amount must equal the calculated amount" in review
+    assert "Expression:" in review
+    assert "Engineering review: Approved by engineer@example.com" in review
+    assert "End date must be after start date" in review
+    assert "Engineering review: Not required" in review
+
+
 def test_selector_is_explicit_and_pending_selection_cannot_change_active_contract(widget_runtime):
     """The editor stays inactive until Open and Change table deactivates the current contract."""
     state = widget_runtime["start"]()
@@ -1518,6 +1561,137 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     assert module._parameters(staged)["operator"] == ">="
     assert widget_runtime["calls"]["guardrails"] == []
     assert "Save Data Contract to persist" in state["message"]
+
+
+def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch):
+    """Applying a new Business Rule must append rather than replace another rule."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    requirements = [
+        "End date must be on or after start date.",
+        "Start date must be on or before end date.",
+    ]
+
+    def resolve(_context, **kwargs):
+        requirement = kwargs["requirement"]
+        return {
+            "rule_type": "column_relationship",
+            "parameters": {
+                "columns": ["column_1", "column_0"],
+                "operator": ">=" if requirement == requirements[0] else "<=",
+                "business_requirement": requirement,
+            },
+            "business_requirement": requirement,
+            "engineering_review_required": False,
+        }
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    for requirement in requirements:
+        controls["business_saved"].value = ""
+        controls["business_requirement"].value = requirement
+        controls["business_columns"].value = ("column_0", "column_1")
+        controls["resolve_business_rule"].click()
+        controls["apply_business_rule"].click()
+
+    staged = [
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "column_relationship"
+    ]
+    assert len(staged) == 2
+    assert {
+        module._parameters(record)["business_requirement"] for record in staged
+    } == set(requirements)
+
+
+def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
+    widget_runtime, monkeypatch
+):
+    """Repeatable uniqueness constraints stay separate from the singular Grain & Row Key."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["row_key_columns"].value = ("column_0",)
+
+    requirements = [
+        ("column_0 must be unique.", ["column_0"]),
+        ("column_0 and column_1 together must also be unique.", ["column_0", "column_1"]),
+    ]
+
+    def resolve(_context, **kwargs):
+        columns = next(cols for requirement, cols in requirements if requirement == kwargs["requirement"])
+        return {
+            "rule_type": "uniqueness",
+            "parameters": {
+                "columns": columns,
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "engineering_review_required": False,
+        }
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    for requirement, columns in requirements:
+        controls["business_saved"].value = ""
+        controls["business_requirement"].value = requirement
+        controls["business_columns"].value = tuple(columns)
+        controls["resolve_business_rule"].click()
+        controls["apply_business_rule"].click()
+
+    staged_uniqueness = [
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "uniqueness"
+        and module._parameters(record).get("business_requirement")
+    ]
+    assert len(staged_uniqueness) == 2
+    assert {tuple(module._parameters(record)["columns"]) for record in staged_uniqueness} == {
+        ("column_0",), ("column_0", "column_1"),
+    }
+    assert controls["row_key_columns"].value == ("column_0",)
+
+
+def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkeypatch):
+    """A simple resolved rule belongs to Columns and hydrates its normal DQ editor."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    def resolve(_context, **kwargs):
+        return {
+            "rule_type": "completeness",
+            "parameters": {
+                "columns": ["column_0"],
+                "maximum_missing_percent": 0,
+                "treat_blank_as_missing": False,
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "engineering_review_required": False,
+        }
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "Business Rules"
+    controls["business_requirement"].value = "Order identifier is always required."
+    controls["business_columns"].value = ("column_0",)
+    controls["resolve_business_rule"].click()
+    controls["apply_business_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "completeness"
+        and module._parameters(record).get("business_requirement")
+        == "Order identifier is always required."
+    )
+    assert staged["column_id"] == "col-0"
+    assert controls["business_saved"].value == ""
+
+    controls["top_nav"].value = "Columns"
+    assert controls["dq_type"].value == "completeness"
+    assert controls["dq_max_missing"].value == "0"
+    assert controls["dq_enabled"].value is True
+    assert "resolved to a Column Rule" in state["message"]
 
 
 def test_custom_business_rule_requires_engineering_review_before_freeze(

@@ -145,6 +145,48 @@ def _manifest_sections(
         ) or "<li>None configured</li>"
         return f"<ul>{items}</ul>"
 
+    def business_rule_list(rows: list[dict[str, Any]]) -> str:
+        if not rows:
+            return "<ul><li>None configured</li></ul>"
+        items = []
+        for row in rows:
+            params = _parameters(row)
+            requirement = str(
+                params.get("business_requirement") or params.get("description") or ""
+            ).strip()
+            columns = [str(value) for value in params.get("columns") or []]
+            kind = str(row.get("rule_type") or "")
+            review_required = (
+                kind == "custom_expression"
+                and bool(params.get("engineering_review_required", True))
+            )
+            review_status = str(
+                params.get("engineering_review_status") or "pending"
+            ).replace("_", " ").title()
+            details = [
+                f"<b>{html.escape(requirement or rule_label(row))}</b>",
+                html.escape(rule_label(row)),
+                html.escape(str(row.get("action") or "Warn")),
+            ]
+            if columns:
+                details.append("Columns: " + html.escape(", ".join(columns)))
+            if kind == "custom_expression" and params.get("expression"):
+                details.append(
+                    "Expression: <code>"
+                    + html.escape(str(params["expression"]))
+                    + "</code>"
+                )
+            if review_required:
+                reviewer = str(params.get("engineering_reviewed_by") or "").strip()
+                review = "Engineering review: " + html.escape(review_status)
+                if reviewer and review_status.lower() == "approved":
+                    review += " by " + html.escape(reviewer)
+                details.append(review)
+            else:
+                details.append("Engineering review: Not required")
+            items.append("<li>" + "<br>".join(details) + "</li>")
+        return "<ul>" + "".join(items) + "</ul>"
+
     def profile_evidence(column_id: str) -> str:
         profile = dict(profiles.get(column_id) or {})
         if not profile:
@@ -258,7 +300,7 @@ def _manifest_sections(
         "<th>Classification</th><th>Sensitive data</th><th>Required</th><th>Rules</th>"
         f"</tr></thead><tbody>{column_rows}</tbody></table></div></details>"
         "<details><summary><b>Business Rules</b> · "
-        f"{len(business_rules)} configured</summary>{rule_list(business_rules)}</details>"
+        f"{len(business_rules)} configured</summary>{business_rule_list(business_rules)}</details>"
     )
     return {"Review": details}
 
@@ -3365,23 +3407,56 @@ def widget_data_contract(
                     })
                     params.pop("engineering_reviewed_by", None)
                     params.pop("engineering_review_note", None)
+                resolved_type = str(business_resolved["rule_type"])
+                resolved_columns = [str(value) for value in params.get("columns") or []]
+                column_rule_id = ""
+                if resolved_type == "uniqueness":
+                    # Uniqueness is repeatable. Grain & Row Key is a separate, singular
+                    # semantic declaration authored on the Table tab.
+                    existing = {}
+                elif resolved_type in _COLUMN_DQ_TYPES and len(resolved_columns) == 1:
+                    column_rule_id = next((
+                        str(column.get("column_id") or "")
+                        for column in columns
+                        if str(column.get("column_name") or "") == resolved_columns[0]
+                    ), "")
+                    if not column_rule_id:
+                        raise ValueError(
+                            "Resolved single-column Business Rule does not match a governed column."
+                        )
+                    existing = next((
+                        rule for rule in session_guardrails()
+                        if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                        and str(rule.get("column_id") or "") == column_rule_id
+                        and str(rule.get("rule_type") or "") == resolved_type
+                    ), {})
                 record = guardrail_record(
                     "data_quality",
-                    str(business_resolved["rule_type"]),
+                    resolved_type,
                     params,
+                    column_id=column_rule_id,
                     action="Block" if business_block.value else "Warn",
                     existing=existing,
                     active=bool(business_enabled.value),
                 )
                 stage_guardrails([record])
-                refresh_business_saved_options(str(record["guardrail_rule_id"]))
+                if column_rule_id:
+                    selected_dq_by_column[column_rule_id] = resolved_type
+                    refresh_business_saved_options()
+                    set_status(
+                        "Business Rule resolved to a Column Rule and staged on "
+                        f"{resolved_columns[0]}. Open Columns to review it before saving."
+                    )
+                else:
+                    refresh_business_saved_options(str(record["guardrail_rule_id"]))
                 business_resolved.clear()
                 apply_business_rule.disabled = True
                 set_validation_error("business_rule")
                 render_engineering_review(record)
-                set_status(
-                    "Business Rule staged in the Data Contract. Save Data Contract to persist."
-                )
+                if not column_rule_id:
+                    set_status(
+                        "Business Rule staged in the Data Contract. Save Data Contract to persist."
+                    )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("business_rule", exc)
                 set_status(str(exc), error=True)
