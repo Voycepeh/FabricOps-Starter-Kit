@@ -2,50 +2,57 @@
 
 **Promote the validated `02_pipeline` logic and run the same engineering pattern in Engineering Production.**
 
-Production should not receive Development output tables, draft metadata, or a hand-edited copy of the contract. The promoted asset is the validated pipeline logic; Production resolves its own configured stores and the active governed definition.
+FabricOps keeps engineering promotion simple. The pipeline tested in Development is promoted unchanged to Production. Environment specific Fabric items are resolved through `00_env_config`, so Production does not need a separate copy of the pipeline logic.
 
-## Promote the pipeline
+## 1. Same pipeline, different environment
 
-Use your organisation's Fabric deployment process to make the validated `02_pipeline` available in Engineering Production.
+The same `02_pipeline` code runs in Development and Production.
 
-Keep environment-specific identities in `00_env_config` so promotion does not require rewriting workspace IDs, item IDs, paths, or SQL endpoints inside the pipeline notebook.
+`00_env_config` controls which configured Lakehouses, Warehouses, schemas, paths, and SQL endpoints are used for the current environment.
 
-## Run Production `00_env_config`
+![Development to Production promotion](../assets/06/Promotion_Overview.png)
 
-The Production notebook loads its own configured context:
+The important boundary is:
+
+* promote the validated pipeline logic
+* keep environment specific identities in `00_env_config`
+* do not move Development output tables or draft metadata into Production
+
+## 2. Select the pipeline artifact in Fabric
+
+In the Fabric Deployment Pipeline, select the tested notebook or engineering artifact from Development and deploy it to the Production stage.
+
+![Select the pipeline artifact for Production](../assets/06/Deployment_Pipeline.png)
+
+The promotion should move the tested engineering asset itself. Workspace IDs, item IDs, paths, and SQL endpoints should continue to come from the Production environment configuration.
+
+## 3. Review and deploy
+
+Review the selected item in the Fabric deployment confirmation, then complete the deployment.
+
+![Confirm the Fabric deployment](../assets/06/Deployment_Confirm.png)
+
+At this point the same validated engineering code is available in Production.
+
+## Run Production
+
+Run the Production `00_env_config` first:
 
 ```python
 %run 00_env_config
 ```
 
-The same logical names now resolve to Production Fabric items.
+Then run the promoted `02_pipeline`.
 
-## Run the same `02_pipeline`
+Production follows the same visible Read → Transform → Write structure used in Development. The difference is contract resolution:
 
-Production follows the same visible Read → Transform → Write structure used in Development.
+* Development can explicitly select an eligible immutable version for validation.
+* Production resolves the active Data Contract automatically for each governed `table_id`.
 
-The key difference is contract resolution:
-
-- Development can explicitly select an eligible immutable version for testing.
-- Production resolves the active Data Contract automatically for each governed `table_id`.
-
-The same Guardrail functions execute the active expectations, and `pipeline_write()` uses the active governed Processing definition for each target.
-
-## What should feel familiar
-
-By this stage there should be no new FabricOps engineering pattern to learn. The user has already seen:
-
-- configured stores in 0B,
-- the same full Read blocks in Steps 2 and 4,
-- the same ordinary PySpark transformation,
-- the same independent Write blocks,
-- the same Guardrail locations,
-- the same target load-strategy boundary.
-
-Production is the validated workflow running under stricter contract resolution, not a separate implementation.
+The same Guardrail functions evaluate the active expectations, and `pipeline_write()` uses the active governed Processing definition for each target.
 
 ## Expected result
 
-Engineering Production has published governed outputs using the active Data Contract and the Production environment configuration.
+Engineering Production runs the same validated pipeline logic against Production configured Fabric items and publishes governed outputs using the active Data Contract.
 
 **Next:** [Step 7. Consume approved Production data](99-explore.md)
