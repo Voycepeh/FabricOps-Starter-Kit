@@ -263,7 +263,7 @@ def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spar
         ("A", "B", "C", "D", "E", "F", "G", "H", 1, 1),
         ("A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", 1, 2),
         ("A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", 2, 1),
-        ("A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", 2, 2),
+        ("A", "B", "C", "D", "E", "F", "G", "H", 2, 2),
     ]
     source = spark_session.createDataFrame(
         rows,
