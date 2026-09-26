@@ -1860,8 +1860,21 @@ def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widge
         }],
     }
     summary = state["_controls"]["left_pane"].children[0].value
-    assert "08:00" in summary
-    assert "Captured by writer pipeline" in summary
+    assert "Refresh Frequency" in summary
+    assert "Daily · 08:00" in summary
+
+
+def test_uncaptured_schedule_is_not_misreported_and_blocks_freeze(widget_runtime):
+    """A profiled-only Catalogue row is not equivalent to no configured schedule."""
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = None
+    state = widget_runtime["open"]()
+
+    assert state["scheduled_refresh"] == {"status": "uncaptured", "schedules": []}
+    assert "Not captured" in state["_controls"]["left_pane"].children[0].value
+    state["_controls"]["freeze"].click()
+    state["_controls"]["freeze_confirm"].click()
+    assert widget_runtime["calls"]["freeze"] == 0
+    assert "Run the writer pipeline before freezing" in state["message"]
 
 
 def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):
