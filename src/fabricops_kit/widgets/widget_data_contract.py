@@ -314,7 +314,7 @@ def _manifest_sections(
         "<div style='margin-top:8px;'><b>Columns</b>"
         + column_rule_list()
         + "</div>"
-        "<div style='margin-top:8px;'><b>Business Rules</b>"
+        "<div style='margin-top:8px;'><b>DQ Rules</b>"
         + business_rule_list(business_rules)
         + "</div>"
     )
