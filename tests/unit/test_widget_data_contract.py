@@ -1025,6 +1025,41 @@ def test_grain_row_key_updates_left_summary_for_manual_and_ai_apply(widget_runti
     assert "column_0" in table_summary
 
 
+def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_runtime, monkeypatch):
+    """Hydrate left-side Table values changed from Processing and Business Rules editors."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    controls["load_strategy"].value = "append"
+    table_summary = controls["left_pane"].children[0].value
+    assert "Load strategy" in table_summary
+    assert "APPEND" in table_summary
+
+    monkeypatch.setattr(
+        module,
+        "suggest_business_rule",
+        lambda *_args, **_kwargs: {
+            "rule_type": "column_relationship",
+            "parameters": {
+                "columns": ["column_0", "column_1"],
+                "operator": "=",
+                "business_requirement": "Columns must match.",
+            },
+            "rationale": "Deterministic relationship.",
+        },
+    )
+    controls["top_nav"].value = "Business Rules"
+    controls["business_requirement"].value = "Columns must match."
+    controls["business_columns"].value = ("column_0", "column_1")
+    controls["resolve_business_rule"].click()
+    controls["apply_business_rule"].click()
+
+    controls["top_nav"].value = "Table"
+    table_summary = controls["left_pane"].children[0].value
+    assert "Data Quality" in table_summary
+    assert "Enabled" in table_summary
+
+
 def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
     """Generate Description after Grain and use manual Classification as context."""
     widget_runtime["enrichment"][:] = [
