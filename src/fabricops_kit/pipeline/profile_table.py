@@ -46,9 +46,18 @@ _PROFILE_EXCLUDED_NAMES = {
     "_notebook_id", "_workspace_id", "_workspace_name", "_metadata_lakehouse_name",
 }
 _PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
-_KEY_CANDIDATE_MAX_COLUMNS = 8
 _KEY_CANDIDATE_MAX_SIZE = 3
 _KEY_CANDIDATE_MAX_RESULTS = 8
+_KEY_NAME_HINTS = {
+    "id", "key", "code", "no", "num", "number", "seq", "sequence", "line",
+    "version", "ref", "reference", "date", "time", "timestamp",
+}
+_KEY_MEASURE_HINTS = {
+    "amount", "total", "price", "cost", "quantity", "qty", "rate", "percent",
+    "percentage", "pct", "score", "balance", "weight", "volume", "length",
+    "width", "height", "discount", "tax",
+}
+_KEY_BOOLEAN_TYPES = {"bool", "boolean"}
 _WAREHOUSE_NUMERIC_TYPES = {
     "bigint", "decimal", "float", "int", "money", "numeric", "real",
     "smallint", "smallmoney", "tinyint",
@@ -302,11 +311,17 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
 
 
 
+def _key_name_tokens(name: str) -> set[str]:
+    """Return normalized semantic tokens used only to prune composite key search."""
+    normalized = "".join(character if character.isalnum() else " " for character in str(name).lower())
+    return {token for token in normalized.split() if token}
+
+
 def _eligible_key_candidate_rows(statistical_profile: Any) -> list[dict[str, Any]]:
     """Return null-free, non-technical profile rows ordered by key usefulness."""
     rows = []
     for row in statistical_profile.select(
-        "COLUMN_NAME", "ROW_COUNT", "NULL_COUNT", "DISTINCT_COUNT"
+        "COLUMN_NAME", "DATA_TYPE", "ROW_COUNT", "NULL_COUNT", "DISTINCT_COUNT"
     ).collect():
         name = str(row["COLUMN_NAME"])
         if (
@@ -321,11 +336,43 @@ def _eligible_key_candidate_rows(statistical_profile: Any) -> list[dict[str, Any
             continue
         rows.append({
             "column_name": name,
+            "data_type": str(row["DATA_TYPE"] or "").lower(),
             "row_count": row_count,
             "distinct_count": distinct_count,
         })
     rows.sort(key=lambda item: (-int(item["distinct_count"]), str(item["column_name"]).casefold()))
     return rows
+
+
+def _plausible_composite_key_columns(rows: Sequence[Mapping[str, Any]]) -> list[str]:
+    """Return deterministic identifier-like columns for bounded composite discovery."""
+    plausible = []
+    for row in rows:
+        name = str(row["column_name"])
+        tokens = _key_name_tokens(name)
+        identifier_like = bool(tokens & _KEY_NAME_HINTS) or any(
+            name.lower().endswith(suffix)
+            for suffix in ("_id", "_key", "_code", "_no", "_num", "_number")
+        )
+        measure_like = bool(tokens & _KEY_MEASURE_HINTS)
+        boolean_like = str(row.get("data_type") or "").lower() in _KEY_BOOLEAN_TYPES
+        if boolean_like or (measure_like and not identifier_like):
+            continue
+        if identifier_like:
+            plausible.append(name)
+    return plausible
+
+
+def _key_candidate_evidence(
+    candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True
+) -> dict[str, Any]:
+    """Return one explicit table-level key-discovery evidence envelope."""
+    values = [dict(candidate) for candidate in candidates]
+    return {
+        "status": "resolved" if values else ("unresolved" if evaluated else "not_evaluated"),
+        "max_combination_width": _KEY_CANDIDATE_MAX_SIZE if evaluated else 0,
+        "candidates": values,
+    }
 
 
 def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[str, Any]:
@@ -356,10 +403,10 @@ def _spark_profile_key_candidates(
     if singles:
         return singles[:_KEY_CANDIDATE_MAX_RESULTS]
 
-    shortlist = [row["column_name"] for row in rows[:_KEY_CANDIDATE_MAX_COLUMNS]]
-    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(shortlist)) + 1):
+    candidate_columns = _plausible_composite_key_columns(rows)
+    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
         matches = []
-        for columns in combinations(shortlist, size):
+        for columns in combinations(candidate_columns, size):
             if int(dataframe.select(*columns).dropDuplicates().count()) == row_count:
                 matches.append(_key_candidate_payload(columns, row_count=row_count))
                 if len(matches) >= _KEY_CANDIDATE_MAX_RESULTS:
@@ -393,11 +440,11 @@ def _warehouse_profile_key_candidates(
         f"{_sql_identifier(str(identity['schema']))}."
         f"{_sql_identifier(str(identity['table_name']))}"
     )
-    shortlist = [row["column_name"] for row in rows[:_KEY_CANDIDATE_MAX_COLUMNS]]
+    candidate_columns = _plausible_composite_key_columns(rows)
     io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
-    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(shortlist)) + 1):
+    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
         matches = []
-        for columns in combinations(shortlist, size):
+        for columns in combinations(candidate_columns, size):
             projected = ", ".join(_sql_identifier(column) for column in columns)
             query = (
                 "SELECT COUNT_BIG(*) AS DISTINCT_COUNT FROM "
@@ -1276,7 +1323,10 @@ def profile_table(
             writer_notebook_name=None,
             scheduled_refresh_json=None,
             profile_key_candidates_json=json.dumps(
-                profile_key_candidates, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+                _key_candidate_evidence(profile_key_candidates),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
             ),
             source_fields=warehouse_fields,
         )

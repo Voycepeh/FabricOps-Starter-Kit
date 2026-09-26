@@ -254,6 +254,80 @@ def test_profile_key_candidates_ignore_fabricops_operational_metadata(spark_sess
     assert all("_activity_id" not in candidate["columns"] for candidate in candidates)
 
 
+
+def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spark_session):
+    """Allow plausible key columns beyond the eight highest-cardinality profile rows."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    rows = [
+        ("A", "B", "C", "D", "E", "F", "G", "H", 1, 1),
+        ("A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", 1, 2),
+        ("A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", 2, 1),
+        ("A", "B", "C", "D", "E", "F", "G", "H", 2, 2),
+    ]
+    source = spark_session.createDataFrame(
+        rows,
+        [
+            "description_a", "description_b", "description_c", "description_d",
+            "description_e", "description_f", "description_g", "description_h",
+            "order_id", "line_number",
+        ],
+    )
+
+    candidates = module._spark_profile_key_candidates(
+        source, shared.build_profile_dataframe(source)
+    )
+
+    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
+
+
+def test_profile_key_candidates_exclude_measure_columns_from_composite_search(spark_session):
+    """Do not use obvious measures as composite-key building blocks."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    shared = importlib.import_module("fabricops_kit.pipeline.shared")
+    source = spark_session.createDataFrame(
+        [
+            (1, 10.0, 1),
+            (1, 20.0, 2),
+            (2, 10.0, 1),
+            (2, 20.0, 2),
+        ],
+        ["order_id", "amount", "line_number"],
+    )
+
+    candidates = module._spark_profile_key_candidates(
+        source, shared.build_profile_dataframe(source)
+    )
+
+    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
+    assert all("amount" not in candidate["columns"] for candidate in candidates)
+
+
+def test_key_candidate_evidence_distinguishes_resolved_and_unresolved():
+    """Persist explicit discovery status instead of overloading an empty JSON array."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    resolved = module._key_candidate_evidence([
+        {
+            "columns": ["order_id", "line_number"],
+            "column_count": 2,
+            "row_count": 4,
+            "distinct_count": 4,
+            "uniqueness_percent": 100.0,
+            "null_count": 0,
+        }
+    ])
+    unresolved = module._key_candidate_evidence([])
+
+    assert resolved["status"] == "resolved"
+    assert resolved["max_combination_width"] == 3
+    assert resolved["candidates"][0]["columns"] == ["order_id", "line_number"]
+    assert unresolved == {
+        "status": "unresolved",
+        "max_combination_width": 3,
+        "candidates": [],
+    }
+
+
 def test_warehouse_percentile_query_isolated_per_numeric_column():
     """Keep each ordered percentile scope isolated for Fabric Warehouse compatibility."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
