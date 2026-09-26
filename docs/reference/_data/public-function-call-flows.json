@@ -2265,7 +2265,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -2333,7 +2333,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4469,7 +4469,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4506,7 +4506,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4543,7 +4543,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4575,7 +4575,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4612,7 +4612,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4723,7 +4723,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -4780,7 +4780,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -6381,7 +6381,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -6441,7 +6441,7 @@
     {
       "architecture_classification": "foundation_io",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -6953,7 +6953,7 @@
     {
       "architecture_classification": "pipeline_orchestration",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -7268,7 +7268,7 @@
     {
       "architecture_classification": "pipeline_orchestration",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -8156,7 +8156,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -8190,7 +8190,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -8753,38 +8753,6 @@
       "source_end_line": 3217,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 3159,
-      "supports_live_contract": false,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
-    },
-    {
-      "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
-      "contract_display": "Preview-only internal",
-      "direct_live_dependent_count": 0,
-      "direct_live_dependents": [],
-      "discontinued_in": null,
-      "function_name": "_display_table_identity",
-      "function_type": "private_function",
-      "inbound_callers": [
-        "fabricops_kit.pipeline.check_guardrail_coverage._label",
-        "fabricops_kit.pipeline.shared.print_guardrail_result"
-      ],
-      "inbound_source_references": [
-        "fabricops_kit.pipeline.check_guardrail_coverage._label",
-        "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
-        "fabricops_kit.pipeline.shared.print_guardrail_result"
-      ],
-      "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
-      "live_since": null,
-      "public_flow_reachable": true,
-      "qualified_name": "fabricops_kit.pipeline.shared._display_table_identity",
-      "release_history": [],
-      "release_versions": [],
-      "source_end_line": 127,
-      "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 99,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -10910,6 +10878,38 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
+      "function_name": "display_table_identity",
+      "function_type": "shared_function",
+      "inbound_callers": [
+        "fabricops_kit.pipeline.check_guardrail_coverage._label",
+        "fabricops_kit.pipeline.shared.print_guardrail_result"
+      ],
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_guardrail_coverage._label",
+        "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
+        "fabricops_kit.pipeline.shared.print_guardrail_result"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "public_flow_reachable": true,
+      "qualified_name": "fabricops_kit.pipeline.shared.display_table_identity",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 127,
+      "source_path": "src/fabricops_kit/pipeline/shared.py",
+      "source_start_line": 99,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
       "function_name": "evaluate_source_drift_guardrail",
       "function_type": "shared_function",
       "inbound_callers": [
@@ -11360,7 +11360,7 @@
         "fabricops_kit.pipeline.pipeline_read.pipeline_read",
         "fabricops_kit.pipeline.pipeline_write.pipeline_write",
         "fabricops_kit.pipeline.profile_table.profile_table",
-        "fabricops_kit.pipeline.shared._display_table_identity",
+        "fabricops_kit.pipeline.shared.display_table_identity",
         "fabricops_kit.pipeline.shared._recover_completed_source_observations",
         "fabricops_kit.pipeline.shared.capture_source_observation",
         "fabricops_kit.pipeline.validate_data_contract._validate_data_contract"
@@ -11383,7 +11383,7 @@
         "fabricops_kit.pipeline.pipeline_write::<module>",
         "fabricops_kit.pipeline.profile_table.profile_table",
         "fabricops_kit.pipeline.profile_table::<module>",
-        "fabricops_kit.pipeline.shared._display_table_identity",
+        "fabricops_kit.pipeline.shared.display_table_identity",
         "fabricops_kit.pipeline.shared._recover_completed_source_observations",
         "fabricops_kit.pipeline.shared.capture_source_observation",
         "fabricops_kit.pipeline.validate_data_contract._validate_data_contract",
@@ -15227,7 +15227,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -15353,7 +15353,7 @@
     {
       "architecture_classification": "domain_public_api",
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
@@ -16181,7 +16181,7 @@
     },
     {
       "architecture_classification": "domain_public_api",
-      "architecture_violation_count": 1,
+      "architecture_violation_count": 0,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -16199,7 +16199,7 @@
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "function_name": "check_guardrail_coverage",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "preview",
       "live_critical_dependencies": [],
@@ -16234,8 +16234,7 @@
       ],
       "public_import_path": "fabricops_kit.check_guardrail_coverage",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
       "raises_documentation": "Not documented yet",
@@ -16250,31 +16249,9 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "_display_table_identity",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.pipeline.shared._display_table_identity",
-              "source_end_line": 127,
-              "source_path": "src/fabricops_kit/pipeline/shared.py",
-              "source_start_line": 99,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "preview",
@@ -16287,8 +16264,7 @@
       "returns_documentation": "Not documented yet",
       "scope": 33,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def check_guardrail_coverage(*, target_table_id: str, source_table_ids: list[str] | tuple[str, ...], spark_session=None, verbose: bool=True) -> dict[str, Any]",
       "source_end_line": 291,
@@ -16644,7 +16620,7 @@
       "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 7,
       "direct_call_count": 12,
@@ -16839,14 +16815,14 @@
       "source_start_line": 51,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
       "transitive_function_count": 76,
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. For incremental reads, observe the complete physical source, resolve the\n   last committed state for the exact target, and derive watermark or\n   changed-partition scope. A missing baseline deterministically bootstraps\n   with a complete read.\n5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   framework-owned ``read_warehouse_query`` pushdown.\n6. Capture transient current-run Source Observation state without advancing\n   accepted progress. Only successful target publication commits it.\n7. Return the DataFrame, explicit ``table_id``, and small source metadata\n   required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse\nFiles do not have a canonical ``table_id`` and should continue to use the\nfoundational CSV, Excel, JSON, or Parquet readers directly.\n\nIncremental Warehouse reads reject caller-owned ``query`` SQL because\nFabricOps cannot safely compose arbitrary SQL with its target-specific\nprogress predicate. Source Drift remains a separate compatibility check;\nincremental scope answers only what this target has not consumed.\n\nThis function does not execute Freshness, Source Drift, Schema, DQ, or\nSensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline`` and\n``02B_incremental_append_pipeline``.\n\nWith ``verbose=True``, a Warehouse table read reports a line such as\n``FabricOps Read \u2192 Warehouse table 'product.demo.orders' \u2192 read_warehouse_table``.",
+      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. For incremental reads, observe the complete physical source, resolve the\n   last committed state for the exact target, and derive watermark or\n   changed-partition scope. A missing baseline deterministically bootstraps\n   with a complete read.\n5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   framework-owned ``read_warehouse_query`` pushdown.\n6. Capture transient current-run Source Observation state without advancing\n   accepted progress. Only successful target publication commits it.\n7. Return the DataFrame, explicit ``table_id``, and small source metadata\n   required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse\nFiles do not have a canonical ``table_id`` and should continue to use the\nfoundational CSV, Excel, JSON, or Parquet readers directly.\n\nIncremental Warehouse reads reject caller-owned ``query`` SQL because\nFabricOps cannot safely compose arbitrary SQL with its target-specific\nprogress predicate. Source Drift remains a separate compatibility check;\nincremental scope answers only what this target has not consumed.\n\nThis function does not execute Freshness, Source Drift, Schema, DQ, or\nSensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline`` and\n``02B_incremental_append_pipeline``.\n\nWith ``verbose=True``, a Warehouse table read reports a line such as\n``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.",
       "width": 12
     },
     {
       "architecture_classification": "pipeline_orchestration",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 7,
       "direct_call_count": 21,
@@ -17063,14 +17039,14 @@
       "source_start_line": 300,
       "summary": "Publish one governed pipeline table target through its configured Fabric store.",
       "transitive_function_count": 80,
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Detect whether this activity already produced target rows.\n9. Perform append/overwrite or dedicated SCD processing only when the\n   activity is not already represented in the physical target.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, idempotently commit target\n    Lineage and accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nSame-activity retries use the target's persisted ``_activity_id`` audit\nfield to detect a row-producing publication and skip its physical mutation.\nCatalogue processing, Lineage, and accepted Source Observation metadata are\nidempotent and replayed on every retry. Empty append, empty overwrite,\npartition-removal-only overwrite, and true SCD no-op operations may leave\nno activity marker; repeating those operations is safe. Changing the\nparticipating source set represents a different logical publication and\ntherefore requires a new activity rather than reuse of the current one.\nLakehouse SCD2 closes changed rows and inserts their replacement current\nversions in one Delta ``MERGE`` so an activity marker cannot represent a\npartially applied two-step history mutation. Warehouse SCD2 retains its\nexisting SQL transaction boundary.\n\nBefore physical publication, target-specific Source Observation evidence\nis durably staged with ``observation_status='observed'``. If a scheduled\nactivity terminates after target rows materialize but before finalization,\nthe next activity verifies the prior target ``_activity_id``, promotes that\nstaged evidence idempotently, and calculates incremental work from the\nrecovered committed baseline. Evidence for another target is not promoted.\n\nA first incremental append has no committed baseline and therefore reads a\ncomplete bootstrap scope. FabricOps permits that bootstrap only for a new\nor empty physical target. A populated target fails before publication so\nmissing metadata cannot silently duplicate all source rows. SCD1 and SCD2\nbootstraps continue through their existing keyed, idempotent merge paths.\n\nA removed source partition is actionable incremental work even though its\ninput DataFrame contains no rows for that partition. FabricOps permits the\nremoval only when governed partition-scoped overwrite can include the\nremoved value in ``replaceWhere`` and clear stale target rows. Other target\nstrategies, or mismatched source and target partition columns, fail before\npublication and therefore do not commit the removal baseline.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, Source Drift, or profiling. These remain\nexplicit notebook engineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
+      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Detect whether this activity already produced target rows.\n9. Perform append/overwrite or dedicated SCD processing only when the\n   activity is not already represented in the physical target.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, idempotently commit target\n    Lineage and accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nSame-activity retries use the target's persisted ``_activity_id`` audit\nfield to detect a row-producing publication and skip its physical mutation.\nCatalogue processing, Lineage, and accepted Source Observation metadata are\nidempotent and replayed on every retry. Empty append, empty overwrite,\npartition-removal-only overwrite, and true SCD no-op operations may leave\nno activity marker; repeating those operations is safe. Changing the\nparticipating source set represents a different logical publication and\ntherefore requires a new activity rather than reuse of the current one.\nLakehouse SCD2 closes changed rows and inserts their replacement current\nversions in one Delta ``MERGE`` so an activity marker cannot represent a\npartially applied two-step history mutation. Warehouse SCD2 retains its\nexisting SQL transaction boundary.\n\nBefore physical publication, target-specific Source Observation evidence\nis durably staged with ``observation_status='observed'``. If a scheduled\nactivity terminates after target rows materialize but before finalization,\nthe next activity verifies the prior target ``_activity_id``, promotes that\nstaged evidence idempotently, and calculates incremental work from the\nrecovered committed baseline. Evidence for another target is not promoted.\n\nA first incremental append has no committed baseline and therefore reads a\ncomplete bootstrap scope. FabricOps permits that bootstrap only for a new\nor empty physical target. A populated target fails before publication so\nmissing metadata cannot silently duplicate all source rows. SCD1 and SCD2\nbootstraps continue through their existing keyed, idempotent merge paths.\n\nA removed source partition is actionable incremental work even though its\ninput DataFrame contains no rows for that partition. FabricOps permits the\nremoval only when governed partition-scoped overwrite can include the\nremoved value in ``replaceWhere`` and clear stale target rows. Other target\nstrategies, or mismatched source and target partition columns, fail before\npublication and therefore do not commit the removal baseline.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, Source Drift, or profiling. These remain\nexplicit notebook engineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API.",
       "width": 21
     },
     {
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 7,
       "direct_call_count": 18,
@@ -17264,7 +17240,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 3,
@@ -17366,7 +17342,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 3,
@@ -17469,7 +17445,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 3,
@@ -17560,7 +17536,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 4,
@@ -17662,7 +17638,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 5,
@@ -17778,7 +17754,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 4,
@@ -17872,7 +17848,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 3,
@@ -17975,7 +17951,7 @@
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 2,
@@ -18372,7 +18348,7 @@
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 2,
       "direct_call_count": 12,
@@ -18501,7 +18477,7 @@
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 3,
       "direct_call_count": 4,
@@ -18791,7 +18767,7 @@
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 6,
       "direct_call_count": 23,
@@ -18941,7 +18917,7 @@
       "architecture_classification": "domain_public_api",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.2.0",
+      "contract_display": "Live · Live since 0.2.0",
       "contract_risk": "live",
       "depth": 6,
       "direct_call_count": 17,
@@ -19254,7 +19230,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 5,
@@ -19393,7 +19369,7 @@
       "architecture_classification": "foundation_io",
       "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
-      "contract_display": "Live \u00b7 Live since 0.1.0",
+      "contract_display": "Live · Live since 0.1.0",
       "contract_risk": "live",
       "depth": 4,
       "direct_call_count": 4,
@@ -23387,21 +23363,12 @@
       "architecture_signal_details": [],
       "architecture_signal_types": [],
       "architecture_signals": [],
-      "architecture_violations": [
-        {
-          "detail": "Private function calls a private function from another file.",
-          "type": "Type 5"
-        }
-      ],
+      "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.pipeline.shared._display_table_identity",
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.display_table_identity",
       "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._label",
-      "violation_details": [
-        "Private function calls a private function from another file."
-      ],
-      "violation_types": [
-        "Type 5"
-      ]
+      "violation_details": [],
+      "violation_types": []
     },
     {
       "architecture_signal_details": [],
@@ -25238,17 +25205,6 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
-      "caller_qualified_name": "fabricops_kit.pipeline.shared._display_table_identity",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared._custom_expression_column",
       "caller_qualified_name": "fabricops_kit.pipeline.shared._dq_failed_expression",
       "violation_details": [],
@@ -26841,6 +26797,17 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.display_table_identity",
+      "violation_details": [],
+      "violation_types": []
+    },
+    {
+      "architecture_signal_details": [],
+      "architecture_signal_types": [],
+      "architecture_signals": [],
+      "architecture_violations": [],
+      "call_count": 1,
       "callee_qualified_name": "fabricops_kit.pipeline.shared._apply_bypass_post_review_warning",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail",
       "violation_details": [],
@@ -27191,7 +27158,7 @@
       "architecture_signals": [],
       "architecture_violations": [],
       "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.pipeline.shared._display_table_identity",
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.display_table_identity",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.print_guardrail_result",
       "violation_details": [],
       "violation_types": []
@@ -31107,7 +31074,6 @@
     "fabricops_kit.pipeline.shared._custom_expression_column",
     "fabricops_kit.pipeline.shared._custom_expression_columns",
     "fabricops_kit.pipeline.shared._custom_expression_tree",
-    "fabricops_kit.pipeline.shared._display_table_identity",
     "fabricops_kit.pipeline.shared._dq_failed_expression",
     "fabricops_kit.pipeline.shared._dq_failed_value_schema",
     "fabricops_kit.pipeline.shared._dq_failed_values_dataframe",
@@ -31158,6 +31124,7 @@
     "fabricops_kit.pipeline.shared.check_source_drift_for_target",
     "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
     "fabricops_kit.pipeline.shared.contract_guardrail_rows",
+    "fabricops_kit.pipeline.shared.display_table_identity",
     "fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail",
     "fabricops_kit.pipeline.shared.execute_lakehouse_processing",
     "fabricops_kit.pipeline.shared.freshness_check_core",

@@ -23,7 +23,7 @@ def _patch_runtime(monkeypatch, *, contracts, rules, evidence=None, env="dev"):
     monkeypatch.setattr(coverage_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(
         coverage_module,
-        "_display_table_identity",
+        "display_table_identity",
         lambda table_id, **_kwargs: table_id,
     )
     monkeypatch.setattr(
@@ -57,7 +57,7 @@ def test_coverage_uses_readable_store_schema_table_labels(monkeypatch, capsys):
     }
     monkeypatch.setattr(
         coverage_module,
-        "_display_table_identity",
+        "display_table_identity",
         lambda table_id, **_kwargs: ".".join(
             str(part) for part in (
                 identities[table_id]["store"],

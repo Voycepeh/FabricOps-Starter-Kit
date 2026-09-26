@@ -11,7 +11,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
-    _display_table_identity,
+    display_table_identity,
     load_table_guardrail_rules,
     resolve_pipeline_data_contract,
 )
@@ -48,7 +48,7 @@ def _payload(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
-    return _display_table_identity(
+    return display_table_identity(
         table_id,
         config=config,
         env=env,
