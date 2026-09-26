@@ -1649,7 +1649,7 @@ def widget_data_contract(
             [change_table_button],
             layout=widgets.Layout(width="100%", justify_content="center"),
         )
-        table_left = (table_summary, table_exit_row)
+        table_left = (table_summary, table_exit_row, table_exit_confirm)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             active = [rule for rule in session_guardrails() if rule.get("is_active", True)]
@@ -4023,8 +4023,30 @@ def widget_data_contract(
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
     )
     change_table_button = widgets.Button(
-        description="Discard changes & exit",
-        layout=widgets.Layout(width="180px"),
+        description="Exit",
+        layout=widgets.Layout(width="120px"),
+    )
+    confirm_exit_discard = widgets.Button(
+        description="Discard & exit",
+        button_style="danger",
+    )
+    cancel_exit = widgets.Button(description="Cancel")
+    table_exit_confirm = widgets.VBox(
+        [
+            widgets.HTML(
+                "<div style='font-size:12px;line-height:1.5;text-align:center;'>"
+                "<b>Discard unsaved changes?</b><br>"
+                "<span style='color:#667085;'>Your staged Data Contract changes will be lost.</span>"
+                "</div>"
+            ),
+            widgets.HBox(
+                [cancel_exit, confirm_exit_discard],
+                layout=widgets.Layout(width="100%", justify_content="center", gap="8px"),
+            ),
+        ],
+        layout=widgets.Layout(
+            width="100%", display="none", gap="8px", margin="8px 0 0 0"
+        ),
     )
     selector_actions = widgets.VBox(
         [
@@ -4165,6 +4187,16 @@ def widget_data_contract(
     state["_return_to_selector"] = return_to_selector
 
     def change_table(_button: Any) -> None:
+        if state.get("dirty"):
+            table_exit_confirm.layout.display = ""
+            return
+        return_to_selector("Select a governed table and contract.")
+
+    def cancel_exit_clicked(_button: Any) -> None:
+        table_exit_confirm.layout.display = "none"
+
+    def confirm_exit_clicked(_button: Any) -> None:
+        table_exit_confirm.layout.display = "none"
         if state.get("current"):
             discard_data_contract_session()
         return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
@@ -4172,6 +4204,8 @@ def widget_data_contract(
     open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
     open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
     change_table_button.on_click(change_table)
+    cancel_exit.on_click(cancel_exit_clicked)
+    confirm_exit_discard.on_click(confirm_exit_clicked)
     store_control.observe(refresh_schema_options, names="value")
     schema_control.observe(refresh_table_options, names="value")
     table_control.observe(table_changed, names="value")
@@ -4203,6 +4237,9 @@ def widget_data_contract(
         "open": open_without_ai_button, "open_progress": open_progress,
         "change_table": change_table_button,
         "table_exit_row": table_exit_row,
+        "table_exit_confirm": table_exit_confirm,
+        "confirm_exit_discard": confirm_exit_discard,
+        "cancel_exit": cancel_exit,
     })
     ip.display(page)
     return state
