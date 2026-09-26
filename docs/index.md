@@ -254,18 +254,18 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 </video>
 
 <div class="fabricops-home-primary">
-  <a class="fabricops-home-action" href="how-fabricops-works/">
+  <a class="fabricops-home-action" href="solutions/effective-data-access/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"></path><path d="M14 3.5v4h4M9 12h6M9 15.5h6"></path></svg>
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
-      <span class="fabricops-home-action__body">See the operating model, Governance ↔ Engineering loop, Data Contracts, and Production path.</span>
+      <span class="fabricops-home-action__body">Understand the end-to-end operating model: how Governance and Engineering work together from contract authoring through validation, activation, promotion, and Production use.</span>
     </span>
     <span class="fabricops-home-action__arrow" aria-hidden="true">→</span>
   </a>
 
-  <a class="fabricops-home-action" href="guided-demo/">
+  <a class="fabricops-home-action" href="solutions/environment-aware-data-pipelines/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="12" cy="11" r="2"></circle><circle cx="19" cy="5" r="2"></circle><path d="M6.5 16.7 10.5 12.5M13.5 9.7 17.5 6.3"></path></svg>
     </span>
@@ -281,18 +281,18 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 ## Featured Solutions
 
 <p class="fabricops-feature-intro">
-Explore practical FabricOps capabilities in action. Each solution will link to a focused walkthrough with a short screen recording, implementation context, and the relevant building blocks.
+Explore the key capabilities FabricOps provides within that operating model. Each solution focuses on one capability, with a dedicated walkthrough, implementation context, and a short screen recording to be added.
 </p>
 
 <div class="fabricops-feature-grid">
-  <a class="fabricops-feature-card" href="guided-demo/03-enrich-guardrails/">
+  <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/">
     <span class="fabricops-feature-card__eyebrow">Governance</span>
     <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
     <p class="fabricops-feature-card__copy">Write a business rule in plain language. FabricOps translates it into a reviewable, enforceable Data Quality rule.</p>
     <span class="fabricops-feature-card__cta">Explore solution</span>
   </a>
 
-  <a class="fabricops-feature-card" href="notebook-templates/">
+  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/">
     <span class="fabricops-feature-card__eyebrow">Engineering</span>
     <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
     <p class="fabricops-feature-card__copy">Use profile evidence and AI to help author descriptions, grain and row keys, sensitive-data handling, patterns, and other Data Contract metadata.</p>
