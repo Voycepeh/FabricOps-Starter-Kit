@@ -1,30 +1,61 @@
 # conditional_completeness
 
+## What this rule does
+
 Requires a target column to be populated only when a condition on another column matches.
 
-## Use it when
+## When to use it
 
-Use `conditional_completeness` for requirements of the form:
+Use for conditional requiredness such as “Approved records require an approved date.”
 
-> When condition column matches a value, target column must be present.
+## Data applicability
 
-Examples:
-
-- "When status is Approved, approved_date is required."
-- "When customer_type is Business, company_registration_number is required."
-
-## Do not use it when
-
-- The target is always required: use [`completeness`](completeness.md).
-- The target must belong to an allowed set under the condition: use [`conditional_values`](conditional-values.md).
-- The condition requires arbitrary multi-column logic that cannot be represented by this pattern: consider [`custom_expression`](custom-expression.md).
+One condition column and one target column.
 
 ## Parameters
 
-The condition supports `=` or `!=`. Set `treat_blank_as_missing` explicitly.
+```yaml
+rule_type: conditional_completeness
+columns: ["status", "approved_date"]
+condition_operator: "="
+condition_value: "Approved"
+treat_blank_as_missing: true
+```
 
-## Example
+## Example rule definition
 
 ```json
 {"rule_type":"conditional_completeness","columns":["status","approved_date"],"condition_operator":"=","condition_value":"Approved","treat_blank_as_missing":true}
 ```
+
+## Sample input data
+
+| record_id | status | approved_date |
+|---|---|---|
+| 1 | Approved | 2026-01-01 |
+| 2 | Approved | null |
+| 3 | Draft | null |
+
+## Rows that pass
+
+| record_id | Why |
+|---|---|
+| 1 | Condition matches and target is populated. |
+| 3 | Condition does not match, so the rule does not apply. |
+
+## Rows that fail
+
+| record_id | Why |
+|---|---|
+| 2 | Condition matches but target is missing. |
+
+## Notes
+
+- The condition supports `=` or `!=`.
+- Use `completeness` when the target is always required.
+- Use `conditional_values` when the target must belong to a governed set instead of merely being populated.
+
+## Related rules
+
+- [`completeness`](completeness.md)
+- [`conditional_values`](conditional-values.md)
