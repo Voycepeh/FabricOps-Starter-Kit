@@ -159,7 +159,6 @@ def widget_runtime(monkeypatch):
             "environment_name": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
-    schedule = {"status": "unavailable", "schedules": []}
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -324,9 +323,6 @@ def widget_runtime(monkeypatch):
         types.SimpleNamespace(display=display_module, get_ipython=lambda: None),
     )
     def start():
-        catalogue[0]["scheduled_refresh_json"] = json.dumps(
-            schedule, sort_keys=True, separators=(",", ":")
-        )
         return module.widget_data_contract(table_id="orders", contract_version=1)
 
     def open_widget():
@@ -337,7 +333,7 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
+        "enrichment": enrichment, "guardrails": guardrails,
         "ai_enrichment": ai_enrichment,
     }
 
@@ -646,7 +642,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
 def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runtime):
     """Operational context shows every read-only schedule without adding an editor."""
-    widget_runtime["schedule"].update({
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps({
         "status": "configured",
         "schedules": [
             {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "Asia/Singapore"},
@@ -665,7 +661,9 @@ def test_scheduled_refresh_renders_all_discovered_times_and_timezone(widget_runt
 
 def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
     """No Fabric schedule remains non-fatal and canonical save records stay unchanged."""
-    widget_runtime["schedule"].update({"status": "not_configured", "schedules": []})
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps(
+        {"status": "not_configured", "schedules": []}
+    )
     state = widget_runtime["open"]()
     assert "No schedule configured" in state["_controls"]["pipeline_refresh"].value
 
