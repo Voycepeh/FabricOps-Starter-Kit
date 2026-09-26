@@ -3930,7 +3930,7 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
     )
     selector_panel = widgets.VBox(
-        [selector_width_style, selector, selector_actions],
+        [selector, selector_width_style, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     editor_shell = widgets.VBox(
