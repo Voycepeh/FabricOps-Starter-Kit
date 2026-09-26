@@ -405,11 +405,18 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
 
+    controls["table_description"].value = "Unsaved edit"
+    assert state["dirty"] is True
+    assert controls["change_table"].description == "Discard changes & exit"
+    assert controls["table_exit_row"].layout.justify_content == "center"
+
     controls["change_table"].click()
     assert state["current"] is None
     assert state["table_id"] is None
+    assert state["dirty"] is False
     assert controls["selector_panel"].layout.display == ""
     assert controls["editor_shell"].layout.display == "none"
+    assert "Unsaved changes discarded" in state["message"]
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
