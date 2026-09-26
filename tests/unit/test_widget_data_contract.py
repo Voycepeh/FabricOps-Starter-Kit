@@ -1064,6 +1064,8 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
     ]
     assert "Engineering profile evidence" in controls["grain_profile_evidence"].value
     assert "Profiled row key" in controls["grain_ai"].value
+    assert "<details" in controls["grain_ai"].value
+    assert "Why this suggestion?" in controls["grain_ai"].value
     assert widget_runtime["calls"]["guardrails"] == []
 
     controls["save_data_contract"].click()
