@@ -2039,13 +2039,13 @@ def widget_data_contract(
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
         )
-        dq_ai_instruction = widgets.Textarea(
+        dq_ai_instruction = widgets.Text(
             value="",
             disabled=True,
-            placeholder="Optional: describe the text pattern you want FabricOps to translate into a regular expression.",
-            **shared.widget_common(widgets, "Additional instruction", textarea=True),
+            placeholder="Example: Product IDs start with P followed by three digits",
+            **shared.widget_common(widgets, "Pattern instruction"),
         )
-        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0", height="72px")
+        dq_ai_instruction.layout = widgets.Layout(width="100%", min_width="0")
         suggest_dq = widgets.Button(description="Suggest", disabled=True)
         dq_suggestion = widgets.Select(
             options=(), disabled=True, **shared.widget_common(widgets, "AI suggestions")
