@@ -12,6 +12,4 @@ The suggestion is never the governed result by itself. Governance reviews the pr
 
 The goal is to reduce repetitive contract authoring while keeping the contract itself explicit, reviewable, versioned, and deterministic.
 
-A future screen recording will show this capability directly in the unified Data Contract workspace.
-
 For the hands-on workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-enrich-guardrails.md).
