@@ -370,7 +370,7 @@ def _key_candidate_evidence(
     values = [dict(candidate) for candidate in candidates]
     return {
         "status": "resolved" if values else ("unresolved" if evaluated else "not_evaluated"),
-        "max_columns_tested": _KEY_CANDIDATE_MAX_SIZE if evaluated else 0,
+        "max_combination_width": _KEY_CANDIDATE_MAX_SIZE if evaluated else 0,
         "candidates": values,
     }
 
