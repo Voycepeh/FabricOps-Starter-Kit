@@ -1912,39 +1912,36 @@ def widget_data_contract(
             accept_button: Any,
             rerun_button: Any,
         ) -> Any:
-            primary = widgets.VBox(
-                [
-                    widgets.HTML("<b>Classification</b>"),
-                    classification,
-                    widgets.HTML("<b>Description</b>"),
-                    description,
-                ],
-                layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
-            )
             if ai_visible:
-                assistant = widgets.VBox(
-                    [
-                        widgets.HTML("<b>AI suggestion</b>"),
-                        suggestion,
-                        shared.action_row(widgets, [accept_button, rerun_button]),
-                    ],
-                    layout=widgets.Layout(
-                        width="100%", min_width="0", gap="8px",
-                        padding="0 0 0 16px",
-                        border_left="1px solid #e1e6eb",
-                    ),
+                suggestion_box = widgets.VBox(
+                    [suggestion, shared.action_row(widgets, [accept_button, rerun_button])],
+                    layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
                 )
                 content = widgets.GridBox(
-                    [primary, assistant],
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification, widgets.HTML(""),
+                        widgets.HTML("<b>Description</b>"), description, suggestion_box,
+                    ],
                     layout=widgets.Layout(
                         width="100%",
-                        grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                        grid_gap="16px",
+                        grid_template_columns="120px minmax(240px, 1fr) minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
                         align_items="flex-start",
                     ),
                 )
             else:
-                content = primary
+                content = widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Classification</b>"), classification,
+                        widgets.HTML("<b>Description</b>"), description,
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns="120px minmax(240px, 1fr)",
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
+                    ),
+                )
             return shared.form_section(widgets, title=title, children=[content])
 
         def guardrail_section(
@@ -1998,9 +1995,43 @@ def widget_data_contract(
                 content = primary
             return shared.form_section(widgets, title=title, children=[content])
 
-        table_definition = definition_section(
-            "Table definition", table_classification, table_description,
-            table_description_ai, accept_table_description, rerun_table_description,
+        table_definition_primary = widgets.VBox(
+            [
+                widgets.HTML("<b>Classification</b>"),
+                table_classification,
+                widgets.HTML("<b>Description</b>"),
+                table_description,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        if ai_visible:
+            table_definition_assistant = widgets.VBox(
+                [
+                    widgets.HTML("<b>AI suggestion</b>"),
+                    table_description_ai,
+                    shared.action_row(
+                        widgets, [accept_table_description, rerun_table_description]
+                    ),
+                ],
+                layout=widgets.Layout(
+                    width="100%", min_width="0", gap="8px",
+                    padding="0 0 0 16px",
+                    border_left="1px solid #e1e6eb",
+                ),
+            )
+            table_definition_content = widgets.GridBox(
+                [table_definition_primary, table_definition_assistant],
+                layout=widgets.Layout(
+                    width="100%",
+                    grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
+                    grid_gap="16px",
+                    align_items="flex-start",
+                ),
+            )
+        else:
+            table_definition_content = table_definition_primary
+        table_definition = shared.form_section(
+            widgets, title="Table definition", children=[table_definition_content]
         )
         grain_definition = shared.form_section(
             widgets,
