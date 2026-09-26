@@ -1,31 +1,64 @@
 # range
 
-Checks one numeric or date-like column against a minimum, maximum, or both.
+## What this rule does
 
-## Use it when
+Checks one numeric or date-like column against a governed minimum, maximum, or both.
 
-Use `range` for explicit lower or upper bounds.
+## When to use it
 
-Examples:
+Use for scores, percentages, quantities, dates, and other values with known valid bounds.
 
-- "Amount must be at least 0."
-- "Score must be between 0 and 100 inclusive."
-- "Transaction date must not be before the agreed start date" when that start date is a literal governed bound.
+## Data applicability
 
-## Do not use it when
-
-- The boundary comes from another column on the same row: use [`column_relationship`](column-relationship.md).
-- The requirement is a fixed allowed list: use [`value_set`](value-set.md).
-- The requirement is text format: use [`pattern`](pattern.md).
+Single comparable columns with explicit lower or upper limits.
 
 ## Parameters
 
-- `columns`: exactly one target column.
-- `minimum` and/or `maximum`.
-- `minimum_inclusive` and `maximum_inclusive`.
+```yaml
+rule_type: range
+columns: ["score"]
+minimum: 0
+minimum_inclusive: true
+maximum: 100
+maximum_inclusive: true
+```
 
-## Example
+## Example rule definition
 
 ```json
-{"rule_type":"range","columns":["amount"],"minimum":0,"minimum_inclusive":true,"maximum":100,"maximum_inclusive":false}
+{"rule_type":"range","columns":["score"],"minimum":0,"minimum_inclusive":true,"maximum":100,"maximum_inclusive":true}
 ```
+
+## Sample input data
+
+| assessment_id | score |
+|---|---:|
+| A001 | 88 |
+| A002 | 0 |
+| A003 | 104 |
+| A004 | -2 |
+
+## Rows that pass
+
+| assessment_id | score | Why |
+|---|---:|---|
+| A001 | 88 | Inside the governed range. |
+| A002 | 0 | On the inclusive lower bound. |
+
+## Rows that fail
+
+| assessment_id | score | Why |
+|---|---:|---|
+| A003 | 104 | Above the maximum. |
+| A004 | -2 | Below the minimum. |
+
+## Notes
+
+- Supply a minimum, maximum, or both.
+- Inclusivity is configured independently for each bound.
+- If the boundary comes from another column on the same row, use [`column_relationship`](column-relationship.md).
+
+## Related rules
+
+- [`value_set`](value-set.md)
+- [`column_relationship`](column-relationship.md)
