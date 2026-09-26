@@ -511,7 +511,7 @@ def widget_data_contract(
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
-        "_column_dq_selection": {}, "dirty": False,
+        "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
     }
     scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
     state["scheduled_refresh"] = scheduled_refresh
@@ -1092,37 +1092,11 @@ def widget_data_contract(
                     "Governance defines the business grain; the frozen contract later enforces the selected key.</span></div>"
                 )
                 return
-            evidence = []
-            for column in columns:
-                cid = str(column.get("column_id") or "")
-                try:
-                    profile_value = load_profile_context(cid)
-                except (TypeError, ValueError, RuntimeError):
-                    continue
-                profile = dict(profile_value.get("profile") or {})
-                if profile.get("distinct_percent") is None:
-                    continue
-                evidence.append((
-                    float(profile.get("distinct_percent") or 0),
-                    float(profile.get("null_percent") or 0),
-                    str(column.get("column_name") or ""),
-                ))
-            evidence.sort(reverse=True)
-            rows = "".join(
-                "<li><code>{}</code> · <b>{:.3f}%</b> distinct · "
-                "<b>{:.3f}%</b> missing{}</li>".format(
-                    html.escape(name), distinct, missing,
-                    " · proven single-column candidate"
-                    if distinct >= 100.0 and missing <= 0.0 else "",
-                )
-                for distinct, missing, name in evidence[:8]
-            )
             grain_profile_evidence.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                "<b>Profile evidence</b><ul style='margin:5px 0 0 18px;'>"
-                + (rows or "<li>No profile evidence available.</li>")
-                + "</ul><span>Composite key discovery is produced by Engineering profiling. "
-                "This fallback only shows existing per-column profile evidence.</span></div>"
+                "<b>Engineering profile evidence</b><br>"
+                "No row key suggestion available from the latest profile. "
+                "Select a row key manually if this table has one.</div>"
             )
 
         def run_grain_ai(*_args: Any) -> None:
@@ -1162,7 +1136,10 @@ def widget_data_contract(
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
                 )
                 ai_state["table"]["grain_key"] = suggestion
-                key_text = ", ".join(suggestion["key_columns"]) or "No profiled key candidate"
+                key_text = (
+                    ", ".join(profiled_key_columns)
+                    if profiled_key_columns else "No row key suggestion available"
+                )
                 grain_ai.value = (
                     "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                     "padding:9px 11px;font-size:12px;line-height:1.5;'>"
@@ -1179,20 +1156,10 @@ def widget_data_contract(
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
-            suggested_keys = tuple(
-                str(name) for name in suggestion.get("key_columns", [])
-                if str(name) in column_names
-            )
-            if suggested_keys:
-                row_key_columns.value = suggested_keys
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
-        grain_profile_evidence.value = (
-            "<div style='color:#667085;font-size:12px;'>"
-            "Engineering profile evidence is used to preselect the row key; "
-            "AI only suggests the grain wording.</div>"
-        )
+        render_grain_profile_evidence()
 
         processing = contracts.contract_processing(row)
         processing_source = contracts.contract_processing_source(row)
@@ -2346,93 +2313,95 @@ def widget_data_contract(
 
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
-            live_enrichments, live_guardrails = current_rows()
-            selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
-            observed_type = str(selected.get("data_type") or "")
-            contract_type = str(contracted_types.get(column_id) or observed_type)
-            mismatch = bool(contract_type and observed_type and contract_type != observed_type)
-            column_name = html.escape(str(selected.get("column_name") or ""))
-            if mismatch:
-                column_context.value = (
-                    "<div style='min-height:54px;'>"
-                    f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
-                    "<div style='color:#a4262c;font-size:12px;font-weight:700;margin-top:3px;'>"
-                    "Datatype drift detected</div>"
-                    f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
-                    f"Contract: <b>{html.escape(contract_type)}</b> · "
-                    f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b></div>"
-                    "</div>"
+            try:
+                live_enrichments, live_guardrails = current_rows()
+                selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
+                observed_type = str(selected.get("data_type") or "")
+                contract_type = str(contracted_types.get(column_id) or observed_type)
+                mismatch = bool(contract_type and observed_type and contract_type != observed_type)
+                column_name = html.escape(str(selected.get("column_name") or ""))
+                if mismatch:
+                    column_context.value = (
+                        "<div style='min-height:54px;'>"
+                        f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
+                        "<div style='color:#a4262c;font-size:12px;font-weight:700;margin-top:3px;'>"
+                        "Datatype drift detected</div>"
+                        f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
+                        f"Contract: <b>{html.escape(contract_type)}</b> · "
+                        f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b></div>"
+                        "</div>"
+                    )
+                    datatype_choice.options = (
+                        (f"Keep contract · {contract_type}", contract_type),
+                        (f"Accept observed · {observed_type}", observed_type),
+                    )
+                    datatype_choice.value = contract_type
+                    datatype_choice.layout.display = ""
+                else:
+                    column_context.value = (
+                        "<div style='min-height:54px;'>"
+                        f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
+                        f"<div style='color:#667085;font-size:12px;margin-top:3px;'>"
+                        f"{html.escape(contract_type or observed_type)}</div></div>"
+                    )
+                    datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
+                    datatype_choice.value = contract_type or observed_type
+                    datatype_choice.layout.display = "none"
+                column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
+                column_classification.value = enrichment_value(live_enrichments, "column", "Classification", column_id)
+                required.value = column_id in required_columns or selected.get("column_name") in required_columns
+                sensitive = next((r for r in live_guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
+                sensitive_parameters = _parameters(sensitive)
+                pii_type.value = str(sensitive_parameters.get("pii_type") or (
+                    "direct" if sensitive else "none"
+                ))
+                pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
+                sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
+                sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
+                sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
+                mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
+                mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
+                mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
+                bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
+                bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
+                configured = [
+                    str(rule.get("rule_type") or "") for rule in live_guardrails
+                    if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                    and str(rule.get("column_id") or "") == column_id
+                    and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
+                    and rule.get("is_active", True)
+                ]
+                preferred_dq = selected_dq_by_column.get(column_id)
+                dq_type.value = (
+                    preferred_dq
+                    if preferred_dq in _COLUMN_DQ_TYPES
+                    else configured[0] if configured else _COLUMN_DQ_TYPES[0]
                 )
-                datatype_choice.options = (
-                    (f"Keep contract · {contract_type}", contract_type),
-                    (f"Accept observed · {observed_type}", observed_type),
-                )
-                datatype_choice.value = contract_type
-                datatype_choice.layout.display = ""
-            else:
-                column_context.value = (
-                    "<div style='min-height:54px;'>"
-                    f"<div style='color:#0f6cbd;font-size:20px;font-weight:700;'>{column_name}</div>"
-                    f"<div style='color:#667085;font-size:12px;margin-top:3px;'>"
-                    f"{html.escape(contract_type or observed_type)}</div></div>"
-                )
-                datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
-                datatype_choice.value = contract_type or observed_type
-                datatype_choice.layout.display = "none"
-            column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
-            column_classification.value = enrichment_value(live_enrichments, "column", "Classification", column_id)
-            required.value = column_id in required_columns or selected.get("column_name") in required_columns
-            sensitive = next((r for r in live_guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
-            sensitive_parameters = _parameters(sensitive)
-            pii_type.value = str(sensitive_parameters.get("pii_type") or (
-                "direct" if sensitive else "none"
-            ))
-            pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
-            sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
-            sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
-            sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
-            mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
-            mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
-            mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
-            bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
-            bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
-            configured = [
-                str(rule.get("rule_type") or "") for rule in live_guardrails
-                if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
-                and str(rule.get("column_id") or "") == column_id
-                and str(rule.get("rule_type") or "") in _COLUMN_DQ_TYPES
-                and rule.get("is_active", True)
-            ]
-            preferred_dq = selected_dq_by_column.get(column_id)
-            dq_type.value = (
-                preferred_dq
-                if preferred_dq in _COLUMN_DQ_TYPES
-                else configured[0] if configured else _COLUMN_DQ_TYPES[0]
-            )
-            hydrate_dq_family(column_id, str(dq_type.value))
-            hydrated_column_snapshots[column_id] = column_editor_snapshot()
-            pending = unsaved_columns.get(column_id)
-            if pending:
-                column_description.value = pending["description"]
-                column_classification.value = pending["classification"]
-                required.value = pending["required"]
-                sensitive_enabled.value = pending["sensitive_enabled"]
-                pii_type.value = pending["pii_type"]
-                pii_reason.value = pending["pii_reason"]
-                sensitive_treatment.value = pending["sensitive_treatment"]
-                sensitive_block.value = pending["sensitive_block"]
-                mask_start.value = pending["mask_start"]
-                mask_end.value = pending["mask_end"]
-                mask_character.value = pending["mask_character"]
-                bucket_bins.value = pending["bucket_bins"]
-                bucket_labels.value = pending["bucket_labels"]
-                dq_type.value = pending["dq_type"]
-                for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
-                    control.value = value
-                dq_enabled.value = pending["dq_enabled"]
-                dq_block.value = pending["dq_block"]
-            profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
-            hydrating["active"] = False
+                hydrate_dq_family(column_id, str(dq_type.value))
+                hydrated_column_snapshots[column_id] = column_editor_snapshot()
+                pending = unsaved_columns.get(column_id)
+                if pending:
+                    column_description.value = pending["description"]
+                    column_classification.value = pending["classification"]
+                    required.value = pending["required"]
+                    sensitive_enabled.value = pending["sensitive_enabled"]
+                    pii_type.value = pending["pii_type"]
+                    pii_reason.value = pending["pii_reason"]
+                    sensitive_treatment.value = pending["sensitive_treatment"]
+                    sensitive_block.value = pending["sensitive_block"]
+                    mask_start.value = pending["mask_start"]
+                    mask_end.value = pending["mask_end"]
+                    mask_character.value = pending["mask_character"]
+                    bucket_bins.value = pending["bucket_bins"]
+                    bucket_labels.value = pending["bucket_labels"]
+                    dq_type.value = pending["dq_type"]
+                    for control, value in zip(dq_parameter_controls, pending["dq_parameters"], strict=True):
+                        control.value = value
+                    dq_enabled.value = pending["dq_enabled"]
+                    dq_block.value = pending["dq_block"]
+                profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
+            finally:
+                hydrating["active"] = False
 
         def load_selected_profile() -> None:
             column_id = str(column_select.value or "")
@@ -4296,6 +4265,8 @@ def widget_data_contract(
     )
 
     def refresh_table_options(*_args: Any) -> None:
+        if state["_selector_refreshing"]:
+            return
         selected_store = str(store_control.value or "")
         selected_schema = str(schema_control.value or "")
         rows = [
@@ -4312,11 +4283,18 @@ def widget_data_contract(
             ],
         ]
         values = [item[1] if isinstance(item, tuple) else item for item in options]
-        table_control.value = None
-        table_control.options = options
-        table_control.value = pending if pending in values else ""
+        state["_selector_refreshing"] = True
+        try:
+            table_control.value = None
+            table_control.options = options
+            table_control.value = pending if pending in values else ""
+        finally:
+            state["_selector_refreshing"] = False
+        table_changed({"new": table_control.value})
 
     def refresh_schema_options(*_args: Any) -> None:
+        if state["_selector_refreshing"]:
+            return
         selected_store = str(store_control.value or "")
         schemas = list(dict.fromkeys(
             str(row.get("schema_name") or "")
@@ -4328,12 +4306,18 @@ def widget_data_contract(
             None,
         )
         preferred = str((pending_row or {}).get("schema_name") or "")
-        schema_control.value = None
-        schema_control.options = schemas
-        schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        state["_selector_refreshing"] = True
+        try:
+            schema_control.value = None
+            schema_control.options = schemas
+            schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+        finally:
+            state["_selector_refreshing"] = False
         refresh_table_options()
 
     def table_changed(change: dict[str, Any]) -> None:
+        if state["_selector_refreshing"]:
+            return
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
@@ -4344,16 +4328,23 @@ def widget_data_contract(
         preferred = state.get("pending_contract_version")
         preferred_value = str(preferred) if preferred is not None else None
         available = [str(row["contract_version"]) for row in matches]
-        contract_control.value = None
-        contract_control.options = options
-        if preferred_value in available:
-            contract_control.value = preferred_value
-        elif matches:
-            contract_control.value = str(matches[0]["contract_version"])
-        else:
-            contract_control.value = "new"
+        state["_selector_refreshing"] = True
+        try:
+            contract_control.value = None
+            contract_control.options = options
+            if preferred_value in available:
+                contract_control.value = preferred_value
+            elif matches:
+                contract_control.value = str(matches[0]["contract_version"])
+            else:
+                contract_control.value = "new"
+        finally:
+            state["_selector_refreshing"] = False
+        contract_changed({"new": contract_control.value})
 
     def contract_changed(change: dict[str, Any]) -> None:
+        if state["_selector_refreshing"]:
+            return
         value = change.get("new")
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
@@ -4458,6 +4449,7 @@ def widget_data_contract(
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
         "store": store_control, "schema": schema_control,
+        "table": table_control, "contract": contract_control,
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
         "change_table": change_table_button,

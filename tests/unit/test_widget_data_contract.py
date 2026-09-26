@@ -410,6 +410,8 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert "Silver · Lakehouse" in store_labels
     assert "Metadata · Lakehouse" not in store_labels
     assert controls["schema"].value == "sales"
+    assert controls["table"].value == "orders"
+    assert controls["contract"].value == "1"
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
         "<b>Fabric store</b>",
@@ -450,6 +452,47 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["selector_panel"].layout.display == ""
     assert controls["editor_shell"].layout.display == "none"
     assert "Unsaved changes discarded" in state["message"]
+
+
+def test_selector_refresh_is_atomic_after_observers_are_registered(
+    widget_runtime, monkeypatch
+):
+    """Store/schema interaction settles once without leaking transient selector state."""
+    bronze_table = {
+        "table_id": "inventory",
+        "environment_name": "dev",
+        "metadata_level": "table",
+        "schema_name": "ops",
+        "table_name": "inventory",
+        "store_type": "Lakehouse",
+        "layer": "Bronze",
+        "load_strategy": "overwrite",
+        "load_strategy_parameters_json": "{}",
+        "is_active": True,
+    }
+    monkeypatch.setattr(
+        module.contracts,
+        "list_contract_governance_state",
+        lambda **_kwargs: {
+            "tables": [widget_runtime["catalogue"][0], bronze_table],
+            "contracts": [widget_runtime["contract"]],
+        },
+    )
+    state = widget_runtime["start"]()
+    controls = state["_controls"]
+
+    controls["store"].value = "Bronze"
+
+    assert state["_selector_refreshing"] is False
+    assert controls["schema"].value == "ops"
+    assert controls["table"].value == ""
+    assert controls["contract"].value == "new"
+    assert state["pending_table_id"] is None
+    assert state["pending_contract_version"] is None
+
+    controls["table"].value = "inventory"
+    assert state["pending_table_id"] == "inventory"
+    assert controls["contract"].value == "new"
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
@@ -988,6 +1031,20 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
 
 
 
+def test_missing_profiled_key_candidate_shows_no_suggestion_without_profile_fallback(
+    widget_runtime,
+):
+    """Missing Engineering key evidence stays explicit and does not infer a fallback key."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert tuple(controls["row_key_columns"].value) == ()
+    assert "No row key suggestion available from the latest profile" in (
+        controls["grain_profile_evidence"].value
+    )
+    assert widget_runtime["calls"]["profiles"] == []
+
+
 def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_runtime, monkeypatch):
     """Consume Engineering key evidence without asking AI to choose the key."""
     widget_runtime["catalogue"][0]["profile_key_candidates_json"] = json.dumps([{
@@ -1017,8 +1074,8 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
     assert module._parameters(saved_uniqueness)["columns"] == ["column_0", "column_1"]
 
 
-def test_grain_row_key_updates_left_summary_for_manual_and_ai_apply(widget_runtime, monkeypatch):
-    """Keep the left summary in sync with row-key selection and Grain AI Apply."""
+def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runtime, monkeypatch):
+    """AI can suggest Grain wording, but Engineering/manual evidence owns the row key."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
@@ -1029,10 +1086,10 @@ def test_grain_row_key_updates_left_summary_for_manual_and_ai_apply(widget_runti
 
     controls["accept_grain"].click()
     assert controls["table_grain"].value == "One row represents a single order line."
-    assert tuple(controls["row_key_columns"].value) == ("column_0",)
+    assert tuple(controls["row_key_columns"].value) == ("column_1",)
     table_summary = controls["left_pane"].children[0].value
     assert "One row represents a single order line." in table_summary
-    assert "column_0" in table_summary
+    assert "column_1" in table_summary
 
 
 def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_runtime, monkeypatch):

@@ -24,9 +24,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:300`
+`fabricops_kit/pipeline/pipeline_write.py:336`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L300-L709">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L336-L747">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -211,7 +211,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 76 |
+| Live-critical dependencies | 82 |
 
 ### Release history
 
@@ -245,6 +245,11 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.data_contract.scheduled_refresh._fabric_schedules_json</code></li>
+<li><code>fabricops_kit.data_contract.scheduled_refresh._time_value</code></li>
+<li><code>fabricops_kit.data_contract.scheduled_refresh.canonical_scheduled_refresh</code></li>
+<li><code>fabricops_kit.data_contract.scheduled_refresh.discover_scheduled_refresh</code></li>
+<li><code>fabricops_kit.data_contract.scheduled_refresh.normalize_scheduled_refresh</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
@@ -277,6 +282,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
