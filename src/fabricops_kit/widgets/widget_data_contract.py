@@ -2224,8 +2224,8 @@ def widget_data_contract(
                 ("Value Rules", "range"),
                 ("Pattern", "pattern"),
             ],
-            value="pattern",
-            disabled=True,
+            value="completeness",
+            disabled=False,
             layout=widgets.Layout(display="none"),
         )
 
@@ -2293,9 +2293,9 @@ def widget_data_contract(
             dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
-        # Compatibility aliases point at Pattern because Pattern is the only AI-assisted family.
-        dq_enabled = dq_family_controls["pattern"]["enabled"]
-        dq_block = dq_family_controls["pattern"]["block"]
+        # Internal compatibility aliases follow the default deterministic family.
+        dq_enabled = dq_family_controls["completeness"]["enabled"]
+        dq_block = dq_family_controls["completeness"]["block"]
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
@@ -2330,6 +2330,9 @@ def widget_data_contract(
             classification.layout.max_width = "100%"
         draft_scope = (str(current["contract_id"]), int(current["contract_version"]))
         unsaved_columns: dict[str, dict[str, Any]] = state["_column_drafts"].setdefault(
+            draft_scope, {}
+        )
+        selected_dq_by_column: dict[str, str] = state["_column_dq_selection"].setdefault(
             draft_scope, {}
         )
 
@@ -3254,6 +3257,7 @@ def widget_data_contract(
 
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
+        dq_type.observe(refresh_dq_ai_controls, names="value")
         refresh_dq_ai_controls()
         def rebuild_column_options() -> None:
             nonlocal column_options
@@ -3858,6 +3862,12 @@ def widget_data_contract(
                 render_table_summary()
                 if column_rule_id:
                     selected_dq_by_column[column_rule_id] = resolved_type
+                    if str(column_select.value or "") == column_rule_id:
+                        hydrating["active"] = True
+                        try:
+                            hydrate_dq_family(column_rule_id, resolved_type)
+                        finally:
+                            hydrating["active"] = False
                     refresh_business_saved_options()
                     set_status(
                         "Business Rule resolved to a Column Rule and staged on "
@@ -4282,7 +4292,8 @@ def widget_data_contract(
             "sensitive_block": sensitive_block, "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
-            "dq_type": dq_type, "dq_parameter_controls": dq_parameter_controls,
+            "dq_type": dq_type, "dq_family_controls": dq_family_controls,
+            "dq_parameter_controls": dq_parameter_controls,
             "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
