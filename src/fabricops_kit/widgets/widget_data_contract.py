@@ -1635,11 +1635,18 @@ def widget_data_contract(
 
         schedule_status = str(scheduled_refresh.get("status") or "unavailable")
         if schedule_status == "configured" and scheduled_refresh.get("schedules"):
-            first_schedule = scheduled_refresh["schedules"][0]
-            refresh_frequency = str(first_schedule.get("frequency") or "Scheduled").replace("_", " ").title()
-            schedule_times = ", ".join(str(value) for value in first_schedule.get("times") or [])
-            if schedule_times:
-                refresh_frequency = f"{refresh_frequency} · {schedule_times}"
+            refresh_lines = []
+            for schedule in scheduled_refresh["schedules"]:
+                frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
+                times = ", ".join(str(value) for value in schedule.get("times") or [])
+                timezone = str(schedule.get("timezone") or "UTC")
+                enabled = "" if schedule.get("enabled", True) else " · Disabled"
+                parts = [frequency]
+                if times:
+                    parts.append(times)
+                parts.append(timezone)
+                refresh_lines.append(" · ".join(parts) + enabled)
+            refresh_frequency = "<br>".join(html.escape(line) for line in refresh_lines)
         elif schedule_status == "not_configured":
             refresh_frequency = "Not configured"
         elif schedule_status == "uncaptured":
@@ -1772,11 +1779,11 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Row Key</div>"
                 f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Loading Strategy</div>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Load strategy</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Refresh Frequency</div>"
-                f"<div style='font-weight:600;'>{html.escape(refresh_frequency)}</div></div>"
+                "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Scheduled refresh</div>"
+                f"<div style='font-weight:600;line-height:1.5;'>{refresh_frequency}</div></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;text-transform:uppercase;'>Guardrails</div>"
                 + guardrail_html + "</div>"
