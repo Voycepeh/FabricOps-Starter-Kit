@@ -218,6 +218,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'resolve_table_id',
             'pipeline_write',
         'widget_data_contract',
+        'widget_activate_data_contract',
         'widget_render_data_steward',
         'widget_render_data_agreement',
         'widget_view_catalogue',

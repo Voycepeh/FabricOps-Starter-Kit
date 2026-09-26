@@ -63,6 +63,8 @@ nav:
           - Range: reference/dq-rules/range.md
           - Pattern: reference/dq-rules/pattern.md
           - Column Relationship: reference/dq-rules/column-relationship.md
+          - Conditional Completeness: reference/dq-rules/conditional-completeness.md
+          - Conditional Values: reference/dq-rules/conditional-values.md
           - Custom Expression: reference/dq-rules/custom-expression.md
   - Releases:
       - Overview: releases/index.md
