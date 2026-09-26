@@ -1601,8 +1601,8 @@ def widget_data_contract(
 
             writer_count = int(runtime_context.get("writer_count") or 0)
             reader_count = int(runtime_context.get("reader_count") or 0)
-            writer_label = "writer" if writer_count == 1 else "writers"
-            reader_label = "reader" if reader_count == 1 else "readers"
+            writer_label = "write" if writer_count == 1 else "writes"
+            reader_label = "read" if reader_count == 1 else "reads"
             lineage_rows = list(runtime_context.get("lineage") or [])
             if lineage_rows:
                 rows_html = "".join(
