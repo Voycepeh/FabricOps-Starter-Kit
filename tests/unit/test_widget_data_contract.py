@@ -1022,7 +1022,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["business_rule_controls"].layout.display == "none"
     assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr) minmax(0, 1fr)"
     assert "Author DQ Rules" in controls["left_pane"].children[0].children[0].value
-    assert "Review & Add DQ Rules" in controls["right_pane"].children[0].children[0].value
+    assert "Review &amp; Add DQ Rules" in controls["right_pane"].children[0].children[0].value
     for label in ("Table", "Columns", "DQ Rules", "Manifest & Freeze"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
