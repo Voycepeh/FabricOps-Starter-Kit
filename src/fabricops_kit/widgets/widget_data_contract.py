@@ -27,7 +27,7 @@ from fabricops_kit.widgets.enrichment_shared import (
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
-_TABS = ("Table", "Columns", "Business Rules", "Manifest & Freeze")
+_TABS = ("Table", "Columns", "DQ Rules", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
 _COLUMN_DQ_TYPES = ("completeness", "value_set", "range", "pattern")
 _DQ_HELP = {
@@ -589,10 +589,16 @@ def widget_data_contract(
     view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
 
     def apply_view(*_args: Any) -> None:
-        left_children, right_children = view_content.get(str(top_nav.value), ((), ()))
+        selected_view = str(top_nav.value)
+        workspace.layout.grid_template_columns = (
+            "minmax(0, 1fr) minmax(0, 1fr)"
+            if selected_view == "DQ Rules"
+            else "minmax(250px, 27fr) minmax(0, 73fr)"
+        )
+        left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
-        if str(top_nav.value) == "Columns":
+        if selected_view == "Columns":
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
@@ -1020,7 +1026,7 @@ def widget_data_contract(
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
         visible_tabs = _TABS if ai_visible else tuple(
-            tab for tab in _TABS if tab != "Business Rules"
+            tab for tab in _TABS if tab != "DQ Rules"
         )
         top_nav.options = visible_tabs
         if str(top_nav.value) not in visible_tabs:
@@ -3527,14 +3533,17 @@ def widget_data_contract(
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
 
-        # Business Rules: Governance states intent; FabricOps resolves deterministic Guardrails.
+        # DQ Rules: author business intent with AI and review the shared draft rule set.
         business_saved = widgets.Select(
-            **shared.widget_common(widgets, "Saved Business Rules")
+            **shared.widget_common(widgets, "Current DQ Rules")
         )
-        business_requirement = widgets.Text(
+        business_requirement = widgets.Textarea(
             disabled=not editable,
-            placeholder="Example: End date must be after start date",
-            **shared.widget_common(widgets, "Business requirement"),
+            placeholder=(
+                "Example: Approved orders require an approved date, "
+                "total amount must be positive, and status must be Approved, Rejected, or Pending."
+            ),
+            **shared.widget_common(widgets, "Business requirement", textarea=True),
         )
         business_requirement.description = ""
         business_columns = widgets.SelectMultiple(
@@ -3543,7 +3552,7 @@ def widget_data_contract(
                 for column in columns
             ],
             disabled=not editable,
-            **shared.widget_common(widgets, "Relevant columns (optional)"),
+            **shared.widget_common(widgets, "Limit to columns (optional)"),
         )
         business_columns.description = ""
         business_enabled = widgets.Checkbox(
@@ -3562,23 +3571,30 @@ def widget_data_contract(
             "<b>Examples</b><br>"
             "• End date must be after start date<br>"
             "• When status is Approved, approved date is required<br>"
-            "• Total amount must equal quantity × unit price × (1 - discount)<br>"
-            "• Either email or mobile number must be present"
+            "• Total amount must be positive and status must be Approved, Rejected, or Pending"
             "</div>"
         )
+        business_proposal_select = widgets.Select(
+            options=[("Generated rules will appear here", -1)],
+            value=-1,
+            **shared.widget_common(widgets, "Resolved DQ Rules"),
+        )
         business_proposal = widgets.HTML(
-            "<p style='color:#667085;'>Describe a rule, optionally select the relevant columns, "
-            "then choose <b>Resolve rule</b>.</p>"
+            "<p style='color:#667085;'>Describe a requirement on the left. "
+            "FabricOps will resolve it into one or more atomic DQ Rules.</p>"
         )
         resolve_business_rule = widgets.Button(
-            description="Resolve rule",
+            description="Generate DQ Rules →",
             disabled=not (
                 editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
             ),
+            button_style="primary",
         )
-        apply_business_rule = widgets.Button(description="Apply", disabled=True)
+        apply_business_rule = widgets.Button(
+            description="Add DQ Rule", disabled=True, button_style="success"
+        )
         delete_business_rule = widgets.Button(
-            description="Delete rule", disabled=True, button_style="danger"
+            description="Delete DQ Rule", disabled=True, button_style="danger"
         )
         confirm_delete_business_rule = widgets.Button(
             description="Confirm delete", disabled=not editable, button_style="danger"
@@ -3627,44 +3643,64 @@ def widget_data_contract(
             ),
         )
         engineering_review_panel.layout.display = "none"
+
         business_lookup: dict[str, dict[str, Any]] = {}
-        business_resolved: dict[str, Any] = {}
+        business_resolved: list[dict[str, Any]] = []
         business_hydrating = {"active": False}
+        business_active_saved = {"rule_id": ""}
 
         business_saved.layout.width = "100%"
-        business_saved.layout.max_width = "760px"
         business_saved.layout.min_width = "0"
-        business_saved.layout.height = "160px"
+        business_saved.layout.height = "190px"
         business_requirement.layout.width = "100%"
         business_requirement.layout.min_width = "0"
+        business_requirement.layout.height = "170px"
         business_columns.layout.width = "100%"
         business_columns.layout.min_width = "0"
-        business_columns.layout.height = "130px"
+        business_columns.layout.height = "115px"
+        business_proposal_select.layout.width = "100%"
+        business_proposal_select.layout.min_width = "0"
+        business_proposal_select.layout.height = "120px"
         engineering_review_note.layout.height = "80px"
 
-        def business_rule_label(rule: Mapping[str, Any]) -> str:
+        def rule_column_names(rule: Mapping[str, Any]) -> list[str]:
             params = _parameters(rule)
-            requirement = str(
-                params.get("business_requirement")
-                or params.get("description")
-                or ""
-            ).strip()
-            if requirement:
-                return requirement
-            kind = str(rule.get("rule_type") or "")
-            if kind == "column_relationship":
-                names = list(params.get("columns") or [])
-                if len(names) == 2:
-                    return f"{names[0]} {params.get('operator') or '='} {names[1]}"
-            return kind.replace("_", " ").title() or "Business Rule"
+            names = [
+                str(name) for name in params.get("columns", [])
+                if str(name).strip()
+            ]
+            if names:
+                return names
+            column_id = str(rule.get("column_id") or "")
+            if not column_id:
+                return []
+            name = next((
+                str(column.get("column_name") or "")
+                for column in columns
+                if str(column.get("column_id") or "") == column_id
+            ), "")
+            return [name] if name else []
+
+        def business_rule_label(rule: Mapping[str, Any]) -> str:
+            kind = str(rule.get("rule_type") or "").replace("_", " ").title()
+            names = rule_column_names(rule)
+            return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
+
+        def proposal_label(proposal: Mapping[str, Any]) -> str:
+            kind = str(proposal.get("rule_type") or "").replace("_", " ").title()
+            names = [
+                str(name) for name in proposal.get("columns", [])
+                if str(name).strip()
+            ]
+            return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
 
         def refresh_business_saved_options(selected: str | None = None) -> None:
             business_lookup.clear()
-            options: list[tuple[str, str]] = [("New Business Rule", "")]
+            options: list[tuple[str, str]] = [("Select a DQ Rule", "")]
             for rule in session_guardrails():
-                if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}:
-                    continue
-                if str(rule.get("column_id") or ""):
+                if str(rule.get("guardrail_type") or "").lower() not in {
+                    "data_quality", "dq"
+                }:
                     continue
                 if str(rule.get("rule_type") or "") not in {
                     "completeness", "uniqueness", "value_set", "range", "pattern",
@@ -3677,9 +3713,29 @@ def widget_data_contract(
                     continue
                 business_lookup[key] = rule
                 options.append((business_rule_label(rule), key))
+            if len(options) == 1:
+                options[0] = ("No DQ Rules in this draft", "")
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
             business_saved.value = selected if selected in option_values else ""
+
+        def refresh_resolved_options(selected: int = 0) -> None:
+            if not business_resolved:
+                business_proposal_select.options = [
+                    ("Generated rules will appear here", -1)
+                ]
+                business_proposal_select.value = -1
+                return
+            business_proposal_select.options = [
+                ("Select a resolved DQ Rule", -1),
+                *[
+                    (proposal_label(proposal), index)
+                    for index, proposal in enumerate(business_resolved)
+                ],
+            ]
+            business_proposal_select.value = min(
+                max(selected, 0), len(business_resolved) - 1
+            )
 
         def hide_business_delete_confirmation() -> None:
             delete_business_rule_confirm.layout.display = "none"
@@ -3721,101 +3777,169 @@ def widget_data_contract(
                 )
             approve_engineering_review.disabled = not editable or approved
 
-        def render_business_proposal(proposal: Mapping[str, Any] | None = None) -> None:
+        def render_business_proposal(
+            proposal: Mapping[str, Any] | None = None,
+            *,
+            saved: bool = False,
+        ) -> None:
             if not proposal:
                 business_rule_controls.layout.display = "none"
                 business_proposal.value = (
-                    "<p style='color:#667085;'>No Data Quality rule has been resolved yet.</p>"
+                    "<p style='color:#667085;'>No DQ Rule selected.</p>"
                 )
+                apply_business_rule.disabled = True
+                render_engineering_review()
                 return
-            business_rule_controls.layout.display = ""
-            rule_type = str(proposal.get("rule_type") or "")
-            params = dict(proposal.get("parameters") or {})
-            rationale = str(proposal.get("rationale") or "").strip()
-            if rule_type == "custom_expression":
-                expression = str(params.get("expression") or "")
-                heading = "Custom Expression"
-                review = (
-                    "<span style='color:#8a6d1d;font-weight:600;'>"
-                    "Engineering review required</span>"
-                )
-            else:
-                names = list(params.get("columns") or [])
-                if rule_type == "column_relationship" and len(names) == 2:
-                    expression = (
-                        f"{names[0]} {params.get('operator') or '='} {names[1]}"
-                    )
-                else:
-                    expression = ", ".join(str(name) for name in names)
-                heading = (
-                    "Known FabricOps pattern: "
-                    + rule_type.replace("_", " ").title()
-                )
-                review = (
-                    "<span style='color:#107c10;font-weight:600;'>"
-                    "No Engineering review required</span>"
-                )
-            rationale_html = (
-                "<br><span style='color:#667085;'>" + html.escape(rationale) + "</span>"
-                if rationale else ""
+
+            params = (
+                _parameters(proposal)
+                if saved
+                else dict(proposal.get("parameters") or {})
             )
+            rule_type = str(proposal.get("rule_type") or "")
+            names = (
+                rule_column_names(proposal)
+                if saved
+                else [str(name) for name in proposal.get("columns", [])]
+            )
+            requirement = str(
+                params.get("business_requirement")
+                or proposal.get("business_requirement")
+                or ""
+            ).strip()
+            details = []
+            for name, value in params.items():
+                if name in {
+                    "columns", "business_requirement",
+                    "engineering_review_required", "engineering_review_status",
+                    "engineering_reviewed_by", "engineering_review_note",
+                } or value in (None, "", [], {}):
+                    continue
+                shown = ", ".join(map(str, value)) if isinstance(value, list) else str(value)
+                details.append(
+                    "<div><b>{}</b>: {}</div>".format(
+                        html.escape(name.replace("_", " ").title()),
+                        html.escape(shown),
+                    )
+                )
+            source = "Current draft DQ Rule" if saved else "Generated atomic DQ Rule"
             business_proposal.value = (
                 "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
-                "padding:10px 12px;font-size:12px;line-height:1.6;'>"
-                f"<b>{html.escape(heading)}</b><br>"
-                f"<code>{html.escape(expression)}</code><br>"
-                f"{review}{rationale_html}</div>"
+                "padding:12px 14px;font-size:12px;line-height:1.6;'>"
+                f"<div style='color:#667085;'>{source}</div>"
+                f"<div style='font-size:15px;font-weight:700;margin-top:2px;'>"
+                f"{html.escape(rule_type.replace('_', ' ').title())}</div>"
+                f"<div><b>Column(s)</b>: {html.escape(', '.join(names) or '—')}</div>"
+                + (
+                    f"<div><b>Requirement</b>: {html.escape(requirement)}</div>"
+                    if requirement else ""
+                )
+                + "".join(details)
+                + "</div>"
             )
+            business_rule_controls.layout.display = ""
+            apply_business_rule.description = (
+                "Update DQ Rule" if saved else "Add DQ Rule"
+            )
+            apply_business_rule.disabled = not editable
+            if saved:
+                render_engineering_review(proposal)
+            else:
+                render_engineering_review()
 
-        def hydrate_business_saved(change: dict[str, Any] | None = None) -> None:
+        def hydrate_business_saved(
+            change: dict[str, Any] | None = None,
+        ) -> None:
+            if business_hydrating["active"]:
+                return
             business_hydrating["active"] = True
             try:
-                business_resolved.clear()
-                apply_business_rule.disabled = True
                 hide_business_delete_confirmation()
-                rule = business_lookup.get(str(business_saved.value or ""), {})
+                key = str(business_saved.value or "")
+                rule = business_lookup.get(key, {})
+                business_active_saved["rule_id"] = key if rule else ""
                 delete_business_rule.disabled = not editable or not bool(rule)
-                params = _parameters(rule)
-                requirement = str(
-                    params.get("business_requirement")
-                    or params.get("description")
-                    or ""
-                ).strip()
-                if not requirement and rule:
-                    requirement = business_rule_label(rule)
-                business_requirement.value = requirement
-                valid_columns = {value for _label, value in business_columns.options}
-                selected_columns = [
-                    str(name) for name in params.get("columns", [])
-                    if str(name) in valid_columns
-                ]
-                business_columns.value = tuple(selected_columns)
-                business_enabled.value = bool(
-                    not rule or rule.get("is_active", True)
-                )
+                if not rule:
+                    if int(business_proposal_select.value or -1) < 0:
+                        render_business_proposal()
+                    return
+                business_proposal_select.value = -1
+                business_enabled.value = bool(rule.get("is_active", True))
                 business_block.value = str(rule.get("action") or "Warn") == "Block"
-                if rule:
-                    render_business_proposal({
-                        "rule_type": str(rule.get("rule_type") or ""),
-                        "parameters": params,
-                        "rationale": "Saved deterministic Guardrail.",
-                    })
-                    render_engineering_review(rule)
-                else:
-                    render_business_proposal()
-                    render_engineering_review()
+                render_business_proposal(rule, saved=True)
             finally:
                 business_hydrating["active"] = False
 
-        def invalidate_business_proposal(_change: dict[str, Any] | None = None) -> None:
+        def hydrate_resolved_business(
+            change: dict[str, Any] | None = None,
+        ) -> None:
+            if business_hydrating["active"]:
+                return
+            index = int(business_proposal_select.value or -1)
+            if index < 0 or index >= len(business_resolved):
+                if not business_active_saved["rule_id"]:
+                    render_business_proposal()
+                return
+            business_hydrating["active"] = True
+            try:
+                business_saved.value = ""
+                business_active_saved["rule_id"] = ""
+                delete_business_rule.disabled = True
+                proposal = business_resolved[index]
+                business_enabled.value = bool(proposal.get("_enabled", True))
+                business_block.value = bool(proposal.get("_block", False))
+                render_business_proposal(proposal)
+            finally:
+                business_hydrating["active"] = False
+
+        def remember_resolved_rule_settings(
+            _change: dict[str, Any] | None = None,
+        ) -> None:
+            if business_hydrating["active"]:
+                return
+            index = int(business_proposal_select.value or -1)
+            if 0 <= index < len(business_resolved):
+                business_resolved[index]["_enabled"] = bool(business_enabled.value)
+                business_resolved[index]["_block"] = bool(business_block.value)
+
+        def invalidate_business_proposal(
+            _change: dict[str, Any] | None = None,
+        ) -> None:
             if business_hydrating["active"]:
                 return
             business_resolved.clear()
+            business_active_saved["rule_id"] = ""
+            refresh_resolved_options()
             apply_business_rule.disabled = True
             render_business_proposal()
 
+        def current_rule_context() -> list[dict[str, Any]]:
+            return [
+                {
+                    "rule_type": str(rule.get("rule_type") or ""),
+                    "columns": rule_column_names(rule),
+                    "parameters": {
+                        key: value
+                        for key, value in _parameters(rule).items()
+                        if key not in {
+                            "business_requirement",
+                            "engineering_review_required",
+                            "engineering_review_status",
+                            "engineering_reviewed_by",
+                            "engineering_review_note",
+                        }
+                    },
+                }
+                for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "").lower() in {
+                    "data_quality", "dq"
+                }
+                and rule_column_names(rule)
+            ]
+
         def resolve_business_rule_clicked(_button: Any) -> None:
             try:
+                profiles = dict(runtime_context.get("column_profiles") or {})
                 context_payload = build_ai_business_rule_context({
                     "table_name": table.get("table_name"),
                     "schema_name": table.get("schema_name"),
@@ -3831,99 +3955,155 @@ def widget_data_contract(
                             "classification": _column_editable_values(
                                 str(column.get("column_id") or "")
                             )[1],
+                            "profile": profiles.get(
+                                str(column.get("column_id") or ""), {}
+                            ),
                         }
                         for column in columns
                     ],
+                    "existing_dq_rules": current_rule_context(),
                 })
-                proposal = suggest_business_rule(
+                proposals = suggest_business_rule(
                     context_payload,
                     requirement=str(business_requirement.value or ""),
                     relevant_columns=list(business_columns.value),
                     prompt=str(ai_enrichment.get("business_rule_prompt") or ""),
                 )
                 business_resolved.clear()
-                business_resolved.update(proposal)
-                render_business_proposal(proposal)
-                apply_business_rule.disabled = False
+                business_resolved.extend(
+                    {
+                        **proposal,
+                        "_enabled": True,
+                        "_block": False,
+                    }
+                    for proposal in proposals
+                )
+                business_active_saved["rule_id"] = ""
+                refresh_resolved_options()
+                hydrate_resolved_business()
                 set_validation_error("business_rule")
             except (TypeError, ValueError, RuntimeError) as exc:
                 business_resolved.clear()
+                refresh_resolved_options()
                 apply_business_rule.disabled = True
                 business_proposal.value = (
                     f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
                 )
                 set_validation_error("business_rule", exc)
 
-        def apply_business_rule_clicked(_button: Any) -> None:
-            if not business_resolved:
+        def sync_column_rule(rule: Mapping[str, Any]) -> None:
+            column_id = str(rule.get("column_id") or "")
+            rule_type = str(rule.get("rule_type") or "")
+            if not column_id or rule_type not in _COLUMN_DQ_TYPES:
                 return
+            selected_dq_by_column[column_id] = rule_type
+            if str(column_select.value or "") == column_id:
+                hydrating["active"] = True
+                try:
+                    hydrate_dq_family(column_id, rule_type)
+                finally:
+                    hydrating["active"] = False
+
+        def apply_business_rule_clicked(_button: Any) -> None:
             try:
-                existing = business_lookup.get(str(business_saved.value or ""), {})
-                params = dict(business_resolved.get("parameters") or {})
-                if str(business_resolved.get("rule_type") or "") == "custom_expression":
+                saved_key = str(business_active_saved["rule_id"] or "")
+                if saved_key:
+                    existing = business_lookup.get(saved_key, {})
+                    if not existing:
+                        return
+                    record = guardrail_record(
+                        "data_quality",
+                        str(existing.get("rule_type") or ""),
+                        _parameters(existing),
+                        column_id=str(existing.get("column_id") or ""),
+                        action="Block" if business_block.value else "Warn",
+                        existing=existing,
+                        active=bool(business_enabled.value),
+                    )
+                    stage_guardrails([record])
+                    sync_column_rule(record)
+                    refresh_business_saved_options(
+                        str(record["guardrail_rule_id"])
+                    )
+                    render_table_summary()
+                    set_status(
+                        "DQ Rule updated in the current draft. "
+                        "Save Data Contract to persist."
+                    )
+                    return
+
+                index = int(business_proposal_select.value or -1)
+                if index < 0 or index >= len(business_resolved):
+                    return
+                proposal = dict(business_resolved[index])
+                params = dict(proposal.get("parameters") or {})
+                if str(proposal.get("rule_type") or "") == "custom_expression":
                     params.update({
                         "engineering_review_required": True,
                         "engineering_review_status": "pending",
                     })
                     params.pop("engineering_reviewed_by", None)
                     params.pop("engineering_review_note", None)
-                resolved_type = str(business_resolved["rule_type"])
-                resolved_columns = [str(value) for value in params.get("columns") or []]
+
+                resolved_type = str(proposal["rule_type"])
+                resolved_columns = [
+                    str(value) for value in params.get("columns") or []
+                ]
                 column_rule_id = ""
+                existing: Mapping[str, Any] = {}
                 if resolved_type == "uniqueness":
-                    # Uniqueness is repeatable. Grain & Row Key is a separate, singular
-                    # semantic declaration authored on the Table tab.
                     existing = {}
-                elif resolved_type in _COLUMN_DQ_TYPES and len(resolved_columns) == 1:
+                elif (
+                    resolved_type in _COLUMN_DQ_TYPES
+                    and len(resolved_columns) == 1
+                ):
                     column_rule_id = next((
                         str(column.get("column_id") or "")
                         for column in columns
-                        if str(column.get("column_name") or "") == resolved_columns[0]
+                        if str(column.get("column_name") or "")
+                        == resolved_columns[0]
                     ), "")
                     if not column_rule_id:
                         raise ValueError(
-                            "Resolved single-column Business Rule does not match a governed column."
+                            "Resolved single-column DQ Rule does not match "
+                            "a governed column."
                         )
                     existing = next((
                         rule for rule in session_guardrails()
-                        if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
+                        if str(rule.get("guardrail_type") or "").lower()
+                        in {"data_quality", "dq"}
                         and str(rule.get("column_id") or "") == column_rule_id
                         and str(rule.get("rule_type") or "") == resolved_type
                     ), {})
+
                 record = guardrail_record(
                     "data_quality",
                     resolved_type,
                     params,
                     column_id=column_rule_id,
-                    action="Block" if business_block.value else "Warn",
+                    action="Block" if proposal.get("_block") else "Warn",
                     existing=existing,
-                    active=bool(business_enabled.value),
+                    active=bool(proposal.get("_enabled", True)),
                 )
                 stage_guardrails([record])
+                sync_column_rule(record)
                 render_table_summary()
-                if column_rule_id:
-                    selected_dq_by_column[column_rule_id] = resolved_type
-                    if str(column_select.value or "") == column_rule_id:
-                        hydrating["active"] = True
-                        try:
-                            hydrate_dq_family(column_rule_id, resolved_type)
-                        finally:
-                            hydrating["active"] = False
-                    refresh_business_saved_options()
-                    set_status(
-                        "Business Rule resolved to a Column Rule and staged on "
-                        f"{resolved_columns[0]}. Open Columns to review it before saving."
-                    )
-                else:
-                    refresh_business_saved_options(str(record["guardrail_rule_id"]))
-                business_resolved.clear()
-                apply_business_rule.disabled = True
+
+                business_resolved.pop(index)
+                refresh_resolved_options(
+                    min(index, max(len(business_resolved) - 1, 0))
+                )
+                refresh_business_saved_options(
+                    str(record["guardrail_rule_id"])
+                )
+                business_active_saved["rule_id"] = str(
+                    record["guardrail_rule_id"]
+                )
                 set_validation_error("business_rule")
-                render_engineering_review(record)
-                if not column_rule_id:
-                    set_status(
-                        "Business Rule staged in the Data Contract. Save Data Contract to persist."
-                    )
+                set_status(
+                    "DQ Rule added to the current draft. "
+                    "Save Data Contract to persist."
+                )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("business_rule", exc)
                 set_status(str(exc), error=True)
@@ -3933,7 +4113,7 @@ def widget_data_contract(
             if not editable or not rule:
                 return
             delete_business_rule_status.value = (
-                "<div style='color:#a4262c;font-weight:600;'>Delete this Business Rule?</div>"
+                "<div style='color:#a4262c;font-weight:600;'>Delete this DQ Rule?</div>"
                 "<div style='color:#667085;font-size:12px;margin-top:3px;'>"
                 "The rule will be removed from the current draft. "
                 "Save the Data Contract to persist the deletion.</div>"
@@ -3953,18 +4133,33 @@ def widget_data_contract(
                 row for row in current.get("guardrails", [])
                 if str(row.get("guardrail_rule_id") or "") != key
             ]
-            scope = (str(current["contract_id"]), int(current["contract_version"]))
+            scope = (
+                str(current["contract_id"]),
+                int(current["contract_version"]),
+            )
             state["_pending_guardrails"].get(scope, {}).pop(key, None)
             state["dirty"] = True
-            business_resolved.clear()
-            apply_business_rule.disabled = True
+            deleted_column_id = str(rule.get("column_id") or "")
+            deleted_type = str(rule.get("rule_type") or "")
             refresh_manifest()
             render_table_summary()
             refresh_business_saved_options()
-            hydrate_business_saved()
+            business_active_saved["rule_id"] = ""
+            if (
+                deleted_column_id
+                and deleted_type in _COLUMN_DQ_TYPES
+                and str(column_select.value or "") == deleted_column_id
+            ):
+                hydrating["active"] = True
+                try:
+                    hydrate_dq_family(deleted_column_id, deleted_type)
+                finally:
+                    hydrating["active"] = False
+            hide_business_delete_confirmation()
+            render_business_proposal()
             set_validation_error("business_rule")
             set_status(
-                "Business Rule deletion staged. Save Data Contract to persist."
+                "DQ Rule deletion staged. Save Data Contract to persist."
             )
 
         def approve_engineering_review_clicked(_button: Any) -> None:
@@ -3972,128 +4167,148 @@ def widget_data_contract(
                 rule = business_lookup.get(str(business_saved.value or ""), {})
                 required, status = engineering_review_state(rule)
                 if not required:
-                    raise ValueError("The selected Business Rule does not require Engineering review.")
+                    raise ValueError(
+                        "The selected DQ Rule does not require Engineering review."
+                    )
                 if status == "approved":
                     return
                 reviewer = str(engineering_reviewer.value or "").strip()
                 if not reviewer:
-                    raise ValueError("Engineering reviewer is required before approval.")
+                    raise ValueError(
+                        "Engineering reviewer is required before approval."
+                    )
                 params = _parameters(rule)
                 params.update({
                     "engineering_review_required": True,
                     "engineering_review_status": "approved",
                     "engineering_reviewed_by": reviewer,
-                    "engineering_review_note": str(engineering_review_note.value or "").strip(),
+                    "engineering_review_note": str(
+                        engineering_review_note.value or ""
+                    ).strip(),
                 })
                 record = guardrail_record(
-                    "data_quality", "custom_expression", params,
+                    "data_quality",
+                    "custom_expression",
+                    params,
                     action=str(rule.get("action") or "Warn"),
                     existing=rule,
                     active=bool(rule.get("is_active", True)),
                 )
                 stage_guardrails([record])
-                refresh_business_saved_options(str(record["guardrail_rule_id"]))
+                refresh_business_saved_options(
+                    str(record["guardrail_rule_id"])
+                )
                 render_engineering_review(record)
                 set_validation_error("business_rule.engineering_review")
                 set_status(
-                    "Engineering review approved and staged. Save Data Contract to persist."
+                    "Engineering review approved and staged. "
+                    "Save Data Contract to persist."
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("business_rule.engineering_review", exc)
                 set_status(str(exc), error=True)
 
         business_saved.observe(hydrate_business_saved, names="value")
-        business_requirement.observe(invalidate_business_proposal, names="value")
-        business_columns.observe(invalidate_business_proposal, names="value")
+        business_proposal_select.observe(
+            hydrate_resolved_business, names="value"
+        )
+        business_requirement.observe(
+            invalidate_business_proposal, names="value"
+        )
+        business_columns.observe(
+            invalidate_business_proposal, names="value"
+        )
+        business_enabled.observe(
+            remember_resolved_rule_settings, names="value"
+        )
+        business_block.observe(
+            remember_resolved_rule_settings, names="value"
+        )
         resolve_business_rule.on_click(resolve_business_rule_clicked)
         apply_business_rule.on_click(apply_business_rule_clicked)
         delete_business_rule.on_click(request_delete_business_rule_clicked)
-        confirm_delete_business_rule.on_click(confirm_delete_business_rule_clicked)
-        cancel_delete_business_rule.on_click(cancel_delete_business_rule_clicked)
-        approve_engineering_review.on_click(approve_engineering_review_clicked)
-        refresh_business_saved_options()
-        hydrate_business_saved()
-
-        business_left = (
-            widgets.HTML(
-                "<div style='color:#0f6cbd;font-size:11px;font-weight:800;"
-                "text-transform:uppercase;letter-spacing:.07em;'>Business Rules</div>"
-                "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Generate enforceable Data Quality rules from plain-language business rules."
-                "</div>"
-            ),
-            business_saved,
-            delete_business_rule,
-            delete_business_rule_confirm,
+        confirm_delete_business_rule.on_click(
+            confirm_delete_business_rule_clicked
         )
+        cancel_delete_business_rule.on_click(
+            cancel_delete_business_rule_clicked
+        )
+        approve_engineering_review.on_click(
+            approve_engineering_review_clicked
+        )
+        refresh_business_saved_options()
+        refresh_resolved_options()
+
+        business_ai_panel = widgets.VBox(
+            [
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "Describe the business requirement in plain language. "
+                    "FabricOps uses the governed table definition, column metadata, "
+                    "profile evidence, and existing DQ Rules to resolve one or more "
+                    "atomic enforceable rules.</div>"
+                ),
+                widgets.HTML("<b>Describe your requirement</b>"),
+                business_requirement,
+                widgets.HTML(
+                    "<div style='margin-top:6px;'><b>Limit to columns "
+                    "(optional)</b></div>"
+                    "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
+                    "Leave blank to let FabricOps resolve columns from the table. "
+                    "To constrain generation, hold <b>Ctrl</b> on Windows or "
+                    "<b>Cmd</b> on macOS while selecting multiple columns.</div>"
+                ),
+                business_columns,
+                business_examples,
+                shared.action_row(widgets, [resolve_business_rule]),
+            ],
+            layout=widgets.Layout(
+                width="100%", min_width="0", gap="8px"
+            ),
+        )
+        business_left = (
+            shared.form_section(
+                widgets,
+                title="Author DQ Rules",
+                children=[business_ai_panel],
+            ),
+        )
+
         business_primary = widgets.VBox(
             [
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Review the resolved deterministic rule and choose whether it is active "
-                    "and whether failure should block the pipeline.</div>"
+                    "Review each generated atomic rule before adding it. "
+                    "Rules created from the Columns page appear in the same draft list below."
+                    "</div>"
                 ),
+                business_proposal_select,
                 business_rule_controls,
                 business_proposal,
+                shared.action_row(widgets, [apply_business_rule]),
                 engineering_review_panel,
+                widgets.HTML(
+                    "<div style='border-top:1px solid #e1e6eb;margin:8px 0 2px 0;'></div>"
+                    "<div style='font-weight:700;'>Current DQ Rules</div>"
+                    "<div style='color:#667085;font-size:12px;'>"
+                    "Shared draft state from both column editors and AI authoring.</div>"
+                ),
+                business_saved,
+                shared.action_row(widgets, [delete_business_rule]),
+                delete_business_rule_confirm,
             ],
-            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+            layout=widgets.Layout(
+                width="100%", min_width="0", gap="8px"
+            ),
         )
-        if ai_visible:
-            business_ai_panel = widgets.VBox(
-                [
-                    widgets.HTML("<b>AI assistant</b>"),
-                    widgets.HTML(
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                        "Write a business rule in plain language. FabricOps translates it into "
-                        "a reviewable, enforceable Data Quality rule.</div>"
-                    ),
-                    widgets.HTML("<b>Business rule</b>"),
-                    business_requirement,
-                    widgets.HTML("<b>Relevant columns (optional)</b>"),
-                    business_columns,
-                    business_examples,
-                    shared.action_row(
-                        widgets, [resolve_business_rule, apply_business_rule]
-                    ),
-                ],
-                layout=widgets.Layout(
-                    width="100%", min_width="0", gap="8px",
-                    padding="0 0 0 16px",
-                    border_left="1px solid #e1e6eb",
-                ),
-            )
-            business_content = widgets.GridBox(
-                [business_primary, business_ai_panel],
-                layout=widgets.Layout(
-                    width="100%",
-                    grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                    grid_gap="16px",
-                    align_items="flex-start",
-                ),
-            )
-        else:
-            business_ai_panel = widgets.VBox(
-                layout=widgets.Layout(display="none")
-            )
-            business_content = business_primary
         business_right = (
             shared.form_section(
                 widgets,
-                title="Generate Enforceable Data Quality Rules from Business Rules",
-                children=[
-                    widgets.HTML(
-                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
-                        "margin-bottom:8px;'>This page showcases one FabricOps capability. "
-                        "For the end-to-end Governance and Engineering lifecycle it fits into, "
-                        "see <a href='https://voycepeh.github.io/FabricOps-Starter-Kit/"
-                        "how-fabricops-works/' target='_blank'>How FabricOps Works</a>.</div>"
-                    ),
-                    business_content,
-                ],
+                title="Review & Add DQ Rules",
+                children=[business_primary],
             ),
         )
-        view_content["Business Rules"] = (business_left, business_right)
+        view_content["DQ Rules"] = (business_left, business_right)
 
 
         # Manifest: current working contract plus changes since the last persisted draft.
@@ -4399,6 +4614,7 @@ def widget_data_contract(
             "business_block": business_block,
             "business_rule_controls": business_rule_controls,
             "business_proposal": business_proposal,
+            "business_proposal_select": business_proposal_select,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
             "delete_business_rule": delete_business_rule,
