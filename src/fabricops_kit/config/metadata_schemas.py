@@ -195,6 +195,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("data_type", "string"),
                 ("load_strategy", "string"),
                 ("load_strategy_parameters_json", "string"),
+                ("scheduled_refresh_json", "string"),
                 ("profile_key_candidates_json", "string"),
                 ("first_profiled_at", "timestamp"),
                 ("last_profiled_at", "timestamp"),
