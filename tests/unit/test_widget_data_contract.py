@@ -1136,6 +1136,43 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     assert "Data Quality</span><span style='font-size:12px;color:#0f6cbd;'>Enabled</span>" in table_summary
 
 
+def test_business_rule_delete_requires_confirmation_and_stages_removal(
+    widget_runtime, monkeypatch
+):
+    """Delete removes only the selected draft Business Rule after explicit confirmation."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Business Rules"
+
+    controls["business_saved"].value = "advanced"
+    assert controls["delete_business_rule"].disabled is False
+    assert controls["delete_business_rule_confirm"].layout.display == "none"
+
+    controls["delete_business_rule"].click()
+    assert controls["delete_business_rule_confirm"].layout.display == ""
+    assert any(
+        row.get("guardrail_rule_id") == "advanced"
+        for row in state["current"]["guardrails"]
+    )
+
+    controls["confirm_delete_business_rule"].click()
+
+    assert controls["business_saved"].value == ""
+    assert controls["delete_business_rule"].disabled is True
+    assert not any(
+        row.get("guardrail_rule_id") == "advanced"
+        for row in state["current"]["guardrails"]
+    )
+    assert state["dirty"] is True
+    assert "Business Rule deletion staged" in state["message"]
+
+    controls["save_data_contract"].click()
+    assert not any(
+        row.get("guardrail_rule_id") == "advanced"
+        for row in widget_runtime["calls"]["draft"][-1]["guardrails"]
+    )
+
+
 def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
     """Generate Description after Grain and use manual Classification as context."""
     widget_runtime["enrichment"][:] = [
