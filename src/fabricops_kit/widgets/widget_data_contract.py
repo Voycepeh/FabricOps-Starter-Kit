@@ -4263,10 +4263,6 @@ def widget_data_contract(
     change_table_button.on_click(change_table)
     cancel_exit.on_click(cancel_exit_clicked)
     confirm_exit_discard.on_click(confirm_exit_clicked)
-    store_control.observe(refresh_schema_options, names="value")
-    schema_control.observe(refresh_table_options, names="value")
-    table_control.observe(table_changed, names="value")
-    contract_control.observe(contract_changed, names="value")
 
     pending_row = next(
         (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
@@ -4281,6 +4277,11 @@ def widget_data_contract(
     refresh_schema_options()
     if table_control.value:
         table_changed({"new": table_control.value})
+
+    store_control.observe(refresh_schema_options, names="value")
+    schema_control.observe(refresh_table_options, names="value")
+    table_control.observe(table_changed, names="value")
+    contract_control.observe(contract_changed, names="value")
     render()
     page = shared.form_page(
         widgets, title="Data Contract",
