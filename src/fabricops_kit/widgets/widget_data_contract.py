@@ -515,7 +515,7 @@ def widget_data_contract(
     }
     scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
     state["scheduled_refresh"] = scheduled_refresh
-    contract_schedule = dict(scheduled_refresh)
+    contract_schedule = {"status": "unavailable", "schedules": []}
 
     def refresh_scheduled_refresh(selected_table: str) -> None:
         table_row = next(
@@ -540,7 +540,10 @@ def widget_data_contract(
         scheduled_refresh.clear()
         scheduled_refresh.update(normalized)
         contract_schedule.clear()
-        contract_schedule.update(normalized)
+        contract_schedule.update(
+            normalized if status_value != "uncaptured"
+            else {"status": "unavailable", "schedules": []}
+        )
 
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
@@ -794,6 +797,11 @@ def widget_data_contract(
 
     def freeze() -> dict[str, Any]:
         current = state.get("current")
+        if str(scheduled_refresh.get("status") or "") == "uncaptured":
+            raise ValueError(
+                "Scheduled Refresh has not been captured by the writer pipeline. "
+                "Run the writer pipeline before freezing this Data Contract."
+            )
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
         if state.get("dirty"):
