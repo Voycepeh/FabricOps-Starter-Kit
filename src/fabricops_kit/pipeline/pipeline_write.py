@@ -26,10 +26,35 @@ from fabricops_kit.pipeline.shared import (
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
+def _writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
+    """Return the current writer notebook schedule or fail metadata finalization."""
+    from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
+
+    discovered = discover_scheduled_refresh(
+        context={
+            "workspace_id": audit.get("_workspace_id"),
+            "notebook_id": audit.get("_notebook_id"),
+        },
+        workspace_id=str(audit.get("_workspace_id") or "") or None,
+        item_id=str(audit.get("_notebook_id") or "") or None,
+    )
+    status = str(discovered.get("status") or "").strip().lower()
+    if status not in {"configured", "not_configured"}:
+        raise RuntimeError(
+            "Scheduled Refresh metadata could not be captured for the writer notebook. "
+            "Retry the pipeline after Fabric schedule discovery is available."
+        )
+    return {
+        "status": status,
+        "schedules": list(discovered.get("schedules") or []),
+    }
+
+
 def _persist_target_processing(
     *,
     identity: dict[str, Any],
     processing: dict[str, Any],
+    scheduled_refresh: dict[str, Any],
     audit: dict[str, Any],
     config: Any,
     env: str,
@@ -81,6 +106,10 @@ def _persist_target_processing(
             "load_strategy_parameters_json": json.dumps(
                 parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             ),
+            "scheduled_refresh_json": json.dumps(
+                scheduled_refresh, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ),
+            "profile_key_candidates_json": None,
             "first_profiled_at": None,
             "last_profiled_at": None,
             "is_active": True,
@@ -113,6 +142,7 @@ def _persist_target_processing(
                 "table_name": "source.table_name",
                 "load_strategy": "source.load_strategy",
                 "load_strategy_parameters_json": "source.load_strategy_parameters_json",
+                "scheduled_refresh_json": "source.scheduled_refresh_json",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
                 "_committed_at": "source._committed_at",
@@ -688,9 +718,11 @@ def pipeline_write(
     else:
         raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
 
+    scheduled_refresh = _writer_scheduled_refresh(audit=audit)
     _persist_target_processing(
         identity=identity,
         processing=processing,
+        scheduled_refresh=scheduled_refresh,
         audit=audit,
         config=config,
         env=env,
@@ -699,7 +731,7 @@ def pipeline_write(
         spark_session=spark_session,
     )
     if verbose:
-        print("6. Catalogue → resolved load strategy and parameters persisted")
+        print("6. Catalogue → load strategy and Scheduled Refresh persisted")
 
     commit_pipeline_write_success(success_context)
     if verbose:
