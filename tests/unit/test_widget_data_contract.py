@@ -1859,8 +1859,9 @@ def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widge
             "timezone": "Asia/Singapore",
         }],
     }
-    assert "08:00" in state["_controls"]["table_summary"].value
-    assert "Captured by writer pipeline" in state["_controls"]["table_summary"].value
+    summary = state["_controls"]["left_pane"].children[0].value
+    assert "08:00" in summary
+    assert "Captured by writer pipeline" in summary
 
 
 def test_freeze_activation_manifest_refresh_and_immutable_controls(widget_runtime):
