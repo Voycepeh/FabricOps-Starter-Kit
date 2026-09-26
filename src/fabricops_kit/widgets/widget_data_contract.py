@@ -4207,7 +4207,6 @@ def widget_data_contract(
             "discard_data_contract": discard_contract_button,
             "freeze": freeze_button if editable else None,
             "freeze_confirm": freeze_confirm_button if editable else None,
-            "activate": next((control for control in actions if getattr(control, "description", "").startswith("Activate")), None),
         })
 
     open_with_ai_button = widgets.Button(
