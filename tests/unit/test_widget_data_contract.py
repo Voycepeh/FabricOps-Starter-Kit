@@ -979,6 +979,14 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
     ]
     assert "Engineering profile evidence" in controls["grain_profile_evidence"].value
     assert "Profiled row key" in controls["grain_ai"].value
+    assert widget_runtime["calls"]["guardrails"] == []
+
+    controls["save_data_contract"].click()
+    saved_uniqueness = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "uniqueness"
+    )
+    assert module._parameters(saved_uniqueness)["columns"] == ["column_0", "column_1"]
 
 
 def test_table_description_ai_uses_grain_and_manual_classification(widget_runtime, monkeypatch):
