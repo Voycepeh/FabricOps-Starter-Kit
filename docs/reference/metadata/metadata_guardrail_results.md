@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Existing Preview installations may require this table to be recreated or updated through metadata setup because FabricOps does not automatically migrate missing columns.
+Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Additive missing columns are upgraded automatically by metadata setup; incompatible types and known legacy schemas still require explicit migration or recreation.
 
 ## Writer functions
 

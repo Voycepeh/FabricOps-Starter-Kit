@@ -650,70 +650,6 @@ def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):
     assert result["created_tables"] == []
 
 
-def test_setup_metadata_tables_rejects_existing_tables_missing_canonical_columns(monkeypatch):
-    """Verify setup does not rewrite existing metadata table schemas in place."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-
-    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
-    registry = metadata_table_schema_registry()
-
-    class Table:
-        def __init__(self, columns):
-            self.columns = list(columns)
-
-        def where(self, _expr):
-            return self
-
-        def limit(self, value):
-            assert value == 1
-            return self
-
-        def take(self, value):
-            assert value == 1
-            return [object()]
-
-        def count(self):
-            raise AssertionError("active steward readiness must not use count")
-
-    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
-    tables["METADATA_DATA_CATALOGUE"] = Table(
-        [name for name in registry["METADATA_DATA_CATALOGUE"].fieldNames() if name != "store_type"]
-    )
-    monkeypatch.setattr(setup_module, "read_lakehouse_table", lambda table_name, **_kwargs: tables[table_name])
-    monkeypatch.setattr(
-        setup_module,
-        "write_lakehouse_table",
-        lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be schema-replaced"),
-    )
-
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["status"] == "partial_failure"
-    assert result["failed_tables"] == ["METADATA_DATA_CATALOGUE"]
-
-
-def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
-    """Verify setup metadata tables raises when missing columns cannot be safely added."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-
-    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
-    registry = metadata_table_schema_registry()
-
-    class Table:
-        def __init__(self, columns):
-            self.columns = list(columns)
-
-    def read_table(table_name, **_kwargs):
-        if table_name == "METADATA_DATA_CATALOGUE":
-            return Table([name for name in registry[table_name].fieldNames() if name != "store_type"])
-        return Table(registry[table_name].fieldNames())
-
-    monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
-
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["failed_tables"] == ["METADATA_DATA_CATALOGUE"]
-    assert "store_type" in result["table_results"]["METADATA_DATA_CATALOGUE"]["message"]
-
-
 def test_setup_metadata_tables_accepts_existing_tables_with_nullable_physical_audit_fields(monkeypatch):
     """Verify setup ignores Spark physical nullability for existing tables."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -1518,6 +1454,64 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     assert f"- {names[0]}" in output
 
 
+def test_setup_metadata_tables_adds_missing_columns_without_overwriting(monkeypatch, capsys):
+    """Verify setup additively evolves existing metadata tables."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    target = "METADATA_DATA_AGREEMENT"
+    missing_column = "supporting_documents_json"
+    writes = []
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def where(self, _expr):
+            return self
+
+        def limit(self, _value):
+            return self
+
+        def take(self, _value):
+            return [object()]
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            assert rows == []
+            return Table(schema.fieldNames())
+
+    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
+    tables[target] = Table([name for name in registry[target].fieldNames() if name != missing_column])
+
+    def read_table(table_name, **_kwargs):
+        return tables[table_name]
+
+    def write_table(frame, table_name, **kwargs):
+        assert table_name == target
+        assert kwargs["mode"] == "append"
+        assert kwargs["options"] == {"mergeSchema": "true"}
+        assert frame.columns == [missing_column]
+        writes.append(table_name)
+        tables[table_name].columns.extend(frame.columns)
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
+
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    output = capsys.readouterr().out
+
+    assert writes == [target]
+    assert result["status"] == "ready"
+    assert result["evolved_tables"] == [target]
+    assert target not in result["validated_tables"]
+    assert result["table_results"][target]["status"] == "evolved"
+    assert result["table_results"][target]["added_columns"] == [missing_column]
+    assert f"Evolved {target}" in output
+    assert f"Added columns: {missing_column}" in output
+
+
 def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeypatch, capsys):
     """Verify one table failure does not stop later table processing."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -1525,7 +1519,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
     registry = metadata_table_schema_registry()
     names = list(registry)
-    failed_name = "METADATA_DATA_CONTRACT"
+    failed_name = "METADATA_DATA_PROFILED"
     read_order = []
 
     class Table:
@@ -1544,7 +1538,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     def read_table(table_name, **_kwargs):
         read_order.append(table_name)
         if table_name == failed_name:
-            return Table(["bad_column"])
+            return Table([*registry[table_name].fieldNames(), "frequency_json"])
         return Table(registry[table_name].fieldNames())
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
@@ -1562,7 +1556,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     assert f"Successful: {len(names) - 1}/{len(names)}" in output
     assert f"Failed: 1/{len(names)}" in output
     assert f"- {failed_name}:" in output
-    assert "missing required column" in output
+    assert "unexpected legacy column: frequency_json" in output
 
 
 def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted(monkeypatch):
