@@ -44,7 +44,7 @@ Author and manage FabricOps Governance metadata and Data Contracts.
 
 Committed progress is source → target specific and advances only after the append target publishes successfully. The starter flow deliberately uses one incremental driving source with one full supporting source. An initial append bootstrap requires a new or empty target; a populated target without committed source → target state fails safely instead of appending a duplicate complete source. Future `02C` and `02D` variants can own the SCD patterns separately.
 
-[Open `02B_incremental_append_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02B_incremental_append_pipeline.ipynb){ .md-button }\n\n[Follow the incremental append Guided Demo](guided-demo/02B-run-incremental-append-pipeline.md)
+[Open `02B_incremental_append_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02B_incremental_append_pipeline.ipynb){ .md-button }\n\n[Follow the incremental append Guided Demo](guided-demo/02B-build-and-run-incremental-append-etl.md)
 
 </div>
 
