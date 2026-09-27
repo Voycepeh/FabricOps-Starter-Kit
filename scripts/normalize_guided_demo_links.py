@@ -12,6 +12,7 @@ DOCS_DIR = ROOT / "docs"
 LINK_REPLACEMENTS = {
     "guided-demo/99-explore-via-notebooks.md": "guided-demo/99-explore-via-notebook.md",
     "../../guided-demo/run-pipeline.md": "../../guided-demo/02-build-and-run-etl.md",
+    "../../guided-demo/02-run-pipeline.md": "../../guided-demo/02-build-and-run-etl.md",
     "../../guided-demo/review-guardrails.md": "../../guided-demo/03-author-and-freeze-data-contract.md",
     "run-environment-setup.md": "00B-configure-environment-and-load-assets.md",
     "run-pipeline-with-guardrails.md": "04-validate-frozen-data-contract.md",
