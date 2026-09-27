@@ -60,7 +60,7 @@ def get_runtime_package_version() -> str:
     )
     if result.returncode != 0:
         raise RuntimeError(result.stdout + result.stderr)
-    return result.stdout.strip()
+    return result.stdout.strip().splitlines()[-1]
 
 
 def version_from_tag(tag_name: str) -> str:
