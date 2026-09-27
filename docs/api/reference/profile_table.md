@@ -158,7 +158,7 @@ distinct snapshot identity.
 
 ## See also
 
-- [Pipeline Execution](../../guided-demo/02-run-pipeline.md)
+- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
 
 
 <details>
