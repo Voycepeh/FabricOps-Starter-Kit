@@ -250,6 +250,26 @@ def test_draft_environment_must_match_authoring_environment():
         )
 
 
+def test_table_grain_is_canonical_enrichment():
+    """Grain is descriptive table metadata and must survive save/reload filtering."""
+    rows = service.canonical_enrichment_state([
+        {
+            "enrichment_id": "grain-1",
+            "contract_id": "contract-orders",
+            "contract_version": 1,
+            "environment_name": "dev",
+            "enrichment_level": "table",
+            "column_id": "",
+            "enrichment_type": "Grain",
+            "value": "One row per order",
+        }
+    ])
+
+    assert len(rows) == 1
+    assert rows[0]["enrichment_type"] == "Grain"
+    assert rows[0]["value"] == "One row per order"
+
+
 def test_guardrail_save_uses_metadata_target(monkeypatch):
     """Guardrail persistence routes through the metadata target."""
     writes = []

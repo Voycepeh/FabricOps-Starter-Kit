@@ -1067,19 +1067,30 @@ def widget_data_contract(
         table_grain.layout = widgets.Layout(
             width="100%", max_width="560px", min_width="0"
         )
-        existing_row_key = next((
+        row_key_rules = [
             rule for rule in guardrails
             if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
             and str(rule.get("rule_type") or "") == "uniqueness"
             and not str(rule.get("column_id") or "")
-        ), {})
+            and not str(_parameters(rule).get("business_requirement") or "").strip()
+        ]
+        existing_row_key = next(
+            (rule for rule in reversed(row_key_rules) if rule.get("is_active", True)),
+            row_key_rules[-1] if row_key_rules else {},
+        )
         existing_row_key_columns = [
             str(name) for name in _parameters(existing_row_key).get("columns", [])
             if str(name) in column_names
         ]
+        row_key_rule = {"current": dict(existing_row_key)}
+        initial_row_key_columns = (
+            existing_row_key_columns
+            if existing_row_key and existing_row_key.get("is_active", True)
+            else ([] if existing_row_key else profiled_key_columns)
+        )
         row_key_columns = widgets.SelectMultiple(
             options=column_names,
-            value=tuple(existing_row_key_columns or profiled_key_columns),
+            value=tuple(initial_row_key_columns),
             disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
@@ -1675,14 +1686,48 @@ def widget_data_contract(
                 return
             try:
                 selected_keys = [str(name) for name in row_key_columns.value]
-                if existing_row_key or selected_keys:
-                    stage_guardrails([guardrail_record(
+                current_rule = row_key_rule["current"]
+                if current_rule or selected_keys:
+                    previous_columns = [
+                        str(name)
+                        for name in _parameters(current_rule).get("columns", [])
+                        if str(name) in column_names
+                    ]
+                    record = guardrail_record(
                         "data_quality", "uniqueness",
-                        {"columns": selected_keys or existing_row_key_columns},
-                        existing=existing_row_key,
+                        {"columns": selected_keys or previous_columns},
+                        existing=current_rule,
                         action="Block" if row_key_block.value else "Warn",
                         active=bool(selected_keys),
-                    )])
+                    )
+                    stage_guardrails([record])
+                    authoritative_id = str(record["guardrail_rule_id"])
+                    duplicate_ids = {
+                        str(rule.get("guardrail_rule_id") or "")
+                        for rule in session_guardrails()
+                        if str(rule.get("guardrail_type") or "").lower()
+                        in {"data_quality", "dq"}
+                        and str(rule.get("rule_type") or "") == "uniqueness"
+                        and not str(rule.get("column_id") or "")
+                        and not str(
+                            _parameters(rule).get("business_requirement") or ""
+                        ).strip()
+                        and str(rule.get("guardrail_rule_id") or "") != authoritative_id
+                    }
+                    if duplicate_ids:
+                        current["guardrails"] = [
+                            rule for rule in current.get("guardrails", [])
+                            if str(rule.get("guardrail_rule_id") or "") not in duplicate_ids
+                        ]
+                        scope = (
+                            str(current["contract_id"]),
+                            int(current["contract_version"]),
+                        )
+                        pending = state["_pending_guardrails"].get(scope, {})
+                        for duplicate_id in duplicate_ids:
+                            pending.pop(duplicate_id, None)
+                        refresh_manifest()
+                    row_key_rule["current"] = record
                 set_validation_error("table.row_key")
                 render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
