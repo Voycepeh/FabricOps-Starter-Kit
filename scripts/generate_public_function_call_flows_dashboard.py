@@ -88,6 +88,10 @@ def render_dashboard(
     )
     html = html.replace("Public Function Call Flows V2", "Public Function Call Flows V3")
     html = html.replace(
+        "Review deterministic public-function architecture signals, then export one focused AI refactor packet.",
+        'Review deterministic public-function architecture signals, then export one focused AI refactor packet. <a href="../function-call-graph/">How this dashboard is generated</a>.',
+    )
+    html = html.replace(
         ".then(renderDashboard).catch(showDataLoadError);",
         ".then(bundle=>{hydrateNormalizedFlows(bundle.data);return bundle}).then(renderDashboard).catch(showDataLoadError);",
     )
