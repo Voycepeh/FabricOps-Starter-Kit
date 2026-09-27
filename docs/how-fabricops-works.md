@@ -206,19 +206,19 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 <div class="fabricops-section-block" markdown="1">
 
-## Explore deeper
+## Featured Solutions
 
 - [Plug-and-Play, Environment-aware Data Pipelines](solutions/environment-aware-data-pipelines.md)
 - [AI-assisted Data Contract Authoring](solutions/ai-assisted-data-contract-authoring.md)
 - [Generate Enforceable Data Quality Rules from Business Rules](solutions/business-rules-to-data-quality.md)
 - [Scan Effective Data Access](solutions/effective-data-access.md)
+- [Explore the Public Function Call Flow](function-call-graph.md)
 
-## Where to go next
+## Read more documentation
 
-- [How do I run the workflow myself?](guided-demo.md)
-- [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
-- [What exactly is stored in FabricOps metadata?](reference/metadata.md)
-- [What does each FabricOps function do?](reference/index.md)
-- [Where are the reusable notebook templates?](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
+- [Function Reference](reference/index.md)
+- [Data Quality Rules](reference/dq-rules/index.md)
+- [Metadata Tables](reference/metadata.md)
+- [Glossary](glossary.md)
 
 </div>
