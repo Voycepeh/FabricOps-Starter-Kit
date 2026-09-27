@@ -27,7 +27,7 @@ Do not use this skill for package implementation changes unless the notebook tas
 ## Implementation workflow
 
 1. Define Context, Task, Constraints, Expected output, and Verification.
-2. Treat templates as applications of FabricOps, not release-frozen package artifacts.
+2. Treat `templates/notebooks/` as the evolving latest templates. At each FabricOps release, preserve the release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` as immutable snapshots under `templates/releases/vX.Y.Z/`.
 3. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers. For ordinary Fabric table/file reads and writes, use the public foundational I/O functions instead of raw Spark/connector/path persistence when FabricOps provides the operation.
 4. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
 5. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
@@ -70,6 +70,7 @@ Do not describe local structural validation or package/API compatibility validat
 - Do not hardcode tenant IDs, workspace IDs, lakehouse IDs, production paths, secrets, or internal URLs.
 - Do not stamp templates as tested for a FabricOps version without actual Fabric execution evidence.
 - Do not modify release manifests, release pages, generated function pages, dashboard HTML, or package metadata for a template-only task.
+- Never modernize or edit a frozen template snapshot after it is copied from its release tag. The release tag is the authoritative source for that snapshot.
 
 ## Expected output
 
