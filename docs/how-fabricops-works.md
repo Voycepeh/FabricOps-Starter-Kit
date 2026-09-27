@@ -119,28 +119,21 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 
 <div class="fabricops-section-block" markdown="1">
 
-## The Governance ↔ Engineering Loop
+## The Governance ↔ Engineering Cycle
 
-![Governance and Engineering around FabricOps](assets/fabricops-roles.png)
+![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
 
-**Engineering produces the physical table. Profiling makes that table visible to Governance, and the Data Contract turns Governance decisions back into executable checks.**
+**FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
-[`profile_table()`](api/reference/profile_table.md) profiles the actual table in its Lakehouse or Warehouse and writes the observed structure and statistics into the **Data Catalogue** and profiling metadata.
+Engineering runs `02_pipeline`. [`profile_table()`](api/reference/profile_table.md) registers the real table in `METADATA_DATA_CATALOGUE` and writes profile snapshots to `METADATA_DATA_PROFILED` and `METADATA_DATA_PROFILED_FREQUENCY`. [`pipeline_read()`](api/reference/pipeline_read.md) and [`pipeline_write()`](api/reference/pipeline_write.md) register pipeline participation in `METADATA_DATA_LINEAGE`, while a successful [`pipeline_write()`](api/reference/pipeline_write.md) commits `METADATA_SOURCE_OBSERVATION`.
 
-Governance reads the actual governed table through its Data Catalogue entry, adds **Enrichment** and **Guardrails**, and authors the versioned **Data Contract** against that real `table_id`. Engineering then uses the contract so the ETL can validate real runs against the governed definition.
+Governance works through `01_governance`. [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) establish `METADATA_DATA_STEWARD` and `METADATA_DATA_AGREEMENT`. Governance then uses the real Catalogue and profiling context to author the governed definition in `METADATA_DATA_CONTRACT` through [`widget_data_contract()`](api/reference/widget_data_contract.md).
 
-`01_governance` can also establish the **Data Steward** and **Data Agreement** around that governed asset. Fabric AI Functions can optionally use the Catalogue and profiling context to suggest descriptions and classifications, which Governance reviews and edits before they become part of the governed definition.
+The Data Contract carries the executable Guardrails for that table. In Development, Engineering selects the exact frozen contract version and evaluates its Schema, Freshness, Data Quality, Sensitive Data, and Source Drift expectations against the real pipeline. Runtime outcomes are written to `METADATA_GUARDRAIL_RESULTS`.
 
-??? info "See the data handoff"
+If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates that exact version for Production. Production then runs the same `02_pipeline` against the active Data Contract.
 
-    ```mermaid
-    flowchart LR
-        TABLE["Table in Lakehouse or Warehouse"] --> PROFILE["profile_table()"]
-        PROFILE --> CATALOGUE["Data Catalogue"]
-        CATALOGUE --> GOVERNANCE["Governance adds<br/>Enrichment + Guardrails"]
-        GOVERNANCE --> CONTRACT["Data Contract"]
-        CONTRACT --> ETL["ETL validates runs<br/>against the Data Contract"]
-    ```
+**Engineering implementation → Catalogue + Profiling + Lineage + Source Observation → Governance authors Data Contract → Engineering selects + validates → Governance activates → Engineering enforces in Production.**
 
 </div>
 
