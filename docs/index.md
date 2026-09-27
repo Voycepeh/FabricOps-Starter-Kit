@@ -324,61 +324,12 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 Explore the key capabilities FabricOps provides within that operating model. Each solution focuses on one capability, with a dedicated walkthrough, implementation context, and a short screen recording to be added.
 </p>
 
-<div class="fabricops-feature-grid" markdown="0">
-  <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/">
-    <div class="fabricops-feature-card__media">
-      <img src="assets/BusinessRuletoDQ.png" alt="Business rules converted into enforceable Data Quality rules">
-    </div>
-    <div class="fabricops-feature-card__content">
-      <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
-      <p class="fabricops-feature-card__copy">Turn plain-language business rules into reviewable, deterministic Data Quality rules.</p>
-      <span class="fabricops-feature-card__cta">Explore solution</span>
-    </div>
-  </a>
-
-  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/">
-    <div class="fabricops-feature-card__media">
-      <img src="assets/AiDatacontract.png" alt="AI-assisted Data Contract authoring">
-    </div>
-    <div class="fabricops-feature-card__content">
-      <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
-      <p class="fabricops-feature-card__copy">Use profile evidence and AI to accelerate governed contract authoring while keeping human review in control.</p>
-      <span class="fabricops-feature-card__cta">Explore solution</span>
-    </div>
-  </a>
-
-  <a class="fabricops-feature-card" href="solutions/effective-data-access/">
-    <div class="fabricops-feature-card__media">
-      <img src="assets/EffectiveAccessScan.png" alt="Effective data access scan across Fabric permission paths">
-    </div>
-    <div class="fabricops-feature-card__content">
-      <h3 class="fabricops-feature-card__title">Scan Effective Data Access</h3>
-      <p class="fabricops-feature-card__copy">Resolve who can actually reach governed tables across overlapping Fabric permission paths.</p>
-      <span class="fabricops-feature-card__cta">Explore solution</span>
-    </div>
-  </a>
-
-  <a class="fabricops-feature-card" href="solutions/environment-aware-data-pipelines/">
-    <div class="fabricops-feature-card__media">
-      <img src="assets/05/PipelinesDeploymentOverview.png" alt="Same FabricOps pipeline promoted from Development to Production">
-    </div>
-    <div class="fabricops-feature-card__content">
-      <h3 class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</h3>
-      <p class="fabricops-feature-card__copy">Promote the same pipeline from Development to Production while configuration resolves environment-specific Fabric resources.</p>
-      <span class="fabricops-feature-card__cta">Explore solution</span>
-    </div>
-  </a>
-
-  <a class="fabricops-feature-card" href="assets/public-function-call-flows-dashboard.html">
-    <div class="fabricops-feature-card__media">
-      <img src="assets/fabricops-call-graph-dashboard.png" alt="Interactive FabricOps public function call flow dashboard">
-    </div>
-    <div class="fabricops-feature-card__content">
-      <h3 class="fabricops-feature-card__title">Explore the Public Function Call Flow</h3>
-      <p class="fabricops-feature-card__copy">Inspect generated callable relationships, expanded call trees, architecture signals, and focused cleanup context.</p>
-      <span class="fabricops-feature-card__cta">Open dashboard</span>
-    </div>
-  </a>
+<div class="fabricops-feature-grid">
+  <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/"><span class="fabricops-feature-card__media"><img src="assets/BusinessRuletoDQ.png" alt="Business rules converted into enforceable Data Quality rules"></span><span class="fabricops-feature-card__content"><span class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</span><span class="fabricops-feature-card__copy">Turn plain-language business rules into reviewable, deterministic Data Quality rules.</span><span class="fabricops-feature-card__cta">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-feature-card__media"><img src="assets/AiDatacontract.png" alt="AI-assisted Data Contract authoring"></span><span class="fabricops-feature-card__content"><span class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</span><span class="fabricops-feature-card__copy">Use profile evidence and AI to accelerate governed contract authoring while keeping human review in control.</span><span class="fabricops-feature-card__cta">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/effective-data-access/"><span class="fabricops-feature-card__media"><img src="assets/EffectiveAccessScan.png" alt="Effective data access scan across Fabric permission paths"></span><span class="fabricops-feature-card__content"><span class="fabricops-feature-card__title">Scan Effective Data Access</span><span class="fabricops-feature-card__copy">Resolve who can actually reach governed tables across overlapping Fabric permission paths.</span><span class="fabricops-feature-card__cta">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/environment-aware-data-pipelines/"><span class="fabricops-feature-card__media"><img src="assets/05/PipelinesDeploymentOverview.png" alt="Same FabricOps pipeline promoted from Development to Production"></span><span class="fabricops-feature-card__content"><span class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</span><span class="fabricops-feature-card__copy">Promote the same pipeline from Development to Production while configuration resolves environment-specific Fabric resources.</span><span class="fabricops-feature-card__cta">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="assets/public-function-call-flows-dashboard.html"><span class="fabricops-feature-card__media"><img src="assets/fabricops-call-graph-dashboard.png" alt="Interactive FabricOps public function call flow dashboard"></span><span class="fabricops-feature-card__content"><span class="fabricops-feature-card__title">Explore the Public Function Call Flow</span><span class="fabricops-feature-card__copy">Inspect generated callable relationships, expanded call trees, architecture signals, and focused cleanup context.</span><span class="fabricops-feature-card__cta">Open dashboard</span></span></a>
 </div>
 
 ## Download FabricOps
