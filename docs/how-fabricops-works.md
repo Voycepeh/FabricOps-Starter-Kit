@@ -95,7 +95,6 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 - **Project-Specific Consumer Workspace** — `99_explore` consumes approved Production data without recreating the engineering workflow.
 - **Promotion path** — the validated `02_pipeline` moves from Engineering Development to Engineering Production; approved data is then consumed from Production.
 
-The rest of this page zooms into that picture without changing the story.
 
 </div>
 
