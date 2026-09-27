@@ -771,7 +771,7 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     assert intro in text
     assert f"![FabricOps metadata model]({image_reference})" in text
     assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
-    assert text.index(intro) < text.index(image_reference)
+    assert text.index(image_reference) < text.index(intro)
     assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
     assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
 
