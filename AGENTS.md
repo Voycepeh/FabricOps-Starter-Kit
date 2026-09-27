@@ -76,7 +76,7 @@ Use the relevant workflow skill:
 
 For release changelogs and GitHub Release notes, include only sections that contain meaningful content for that release. Do not emit empty headings such as `Deprecated`, `Removed`, `Fixed`, `Security`, `Documentation`, `Breaking changes`, `Notebook templates`, or `Skills` when there is nothing to report.
 
-Release notes describe the formal package release contract first. Notebook templates, skills, samples, guided demos, DQ assets, and environment resources are independently maintained and must not receive dedicated release-note sections merely because they exist in the repository. Mention them only when a release-specific note materially affects users, for example to restate that they remain outside the formal package release contract.
+Release notes describe the formal package release contract first. Notebook templates, skills, samples, guided demos, DQ assets, and environment resources are independently maintained and must not receive dedicated release-note sections merely because they exist in the repository. `00_env_config.ipynb` and `02_pipeline.ipynb` are still snapshotted at every release tag as immutable provenance and migration fixtures; this does not make them Python package release assets. Mention them only when a release-specific note materially affects users, for example to restate that they remain outside the formal package release contract.
 
 ## Backward compatibility and public contracts
 
@@ -254,7 +254,11 @@ Human-facing pages should be scannable before they are read in detail. Use the d
 - Preserve exact FabricOps terminology and do not replace canonical repo terms with generic alternatives.
 - Keep layouts readable on mobile as well as desktop.
 
-The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skills/fabricops-release/SKILL.md` owns the workflow and `docs/maintainer/index.md` is synchronised from it. Change the skill first rather than independently editing the published guide.
+The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skills/fabricops-release/SKILL.md` owns the workflow and `docs/maintainer/index.md` is synchronised from it.
+
+### Notebook release snapshots
+
+`templates/notebooks/` is the evolving latest notebook-template surface. At each FabricOps release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. The release tag is authoritative. Frozen copies are immutable provenance and migration fixtures: never modernize, reformat, or backport later template changes into them. Publish those exact two notebooks individually as downloadable GitHub Release assets for the matching version; do not require a ZIP bundle. These snapshots remain outside the formal Python package asset lifecycle. Change the skill first rather than independently editing the published guide.
 
 ### Public API docstrings
 
