@@ -5,8 +5,6 @@
 <div align="center">
 
 [![Documentation Home](https://img.shields.io/badge/Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-[![Guided Demo](https://img.shields.io/badge/Guided_Demo-Run_FabricOps-0f8f83?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-[![Latest Release](https://img.shields.io/badge/Release-0.2.0-0f8f83?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/0.2.0/)
 
 </div>
 
