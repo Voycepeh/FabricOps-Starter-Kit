@@ -462,6 +462,12 @@
     overflow: visible;
   }
 
+  /* Material sets contain: content on the tabs list, which clips absolutely
+     positioned dropdowns even when overflow is visible. */
+  .md-tabs__list {
+    contain: none;
+  }
+
   .md-tabs__item--dropdown {
     position: relative;
   }
