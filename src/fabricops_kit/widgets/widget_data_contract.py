@@ -1978,6 +1978,7 @@ def widget_data_contract(
             description: str,
             primary_children: list[Any],
             ai_children: list[Any] | None = None,
+            header_controls: list[Any] | None = None,
         ) -> Any:
             """Render every Guardrail with one consistent primary/assistant layout."""
             banner = widgets.HTML(
@@ -2019,7 +2020,23 @@ def widget_data_contract(
                 )
             else:
                 content = primary
-            return shared.form_section(widgets, title=title, children=[content])
+            section_children: list[Any] = []
+            if header_controls:
+                section_children.append(
+                    widgets.HBox(
+                        list(header_controls),
+                        layout=widgets.Layout(
+                            width="auto",
+                            min_width="0",
+                            gap="18px",
+                            align_items="center",
+                            justify_content="flex-start",
+                            overflow="visible",
+                        ),
+                    )
+                )
+            section_children.append(content)
+            return shared.form_section(widgets, title=title, children=section_children)
 
         table_definition_primary = widgets.VBox(
             [
@@ -2137,16 +2154,11 @@ def widget_data_contract(
                     "Freshness uses the latest value in the selected timestamp column "
                     "relative to the pipeline run time."
                 ),
+                header_controls=[
+                    table_rules["freshness"]["enabled"],
+                    table_rules["freshness"]["block"],
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(0, 1fr))",
-                            grid_gap="8px 16px",
-                            align_items="center",
-                        ),
-                    ),
                     *table_rules["freshness"]["display"],
                 ],
             ),
@@ -2161,16 +2173,11 @@ def widget_data_contract(
                     "Check whether data that was previously consumed from this table has "
                     "changed when the same source data is read again."
                 ),
+                header_controls=[
+                    table_rules["source_drift"]["enabled"],
+                    table_rules["source_drift"]["block"],
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     *table_rules["source_drift"]["display"],
                 ],
             ),
