@@ -1,13 +1,15 @@
 # List of Metadata Tables
 
-![FabricOps metadata model](../assets/fabricops-metadata-model.png)
-
 FabricOps metadata is stored in one **Metadata Lakehouse** with two physical schemas:
 
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
 `table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with Enrichment and Guardrails belonging to that exact Data Contract version.
+
+The diagram above shows the current implemented metadata tables and relationships.
+
+![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
 ## Metadata tables
 
