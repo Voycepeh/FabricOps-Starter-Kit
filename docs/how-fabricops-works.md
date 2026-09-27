@@ -63,19 +63,19 @@
 }
 </style>
 
-<div class="fabricops-section-block" markdown>
+<div class="fabricops-section-block" markdown="1">
 
 ## The Big Picture
 
 <div class="fabricops-big-picture">
 
-<div class="fabricops-big-picture__visual" markdown>
+<div class="fabricops-big-picture__visual" markdown="1">
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
 </div>
 
-<div class="fabricops-big-picture__copy" markdown>
+<div class="fabricops-big-picture__copy" markdown="1">
 
 **Microsoft Fabric gives the platform. FabricOps gives the operating practice.**
 
@@ -99,7 +99,7 @@ The rest of this page zooms into that picture without changing the story.
 
 </div>
 
-<div class="fabricops-section-block" markdown>
+<div class="fabricops-section-block" markdown="1">
 
 ## The Governance ↔ Engineering Loop
 
@@ -126,7 +126,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 </div>
 
-<div class="fabricops-section-block" markdown>
+<div class="fabricops-section-block" markdown="1">
 
 ## FabricOps Assets
 
@@ -134,7 +134,7 @@ FabricOps packages that operating pattern around five reusable notebooks:
 
 <div class="fabricops-assets-grid">
 
-<div class="fabricops-asset" markdown>
+<div class="fabricops-asset" markdown="1">
 
 ### Notebooks
 
@@ -150,7 +150,7 @@ FabricOps packages that operating pattern around five reusable notebooks:
 
 </div>
 
-<div class="fabricops-asset" markdown>
+<div class="fabricops-asset" markdown="1">
 
 ### Functions
 
@@ -162,7 +162,7 @@ The notebooks are supported by the FabricOps package: reusable public functions 
 
 </div>
 
-<div class="fabricops-asset" markdown>
+<div class="fabricops-asset" markdown="1">
 
 ### Data Contracts
 
@@ -176,7 +176,7 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 </div>
 
-<div class="fabricops-asset" markdown>
+<div class="fabricops-asset" markdown="1">
 
 ### Metadata
 
@@ -222,7 +222,7 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 </div>
 
-<div class="fabricops-section-block" markdown>
+<div class="fabricops-section-block" markdown="1">
 
 ## The 7-Step FabricOps Lifecycle
 
@@ -246,7 +246,7 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 </div>
 
-<div class="fabricops-section-block" markdown>
+<div class="fabricops-section-block" markdown="1">
 
 ## Explore deeper
 
