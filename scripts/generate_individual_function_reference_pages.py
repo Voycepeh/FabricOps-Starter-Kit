@@ -4570,7 +4570,7 @@ def generate_metadata_reference_pages() -> None:
             "",
             *(
                 [
-                    f"* [`{template}`](../../notebook-templates.md)"
+                    f"* [`{template}`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)"
                     + (f" — {segment}" if segment else "")
                     for template, segment in writer_templates
                 ]
