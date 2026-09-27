@@ -846,7 +846,11 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
     assert "  - Reference:" not in mkdocs_text
-    assert "  - Notebook Templates: notebook-templates.md" in mkdocs_text
+    assert (
+        "      - Notebook Templates: "
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks"
+        in mkdocs_text
+    )
     assert "      - Overview: reference/metadata.md" in mkdocs_text
     assert "  - List of Functions: reference/index.md" in mkdocs_text
     assert "  - List of DQ Rules:" in mkdocs_text
