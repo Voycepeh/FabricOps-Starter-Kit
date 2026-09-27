@@ -182,7 +182,7 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 
 ## See also
 
-- [Templates](../../notebook-templates.md)
+- [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 
 <details>
