@@ -55,8 +55,13 @@
   margin-bottom: 0;
 }
 
+@media (max-width: 1200px) {
+  .md-typeset .fabricops-big-picture {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 960px) {
-  .md-typeset .fabricops-big-picture,
   .md-typeset .fabricops-assets-grid {
     grid-template-columns: 1fr;
   }
