@@ -109,8 +109,6 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 - **6. Project-Specific Consumer Workspace**  
   Consumers use `99_explore` and read approved Production data only. Power BI, data agents, AI workloads, and other project-specific consumption should not connect to Engineering Development outputs or recreate the governed engineering pipeline.
 
-- **Notebook ownership**  
-  Governance owns `01_governance`. Engineering owns `02_pipeline`. Each operational workspace has its own environment-specific `00_env_config`, while project-specific consumer workspaces use `99_explore`.
 
 
 </div>
