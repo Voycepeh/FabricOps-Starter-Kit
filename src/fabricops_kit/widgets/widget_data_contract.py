@@ -297,7 +297,13 @@ def _manifest_sections(
                 + html.escape(column_enrichment.get(
                     (str(row.get("column_id") or ""), "Description"), ""
                 ))
-                + "</summary></details>"
+                + "</summary>"
+                + "<div style='margin-top:6px;white-space:normal;overflow-wrap:anywhere;"
+                "line-height:1.45;color:#344054;'>"
+                + html.escape(column_enrichment.get(
+                    (str(row.get("column_id") or ""), "Description"), ""
+                ))
+                + "</div></details>"
                 if column_enrichment.get(
                     (str(row.get("column_id") or ""), "Description"), ""
                 )
