@@ -131,7 +131,7 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 
 ## See also
 
-- [Templates](../../notebook-templates.md)
+- [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 
 <details>
