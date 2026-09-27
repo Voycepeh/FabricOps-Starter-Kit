@@ -146,7 +146,7 @@
 .fabricops-feature-grid {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(18rem, 31%);
+  grid-auto-columns: clamp(20rem, 36vw, 23rem);
   gap: 0.75rem;
   margin: 0.9rem 0 1.7rem;
   padding: 0 0 0.45rem;
@@ -196,15 +196,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 16 / 9;
-  padding: 0.55rem;
+  height: 13rem;
+  padding: 0.45rem;
   background: color-mix(in srgb, var(--md-primary-fg-color) 4%, var(--md-default-bg-color));
 }
 
 .fabricops-feature-card__media img {
   display: block;
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   border-radius: 0.4rem;
 }
@@ -244,14 +246,18 @@
 
 @media screen and (max-width: 900px) {
   .fabricops-feature-grid {
-    grid-auto-columns: minmax(17rem, 72%);
+    grid-auto-columns: min(23rem, 82vw);
   }
 }
 
 @media screen and (max-width: 560px) {
   .fabricops-feature-grid {
-    grid-auto-columns: 88%;
+    grid-auto-columns: 86vw;
     gap: 0.65rem;
+  }
+
+  .fabricops-feature-card__media {
+    height: 11.5rem;
   }
 }
 
