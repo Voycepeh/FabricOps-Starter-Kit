@@ -127,7 +127,7 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
-    "The cards below show the current implemented metadata tables and relationships."
+    "The diagram above shows the current implemented metadata tables and relationships."
 )
 
 METADATA_TABLE_MODELS = {
