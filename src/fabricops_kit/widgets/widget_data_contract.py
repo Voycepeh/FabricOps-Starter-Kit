@@ -1402,7 +1402,7 @@ def widget_data_contract(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("expected_refresh_unit") or "days"),
                     disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="120px"),
+                    layout=widgets.Layout(width="130px", min_width="110px"),
                 )
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""),
@@ -1413,7 +1413,7 @@ def widget_data_contract(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"),
                     disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="120px"),
+                    layout=widgets.Layout(width="130px", min_width="110px"),
                 )
                 freshness_grid = widgets.GridBox(
                     [
@@ -1432,8 +1432,8 @@ def widget_data_contract(
                     ],
                     layout=widgets.Layout(
                         width="100%",
-                        grid_template_columns="180px minmax(180px, 1fr) 180px",
-                        grid_gap="8px 10px",
+                        grid_template_columns="140px minmax(160px, 1fr) 140px",
+                        grid_gap="8px 8px",
                         align_items="flex-start",
                     ),
                 )
@@ -2142,8 +2142,8 @@ def widget_data_contract(
                         [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
                         layout=widgets.Layout(
                             width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
+                            grid_template_columns="repeat(2, minmax(0, 1fr))",
+                            grid_gap="8px 16px",
                             align_items="center",
                         ),
                     ),
