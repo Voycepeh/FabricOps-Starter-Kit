@@ -8,7 +8,7 @@ The current structural registry of known table and column assets. table_id ident
 
 ## Used in Workflow Template
 
-* [`02_pipeline / optional 99_explore`](../../notebook-templates.md) — Profiling
+* [`02_pipeline / optional 99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Profiling
 
 ## Model
 

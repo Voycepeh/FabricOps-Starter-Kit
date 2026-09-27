@@ -12,7 +12,11 @@ def test_resources_reference_nav_matches_current_structure() -> None:
 
     assert "  - Download FabricOps:" in mkdocs_text
     assert "      - Releases (Python package):" in mkdocs_text
-    assert "      - Notebook Templates: notebook-templates.md" in mkdocs_text
+    assert (
+        "      - Notebook Templates: "
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks"
+        in mkdocs_text
+    )
     assert (
         "      - Demo Assets: "
         "https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData"

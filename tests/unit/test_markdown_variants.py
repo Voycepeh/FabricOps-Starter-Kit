@@ -45,7 +45,7 @@ def test_markdown_variant_hook_preserves_current_source_paths(tmp_path: Path) ->
 
     hook.on_post_build({"docs_dir": str(ROOT / "docs"), "site_dir": str(site_dir)})
 
-    expected_paths = [site_dir / "notebook-templates.md"]
+    expected_paths = []
     stale_flat_paths = [
         site_dir / "how-fabricops-works" / "environment-config.md",
         site_dir / "how-fabricops-works" / "agreement-setup.md",
