@@ -258,7 +258,7 @@ The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skill
 
 ### Notebook release snapshots
 
-`templates/notebooks/` is the evolving latest notebook-template surface. At each FabricOps release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. The release tag is authoritative. Frozen copies are immutable provenance and migration fixtures: never modernize, reformat, or backport later template changes into them. These snapshots remain outside the formal Python package asset lifecycle. Change the skill first rather than independently editing the published guide.
+`templates/notebooks/` is the evolving latest notebook-template surface. At each FabricOps release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. The release tag is authoritative. Frozen copies are immutable provenance and migration fixtures: never modernize, reformat, or backport later template changes into them. Publish those exact two notebooks individually as downloadable GitHub Release assets for the matching version; do not require a ZIP bundle. These snapshots remain outside the formal Python package asset lifecycle. Change the skill first rather than independently editing the published guide.
 
 ### Public API docstrings
 
