@@ -8,7 +8,7 @@ Know who is responsible for the data.
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Agreement intake
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Agreement intake
 
 ## Model
 
