@@ -130,7 +130,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 ## FabricOps Assets
 
-FabricOps packages that operating pattern around five reusable notebooks.
+FabricOps packages that operating pattern around five reusable notebooks:
 
 <div class="fabricops-assets-grid">
 
@@ -180,7 +180,7 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 ### Metadata
 
-**The metadata model is the storage view of the same seven-step workflow.** The workflow explains when Governance and Engineering act; this diagram shows where those definitions, observations, and runtime results are persisted.
+**The metadata model is the storage view of the same seven-step workflow above.** The workflow explains when Governance and Engineering act; this diagram shows where those definitions, observations, and runtime results are persisted.
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
