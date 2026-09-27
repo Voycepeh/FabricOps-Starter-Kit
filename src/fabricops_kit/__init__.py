@@ -123,5 +123,10 @@ def _load_package_version() -> str:
 
 
 __version__ = _load_package_version()
+__release_date__ = "2026-09-22"
+
+print(f"FabricOps v{__version__} · Released {__release_date__}")
+print("Docs, examples, releases & support:")
+print("https://github.com/Voycepeh/FabricOps-Starter-Kit")
 
 __all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
