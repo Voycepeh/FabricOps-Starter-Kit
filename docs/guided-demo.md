@@ -2,7 +2,11 @@
 
 **Run the FabricOps operating model yourself in Microsoft Fabric, from initial setup through governed Production consumption.**
 
-`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then walk through the same lifecycle described in [How FabricOps Works](how-fabricops-works.md).
+`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then walk you through the implementation.
+
+!!! info "Want to understand the operating model first?"
+
+    Read [How FabricOps Works](how-fabricops-works.md) for the Big Picture, Governance ↔ Engineering cycle, Data Contracts, and seven-step lifecycle before running the demo.
 
 !!! tip "New to Microsoft Fabric?"
 
@@ -22,7 +26,6 @@
 
 ## The seven-step FabricOps workflow
 
-![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 | Step | Notebook | What you do |
 | --- | --- | --- |
