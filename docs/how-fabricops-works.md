@@ -88,6 +88,9 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 
 **How Governance and Engineering work hand in hand within Microsoft Fabric**
 
+- **0. Microsoft Fabric building blocks**  
+  FabricOps operates inside Microsoft Fabric using its native building blocks: Workspaces to separate responsibilities and environments, Notebooks running PySpark for engineering and governance logic, Deployment Pipelines for promotion, Lakehouses and Warehouses for Bronze, Silver, Gold, and Metadata storage, and Fabric environments and object configuration to keep Development and Production aligned.
+
 - **1. Governance Workspace**  
   Owns the governed definition of the data. `00_env_config` stores the Governance environment configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
 
