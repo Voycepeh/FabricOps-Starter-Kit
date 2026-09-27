@@ -2063,21 +2063,21 @@ def widget_data_contract(
             widgets,
             title="Grain & Row Key",
                 children=[
+                    row_key_block,
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:4px;'>Define what one row represents, then "
+                        "select the column or smallest column combination that should "
+                        "uniquely identify that row. The selected key automatically "
+                        "becomes the table-level uniqueness guardrail.</div>"
+                    ),
                     widgets.GridBox(
                         [
                             widgets.VBox(
                                 [
-                                    widgets.HTML(
-                                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
-                                        "margin-bottom:4px;'>Define what one row represents, then "
-                                        "select the column or smallest column combination that should "
-                                        "uniquely identify that row. The selected key automatically "
-                                        "becomes the table-level uniqueness guardrail.</div>"
-                                    ),
                                     table_grain,
                                     row_key_columns,
                                     grain_profile_evidence,
-                                    row_key_block,
                                 ],
                                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
                             ),
