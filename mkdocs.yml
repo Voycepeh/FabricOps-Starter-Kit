@@ -40,12 +40,26 @@ nav:
       - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
       - "Step 6 - Run Pipeline in Production": guided-demo/06-run-production.md
       - "Step 7 - Consume Production Data": guided-demo/07-consume-production-data.md
-  - Resources & Reference:
+  - Download FabricOps:
+      - Releases (Python package):
+          - Overview: releases/index.md
+          - 0.2.0: releases/0.2.0/index.md
+          - 0.1.0: releases/0.1.0/index.md
       - Notebook Templates: notebook-templates.md
+      - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
+  - Reference Documentation:
       - Function Reference: reference/index.md
-      - Call Flow: function-call-graph.md
-      - FabricOps Engineering: reference/engineering-cheat-sheet.md
-      - Glossary: glossary.md
+      - Data Quality Rules:
+          - Overview: reference/dq-rules/index.md
+          - Completeness: reference/dq-rules/completeness.md
+          - Uniqueness: reference/dq-rules/uniqueness.md
+          - Value Set: reference/dq-rules/value-set.md
+          - Range: reference/dq-rules/range.md
+          - Pattern: reference/dq-rules/pattern.md
+          - Column Relationship: reference/dq-rules/column-relationship.md
+          - Conditional Completeness: reference/dq-rules/conditional-completeness.md
+          - Conditional Values: reference/dq-rules/conditional-values.md
+          - Custom Expression: reference/dq-rules/custom-expression.md
       - Metadata Tables:
           - Overview: reference/metadata.md
           - Data Steward: reference/metadata/metadata_data_steward.md
@@ -60,21 +74,7 @@ nav:
           - Guardrail Results: reference/metadata/metadata_guardrail_results.md
           - Data Contract: reference/metadata/metadata_data_contract.md
           - Data Access: reference/metadata/metadata_data_access.md
-      - DQ Rules:
-          - Overview: reference/dq-rules/index.md
-          - Completeness: reference/dq-rules/completeness.md
-          - Uniqueness: reference/dq-rules/uniqueness.md
-          - Value Set: reference/dq-rules/value-set.md
-          - Range: reference/dq-rules/range.md
-          - Pattern: reference/dq-rules/pattern.md
-          - Column Relationship: reference/dq-rules/column-relationship.md
-          - Conditional Completeness: reference/dq-rules/conditional-completeness.md
-          - Conditional Values: reference/dq-rules/conditional-values.md
-          - Custom Expression: reference/dq-rules/custom-expression.md
-  - Releases:
-      - Overview: releases/index.md
-      - 0.2.0: releases/0.2.0/index.md
-      - 0.1.0: releases/0.1.0/index.md
+      - Glossary: glossary.md
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md

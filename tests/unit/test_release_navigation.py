@@ -30,11 +30,11 @@ def test_release_navigation_lists_only_live_versions_newest_first(tmp_path: Path
     _write_manifest(manifests, "0.11.0", "preparing")
 
     assert rn.render_release_navigation(manifests) == (
-        "  - Releases:\n"
-        "      - Overview: releases/index.md\n"
-        "      - 0.10.0: releases/0.10.0/index.md\n"
-        "      - 0.2.0: releases/0.2.0/index.md\n"
-        "      - 0.1.0: releases/0.1.0/index.md\n"
+        "      - Releases (Python package):\n"
+        "          - Overview: releases/index.md\n"
+        "          - 0.10.0: releases/0.10.0/index.md\n"
+        "          - 0.2.0: releases/0.2.0/index.md\n"
+        "          - 0.1.0: releases/0.1.0/index.md\n"
     )
 
 
@@ -47,9 +47,11 @@ def test_release_navigation_replaces_only_releases_block(tmp_path: Path) -> None
     mkdocs.write_text(
         "nav:\n"
         "  - Home: index.md\n"
-        "  - Releases:\n"
-        "      - Overview: releases/index.md\n"
-        "      - 0.1.0: releases/0.1.0/index.md\n"
+        "  - Download FabricOps:\n"
+        "      - Releases (Python package):\n"
+        "          - Overview: releases/index.md\n"
+        "          - 0.1.0: releases/0.1.0/index.md\n"
+        "      - Notebook Templates: notebook-templates.md\n"
         "  - Reference: reference/index.md\n",
         encoding="utf-8",
     )
@@ -59,9 +61,11 @@ def test_release_navigation_replaces_only_releases_block(tmp_path: Path) -> None
     assert mkdocs.read_text(encoding="utf-8") == (
         "nav:\n"
         "  - Home: index.md\n"
-        "  - Releases:\n"
-        "      - Overview: releases/index.md\n"
-        "      - 0.2.0: releases/0.2.0/index.md\n"
+        "  - Download FabricOps:\n"
+        "      - Releases (Python package):\n"
+        "          - Overview: releases/index.md\n"
+        "          - 0.2.0: releases/0.2.0/index.md\n"
+        "      - Notebook Templates: notebook-templates.md\n"
         "  - Reference: reference/index.md\n"
     )
 
@@ -74,9 +78,10 @@ def test_release_navigation_check_fails_when_sidebar_is_stale(tmp_path: Path) ->
     mkdocs = tmp_path / "mkdocs.yml"
     mkdocs.write_text(
         "nav:\n"
-        "  - Releases:\n"
-        "      - Overview: releases/index.md\n"
-        "      - 0.1.0: releases/0.1.0/index.md\n",
+        "  - Download FabricOps:\n"
+        "      - Releases (Python package):\n"
+        "          - Overview: releases/index.md\n"
+        "          - 0.1.0: releases/0.1.0/index.md\n",
         encoding="utf-8",
     )
 

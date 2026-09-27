@@ -100,9 +100,13 @@
 
 .fabricops-home-quicklinks {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem;
   margin: 0.85rem 0 1.5rem;
+}
+
+.fabricops-home-quicklinks--assets {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .fabricops-home-quicklink {
@@ -141,9 +145,29 @@
 
 .fabricops-feature-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(18rem, 31%);
   gap: 0.75rem;
   margin: 0.9rem 0 1.7rem;
+  padding: 0 0 0.45rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-primary-fg-color) transparent;
+}
+
+.fabricops-feature-grid::-webkit-scrollbar {
+  height: 0.35rem;
+}
+
+.fabricops-feature-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--md-primary-fg-color);
+}
+
+.fabricops-feature-grid::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .fabricops-feature-card {
@@ -157,6 +181,7 @@
   box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.045);
   color: var(--md-default-fg-color) !important;
   text-decoration: none;
+  scroll-snap-align: start;
   transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
@@ -174,7 +199,6 @@
   aspect-ratio: 16 / 9;
   padding: 0.55rem;
   background: color-mix(in srgb, var(--md-primary-fg-color) 4%, var(--md-default-bg-color));
-  border-bottom: 1px solid var(--md-default-fg-color--lightest);
 }
 
 .fabricops-feature-card__media img {
@@ -218,9 +242,16 @@
   content: " →";
 }
 
+@media screen and (max-width: 900px) {
+  .fabricops-feature-grid {
+    grid-auto-columns: minmax(17rem, 72%);
+  }
+}
+
 @media screen and (max-width: 560px) {
   .fabricops-feature-grid {
-    grid-template-columns: 1fr;
+    grid-auto-columns: 88%;
+    gap: 0.65rem;
   }
 }
 
@@ -293,7 +324,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 Explore the key capabilities FabricOps provides within that operating model. Each solution focuses on one capability, with a dedicated walkthrough, implementation context, and a short screen recording to be added.
 </p>
 
-<div class="fabricops-feature-grid">
+<div class="fabricops-feature-grid" markdown="0">
   <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/">
     <div class="fabricops-feature-card__media">
       <img src="assets/BusinessRuletoDQ.png" alt="Business rules converted into enforceable Data Quality rules">
@@ -337,19 +368,38 @@ Explore the key capabilities FabricOps provides within that operating model. Eac
       <span class="fabricops-feature-card__cta">Explore solution</span>
     </div>
   </a>
+
+  <a class="fabricops-feature-card" href="assets/public-function-call-flows-dashboard.html">
+    <div class="fabricops-feature-card__media">
+      <img src="assets/fabricops-call-graph-dashboard.png" alt="Interactive FabricOps public function call flow dashboard">
+    </div>
+    <div class="fabricops-feature-card__content">
+      <h3 class="fabricops-feature-card__title">Explore the Public Function Call Flow</h3>
+      <p class="fabricops-feature-card__copy">Inspect generated callable relationships, expanded call trees, architecture signals, and focused cleanup context.</p>
+      <span class="fabricops-feature-card__cta">Open dashboard</span>
+    </div>
+  </a>
 </div>
 
-## Explore FabricOps
+## Download FabricOps
+
+<p class="fabricops-feature-intro">
+Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets. For detailed information, see the Reference Documentation below.
+</p>
+
+<div class="fabricops-home-quicklinks fabricops-home-quicklinks--assets">
+  <a class="fabricops-home-quicklink" href="releases/">Releases (Python package)</a>
+  <a class="fabricops-home-quicklink" href="notebook-templates/">Notebook Templates</a>
+  <a class="fabricops-home-quicklink" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets</a>
+</div>
+
+## Reference Documentation
 
 <div class="fabricops-home-quicklinks">
-  <a class="fabricops-home-quicklink" href="notebook-templates/">Notebook Templates</a>
-  <a class="fabricops-home-quicklink" href="reference/engineering-cheat-sheet/">FabricOps Engineering</a>
-  <a class="fabricops-home-quicklink" href="glossary/">Glossary</a>
-  <a class="fabricops-home-quicklink" href="reference/metadata/">Metadata Tables</a>
   <a class="fabricops-home-quicklink" href="reference/">Function Reference</a>
-  <a class="fabricops-home-quicklink" href="function-call-graph/">Call Flow</a>
-  <a class="fabricops-home-quicklink" href="reference/dq-rules/">DQ Rules</a>
-  <a class="fabricops-home-quicklink" href="releases/">Releases</a>
+  <a class="fabricops-home-quicklink" href="reference/dq-rules/">Data Quality Rules</a>
+  <a class="fabricops-home-quicklink" href="reference/metadata/">Metadata Tables</a>
+  <a class="fabricops-home-quicklink" href="glossary/">Glossary</a>
 </div>
 
 </div>
