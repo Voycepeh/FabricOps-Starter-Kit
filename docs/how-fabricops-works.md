@@ -146,7 +146,7 @@ FabricOps packages that operating pattern around five reusable notebooks:
 | [`02B_incremental_append_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02B_incremental_append_pipeline.ipynb) | Variant of `02_pipeline` for incremental reads published through append. |
 | [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific workspaces consume approved Production data without recreating the Production engineering workflow. |
 
-[Browse the reusable notebook templates →](notebook-templates.md)
+[Browse the reusable notebook templates →](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 </div>
 
@@ -261,6 +261,6 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 - [Why does FabricOps make these engineering choices?](reference/engineering-cheat-sheet.md)
 - [What exactly is stored in FabricOps metadata?](reference/metadata.md)
 - [What does each FabricOps function do?](reference/index.md)
-- [Where are the reusable notebook templates?](notebook-templates.md)
+- [Where are the reusable notebook templates?](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 </div>
