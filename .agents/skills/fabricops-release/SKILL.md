@@ -377,7 +377,7 @@ Do not maintain or rerun the generic CI checklist here. `.github/workflows/ci.ym
 
 Before release preparation is considered validated, confirm the candidate commit has a successful FabricOps CI run. If CI is missing, pending, cancelled, or failed, stop and fix CI rather than reproducing those checks in this skill.
 
-A release may validly contain zero Live metadata contracts. Current notebook templates remain living applications of the FabricOps package and are not Python package assets. Release preparation must preserve exact release-tag snapshots of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/` for provenance and migration; never edit those frozen copies after capture. Their current-template `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
+A release may validly contain zero Live metadata contracts. Current notebook templates remain living applications of the FabricOps package and are not Python package assets. Release preparation must preserve exact release-tag snapshots of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/` for provenance and migration; never edit those frozen copies after capture. The tag workflow must attach the two notebooks individually to the GitHub Release, without requiring a ZIP bundle. Their current-template `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
 
 ## 13. Prepare and merge release PR
 
@@ -497,6 +497,7 @@ The tag workflow must:
 7. Generate checksums.
 8. Extract the matching changelog release notes.
 9. Create the GitHub Release and attach its assets.
+10. Attach the exact release-tag `00_env_config.ipynb` and `02_pipeline.ipynb` individually as downloadable GitHub Release assets. Do not require a ZIP wrapper.
 
 It must not rerun Ruff, pytest, strict MkDocs, generic generated-artifact validation, individual reference regeneration, or the installed-wheel smoke test. Those checks belong to canonical CI and must have passed before the tag is created.
 
@@ -505,6 +506,8 @@ After the tag workflow completes, verify the GitHub Release contains:
 - wheel
 - source distribution
 - checksums
+- `00_env_config.ipynb`
+- `02_pipeline.ipynb`
 - release notes
 
 Verify frozen source links now resolve through `blob/vX.Y.Z/`. If frozen source links return 404 before the release tag is pushed, confirm the manifest uses the intended tag; this is expected because the tag does not exist yet. If the links still return 404 after the tag is pushed, verify that the tag exists remotely in GitHub and points to the merged release commit.
@@ -549,6 +552,7 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | Build artifacts and checksums | Tag workflow | AI verifies published assets. |
 | Canonical frozen source reference | Human-approved manifest field | Use `source_ref: vX.Y.Z`; resolved commit SHA is audit metadata only. |
 | `00` / `02` release template snapshots | Deterministic release provenance | Copy exactly from the release tag into `templates/releases/vX.Y.Z/`; never modernize the frozen copies. |
+| `00_env_config.ipynb` / `02_pipeline.ipynb` GitHub Release assets | Tag workflow | Publish the exact frozen notebooks individually; no ZIP bundle is required. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
 
 ## 19. Exact source-code links
