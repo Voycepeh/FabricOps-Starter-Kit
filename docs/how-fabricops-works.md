@@ -86,15 +86,14 @@
 
 Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
-**Questions this diagram answers:**
+**How the operating model fits together:**
 
-- Where do Governance, Engineering Development, Engineering Production, and project-specific consumers sit?
-- Which notebooks belong in each workspace?
-- Where does the shared Metadata Lakehouse fit?
-- What is promoted to Production?
-- Where are approved outputs consumed from?
-
-Read it from top to bottom. Governance defines and versions governed expectations. Engineering Development builds and validates the implementation. The validated `02_pipeline` is promoted to Engineering Production, where active contracts are resolved and governed outputs are produced. Project-specific consumers then use approved Production data through `99_explore`.
+- **Governance Workspace** — `00_env_config` and `01_governance` define, review, version, and activate governed expectations.
+- **Metadata Lakehouse** — shared FabricOps metadata connects Governance and Engineering, including catalogue, profiling, contracts, lineage, and guardrail results.
+- **Engineering Development Workspace** — `00_env_config` and `02_pipeline` build, run, and validate the implementation against the selected frozen Data Contract.
+- **Engineering Production Workspace** — receives the validated `02_pipeline`, resolves the active Data Contract, and produces governed Production outputs.
+- **Project-Specific Consumer Workspace** — `99_explore` consumes approved Production data without recreating the engineering workflow.
+- **Promotion path** — the validated `02_pipeline` moves from Engineering Development to Engineering Production; approved data is then consumed from Production.
 
 The rest of this page zooms into that picture without changing the story.
 
