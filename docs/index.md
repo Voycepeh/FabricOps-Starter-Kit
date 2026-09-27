@@ -150,12 +150,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 10.5rem;
-  padding: 0.9rem;
+  overflow: hidden;
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.55rem;
+  border-radius: 0.7rem;
   background: var(--md-default-bg-color);
-  box-shadow: 0 0.1rem 0.35rem rgba(0, 0, 0, 0.035);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.045);
   color: var(--md-default-fg-color) !important;
   text-decoration: none;
   transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
@@ -164,15 +163,39 @@
 .fabricops-feature-card:hover,
 .fabricops-feature-card:focus {
   border-color: var(--md-primary-fg-color);
-  box-shadow: 0 0.25rem 0.8rem rgba(15, 143, 131, 0.1);
-  transform: translateY(-0.06rem);
+  box-shadow: 0 0.35rem 1rem rgba(15, 143, 131, 0.12);
+  transform: translateY(-0.08rem);
 }
 
+.fabricops-feature-card__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  padding: 0.55rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 4%, var(--md-default-bg-color));
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.fabricops-feature-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0.4rem;
+}
+
+.fabricops-feature-card__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0.9rem 0.95rem 0.95rem;
+}
 
 .fabricops-feature-card__title {
   margin: 0 0 0.35rem;
   color: var(--md-default-fg-color);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 800;
   line-height: 1.3;
 }
@@ -272,27 +295,47 @@ Explore the key capabilities FabricOps provides within that operating model. Eac
 
 <div class="fabricops-feature-grid">
   <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/">
-    <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
-    <p class="fabricops-feature-card__copy">Write a business rule in plain language. FabricOps translates it into a reviewable, enforceable Data Quality rule.</p>
-    <span class="fabricops-feature-card__cta">Explore solution</span>
+    <div class="fabricops-feature-card__media">
+      <img src="assets/BusinessRuletoDQ.png" alt="Business rules converted into enforceable Data Quality rules">
+    </div>
+    <div class="fabricops-feature-card__content">
+      <h3 class="fabricops-feature-card__title">Generate Enforceable Data Quality Rules from Business Rules</h3>
+      <p class="fabricops-feature-card__copy">Turn plain-language business rules into reviewable, deterministic Data Quality rules.</p>
+      <span class="fabricops-feature-card__cta">Explore solution</span>
+    </div>
   </a>
 
   <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/">
-    <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
-    <p class="fabricops-feature-card__copy">Use profile evidence and AI to help author descriptions, grain and row keys, sensitive-data handling, patterns, and other Data Contract metadata.</p>
-    <span class="fabricops-feature-card__cta">Explore solution</span>
+    <div class="fabricops-feature-card__media">
+      <img src="assets/AiDatacontract.png" alt="AI-assisted Data Contract authoring">
+    </div>
+    <div class="fabricops-feature-card__content">
+      <h3 class="fabricops-feature-card__title">AI-assisted Data Contract Authoring</h3>
+      <p class="fabricops-feature-card__copy">Use profile evidence and AI to accelerate governed contract authoring while keeping human review in control.</p>
+      <span class="fabricops-feature-card__cta">Explore solution</span>
+    </div>
   </a>
 
   <a class="fabricops-feature-card" href="solutions/effective-data-access/">
-    <h3 class="fabricops-feature-card__title">Scan Effective Data Access</h3>
-    <p class="fabricops-feature-card__copy">Resolve who actually has access to your tables by scanning workspace roles, direct item access, OneLake security roles, and SQL endpoint grants.</p>
-    <span class="fabricops-feature-card__cta">Explore solution</span>
+    <div class="fabricops-feature-card__media">
+      <img src="assets/EffectiveAccessScan.png" alt="Effective data access scan across Fabric permission paths">
+    </div>
+    <div class="fabricops-feature-card__content">
+      <h3 class="fabricops-feature-card__title">Scan Effective Data Access</h3>
+      <p class="fabricops-feature-card__copy">Resolve who can actually reach governed tables across overlapping Fabric permission paths.</p>
+      <span class="fabricops-feature-card__cta">Explore solution</span>
+    </div>
   </a>
 
   <a class="fabricops-feature-card" href="solutions/environment-aware-data-pipelines/">
-    <h3 class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</h3>
-    <p class="fabricops-feature-card__copy">Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.</p>
-    <span class="fabricops-feature-card__cta">Explore solution</span>
+    <div class="fabricops-feature-card__media">
+      <img src="assets/05/PipelinesDeploymentOverview.png" alt="Same FabricOps pipeline promoted from Development to Production">
+    </div>
+    <div class="fabricops-feature-card__content">
+      <h3 class="fabricops-feature-card__title">Plug-and-Play, Environment-aware Data Pipelines</h3>
+      <p class="fabricops-feature-card__copy">Promote the same pipeline from Development to Production while configuration resolves environment-specific Fabric resources.</p>
+      <span class="fabricops-feature-card__cta">Explore solution</span>
+    </div>
   </a>
 </div>
 
