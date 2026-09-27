@@ -36,6 +36,23 @@ Do not use this skill for package implementation changes unless the notebook tas
 8. Claim Microsoft Fabric runtime success only after actual Fabric execution by the named tester. Local Python checks may support compatibility claims but cannot prove Fabric execution.
 9. Preserve sample assets only when they are public-safe and genuinely required by the template.
 
+## Standard 02 pipeline migration contract
+
+Treat `02_pipeline.ipynb` as a cloneable bootstrap that users own after copying it. FabricOps owns the scaffold and package behaviour; projects own the configuration values and transformation logic they place into the scaffold.
+
+Preserve these migration surfaces across routine template changes:
+
+- Keep the top-level flow ordered as Environment → Data Contract → Read → Transform → Write.
+- Keep source configuration at the top of each cloneable Read block, before the first `pipeline_read()` call.
+- Keep target configuration at the top of each cloneable Write block, before target resolution, validation, or `pipeline_write()`.
+- Keep project transformation logic isolated in the dedicated `transform` cell between Read and Write. Do not bury project transformation logic inside FabricOps-owned read/write scaffolding.
+- Keep FabricOps-owned engine behaviour behind public `fabricops_kit` APIs. Do not grow private framework implementations inline in the notebook when the behaviour belongs in the package.
+- Preserve stable cell IDs for the standard migration surfaces unless a deliberate migration-contract change requires otherwise.
+
+The goal is not to freeze notebook presentation or exact cell contents. Maintainers may improve explanations, examples, public API calls, and scaffold implementation. The invariant is that a user or coding assistant can migrate an existing pipeline to a newer template by identifying the same configuration surfaces and dedicated transformation cell, then reviewing the resulting pipeline before execution.
+
+A change that moves or mixes these user-owned surfaces is a migration-contract change. Keep it explicit, justify it in the PR, and update the structural contract tests intentionally rather than weakening them.
+
 ## Validation types
 
 Distinguish three validation levels in reports and notebook wording:

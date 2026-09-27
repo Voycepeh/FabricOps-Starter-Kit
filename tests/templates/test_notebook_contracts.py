@@ -547,3 +547,53 @@ def test_02B_incremental_append_pipeline_is_one_append_publication_pattern():
     assert '"scd2"' not in source
     assert "separate `02C` or `02D` pipeline variant" in source
     assert "not yet been manually validated in Microsoft Fabric" in source
+
+
+# Standard 02 migration surfaces: these protect transplantability without snapshotting the notebook.
+def test_02_pipeline_preserves_migration_surfaces():
+    """Keep configuration and project transformation easy to transplant into a newer template."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
+    cell_ids = [cell.get("id") for cell in notebook.cells]
+    required_order = [
+        "environment",
+        "contracts",
+        "read-setup",
+        "read-1",
+        "read-2",
+        "read-3",
+        "transform",
+        "write-setup",
+        "write-1",
+        "write-2",
+    ]
+    positions = [cell_ids.index(cell_id) for cell_id in required_order]
+    assert positions == sorted(positions)
+
+    transform = _cell_by_id("02_pipeline.ipynb", "transform").source
+    assert "pipeline_read(" not in transform
+    assert "pipeline_write(" not in transform
+
+    for cell_id in ("read-1", "read-2", "read-3"):
+        block = _cell_by_id("02_pipeline.ipynb", cell_id).source
+        first_read = block.index("pipeline_read(")
+        for name in ("READ_NAME", "READ_STORE", "READ_SCHEMA", "READ_TABLE", "READ_MODE", "READ_QUERY"):
+            assert block.index(f"{name} =") < first_read
+
+    for cell_id in ("write-1", "write-2"):
+        block = _cell_by_id("02_pipeline.ipynb", cell_id).source
+        first_write = block.index("pipeline_write(")
+        for name in ("WRITE_NAME", "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
+            assert block.index(f"{name} =") < first_write
+
+
+def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
+    """Prevent the standard pipeline from depending on private FabricOps implementation modules."""
+    for cell_index, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"):
+        tree = _parse_code_cell(NOTEBOOK_DIR / "02_pipeline.ipynb", cell_index, source)
+        if tree is None:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                assert not node.module.startswith("fabricops_kit."), (
+                    f"02_pipeline.ipynb cell {cell_index} imports FabricOps internals: {node.module}"
+                )
