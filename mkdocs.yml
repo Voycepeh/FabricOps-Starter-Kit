@@ -79,6 +79,7 @@ nav:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
+      - Call Flow Dashboard Architecture: function-call-graph.md
 
 markdown_extensions:
   - abbr
