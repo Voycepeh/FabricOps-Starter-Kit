@@ -29,9 +29,18 @@
   padding-inline: clamp(0.8rem, 2vw, 2rem);
 }
 
-/* Keep regular text readable even when the page container is wide */
+/* Let page components use the desktop canvas. Constrain prose, not the
+   entire .md-typeset container, so cards/images/tables are not squeezed. */
 .md-content__inner .md-typeset {
-  max-width: 78ch;
+  max-width: 100%;
+  width: 100%;
+}
+
+.md-content__inner .md-typeset > p,
+.md-content__inner .md-typeset > ul,
+.md-content__inner .md-typeset > ol,
+.md-content__inner .md-typeset > blockquote {
+  max-width: 84ch;
 }
 
 /* Expand media/diagram/table blocks beyond prose width when possible */
@@ -72,14 +81,25 @@
   margin-right: 0;
 }
 
-/* Keep sidebars usable without forcing main layout internals */
+/* Desktop navigation lives in the top hover menus. Reclaim the permanent
+   left navigation rail for the page content. Keep the page TOC on the right
+   because it navigates within the current document rather than the site. */
 @media screen and (min-width: 76.25em) {
   .md-sidebar--primary {
-    width: 13.5rem;
+    display: none;
   }
 
   .md-sidebar--secondary {
-    width: 13rem;
+    width: 12rem;
+  }
+
+  .md-content {
+    min-width: 0;
+  }
+
+  .md-content__inner {
+    max-width: 118rem;
+    padding-inline: clamp(1rem, 2.5vw, 2.5rem);
   }
 }
 
