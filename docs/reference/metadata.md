@@ -103,10 +103,10 @@ The cards below show the current implemented metadata tables and relationships.
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Author and freeze one table-centric schema, processing, Enrichment, and Guardrail snapshot; link an exact Data Agreement version only when activating it for Production.</span>
+  <span class="metadata-table-card__purpose">Own one table-centric governed definition in a single versioned JSON payload; edit the draft in place, freeze the reviewed definition, and link an exact Data Agreement version only when activating it for Production.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One Data Contract lifecycle version for one governed table; its payload becomes immutable when frozen and its Data Agreement linkage is populated at activation.</span>
+    <span>One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

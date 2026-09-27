@@ -126,4 +126,4 @@ At this point, stop. Do not create the managed source tables manually in 0B.
 
 The next setup notebook demonstrates the FabricOps I/O helpers and prepares the exact managed tables that `02_pipeline` will use.
 
-**Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data.md)
+**Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)

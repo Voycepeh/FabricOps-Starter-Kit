@@ -67,4 +67,4 @@ Do not edit a frozen version in place.
 
 The exact frozen target contract has successful validation evidence for the Development environment, and the notebook exits at the validation gate before the business target can be written. This evidence is one prerequisite for the later Governance activation decision; it does not activate the contract by itself.
 
-**Next:** [Step 5. Link the Data Agreement and activate](05-create-data-contract.md)
+**Next:** [Step 5. Link the Data Agreement and activate](05-activate-data-contract-and-promote.md)

@@ -1,6 +1,6 @@
 # Step 2B. Run an Incremental Append Pipeline
 
-Use the `02B_incremental_append_pipeline` template after you understand the full-read flow in [Step 2. Build and run the ETL](02-run-pipeline.md).
+Use the `02B_incremental_append_pipeline` template after you understand the full-read flow in [Step 2. Build and run the ETL](02-build-and-run-etl.md).
 
 The incremental template is **target-aware**. FabricOps resolves the unconsumed scope of an incremental source relative to a specific target, so the target identity must be known before the incremental read starts.
 
@@ -193,4 +193,4 @@ An append bootstrap is allowed only when the target is new or empty. A populated
 
 Use separate `02C` and `02D` variants for the SCD patterns rather than mixing them into this notebook.
 
-**Next:** return to [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md) when you are ready to govern the pipeline.
+**Next:** return to [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md) when you are ready to govern the pipeline.

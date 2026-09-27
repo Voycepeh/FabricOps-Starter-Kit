@@ -42,8 +42,8 @@ You have completed the same seven-stage operating flow described in How FabricOp
 2. Engineering built and ran the real ETL, creating the technical evidence.
 3. Governance authored the table-specific Data Contract.
 4. Engineering selected and validated the frozen version.
-5. Governance linked the agreement and activated the tested version.
-6. Engineering promoted and ran the same pipeline in Production.
+5. Governance linked the agreement, activated the tested Data Contract, and Engineering promoted the validated pipeline to Production.
+6. Engineering ran the same validated pipeline workflow again in Production.
 7. Consumers now use the approved Production output.
 
 The four reusable notebooks have different responsibilities:

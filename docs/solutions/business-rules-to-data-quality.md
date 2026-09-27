@@ -18,4 +18,4 @@ Business intent stays readable while Engineering receives an explicit rule shape
 
 A future screen recording will show the full flow from plain-language requirement to reviewed DQ rules.
 
-For the hands-on workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-enrich-guardrails.md).
+For the hands-on workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-author-and-freeze-data-contract.md).

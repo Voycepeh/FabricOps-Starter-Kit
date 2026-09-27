@@ -402,7 +402,7 @@ disabled or Fabric AI Functions are unavailable, manual authoring continues unch
 
 ## Practical cheat sheets
 
-Use these when you already know what you want to do and only need a quick syntax or tuning reminder. The [Guided Demo](../guided-demo/02-run-pipeline.md) explains how the patterns fit into the FabricOps workflow.
+Use these when you already know what you want to do and only need a quick syntax or tuning reminder. The [Guided Demo](../guided-demo/02-build-and-run-etl.md) explains how the patterns fit into the FabricOps workflow.
 
 ??? example "PySpark transformation cheat sheet"
 
@@ -727,4 +727,4 @@ Use these when you already know what you want to do and only need a quick syntax
 
     After the query returns, continue project-specific transformation using the returned PySpark DataFrame.
 
-For exact FabricOps function contracts, use the [Function Reference](index.md). For the worked learning path, return to [Module 2: Engineer and run a data pipeline](../guided-demo/02-run-pipeline.md).
+For exact FabricOps function contracts, use the [Function Reference](index.md). For the worked learning path, return to [Module 2: Engineer and run a data pipeline](../guided-demo/02-build-and-run-etl.md).

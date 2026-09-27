@@ -66,5 +66,5 @@ The frozen version is immutable and becomes the exact candidate Engineering sele
 
 You now have one frozen Data Contract ready for Engineering validation.
 
-**Previous:** [Step 2. Run the Development pipeline](02-run-pipeline.md)  
-**Next:** [Step 4. Select and validate the Data Contract](04-run-pipeline-with-guardrails.md)
+**Previous:** [Step 2. Run the Development pipeline](02-build-and-run-etl.md)  
+**Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)

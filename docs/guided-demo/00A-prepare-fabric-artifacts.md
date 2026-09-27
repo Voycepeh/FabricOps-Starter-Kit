@@ -114,4 +114,4 @@ You now have:
 
 The physical Fabric foundation is ready. The next step imports the FabricOps notebook templates and demo data.
 
-**Next:** [0B. Configure the environment and load demo data](00B-run-environment-setup.md)
+**Next:** [0B. Configure the environment and load demo data](00B-configure-environment-and-load-assets.md)

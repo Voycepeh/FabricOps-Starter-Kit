@@ -2,11 +2,11 @@
 
 Run the `02_pipeline` template in the Engineering Development Workspace.
 
-This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
+This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
 
 This walkthrough intentionally demonstrates one pattern: **full read → transform → full overwrite**.
 
-For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2B. Run an incremental append pipeline](02B-run-incremental-append-pipeline.md).
+For target-aware incremental reads, incremental writes, partition-aware processing, and profiling partial batches versus complete persisted tables, continue with [Step 2B. Run an incremental append pipeline](02B-build-and-run-incremental-append-etl.md).
 
 
 ## What you will do
@@ -208,7 +208,7 @@ The template contains two independent Write blocks.
     CREATE SCHEMA demo;
     ```
 
-    You only need to create each Warehouse schema once. The guided demo creates the `demo` schema earlier in [Step 00C. Prepare the demo data](00C-prepare-demo-data.md).
+    You only need to create each Warehouse schema once. The guided demo creates the `demo` schema earlier in [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
 
 !!! important "This is the part you edit"
     Each Write block is designed to be cloned. For a normal pipeline, **these are the only Write settings you need to change**:
@@ -323,4 +323,4 @@ At the end of Step 2 you should have:
 - contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
 
 
-**Next:** [Step 3. Author and freeze the Data Contract](03-enrich-guardrails.md)
+**Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

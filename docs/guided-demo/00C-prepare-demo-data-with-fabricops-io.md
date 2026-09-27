@@ -130,4 +130,4 @@ gold Warehouse
   demo.order_history
 ```
 
-**Next:** [Step 1. Establish Governance context](01-create-agreement.md)
+**Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)

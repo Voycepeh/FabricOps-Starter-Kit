@@ -28,8 +28,8 @@ No immediate table relationship is defined in the current implementation.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 23 |
-| Business columns | 15 |
+| Total columns | 28 |
+| Business columns | 20 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -48,6 +48,11 @@ No immediate table relationship is defined in the current implementation.
 | `data_type` | `string` | Stable data type label recorded for the column. |
 | `load_strategy` | `string` | Metadata Data Catalogue field `load_strategy`. |
 | `load_strategy_parameters_json` | `string` | JSON payload stored for `load_strategy_parameters_json`. |
+| `writer_workspace_id` | `string` | Identifier stored for `writer_workspace_id`. |
+| `writer_notebook_id` | `string` | Identifier stored for `writer_notebook_id`. |
+| `writer_notebook_name` | `string` | Human-readable name stored for `writer_notebook_name`. |
+| `scheduled_refresh_json` | `string` | JSON payload stored for `scheduled_refresh_json`. |
+| `profile_key_candidates_json` | `string` | JSON payload stored for `profile_key_candidates_json`. |
 | `first_profiled_at` | `timestamp` | Timestamp stored for `first_profiled_at`. |
 | `last_profiled_at` | `timestamp` | Timestamp stored for `last_profiled_at`. |
 | `is_active` | `boolean` | Whether the row is currently active. |
