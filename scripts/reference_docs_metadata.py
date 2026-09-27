@@ -245,7 +245,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Existing Preview installations may require this table to be recreated or updated through metadata setup because FabricOps does not automatically migrate missing columns.",
+        "purpose": "Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Additive missing columns are upgraded automatically by metadata setup; incompatible types and known legacy schemas still require explicit migration or recreation.",
         "grain": "One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
@@ -1722,7 +1722,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.",
         "side_effects": "Performs metadata-layer table creation and schema validation in the configured metadata lakehouse. Missing tables are created as empty Delta tables; existing tables are validated and are not silently accepted when incompatible.",
         "return_interpretation": "Use the returned status and per-table results to confirm that the physical metadata layer is ready. The function is primarily used for table-creation and validation side effects, not for registering business datasets.",
-        "common_failure_causes": ["Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing table is missing a required field or has an incompatible Spark field type.", "Nullability and field order are not validated; required field names and Spark data types are validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
+        "common_failure_causes": ["Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.", "Missing canonical fields are added automatically; nullability and field order are not validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
         "preferred_example": "setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)",
     },
     "setup_notebook": {
