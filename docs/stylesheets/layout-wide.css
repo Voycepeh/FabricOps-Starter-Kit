@@ -81,16 +81,12 @@
   margin-right: 0;
 }
 
-/* Desktop navigation lives in the top hover menus. Reclaim the permanent
-   left navigation rail for the page content. Keep the page TOC on the right
-   because it navigates within the current document rather than the site. */
+/* Desktop navigation lives in the top hover menus. Reclaim both permanent
+   side rails so documentation pages can use the full desktop canvas. */
 @media screen and (min-width: 76.25em) {
-  .md-sidebar--primary {
-    display: none;
-  }
-
+  .md-sidebar--primary,
   .md-sidebar--secondary {
-    width: 12rem;
+    display: none;
   }
 
   .md-content {
