@@ -346,7 +346,7 @@ Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets.
 
 <div class="fabricops-home-quicklinks fabricops-home-quicklinks--assets">
   <a class="fabricops-home-quicklink" href="releases/">Releases (Python package)</a>
-  <a class="fabricops-home-quicklink" href="notebook-templates/">Notebook Templates</a>
+  <a class="fabricops-home-quicklink" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates</a>
   <a class="fabricops-home-quicklink" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets</a>
 </div>
 
