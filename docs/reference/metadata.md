@@ -2,7 +2,7 @@
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
-FabricOps metadata is stored in one **Metadata Lakehouse** with two physical schemas:
+FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
