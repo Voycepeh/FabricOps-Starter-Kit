@@ -67,7 +67,7 @@
 
 ## The Big Picture
 
-<div class="fabricops-big-picture">
+<div class="fabricops-big-picture" markdown="1">
 
 <div class="fabricops-big-picture__visual" markdown="1">
 
@@ -132,7 +132,7 @@ Governance reads the actual governed table through its Data Catalogue entry, add
 
 FabricOps packages that operating pattern around five reusable notebooks:
 
-<div class="fabricops-assets-grid">
+<div class="fabricops-assets-grid" markdown="1">
 
 <div class="fabricops-asset" markdown="1">
 
