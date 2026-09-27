@@ -12,12 +12,11 @@ Create missing FabricOps metadata tables and check existing table columns and Sp
 
 <div class="reference-docstring-intro" markdown="1">
 
-Creates missing metadata tables and validates existing metadata tables
-against the canonical registry for the installed FabricOps version. The
-function finds the metadata lakehouse configured for the selected
-environment, creates missing tables as empty Delta tables, leaves valid
-existing tables in place, reports invalid existing tables as failed, and
-returns a setup report.
+Creates missing metadata tables, additively evolves existing metadata
+tables with missing canonical columns, and validates canonical column
+types against the registry for the installed FabricOps version. Existing
+data and extra physical columns are preserved; incompatible canonical
+types and known legacy schemas are reported as failures.
 
 This function prepares the metadata table structures only. It does not
 create business metadata records such as stewards, agreements, catalogue
@@ -29,9 +28,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:118`
+`fabricops_kit/config/setup_metadata_tables.py:169`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L118-L453">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L550">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -103,8 +102,8 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 - Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
 - Spark or Fabric lakehouse context is unavailable.
 - The caller lacks permission to create or inspect metadata tables.
-- An existing table is missing a required field or has an incompatible Spark field type.
-- Nullability and field order are not validated; required field names and Spark data types are validated.
+- An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.
+- Missing canonical fields are added automatically; nullability and field order are not validated.
 - One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
 
 ## Notes
@@ -125,10 +124,12 @@ Setup flow:
 8. Write that empty DataFrame to the metadata lakehouse using overwrite
    mode to create the table.
 9. Read the created table again.
-10. Validate required column names and physical Spark data types.
-11. Continue processing the remaining tables when one table fails.
-12. Check whether at least one active steward record exists.
-13. Return overall, data-agreement, governance, and per-table setup
+10. Validate overlapping canonical column names and physical Spark data types.
+11. Add missing canonical columns with an empty Delta append using
+    ``mergeSchema=true``, then read and validate the table again.
+12. Continue processing the remaining tables when one table fails.
+13. Check whether at least one active steward record exists.
+14. Return overall, data-agreement, governance, and per-table setup
     results.
 
 ``data_agreement["active_steward_count"]`` is retained for compatibility
@@ -201,21 +202,18 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
-Existing tables are validated for required column names and
-compatible Spark data types. Physical Spark/Delta nullability is
-intentionally not compared because persisted Fabric tables may report
-fields as nullable regardless of the canonical logical requirement. The
-legacy ``frequency_json`` column specifically fails
-``METADATA_DATA_PROFILED`` validation; unrelated
-metadata tables continue to permit additive columns.
-Because normalized frequency persistence is a breaking physical-schema
-change, existing metadata tables may need recreation through this setup
-flow; no automatic migration is performed.
-Existing tables are not automatically overwritten merely because they
-already exist. Missing columns or incompatible types mark that table as
-failed, processing continues for remaining metadata tables, and
-``raise_on_failure=True`` raises only after all tables have been processed
-when failures exist.
+Existing tables are validated by canonical column name and compatible
+Spark data type. Physical Spark/Delta nullability is intentionally not
+compared or migrated. Missing canonical columns are added automatically
+through an empty append with Delta ``mergeSchema=true``; existing rows and
+unrelated extra columns are preserved. Existing canonical columns with
+incompatible physical types still fail validation. The legacy
+``frequency_json`` column specifically fails ``METADATA_DATA_PROFILED``
+validation because that normalized-frequency change requires explicit
+migration or recreation. Existing tables are never overwritten merely
+because their schema differs. Processing continues for remaining metadata
+tables, and ``raise_on_failure=True`` raises only after all tables have
+been processed when failures exist.
 
 A missing table is created by writing an empty Spark DataFrame with the
 required FabricOps table structure. This creates the metadata table structure but
@@ -245,7 +243,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 17 |
+| Live-critical dependencies | 19 |
 
 ### Release history
 
@@ -265,9 +263,11 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
