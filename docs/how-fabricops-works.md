@@ -100,16 +100,13 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 - **3. Engineering Development Workspace**  
   This is where the engineering implementation is built and validated. Its `00_env_config` points to the Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
 
-- **4. Promote the validated pipeline**  
-  Once `02_pipeline` has been validated in Development against the frozen Data Contract, the validated notebook is promoted to the Engineering Production Workspace.
+- **4. Engineering Production Workspace**  
+  Runs the same validated `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the activated Data Contract and produces governed Production outputs.
 
-- **5. Engineering Production Workspace**  
-  Runs the same promoted `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the activated Data Contract and produces governed Production outputs.
+- **5. Aligned environments and promotion**  
+  Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
-- **6. Same data architecture across environments**  
-  Bronze, Silver, and Gold stores exist within the Engineering workspaces across Development and Production. They can be implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their logical roles and structure remain aligned 1:1 across environments.
-
-- **7. Project-Specific Consumer Workspace**  
+- **6. Project-Specific Consumer Workspace**  
   Consumers use `99_explore` and read approved Production data only. Power BI, data agents, AI workloads, and other project-specific consumption should not connect to Engineering Development outputs or recreate the governed engineering pipeline.
 
 - **Notebook ownership**  
