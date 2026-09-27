@@ -29,7 +29,7 @@ DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 _TABS = ("Table", "Columns", "DQ Rules", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
-_COLUMN_DQ_TYPES = ("completeness", "value_set", "range", "pattern")
+_COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
     "uniqueness": "Require one column, or a table-level column combination, to be unique.",
@@ -297,7 +297,13 @@ def _manifest_sections(
                 + html.escape(column_enrichment.get(
                     (str(row.get("column_id") or ""), "Description"), ""
                 ))
-                + "</summary></details>"
+                + "</summary>"
+                + "<div style='margin-top:6px;white-space:normal;overflow-wrap:anywhere;"
+                "line-height:1.45;color:#344054;'>"
+                + html.escape(column_enrichment.get(
+                    (str(row.get("column_id") or ""), "Description"), ""
+                ))
+                + "</div></details>"
                 if column_enrichment.get(
                     (str(row.get("column_id") or ""), "Description"), ""
                 )
@@ -1413,7 +1419,7 @@ def widget_data_contract(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("expected_refresh_unit") or "days"),
                     disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="120px"),
+                    layout=widgets.Layout(width="130px", min_width="110px"),
                 )
                 maximum_age = widgets.Text(
                     value=str(existing_parameters.get("maximum_age") or ""),
@@ -1424,7 +1430,7 @@ def widget_data_contract(
                     options=("minutes", "hours", "days"),
                     value=str(existing_parameters.get("maximum_age_unit") or "days"),
                     disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="120px"),
+                    layout=widgets.Layout(width="130px", min_width="110px"),
                 )
                 freshness_grid = widgets.GridBox(
                     [
@@ -1443,8 +1449,8 @@ def widget_data_contract(
                     ],
                     layout=widgets.Layout(
                         width="100%",
-                        grid_template_columns="180px minmax(180px, 1fr) 180px",
-                        grid_gap="8px 10px",
+                        grid_template_columns="140px minmax(160px, 1fr) 140px",
+                        grid_gap="8px 8px",
                         align_items="flex-start",
                     ),
                 )
@@ -2023,6 +2029,7 @@ def widget_data_contract(
             description: str,
             primary_children: list[Any],
             ai_children: list[Any] | None = None,
+            header_controls: list[Any] | None = None,
         ) -> Any:
             """Render every Guardrail with one consistent primary/assistant layout."""
             banner = widgets.HTML(
@@ -2044,9 +2051,9 @@ def widget_data_contract(
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
-            if ai_visible:
+            if ai_visible and ai_children:
                 assistant = widgets.VBox(
-                    list(ai_children or []),
+                    list(ai_children),
                     layout=widgets.Layout(
                         width="100%", min_width="0", gap="8px",
                         padding="0 0 0 16px",
@@ -2064,7 +2071,23 @@ def widget_data_contract(
                 )
             else:
                 content = primary
-            return shared.form_section(widgets, title=title, children=[content])
+            section_children: list[Any] = []
+            if header_controls:
+                section_children.append(
+                    widgets.HBox(
+                        list(header_controls),
+                        layout=widgets.Layout(
+                            width="auto",
+                            min_width="0",
+                            gap="18px",
+                            align_items="center",
+                            justify_content="flex-start",
+                            overflow="visible",
+                        ),
+                    )
+                )
+            section_children.append(content)
+            return shared.form_section(widgets, title=title, children=section_children)
 
         table_definition_primary = widgets.VBox(
             [
@@ -2108,21 +2131,21 @@ def widget_data_contract(
             widgets,
             title="Grain & Row Key",
                 children=[
+                    row_key_block,
+                    widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                        "margin-bottom:4px;'>Define what one row represents, then "
+                        "select the column or smallest column combination that should "
+                        "uniquely identify that row. The selected key automatically "
+                        "becomes the table-level uniqueness guardrail.</div>"
+                    ),
                     widgets.GridBox(
                         [
                             widgets.VBox(
                                 [
-                                    widgets.HTML(
-                                        "<div style='color:#667085;font-size:12px;line-height:1.5;"
-                                        "margin-bottom:4px;'>Define what one row represents, then "
-                                        "select the column or smallest column combination that should "
-                                        "uniquely identify that row. The selected key automatically "
-                                        "becomes the table-level uniqueness guardrail.</div>"
-                                    ),
                                     table_grain,
                                     row_key_columns,
                                     grain_profile_evidence,
-                                    row_key_block,
                                 ],
                                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
                             ),
@@ -2182,16 +2205,11 @@ def widget_data_contract(
                     "Freshness uses the latest value in the selected timestamp column "
                     "relative to the pipeline run time."
                 ),
+                header_controls=[
+                    table_rules["freshness"]["enabled"],
+                    table_rules["freshness"]["block"],
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [table_rules["freshness"]["enabled"], table_rules["freshness"]["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     *table_rules["freshness"]["display"],
                 ],
             ),
@@ -2206,16 +2224,11 @@ def widget_data_contract(
                     "Check whether data that was previously consumed from this table has "
                     "changed when the same source data is read again."
                 ),
+                header_controls=[
+                    table_rules["source_drift"]["enabled"],
+                    table_rules["source_drift"]["block"],
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [table_rules["source_drift"]["enabled"], table_rules["source_drift"]["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     *table_rules["source_drift"]["display"],
                 ],
             ),
@@ -2291,6 +2304,7 @@ def widget_data_contract(
         dq_type = widgets.Dropdown(
             options=[
                 ("Completeness", "completeness"),
+                ("Uniqueness", "uniqueness"),
                 ("Allowed Values", "value_set"),
                 ("Value Rules", "range"),
                 ("Pattern", "pattern"),
@@ -2301,15 +2315,24 @@ def widget_data_contract(
         )
 
         def dq_checkbox(label: str) -> Any:
-            return widgets.Checkbox(description=label, disabled=not editable)
+            control = widgets.Checkbox(
+                description=label,
+                disabled=not editable,
+                style={"description_width": "initial"},
+                layout=widgets.Layout(width="auto", max_width="100%", min_width="0"),
+            )
+            control.add_class("fabricops-dq-checkbox")
+            return control
 
         dq_max_missing = widgets.Text(
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Maximum missing %"),
         )
-        dq_blank_missing = widgets.Checkbox(
-            value=False, description="Treat blank/whitespace text as missing",
-            disabled=not editable,
+        dq_blank_missing = dq_checkbox("Count blank text as missing")
+        dq_blank_missing.value = False
+        dq_min_unique = widgets.Text(
+            value="100", disabled=not editable,
+            **shared.widget_common(widgets, "Minimum unique %"),
         )
         dq_value_mode = widgets.Dropdown(
             options=("allow", "block"), disabled=not editable,
@@ -2317,22 +2340,21 @@ def widget_data_contract(
         )
         dq_values = widgets.Text(
             disabled=not editable,
-            **shared.widget_common(widgets, "Allowed values (comma-separated)"),
+            placeholder="Example: Active, Inactive",
+            **shared.widget_common(widgets, "Allowed values"),
         )
         dq_minimum = widgets.Text(
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
-        dq_minimum_inclusive = widgets.Checkbox(
-            value=True, description="Include lower bound", disabled=not editable
-        )
+        dq_minimum_inclusive = dq_checkbox("Include lower bound")
+        dq_minimum_inclusive.value = True
         dq_maximum = widgets.Text(
             disabled=not editable, **shared.widget_common(widgets, "Upper bound")
         )
-        dq_maximum_inclusive = widgets.Checkbox(
-            value=True, description="Include upper bound", disabled=not editable
-        )
+        dq_maximum_inclusive = dq_checkbox("Include upper bound")
+        dq_maximum_inclusive.value = True
         dq_pattern = widgets.Text(
-            disabled=not editable, **shared.widget_common(widgets, "Regular expression")
+            disabled=not editable, **shared.widget_common(widgets, "Regex pattern")
         )
 
         dq_family_controls = {
@@ -2340,6 +2362,11 @@ def widget_data_contract(
                 "enabled": dq_checkbox("Enabled"),
                 "block": dq_checkbox("Block on failure"),
                 "parameters": (dq_max_missing, dq_blank_missing),
+            },
+            "uniqueness": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (dq_min_unique,),
             },
             "value_set": {
                 "enabled": dq_checkbox("Enabled"),
@@ -2361,7 +2388,7 @@ def widget_data_contract(
             },
         }
         dq_parameter_controls = (
-            dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
+            dq_max_missing, dq_blank_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
         # Internal compatibility aliases follow the default deterministic family.
@@ -2391,7 +2418,7 @@ def widget_data_contract(
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
-            dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
+            dq_max_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
         ):
             control.layout.width = "100%"
             control.layout.max_width = "560px"
@@ -2446,6 +2473,7 @@ def widget_data_contract(
             controls = dq_family_controls[kind]
             defaults = {
                 "completeness": ("0", False),
+                "uniqueness": ("100",),
                 "value_set": ("allow", ""),
                 "range": ("", True, "", True),
                 "pattern": ("",),
@@ -2467,6 +2495,9 @@ def widget_data_contract(
                 "completeness": (
                     str(params.get("maximum_missing_percent", 0)),
                     bool(params.get("treat_blank_as_missing", False)),
+                ),
+                "uniqueness": (
+                    str(params.get("minimum_unique_percent", 100)),
                 ),
                 "value_set": (
                     str(params.get("mode") or "allow"),
@@ -3158,6 +3189,11 @@ def widget_data_contract(
                         "maximum_missing_percent": float(dq_max_missing.value),
                         "treat_blank_as_missing": bool(dq_blank_missing.value),
                     })
+                elif kind == "uniqueness":
+                    threshold = float(dq_min_unique.value)
+                    if not 0 <= threshold <= 100:
+                        raise ValueError("uniqueness minimum unique % must be between 0 and 100.")
+                    params["minimum_unique_percent"] = threshold
                 elif kind == "value_set":
                     values = [item.strip() for item in dq_values.value.split(",") if item.strip()]
                     if not values:
@@ -3410,7 +3446,7 @@ def widget_data_contract(
             column_select,
         )
         def dq_family_section(
-            title: str, kind: str, description: str, *, ai: bool = False
+            title: str, kind: str, description: str
         ) -> Any:
             controls = dq_family_controls[kind]
             primary = widgets.VBox(
@@ -3419,60 +3455,35 @@ def widget_data_contract(
                         f"<div style='font-size:13px;color:#667085;line-height:1.5;'>"
                         f"{html.escape(description)}</div>"
                     ),
-                    widgets.GridBox(
-                        [controls["enabled"], controls["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     *controls["parameters"],
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
-            children = [widgets.HTML(f"<h4 style='margin:0 0 8px 0;'>{html.escape(title)}</h4>")]
-            if ai:
-                children.append(
-                    widgets.GridBox(
-                        [
-                            primary,
-                            widgets.VBox(
-                                [
-                                    widgets.HTML("<b>AI suggestion</b>"),
-                                    dq_ai_instruction,
-                                    dq_suggestion,
-                                    dq_ai,
-                                    shared.action_row(
-                                        widgets, [suggest_dq, accept_dq_suggestion]
-                                    ),
-                                ],
-                                layout=widgets.Layout(
-                                    width="100%", min_width="0", gap="8px",
-                                    padding="0 0 0 16px",
-                                    border_left="1px solid #e1e6eb",
-                                ),
-                            ),
-                        ],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                            grid_gap="16px",
-                            align_items="flex-start",
-                        ),
-                    )
-                )
-            else:
-                children.append(primary)
+            children = [
+                widgets.HTML(f"<h4 style='margin:0;'>{html.escape(title)}</h4>"),
+                widgets.HBox(
+                    [controls["enabled"], controls["block"]],
+                    layout=widgets.Layout(
+                        width="auto",
+                        min_width="0",
+                        gap="18px",
+                        align_items="center",
+                        justify_content="flex-start",
+                        overflow="visible",
+                    ),
+                ),
+                primary,
+            ]
             return widgets.VBox(
                 children,
                 layout=widgets.Layout(
                     width="100%",
                     min_width="0",
-                    gap="4px",
+                    max_width="760px",
+                    gap="6px",
                     padding="14px 0",
                     border_bottom="1px solid #e1e6eb",
+                    overflow="visible",
                 ),
             )
 
@@ -3481,6 +3492,10 @@ def widget_data_contract(
                 dq_family_section(
                     "Completeness", "completeness",
                     "Limit missing values, with explicit blank-text handling.",
+                ),
+                dq_family_section(
+                    "Uniqueness", "uniqueness",
+                    "Require this column to meet a minimum percentage of unique values. Use 100% for strict uniqueness.",
                 ),
                 dq_family_section(
                     "Allowed Values", "value_set",
@@ -3492,12 +3507,11 @@ def widget_data_contract(
                 ),
                 dq_family_section(
                     "Pattern", "pattern",
-                    "Enforce text structure with a regular expression.", ai=True,
+                    "Enforce text structure with a regular expression.",
                 ),
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="0"),
         )
-        dq_ai_panel = widgets.VBox([], layout=widgets.Layout(display="none"))
         dq_panel = guardrail_section(
             "Column data quality",
             banner_title="Applies when this governed column is validated or enforced in a pipeline.",
@@ -3506,10 +3520,25 @@ def widget_data_contract(
                 "write is allowed to continue."
             ),
             description=(
-                "Configure each deterministic rule directly. Pattern also supports optional "
-                "AI assistance for translating a human instruction into a regular expression."
+                "Configure each deterministic rule directly."
             ),
             primary_children=[dq_primary],
+        )
+        dq_ai_panel = shared.form_section(
+            widgets,
+            title="AI-assisted Pattern authoring",
+            children=[
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                    "margin-bottom:4px;'>Optionally describe the text pattern in natural language. "
+                    "FabricOps translates it into a regular expression that you can review and apply "
+                    "to the Pattern rule above.</div>"
+                ),
+                dq_ai_instruction,
+                dq_suggestion,
+                dq_ai,
+                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
+            ],
         )
         column_definition = definition_section(
             "Column definition", column_classification, column_description,
@@ -3557,21 +3586,17 @@ def widget_data_contract(
                     "Classify whether this column contains PII, record the reason, and choose "
                     "how the pipeline should treat the sensitive value."
                 ),
+                header_controls=[
+                    sensitive_enabled,
+                    sensitive_block,
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [sensitive_enabled, sensitive_block],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     sensitive_primary,
                 ],
                 ai_children=list(sensitive_ai_panel.children),
             ),
             dq_panel,
+            *([dq_ai_panel] if ai_visible else []),
         )
         view_content["Columns"] = (column_left, column_right)
 
@@ -4681,6 +4706,7 @@ def widget_data_contract(
             "dq_type": dq_type, "dq_family_controls": dq_family_controls,
             "dq_parameter_controls": dq_parameter_controls,
             "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
+            "dq_min_unique": dq_min_unique,
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,

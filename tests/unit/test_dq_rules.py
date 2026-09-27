@@ -104,6 +104,33 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
     assert checks[0]["failed_count"] == failed
 
 
+def test_uniqueness_threshold_allows_minimum_distinct_percentage(spark_session):
+    """Uniqueness can enforce a minimum distinct percentage instead of strict 100% uniqueness."""
+    df = spark_session.createDataFrame(
+        [("A",), ("A",), ("B",)],
+        "id string",
+    )
+
+    passing = _rule(
+        "uniqueness",
+        columns=["id"],
+        minimum_unique_percent=60,
+    )
+    failing = _rule(
+        "uniqueness",
+        columns=["id"],
+        minimum_unique_percent=70,
+    )
+
+    passing_check = governance._run_dq_guardrail_checks(df, "items", [passing])[0]
+    failing_check = governance._run_dq_guardrail_checks(df, "items", [failing])[0]
+
+    assert passing_check["passed"] is True
+    assert passing_check["failed_count"] == 0
+    assert failing_check["passed"] is False
+    assert failing_check["failed_count"] == 2
+
+
 def test_custom_expression_supports_safe_arithmetic_business_rule(spark_session):
     """Evaluate arithmetic Business Rules without eval or arbitrary Python."""
     df = spark_session.createDataFrame(
