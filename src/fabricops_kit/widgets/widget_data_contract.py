@@ -1077,6 +1077,7 @@ def widget_data_contract(
             str(name) for name in _parameters(existing_row_key).get("columns", [])
             if str(name) in column_names
         ]
+        row_key_rule = {"current": dict(existing_row_key)}
         row_key_columns = widgets.SelectMultiple(
             options=column_names,
             value=tuple(existing_row_key_columns or profiled_key_columns),
@@ -1675,14 +1676,22 @@ def widget_data_contract(
                 return
             try:
                 selected_keys = [str(name) for name in row_key_columns.value]
-                if existing_row_key or selected_keys:
-                    stage_guardrails([guardrail_record(
+                current_rule = row_key_rule["current"]
+                if current_rule or selected_keys:
+                    previous_columns = [
+                        str(name)
+                        for name in _parameters(current_rule).get("columns", [])
+                        if str(name) in column_names
+                    ]
+                    record = guardrail_record(
                         "data_quality", "uniqueness",
-                        {"columns": selected_keys or existing_row_key_columns},
-                        existing=existing_row_key,
+                        {"columns": selected_keys or previous_columns},
+                        existing=current_rule,
                         action="Block" if row_key_block.value else "Warn",
                         active=bool(selected_keys),
-                    )])
+                    )
+                    stage_guardrails([record])
+                    row_key_rule["current"] = record
                 set_validation_error("table.row_key")
                 render_table_summary()
             except (TypeError, ValueError, RuntimeError) as exc:
