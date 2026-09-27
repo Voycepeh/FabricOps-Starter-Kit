@@ -3350,6 +3350,13 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             rule["maximum_missing_percent"] = threshold
             if not isinstance(rule.get("treat_blank_as_missing"), bool):
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires boolean treat_blank_as_missing.")
+        if rtype == "uniqueness":
+            threshold = float(rule.get("minimum_unique_percent", 100))
+            if not 0 <= threshold <= 100:
+                raise ValueError(
+                    f"DQ rule '{rule['rule_id']}' minimum_unique_percent must be between 0 and 100."
+                )
+            rule["minimum_unique_percent"] = threshold
         if rtype == "value_set":
             if rule.get("mode") not in {"allow", "block"}:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' mode must be 'allow' or 'block'.")
@@ -3719,7 +3726,17 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         missing_count = int(df.filter(missing).count()) if total else 0
         failed = missing if total and ((missing_count / total) * 100) > float(rule["maximum_missing_percent"]) else F.lit(False)
     elif rtype == "uniqueness":
-        failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
+        total = int(df.count())
+        distinct_count = int(df.select(*[F.col(c) for c in cols]).distinct().count()) if total else 0
+        unique_percent = ((distinct_count / total) * 100) if total else 100.0
+        duplicate = F.count(F.lit(1)).over(
+            Window.partitionBy(*[F.col(c) for c in cols])
+        ) > F.lit(1)
+        failed = (
+            duplicate
+            if unique_percent < float(rule.get("minimum_unique_percent", 100))
+            else F.lit(False)
+        )
     elif rtype == "value_set":
         contained = F.col(col_name).isin(list(rule["values"]))
         failed = F.col(col_name).isNotNull() & (contained if rule["mode"] == "block" else ~contained)
