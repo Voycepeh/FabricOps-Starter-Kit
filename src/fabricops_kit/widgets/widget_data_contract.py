@@ -3381,20 +3381,24 @@ def widget_data_contract(
                         f"<div style='font-size:13px;color:#667085;line-height:1.5;'>"
                         f"{html.escape(description)}</div>"
                     ),
-                    widgets.GridBox(
-                        [controls["enabled"], controls["block"]],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     *controls["parameters"],
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
-            children = [widgets.HTML(f"<h4 style='margin:0 0 8px 0;'>{html.escape(title)}</h4>")]
+            children = [
+                widgets.HTML(f"<h4 style='margin:0;'>{html.escape(title)}</h4>"),
+                widgets.HBox(
+                    [controls["enabled"], controls["block"]],
+                    layout=widgets.Layout(
+                        width="auto",
+                        min_width="0",
+                        gap="18px",
+                        align_items="center",
+                        justify_content="flex-start",
+                        overflow="visible",
+                    ),
+                ),
+            ]
             if ai:
                 children.append(
                     widgets.GridBox(
@@ -3519,16 +3523,11 @@ def widget_data_contract(
                     "Classify whether this column contains PII, record the reason, and choose "
                     "how the pipeline should treat the sensitive value."
                 ),
+                header_controls=[
+                    sensitive_enabled,
+                    sensitive_block,
+                ],
                 primary_children=[
-                    widgets.GridBox(
-                        [sensitive_enabled, sensitive_block],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="repeat(2, minmax(160px, max-content))",
-                            grid_gap="8px 20px",
-                            align_items="center",
-                        ),
-                    ),
                     sensitive_primary,
                 ],
                 ai_children=list(sensitive_ai_panel.children),
