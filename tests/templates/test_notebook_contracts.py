@@ -186,10 +186,10 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
 
 def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     """Guided Demo Steps 3–6 preserve lifecycle order and responsibility boundaries."""
-    step_3 = (ROOT / "docs/guided-demo/03-enrich-guardrails.md").read_text(encoding="utf-8")
-    step_4 = (ROOT / "docs/guided-demo/04-run-pipeline-with-guardrails.md").read_text(encoding="utf-8")
-    step_5 = (ROOT / "docs/guided-demo/05-create-data-contract.md").read_text(encoding="utf-8")
-    step_6 = (ROOT / "docs/guided-demo/06-promote-to-production.md").read_text(encoding="utf-8")
+    step_3 = (ROOT / "docs/guided-demo/03-author-and-freeze-data-contract.md").read_text(encoding="utf-8")
+    step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
+    step_5 = (ROOT / "docs/guided-demo/05-activate-data-contract-and-promote.md").read_text(encoding="utf-8")
+    step_6 = (ROOT / "docs/guided-demo/06-run-production.md").read_text(encoding="utf-8")
     overview = (ROOT / "docs/guided-demo.md").read_text(encoding="utf-8")
 
     normalized = {
@@ -255,8 +255,8 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
 
 def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validation():
     """The existing walkthrough remains runnable without changing the selector default."""
-    step_2 = (ROOT / "docs/guided-demo/02-run-pipeline.md").read_text(encoding="utf-8")
-    step_4 = (ROOT / "docs/guided-demo/04-run-pipeline-with-guardrails.md").read_text(encoding="utf-8")
+    step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
+    step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "defaults every discovered source and target to **Enforce**" in step_2
     assert "no mode change is required for the initial Guided Demo run" in step_2
