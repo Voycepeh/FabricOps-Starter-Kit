@@ -104,7 +104,7 @@ USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/config/": CONFIG_USAGE_NOTE,
 }
 
-METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one **Metadata Lakehouse** with two physical schemas:
+METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
