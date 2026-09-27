@@ -2006,9 +2006,9 @@ def widget_data_contract(
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
-            if ai_visible:
+            if ai_visible and ai_children:
                 assistant = widgets.VBox(
-                    list(ai_children or []),
+                    list(ai_children),
                     layout=widgets.Layout(
                         width="100%", min_width="0", gap="8px",
                         padding="0 0 0 16px",
