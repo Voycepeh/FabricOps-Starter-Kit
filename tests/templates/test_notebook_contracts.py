@@ -212,21 +212,22 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "defaults every table to **enforce**" in normalized["step_4"]
     assert "`pipeline_write()` is never reached" in normalized["step_4"]
 
-    assert "# step 5. link the data agreement and activate" in normalized["step_5"]
+    assert "# step 5. activate the data contract and promote to production" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]
-    assert "activation does **not** deploy `02_pipeline`" in normalized["step_5"]
-    assert "active production definition" in normalized["step_5"]
+    assert "activate the data contract" in normalized["step_5"]
+    assert "fabric deployment pipeline" in normalized["step_5"]
+    assert "deploy it to the production stage" in normalized["step_5"]
 
-    assert "# step 6. promote and run production" in normalized["step_6"]
-    assert "production resolves the active data contract automatically" in normalized["step_6"]
-    assert "draft metadata" in normalized["step_6"]
-    assert "validated pipeline logic" in normalized["step_6"]
+    assert "# step 6. run the pipeline in production" in normalized["step_6"]
+    assert "same tested workflow in the production environment" in normalized["step_6"]
+    assert "production automatically resolves the single active data contract" in normalized["step_6"]
+    assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
         "author and freeze the data contract",
         "validate the frozen data contract",
-        "link the data agreement and activate",
-        "promote and run production",
+        "activate the data contract and promote",
+        "run the pipeline in production",
     )
     lifecycle_positions = [normalized["overview"].index(step) for step in lifecycle_steps]
     assert lifecycle_positions == sorted(lifecycle_positions)
