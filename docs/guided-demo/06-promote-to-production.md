@@ -10,7 +10,7 @@ The same `02_pipeline` code runs in Development and Production.
 
 `00_env_config` controls which configured Lakehouses, Warehouses, schemas, paths, and SQL endpoints are used for the current environment.
 
-![Development to Production promotion](../assets/06/Promotion_Overview.png)
+![Development to Production promotion](../assets/05/PipelinesDeploymentOverview.png)
 
 The important boundary is:
 
@@ -22,7 +22,7 @@ The important boundary is:
 
 In the Fabric Deployment Pipeline, select the tested notebook or engineering artifact from Development and deploy it to the Production stage.
 
-![Select the pipeline artifact for Production](../assets/06/Deployment_Pipeline.png)
+![Select the pipeline artifact for Production](../assets/05/DeploymentPipeline.png)
 
 The promotion should move the tested engineering asset itself. Workspace IDs, item IDs, paths, and SQL endpoints should continue to come from the Production environment configuration.
 
@@ -30,7 +30,7 @@ The promotion should move the tested engineering asset itself. Workspace IDs, it
 
 Review the selected item in the Fabric deployment confirmation, then complete the deployment.
 
-![Confirm the Fabric deployment](../assets/06/Deployment_Confirm.png)
+![Confirm the Fabric deployment](../assets/05/Deployment.png)
 
 At this point the same validated engineering code is available in Production.
 
