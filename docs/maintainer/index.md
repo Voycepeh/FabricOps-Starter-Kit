@@ -20,7 +20,7 @@ If generic validation changes, update CI rather than duplicating the change in P
 
 1. Identify the target version from `pyproject.toml`, the intended manifest under `docs/releases/manifests/`, and the candidate commit with `git rev-parse HEAD`.
 2. Inspect the release-specific public callable inventory generated from `src/fabricops_kit/public_api.py`; verify all intended Live public functions are represented.
-3. Keep package release assets separate from independently maintained notebook templates. Do not copy, freeze, version, package, or stamp templates during package release preparation.
+3. Keep package release assets separate from notebook templates. `templates/notebooks/` remains the evolving latest surface, but preserve exact release-tag snapshots of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. Do not modernize a frozen snapshot or treat it as a packaged Python asset.
 4. Verify release notes in `CHANGELOG.md`, package metadata in `pyproject.toml`, release pages under `docs/releases/`, dashboard data where intentionally refreshed, and standalone function pages where applicable to the release scope.
 5. Repair release presentation by fixing the proper source file, manifest, changelog, metadata, or generator. Do not change function implementations merely to repair release presentation.
 6. Verify generated outputs originate from their documented generator; do not hand-edit generated pages or inventories as source of truth.
@@ -259,7 +259,7 @@ New assets default to `preview`. The generator must not automatically promote as
 
 Formal lifecycle decisions apply only to public functions and metadata tables. Do not classify notebook templates, DQ rules, skills, samples, guided demos, function packets, refactor packets, documentation examples, or environment resource bundles as package release assets.
 
-Notebook templates are manually maintained living applications of the package. They are not promoted, frozen, copied, renamed by package version, packaged, automatically stamped, or release-blocked by this workflow. Maintainers may run separate manual validation for templates, and each template should keep a manually maintained `Tested with FabricOps` table that Voyce Peh updates only after testing in Microsoft Fabric.
+Notebook templates under `templates/notebooks/` are manually maintained living applications of the package. Do not promote them through package lifecycle statuses or package them in the Python distribution. At each release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`; those copies are immutable provenance and migration fixtures. The release tag is authoritative, so never modernize a frozen snapshot. Other templates remain living artifacts unless explicitly added to this release-snapshot contract. Maintainers may run separate manual validation for templates, and each current template should keep a manually maintained `Tested with FabricOps` table updated only after testing in Microsoft Fabric.
 
 DQ logic may remain available in the repository, but DQ validation, DQ rules, DQ widgets, and DQ release notes are not part of the formal release contract for now. Do not add DQ versioning, migration, compatibility, schema, or release requirements during package release preparation.
 
@@ -366,7 +366,7 @@ Do not maintain or rerun the generic CI checklist here. `.github/workflows/ci.ym
 
 Before release preparation is considered validated, confirm the candidate commit has a successful FabricOps CI run. If CI is missing, pending, cancelled, or failed, stop and fix CI rather than reproducing those checks in this skill.
 
-A release may validly contain zero Live metadata contracts. Notebook templates are living applications of the FabricOps package; do not copy, freeze, version, package, or stamp them during package release preparation. Their `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
+A release may validly contain zero Live metadata contracts. Current notebook templates remain living applications of the FabricOps package and are not Python package assets. Release preparation must preserve exact release-tag snapshots of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/` for provenance and migration; never edit those frozen copies after capture. Their current-template `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
 
 ## 13. Prepare and merge release PR
 
@@ -396,7 +396,7 @@ The preflight must:
 4. Confirm no tracked files changed during release-specific checks.
 5. Report whether the release is ready.
 
-Notebook templates, template snapshots, skills, DQ validation, sample generation, and environment resource bundles must not block package release preflight.
+Notebook runtime validation, skills, DQ validation, sample generation, and environment resource bundles must not block package release preflight. The required `00_env_config.ipynb` and `02_pipeline.ipynb` release snapshots are deterministic release provenance: verify they exist for `vX.Y.Z` and are byte-for-byte identical to the files at the release tag.
 
 Release-specific checks are:
 
@@ -537,6 +537,7 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | Generic repository validation and Pages deployment | CI workflow | AI verifies the candidate commit passed canonical CI. |
 | Build artifacts and checksums | Tag workflow | AI verifies published assets. |
 | Canonical frozen source reference | Human-approved manifest field | Use `source_ref: vX.Y.Z`; resolved commit SHA is audit metadata only. |
+| `00` / `02` release template snapshots | Deterministic release provenance | Copy exactly from the release tag into `templates/releases/vX.Y.Z/`; never modernize the frozen copies. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
 
 ## 19. Exact source-code links
