@@ -11,26 +11,26 @@ DOCS_DIR = ROOT / "docs"
 
 LINK_REPLACEMENTS = {
     "guided-demo/99-explore-via-notebooks.md": "guided-demo/99-explore-via-notebook.md",
-    "../../guided-demo/run-pipeline.md": "../../guided-demo/02-run-pipeline.md",
-    "../../guided-demo/review-guardrails.md": "../../guided-demo/03-enrich-guardrails.md",
-    "run-environment-setup.md": "00B-run-environment-setup.md",
-    "run-pipeline-with-guardrails.md": "04-run-pipeline-with-guardrails.md",
-    "run-pipeline.md": "02-run-pipeline.md",
-    "review-guardrails.md": "03-enrich-guardrails.md",
-    "create-data-contract.md": "05-create-data-contract.md",
-    "promote-to-production.md": "06-promote-to-production.md",
+    "../../guided-demo/run-pipeline.md": "../../guided-demo/02-build-and-run-etl.md",
+    "../../guided-demo/review-guardrails.md": "../../guided-demo/03-author-and-freeze-data-contract.md",
+    "run-environment-setup.md": "00B-configure-environment-and-load-assets.md",
+    "run-pipeline-with-guardrails.md": "04-validate-frozen-data-contract.md",
+    "run-pipeline.md": "02-build-and-run-etl.md",
+    "review-guardrails.md": "03-author-and-freeze-data-contract.md",
+    "create-data-contract.md": "05-activate-data-contract-and-promote.md",
+    "promote-to-production.md": "06-run-production.md",
     "explore-metadata-outputs.md": "99-explore-via-notebook.md",
 }
 
 SOURCE_REPLACEMENTS = {
-    '"path": "../../guided-demo/run-pipeline.md"': '"path": "../../guided-demo/02-run-pipeline.md"',
-    '"path": "../../guided-demo/review-guardrails.md"': '"path": "../../guided-demo/03-enrich-guardrails.md"',
-    "'path': '../../guided-demo/run-pipeline.md'": "'path': '../../guided-demo/02-run-pipeline.md'",
-    "'path': '../../guided-demo/review-guardrails.md'": "'path': '../../guided-demo/03-enrich-guardrails.md'",
-    '"guided-demo" / "run-environment-setup.md"': '"guided-demo" / "00B-run-environment-setup.md"',
-    '"guided-demo" / "create-agreement.md"': '"guided-demo" / "01-create-agreement.md"',
-    '"guided-demo" / "run-pipeline.md"': '"guided-demo" / "02-run-pipeline.md"',
-    '"guided-demo" / "review-guardrails.md"': '"guided-demo" / "03-enrich-guardrails.md"',
+    '"path": "../../guided-demo/run-pipeline.md"': '"path": "../../guided-demo/02-build-and-run-etl.md"',
+    '"path": "../../guided-demo/review-guardrails.md"': '"path": "../../guided-demo/03-author-and-freeze-data-contract.md"',
+    "'path': '../../guided-demo/run-pipeline.md'": "'path': '../../guided-demo/02-build-and-run-etl.md'",
+    "'path': '../../guided-demo/review-guardrails.md'": "'path': '../../guided-demo/03-author-and-freeze-data-contract.md'",
+    '"guided-demo" / "run-environment-setup.md"': '"guided-demo" / "00B-configure-environment-and-load-assets.md"',
+    '"guided-demo" / "create-agreement.md"': '"guided-demo" / "01-establish-governance-context.md"',
+    '"guided-demo" / "run-pipeline.md"': '"guided-demo" / "02-build-and-run-etl.md"',
+    '"guided-demo" / "review-guardrails.md"': '"guided-demo" / "03-author-and-freeze-data-contract.md"',
 }
 
 SOURCE_FILES = (
@@ -39,7 +39,7 @@ SOURCE_FILES = (
 )
 
 # Match only complete Markdown destinations. This prevents a valid target such as
-# ``02-run-pipeline.md`` from being rewritten to ``02-02-run-pipeline.md``.
+# ``02-build-and-run-etl.md`` from being rewritten to ``02-02-build-and-run-etl.md``.
 MARKDOWN_LINK_PATTERN = re.compile(r"(?P<prefix>\]\()(?P<target>[^)]+)(?P<suffix>\))")
 
 
