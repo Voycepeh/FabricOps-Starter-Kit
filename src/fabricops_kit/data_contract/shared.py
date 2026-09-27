@@ -31,7 +31,7 @@ GUARDRAIL_TYPES = frozenset({"schema", "freshness", "source_drift", "data_qualit
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
-    "table": frozenset({"Description", "Classification"}),
+    "table": frozenset({"Description", "Classification", "Grain"}),
     "column": frozenset({"Description", "Classification"}),
 }
 CONTRACT_SOURCE_TABLES = (
