@@ -10,6 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- `setup_metadata_tables()` now additively evolves existing metadata tables by adding missing canonical columns while preserving existing rows and extra columns; incompatible canonical types and known legacy schemas still fail validation.
+
 ### Deprecated
 
 ### Removed
