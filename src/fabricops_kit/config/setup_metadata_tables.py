@@ -23,17 +23,33 @@ def _schema_fields_by_name(schema: Any) -> dict[str, Any]:
     return {field.name: field for field in getattr(schema, "fields", [])}
 
 
-def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, expected_schema: Any) -> None:
-    """Validate that required metadata columns exist with compatible physical types."""
+def _table_column_names(table: Any) -> list[str]:
+    """Return physical table column names without depending on nullability."""
+    if table is None:
+        return []
+    schema = getattr(table, "schema", None)
+    if schema is not None:
+        names = list(getattr(schema, "fieldNames", lambda: [])())
+        if names:
+            return names
+    return list(getattr(table, "columns", []) or [])
+
+
+def _validate_existing_metadata_schema(
+    table_name: str,
+    existing_schema: Any,
+    expected_schema: Any,
+    *,
+    allow_missing: bool = False,
+) -> list[str]:
+    """Validate canonical field types and return missing canonical columns."""
     existing = _schema_fields_by_name(existing_schema)
     expected = _schema_fields_by_name(expected_schema)
     if not existing:
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
-    missing = [name for name in expected if name not in existing]
-    if missing:
-        raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+    missing = [name for name in expected if name not in existing]
     mismatches: list[str] = []
     for name, expected_field in expected.items():
         existing_field = existing.get(name)
@@ -49,6 +65,34 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
             + "; ".join(mismatches)
             + "."
         )
+    if missing and not allow_missing:
+        raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+    return missing
+
+
+def _add_missing_metadata_columns(
+    *,
+    spark: Any,
+    table_name: str,
+    metadata_schema: str,
+    expected_schema: Any,
+    missing_columns: list[str],
+    context: dict[str, Any],
+) -> None:
+    """Add missing canonical columns through an empty Delta merge-schema append."""
+    expected = _schema_fields_by_name(expected_schema)
+    additive_schema = expected_schema.__class__([expected[name] for name in missing_columns])
+    empty_frame = spark.createDataFrame([], schema=additive_schema)
+    write_lakehouse_table(
+        empty_frame,
+        table_name,
+        store="Metadata",
+        schema=metadata_schema,
+        mode="append",
+        options={"mergeSchema": "true"},
+        verbose=False,
+        context=context,
+    )
 
 
 def _result(table_name: str, status: str, message: str, *, error_type: str | None = None) -> dict[str, Any]:
@@ -85,6 +129,7 @@ def _print_setup_summary(
     *,
     total: int,
     created: list[str],
+    evolved: list[str],
     validated: list[str],
     failed: list[str],
     table_results: dict[str, dict[str, Any]],
@@ -93,7 +138,7 @@ def _print_setup_summary(
     """Print concise notebook-facing setup output after per-table progress."""
     active_label = "Yes" if active_stewards else "No"
     if failed:
-        successful_count = len(created) + len(validated)
+        successful_count = len(created) + len(evolved) + len(validated)
         print("\nFabricOps metadata setup completed with failures.")
         print(f"Successful: {successful_count}/{total}")
         print(f"Failed: {len(failed)}/{total}\n")
@@ -102,13 +147,19 @@ def _print_setup_summary(
             print(f"- {table_name}: {table_results[table_name].get('message', '')}")
         print(f"Active steward present: {active_label}")
         return
-    if created:
+    if created or evolved:
         print(f"\nFabricOps metadata setup complete ({total}/{total}).")
         print(f"Created: {len(created)}")
+        print(f"Evolved: {len(evolved)}")
         print(f"Validated: {len(validated)}")
-        print("Created tables:")
-        for table_name in created:
-            print(f"- {table_name}")
+        if created:
+            print("Created tables:")
+            for table_name in created:
+                print(f"- {table_name}")
+        if evolved:
+            print("Evolved tables:")
+            for table_name in evolved:
+                print(f"- {table_name}")
         print(f"Active steward present: {active_label}")
         return
     print(f"\nFabricOps metadata tables ready ({total}/{total}).")
@@ -321,6 +372,7 @@ def setup_metadata_tables(
 
     table_results: dict[str, dict[str, Any]] = {}
     created_tables: list[str] = []
+    evolved_tables: list[str] = []
     validated_tables: list[str] = []
     failed_tables: list[str] = []
 
@@ -354,10 +406,38 @@ def setup_metadata_tables(
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
+            evolved_columns: list[str] = []
+            if not created:
+                columns = _table_column_names(table)
+                if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in columns:
+                    raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+                if table is not None and hasattr(table, "schema"):
+                    evolved_columns = _validate_existing_metadata_schema(
+                        table_name, table.schema, schema, allow_missing=True
+                    )
+                else:
+                    expected_columns = metadata_table_field_names(schema)
+                    evolved_columns = [field for field in expected_columns if field not in columns]
+                if evolved_columns:
+                    _add_missing_metadata_columns(
+                        spark=spark,
+                        table_name=table_name,
+                        metadata_schema=resolved_metadata_schema,
+                        expected_schema=schema,
+                        missing_columns=evolved_columns,
+                        context=context,
+                    )
+                    table = read_lakehouse_table(
+                        table_name,
+                        store="Metadata",
+                        schema=resolved_metadata_schema,
+                        spark_session=spark,
+                        context=context,
+                    )
             if table is not None and hasattr(table, "schema"):
                 _validate_existing_metadata_schema(table_name, table.schema, schema)
             else:
-                columns = list(getattr(table, "columns", []) or []) if table is not None else []
+                columns = _table_column_names(table)
                 missing = [field for field in metadata_table_field_names(schema) if field not in columns]
                 if missing:
                     raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
@@ -368,6 +448,19 @@ def setup_metadata_tables(
                 table_results[table_name] = _result(table_name, "created", "Metadata table was created and validated.")
                 if verbose:
                     print(f"[{index}/{total_tables}] Created {table_name}\n")
+            elif evolved_columns:
+                evolved_tables.append(table_name)
+                table_results[table_name] = {
+                    **_result(
+                        table_name,
+                        "evolved",
+                        "Existing metadata table was additively evolved and validated.",
+                    ),
+                    "added_columns": evolved_columns,
+                }
+                if verbose:
+                    print(f"[{index}/{total_tables}] Evolved {table_name}")
+                    print(f"       Added columns: {', '.join(evolved_columns)}\n")
             else:
                 validated_tables.append(table_name)
                 table_results[table_name] = _result(
@@ -382,7 +475,7 @@ def setup_metadata_tables(
 
     active_stewards = _active_steward_presence(steward_table)
 
-    successful = created_tables + validated_tables
+    successful = created_tables + evolved_tables + validated_tables
     status = "ready" if not failed_tables else ("partial_failure" if successful else "failed")
     data_agreement_tables = [
         "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
@@ -392,6 +485,7 @@ def setup_metadata_tables(
         "status": "failed" if data_agreement_failed else ("ready" if active_stewards else "not_ready"),
         "tables": data_agreement_tables,
         "created_tables": [table for table in data_agreement_tables if table in created_tables],
+        "evolved_tables": [table for table in data_agreement_tables if table in evolved_tables],
         "validated_tables": [table for table in data_agreement_tables if table in validated_tables],
         "failed_tables": data_agreement_failed,
         "active_steward_count": active_stewards,
@@ -404,6 +498,7 @@ def setup_metadata_tables(
         "status": "failed" if governance_failed else "ready",
         "tables": governance_tables,
         "created_tables": [table for table in governance_tables if table in created_tables],
+        "evolved_tables": [table for table in governance_tables if table in evolved_tables],
         "validated_tables": [table for table in governance_tables if table in validated_tables],
         "failed_tables": governance_failed,
     }
@@ -413,6 +508,7 @@ def setup_metadata_tables(
         "status": "failed" if engineering_failed else "ready",
         "tables": engineering_tables,
         "created_tables": [table for table in engineering_tables if table in created_tables],
+        "evolved_tables": [table for table in engineering_tables if table in evolved_tables],
         "validated_tables": [table for table in engineering_tables if table in validated_tables],
         "failed_tables": engineering_failed,
     }
@@ -431,6 +527,7 @@ def setup_metadata_tables(
         "engineering": engineering,
         "fully_qualified_tables": fully_qualified_tables,
         "created_tables": created_tables,
+        "evolved_tables": evolved_tables,
         "validated_tables": validated_tables,
         "failed_tables": failed_tables,
         "created_or_checked_tables": successful,
@@ -442,6 +539,7 @@ def setup_metadata_tables(
         _print_setup_summary(
             total=total_tables,
             created=created_tables,
+            evolved=evolved_tables,
             validated=validated_tables,
             failed=failed_tables,
             table_results=table_results,
