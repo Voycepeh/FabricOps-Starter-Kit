@@ -51,7 +51,7 @@ def test_release_navigation_replaces_only_releases_block(tmp_path: Path) -> None
         "      - Releases (Python package):\n"
         "          - Overview: releases/index.md\n"
         "          - 0.1.0: releases/0.1.0/index.md\n"
-        "      - Notebook Templates: notebook-templates.md\n"
+        "      - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks\n"
         "  - Reference: reference/index.md\n",
         encoding="utf-8",
     )
