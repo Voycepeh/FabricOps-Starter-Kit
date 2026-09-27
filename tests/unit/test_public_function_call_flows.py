@@ -1378,4 +1378,6 @@ def test_dashboard_uses_shared_generated_artifact_metadata() -> None:
     assert "generated-artifacts.json" in html
     assert "Call-flow data generated:" in html
     assert "Dashboard UI version:" in html
+    assert 'href="../function-call-graph/"' in html
+    assert "How this dashboard is generated" in html
     assert "DATA.metadata||{}).generated_at_sgt" not in html
