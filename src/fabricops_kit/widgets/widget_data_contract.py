@@ -2270,16 +2270,21 @@ def widget_data_contract(
         )
 
         def dq_checkbox(label: str) -> Any:
-            return widgets.Checkbox(description=label, disabled=not editable)
+            control = widgets.Checkbox(
+                description=label,
+                disabled=not editable,
+                style={"description_width": "initial"},
+                layout=widgets.Layout(width="auto", max_width="100%", min_width="0"),
+            )
+            control.add_class("fabricops-dq-checkbox")
+            return control
 
         dq_max_missing = widgets.Text(
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Maximum missing %"),
         )
-        dq_blank_missing = widgets.Checkbox(
-            value=False, description="Treat blank/whitespace text as missing",
-            disabled=not editable,
-        )
+        dq_blank_missing = dq_checkbox("Count blank text as missing")
+        dq_blank_missing.value = False
         dq_min_unique = widgets.Text(
             value="100", disabled=not editable,
             **shared.widget_common(widgets, "Minimum unique %"),
@@ -2290,22 +2295,21 @@ def widget_data_contract(
         )
         dq_values = widgets.Text(
             disabled=not editable,
-            **shared.widget_common(widgets, "Allowed values (comma-separated)"),
+            placeholder="Example: Active, Inactive",
+            **shared.widget_common(widgets, "Allowed values"),
         )
         dq_minimum = widgets.Text(
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
-        dq_minimum_inclusive = widgets.Checkbox(
-            value=True, description="Include lower bound", disabled=not editable
-        )
+        dq_minimum_inclusive = dq_checkbox("Include lower bound")
+        dq_minimum_inclusive.value = True
         dq_maximum = widgets.Text(
             disabled=not editable, **shared.widget_common(widgets, "Upper bound")
         )
-        dq_maximum_inclusive = widgets.Checkbox(
-            value=True, description="Include upper bound", disabled=not editable
-        )
+        dq_maximum_inclusive = dq_checkbox("Include upper bound")
+        dq_maximum_inclusive.value = True
         dq_pattern = widgets.Text(
-            disabled=not editable, **shared.widget_common(widgets, "Regular expression")
+            disabled=not editable, **shared.widget_common(widgets, "Regex pattern")
         )
 
         dq_family_controls = {
@@ -3430,9 +3434,11 @@ def widget_data_contract(
                 layout=widgets.Layout(
                     width="100%",
                     min_width="0",
-                    gap="4px",
+                    max_width="760px",
+                    gap="6px",
                     padding="14px 0",
                     border_bottom="1px solid #e1e6eb",
+                    overflow="visible",
                 ),
             )
 
