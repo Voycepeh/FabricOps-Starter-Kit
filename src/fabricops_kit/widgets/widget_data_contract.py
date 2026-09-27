@@ -1072,6 +1072,7 @@ def widget_data_contract(
             if str(rule.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
             and str(rule.get("rule_type") or "") == "uniqueness"
             and not str(rule.get("column_id") or "")
+            and not str(_parameters(rule).get("business_requirement") or "").strip()
         ]
         existing_row_key = next(
             (rule for rule in reversed(row_key_rules) if rule.get("is_active", True)),
@@ -1708,6 +1709,9 @@ def widget_data_contract(
                         in {"data_quality", "dq"}
                         and str(rule.get("rule_type") or "") == "uniqueness"
                         and not str(rule.get("column_id") or "")
+                        and not str(
+                            _parameters(rule).get("business_requirement") or ""
+                        ).strip()
                         and str(rule.get("guardrail_rule_id") or "") != authoritative_id
                     }
                     if duplicate_ids:
@@ -4106,13 +4110,7 @@ def widget_data_contract(
                 column_rule_id = ""
                 existing: Mapping[str, Any] = {}
                 if resolved_type == "uniqueness":
-                    existing = next((
-                        rule for rule in session_guardrails()
-                        if str(rule.get("guardrail_type") or "").lower()
-                        in {"data_quality", "dq"}
-                        and str(rule.get("rule_type") or "") == "uniqueness"
-                        and not str(rule.get("column_id") or "")
-                    ), {})
+                    existing = {}
                 elif (
                     resolved_type in _COLUMN_DQ_TYPES
                     and len(resolved_columns) == 1
