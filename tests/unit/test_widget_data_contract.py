@@ -630,6 +630,52 @@ def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
     assert controls["row_key_block"].value is True
 
 
+def test_row_key_changes_reuse_one_table_uniqueness_rule(widget_runtime):
+    """Changing Grain & Row Key mutates one logical uniqueness Guardrail."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["row_key_columns"].value = ("column_0",)
+    first_rules = [
+        rule for rule in state["current"]["guardrails"]
+        if rule.get("guardrail_type") == "data_quality"
+        and rule.get("rule_type") == "uniqueness"
+        and not rule.get("column_id")
+    ]
+    assert len(first_rules) == 1
+    rule_id = first_rules[0]["guardrail_rule_id"]
+
+    controls["row_key_columns"].value = ("column_1",)
+    controls["row_key_columns"].value = ("column_0", "column_1")
+
+    row_key_rules = [
+        rule for rule in state["current"]["guardrails"]
+        if rule.get("guardrail_type") == "data_quality"
+        and rule.get("rule_type") == "uniqueness"
+        and not rule.get("column_id")
+    ]
+    assert len(row_key_rules) == 1
+    assert row_key_rules[0]["guardrail_rule_id"] == rule_id
+    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
+        "columns": ["column_0", "column_1"]
+    }
+    assert row_key_rules[0]["is_active"] is True
+
+    controls["row_key_columns"].value = ()
+    row_key_rules = [
+        rule for rule in state["current"]["guardrails"]
+        if rule.get("guardrail_type") == "data_quality"
+        and rule.get("rule_type") == "uniqueness"
+        and not rule.get("column_id")
+    ]
+    assert len(row_key_rules) == 1
+    assert row_key_rules[0]["guardrail_rule_id"] == rule_id
+    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
+        "columns": ["column_0", "column_1"]
+    }
+    assert row_key_rules[0]["is_active"] is False
+
+
 def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
     state = widget_runtime["open"]()
