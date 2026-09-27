@@ -451,3 +451,127 @@
 .md-typeset .fabricops-table-wide code {
   white-space: nowrap;
 }
+
+
+/* Desktop top-navigation dropdowns.
+   Section tabs are menu triggers instead of links to their first child. */
+@media screen and (min-width: 76.25em) {
+  .md-tabs,
+  .md-tabs .md-grid,
+  .md-tabs__list {
+    overflow: visible;
+  }
+
+  .md-tabs__item--dropdown {
+    position: relative;
+  }
+
+  .fabricops-tabs-trigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: default;
+    display: flex;
+    font: inherit;
+    gap: 0.3rem;
+    height: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .fabricops-tabs-trigger__chevron {
+    font-size: 0.72em;
+    line-height: 1;
+    opacity: 0.75;
+    transform: translateY(0.02rem);
+    transition: transform 120ms ease;
+  }
+
+  .fabricops-tabs-dropdown {
+    background: var(--md-default-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.16);
+    left: -0.6rem;
+    list-style: none;
+    margin: 0;
+    min-width: 17rem;
+    opacity: 0;
+    padding: 0.4rem;
+    pointer-events: none;
+    position: absolute;
+    top: calc(100% - 0.05rem);
+    transform: translateY(-0.2rem);
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease,
+      visibility 120ms ease;
+    visibility: hidden;
+    z-index: 30;
+  }
+
+  .md-tabs__item--dropdown:hover > .fabricops-tabs-dropdown,
+  .md-tabs__item--dropdown:focus-within > .fabricops-tabs-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .md-tabs__item--dropdown:hover .fabricops-tabs-trigger__chevron,
+  .md-tabs__item--dropdown:focus-within .fabricops-tabs-trigger__chevron {
+    transform: rotate(180deg);
+  }
+
+  .fabricops-tabs-dropdown__item,
+  .fabricops-tabs-dropdown__group {
+    margin: 0;
+    padding: 0;
+  }
+
+  .fabricops-tabs-dropdown__link {
+    border-radius: 0.2rem;
+    color: var(--md-default-fg-color);
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    padding: 0.52rem 0.65rem;
+    text-decoration: none;
+    white-space: normal;
+  }
+
+  .fabricops-tabs-dropdown__link:hover,
+  .fabricops-tabs-dropdown__link:focus,
+  .fabricops-tabs-dropdown__item--active > .fabricops-tabs-dropdown__link {
+    background: var(--md-accent-fg-color--transparent);
+    color: var(--md-primary-fg-color);
+  }
+
+  .fabricops-tabs-dropdown__group + .fabricops-tabs-dropdown__group,
+  .fabricops-tabs-dropdown__item + .fabricops-tabs-dropdown__group {
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .fabricops-tabs-dropdown__group-title {
+    color: var(--md-default-fg-color--light);
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.42rem 0.65rem 0.25rem;
+  }
+
+  .fabricops-tabs-dropdown__nested {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .fabricops-tabs-dropdown__nested .fabricops-tabs-dropdown__link {
+    padding-left: 0.9rem;
+  }
+}
