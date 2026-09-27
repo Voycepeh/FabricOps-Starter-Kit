@@ -8,7 +8,7 @@ Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Dat
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring
 
 ## Model
 

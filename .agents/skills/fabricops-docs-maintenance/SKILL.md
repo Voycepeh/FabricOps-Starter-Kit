@@ -23,7 +23,7 @@ Classify the requested content before creating or moving files:
 2. Product definition: `docs/maintainer/product-definition.md` for what FabricOps is, its original product intent, audience, positioning, scope, and product-level boundaries.
 3. High-level workflow explanation: `docs/how-fabricops-works.md` for how the complete FabricOps workflow fits together without implementation-level detail.
 4. Guided implementation: `docs/guided-demo.md` and `docs/guided-demo/` for what users do, run, configure, and observe when applying FabricOps. Put contextual rationale, design choices, trade-offs, caveats, and edge cases beside the relevant implementation step in focused collapsible blocks when they help users understand why the workflow is designed that way.
-5. User implementation guidance not owned by the Guided Demo: `docs/notebook-templates.md` or another existing canonical implementation page.
+5. User implementation guidance not owned by the Guided Demo: `templates/notebooks/README.md` or another existing canonical implementation page.
 6. Maintainer procedure: `docs/maintainer/`, except where a more specific ownership rule applies.
 7. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
 8. Release-specific reference: `docs/releases/`, `docs/releases/manifests/`, and release generators.
@@ -98,7 +98,7 @@ The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the
 - `AGENTS.md`, especially documentation, generated-artifact, and verification rules.
 - `README.md` for concise repository navigation.
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
-- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
+- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `templates/notebooks/README.md`, `docs/maintainer/`, and `docs/releases/`.
 - `docs/maintainer/product-definition.md` before changing product positioning, scope, audience, or product-level intent.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
 - `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.

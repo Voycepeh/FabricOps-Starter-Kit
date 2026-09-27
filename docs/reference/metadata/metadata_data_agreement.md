@@ -8,7 +8,7 @@ Define why the data is shared, with whom, and under what conditions.
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Agreement intake
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Agreement intake
 
 ## Model
 

@@ -8,7 +8,7 @@ Own one table-centric governed definition in a single versioned JSON payload; ed
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring
 
 ## Model
 

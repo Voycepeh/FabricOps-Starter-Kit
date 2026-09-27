@@ -8,7 +8,7 @@ Store descriptive Description and Classification metadata for one exact Data Con
 
 ## Used in Workflow Template
 
-* [`01_governance`](../../notebook-templates.md) — Data Contract authoring
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring
 
 ## Model
 
