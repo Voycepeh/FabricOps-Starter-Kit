@@ -117,7 +117,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     contract_page = first_pages["metadata_data_contract.md"]
     assert "[`widget_data_contract`](../../api/reference/widget_data_contract.md)" in contract_page
     assert "widget_register_data_contract.md" not in contract_page
-    assert "[`01_governance`](../../notebook-templates.md) — Data Contract authoring" in contract_page
+    assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert contract_page.count("`METADATA_DATA_AGREEMENT` **(N → 1)**") == 1
     assert "via `agreement_id` + `agreement_version`" in contract_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
