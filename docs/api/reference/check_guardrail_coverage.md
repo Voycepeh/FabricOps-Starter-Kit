@@ -100,7 +100,7 @@ Raises ValueError for missing canonical identities or missing Fabric activity id
 
 ## See also
 
-- [Pipeline Execution](../../guided-demo/02-run-pipeline.md)
+- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
 
 
 <details>
