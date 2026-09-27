@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Author and freeze one table-centric schema, processing, Enrichment, and Guardrail snapshot; link an exact Data Agreement version only when activating it for Production.
+Own one table-centric governed definition in a single versioned JSON payload; edit the draft in place, freeze the reviewed definition, and link an exact Data Agreement version only when activating it for Production.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ Author and freeze one table-centric schema, processing, Enrichment, and Guardrai
 
 **Default physical schema:** `governance`
 
-**Grain:** One Data Contract lifecycle version for one governed table; its payload becomes immutable when frozen and its Data Agreement linkage is populated at activation.
+**Grain:** One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.
 
 **Primary key:** `contract_id` + `contract_version`
 
@@ -46,7 +46,7 @@ via `table_id`
 | `agreement_version` | `string` | Canonical agreement version associated with the row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `contract_payload_json` | `string` | Serialized contract payload stored for the row. |
+| `contract_payload_json` | `string` | Serialized governed Data Contract definition; mutable while draft and immutable once frozen. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `is_active` | `boolean` | Whether the row is currently active. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
