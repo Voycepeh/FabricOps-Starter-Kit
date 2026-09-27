@@ -86,14 +86,31 @@
 
 Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
-**How the operating model fits together:**
+**How Governance and Engineering work hand in hand within Microsoft Fabric**
 
-- **Governance Workspace** — `00_env_config` and `01_governance` define, review, version, and activate governed expectations.
-- **Metadata Lakehouse** — shared FabricOps metadata connects Governance and Engineering, including catalogue, profiling, contracts, lineage, and guardrail results.
-- **Engineering Development Workspace** — `00_env_config` and `02_pipeline` build, run, and validate the implementation against the selected frozen Data Contract.
-- **Engineering Production Workspace** — receives the validated `02_pipeline`, resolves the active Data Contract, and produces governed Production outputs.
-- **Project-Specific Consumer Workspace** — `99_explore` consumes approved Production data without recreating the engineering workflow.
-- **Promotion path** — the validated `02_pipeline` moves from Engineering Development to Engineering Production; approved data is then consumed from Production.
+- **1. Governance Workspace**  
+  Owns the governed definition of the data. `00_env_config` stores the Governance environment configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
+
+- **2. Shared Metadata Lakehouse**  
+  Lives in the Governance Workspace and connects Governance with Engineering. It stores the shared FabricOps metadata used across the lifecycle, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
+
+- **3. Engineering Development Workspace**  
+  This is where the engineering implementation is built and validated. Its `00_env_config` points to the Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
+
+- **4. Promote the validated pipeline**  
+  Once `02_pipeline` has been validated in Development against the frozen Data Contract, the validated notebook is promoted to the Engineering Production Workspace.
+
+- **5. Engineering Production Workspace**  
+  Runs the same promoted `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the activated Data Contract and produces governed Production outputs.
+
+- **6. Same data architecture across environments**  
+  Bronze, Silver, and Gold stores exist within the Engineering workspaces across Development and Production. They can be implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their logical roles and structure remain aligned 1:1 across environments.
+
+- **7. Project-Specific Consumer Workspace**  
+  Consumers use `99_explore` and read approved Production data only. Power BI, data agents, AI workloads, and other project-specific consumption should not connect to Engineering Development outputs or recreate the governed engineering pipeline.
+
+- **Notebook ownership**  
+  Governance owns `01_governance`. Engineering owns `02_pipeline`. Each operational workspace has its own environment-specific `00_env_config`, while project-specific consumer workspaces use `99_explore`.
 
 
 </div>
