@@ -676,6 +676,151 @@ def test_row_key_changes_reuse_one_table_uniqueness_rule(widget_runtime):
     assert row_key_rules[0]["is_active"] is False
 
 
+def test_inactive_row_key_hydrates_as_unselected(widget_runtime):
+    """A cleared persisted row key stays cleared when the widget is reopened."""
+    widget_runtime["guardrails"].append({
+        "guardrail_rule_id": "row-key-disabled",
+        "guardrail_version": 1,
+        "guardrail_type": "data_quality",
+        "column_id": "",
+        "rule_type": "uniqueness",
+        "rule_parameters_json": '{"columns":["column_0"]}',
+        "action": "Block",
+        "is_active": False,
+        "contract_id": "contract-orders",
+        "contract_version": 1,
+        "environment_name": "dev",
+    })
+
+    state = widget_runtime["open"]()
+    assert tuple(state["_controls"]["row_key_columns"].value) == ()
+
+
+def test_row_key_change_cleans_legacy_duplicate_table_uniqueness(widget_runtime):
+    """The Grain row-key editor owns one table-level uniqueness rule."""
+    for rule_id, columns in (
+        ("row-key-a", ["column_0"]),
+        ("row-key-b", ["column_1"]),
+    ):
+        widget_runtime["guardrails"].append({
+            "guardrail_rule_id": rule_id,
+            "guardrail_version": 1,
+            "guardrail_type": "data_quality",
+            "column_id": "",
+            "rule_type": "uniqueness",
+            "rule_parameters_json": json.dumps({"columns": columns}),
+            "action": "Block",
+            "is_active": True,
+            "contract_id": "contract-orders",
+            "contract_version": 1,
+            "environment_name": "dev",
+        })
+
+    state = widget_runtime["open"]()
+    state["_controls"]["row_key_columns"].value = ("column_0", "column_1")
+
+    row_key_rules = [
+        rule for rule in state["current"]["guardrails"]
+        if rule.get("guardrail_type") == "data_quality"
+        and rule.get("rule_type") == "uniqueness"
+        and not rule.get("column_id")
+    ]
+    assert len(row_key_rules) == 1
+    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
+        "columns": ["column_0", "column_1"]
+    }
+
+
+def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
+    """Saved governance choices hydrate without relying on the old widget instance."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    controls["table_description"].value = "Persisted orders"
+    controls["table_classification"].value = "Restricted"
+    controls["table_grain"].value = "One row per order"
+    controls["row_key_columns"].value = ("column_0",)
+    controls["row_key_block"].value = True
+
+    freshness = controls["table_guardrails"]["freshness"]
+    freshness["enabled"].value = True
+    freshness["block"].value = False
+    freshness["parameters"][0].value = "recurring"
+    freshness["parameters"][1].value = "column_1"
+    freshness["parameters"][2].value = "2"
+    freshness["parameters"][3].value = "days"
+    freshness["parameters"][4].value = "3"
+    freshness["parameters"][5].value = "days"
+
+    drift = controls["table_guardrails"]["source_drift"]
+    drift["enabled"].value = True
+    drift["block"].value = True
+    drift["parameters"][0].value = "column_0"
+    drift["parameters"][1].value = "column_1"
+
+    controls["column_select"].value = "col-0"
+    controls["column_description"].value = "Persisted identifier"
+    controls["column_classification"].value = "Restricted"
+    controls["required"].value = True
+    controls["pii_type"].value = "direct"
+    controls["pii_reason"].value = "Identifies an order"
+    controls["sensitive_treatment"].value = "mask"
+    controls["mask_start"].value = "1"
+    controls["mask_end"].value = "2"
+    controls["mask_character"].value = "#"
+    controls["sensitive_enabled"].value = True
+    controls["sensitive_block"].value = True
+
+    completeness = controls["dq_family_controls"]["completeness"]
+    completeness["enabled"].value = True
+    completeness["block"].value = True
+    completeness["parameters"][0].value = "5"
+    completeness["parameters"][1].value = True
+
+    controls["save_data_contract"].click()
+    assert widget_runtime["calls"]["draft"]
+
+    reopened = widget_runtime["open"]()
+    hydrated = reopened["_controls"]
+    assert hydrated["table_description"].value == "Persisted orders"
+    assert hydrated["table_classification"].value == "Restricted"
+    assert hydrated["table_grain"].value == "One row per order"
+    assert tuple(hydrated["row_key_columns"].value) == ("column_0",)
+    assert hydrated["row_key_block"].value is True
+
+    reopened_freshness = hydrated["table_guardrails"]["freshness"]
+    assert reopened_freshness["enabled"].value is True
+    assert reopened_freshness["block"].value is False
+    assert reopened_freshness["parameters"][1].value == "column_1"
+    assert reopened_freshness["parameters"][2].value == "2.0"
+    assert reopened_freshness["parameters"][4].value == "3.0"
+
+    reopened_drift = hydrated["table_guardrails"]["source_drift"]
+    assert reopened_drift["enabled"].value is True
+    assert reopened_drift["block"].value is True
+    assert reopened_drift["parameters"][0].value == "column_0"
+    assert reopened_drift["parameters"][1].value == "column_1"
+
+    hydrated["column_select"].value = "col-0"
+    assert hydrated["column_description"].value == "Persisted identifier"
+    assert hydrated["column_classification"].value == "Restricted"
+    assert hydrated["required"].value is True
+    assert hydrated["pii_type"].value == "direct"
+    assert hydrated["pii_reason"].value == "Identifies an order"
+    assert hydrated["sensitive_treatment"].value == "mask"
+    assert hydrated["mask_start"].value == "1"
+    assert hydrated["mask_end"].value == "2"
+    assert hydrated["mask_character"].value == "#"
+    assert hydrated["sensitive_enabled"].value is True
+    assert hydrated["sensitive_block"].value is True
+
+    reopened_completeness = hydrated["dq_family_controls"]["completeness"]
+    assert reopened_completeness["enabled"].value is True
+    assert reopened_completeness["block"].value is True
+    assert reopened_completeness["parameters"][0].value == "5.0"
+    assert reopened_completeness["parameters"][1].value is True
+
+
 def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
     state = widget_runtime["open"]()
