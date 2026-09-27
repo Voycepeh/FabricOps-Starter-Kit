@@ -87,11 +87,11 @@ setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT
 
 ## Returns
 
-dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.
+dict[str, Any] setup report after all managed metadata tables have been created, additively evolved, or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, evolved_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.
 
 ### Return interpretation
 
-Use the returned status and per-table results to confirm that the physical metadata layer is ready. The function is primarily used for table-creation and validation side effects, not for registering business datasets.
+Use the returned status and per-table results to confirm that the physical metadata layer is ready and to distinguish tables that were created, evolved, validated, or failed. The function does not register business datasets.
 
 ## Raises / Errors
 
