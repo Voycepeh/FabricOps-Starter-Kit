@@ -11,7 +11,7 @@ Store aggregate enforce and validate Guardrail summaries and continuation decisi
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](../../notebook-templates.md) — Source guardrails
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Source guardrails
 
 ## Model
 
