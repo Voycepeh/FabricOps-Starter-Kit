@@ -46,7 +46,7 @@ nav:
           - Overview: releases/index.md
           - 0.2.0: releases/0.2.0/index.md
           - 0.1.0: releases/0.1.0/index.md
-      - Notebook Templates: notebook-templates.md
+      - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks
       - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
   - Reference Documentation:
       - Function Reference: reference/index.md
