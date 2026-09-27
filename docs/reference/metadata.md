@@ -1,14 +1,15 @@
 # List of Metadata Tables
 
-FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas: Governance owns authored governance definitions, while Engineering/runtime owns technical observations, profiling, Lineage, Access, and runtime results. Governed outputs, DQ `failed_rows` DataFrames, and optional Sensitive Data token mappings remain project-owned physical or support data rather than FabricOps metadata.
-
-`table_id` is the canonical bridge for a governed data asset. `contract_id` and `contract_version` identify its governed definition; Enrichment and Guardrails belong to that exact Data Contract version.
-
-`scan_workspace_access(...)`, `scan_onelake_access(...)`, and `scan_sql_access(...)` observe the three supported Fabric table-access paths and normalize them into append-only `METADATA_DATA_ACCESS` snapshots. Direct item sharing, Entra group expansion, Power BI security, and effective-access resolution remain outside this scanner set. Pass `persist=False` for inspection-only scans.
-
-The cards below show the current implemented metadata tables and relationships.
-
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
+
+FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
+
+- **Governance** stores authored governance definitions.
+- **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
+
+`table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with Enrichment and Guardrails belonging to that exact Data Contract version.
+
+The diagram above shows the current implemented metadata tables and relationships.
 
 ## Metadata tables
 
