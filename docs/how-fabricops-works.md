@@ -137,43 +137,7 @@ If the implementation or governed definition needs refinement, Governance create
 
 <div class="fabricops-section-block" markdown="1">
 
-## FabricOps Assets
-
-FabricOps packages that operating pattern around five reusable notebooks:
-
-<div class="fabricops-assets-grid" markdown="1">
-
-<div class="fabricops-asset" markdown="1">
-
-### Notebooks
-
-| Notebook | Role |
-| --- | --- |
-| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) | Defines the active environment and configured Fabric stores. |
-| [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb) | Authors the governance context and versioned Data Contracts. |
-| [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) | Provides the canonical Full Read Pipeline Template for complete-source engineering. |
-| [`02B_incremental_append_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02B_incremental_append_pipeline.ipynb) | Variant of `02_pipeline` for incremental reads published through append. |
-| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb) | Lets project-specific workspaces consume approved Production data without recreating the Production engineering workflow. |
-
-[Browse the reusable notebook templates →](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
-
-</div>
-
-<div class="fabricops-asset" markdown="1">
-
-### Functions
-
-The notebooks are supported by the FabricOps package: reusable public functions and widgets provide the repeatable pieces, while the project keeps its own transformation logic.
-
-[See what each FabricOps function does →](reference/index.md)
-
-[Explore the environment-aware pipeline pattern →](solutions/environment-aware-data-pipelines.md)
-
-</div>
-
-<div class="fabricops-asset" markdown="1">
-
-### Data Contracts
+## Data Contracts
 
 **The Data Contract is the versioned governance definition for a governed table, not passive documentation beside the pipeline.**
 
@@ -183,19 +147,7 @@ Governance authors the definition once, Engineering explicitly selects or resolv
 
 [Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
 
-</div>
 
-<div class="fabricops-asset" markdown="1">
-
-### Metadata
-
-**The metadata model is the storage view of the same seven-step workflow above.** The workflow explains when Governance and Engineering act; this diagram shows where those definitions, observations, and runtime results are persisted.
-
-![FabricOps metadata model](assets/fabricops-metadata-model.png)
-
-[What exactly is stored in each metadata table? →](reference/metadata.md)
-
-</div>
 
 </div>
 
