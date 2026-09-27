@@ -2,6 +2,8 @@
 
 Write a business requirement in plain language. FabricOps can decompose it into one or more reviewable, enforceable Data Quality rules.
 
+![Business rules converted to enforceable Data Quality rules](../assets/BusinessRuletoDQ.png)
+
 ## How it works
 
 Governance describes what must be true in business language. FabricOps uses the governed table definition, column metadata, profile evidence, and existing DQ rules to resolve the intent into the smallest set of independent deterministic Data Quality rules. Relevant columns are inferred by default; an optional multi-select can constrain generation when needed.

@@ -2,6 +2,8 @@
 
 Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
 
+![Development to Production pipeline promotion](../assets/05/PipelinesDeploymentOverview.png)
+
 ## What is reusable
 
 FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings.

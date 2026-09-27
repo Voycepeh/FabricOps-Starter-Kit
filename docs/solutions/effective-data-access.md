@@ -2,6 +2,8 @@
 
 Resolve who actually has access to your tables by scanning workspace roles, direct item access, OneLake security roles, and SQL endpoint grants.
 
+![Effective data access scan](../assets/EffectiveAccessScan.png)
+
 ## What it resolves
 
 Data access in Microsoft Fabric can be granted through several overlapping paths. FabricOps scans those paths together so Governance can reason about the effective table access a user actually receives rather than inspecting each permission mechanism in isolation.

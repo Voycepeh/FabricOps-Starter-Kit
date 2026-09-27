@@ -2,6 +2,8 @@
 
 FabricOps uses profile evidence and Microsoft Fabric AI Functions to assist Data Contract authoring without making Governance approval or runtime enforcement AI-dependent.
 
+![AI-assisted Data Contract authoring](../assets/AiDatacontract.png)
+
 ## What it helps author
 
 AI can assist with table and column descriptions, Grain & Row Key suggestions, Sensitive Data assessment and treatment, Pattern generation, and other authoring tasks where interpretation is useful.
