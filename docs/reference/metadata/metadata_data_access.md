@@ -10,7 +10,7 @@ See observable Workspace, OneLake Security, and SQL access for registered govern
 
 ## Used in Workflow Template
 
-* [`90_access_inventory (planned)`](../../notebook-templates.md) — Access inventory
+* [`90_access_inventory (planned)`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Access inventory
 
 ## Model
 
