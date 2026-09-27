@@ -177,12 +177,11 @@ def setup_metadata_tables(
 ) -> dict[str, Any]:
     """Create or check the FabricOps metadata tables for one environment.
 
-    Creates missing metadata tables and validates existing metadata tables
-    against the canonical registry for the installed FabricOps version. The
-    function finds the metadata lakehouse configured for the selected
-    environment, creates missing tables as empty Delta tables, leaves valid
-    existing tables in place, reports invalid existing tables as failed, and
-    returns a setup report.
+    Creates missing metadata tables, additively evolves existing metadata
+    tables with missing canonical columns, and validates canonical column
+    types against the registry for the installed FabricOps version. Existing
+    data and extra physical columns are preserved; incompatible canonical
+    types and known legacy schemas are reported as failures.
 
     This function prepares the metadata table structures only. It does not
     create business metadata records such as stewards, agreements, catalogue
@@ -216,13 +215,14 @@ def setup_metadata_tables(
         A dictionary summarizing the completed metadata lakehouse setup,
         including the resolved governance and engineering metadata schemas,
         metadata tables checked,
-        tables created, existing tables successfully validated, failed tables,
+        tables created, additively evolved, successfully validated, failed tables,
         per-table messages, active steward readiness, fully qualified table
         names, and overall setup status. Key fields are ``status``,
         ``data_agreement``, ``governance``, ``engineering``, ``tables``,
         ``table_results``,
         ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,
-        ``validated_tables``, ``failed_tables``, ``created_or_checked_tables``,
+        ``evolved_tables``, ``validated_tables``, ``failed_tables``,
+        ``created_or_checked_tables``,
         ``warnings``, ``active_metadata_tables``, and
         ``active_metadata_table_count``.
 
@@ -260,10 +260,12 @@ def setup_metadata_tables(
     8. Write that empty DataFrame to the metadata lakehouse using overwrite
        mode to create the table.
     9. Read the created table again.
-    10. Validate required column names and physical Spark data types.
-    11. Continue processing the remaining tables when one table fails.
-    12. Check whether at least one active steward record exists.
-    13. Return overall, data-agreement, governance, and per-table setup
+    10. Validate overlapping canonical column names and physical Spark data types.
+    11. Add missing canonical columns with an empty Delta append using
+        ``mergeSchema=true``, then read and validate the table again.
+    12. Continue processing the remaining tables when one table fails.
+    13. Check whether at least one active steward record exists.
+    14. Return overall, data-agreement, governance, and per-table setup
         results.
 
     ``data_agreement["active_steward_count"]`` is retained for compatibility
@@ -336,21 +338,18 @@ def setup_metadata_tables(
     ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
-    Existing tables are validated for required column names and
-    compatible Spark data types. Physical Spark/Delta nullability is
-    intentionally not compared because persisted Fabric tables may report
-    fields as nullable regardless of the canonical logical requirement. The
-    legacy ``frequency_json`` column specifically fails
-    ``METADATA_DATA_PROFILED`` validation; unrelated
-    metadata tables continue to permit additive columns.
-    Because normalized frequency persistence is a breaking physical-schema
-    change, existing metadata tables may need recreation through this setup
-    flow; no automatic migration is performed.
-    Existing tables are not automatically overwritten merely because they
-    already exist. Missing columns or incompatible types mark that table as
-    failed, processing continues for remaining metadata tables, and
-    ``raise_on_failure=True`` raises only after all tables have been processed
-    when failures exist.
+    Existing tables are validated by canonical column name and compatible
+    Spark data type. Physical Spark/Delta nullability is intentionally not
+    compared or migrated. Missing canonical columns are added automatically
+    through an empty append with Delta ``mergeSchema=true``; existing rows and
+    unrelated extra columns are preserved. Existing canonical columns with
+    incompatible physical types still fail validation. The legacy
+    ``frequency_json`` column specifically fails ``METADATA_DATA_PROFILED``
+    validation because that normalized-frequency change requires explicit
+    migration or recreation. Existing tables are never overwritten merely
+    because their schema differs. Processing continues for remaining metadata
+    tables, and ``raise_on_failure=True`` raises only after all tables have
+    been processed when failures exist.
 
     A missing table is created by writing an empty Spark DataFrame with the
     required FabricOps table structure. This creates the metadata table structure but
