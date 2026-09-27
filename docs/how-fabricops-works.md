@@ -55,8 +55,13 @@
   margin-bottom: 0;
 }
 
+@media (max-width: 1200px) {
+  .md-typeset .fabricops-big-picture {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 960px) {
-  .md-typeset .fabricops-big-picture,
   .md-typeset .fabricops-assets-grid {
     grid-template-columns: 1fr;
   }
@@ -81,17 +86,30 @@
 
 Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
-**Questions this diagram answers:**
+**How Governance and Engineering work hand in hand within Microsoft Fabric**
 
-- Where do Governance, Engineering Development, Engineering Production, and project-specific consumers sit?
-- Which notebooks belong in each workspace?
-- Where does the shared Metadata Lakehouse fit?
-- What is promoted to Production?
-- Where are approved outputs consumed from?
+- **0. Microsoft Fabric building blocks**  
+  FabricOps operates inside Microsoft Fabric using its native building blocks: Workspaces to separate responsibilities and environments, Notebooks running PySpark for engineering and governance logic, Deployment Pipelines for promotion, Lakehouses and Warehouses for Bronze, Silver, Gold, and Metadata storage, and Fabric environments and object configuration to keep Development and Production aligned.
 
-Read it from top to bottom. Governance defines and versions governed expectations. Engineering Development builds and validates the implementation. The validated `02_pipeline` is promoted to Engineering Production, where active contracts are resolved and governed outputs are produced. Project-specific consumers then use approved Production data through `99_explore`.
+- **1. Governance Workspace**  
+  Owns the governed definition of the data. `00_env_config` stores the Governance environment configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
 
-The rest of this page zooms into that picture without changing the story.
+- **2. Shared Metadata Lakehouse**  
+  Lives in the Governance Workspace and connects Governance with Engineering. It stores the shared FabricOps metadata used across the lifecycle, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
+
+- **3. Engineering Development Workspace**  
+  This is where the engineering implementation is built and validated. Its `00_env_config` points to the Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
+
+- **4. Engineering Production Workspace**  
+  Runs the same validated `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the activated Data Contract and produces governed Production outputs.
+
+- **5. Aligned environments and promotion**  
+  Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
+
+- **6. Project-Specific Consumer Workspace**  
+  Consumers use `99_explore` and read approved Production data only. Power BI, data agents, AI workloads, and other project-specific consumption should not connect to Engineering Development outputs or recreate the governed engineering pipeline.
+
+
 
 </div>
 
