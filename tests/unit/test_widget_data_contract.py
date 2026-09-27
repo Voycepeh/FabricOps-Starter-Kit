@@ -678,7 +678,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     ]
 
     grain_section = controls["right_pane"].children[0]
-    assert len(grain_section.children[1].children) == 1
+    assert grain_section.children[1] is controls["row_key_block"]
+    assert len(grain_section.children[3].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
     controls["top_nav"].value = "Columns"
@@ -1024,16 +1025,16 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
     grain_section = controls["right_pane"].children[0]
-    assert grain_section.children[1].layout.grid_template_columns == (
+    assert grain_section.children[1] is controls["row_key_block"]
+    assert grain_section.children[3].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
-    assert len(grain_section.children[1].children) == 2
-    grain_primary = grain_section.children[1].children[0]
+    assert len(grain_section.children[3].children) == 2
+    grain_primary = grain_section.children[3].children[0]
     assert controls["grain_profile_evidence"] in grain_primary.children
     controls["top_nav"].value = "Columns"
-    assert controls["dq_panel"].children[1].layout.grid_template_columns == (
-        "minmax(0, 68fr) minmax(240px, 32fr)"
-    )
+    assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
+    assert controls["dq_ai_panel"] in controls["right_pane"].children
     assert "DQ Rules" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "DQ Rules"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
@@ -1628,7 +1629,9 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
     freshness_section = state["_controls"]["right_pane"].children[3]
-    freshness_primary = freshness_section.children[1]
+    assert freshness_section.children[1].children[0] is freshness["enabled"]
+    assert freshness_section.children[1].children[1] is freshness["block"]
+    freshness_primary = freshness_section.children[2]
     assert "Applies when this table is used as a source in a downstream pipeline." in freshness_primary.children[0].value
     assert "not when this table itself is written" in freshness_primary.children[0].value
 
@@ -1724,7 +1727,9 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
     drift_section = state["_controls"]["right_pane"].children[4]
-    drift_primary = drift_section.children[1]
+    assert drift_section.children[1].children[0] is drift["enabled"]
+    assert drift_section.children[1].children[1] is drift["block"]
+    drift_primary = drift_section.children[2]
     assert "Applies when this table is used as a source in a downstream pipeline." in drift_primary.children[0].value
     assert "previously consumed from this table has changed" in drift_primary.children[1].value
 
@@ -2276,7 +2281,7 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
 
     expected_ai_grid = "minmax(0, 68fr) minmax(240px, 32fr)"
     table_content = controls["table_definition"].children[1]
-    grain_content = controls["right_pane"].children[0].children[1]
+    grain_content = controls["right_pane"].children[0].children[3]
     assert table_content.layout.grid_template_columns == expected_ai_grid
     assert grain_content.layout.grid_template_columns == expected_ai_grid
     assert table_content.children[1].children[0].value == "<b>AI suggestion</b>"
