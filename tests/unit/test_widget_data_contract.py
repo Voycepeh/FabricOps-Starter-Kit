@@ -686,7 +686,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
     assert [label for label, _value in controls["dq_type"].options] == [
-        "Completeness", "Allowed Values", "Value Rules", "Pattern",
+        "Completeness", "Uniqueness", "Allowed Values", "Value Rules", "Pattern",
     ]
     assert "save_column" not in controls
     assert "save_dq" not in controls
@@ -2168,6 +2168,34 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
     assert params["engineering_reviewed_by"] == "data.engineer@example.com"
     assert params["engineering_review_note"] == "Expression and referenced columns reviewed."
     assert "Engineering review approved" in controls["engineering_review_status"].value
+
+
+def test_column_uniqueness_supports_strict_or_minimum_percentage(widget_runtime):
+    """Author a single-column uniqueness rule with a configurable minimum unique percentage."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    families = controls["dq_family_controls"]
+
+    assert "uniqueness" in families
+    assert controls["dq_min_unique"].value == "100"
+
+    families["uniqueness"]["enabled"].value = True
+    families["uniqueness"]["block"].value = True
+    controls["dq_min_unique"].value = "95"
+
+    assert widget_runtime["calls"]["guardrails"] == []
+    controls["save_data_contract"].click()
+
+    saved = next(
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "uniqueness"
+        and record.get("column_id") == "col-0"
+    )
+    assert saved["action"] == "Block"
+    assert module._parameters(saved) == {
+        "columns": ["column_0"],
+        "minimum_unique_percent": 95.0,
+    }
 
 
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
