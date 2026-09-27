@@ -382,7 +382,7 @@ def widget_activate_data_contract(
             min_width="0",
             grid_template_columns="repeat(3, minmax(0, 1fr))",
             grid_gap="12px",
-            align_items="start",
+            align_items="flex-start",
         ),
     )
 
