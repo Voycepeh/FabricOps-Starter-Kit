@@ -227,7 +227,7 @@ their respective FabricOps workflows.
 
 ## See also
 
-- [Templates](../../notebook-templates.md)
+- [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 - [Metadata Tables](../../reference/metadata.md)
 
 
