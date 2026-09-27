@@ -3378,7 +3378,7 @@ def widget_data_contract(
             column_select,
         )
         def dq_family_section(
-            title: str, kind: str, description: str, *, ai: bool = False
+            title: str, kind: str, description: str
         ) -> Any:
             controls = dq_family_controls[kind]
             primary = widgets.VBox(
@@ -3404,39 +3404,8 @@ def widget_data_contract(
                         overflow="visible",
                     ),
                 ),
+                primary,
             ]
-            if ai:
-                children.append(
-                    widgets.GridBox(
-                        [
-                            primary,
-                            widgets.VBox(
-                                [
-                                    widgets.HTML("<b>AI suggestion</b>"),
-                                    dq_ai_instruction,
-                                    dq_suggestion,
-                                    dq_ai,
-                                    shared.action_row(
-                                        widgets, [suggest_dq, accept_dq_suggestion]
-                                    ),
-                                ],
-                                layout=widgets.Layout(
-                                    width="100%", min_width="0", gap="8px",
-                                    padding="0 0 0 16px",
-                                    border_left="1px solid #e1e6eb",
-                                ),
-                            ),
-                        ],
-                        layout=widgets.Layout(
-                            width="100%",
-                            grid_template_columns="minmax(0, 68fr) minmax(240px, 32fr)",
-                            grid_gap="16px",
-                            align_items="flex-start",
-                        ),
-                    )
-                )
-            else:
-                children.append(primary)
             return widgets.VBox(
                 children,
                 layout=widgets.Layout(
@@ -3464,12 +3433,11 @@ def widget_data_contract(
                 ),
                 dq_family_section(
                     "Pattern", "pattern",
-                    "Enforce text structure with a regular expression.", ai=True,
+                    "Enforce text structure with a regular expression.",
                 ),
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="0"),
         )
-        dq_ai_panel = widgets.VBox([], layout=widgets.Layout(display="none"))
         dq_panel = guardrail_section(
             "Column data quality",
             banner_title="Applies when this governed column is validated or enforced in a pipeline.",
@@ -3478,10 +3446,25 @@ def widget_data_contract(
                 "write is allowed to continue."
             ),
             description=(
-                "Configure each deterministic rule directly. Pattern also supports optional "
-                "AI assistance for translating a human instruction into a regular expression."
+                "Configure each deterministic rule directly."
             ),
             primary_children=[dq_primary],
+        )
+        dq_ai_panel = shared.form_section(
+            widgets,
+            title="AI-assisted Pattern authoring",
+            children=[
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                    "margin-bottom:4px;'>Optionally describe the text pattern in natural language. "
+                    "FabricOps translates it into a regular expression that you can review and apply "
+                    "to the Pattern rule above.</div>"
+                ),
+                dq_ai_instruction,
+                dq_suggestion,
+                dq_ai,
+                shared.action_row(widgets, [suggest_dq, accept_dq_suggestion]),
+            ],
         )
         column_definition = definition_section(
             "Column definition", column_classification, column_description,
@@ -3539,6 +3522,7 @@ def widget_data_contract(
                 ai_children=list(sensitive_ai_panel.children),
             ),
             dq_panel,
+            *([dq_ai_panel] if ai_visible else []),
         )
         view_content["Columns"] = (column_left, column_right)
 
