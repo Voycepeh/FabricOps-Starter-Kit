@@ -29,7 +29,7 @@ DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 _TABS = ("Table", "Columns", "DQ Rules", "Manifest & Freeze")
 _CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
-_COLUMN_DQ_TYPES = ("completeness", "value_set", "range", "pattern")
+_COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
     "uniqueness": "Require one column, or a table-level column combination, to be unique.",
@@ -2259,6 +2259,7 @@ def widget_data_contract(
         dq_type = widgets.Dropdown(
             options=[
                 ("Completeness", "completeness"),
+                ("Uniqueness", "uniqueness"),
                 ("Allowed Values", "value_set"),
                 ("Value Rules", "range"),
                 ("Pattern", "pattern"),
@@ -2278,6 +2279,10 @@ def widget_data_contract(
         dq_blank_missing = widgets.Checkbox(
             value=False, description="Treat blank/whitespace text as missing",
             disabled=not editable,
+        )
+        dq_min_unique = widgets.Text(
+            value="100", disabled=not editable,
+            **shared.widget_common(widgets, "Minimum unique %"),
         )
         dq_value_mode = widgets.Dropdown(
             options=("allow", "block"), disabled=not editable,
@@ -2309,6 +2314,11 @@ def widget_data_contract(
                 "block": dq_checkbox("Block on failure"),
                 "parameters": (dq_max_missing, dq_blank_missing),
             },
+            "uniqueness": {
+                "enabled": dq_checkbox("Enabled"),
+                "block": dq_checkbox("Block on failure"),
+                "parameters": (dq_min_unique,),
+            },
             "value_set": {
                 "enabled": dq_checkbox("Enabled"),
                 "block": dq_checkbox("Block on failure"),
@@ -2329,7 +2339,7 @@ def widget_data_contract(
             },
         }
         dq_parameter_controls = (
-            dq_max_missing, dq_blank_missing, dq_value_mode, dq_values, dq_minimum,
+            dq_max_missing, dq_blank_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum,
             dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive, dq_pattern,
         )
         # Internal compatibility aliases follow the default deterministic family.
@@ -2359,7 +2369,7 @@ def widget_data_contract(
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
-            dq_max_missing, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
+            dq_max_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum, dq_maximum, dq_pattern,
         ):
             control.layout.width = "100%"
             control.layout.max_width = "560px"
@@ -2414,6 +2424,7 @@ def widget_data_contract(
             controls = dq_family_controls[kind]
             defaults = {
                 "completeness": ("0", False),
+                "uniqueness": ("100",),
                 "value_set": ("allow", ""),
                 "range": ("", True, "", True),
                 "pattern": ("",),
@@ -2435,6 +2446,9 @@ def widget_data_contract(
                 "completeness": (
                     str(params.get("maximum_missing_percent", 0)),
                     bool(params.get("treat_blank_as_missing", False)),
+                ),
+                "uniqueness": (
+                    str(params.get("minimum_unique_percent", 100)),
                 ),
                 "value_set": (
                     str(params.get("mode") or "allow"),
@@ -3126,6 +3140,11 @@ def widget_data_contract(
                         "maximum_missing_percent": float(dq_max_missing.value),
                         "treat_blank_as_missing": bool(dq_blank_missing.value),
                     })
+                elif kind == "uniqueness":
+                    threshold = float(dq_min_unique.value)
+                    if not 0 <= threshold <= 100:
+                        raise ValueError("uniqueness minimum unique % must be between 0 and 100.")
+                    params["minimum_unique_percent"] = threshold
                 elif kind == "value_set":
                     values = [item.strip() for item in dq_values.value.split(",") if item.strip()]
                     if not values:
@@ -3422,6 +3441,10 @@ def widget_data_contract(
                 dq_family_section(
                     "Completeness", "completeness",
                     "Limit missing values, with explicit blank-text handling.",
+                ),
+                dq_family_section(
+                    "Uniqueness", "uniqueness",
+                    "Require this column to meet a minimum percentage of unique values. Use 100% for strict uniqueness.",
                 ),
                 dq_family_section(
                     "Allowed Values", "value_set",
@@ -4632,6 +4655,7 @@ def widget_data_contract(
             "dq_type": dq_type, "dq_family_controls": dq_family_controls,
             "dq_parameter_controls": dq_parameter_controls,
             "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
+            "dq_min_unique": dq_min_unique,
             "dq_value_mode": dq_value_mode, "dq_values": dq_values,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
