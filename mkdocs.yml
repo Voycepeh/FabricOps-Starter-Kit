@@ -49,6 +49,7 @@ nav:
       - Notebook Templates: notebook-templates.md
       - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
   - Reference Documentation:
+      - Glossary: glossary.md
       - Function Reference: reference/index.md
       - Data Quality Rules:
           - Overview: reference/dq-rules/index.md
@@ -74,8 +75,7 @@ nav:
           - Guardrail: reference/metadata/metadata_guardrail.md
           - Guardrail Results: reference/metadata/metadata_guardrail_results.md
           - Data Contract: reference/metadata/metadata_data_contract.md
-          - Data Access: reference/metadata/metadata_data_access.md
-      - Glossary: glossary.md
+          - Data Access: reference/metadata/metadata_data_access.md      
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
