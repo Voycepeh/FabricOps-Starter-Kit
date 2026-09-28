@@ -123,7 +123,14 @@ def require_ipywidgets():
 
 def widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
     """Return common style and layout keyword arguments for form controls."""
-    common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
+    label = str(description or "").strip()
+    common: dict[str, Any] = {
+        "description": label,
+        "style": {
+            **_WIDGET_STYLE,
+            "description_width": _WIDGET_LABEL_WIDTH if label else "0px",
+        },
+    }
     layout_class = getattr(widgets_module, "Layout", None)
     if layout_class is not None:
         kwargs = {
@@ -144,8 +151,13 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
         ".fabricops-form .widget-inline-hbox:not(.widget-checkbox){display:grid;"
         "grid-template-columns:150px minmax(0,560px);column-gap:12px;align-items:start;"
         "width:100%;min-width:0;max-width:722px;}"
+        ".fabricops-form .widget-label{text-align:left;justify-self:start;}"
         ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
-        "width:150px;min-width:150px;max-width:150px;margin:0;white-space:normal;overflow-wrap:anywhere;}"
+        "width:150px;min-width:150px;max-width:150px;margin:0;text-align:left;"
+        "white-space:normal;overflow-wrap:anywhere;}"
+        ".fabricops-form .widget-label:empty{display:none;}"
+        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox):has(>.widget-label:empty){"
+        "grid-template-columns:minmax(0,560px);column-gap:0;}"
         ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
         ".fabricops-form .widget-combobox input,.fabricops-form .widget-select select,"
         ".fabricops-form .widget-select-multiple select,.fabricops-form .widget-textarea textarea{"
