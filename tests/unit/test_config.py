@@ -279,7 +279,7 @@ def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
     assert '"classification_prompt"' not in source
     assert '"sensitive_data_prompt"' in source
     assert '"grain_prompt"' in source
-    assert '"pattern_prompt"' in source
+    assert '"pattern_prompt"' not in source
     assert '"business_rule_prompt"' in source
     assert '"dq_prompt"' not in source
     assert '"enabled": True' in source
@@ -1623,7 +1623,6 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "table_description_prompt": " describe table ",
             "column_description_prompt": " describe column ",
             "sensitive_data_prompt": " sensitive rules ",
-            "pattern_prompt": " pattern rules ",
         },
     )
     assert config.sensitivity_labels == ["Public", "Restricted"]
@@ -1633,7 +1632,6 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         "column_description_prompt": "describe column",
         "sensitive_data_prompt": "sensitive rules",
         "grain_prompt": GovernanceConfig().ai_enrichment["grain_prompt"],
-        "pattern_prompt": "pattern rules",
         "business_rule_prompt": GovernanceConfig().ai_enrichment["business_rule_prompt"],
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
@@ -1658,4 +1656,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         )
     )
     assert "evidence, not contractual" in business_prompt
+    assert "whitelist" in business_prompt
+    assert "blacklist" in business_prompt
+    assert "regular expression" in business_prompt
     assert "only when none of those structured patterns" in business_prompt
