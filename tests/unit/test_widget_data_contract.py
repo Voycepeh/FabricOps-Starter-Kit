@@ -2116,6 +2116,46 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
     assert controls["row_key_columns"].value == ("column_0",)
 
 
+def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch):
+    """Create Pattern through the DQ Rules workflow without a column regex editor."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    requirement = "Order ID must start with ORD- followed by digits."
+
+    def resolve(_context, **kwargs):
+        return [{
+            "rule_type": "pattern",
+            "columns": ["column_0"],
+            "parameters": {
+                "columns": ["column_0"],
+                "pattern": "^ORD-[0-9]+$",
+                "business_requirement": kwargs["requirement"],
+            },
+            "business_requirement": kwargs["requirement"],
+            "engineering_review_required": False,
+        }]
+
+    monkeypatch.setattr(module, "suggest_business_rule", resolve)
+    controls["top_nav"].value = "DQ Rules"
+    controls["business_requirement"].value = requirement
+    controls["business_columns"].value = ("column_0",)
+    controls["resolve_business_rule"].click()
+    controls["apply_business_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "pattern"
+        and module._parameters(record).get("business_requirement") == requirement
+    )
+    assert staged["column_id"] == ""
+    assert module._parameters(staged)["pattern"] == "^ORD-[0-9]+$"
+    assert any(
+        label == "Pattern · column_0"
+        for label, _value in controls["business_saved"].options
+    )
+
+
 def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkeypatch):
     """A simple resolved rule belongs to Columns and hydrates its normal DQ editor."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
