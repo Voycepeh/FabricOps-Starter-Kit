@@ -1488,10 +1488,10 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
 
-def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
+def test_dq_ai_pattern_authoring_is_clickable_and_forwards_instruction(
     widget_runtime, monkeypatch
 ):
-    """Only Pattern exposes AI assistance and user intent augments the prompt."""
+    """Pattern AI stays directly usable in AI mode and forwards author intent."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     captured: dict[str, object] = {}
@@ -1508,11 +1508,6 @@ def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
 
     monkeypatch.setattr(module, "suggest_dq_rules", dq)
 
-    assert controls["dq_type"].value == "completeness"
-    assert controls["suggest_dq"].disabled is True
-    assert controls["dq_ai_instruction"].disabled is True
-
-    controls["dq_type"].value = "pattern"
     assert controls["suggest_dq"].disabled is False
     assert controls["dq_ai_instruction"].disabled is False
     assert controls["dq_ai_instruction"].description == "Pattern instruction"
@@ -1523,10 +1518,6 @@ def test_dq_ai_is_scoped_to_pattern_and_forwards_instruction(
     assert "Product IDs start with P followed by three digits." in str(captured["prompt"])
     controls["accept_dq_suggestion"].click()
     assert controls["dq_pattern"].value == "^P[0-9]{3}$"
-
-    controls["dq_type"].value = "value_set"
-    assert controls["suggest_dq"].disabled is True
-    assert controls["dq_suggestion"].options == ()
 
 
 def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runtime, monkeypatch):
