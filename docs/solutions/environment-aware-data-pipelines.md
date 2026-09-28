@@ -1,16 +1,31 @@
 # Plug-and-Play, Environment-aware Data Pipelines
 
-Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
-
 ![Development to Production pipeline promotion](../assets/05/PipelinesDeploymentOverview.png)
 
-## What is reusable
+## The problem
 
-FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings.
+Fabric notebooks work naturally against a single attached Lakehouse or Warehouse. Real ETL pipelines often cross multiple stores and environments, which can leave notebooks full of workspace IDs, item IDs, ABFSS paths, SQL endpoints, and environment-specific wiring that has to be changed during promotion.
 
-The engineering notebook stack provides a repeatable pattern for environment setup, pipeline execution, Data Contract validation, and Production promotion. Standard Read and Write blocks handle the common Fabric plumbing while project-specific transformation remains normal PySpark.
+## The solution
 
-## How does Engineering actually run across Fabric stores?
+Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
+
+FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings. The engineering notebook stack provides a repeatable pattern for environment setup, pipeline execution, Data Contract validation, and Production promotion. Standard Read and Write blocks handle the common Fabric plumbing while project-specific transformation remains normal PySpark.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["00_env_config<br/>logical stores"] --> B["Read"]
+    B --> C["Transform<br/>normal PySpark"]
+    C --> D["Validate contract"]
+    D --> E["Write"]
+    E --> F["Promote same notebooks<br/>across environments"]
+```
+
+## Implementation details
+
+### How Engineering runs across Fabric stores
 
 Fabric notebooks work very well when a notebook only needs its **single default attached Lakehouse or Warehouse**. You can browse that store naturally and work with its files or tables without repeatedly describing where the data lives.
 
@@ -102,10 +117,12 @@ This gives `02_pipeline` a consistent shape without turning it into a black box:
 
     [`pipeline_write()`](../api/reference/pipeline_write.md) resolves the governed target and routes publication through the correct Lakehouse or Warehouse path while applying the Data Contract load strategy.
 
-## Why it matters
+### Why it matters
 
 Projects can reuse the same engineering pattern instead of rebuilding environment wiring, Fabric item resolution, validation, and publication behavior for every pipeline.
 
 A future screen recording will show the same notebook pattern moving across environments without rewriting pipeline logic.
+
+## Go deeper
 
 For the hands-on workflow, start with the [Guided Demo](../guided-demo.md).

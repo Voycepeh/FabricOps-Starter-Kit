@@ -1,19 +1,44 @@
 # Function Call Graph
 
-> **First make it exist. Then make it good.**
->
-> AI helps FabricOps move quickly from an idea to a working public callable function. The Function Call Graph is the maintainability checkpoint that helps reviewers decide whether the implementation is clean enough to keep.
-
-The workflow follows the same five steps shown below: repository code, agent context, source editing, call-flow regeneration, then dashboard review.
-
-![Function Call Graph workflow](assets/fabricops-call-graph-setup.png)
-
 <div align="center">
-  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Dashboard</a>
+  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
   <a class="md-button" href="../reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
 
-## 1. Repository Code
+[![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)](assets/public-function-call-flows-dashboard.html)
+
+## The problem
+
+FabricOps can move quickly from an idea to a working public callable function, especially with AI-assisted development. As the public API grows, reviewing functions one file at a time makes it harder to see helper reachability, architecture boundaries, call-tree complexity, and the impact of a change.
+
+## The solution
+
+The Function Call Graph is the maintainability checkpoint for the FabricOps public API. A deterministic generator scans the repository into a versioned call-flow JSON contract, and the interactive dashboard turns that contract into a focused review surface.
+
+> **First make it exist. Then make it good.**
+
+Use the dashboard to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
+
+<div align="center">
+  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
+</div>
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Python source"] --> B["Call-flow generator"]
+    B --> C["Call-flow JSON"]
+    C --> D["Interactive dashboard"]
+    C --> E["Function references"]
+    D --> F["Review and cleanup"]
+```
+
+The workflow keeps source authoritative. Repository code is scanned into the generated JSON contract, which feeds the review experience. Changes are made back in source and the affected generated artifacts are refreshed.
+
+## Implementation details
+
+### 1. Repository Code
 
 **Source of truth**
 
@@ -33,7 +58,7 @@ src/
 
 The repository is authoritative. When generated output disagrees with the implementation, update the source scanner or generator rules rather than manually changing the JSON.
 
-## 2. Agent reads context
+### 2. Agent reads context
 
 **Plan before editing**
 
@@ -51,7 +76,7 @@ This gives the agent the current:
 
 The purpose of this step is to understand the existing function boundary and downstream impact before editing code.
 
-## 3. Edit function source
+### 3. Edit function source
 
 **Update the implementation**
 
@@ -67,7 +92,7 @@ Typical changes include:
 
 Keep source as the truth. Do not patch `public-function-call-flows.json` manually.
 
-## 4. Regenerate call flow
+### 4. Regenerate call flow
 
 **Refresh the contract**
 
@@ -85,7 +110,7 @@ docs/reference/_data/public-function-call-flows.json
 
 Commit the regenerated JSON when callable structure, source locations, exports, helper relationships, architecture classification, or call-flow metrics have changed.
 
-## 5. Dashboard & review
+### 5. Dashboard & review
 
 **Consume the refreshed JSON**
 
@@ -98,13 +123,6 @@ Use it to:
 * check width, depth, and architecture violations
 * identify inline or shared-helper candidates
 * export a focused AI refactor packet
-
-![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)
-
-<div align="center">
-  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open the dashboard</a>
-</div>
-
 
 Selecting a public function should scope the call tree, inventory, signals, and export workflow around that callable.
 
