@@ -45,14 +45,26 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
         min-width: 0 !important;
         max-width: 722px !important;
       }
+      .fabricops-form .widget-label {
+        text-align: left !important;
+        justify-self: start !important;
+      }
       .fabricops-form .widget-inline-hbox:not(.widget-checkbox) > .widget-label {
         display: block !important;
         width: 150px !important;
         min-width: 150px !important;
         max-width: 150px !important;
         margin: 0 !important;
+        text-align: left !important;
         white-space: normal !important;
         overflow-wrap: anywhere !important;
+      }
+      .fabricops-form .widget-label:empty {
+        display: none !important;
+      }
+      .fabricops-form .widget-inline-hbox:not(.widget-checkbox):has(> .widget-label:empty) {
+        grid-template-columns: minmax(0, 560px) !important;
+        column-gap: 0 !important;
       }
       .fabricops-form .widget-text input,
       .fabricops-form .widget-textarea textarea,
