@@ -42,7 +42,9 @@ For each governed column, review the physical definition and examples, then auth
 * Required
 * Classification and Description
 * Sensitive Data treatment
-* Direct column Data Quality rules: Completeness, Uniqueness, Allowed Values, and Value Rules
+* Direct column Data Quality rules: Completeness, Uniqueness, Value Lists, and Value Rules
+
+**Value Lists** uses separate comma-separated **Whitelist** and **Blacklist** inputs. Each non-empty list becomes its own deterministic Data Quality rule, and the editor shows the parsed value count before save.
 
 Profile statistics are evidence only. They do not become contract requirements unless Governance authors a rule from them.
 
