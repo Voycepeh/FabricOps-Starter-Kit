@@ -877,6 +877,10 @@ def build_callable_graph(
                 edges.append(edge)
                 if resolved_qn and edge_type in {"same_module", "cross_module"}:
                     callee_module = resolved_qn.removeprefix(f"{PACKAGE_NAME}.").rsplit(".", 1)[0] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
+                    while callee_module not in called_by_modules and "." in callee_module:
+                        # Class methods add the class name between the module and
+                        # method. Walk back to the owning module for summaries.
+                        callee_module = callee_module.rsplit(".", 1)[0]
                     if callee_module != module:
                         calls_modules[module].add(callee_module)
                         called_by_modules[callee_module].add(module)

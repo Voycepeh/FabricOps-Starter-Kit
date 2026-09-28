@@ -330,9 +330,9 @@
       "qualified_name": "fabricops_kit.__getattr__",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 109,
+      "source_end_line": 110,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 99,
+      "source_start_line": 100,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -357,9 +357,9 @@
       "qualified_name": "fabricops_kit._load_package_version",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 122,
+      "source_end_line": 123,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 112,
+      "source_start_line": 113,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []

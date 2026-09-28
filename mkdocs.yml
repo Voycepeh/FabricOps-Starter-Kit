@@ -22,6 +22,7 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
+  - Context Layer: context-layer.md
   - Featured Solutions:
       - AI-assisted Data Contract Authoring: solutions/ai-assisted-data-contract-authoring.md
       - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md

@@ -17,6 +17,7 @@ from .config import (
     setup_metadata_tables,
     setup_notebook,
 )
+from .context import FabricOpsContextLayer
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -124,4 +125,11 @@ def _load_package_version() -> str:
 
 __version__ = _load_package_version()
 
-__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
+__all__ = [
+    *ACCESS_EXPORTS,
+    *CONFIG_EXPORTS,
+    "FabricOpsContextLayer",
+    *IO_EXPORTS,
+    *PIPELINE_EXPORTS,
+    *WIDGET_EXPORTS,
+]

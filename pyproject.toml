@@ -48,6 +48,9 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"fabricops_kit.context.resources" = ["*.md", "migrations/*.md"]
+
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
