@@ -374,14 +374,6 @@ DEFAULT_AI_ENRICHMENT = {
         "so describe composite keys as candidates that the table-level uniqueness guardrail must validate. "
         "Return structured JSON only; final review belongs to Governance."
     ),
-    "pattern_prompt": (
-        "Translate the author's business intent into one conservative Pattern rule for the selected column. "
-        "Use only the supplied governed metadata, description, manually selected classification, profile "
-        "summary, frequency evidence, and any additional author instruction. Return one regular expression "
-        "that can be applied directly to the Pattern editor. Observed values are evidence, not automatic "
-        "contractual requirements. Do not invent business rules, row keys, relationships, ranges, allowed "
-        "values, or executable code. Return structured JSON only; final review belongs to Governance."
-    ),
     "business_rule_prompt": (
         "Resolve Governance-authored business intent into the smallest set of independent deterministic FabricOps "
         "Data Quality rules that preserves the stated requirement. Decompose compound requirements when separate "
@@ -389,10 +381,14 @@ DEFAULT_AI_ENRICHMENT = {
         "description, column metadata, classifications, profile evidence, and existing DQ rules; an optional column "
         "selection is a constraint, not a requirement. Supported rule types are completeness, uniqueness, value_set, "
         "range, pattern, column_relationship, conditional_completeness, conditional_values, and custom_expression. "
-        "Prefer supported structured patterns before custom_expression; use custom_expression only when none of those structured patterns can preserve the atomic requirement without changing its meaning. "
-        "Never invent columns or business meaning, and do not propose obvious duplicates of existing DQ rules. "
-        "Observed profile or frequency values are evidence, not contractual allowed values, mappings, or thresholds "
-        "unless Governance explicitly states them as such. Return structured JSON only; final review belongs to Governance."
+        "Treat a business-language whitelist as value_set mode=allow and a blacklist as value_set mode=block; if both "
+        "are explicitly required, return two independent value_set rules. Resolve text-format requirements as Pattern "
+        "rules here and generate the deterministic regular expression as an implementation detail for Governance review. "
+        "Prefer supported structured patterns before custom_expression; use custom_expression only when none of those "
+        "structured patterns can preserve the atomic requirement without changing its meaning. Never invent columns or "
+        "business meaning, and do not propose obvious duplicates of existing DQ rules. Observed profile or frequency "
+        "values are evidence, not contractual whitelist, blacklist, mappings, patterns, or thresholds unless Governance "
+        "explicitly states them as such. Return structured JSON only; final review belongs to Governance."
     ),
 }
 
@@ -446,7 +442,6 @@ class GovernanceConfig:
                 ai_enrichment.get("sensitive_data_prompt") or ""
             ).strip(),
             "grain_prompt": str(ai_enrichment.get("grain_prompt") or "").strip(),
-            "pattern_prompt": str(ai_enrichment.get("pattern_prompt") or "").strip(),
             "business_rule_prompt": str(
                 ai_enrichment.get("business_rule_prompt") or ""
             ).strip(),
