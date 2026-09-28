@@ -1458,14 +1458,14 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
-    controls["dq_values"].value = "keep-me"
+    controls["dq_whitelist_values"].value = "keep-me"
 
     original_classification = controls["column_classification"].value
     controls["accept_column_description"].click()
     assert controls["column_description"].value == "Suggested column description"
     assert controls["column_classification"].value == original_classification
     assert controls["required"].value is False
-    assert controls["dq_values"].value == "keep-me"
+    assert controls["dq_whitelist_values"].value == "keep-me"
 
     description = controls["column_description"].value
     controls["accept_sensitive"].click()
@@ -1475,7 +1475,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
-    assert controls["dq_values"].value == "keep-me"
+    assert controls["dq_whitelist_values"].value == "keep-me"
     assert widget_runtime["calls"]["guardrails"] == []
 
     assert widget_runtime["calls"]["guardrails"] == []
@@ -1576,7 +1576,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
     controls["column_classification"].value = "Restricted"
-    controls["dq_values"].value = "keep-me"
+    controls["dq_whitelist_values"].value = "keep-me"
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
 
@@ -1584,7 +1584,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 
     assert controls["column_description"].value == "Unsaved description"
     assert controls["column_classification"].value == "Restricted"
-    assert controls["dq_values"].value == "keep-me"
+    assert controls["dq_whitelist_values"].value == "keep-me"
 
 
 def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
@@ -2284,6 +2284,60 @@ def test_column_uniqueness_supports_strict_or_minimum_percentage(widget_runtime)
         "columns": ["column_0"],
         "minimum_unique_percent": 95.0,
     }
+
+
+def test_value_lists_create_independent_whitelist_and_blacklist_rules(widget_runtime):
+    """Whitelist and Blacklist render as two text lists and persist as separate value-set rules."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    family = controls["dq_family_controls"]["value_set"]
+
+    assert len(family["display"]) == 2
+    controls["dq_whitelist_values"].value = "Active, Inactive, Pending"
+    controls["dq_blacklist_values"].value = "Unknown, N/A"
+    assert "3 values" in controls["dq_whitelist_count"].value
+    assert "2 values" in controls["dq_blacklist_count"].value
+    assert "comma-separated" in controls["dq_whitelist_count"].value
+
+    family["enabled"].value = True
+    family["block"].value = True
+    controls["save_data_contract"].click()
+
+    rules = [
+        record for record in widget_runtime["calls"]["guardrails"][-1]
+        if record.get("rule_type") == "value_set"
+        and record.get("column_id") == "col-0"
+        and record.get("is_active")
+    ]
+    assert len(rules) == 2
+    by_mode = {
+        module._parameters(record)["mode"]: module._parameters(record)
+        for record in rules
+    }
+    assert by_mode["allow"]["values"] == ["Active", "Inactive", "Pending"]
+    assert by_mode["block"]["values"] == ["Unknown", "N/A"]
+    assert all(record["action"] == "Block" for record in rules)
+
+
+def test_dq_parameter_checkboxes_align_with_the_fields_they_modify(widget_runtime):
+    """Completeness and range option checkboxes sit on the same row as their field."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    completeness_row = controls["dq_family_controls"]["completeness"]["display"][0]
+    lower_row, upper_row = controls["dq_family_controls"]["range"]["display"]
+
+    assert completeness_row.children == (
+        controls["dq_max_missing"], controls["dq_blank_missing"]
+    )
+    assert lower_row.children == (
+        controls["dq_minimum"], controls["dq_minimum_inclusive"]
+    )
+    assert upper_row.children == (
+        controls["dq_maximum"], controls["dq_maximum_inclusive"]
+    )
+    assert lower_row.layout.align_items == "center"
+    assert upper_row.layout.align_items == "center"
 
 
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
