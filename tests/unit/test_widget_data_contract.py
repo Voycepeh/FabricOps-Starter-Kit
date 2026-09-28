@@ -1227,7 +1227,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["grain_profile_evidence"] in grain_primary.children
     controls["top_nav"].value = "Columns"
     assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
-    assert controls["dq_ai_panel"] in controls["right_pane"].children
+    assert "dq_ai_panel" not in controls
     assert "DQ Rules" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "DQ Rules"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
