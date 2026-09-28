@@ -42,13 +42,17 @@ For each governed column, review the physical definition and examples, then auth
 * Required
 * Classification and Description
 * Sensitive Data treatment
-* Column level Data Quality rules
+* Direct column Data Quality rules: Completeness, Uniqueness, Value Lists, and Value Rules
+
+**Value Lists** uses separate comma-separated **Whitelist** and **Blacklist** inputs. Each non-empty list becomes its own deterministic Data Quality rule, and the editor shows the parsed value count before save.
 
 Profile statistics are evidence only. They do not become contract requirements unless Governance authors a rule from them.
 
 ## 4. DQ Rules
 
 Open **DQ Rules** when AI is enabled to describe requirements in business language. FabricOps resolves the governed table context into one or more atomic enforceable DQ rules; the same draft list also includes rules authored directly from the Columns page.
+
+Use **DQ Rules** for Pattern requirements as well. Describe the format in business language and let FabricOps resolve it into the deterministic Pattern rule; there is no regex authoring field on the Columns page.
 
 With AI enabled, describe the requirement and resolve it into a deterministic FabricOps Data Quality rule. Review the result before applying it.
 

@@ -546,15 +546,15 @@ Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, c
 Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent that atomic requirement without changing its meaning.
 Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
 Uniqueness: one or more columns; no rule-specific parameters. This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a DQ Rule. Grain is a separate singular table definition authored in the Table workspace.
-Value Set: exactly one column; parameters mode (allow or block) and non-empty values.
+Value Set: exactly one column; parameters mode (allow or block) and non-empty values. Interpret whitelist as mode=allow and blacklist as mode=block. If Governance explicitly requires both for the same column, return two independent value_set rules.
 Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
-Pattern: exactly one column; parameter pattern containing the governed regular expression.
+Pattern: exactly one column; parameter pattern containing the governed regular expression. Translate the stated business-language text format into the regex; regex is an implementation detail, not something Governance is expected to author manually.
 Column Relationship: exactly two different columns; parameter operator using =, !=, >, >=, <, or <=.
 Conditional Completeness: exactly two columns, condition column then required target column; parameters condition_operator (= or !=), condition_value, and treat_blank_as_missing.
 Conditional Values: exactly two columns, condition column then target column; parameters condition_operator (= or !=), condition_value, mode (allow or block), and non-empty values.
 Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
 A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), F.lit(...), literals, comparisons, &, |, ~, arithmetic (+, -, *, /, %), and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, arbitrary Python calls, exponentiation, floor division, or matrix multiplication.
-Observed profile and frequency values are evidence, not automatic contractual requirements. Never turn observed values into allowed values, mappings, or thresholds unless the business requirement explicitly states them.
+Observed profile and frequency values are evidence, not automatic contractual requirements. Never turn observed values into whitelist or blacklist entries, mappings, patterns, or thresholds unless the business requirement explicitly states them.
 Do not force a known pattern when it would weaken, broaden, or otherwise change the atomic requirement.
 
 Context:

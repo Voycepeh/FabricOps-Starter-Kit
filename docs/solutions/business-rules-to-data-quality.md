@@ -29,7 +29,7 @@ Governance describes what must be true in business language. FabricOps uses the 
 
 Known FabricOps rule patterns are preferred first, including Uniqueness, Column Relationship, Conditional Completeness, and Conditional Values. A constrained Custom Expression is used only when the requirement cannot be represented faithfully by a standard pattern.
 
-Each resulting rule is reviewed by a human before it enters the Data Contract. Rules authored directly from the Columns page and rules generated from natural language share the same draft DQ rule collection. Runtime enforcement remains deterministic.
+Each resulting rule is reviewed by a human before it enters the Data Contract. Direct column rules authored from the Columns page and rules generated from natural language share the same draft DQ rule collection. Pattern is authored through DQ Rules rather than a manual regex field in Columns. Runtime enforcement remains deterministic.
 
 A future screen recording will show the full flow from plain-language requirement to reviewed DQ rules.
 
