@@ -3267,6 +3267,23 @@ def widget_data_contract(
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(key, exc)
 
+        for control in (column_description, column_classification):
+            control.observe(sync_column_enrichment, names="value")
+        required.observe(sync_required, names="value")
+        for control in (
+            sensitive_enabled, pii_type, pii_reason, sensitive_treatment, sensitive_block,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+        ):
+            control.observe(sync_sensitive, names="value")
+        for kind, controls in dq_family_controls.items():
+            for control in (
+                controls["enabled"], controls["block"], *controls["parameters"]
+            ):
+                control.observe(
+                    lambda _change, family=kind: sync_dq_family(family),
+                    names="value",
+                )
+
         def rebuild_column_options() -> None:
             nonlocal column_options
             column_options = [
