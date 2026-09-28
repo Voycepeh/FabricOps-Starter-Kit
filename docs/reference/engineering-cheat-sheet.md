@@ -316,21 +316,22 @@ expandEngineeringChoiceFromHash();
 ### AI-assisted Data Contract authoring
 
 `widget_data_contract()` can explicitly request AI suggestions for Description, Sensitive Data,
-and the standard single-column Data Quality rule families through Microsoft Fabric AI Functions.
+Grain & Row Key, and business-language DQ Rules through Microsoft Fabric AI Functions.
 Classification remains a manual Governance choice from the configured information-classification
 labels; FabricOps does not ask AI to classify the table or column.
 
 The helpers receive only the governed context needed for each task. Description uses the selected
 table or column metadata and profile summary. Sensitive Data additionally uses the reviewed
 Description and manual Classification to assess Direct PII, Indirect PII, or Not PII and may
-suggest one supported deterministic treatment. Data Quality uses the selected column's governed
-metadata, profile, and frequency evidence to propose conservative standard rules.
+suggest one supported deterministic treatment. DQ Rules interpret business-language requirements
+against governed table, column, profile, and existing-rule context. Pattern is resolved there as a
+deterministic rule rather than authored as regex in the Columns page.
 
-Projects configure the enabled state plus the Description, Sensitive Data, and Data Quality prompts
-in `00_env_config`. Suggestions live only in widget memory and never save, freeze, activate, or
-enforce a contract automatically. Governance can accept, edit, ignore, or re-run them, while the
-normal save path remains the only route to persisted Enrichment and Guardrail metadata. If AI is
-disabled or Fabric AI Functions are unavailable, manual authoring continues unchanged.
+Projects configure the enabled state plus the relevant AI prompts in `00_env_config`. Suggestions
+live only in widget memory and never save, freeze, activate, or enforce a contract automatically.
+Governance can accept, edit, ignore, or re-run them, while the normal save path remains the only
+route to persisted Enrichment and Guardrail metadata. If AI is disabled or Fabric AI Functions are
+unavailable, manual authoring continues unchanged.
 
 <span id="pyspark-first"></span>
 
