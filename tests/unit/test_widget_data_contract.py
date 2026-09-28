@@ -597,7 +597,6 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].value == "append"
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
-    assert controls["dq_type"].value == "completeness"
     assert controls["business_saved"].value == ""
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
@@ -876,9 +875,14 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     controls["top_nav"].value = "Columns"
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
-    assert [label for label, _value in controls["dq_type"].options] == [
-        "Completeness", "Uniqueness", "Allowed Values", "Value Rules", "Pattern",
+    assert list(controls["dq_family_controls"]) == [
+        "completeness", "uniqueness", "value_set", "range",
     ]
+    assert "pattern" not in controls["dq_family_controls"]
+    assert any(
+        label == "Pattern · column_0"
+        for label, _value in controls["business_saved"].options
+    )
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
@@ -1118,7 +1122,6 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     controls["sensitive_treatment"].value = "tokenize"
     controls["pii_reason"].value = "The identifier directly associates an order with a person."
 
-    controls["dq_type"].value = "completeness"
     controls["dq_blank_missing"].value = True
 
     assert widget_runtime["calls"]["guardrails"] == []
@@ -1455,15 +1458,14 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
-    controls["dq_type"].value = "pattern"
-    controls["dq_pattern"].value = "manual-pattern"
+    controls["dq_values"].value = "keep-me"
 
     original_classification = controls["column_classification"].value
     controls["accept_column_description"].click()
     assert controls["column_description"].value == "Suggested column description"
     assert controls["column_classification"].value == original_classification
     assert controls["required"].value is False
-    assert controls["dq_pattern"].value == "manual-pattern"
+    assert controls["dq_values"].value == "keep-me"
 
     description = controls["column_description"].value
     controls["accept_sensitive"].click()
@@ -1473,8 +1475,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False
-    assert controls["dq_type"].value == "pattern"
-    assert controls["dq_pattern"].value == "manual-pattern"
+    assert controls["dq_values"].value == "keep-me"
     assert widget_runtime["calls"]["guardrails"] == []
 
     assert widget_runtime["calls"]["guardrails"] == []
@@ -1488,60 +1489,6 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert saved_parameters["pii_reason"] == "Can uniquely associate a person."
 
 
-def test_dq_ai_pattern_authoring_is_clickable_and_forwards_instruction(
-    widget_runtime, monkeypatch
-):
-    """Pattern AI stays directly usable in AI mode and forwards author intent."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
-    controls = state["_controls"]
-    captured: dict[str, object] = {}
-
-    def dq(_context, **kwargs):
-        captured.update(kwargs)
-        return [{
-            "rule_type": "pattern",
-            "columns": ["column_0"],
-            "parameters": {"pattern": "^P[0-9]{3}$"},
-            "rationale": "Matches the requested product ID shape.",
-            "selected": True,
-        }]
-
-    monkeypatch.setattr(module, "suggest_dq_rules", dq)
-
-    assert controls["suggest_dq"].disabled is False
-    assert controls["dq_ai_instruction"].disabled is False
-    assert controls["dq_ai_instruction"].description == "Pattern instruction"
-
-    controls["dq_ai_instruction"].value = "Product IDs start with P followed by three digits."
-    controls["suggest_dq"].click()
-
-    assert "Product IDs start with P followed by three digits." in str(captured["prompt"])
-    controls["accept_dq_suggestion"].click()
-    assert controls["dq_pattern"].value == "^P[0-9]{3}$"
-
-
-def test_dq_ai_uses_fresh_description_suggestions_before_acceptance(widget_runtime, monkeypatch):
-    """Dependent DQ advice sees fresh AI Description context without auto-accepting it."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
-    controls = state["_controls"]
-    captured: list[dict[str, object]] = []
-
-    def dq(context, **_kwargs):
-        captured.append(context)
-        return []
-
-    monkeypatch.setattr(module, "suggest_dq_rules", dq)
-
-    assert controls["column_description"].value == "Order identifier"
-    controls["dq_type"].value = "pattern"
-    controls["suggest_dq"].click()
-
-    assert captured
-    assert captured[0]["table_description"] == "Orders table"
-    assert captured[0]["columns"][0]["description"] == "Suggested column description"
-    assert controls["column_description"].value == "Order identifier"
-
-
 def test_manual_description_change_marks_dependent_ai_stale_and_requests_rerun(
     widget_runtime, monkeypatch
 ):
@@ -1551,25 +1498,11 @@ def test_manual_description_change_marks_dependent_ai_stale_and_requests_rerun(
     scope = next(iter(state["_ai_suggestions"]))
     column_id = str(controls["column_select"].value)
 
-    state["_ai_suggestions"][scope]["dq"] = [{
-        "rule_type": "completeness",
-        "columns": ["column_0"],
-        "parameters": {},
-        "rationale": "old",
-        "selected": True,
-    }]
-    controls["dq_suggestion"].options = [("old", "0")]
-    controls["dq_suggestion"].disabled = False
-    controls["accept_dq_suggestion"].disabled = False
-
     controls["column_description"].value = "Edited business description"
 
     suggestions = state["_ai_suggestions"][scope]["columns"][column_id]
     assert suggestions["description"]["stale"] is True
     assert suggestions["sensitive_data"]["stale"] is True
-    assert "dq" not in state["_ai_suggestions"][scope]
-    assert controls["dq_suggestion"].options == ()
-    assert "Re-run suggestions" in controls["dq_ai"].value
     assert "Needs refresh" in controls["sensitive_ai"].value
 
 
@@ -1619,39 +1552,6 @@ def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkey
     assert controls["accept_column_description"].disabled is True
 
 
-def test_dq_failure_clears_previous_suggestions(widget_runtime, monkeypatch):
-    """A failed DQ re-run must not leave old AI suggestions selectable."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
-    controls = state["_controls"]
-
-    monkeypatch.setattr(
-        module,
-        "suggest_dq_rules",
-        lambda *_args, **_kwargs: [{
-            "rule_type": "pattern",
-            "columns": ["column_0"],
-            "parameters": {"pattern": "^ORD-[0-9]+$"},
-            "rationale": "Structured identifier.",
-            "selected": True,
-        }],
-    )
-    controls["dq_type"].value = "pattern"
-    controls["suggest_dq"].click()
-    assert controls["dq_suggestion"].options
-
-    monkeypatch.setattr(
-        module,
-        "suggest_dq_rules",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("DQ AI unavailable")),
-    )
-    controls["suggest_dq"].click()
-
-    assert controls["dq_suggestion"].options == ()
-    assert controls["dq_suggestion"].disabled is True
-    assert controls["accept_dq_suggestion"].disabled is True
-    assert "DQ AI unavailable" in controls["dq_ai"].value
-
-
 def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
     """Do not silently discard a reviewed Direct or Indirect PII assessment."""
     state = widget_runtime["open"]()
@@ -1676,8 +1576,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
     controls["column_classification"].value = "Restricted"
-    controls["dq_type"].value = "pattern"
-    controls["dq_pattern"].value = "keep-me"
+    controls["dq_values"].value = "keep-me"
     controls["column_select"].value = "col-1"
     controls["column_select"].value = "col-0"
 
@@ -1685,8 +1584,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 
     assert controls["column_description"].value == "Unsaved description"
     assert controls["column_classification"].value == "Restricted"
-    assert controls["dq_type"].value == "pattern"
-    assert controls["dq_pattern"].value == "keep-me"
+    assert controls["dq_values"].value == "keep-me"
 
 
 def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
@@ -1950,7 +1848,6 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
-    controls["dq_type"].value = "completeness"
     controls["dq_max_missing"].value = "not-a-number"
 
 
@@ -1961,52 +1858,19 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     )
 
 
-def test_column_dq_families_hydrate_independently(widget_runtime):
-    """Keep multiple rules on one column visible, independently editable, and correctly staged."""
+def test_pattern_is_owned_by_dq_rules_not_columns(widget_runtime):
+    """Pattern remains a supported DQ Rule without exposing regex authoring in Columns."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    families = controls["dq_family_controls"]
-    assert controls["dq_max_missing"].value == "0"
-    assert families["completeness"]["block"].value is True
-    assert controls["dq_pattern"].value == "^ORD-[0-9]+$"
-    assert families["pattern"]["block"].value is False
 
-    controls["dq_pattern"].value = "^ORDER-[0-9]+$"
-    assert widget_runtime["calls"]["guardrails"] == []
-    state["_controls"]["save_data_contract"].click()
-    saved = next(
-        record for record in widget_runtime["calls"]["guardrails"][-1]
-        if record.get("guardrail_rule_id") == "dq-pattern"
-    )
-    assert saved["guardrail_rule_id"] == "dq-pattern"
-    assert module._parameters(saved)["pattern"] == "^ORDER-[0-9]+$"
-
-
-def test_dq_ai_receives_unpacked_profile_and_frequency_evidence(widget_runtime, monkeypatch):
-    """Pass governed profile statistics and bounded frequencies into DQ suggestions."""
-    _enable_ai(widget_runtime, monkeypatch)
-    captured = {}
-
-    def suggest(context, **_kwargs):
-        captured.update(context)
-        return []
-
-    monkeypatch.setattr(module, "suggest_dq_rules", suggest)
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
-    state["_controls"]["dq_type"].value = "pattern"
-    state["_controls"]["suggest_dq"].click()
-
-    column = captured["columns"][0]
-    assert column["profile_evidence"] == {
-        "row_count": 10, "non_null_count": 9, "null_count": 1,
-        "null_percent": 10.0, "distinct_count": 8, "distinct_percent": 80.0,
-        "mean_value": 5.0, "stddev_value": 2.5,
-        "min_value": "1", "percentile_25_value": 3.0, "median_value": 5.0,
-        "percentile_75_value": 7.0, "max_value": "9",
-    }
-    assert column["frequency_evidence"] == [
-        {"value": "col-0", "count": 2, "percent": 20.0}
+    assert "pattern" not in controls["dq_family_controls"]
+    assert "dq_pattern" not in controls
+    pattern_options = [
+        (label, value)
+        for label, value in controls["business_saved"].options
+        if label == "Pattern · column_0"
     ]
+    assert pattern_options == [("Pattern · column_0", "dq-pattern")]
 
 
 def test_review_sections_render_column_contract_table_with_profile_and_governance():
@@ -2385,9 +2249,6 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
-
-    controls["dq_type"].value = "range"
-    assert controls["suggest_dq"].disabled is True
 
     controls["dq_family_controls"]["range"]["enabled"].value = True
     controls["dq_minimum"].value = "1"
