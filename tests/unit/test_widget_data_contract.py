@@ -171,7 +171,6 @@ def widget_runtime(monkeypatch):
         "column_description_prompt": "configured column description prompt",
         "sensitive_data_prompt": "configured sensitive prompt",
         "grain_prompt": "configured grain prompt",
-        "pattern_prompt": "configured pattern prompt",
         "business_rule_prompt": "configured business rule prompt",
     }
 
