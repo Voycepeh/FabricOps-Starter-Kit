@@ -15,8 +15,8 @@
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
     },
     "public_function_call_flows_json": {
-      "generated_at_sgt": "28 Sep 2026, 2:34 AM SGT",
-      "generated_at_utc": "2026-09-27T18:34:37.986038Z",
+      "generated_at_sgt": "28 Sep 2026, 5:14 PM SGT",
+      "generated_at_utc": "2026-09-28T09:14:35Z",
       "generator": "scripts/generate_public_function_call_flows_json.py",
       "label": "Public function call-flow data",
       "output_path": "docs/reference/_data/public-function-call-flows.json"
