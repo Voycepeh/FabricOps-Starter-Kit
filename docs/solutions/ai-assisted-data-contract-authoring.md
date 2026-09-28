@@ -1,10 +1,34 @@
 # AI-assisted Data Contract Authoring
 
-FabricOps makes the Data Contract explicit, versioned, and executable. Microsoft Fabric AI Functions can assist where interpretation is useful, while deterministic FabricOps metadata and Governance decisions remain the source of truth.
-
 ![AI-assisted Data Contract authoring](../assets/AiDatacontract.png)
 
-## What the Data Contract captures
+## The problem
+
+A useful Data Contract has to combine what Engineering actually produced with Governance decisions about meaning, quality, sensitivity, and acceptable behaviour. Recreating technical metadata manually is slow, while allowing AI-generated suggestions to become policy automatically would make the governed definition difficult to trust and review.
+
+## The solution
+
+FabricOps makes the Data Contract explicit, versioned, and executable. Microsoft Fabric AI Functions can assist where interpretation is useful, while deterministic FabricOps metadata and Governance decisions remain the source of truth.
+
+The contract combines the observed Engineering definition with Governance-owned decisions rather than asking users to recreate technical metadata manually.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Observe Engineering<br/>metadata"] --> B["Author contract"]
+    C["AI-assisted<br/>suggestions"] --> B
+    B --> D["Governance review"]
+    D --> E["Freeze version"]
+    E --> F["Validate in Development"]
+    F --> G["Activate"]
+    G --> H["Enforce in Production"]
+    F -. "iterate" .-> B
+```
+
+## Implementation details
+
+### What the Data Contract captures
 
 A Data Contract is the governed definition for one `table_id`. Its versioned `contract_payload_json` brings together:
 
@@ -15,7 +39,7 @@ A Data Contract is the governed definition for one `table_id`. Its versioned `co
 
 Governance authors and reviews the contract through [`widget_data_contract()`](../api/reference/widget_data_contract.md) in `01_governance`.
 
-## Where the definition comes from
+### Where the definition comes from
 
 Not every part of a Data Contract is authored the same way.
 
@@ -27,15 +51,13 @@ Not every part of a Data Contract is authored the same way.
 
 **AI suggestions never become the governed definition simply because AI produced them.** They are proposed authoring inputs. Governance decides what is applied, saved, and frozen.
 
-## What is being captured
-
-The contract combines the observed Engineering definition with Governance-owned decisions rather than asking users to recreate technical metadata manually.
+### What is being captured
 
 For example, the physical columns and data types originate from the Data Catalogue. Governance can then add descriptive Enrichment and executable Guardrails against those same columns. Processing records how the governed target is expected to be written.
 
 This produces one versioned manifest that Engineering can resolve and execute instead of maintaining a separate policy document beside the pipeline.
 
-## Available Guardrails
+### Available Guardrails
 
 | Guardrail | What it governs |
 | --- | --- |
@@ -47,7 +69,7 @@ This produces one versioned manifest that Engineering can resolve and execute in
 
 Guardrails can be configured with **Warn** or **Block** behaviour. The contract records the governed expectation; FabricOps runtime functions perform the actual checks.
 
-## Where and when enforcement happens
+### Where and when enforcement happens
 
 The contract moves through a deliberate Governance ↔ Engineering cycle:
 
@@ -68,7 +90,7 @@ The runtime enforcement functions are:
 
 Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
 
-## Where AI helps
+### Where AI helps
 
 AI is an **authoring assistant**, not the enforcement engine.
 
@@ -77,6 +99,8 @@ Fabric AI Functions can use the Data Catalogue and profiling context to suggest 
 Governance reviews those suggestions in the same authoring workflow as manually entered decisions. Once accepted into a frozen Data Contract, enforcement is deterministic through the FabricOps Guardrail functions.
 
 That separation is intentional: **AI helps Governance author faster; the Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
+
+## Go deeper
 
 For the hands-on workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-author-and-freeze-data-contract.md).
 
