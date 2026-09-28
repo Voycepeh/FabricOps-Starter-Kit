@@ -140,7 +140,14 @@ def _manifest_sections(
         return " · ".join(parts)
 
     def rule_label(row: Mapping[str, Any]) -> str:
-        return str(row.get("rule_type") or row.get("guardrail_type") or "").replace("_", " ").title()
+        rule_type = str(row.get("rule_type") or row.get("guardrail_type") or "")
+        if rule_type == "value_set":
+            mode = str(_parameters(row).get("mode") or "").lower()
+            if mode == "allow":
+                return "Whitelist"
+            if mode == "block":
+                return "Blacklist"
+        return rule_type.replace("_", " ").title()
 
     def rule_list(rows: list[dict[str, Any]]) -> str:
         items = "".join(
@@ -2332,15 +2339,35 @@ def widget_data_contract(
             value="100", disabled=not editable,
             **shared.widget_common(widgets, "Minimum unique %"),
         )
-        dq_value_mode = widgets.Dropdown(
-            options=("allow", "block"), disabled=not editable,
-            **shared.widget_common(widgets, "Mode"),
-        )
-        dq_values = widgets.Text(
+        dq_whitelist_values = widgets.Text(
             disabled=not editable,
             placeholder="Example: Active, Inactive",
-            **shared.widget_common(widgets, "Allowed values"),
+            **shared.widget_common(widgets, "Whitelist"),
         )
+        dq_blacklist_values = widgets.Text(
+            disabled=not editable,
+            placeholder="Example: Unknown, N/A",
+            **shared.widget_common(widgets, "Blacklist"),
+        )
+        dq_whitelist_count = widgets.HTML()
+        dq_blacklist_count = widgets.HTML()
+
+        def dq_value_count_text(raw: Any) -> str:
+            values = [item.strip() for item in str(raw or "").split(",") if item.strip()]
+            count = len(values)
+            noun = "value" if count == 1 else "values"
+            return (
+                "<div style='margin-left:162px;color:#667085;font-size:11px;'>"
+                f"{count} {noun} · comma-separated</div>"
+            )
+
+        def refresh_dq_value_counts(_change: dict[str, Any] | None = None) -> None:
+            dq_whitelist_count.value = dq_value_count_text(dq_whitelist_values.value)
+            dq_blacklist_count.value = dq_value_count_text(dq_blacklist_values.value)
+
+        dq_whitelist_values.observe(refresh_dq_value_counts, names="value")
+        dq_blacklist_values.observe(refresh_dq_value_counts, names="value")
+        refresh_dq_value_counts()
         dq_minimum = widgets.Text(
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
@@ -2365,7 +2392,7 @@ def widget_data_contract(
             "value_set": {
                 "enabled": dq_checkbox("Enabled"),
                 "block": dq_checkbox("Block on failure"),
-                "parameters": (dq_value_mode, dq_values),
+                "parameters": (dq_whitelist_values, dq_blacklist_values),
             },
             "range": {
                 "enabled": dq_checkbox("Enabled"),
@@ -2377,8 +2404,9 @@ def widget_data_contract(
             },
         }
         dq_parameter_controls = (
-            dq_max_missing, dq_blank_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum,
-            dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive,
+            dq_max_missing, dq_blank_missing, dq_min_unique,
+            dq_whitelist_values, dq_blacklist_values,
+            dq_minimum, dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive,
         )
         # Internal compatibility aliases follow the default deterministic family.
         dq_enabled = dq_family_controls["completeness"]["enabled"]
@@ -2394,7 +2422,8 @@ def widget_data_contract(
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
-            dq_max_missing, dq_min_unique, dq_value_mode, dq_values, dq_minimum, dq_maximum,
+            dq_max_missing, dq_min_unique, dq_whitelist_values, dq_blacklist_values,
+            dq_minimum, dq_maximum,
         ):
             control.layout.width = "100%"
             control.layout.max_width = "560px"
@@ -2450,21 +2479,46 @@ def widget_data_contract(
             defaults = {
                 "completeness": ("0", False),
                 "uniqueness": ("100",),
-                "value_set": ("allow", ""),
+                "value_set": ("", ""),
                 "range": ("", True, "", True),
             }[kind]
             for control, value in zip(controls["parameters"], defaults, strict=True):
                 control.value = value
             controls["enabled"].value = False
             controls["block"].value = False
-            rule = next((
+            matching_rules = [
                 row for row in session_guardrails()
                 if str(row.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
                 and str(row.get("column_id") or "") == column_id
                 and str(row.get("rule_type") or "") == kind
-            ), {})
-            if not rule:
+            ]
+            if not matching_rules:
                 return
+            if kind == "value_set":
+                by_mode = {
+                    str(_parameters(rule).get("mode") or "").lower(): rule
+                    for rule in matching_rules
+                }
+                allow_rule = by_mode.get("allow", {})
+                block_rule = by_mode.get("block", {})
+                dq_whitelist_values.value = ", ".join(
+                    map(str, _parameters(allow_rule).get("values", []))
+                )
+                dq_blacklist_values.value = ", ".join(
+                    map(str, _parameters(block_rule).get("values", []))
+                )
+                active_rules = [
+                    rule for rule in (allow_rule, block_rule)
+                    if rule and rule.get("is_active", True)
+                ]
+                controls["enabled"].value = bool(active_rules)
+                controls["block"].value = bool(active_rules) and all(
+                    str(rule.get("action") or "Warn") == "Block"
+                    for rule in active_rules
+                )
+                refresh_dq_value_counts()
+                return
+            rule = matching_rules[0]
             params = _parameters(rule)
             values = {
                 "completeness": (
@@ -2473,10 +2527,6 @@ def widget_data_contract(
                 ),
                 "uniqueness": (
                     str(params.get("minimum_unique_percent", 100)),
-                ),
-                "value_set": (
-                    str(params.get("mode") or "allow"),
-                    ", ".join(map(str, params.get("values", []))),
                 ),
                 "range": (
                     "" if params.get("minimum") is None else str(params["minimum"]),
@@ -3131,12 +3181,58 @@ def widget_data_contract(
             key = f"column.{cid}.dq.{kind}"
             try:
                 selected = selected_column()
-                existing = next((
+                matching_rules = [
                     r for r in session_guardrails()
                     if str(r.get("guardrail_type") or "").lower() in {"data_quality", "dq"}
                     and str(r.get("column_id") or "") == cid
                     and str(r.get("rule_type") or "") == kind
-                ), {})
+                ]
+                if kind == "value_set":
+                    column_name = str(selected.get("column_name") or cid)
+                    values_by_mode = {
+                        "allow": [
+                            item.strip() for item in dq_whitelist_values.value.split(",")
+                            if item.strip()
+                        ],
+                        "block": [
+                            item.strip() for item in dq_blacklist_values.value.split(",")
+                            if item.strip()
+                        ],
+                    }
+                    existing_by_mode = {
+                        str(_parameters(rule).get("mode") or "").lower(): rule
+                        for rule in matching_rules
+                    }
+                    if controls["enabled"].value and not any(values_by_mode.values()):
+                        raise ValueError(
+                            "Whitelist or Blacklist requires at least one comma-separated value."
+                        )
+                    records = []
+                    for mode, values in values_by_mode.items():
+                        existing = existing_by_mode.get(mode, {})
+                        if not values and not existing:
+                            continue
+                        params = (
+                            {"columns": [column_name], "mode": mode, "values": values}
+                            if values
+                            else _parameters(existing)
+                        )
+                        records.append(guardrail_record(
+                            "data_quality",
+                            "value_set",
+                            params,
+                            column_id=cid,
+                            action="Block" if controls["block"].value else "Warn",
+                            existing=existing,
+                            active=bool(controls["enabled"].value and values),
+                        ))
+                    if records:
+                        stage_guardrails(records)
+                    set_validation_error(key)
+                    mark_column_hydrated("dq")
+                    refresh_dq_value_counts()
+                    return
+                existing = matching_rules[0] if matching_rules else {}
                 if not existing and not controls["enabled"].value:
                     set_validation_error(key)
                     mark_column_hydrated("dq")
@@ -3152,11 +3248,6 @@ def widget_data_contract(
                     if not 0 <= threshold <= 100:
                         raise ValueError("uniqueness minimum unique % must be between 0 and 100.")
                     params["minimum_unique_percent"] = threshold
-                elif kind == "value_set":
-                    values = [item.strip() for item in dq_values.value.split(",") if item.strip()]
-                    if not values:
-                        raise ValueError("value_set requires at least one configured value.")
-                    params.update({"mode": str(dq_value_mode.value), "values": values})
                 elif kind == "range":
                     if not dq_minimum.value.strip() and not dq_maximum.value.strip():
                         raise ValueError("range requires a minimum or maximum.")
@@ -3255,6 +3346,38 @@ def widget_data_contract(
             column_option_style,
             column_select,
         )
+        def dq_option_row(field: Any, option: Any) -> Any:
+            """Align an option checkbox with the field it modifies."""
+            return widgets.HBox(
+                [field, option],
+                layout=widgets.Layout(
+                    width="100%",
+                    min_width="0",
+                    max_width="760px",
+                    gap="12px",
+                    align_items="center",
+                    overflow="visible",
+                ),
+            )
+
+        dq_family_controls["completeness"]["display"] = (
+            dq_option_row(dq_max_missing, dq_blank_missing),
+        )
+        dq_family_controls["value_set"]["display"] = (
+            widgets.VBox(
+                [dq_whitelist_values, dq_whitelist_count],
+                layout=widgets.Layout(width="100%", min_width="0", gap="2px"),
+            ),
+            widgets.VBox(
+                [dq_blacklist_values, dq_blacklist_count],
+                layout=widgets.Layout(width="100%", min_width="0", gap="2px"),
+            ),
+        )
+        dq_family_controls["range"]["display"] = (
+            dq_option_row(dq_minimum, dq_minimum_inclusive),
+            dq_option_row(dq_maximum, dq_maximum_inclusive),
+        )
+
         def dq_family_section(
             title: str, kind: str, description: str
         ) -> Any:
@@ -3265,7 +3388,7 @@ def widget_data_contract(
                         f"<div style='font-size:13px;color:#667085;line-height:1.5;'>"
                         f"{html.escape(description)}</div>"
                     ),
-                    *controls["parameters"],
+                    *controls.get("display", controls["parameters"]),
                 ],
                 layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
             )
@@ -3308,8 +3431,9 @@ def widget_data_contract(
                     "Require this column to meet a minimum percentage of unique values. Use 100% for strict uniqueness.",
                 ),
                 dq_family_section(
-                    "Allowed Values", "value_set",
-                    "Choose which governed values are accepted or blocked.",
+                    "Value Lists", "value_set",
+                    "Use a whitelist for accepted values and a blacklist for rejected values. "
+                    "Each non-empty list is stored as its own deterministic rule.",
                 ),
                 dq_family_section(
                     "Value Rules", "range",
@@ -3554,7 +3678,12 @@ def widget_data_contract(
             return [name] if name else []
 
         def business_rule_label(rule: Mapping[str, Any]) -> str:
-            kind = str(rule.get("rule_type") or "").replace("_", " ").title()
+            rule_type = str(rule.get("rule_type") or "")
+            if rule_type == "value_set":
+                mode = str(_parameters(rule).get("mode") or "").lower()
+                kind = "Whitelist" if mode == "allow" else "Blacklist" if mode == "block" else "Value Set"
+            else:
+                kind = rule_type.replace("_", " ").title()
             names = rule_column_names(rule)
             return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
 
@@ -4496,7 +4625,10 @@ def widget_data_contract(
             "dq_parameter_controls": dq_parameter_controls,
             "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
             "dq_min_unique": dq_min_unique,
-            "dq_value_mode": dq_value_mode, "dq_values": dq_values,
+            "dq_whitelist_values": dq_whitelist_values,
+            "dq_blacklist_values": dq_blacklist_values,
+            "dq_whitelist_count": dq_whitelist_count,
+            "dq_blacklist_count": dq_blacklist_count,
             "dq_minimum": dq_minimum, "dq_minimum_inclusive": dq_minimum_inclusive,
             "dq_maximum": dq_maximum, "dq_maximum_inclusive": dq_maximum_inclusive,
             "dq_enabled": dq_enabled, "dq_block": dq_block,
