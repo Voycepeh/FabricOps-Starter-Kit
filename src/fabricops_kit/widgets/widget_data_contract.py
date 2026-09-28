@@ -3225,9 +3225,7 @@ def widget_data_contract(
         def suggest_dq_clicked(_button: Any) -> None:
             """Generate Pattern advice and hydrate controls only on apply."""
             try:
-                requested_type = str(dq_type.value or "")
-                if requested_type != "pattern":
-                    raise ValueError("AI assistance is available only for Pattern.")
+                requested_type = "pattern"
                 selected = selected_column()
                 profile_value = load_profile_context(str(selected.get("column_id") or ""))
                 profile = dict(profile_value.get("profile") or {})
@@ -3329,42 +3327,24 @@ def widget_data_contract(
                     names="value",
                 )
 
-        def refresh_dq_ai_controls(_change: dict[str, Any] | None = None) -> None:
-            if _change and _change.get("old") != _change.get("new"):
-                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
-                dq_suggestion.options = ()
-                dq_suggestion.disabled = True
-                accept_dq_suggestion.disabled = True
-            supported = str(dq_type.value or "") == "pattern"
+        def refresh_dq_ai_controls() -> None:
             available = bool(
                 editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
             )
-            enabled = supported and available
-            dq_ai_instruction.disabled = not enabled
-            suggest_dq.disabled = not enabled
-            if supported:
-                dq_ai_instruction.placeholder = (
-                    "Optional: describe the text pattern you want FabricOps to translate "
-                    "into a regular expression."
-                )
-                if not state["_ai_suggestions"][suggestion_scope].get("dq"):
-                    dq_ai.value = (
-                        "<p>Use AI to translate a human description into a Pattern rule, "
-                        "then choose <b>Apply</b> and edit the regular expression if needed.</p>"
-                    )
-            else:
-                state["_ai_suggestions"][suggestion_scope].pop("dq", None)
-                dq_suggestion.options = ()
-                dq_suggestion.disabled = True
-                accept_dq_suggestion.disabled = True
+            dq_ai_instruction.disabled = not available
+            suggest_dq.disabled = not available
+            dq_ai_instruction.placeholder = (
+                "Optional: describe the text pattern you want FabricOps to translate "
+                "into a regular expression."
+            )
+            if not state["_ai_suggestions"][suggestion_scope].get("dq"):
                 dq_ai.value = (
-                    "<p>Completeness, Allowed Values, and Value Rules are configured directly; "
-                    "AI assistance is reserved for Pattern.</p>"
+                    "<p>Use AI to translate a human description into a Pattern rule, "
+                    "then choose <b>Apply</b> and edit the regular expression if needed.</p>"
                 )
 
         suggest_dq.on_click(suggest_dq_clicked)
         accept_dq_suggestion.on_click(accept_dq_clicked)
-        dq_type.observe(refresh_dq_ai_controls, names="value")
         refresh_dq_ai_controls()
         def rebuild_column_options() -> None:
             nonlocal column_options
