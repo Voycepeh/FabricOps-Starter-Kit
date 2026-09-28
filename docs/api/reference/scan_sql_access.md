@@ -20,7 +20,10 @@ Direct permissions and permissions inherited through explicit database
 role membership are returned separately. Object-level permissions map to
 one registered table. Schema-level and database-level permissions expand to
 every active registered physical table in that scope while preserving the
-original SQL permission class in ``access_level``.
+original SQL permission class in ``access_level``. SQL user types normalize
+to ``USER`` while groups and other catalogue principal types retain distinct
+classifications; names that resemble email addresses are not used to infer
+a user type.
 
 Configured target keys are related to catalogue rows by reconstructing the
 canonical ``table_id`` from the configured item kind, target key, schema,
@@ -32,9 +35,9 @@ physical item identifier.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_sql_access.py:245`
+`fabricops_kit/access_scanner/scan_sql_access.py:251`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L245-L369">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L251-L378">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

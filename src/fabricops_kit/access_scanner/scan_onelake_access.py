@@ -12,6 +12,7 @@ from fabricops_kit.access_scanner.shared import (
     catalogue_tables,
     fabric_access_token,
     list_fabric_pages,
+    normalise_principal_type,
     normalise_targets,
     persist_access_rows,
     target_store_kinds,
@@ -36,13 +37,22 @@ def _member_rows(role: dict[str, Any]) -> list[dict[str, str]]:
     for member in members.get("microsoftEntraMembers") or []:
         if not isinstance(member, dict):
             continue
-        object_id = str(member.get("objectId") or "").strip()
-        if not object_id:
+        user_type = normalise_principal_type(member.get("objectType"))
+        identity_fields = (
+            ("userPrincipalName", "principalName", "displayName", "objectId")
+            if user_type == "USER"
+            else ("displayName", "principalName", "objectId")
+        )
+        user_principal = next(
+            (str(member.get(field) or "").strip() for field in identity_fields if str(member.get(field) or "").strip()),
+            "",
+        )
+        if not user_principal:
             continue
         rows.append(
             {
-                "user_principal": object_id,
-                "user_type": str(member.get("objectType") or "UNKNOWN").upper(),
+                "user_principal": user_principal,
+                "user_type": user_type,
                 "permission_source": "ONELAKE_ROLE",
                 "membership_detail": str(member.get("tenantId") or ""),
             }
@@ -258,9 +268,11 @@ def scan_onelake_access(
     """Scan OneLake Security roles and map table access to FabricOps table IDs.
 
     The scanner reads the Fabric dataAccessRoles REST endpoint for each configured
-    Lakehouse target. Explicit Entra members are preserved by object ID. Automatic
-    Fabric item membership used by roles such as DefaultReader is preserved as a
-    selector instead of being misrepresented as an individual user.
+    Lakehouse target. Explicit Entra members use a UPN or readable identity when
+    the response provides one and otherwise retain the Entra object ID. Groups
+    remain groups and are not expanded. Automatic Fabric item membership used by
+    roles such as DefaultReader is preserved as a selector instead of being
+    misrepresented as an individual user. No Microsoft Graph lookup is performed.
 
     Normalized access rows are appended to METADATA_DATA_ACCESS by default.
     Pass persist=False for an inspection-only scan. The scanner never changes

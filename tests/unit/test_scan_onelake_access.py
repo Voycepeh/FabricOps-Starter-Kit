@@ -63,7 +63,43 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
         "ONELAKE_ROLE",
         "ONELAKE_ITEM_ACCESS_SELECTOR",
     }
+    assert {(row["user_principal"], row["user_type"]) for row in rows} == {
+        ("user-object-id", "USER"),
+        ("fabric-item:workspace-id/item-id:ReadAll", "FABRIC_ITEM_MEMBERS"),
+    }
     assert all('"rows"' in row["constraints_json"] for row in rows)
+
+
+def test_entra_members_use_exposed_principal_identity_and_preserve_types():
+    """Prefer an exposed UPN while retaining group and service identities honestly."""
+    module = importlib.import_module("fabricops_kit.access_scanner.scan_onelake_access")
+    rows = module._member_rows(
+        {
+            "members": {
+                "microsoftEntraMembers": [
+                    {
+                        "objectId": "user-object-id",
+                        "objectType": "User",
+                        "userPrincipalName": "alice@example.com",
+                    },
+                    {
+                        "objectId": "group-object-id",
+                        "objectType": "Group",
+                        "displayName": "Data Consumers",
+                    },
+                    {"objectId": "group-id-only", "objectType": "Group"},
+                    {"objectId": "service-id", "objectType": "ServicePrincipal"},
+                ]
+            }
+        }
+    )
+
+    assert [(row["user_principal"], row["user_type"]) for row in rows] == [
+        ("alice@example.com", "USER"),
+        ("Data Consumers", "GROUP"),
+        ("group-id-only", "GROUP"),
+        ("service-id", "SERVICE_PRINCIPAL"),
+    ]
 
 
 def test_list_data_access_roles_uses_shared_fabric_pagination(monkeypatch):

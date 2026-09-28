@@ -12,9 +12,11 @@ Scan OneLake Security roles and map Lakehouse table access to canonical FabricOp
 <div class="reference-docstring-intro" markdown="1">
 
 The scanner reads the Fabric dataAccessRoles REST endpoint for each configured
-Lakehouse target. Explicit Entra members are preserved by object ID. Automatic
-Fabric item membership used by roles such as DefaultReader is preserved as a
-selector instead of being misrepresented as an individual user.
+Lakehouse target. Explicit Entra members use a UPN or readable identity when
+the response provides one and otherwise retain the Entra object ID. Groups
+remain groups and are not expanded. Automatic Fabric item membership used by
+roles such as DefaultReader is preserved as a selector instead of being
+misrepresented as an individual user. No Microsoft Graph lookup is performed.
 
 Normalized access rows are appended to METADATA_DATA_ACCESS by default.
 Pass persist=False for an inspection-only scan. The scanner never changes
@@ -25,9 +27,9 @@ OneLake permissions.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_onelake_access.py:248`
+`fabricops_kit/access_scanner/scan_onelake_access.py:258`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L248-L329">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L258-L341">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

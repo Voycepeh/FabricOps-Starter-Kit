@@ -12,6 +12,7 @@ from fabricops_kit.io.shared import get_spark_session, read_warehouse_synapsesql
 from fabricops_kit.access_scanner.shared import (
     ACCESS_TABLE,
     catalogue_tables,
+    normalise_principal_type,
     normalise_targets,
     persist_access_rows,
     target_store_kinds,
@@ -142,8 +143,13 @@ def _scan_targets(*, targets: list[str], spark_session, context: dict[str, Any])
 
 def _map_to_catalogue(observations, catalogue_tables):
     from pyspark.sql import functions as F
+    from pyspark.sql import types as T
 
-    observed = observations.alias("observed")
+    normalized_principal_type = F.udf(lambda value: normalise_principal_type(value), T.StringType())
+    observed = observations.withColumn(
+        "user_type",
+        normalized_principal_type(F.col("user_type")),
+    ).alias("observed")
     catalogue = catalogue_tables.alias("catalogue")
 
     target_match = F.col("observed._target") == F.col("catalogue._catalogue_target")
@@ -263,7 +269,10 @@ def scan_sql_access(
     role membership are returned separately. Object-level permissions map to
     one registered table. Schema-level and database-level permissions expand to
     every active registered physical table in that scope while preserving the
-    original SQL permission class in ``access_level``.
+    original SQL permission class in ``access_level``. SQL user types normalize
+    to ``USER`` while groups and other catalogue principal types retain distinct
+    classifications; names that resemble email addresses are not used to infer
+    a user type.
 
     Configured target keys are related to catalogue rows by reconstructing the
     canonical ``table_id`` from the configured item kind, target key, schema,

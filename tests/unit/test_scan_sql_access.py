@@ -145,6 +145,32 @@ def _observations(spark_session):
             "not_registered",
             "USER_TABLE",
         ),
+        (
+            "Data Consumers",
+            "EXTERNAL_GROUP",
+            None,
+            "Direct Permission",
+            "GRANT",
+            "SELECT",
+            "OBJECT_OR_COLUMN",
+            "GoldWarehouse",
+            "sales",
+            "orders",
+            "USER_TABLE",
+        ),
+        (
+            "fabricops-application",
+            "EXTERNAL_LOGIN",
+            None,
+            "Direct Permission",
+            "GRANT",
+            "SELECT",
+            "OBJECT_OR_COLUMN",
+            "GoldWarehouse",
+            "sales",
+            "customers",
+            "USER_TABLE",
+        ),
     ]
     return spark_session.createDataFrame(rows, columns)
 
@@ -188,7 +214,14 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert by_principal["alice@example.com"] == {orders_id}
     assert by_principal["bob@example.com"] == {orders_id, customers_id}
     assert by_principal["carol@example.com"] == {orders_id, customers_id}
+    assert by_principal["Data Consumers"] == {orders_id}
+    assert by_principal["fabricops-application"] == {customers_id}
     assert "dave@example.com" not in by_principal
+
+    principal_types = {row["user_principal"]: row["user_type"] for row in access_rows}
+    assert principal_types["alice@example.com"] == "USER"
+    assert principal_types["Data Consumers"] == "GROUP"
+    assert principal_types["fabricops-application"] == "EXTERNAL_LOGIN"
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
     assert {row["environment_name"] for row in access_rows} == {"dev"}
@@ -197,6 +230,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
 
     assert len(unmatched_rows) == 1
     assert unmatched_rows[0]["user_name"] == "dave@example.com"
+    assert unmatched_rows[0]["user_type"] == "USER"
     assert unmatched_rows[0]["target"] == "warehouse"
     assert unmatched_rows[0]["unmatched_reason"] == "not_registered_in_catalogue"
 
