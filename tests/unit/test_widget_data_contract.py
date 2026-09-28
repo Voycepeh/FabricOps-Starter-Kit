@@ -1951,6 +1951,8 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
     assert "Required" in review and ">Yes<" in review
+    assert "required columns: customer_id" in review
+    assert "required columns: col-1" not in review
     assert review.count("<b>Pattern</b>") == 1
 
     fallback = module._manifest_sections(
