@@ -111,13 +111,27 @@ def _manifest_sections(
         if str(rule.get("guardrail_type") or "").lower() == "schema" and rule.get("is_active", True):
             required.update(_parameters(rule).get("required_columns", []))
 
+    column_names_by_id = {
+        str(row.get("column_id") or ""): str(row.get("column_name") or "")
+        for row in columns
+        if str(row.get("column_id") or "")
+    }
+
     def parameter_text(row: Mapping[str, Any]) -> str:
         parts = []
         for name, value in _parameters(row).items():
             if value in (None, "", [], {}):
                 continue
             if isinstance(value, list):
-                shown = ", ".join(str(item) for item in value)
+                display_values = (
+                    [
+                        column_names_by_id.get(str(item), str(item))
+                        for item in value
+                    ]
+                    if name == "required_columns"
+                    else value
+                )
+                shown = ", ".join(str(item) for item in display_values)
             elif isinstance(value, bool):
                 shown = "Yes" if value else "No"
             else:
