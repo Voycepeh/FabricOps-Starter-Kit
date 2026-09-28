@@ -70,7 +70,6 @@ def widget_activate_data_contract(
     spark_session: Any = None, context: Any = None,
 ) -> dict[str, Any]:
     """Link a Data Agreement and activate one validated frozen Data Contract.
-
     Only frozen versions are selectable. The exact selected version must have a
     successful latest Engineering validation run in METADATA_GUARDRAIL_RESULTS
     with execution_type='validate' before activation is enabled. Activation
@@ -80,7 +79,6 @@ def widget_activate_data_contract(
     """
     from IPython import display as ip
     import ipywidgets as widgets
-
     config, env, runtime_context = resolve_fabric_context(context=context)
     spark = get_spark_session(spark_session)
     quiet_context = {
@@ -89,7 +87,6 @@ def widget_activate_data_contract(
         "env": env,
         "_fabricops_suppress_io_log": True,
     }
-
     governance = contracts.list_contract_governance_state(
         config=config, env=env, spark_session=spark
     )
@@ -115,7 +112,6 @@ def widget_activate_data_contract(
         spark_session=spark,
         context=quiet_context,
     ))
-
     table_labels = {
         str(row.get("table_id") or ""): (
             f"{row.get('layer') or ''} · {row.get('schema_name') or ''}.{row.get('table_name') or ''}"
@@ -125,7 +121,6 @@ def widget_activate_data_contract(
     initial_table = str(table_id or "")
     if initial_table not in table_labels:
         initial_table = next(iter(table_labels), "")
-
     field_layout = widgets.Layout(width="100%", min_width="0", max_width="100%")
     field_style = {"description_width": "96px"}
     table_select = widgets.Dropdown(
@@ -178,7 +173,6 @@ def widget_activate_data_contract(
             gap="10px",
         ),
     )
-
     state: dict[str, Any] = {
         "environment_name": env,
         "table_id": initial_table or None,
@@ -189,7 +183,6 @@ def widget_activate_data_contract(
         "validation": None,
         "activation_result": None,
     }
-
     def contract_options(selected_table: str) -> list[tuple[str, tuple[str, int]]]:
         candidates = [
             row for row in frozen if str(row.get("table_id") or "") == selected_table
@@ -203,7 +196,6 @@ def widget_activate_data_contract(
             )
             for row in candidates
         ]
-
     agreement_lookup: dict[str, tuple[str, str]] = {}
 
     def agreement_options() -> list[tuple[str, tuple[str, str]]]:
