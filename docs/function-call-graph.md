@@ -5,7 +5,7 @@
   <a class="md-button" href="../reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
 
-![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)
+[![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)](assets/public-function-call-flows-dashboard.html)
 
 ## The problem
 
