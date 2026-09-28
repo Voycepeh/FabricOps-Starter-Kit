@@ -69,6 +69,9 @@ def test_activation_widget_uses_compact_three_step_confirmation_flow():
     assert 'title="1 · Contract"' in source
     assert 'title="2 · Data Agreement"' in source
     assert 'title="3 · Review & activate"' in source
+    assert "widgets.Combobox(" in source
+    assert 'placeholder="Search Data Agreements..."' in source
+    assert "ensure_option=True" in source
     assert "widgets.Checkbox(" not in source
     assert "confirmation_prompt.layout.display = \"flex\"" in source
     assert "confirm_activation.on_click(perform_activation)" in source
