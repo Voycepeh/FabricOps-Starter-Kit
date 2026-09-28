@@ -11,6 +11,7 @@ from fabricops_kit.access_scanner.shared import (
     catalogue_tables,
     fabric_access_token,
     list_fabric_pages,
+    normalise_principal_type,
     normalise_targets,
     persist_access_rows,
     target_store_kinds,
@@ -31,12 +32,12 @@ def _list_workspace_role_assignments(*, workspace_id: str, access_token: str) ->
 def _principal_name(principal: dict[str, Any]) -> str:
     """Return the most useful stable principal label exposed by the workspace API."""
     user_details = principal.get("userDetails") or {}
-    return str(
-        user_details.get("userPrincipalName")
-        or principal.get("displayName")
-        or principal.get("id")
-        or ""
-    ).strip()
+    identity_fields = (
+        (user_details.get("userPrincipalName"), principal.get("displayName"), principal.get("id"))
+        if normalise_principal_type(principal.get("type")) == "USER"
+        else (principal.get("displayName"), principal.get("id"))
+    )
+    return next((str(value).strip() for value in identity_fields if str(value or "").strip()), "")
 
 
 def _role_access_value(role: str) -> str:
@@ -70,7 +71,7 @@ def _workspace_observations(
                 "role_assignment_id": str(assignment.get("id") or ""),
                 "principal_id": principal_id,
                 "user_principal": _principal_name(principal) or principal_id,
-                "user_type": str(principal.get("type") or "UNKNOWN").upper(),
+                "user_type": normalise_principal_type(principal.get("type")),
                 "role_name": role,
                 "access_value": _role_access_value(role),
                 "access_state": "GRANT",
@@ -207,7 +208,8 @@ def scan_workspace_access(
     contain the configured targets. Each unique workspace is scanned once.
     Viewer is normalized to READ, while Admin, Member, and Contributor are
     normalized to READWRITE. The original workspace role is retained in
-    role_name.
+    role_name. Users use the UPN exposed by Fabric; groups and other principal
+    types remain separate records and are not expanded into members.
 
     Rows are appended to METADATA_DATA_ACCESS by default. Pass persist=False to
     inspect the result without writing metadata.

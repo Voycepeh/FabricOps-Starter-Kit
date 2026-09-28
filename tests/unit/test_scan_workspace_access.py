@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 
 
 def test_scan_workspace_access_is_exposed_from_access_scanner_package():
@@ -34,6 +35,7 @@ def test_workspace_observations_normalize_roles_and_principals():
                 "id": "group-id",
                 "type": "Group",
                 "displayName": "Data Consumers",
+                "userDetails": {"userPrincipalName": "not-a-group-upn@example.com"},
             },
         },
     ]
@@ -182,3 +184,14 @@ def test_shared_access_persistence_can_be_disabled(monkeypatch):
         context={},
         persist=False,
     )
+
+
+def test_access_scanners_do_not_introduce_microsoft_graph_dependencies():
+    """Keep access discovery on existing Fabric and SQL sources without Graph."""
+    scanner_root = Path("src/fabricops_kit/access_scanner")
+    source = "\n".join(path.read_text(encoding="utf-8").lower() for path in scanner_root.glob("*.py"))
+
+    assert "graph.microsoft.com" not in source
+    assert "groupmember.readbasic.all" not in source
+    assert "directory.read.all" not in source
+    assert "import msal" not in source

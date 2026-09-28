@@ -17,6 +17,21 @@ ACCESS_TABLE = "METADATA_DATA_ACCESS"
 FABRIC_API_ROOT = "https://api.fabric.microsoft.com/v1"
 
 
+def normalise_principal_type(principal_type: Any) -> str:
+    """Normalize known source principal types without treating other identities as users."""
+    source_type = str(principal_type or "UNKNOWN").strip().upper().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "EXTERNAL_USER": "USER",
+        "SQL_USER": "USER",
+        "WINDOWS_USER": "USER",
+        "EXTERNAL_GROUP": "GROUP",
+        "EXTERNAL_GROUPS": "GROUP",
+        "WINDOWS_GROUP": "GROUP",
+        "SERVICEPRINCIPAL": "SERVICE_PRINCIPAL",
+    }
+    return aliases.get(source_type, source_type or "UNKNOWN")
+
+
 def normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
     """Return unique, validated configured target keys in input order."""
     values = [targets] if isinstance(targets, str) else list(targets)

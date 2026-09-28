@@ -15,7 +15,8 @@ The scanner reads Fabric workspace role assignments for the workspaces that
 contain the configured targets. Each unique workspace is scanned once.
 Viewer is normalized to READ, while Admin, Member, and Contributor are
 normalized to READWRITE. The original workspace role is retained in
-role_name.
+role_name. Users use the UPN exposed by Fabric; groups and other principal
+types remain separate records and are not expanded into members.
 
 Rows are appended to METADATA_DATA_ACCESS by default. Pass persist=False to
 inspect the result without writing metadata.
@@ -25,9 +26,9 @@ inspect the result without writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_workspace_access.py:194`
+`fabricops_kit/access_scanner/scan_workspace_access.py:195`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L194-L276">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L195-L278">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
