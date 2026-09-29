@@ -92,7 +92,7 @@ That also means engineers can use **Microsoft Fabric Copilot** to help write or 
 
 ### Write
 
-A Write block publishes the prepared DataFrame through [`orchestrate_write()`](../api/reference/orchestrate_write.md). It visibly executes Data Contract → Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage → Write → Profile. Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
+A Write block publishes the prepared DataFrame through [`orchestrate_write()`](../api/reference/orchestrate_write.md). Validate and Enforce visibly execute the same Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage path. Validate then returns without publication; Enforce continues through Write → Profile. Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
 
 The target identity is resolved with [`resolve_table_id()`](../api/reference/resolve_table_id.md). The Write block is where the Data Contract becomes operational: FabricOps resolves the selected or active Data Contract and uses its governed processing definition to determine how the target is published.
 
@@ -103,8 +103,13 @@ Inside `orchestrate_write()`, FabricOps executes the invariant target lifecycle 
 - enforce Source Drift with [`check_source_drift()`](../api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
 - enforce target Data Quality on the Sensitive Data output with [`check_dq()`](../api/reference/check_dq.md)
 - verify the governed target has the required Guardrail coverage with `check_guardrail_coverage()` before publication
-- publish the prepared DataFrame with [`pipeline_write()`](../api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
-- profile the complete persisted target with a post-write [`profile_table()`](../api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
+
+After Guardrail Coverage passes, contract mode controls only publication:
+
+- **Validate** returns `published=False` and `validation_passed=True`; no target is written or profiled
+- **Enforce** publishes the prepared DataFrame with [`pipeline_write()`](../api/reference/pipeline_write.md), then profiles the complete persisted target with [`profile_table()`](../api/reference/profile_table.md)
+
+`pipeline_write()` retains responsibility for resolving the governed load strategy and physical Lakehouse or Warehouse path, adding FabricOps technical audit columns, persisting the processing definition in Catalogue, and committing successful Lineage plus Source Observation state only after the physical write succeeds.
 
 The standard Write block exposes the destination, load strategy, source participation, and transformed DataFrame—not the repeated capability call sequence. Advanced users retain direct access to every linked capability for custom composition. Optional inspection and persistence of returned support mappings or DQ failure rows remain explicit project-owned actions outside orchestration.
 

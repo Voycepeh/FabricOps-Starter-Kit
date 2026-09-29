@@ -7108,7 +7108,7 @@
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 106,
+      "source_end_line": 111,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "supports_live_contract": false,
@@ -17463,7 +17463,7 @@
           "type": "str"
         },
         {
-          "description": "``widget_select_data_contract`` result. Validate mode evaluates the frozen candidate and returns without publication.",
+          "description": "``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails.",
           "name": "contracts",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -17644,12 +17644,12 @@
         "architecture_violation"
       ],
       "signature": "def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, load_strategy: str, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 106,
+      "source_end_line": 111,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
       "transitive_function_count": 187,
-      "usage_notes": "Order matches canonical ``02_pipeline``: Data Contract gate, Schema,\nSensitive Data, Source Drift, Data Quality, Guardrail Coverage, Write, and\npersisted-target Profile. Existing metadata and Source Observation commit\nbehaviour remains owned by ``pipeline_write``. No DataFrame is displayed.",
+      "usage_notes": "Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,\nand Guardrail Coverage identically. Validate then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\n``pipeline_write``. No DataFrame is displayed.",
       "width": 9
     },
     {

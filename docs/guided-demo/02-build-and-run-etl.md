@@ -235,7 +235,7 @@ Everything below uses those settings. You normally do not need to edit the Fabri
 
 ### Run the Write block
 
-`orchestrate_write()` is the normal path. It visibly runs Data Contract → Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage → Write → Profile while `pipeline_write()` retains the physical publication and metadata commit boundary.
+`orchestrate_write()` is the normal path. Validate and Enforce visibly run the same Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage sequence. Validate then returns without publication; Enforce continues through Write → Profile while `pipeline_write()` retains the physical publication and metadata commit boundary.
 
 The selector's default Enforce mode follows this existing path. Validate mode is optional and target-scoped; when selected in Step 4, the same Write block evaluates the frozen candidate and structurally skips `pipeline_write()` for that target only.
 
@@ -249,7 +249,7 @@ write_result = orchestrate_write(
 )
 ```
 
-After this succeeds, the target has been physically written and FabricOps records the associated Catalogue, lineage, and source observation state handled by the publication flow.
+In Enforce mode, success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, and Source Observation state handled by the publication flow. In Validate mode, success returns `published=False` and `validation_passed=True`; the notebook exits without writing or profiling the target.
 
 ??? info "Write block details"
     The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.

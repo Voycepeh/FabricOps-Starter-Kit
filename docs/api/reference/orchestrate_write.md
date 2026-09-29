@@ -14,7 +14,7 @@ Run the observable standard governed target lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_write.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L106">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L111">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -72,7 +72,7 @@ def orchestrate_write(
 | `schema` | `str \| None` | Yes | Physical target schema. |
 | `table_name` | `str` | Yes | Physical target table name. |
 | `load_strategy` | `str` | Yes | Governed strategy forwarded to :func:`pipeline_write`. |
-| `contracts` | `dict[str, Any] \| None` | No | ``widget_select_data_contract`` result. Validate mode evaluates the frozen candidate and returns without publication. |
+| `contracts` | `dict[str, Any] \| None` | No | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
 | `repartition_by` | `int \| None` | No | Spark write partition count. |
 | `spark_session` | `object` | No | Spark session used by every stage. |
 | `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
@@ -91,10 +91,11 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Order matches canonical ``02_pipeline``: Data Contract gate, Schema,
-Sensitive Data, Source Drift, Data Quality, Guardrail Coverage, Write, and
-persisted-target Profile. Existing metadata and Source Observation commit
-behaviour remains owned by ``pipeline_write``. No DataFrame is displayed.
+Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,
+and Guardrail Coverage identically. Validate then returns without writing;
+Enforce continues through Write and persisted-target Profile. Existing
+metadata and Source Observation commit behaviour remains owned by
+``pipeline_write``. No DataFrame is displayed.
 
 </div>
 

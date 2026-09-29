@@ -123,20 +123,96 @@ def test_orchestration_status_aggregates_multi_source_results():
     assert _orchestration_status([{"status": "passed"}, {"status": "blocked"}]) == "blocked"
 
 
-def test_contract_validation_failure_is_reported_inside_stage(capsys):
-    """A failed candidate cannot be printed as a passed Data Contract stage."""
+def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
+    """Validate is the enforcement Guardrail path with publication omitted."""
     from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    dataframe, prepared = object(), object()
+    calls = []
+
+    def record(stage, result):
+        def call(*args, **kwargs):
+            calls.append(stage)
+            return result
+
+        return call
 
     contracts = {
         "tables": {"target-id": {"mode": "validate"}},
-        "validate": Mock(return_value={"validation_passed": False}),
+        "validate": Mock(side_effect=AssertionError("legacy validation callback called")),
     }
     with patch(
         "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
         return_value="target-id",
-    ):
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_schema",
+        record("schema", {"status": "passed"}),
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
+        record("sensitive", {"status": "passed", "dataframe": prepared}),
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
+        record("drift", {"status": "passed"}),
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_dq",
+        record("dq", {"status": "passed"}),
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_guardrail_coverage",
+        record("coverage", {"status": "passed"}),
+    ), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write, patch(
+        "fabricops_kit.pipeline.orchestrate_write.profile_table"
+    ) as profile:
+        result = orchestrate_write(
+            dataframe,
+            name="target",
+            sources=[{"table_id": "source-id"}],
+            store="Silver",
+            schema="demo",
+            table_name="target",
+            load_strategy="overwrite",
+            contracts=contracts,
+            verbose=False,
+        )
+
+    assert calls == ["schema", "sensitive", "drift", "dq", "coverage"]
+    assert result["published"] is False
+    assert result["validation_passed"] is True
+    assert [stage["stage"] for stage in result["orchestration_stages"]] == [
+        "Schema",
+        "Sensitive Data",
+        "Source Drift",
+        "Data Quality",
+        "Guardrail Coverage",
+    ]
+    contracts["validate"].assert_not_called()
+    write.assert_not_called()
+    profile.assert_not_called()
+
+
+def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys):
+    """Validate attributes the same blocking Guardrail and never publishes."""
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    cause = RuntimeError("blocking target Data Quality rule")
+    contracts = {"tables": {"target-id": {"mode": "validate"}}}
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
+        return_value="target-id",
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_schema",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
+        return_value={"status": "passed", "dataframe": object()},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_dq",
+        side_effect=cause,
+    ), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
         with pytest.raises(
-            RuntimeError, match="WRITE 'target' failed during Data Contract"
+            RuntimeError, match="WRITE 'target' failed during Data Quality"
         ) as raised:
             orchestrate_write(
                 object(),
@@ -150,7 +226,8 @@ def test_contract_validation_failure_is_reported_inside_stage(capsys):
             )
 
     output = capsys.readouterr().out
-    assert "[1/8] Data Contract ... ✗ Failed" in output
-    assert "[1/8] Data Contract ... ✓ Passed" not in output
+    assert "[4/5] Data Quality ... ✗ Failed" in output
+    assert "[4/5] Data Quality ... ✓ Passed" not in output
     assert "Later stages did not run." in output
-    assert isinstance(raised.value.__cause__, ValueError)
+    assert raised.value.__cause__ is cause
+    write.assert_not_called()

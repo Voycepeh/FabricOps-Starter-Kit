@@ -32,8 +32,8 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     load_strategy : str
         Governed strategy forwarded to :func:`pipeline_write`.
     contracts : dict, optional
-        ``widget_select_data_contract`` result. Validate mode evaluates the
-        frozen candidate and returns without publication.
+        ``widget_select_data_contract`` result used to choose Validate or
+        Enforce publication behaviour. Both modes run the same Guardrails.
     repartition_by : int, optional
         Spark write partition count.
     spark_session : object, optional
@@ -55,10 +55,11 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
 
     Notes
     -----
-    Order matches canonical ``02_pipeline``: Data Contract gate, Schema,
-    Sensitive Data, Source Drift, Data Quality, Guardrail Coverage, Write, and
-    persisted-target Profile. Existing metadata and Source Observation commit
-    behaviour remains owned by ``pipeline_write``. No DataFrame is displayed.
+    Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,
+    and Guardrail Coverage identically. Validate then returns without writing;
+    Enforce continues through Write and persisted-target Profile. Existing
+    metadata and Source Observation commit behaviour remains owned by
+    ``pipeline_write``. No DataFrame is displayed.
 
     Examples
     --------
@@ -72,7 +73,11 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     """
     source_ids = [source["table_id"] for source in sources]
     target_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
-    names = ["Data Contract", "Schema", "Sensitive Data", "Source Drift", "Data Quality", "Guardrail Coverage", "Write", "Profile"]
+    contract = (contracts or {}).get("tables", {}).get(target_id) or {}
+    contract_mode = str(contract.get("mode") or "enforce").strip().lower()
+    names = ["Schema", "Sensitive Data", "Source Drift", "Data Quality", "Guardrail Coverage"]
+    if contract_mode != "validate":
+        names.extend(["Write", "Profile"])
     stages = []
     if verbose:
         print(f"FabricOps WRITE · {name}")
@@ -80,27 +85,27 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         result, record = _run_orchestration_stage(operation="WRITE", name=name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
-    contract = (contracts or {}).get("tables", {}).get(target_id)
-    if contract and contract.get("mode") == "validate":
-        def validate_contract():
-            validation_result = (contracts or {})["validate"](
-                dataframe=dataframe,
-                table_id=target_id,
-                spark_session=spark_session,
-            )
-            if not validation_result["validation_passed"]:
-                raise ValueError(f"Data Contract validation failed for {name}.")
-            return validation_result
-
-        validation = run("Data Contract", validate_contract)
-        return {"table_id": target_id, "published": False, "validation_result": validation, "orchestration_stages": stages}
-    run("Data Contract", lambda: {"status": "skipped", "reason": "Enforce path"})
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     prepared = sensitive["dataframe"]
     drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False) for source_id in source_ids])
     dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False))
+    common_results = {
+        "table_id": target_id,
+        "schema_result": schema_result,
+        "sensitive_result": sensitive,
+        "source_drift_results": drift,
+        "dq_result": dq_result,
+        "coverage_result": coverage,
+        "orchestration_stages": stages,
+    }
+    if contract_mode == "validate":
+        return {
+            **common_results,
+            "published": False,
+            "validation_passed": True,
+        }
     write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=load_strategy, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], spark_session=spark_session))
-    return {**write_result, "published": True, "schema_result": schema_result, "sensitive_result": sensitive, "source_drift_results": drift, "dq_result": dq_result, "coverage_result": coverage, "profile_result": profile, "orchestration_stages": stages}
+    return {**common_results, **write_result, "published": True, "profile_result": profile}

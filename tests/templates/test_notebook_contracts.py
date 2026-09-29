@@ -264,7 +264,8 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
     assert "same cloneable blocks" in step_2
     assert "switches only the governed target to Validate mode" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
-    assert "Enforce does not need a second branch" in step_4
+    assert "exact same Schema, Sensitive Data, Source Drift, Data Quality" in step_4
+    assert "Validate returns `published=False` and `validation_passed=True`" in step_4
     assert "business target can be written" in step_4
 
 
