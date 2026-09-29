@@ -247,7 +247,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
 ## Featured Solutions
 
-- [Plug-and-Play, Environment-aware Data Pipelines](solutions/environment-aware-data-pipelines.md)
+- [Plug-and-Play Data Pipelines with Data Contract Enforcement](solutions/plug-and-play-data-pipelines.md)
 - [AI-assisted Data Contract Authoring](solutions/ai-assisted-data-contract-authoring.md)
 - [Generate Enforceable Data Quality Rules from Business Rules](solutions/business-rules-to-data-quality.md)
 - [Scan Effective Data Access](solutions/effective-data-access.md)
