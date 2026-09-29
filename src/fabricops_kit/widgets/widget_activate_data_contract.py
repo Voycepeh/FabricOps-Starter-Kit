@@ -70,6 +70,7 @@ def widget_activate_data_contract(
     spark_session: Any = None, context: Any = None,
 ) -> dict[str, Any]:
     """Link a Data Agreement and activate one validated frozen Data Contract.
+
     Only frozen versions are selectable. The exact selected version must have a
     successful latest Engineering validation run in METADATA_GUARDRAIL_RESULTS
     with execution_type='validate' before activation is enabled. Activation
@@ -197,6 +198,7 @@ def widget_activate_data_contract(
             )
             for row in candidates
         ]
+
     agreement_lookup: dict[str, tuple[str, str]] = {}
 
     def agreement_options() -> list[tuple[str, tuple[str, str]]]:
@@ -249,7 +251,6 @@ def widget_activate_data_contract(
             state["agreement_id"], state["agreement_version"] = agreement
         else:
             state["agreement_id"], state["agreement_version"] = None, None
-
         if validation["validated"]:
             validation_view.value = (
                 "<div style='font-size:12px;line-height:1.45;'>"
