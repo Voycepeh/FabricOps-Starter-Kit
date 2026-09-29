@@ -469,15 +469,13 @@ def test_02_pipeline_preserves_migration_surfaces():
 
     for cell_id in ("read-1", "read-2", "read-3"):
         block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        first_read = block.index("orchestrate_read(")
-        for name in ("READ_NAME", "READ_STORE", "READ_SCHEMA", "READ_TABLE", "READ_MODE", "READ_QUERY"):
-            assert block.index(f"{name} =") < first_read
+        assert "orchestrate_read(" in block
+        assert "READ_NAME =" not in block
 
     for cell_id in ("write-1", "write-2"):
         block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        first_write = block.index("orchestrate_write(")
-        for name in ("WRITE_NAME", "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
-            assert block.index(f"{name} =") < first_write
+        assert "orchestrate_write(" in block
+        assert "WRITE_NAME =" not in block
 
 
 def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
