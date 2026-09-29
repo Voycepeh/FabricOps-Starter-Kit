@@ -183,6 +183,7 @@ def widget_activate_data_contract(
         "validation": None,
         "activation_result": None,
     }
+
     def contract_options(selected_table: str) -> list[tuple[str, tuple[str, int]]]:
         candidates = [
             row for row in frozen if str(row.get("table_id") or "") == selected_table
