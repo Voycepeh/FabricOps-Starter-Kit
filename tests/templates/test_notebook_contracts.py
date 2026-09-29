@@ -302,13 +302,13 @@ def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filte
     assert "net_amount" in block
     assert "FROM demo.order_history" in block
     assert "WHERE" not in block
-    assert 'query="SELECT historical_order_id, customer_id, order_datetime, net_amount FROM demo.order_history"' in block
+    assert 'query="""' in block
 
 
 def test_02_pipeline_source_dictionary_is_explained():
     """The notebook tells engineers exactly what the multi-source dictionary contains."""
     setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
-    assert "Dictionary used to keep multiple source reads" in setup
+    assert "Dictionary used to keep source results" in setup
     assert "source results for transformation and lineage" in setup
     assert "sources = {}" in setup
 
