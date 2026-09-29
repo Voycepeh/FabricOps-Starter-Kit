@@ -43,8 +43,9 @@ Treat `02_pipeline.ipynb` as a cloneable bootstrap that users own after copying 
 Preserve these migration surfaces across routine template changes:
 
 - Keep the top-level flow ordered as Environment → Data Contract → Read → Transform → Write.
-- Keep source configuration at the top of each cloneable Read block, before the `orchestrate_read()` call.
-- Keep target configuration at the top of each cloneable Write block, before the `orchestrate_write()` call.
+- Use each `orchestrate_read()` call itself as the source configuration surface. Keep source choices explicit as call arguments rather than duplicating them into `READ_*` passthrough variables.
+- Use each `orchestrate_write()` call itself as the target configuration surface. Keep target choices explicit as call arguments rather than duplicating them into `WRITE_*` passthrough variables.
+- Treat read strategy as a per-source decision and write strategy as a per-target decision. One pipeline may mix full and incremental sources and publish targets with different supported load strategies.
 - Keep project transformation logic isolated in the dedicated `transform` cell between Read and Write. Do not bury project transformation logic inside FabricOps-owned read/write scaffolding.
 - Keep FabricOps-owned engine behaviour behind public `fabricops_kit` APIs. Do not grow private framework implementations inline in the notebook when the behaviour belongs in the package.
 - Preserve stable cell IDs for the standard migration surfaces unless a deliberate migration-contract change requires otherwise.
@@ -52,7 +53,7 @@ Preserve these migration surfaces across routine template changes:
 - Keep optional `display()` calls outside orchestration and keep the Transform cell free of orchestration calls.
 - Do not reconstruct the standard Read or Write stage sequence inline; the canonical standard template calls `orchestrate_read()` and `orchestrate_write()`.
 
-The goal is not to freeze notebook presentation or exact cell contents. Maintainers may improve explanations, examples, public API calls, and scaffold implementation. The invariant is that a user or coding assistant can migrate an existing pipeline to a newer template by identifying the same configuration surfaces and dedicated transformation cell, then reviewing the resulting pipeline before execution.
+The goal is not to freeze notebook presentation or exact cell contents. Maintainers may improve explanations, examples, public API calls, and scaffold implementation. The invariant is that a user or coding assistant can migrate an existing pipeline to a newer template by identifying the orchestrator configuration calls and dedicated transformation cell, then reviewing the resulting pipeline before execution.
 
 A change that moves or mixes these user-owned surfaces is a migration-contract change. Keep it explicit, justify it in the PR, and update the structural contract tests intentionally rather than weakening them.
 
