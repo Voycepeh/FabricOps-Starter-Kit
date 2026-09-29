@@ -82,10 +82,17 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         return result
     contract = (contracts or {}).get("tables", {}).get(target_id)
     if contract and contract.get("mode") == "validate":
-        validation = run("Data Contract", lambda: (contracts or {})["validate"](dataframe=dataframe, table_id=target_id, spark_session=spark_session))
-        if not validation["validation_passed"]:
-            cause = ValueError(f"Data Contract validation failed for {name}.")
-            raise RuntimeError(f"WRITE {name!r} failed during Data Contract.") from cause
+        def validate_contract():
+            validation_result = (contracts or {})["validate"](
+                dataframe=dataframe,
+                table_id=target_id,
+                spark_session=spark_session,
+            )
+            if not validation_result["validation_passed"]:
+                raise ValueError(f"Data Contract validation failed for {name}.")
+            return validation_result
+
+        validation = run("Data Contract", validate_contract)
         return {"table_id": target_id, "published": False, "validation_result": validation, "orchestration_stages": stages}
     run("Data Contract", lambda: {"status": "skipped", "reason": "Enforce path"})
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))

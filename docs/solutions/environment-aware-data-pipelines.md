@@ -66,13 +66,15 @@ A Read block describes one source and calls [`orchestrate_read()`](../api/refere
 
 Each Read block is designed to be **fully clonable**. Copy the whole block, change the small set of variables at the top such as the store, schema, table, or optional Warehouse query, and the same structure works for the next source.
 
-After the source is read, the Read block keeps the governed checks and profiling explicit:
+Inside `orchestrate_read()`, FabricOps executes the standard governed checks and profiling in order:
 
 - enforce Freshness with [`check_freshness()`](../api/reference/check_freshness.md)
 - enforce Schema on the returned DataFrame with [`check_schema()`](../api/reference/check_schema.md)
 - enforce Data Quality on that same DataFrame with [`check_dq()`](../api/reference/check_dq.md)
 - canonically profile the complete persisted source with [`profile_table()`](../api/reference/profile_table.md) using its `table_id`
-- if [`check_dq()`](../api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](../api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](../api/reference/write_warehouse_table.md)
+- return the DQ and Profile results alongside the source DataFrame and canonical `table_id` for optional notebook-level inspection
+
+These capability calls are intentionally not reconstructed in the standard Read block. Advanced users can call the linked lower-level functions directly when composing a genuinely custom lifecycle. Optional `display()` and persistence of caller-owned DQ failure rows remain notebook or project decisions outside the orchestrator.
 
 The routing stays hidden underneath the public functions. [`pipeline_read()`](../api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](../api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](../api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](../api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
 
@@ -94,16 +96,17 @@ A Write block publishes the prepared DataFrame through [`orchestrate_write()`](.
 
 The target identity is resolved with [`resolve_table_id()`](../api/reference/resolve_table_id.md). The Write block is where the Data Contract becomes operational: FabricOps resolves the selected or active Data Contract and uses its governed processing definition to determine how the target is published.
 
-The surrounding Write block keeps the important target decisions explicit and in sequence:
+Inside `orchestrate_write()`, FabricOps executes the invariant target lifecycle in sequence:
 
 - enforce target Schema with [`check_schema()`](../api/reference/check_schema.md)
 - enforce Sensitive Data Guardrails with [`check_sensitive_data()`](../api/reference/check_sensitive_data.md), then carry its returned DataFrame into every later step; when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
 - enforce Source Drift with [`check_source_drift()`](../api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
 - enforce target Data Quality on the Sensitive Data output with [`check_dq()`](../api/reference/check_dq.md)
-- if [`check_dq()`](../api/reference/check_dq.md) returns a caller-owned DQ failure DataFrame, optionally persist it with [`write_lakehouse_table()`](../api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](../api/reference/write_warehouse_table.md)
 - verify the governed target has the required Guardrail coverage with `check_guardrail_coverage()` before publication
 - publish the prepared DataFrame with [`pipeline_write()`](../api/reference/pipeline_write.md), which resolves the governed load strategy and the correct Lakehouse or Warehouse path, adds FabricOps technical audit columns, persists the resolved load strategy and parameters in Catalogue, and commits successful Lineage plus lightweight Source Observation state only after the physical write succeeds
-- profile the complete persisted target with an explicit post-write [`profile_table()`](../api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
+- profile the complete persisted target with a post-write [`profile_table()`](../api/reference/profile_table.md) call, because append, partition overwrite, SCD1, and SCD2 results can differ from the input batch
+
+The standard Write block exposes the destination, load strategy, source participation, and transformed DataFrame—not the repeated capability call sequence. Advanced users retain direct access to every linked capability for custom composition. Optional inspection and persistence of returned support mappings or DQ failure rows remain explicit project-owned actions outside orchestration.
 
 This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
 

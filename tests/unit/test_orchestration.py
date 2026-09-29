@@ -65,3 +65,92 @@ def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
             orchestrate_write(object(), name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", load_strategy="overwrite", verbose=False)
     assert raised.value.__cause__ is cause
     write.assert_not_called()
+
+
+def test_failed_stage_output_never_reports_passed_and_marks_later_stages_not_run(capsys):
+    """User-facing output attributes failure without a contradictory pass."""
+    from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_read.pipeline_read",
+        return_value={"dataframe": object(), "table_id": "source-id"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.check_freshness",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.check_schema",
+        side_effect=ValueError("schema mismatch"),
+    ):
+        with pytest.raises(RuntimeError):
+            orchestrate_read(
+                name="orders",
+                store="Bronze",
+                schema="demo",
+                table_name="orders",
+            )
+
+    output = capsys.readouterr().out
+    assert "[3/5] Schema ... ✗ Failed" in output
+    assert "[3/5] Schema ... ✓ Passed" not in output
+    assert "Later stages did not run." in output
+
+
+@pytest.mark.parametrize(
+    ("capability_status", "orchestration_status"),
+    [
+        ("passed", "passed"),
+        ("warning", "warning"),
+        ("blocked", "blocked"),
+        ("failed", "blocked"),
+        ("skipped", "skipped"),
+        ("unexpected-new-status", "warning"),
+    ],
+)
+def test_orchestration_status_maps_capability_semantics(
+    capability_status, orchestration_status
+):
+    """Capability PASS, WARN, BLOCK, and SKIP states are mapped deliberately."""
+    from fabricops_kit.pipeline.shared import _orchestration_status
+
+    assert _orchestration_status({"status": capability_status}) == orchestration_status
+
+
+def test_orchestration_status_aggregates_multi_source_results():
+    """A warning or block in one source cannot become a passed aggregate stage."""
+    from fabricops_kit.pipeline.shared import _orchestration_status
+
+    assert _orchestration_status([{"status": "passed"}, {"status": "warning"}]) == "warning"
+    assert _orchestration_status([{"status": "passed"}, {"status": "blocked"}]) == "blocked"
+
+
+def test_contract_validation_failure_is_reported_inside_stage(capsys):
+    """A failed candidate cannot be printed as a passed Data Contract stage."""
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    contracts = {
+        "tables": {"target-id": {"mode": "validate"}},
+        "validate": Mock(return_value={"validation_passed": False}),
+    }
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
+        return_value="target-id",
+    ):
+        with pytest.raises(
+            RuntimeError, match="WRITE 'target' failed during Data Contract"
+        ) as raised:
+            orchestrate_write(
+                object(),
+                name="target",
+                sources=[{"table_id": "source-id"}],
+                store="Silver",
+                schema="demo",
+                table_name="target",
+                load_strategy="overwrite",
+                contracts=contracts,
+            )
+
+    output = capsys.readouterr().out
+    assert "[1/8] Data Contract ... ✗ Failed" in output
+    assert "[1/8] Data Contract ... ✓ Passed" not in output
+    assert "Later stages did not run." in output
+    assert isinstance(raised.value.__cause__, ValueError)
