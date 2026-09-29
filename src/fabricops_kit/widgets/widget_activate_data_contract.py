@@ -358,7 +358,6 @@ def widget_activate_data_contract(
     agreement_select.options = [label for label, _ in agreement_choices]
     agreement_select.value = ""
     refresh_contracts()
-
     activation_actions = shared.action_row(widgets, [activate])
     activation_flow = widgets.GridBox(
         [
