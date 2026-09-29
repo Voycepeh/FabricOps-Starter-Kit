@@ -75,9 +75,20 @@ Each source is configured directly in its own `orchestrate_read()` call. There a
 
 For the full-refresh Orders source in this step:
 
+```python
+source = orchestrate_read(
+    name="orders",
+    store="Bronze",
+    schema="demo",
+    table_name="orders",
+    read_mode="full",
+    query=None,
+    spark_session=spark,
+)
+sources["orders"] = source
+```
 
-
-**You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
+The returned DataFrame is available as `source["dataframe"]` and the named source is available later as `sources["orders"]`.
 
 ??? info "Read block details"
     The full Read block follows **READ → CHECK → PROFILE → KEEP**.
