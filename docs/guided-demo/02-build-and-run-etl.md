@@ -228,50 +228,56 @@ write_result = orchestrate_write(
 In Enforce mode, success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, and Source Observation state handled by the publication flow. In Validate mode, success returns `published=False` and `validation_passed=True`; the notebook exits without writing or profiling the target.
 
 ??? info "Write block details"
-    The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.
+    The standard Write block is intentionally small. **The `orchestrate_write()` arguments are the configuration.** FabricOps owns the governed publication lifecycle behind them.
 
-    **PREPARE**
+    **What you choose**
 
-    FabricOps resolves the target `table_id`, the source lineage, the load strategy, and any optional `WRITE_REPARTITION_BY` setting.
+    - The first argument is the project-transformed PySpark DataFrame to publish.
+    - `name` gives the target a readable notebook name.
+    - `sources` identifies the governed Read results that contributed to this target so FabricOps can retain source-to-target lineage.
+    - `store`, `schema`, and `table_name` identify the logical destination. `00_env_config` resolves the physical Fabric resource for the current environment.
+    - `load_strategy` is chosen independently for each target. Use the strategy required by that target, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+    - `contracts=CONTRACTS` supplies the table-level Data Contract context selected by the notebook.
+    - `repartition_by` is optional Spark write parallelism. Leave it as `None` unless the write scale or performance requires an explicit value.
 
-    **CHECK**
-
-    FabricOps validates the target schema, applies configured sensitive data handling, checks source drift, runs Data Quality rules, and confirms Guardrail coverage. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **WRITE**
-
-    `pipeline_write()` is the physical publication boundary. This template deliberately uses `WRITE_LOAD_STRATEGY = "overwrite"` for every target.
-
-    `WRITE_REPARTITION_BY` optionally controls Spark write parallelism. Leave it as `None` for small or normal writes and increase it only when write scale or performance justifies the extra parallelism.
-
-    **PROFILE**
-
-    FabricOps profiles the complete persisted target after publication.
+    This means one pipeline can publish different targets with different strategies. The write strategy belongs to the target, just as the read strategy belongs to each source.
 
     ```python
-    write_profile = profile_table(
-        table_id=write_result["table_id"],
+    write_result = orchestrate_write(
+        transformed_df,
+        name="curated_orders",
+        sources=[sources["orders"], sources["products"]],
+        store="Silver",
+        schema="demo",
+        table_name="curated_orders",
+        load_strategy="overwrite",
+        contracts=CONTRACTS,
+        repartition_by=None,
         spark_session=spark,
     )
-
-    # display(write_profile["profile"])
-    # display(write_profile["frequency_profile"])
     ```
 
-    Because this is a full-refresh pattern, FabricOps profiles the complete persisted target after the overwrite succeeds.
+    **What FabricOps handles**
 
-    **KEEP**
+    Behind that one call, FabricOps resolves the canonical target identity and source lineage, then runs the standard governed target lifecycle: Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage. If publication is allowed, FabricOps routes the physical write to the correct Lakehouse or Warehouse implementation, records the governed metadata, and profiles the complete persisted target.
 
-    `writes[WRITE_NAME] = write_result` keeps the completed publication result available for later notebook use.
+    You do **not** reconstruct `check_schema()`, `check_sensitive_data()`, `check_source_drift()`, `check_dq()`, `check_guardrail_coverage()`, `pipeline_write()`, or `profile_table()` inside the standard `02_pipeline`. Those lower-level public functions remain available for advanced custom composition.
 
-    Optional inspection remains available when you need it:
+    **How the Data Contract changes publication**
+
+    Validate and Enforce use the same pre-publication Guardrails. The difference is what happens after they pass:
+
+    - **Validate:** returns `published=False` and `validation_passed=True`. The target is not written or profiled.
+    - **Enforce:** continues through the physical write and profiles the persisted target.
+
+    Contract mode is resolved per governed target, so targets in the same notebook can be at different Data Contract lifecycle stages.
+
+    **What comes back**
+
+    The result keeps the canonical target identity, publication or validation state, Guardrail results, profile result when applicable, and orchestration stage status together. Keep it in `writes` when later notebook logic needs the publication result.
 
     ```python
-    # display(WRITE_DATAFRAME)
-    # display(prepared_df)
-    # display(target_dq_df)
-    # display(target_dq_failed_values)
-    # display(support_mapping_df)
+    writes["curated_orders"] = write_result
     ```
 
 ??? example "Show complete Write block outputs"
