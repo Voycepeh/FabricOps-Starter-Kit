@@ -69,44 +69,13 @@ The template contains three independent Read blocks.
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
 
-### Configure the Read block
+### Configure and run each Read
 
-!!! important "This is the part you edit"
-    Each Read block is designed to be cloned. For a normal pipeline, **these are the only Read settings you need to change**:
+Each source is configured directly in its own `orchestrate_read()` call. There are no separate `READ_*` passthrough variables. Read strategy belongs to the source, so the same pipeline may mix full and incremental reads.
 
-    - `READ_NAME` → a short notebook name used to reference this source later.
-    - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
-    - `READ_SCHEMA` → the source schema.
-    - `READ_TABLE` → the source table.
-    - `READ_MODE` → keep as `"full"` in this full-refresh template.
-    - `READ_QUERY` → use `None` for a normal full table read, or a Warehouse `SELECT` to project/shape the full row set without turning the flow into an incremental read.
+For the full-refresh Orders source in this step:
 
-```python
-READ_NAME = "orders"
-READ_STORE = "Bronze"
-READ_SCHEMA = "demo"
-READ_TABLE = "orders"
-READ_MODE = "full"
-READ_QUERY = None
-```
 
-Everything below uses those settings. You normally do not need to edit the FabricOps orchestration, checks, profiling, or registration logic.
-
-### Run the Read block
-
-`orchestrate_read()` is the normal path. It exposes each Read stage and returns the Spark DataFrame together with its canonical FabricOps `table_id`. Underneath it runs Read → Freshness → Schema → Data Quality → Profile.
-
-```python
-source = orchestrate_read(
-    name=READ_NAME, store=READ_STORE, schema=READ_SCHEMA,
-    table_name=READ_TABLE, read_mode=READ_MODE, query=READ_QUERY,
-    spark_session=spark,
-)
-df = source["dataframe"]
-
-# Optional development inspection
-# display(df)
-```
 
 **You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
 
@@ -115,12 +84,12 @@ df = source["dataframe"]
 
     **READ**
 
-    `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
+    `orchestrate_read()` gets the DataFrame and canonical `table_id`. `query=None` reads the full table.
 
-    A Warehouse source may still use `READ_QUERY` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
+    A Warehouse source may still use `query` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
 
     ```python
-    READ_QUERY = """
+    query = """
     SELECT
         historical_order_id,
         customer_id,
