@@ -69,14 +69,21 @@ def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
     assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox){display:grid;" in css
     assert "grid-template-columns:150px minmax(0,560px);column-gap:12px;" in css
     assert "max-width:722px;" in css
+    assert ".fabricops-form .widget-label{text-align:left;justify-self:start;}" in css
     assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)>.widget-label{" in css
     assert "width:150px;min-width:150px;max-width:150px;" in css
+    assert ".fabricops-form .widget-label:empty{display:none;}" in css
+    assert ":has(>.widget-label:empty)" in css
 
     common = shared.widget_common(_FakeWidgets, "Example")
     assert common["style"]["description_width"] == "150px"
     assert common["layout"].kwargs["width"] == "100%"
     assert common["layout"].kwargs["min_width"] == "0"
     assert common["layout"].kwargs["max_width"] == "722px"
+
+    empty = shared.widget_common(_FakeWidgets, "   ")
+    assert empty["description"] == ""
+    assert empty["style"]["description_width"] == "0px"
 
     grid = shared.form_grid(_FakeWidgets, [_FakeWidget(), _FakeWidget()])
     assert grid.layout.kwargs["grid_template_columns"] == "repeat(auto-fit, minmax(min(100%, 280px), 1fr))"
