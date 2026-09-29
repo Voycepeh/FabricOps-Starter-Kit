@@ -94,20 +94,18 @@ Everything below uses those settings. You normally do not need to edit the Fabri
 
 ### Run the Read block
 
-`pipeline_read()` resolves whether the source is a Lakehouse or Warehouse, reads it through the appropriate FabricOps I/O function, and returns the Spark DataFrame together with its canonical FabricOps `table_id`.
+`orchestrate_read()` is the normal path. It exposes each Read stage and returns the Spark DataFrame together with its canonical FabricOps `table_id`. Underneath it runs Read → Freshness → Schema → Data Quality → Profile.
 
 ```python
-source = pipeline_read(
-    store=READ_STORE,
-    schema=READ_SCHEMA,
-    table_name=READ_TABLE,
-    read_mode=READ_MODE,
-    query=READ_QUERY,
+source = orchestrate_read(
+    name=READ_NAME, store=READ_STORE, schema=READ_SCHEMA,
+    table_name=READ_TABLE, read_mode=READ_MODE, query=READ_QUERY,
     spark_session=spark,
 )
-
 df = source["dataframe"]
-table_id = source["table_id"]
+
+# Optional development inspection
+# display(df)
 ```
 
 **You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
@@ -237,19 +235,16 @@ Everything below uses those settings. You normally do not need to edit the Fabri
 
 ### Run the Write block
 
-`pipeline_write()` resolves whether the target is a Lakehouse or Warehouse and performs the physical publication through the appropriate FabricOps I/O function.
+`orchestrate_write()` is the normal path. It visibly runs Data Contract → Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage → Write → Profile while `pipeline_write()` retains the physical publication and metadata commit boundary.
 
 The selector's default Enforce mode follows this existing path. Validate mode is optional and target-scoped; when selected in Step 4, the same Write block evaluates the frozen candidate and structurally skips `pipeline_write()` for that target only.
 
 ```python
-write_result = pipeline_write(
-    prepared_df,
-    store=WRITE_STORE,
-    schema=WRITE_SCHEMA,
-    table_name=WRITE_TABLE,
-    load_strategy=WRITE_LOAD_STRATEGY,
-    source_table_ids=[source["table_id"] for source in write_sources],
-    repartition_by=WRITE_REPARTITION_BY,
+write_result = orchestrate_write(
+    WRITE_DATAFRAME, name=WRITE_NAME,
+    sources=[sources[name] for name in WRITE_SOURCE_NAMES],
+    store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE,
+    load_strategy=WRITE_LOAD_STRATEGY, contracts=CONTRACTS,
     spark_session=spark,
 )
 ```

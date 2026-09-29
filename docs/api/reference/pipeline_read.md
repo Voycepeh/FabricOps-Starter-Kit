@@ -32,11 +32,10 @@ choose between Lakehouse and Warehouse table readers.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">02B_incremental_append_pipeline</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `02B_incremental_append_pipeline`
+**Used in notebooks:** `02B_incremental_append_pipeline`
 
 ## Usage notes
 

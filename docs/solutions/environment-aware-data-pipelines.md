@@ -10,17 +10,17 @@ Fabric notebooks work naturally against a single attached Lakehouse or Warehouse
 
 Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
 
-FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings. The engineering notebook stack provides a repeatable pattern for environment setup, pipeline execution, Data Contract validation, and Production promotion. Standard Read and Write blocks handle the common Fabric plumbing while project-specific transformation remains normal PySpark.
+FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings. The engineering notebook stack provides a repeatable pattern for environment setup, pipeline execution, Data Contract validation, and Production promotion. `orchestrate_read()` and `orchestrate_write()` own the governed runtime lifecycle while project-specific transformation remains visible, ordinary PySpark.
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    A["00_env_config<br/>logical stores"] --> B["Read"]
-    B --> C["Transform<br/>normal PySpark"]
-    C --> D["Validate contract"]
-    D --> E["Write"]
-    E --> F["Promote same notebooks<br/>across environments"]
+    ENV["00 Env Config"] --> READ["orchestrate_read()"]
+    READ --> DF["PySpark DataFrame"]
+    DF --> TRANSFORM["Your PySpark transformation"]
+    TRANSFORM --> WRITE["orchestrate_write()"]
+    WRITE --> DEST["Environment-aware destination"]
 ```
 
 ## Implementation details
@@ -62,7 +62,7 @@ flowchart LR
 
 ### Read
 
-A Read block describes one source and calls [`pipeline_read()`](../api/reference/pipeline_read.md). FabricOps then resolves the configured store from `00_env_config`, the canonical `table_id`, the physical Fabric item, and the correct lower-level reader.
+A Read block describes one source and calls [`orchestrate_read()`](../api/reference/orchestrate_read.md). The orchestrator visibly executes Read → Freshness → Schema → Data Quality → Profile; skipped Guardrails remain visibly skipped. FabricOps then resolves the configured store from `00_env_config`, the canonical `table_id`, the physical Fabric item, and the correct lower-level reader.
 
 Each Read block is designed to be **fully clonable**. Copy the whole block, change the small set of variables at the top such as the store, schema, table, or optional Warehouse query, and the same structure works for the next source.
 
@@ -90,7 +90,7 @@ That also means engineers can use **Microsoft Fabric Copilot** to help write or 
 
 ### Write
 
-A Write block publishes the prepared DataFrame through [`pipeline_write()`](../api/reference/pipeline_write.md). Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
+A Write block publishes the prepared DataFrame through [`orchestrate_write()`](../api/reference/orchestrate_write.md). It visibly executes Data Contract → Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage → Write → Profile. Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
 
 The target identity is resolved with [`resolve_table_id()`](../api/reference/resolve_table_id.md). The Write block is where the Data Contract becomes operational: FabricOps resolves the selected or active Data Contract and uses its governed processing definition to determine how the target is published.
 

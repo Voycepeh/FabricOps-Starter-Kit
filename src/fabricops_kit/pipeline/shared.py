@@ -6,11 +6,40 @@ import hashlib
 import json
 import ast
 import re
+import time
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import reduce
 from uuid import uuid4
 from typing import Any, Mapping
+
+def _orchestration_status(result: Any) -> str:
+    """Normalize a capability result into an orchestration stage status."""
+    if isinstance(result, dict) and str(result.get("status", "")).lower() in {"skip", "skipped", "not_applicable"}:
+        return "skipped"
+    return "passed"
+
+
+def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool):
+    """Run one visible stage while retaining its original exception as the cause."""
+    started = time.perf_counter()
+    if verbose:
+        print(f"[{index}/{total}] {stage} ... running")
+    try:
+        result = function()
+    except Exception as exc:
+        duration = time.perf_counter() - started
+        if verbose:
+            print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
+            print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
+        raise RuntimeError(f"{operation} {name!r} failed during {stage}.") from exc
+    duration = time.perf_counter() - started
+    status = _orchestration_status(result)
+    if verbose:
+        marker, label = ("○", "Skipped / not applicable") if status == "skipped" else ("✓", "Passed")
+        print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
+    return result, {"stage": stage, "status": status, "duration_seconds": duration}
+
 
 from fabricops_kit.config.shared import (
     get_audit_timezone,

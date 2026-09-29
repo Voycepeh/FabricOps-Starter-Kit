@@ -269,47 +269,25 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
 
 
 def test_02_pipeline_target_validate_mode_exits_before_business_write():
-    """Validate is a small pre-write gate; the normal enforce path stays flat and cloneable."""
+    """The orchestrator owns validation and the notebook exits on validation-only success."""
     for index in (1, 2):
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        tree = ast.parse(block)
-        mode_branch = next(
-            node for node in tree.body
-            if isinstance(node, ast.If)
-            and isinstance(node.test, ast.Compare)
-            and isinstance(node.test.left, ast.Subscript)
-            and isinstance(node.test.left.value, ast.Name)
-            and node.test.left.value.id == "contract"
-            and any(isinstance(value, ast.Constant) and value.value == "validate" for value in node.test.comparators)
-        )
-        validate_source = ast.unparse(ast.Module(body=mode_branch.body, type_ignores=[]))
-        assert "CONTRACTS['validate']" in validate_source
-        assert "notebookutils.notebook.exit" in validate_source
-        assert "pipeline_write" not in validate_source
-        assert mode_branch.orelse == []
-        assert 'contract = CONTRACTS["tables"][target_table_id]' in block
-        assert block.index("notebookutils.notebook.exit") < block.index("check_schema(")
-        assert block.index("check_guardrail_coverage(") < block.index("pipeline_write(")
-        assert "_validate_data_contract" not in block
+        assert "contracts=CONTRACTS" in block
+        assert 'if not write_result["published"]:' in block
+        assert "notebookutils.notebook.exit" in block
+        assert block.index("orchestrate_write(") < block.index("notebookutils.notebook.exit")
+        assert 'CONTRACTS["validate"]' not in block
 
 def test_02_pipeline_is_full_read_and_full_profile_by_design():
-    """The default pipeline reads and profiles complete governed sources."""
+    """The standard orchestrator receives full mode for complete-source profiling."""
     source = _notebook_source("02_pipeline.ipynb")
     code = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert "full refresh pipeline template" in source.lower()
     assert "full read → transform → full overwrite" in source
     assert code.count('READ_MODE = "full"') == 3
     assert code.count("read_mode=READ_MODE") == 3
-    assert "PROFILE_SCOPE" not in source
-    assert "PROCESSING_SCOPE" not in source
-    assert source.count("profile_table(") >= 5
-    assert source.count("dataframe=df") == 3
-    assert source.count("store=READ_STORE") == 6
-    assert source.count("schema=READ_SCHEMA") == 6
-    assert source.count("table_name=READ_TABLE") == 6
-    assert source.count("spark_session=spark") >= 5
-    assert "profile_table(table_id=table_id)" not in source
-
+    assert source.count("source = orchestrate_read(") == 3
+    assert "profile_table(" not in source
 
 def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filter():
     """Order History demonstrates Warehouse SQL projection while keeping a full row scope."""
@@ -335,39 +313,18 @@ def test_02_pipeline_source_dictionary_is_explained():
     assert "sources = {}" in setup
 
 
-def test_02_pipeline_read_blocks_are_cloneable_and_explicit():
-    """Every source block repeats the explicit governed full-read workflow."""
+def test_02_pipeline_read_blocks_use_standard_orchestration():
+    """Every source exposes decisions before one standard orchestrator call."""
     for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
-        for fragment in (
-            f'READ_NAME = "{read_name}"',
-            'READ_MODE = "full"',
-            "source = pipeline_read(",
-            "read_mode=READ_MODE",
-            "spark_session=spark",
-            'df = source["dataframe"]',
-            'table_id = source["table_id"]',
-            "check_freshness(",
-            "check_schema(df,",
-            "check_dq(df,",
-            'dq_df = dq_result.get("dataframe", df)',
-            'dq_failed_values = dq_result.get("failed_values")',
-            "profile_table(",
-            "dataframe=df",
-            "store=READ_STORE",
-            "schema=READ_SCHEMA",
-            "table_name=READ_TABLE",
-            "sources[READ_NAME] = source",
-            "# display(df)",
-            '# display(profile_result["profile"])',
-            '# display(profile_result["frequency_profile"])',
-            "# display(dq_df)",
-            "# display(dq_failed_values)",
-        ):
-            assert fragment in block
-        assert "report_check" not in block
-        assert "METADATA_GUARDRAIL_RESULTS" not in block
-
+        call = block.index("orchestrate_read(")
+        for name in ("READ_NAME", "READ_STORE", "READ_SCHEMA", "READ_TABLE", "READ_MODE", "READ_QUERY"):
+            assert block.index(f"{name} =") < call
+        assert f'READ_NAME = "{read_name}"' in block
+        assert 'df = source["dataframe"]' in block
+        assert "# display(df)" in block
+        for expanded in ("pipeline_read(", "check_freshness(", "check_schema(", "check_dq(", "profile_table("):
+            assert expanded not in block
 
 def test_02_pipeline_transform_is_plain_pyspark():
     """Project transformation remains ordinary readable PySpark and produces two target DataFrames."""
@@ -391,91 +348,32 @@ def test_02_pipeline_demonstrates_full_refresh_writes_and_parallel_warehouse_wri
 
 
 def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
-    """Write blocks demonstrate distinct Lakehouse and Warehouse target outputs."""
+    """Write blocks expose decisions before one standard orchestrator call."""
     setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
-    assert "Dictionary used to keep multiple write results" in setup
-    assert "Key = WRITE_NAME" in setup
-    assert "target table_id" in setup
     assert "writes = {}" in setup
-
-    expected = (
-        (1, "curated_orders_lakehouse", "transformed_df", "Silver", "curated_orders"),
-        (2, "customer_summary_warehouse", "customer_summary_df", "Gold", "customer_summary"),
-    )
-    for index, write_name, dataframe, store, table in expected:
+    for index in (1, 2):
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        for fragment in (
-            f'WRITE_NAME = "{write_name}"',
-            f"WRITE_DATAFRAME = {dataframe}",
-            f'WRITE_STORE = "{store}"',
-            f'WRITE_TABLE = "{table}"',
-            'WRITE_SOURCE_NAMES = ("orders", "products", "history")',
-            "write_sources = [sources[name] for name in WRITE_SOURCE_NAMES]",
-            "target_table_id = resolve_table_id(",
-            "check_schema(",
-            "check_sensitive_data(",
-            'support_mapping_df = sensitive_result.get("support_mapping")',
-            "check_source_drift(",
-            "check_dq(",
-            'target_dq_failed_values = target_dq_result.get("failed_values")',
-            "check_guardrail_coverage(",
-            "write_result = pipeline_write(",
-            "spark_session=spark",
-            "store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE",
-            'source_table_ids=[source["table_id"] for source in write_sources]',
-            "writes[WRITE_NAME] = write_result",
-            'write_profile = profile_table(',
-            'table_id=write_result["table_id"]',
-            "spark_session=spark",
-            'display(write_profile["profile"])',
-            'display(write_profile["frequency_profile"])',
-        ):
-            assert fragment in block
-        stages = (
-            "check_schema(",
-            "check_sensitive_data(",
-            "check_source_drift(",
-            "check_dq(",
-            "check_guardrail_coverage(",
-            "pipeline_write(",
-            "profile_table(",
-        )
-        assert [block.index(stage) for stage in stages] == sorted(block.index(stage) for stage in stages)
+        call = block.index("orchestrate_write(")
+        for name in ("WRITE_NAME", "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
+            assert block.index(f"{name} =") < call
+        assert "contracts=CONTRACTS" in block
+        assert "# display(WRITE_DATAFRAME)" in block
+        for expanded in ("resolve_table_id(", "check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(", "check_guardrail_coverage(", "pipeline_write(", "profile_table("):
+            assert expanded not in block
 
-
-def test_02_pipeline_keeps_orchestration_out_of_public_boundaries():
-    """Read, checks, coverage, profiling, and governed publication remain separate notebook calls."""
+def test_02_pipeline_keeps_standard_orchestration_at_public_boundaries():
+    """Canonical 02 calls orchestrators without reconstructing their stages."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count("source = pipeline_read(") == 3
-    assert source.count("coverage_result = check_guardrail_coverage(") == 2
-    assert source.count("write_result = pipeline_write(") == 2
-    assert "report_check" not in source
-    assert "run_all_checks" not in source
-    for hidden in ("read_lakehouse_table", "read_warehouse_table"):
-        assert hidden not in source
+    assert source.count("source = orchestrate_read(") == 3
+    assert source.count("write_result = orchestrate_write(") == 2
+    assert "source = pipeline_read(" not in source
+    assert "write_result = pipeline_write(" not in source
 
-
-def test_02_pipeline_profile_inspection_and_support_writes_are_explicit():
-    """Source profile outputs stay available as optional inspection while support persistence stays outside the template."""
+def test_02_pipeline_optional_display_stays_outside_orchestration():
+    """Optional inspection remains explicit notebook code."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count('# display(profile_result["profile"])') == 3
-    assert source.count('# display(profile_result["frequency_profile"])') == 3
-    assert "write_lakehouse_table" not in source
-    assert "write_warehouse_table" not in source
-    for optional in (
-        "# display(df)",
-        '# display(profile_result["profile"])',
-        '# display(profile_result["frequency_profile"])',
-        "# display(dq_df)",
-        "# display(dq_failed_values)",
-        "# display(transformed_df)",
-        "# display(target_dq_failed_values)",
-        "# display(support_mapping_df)",
-        'display(write_profile["profile"])',
-        'display(write_profile["frequency_profile"])',
-    ):
-        assert optional in source
-
+    assert source.count("# display(df)") == 3
+    assert source.count("# display(WRITE_DATAFRAME)") == 2
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     """Every required workflow cell contains active parseable code."""
@@ -575,13 +473,13 @@ def test_02_pipeline_preserves_migration_surfaces():
 
     for cell_id in ("read-1", "read-2", "read-3"):
         block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        first_read = block.index("pipeline_read(")
+        first_read = block.index("orchestrate_read(")
         for name in ("READ_NAME", "READ_STORE", "READ_SCHEMA", "READ_TABLE", "READ_MODE", "READ_QUERY"):
             assert block.index(f"{name} =") < first_read
 
     for cell_id in ("write-1", "write-2"):
         block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        first_write = block.index("pipeline_write(")
+        first_write = block.index("orchestrate_write(")
         for name in ("WRITE_NAME", "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
             assert block.index(f"{name} =") < first_write
 

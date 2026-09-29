@@ -39,6 +39,8 @@ from .pipeline import (
     resolve_table_id,
     profile_table,
     pipeline_write,
+    orchestrate_read,
+    orchestrate_write,
 )
 
 ACCESS_EXPORTS = (
@@ -82,6 +84,8 @@ PIPELINE_EXPORTS = (
     "pipeline_read",
     "resolve_table_id",
     "pipeline_write",
+    "orchestrate_read",
+    "orchestrate_write",
 )
 
 WIDGET_EXPORTS = (

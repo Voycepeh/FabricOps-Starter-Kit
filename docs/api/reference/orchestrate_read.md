@@ -1,4 +1,4 @@
-# `check_freshness`
+# `orchestrate_read`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,22 +7,22 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Check whether source timing satisfies direct or approved freshness intent.
+Run the observable standard governed source lifecycle.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_freshness.py:20`
+`fabricops_kit/pipeline/orchestrate_read.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L20-L207">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L77">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02B_incremental_append_pipeline</span>
+<span class="reference-chip">02_pipeline</span>
 </p>
 
-**Used in notebooks:** `02B_incremental_append_pipeline`
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -36,13 +36,17 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_freshness(
-    table_id: str,
-    enabled: bool=True,
-    raise_on_failure: bool=False,
+def orchestrate_read(
+    name: str,
+    store: str,
+    schema: str | None,
+    table_name: str,
+    read_mode: str='full',
+    query: str | None=None,
+    target_table_id: str | None=None,
     spark_session=None,
     verbose: bool=True,
-) -> dict:
+) -> dict[str, Any]:
 ```
 
 </div>
@@ -51,7 +55,8 @@ def check_freshness(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_freshness(source_result["table_id"])
+>>> source = orchestrate_read(name="orders", store="Bronze", schema="demo", table_name="orders")
+>>> orders_df = source["dataframe"]
 
 </div>
 
@@ -59,31 +64,33 @@ def check_freshness(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
-| `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
-| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking freshness result cannot continue. |
-| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps resolves the active session. |
-| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
+| `name` | `str` | Yes | Notebook-facing name used in orchestration output. |
+| `store` | `str` | Yes | Configured source store key. |
+| `schema` | `str \| None` | Yes | Physical source schema. |
+| `table_name` | `str` | Yes | Physical source table name. |
+| `read_mode` | `str` | No | Source read behaviour forwarded to :func:`pipeline_read`. |
+| `query` | `str \| None` | No | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
+| `target_table_id` | `str \| None` | No | Governed target identity required for incremental reads. |
+| `spark_session` | `object` | No | Spark session used by every stage. |
+| `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
 
 ## Returns
 
-Structured freshness evidence and continuation decision.
+Governed source DataFrame and table identity together with every stage result.
 
 ## Raises / Errors
 
-ValueError
-    If the observation or configured freshness rule is invalid.
 RuntimeError
-    If ``raise_on_failure=True`` and a blocking freshness result cannot
-    continue.
+    If a stage fails. Its name is reported and the original exception is
+    retained as ``__cause__``.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Production resolves expectations from the active Data Contract. Development
-uses an explicitly selected immutable version, or safely skips when none is
-selected.
+Stages run as Read, Freshness, Schema, Data Quality, and Profile, matching
+canonical ``02_pipeline``. Skipped capability results remain skipped.
+DataFrames are never displayed. Incremental batches are not profiled.
 
 </div>
 
@@ -105,12 +112,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.2.0 |
 
 
 </details>
