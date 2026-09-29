@@ -4,133 +4,159 @@
 
 ## The problem
 
-Fabric notebooks work naturally against a single attached Lakehouse or Warehouse. Real ETL pipelines often cross multiple stores and environments, which can leave notebooks full of workspace IDs, item IDs, ABFSS paths, SQL endpoints, and environment-specific wiring that has to be changed during promotion.
+Fabric pipelines often start simple, then accumulate environment-specific workspace IDs, item IDs, paths, SQL endpoints, repeated read/write plumbing, and governance logic. That makes the notebook harder to promote from Development to Production and harder to reuse across projects.
 
 ## The solution
 
-Clone the notebook stack, resolve environment-specific parameters through configuration, and promote the same notebooks from Development to Production.
+FabricOps provides a **clonable two-notebook engineering stack**:
 
-FabricOps separates reusable pipeline logic from environment-specific Fabric identities and settings. The engineering notebook stack provides a repeatable pattern for environment setup, pipeline execution, Data Contract validation, and Production promotion. `orchestrate_read()` and `orchestrate_write()` own the governed runtime lifecycle while project-specific transformation remains visible, ordinary PySpark.
+- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) resolves the logical Fabric stores to the physical resources for the current Development or Production environment.
+- [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) is the pipeline you promote unchanged between environments. It provides two plug-and-play governed ETL boundaries: [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md).
 
-## How it works
+Everything project-specific stays visible between those boundaries as ordinary PySpark transformation code.
+
+## The big picture
 
 ```mermaid
 flowchart LR
-    ENV["00 Env Config"] --> READ["orchestrate_read()"]
-    READ --> DF["PySpark DataFrame"]
-    DF --> TRANSFORM["Your PySpark transformation"]
+    ENV["00 Env Config<br/>resolve Dev / Prod"] --> PIPE["02 Pipeline<br/>promote the same notebook"]
+    CONTRACT["Data Contract<br/>table-level mode"] --> PIPE
+    PIPE --> READ["orchestrate_read()"]
+    READ --> TRANSFORM["Project-specific<br/>PySpark transformation"]
     TRANSFORM --> WRITE["orchestrate_write()"]
-    WRITE --> DEST["Environment-aware destination"]
+    WRITE --> TARGET["Resolved Dev / Prod<br/>destination"]
 ```
 
-## Implementation details
+The notebook structure stays the same. What changes from pipeline to pipeline are the arguments passed to each Read and Write orchestrator and the transformation code in the middle.
 
-### How Engineering runs across Fabric stores
+## Read recipes
 
-Fabric notebooks work very well when a notebook only needs its **single default attached Lakehouse or Warehouse**. You can browse that store naturally and work with its files or tables without repeatedly describing where the data lives.
+Each source has its **own** `orchestrate_read()` call. Read strategy is therefore a per-table decision, not a setting for the whole pipeline.
 
-The difficulty starts when the pipeline needs **two or more Fabric stores**, which is normal for ETL. One pipeline may read from a source Lakehouse, enrich from a Warehouse, and publish to another target store. Without another abstraction, the notebook starts accumulating workspace IDs, item IDs, ABFSS paths, SQL endpoints, or attachment-specific logic.
+A pipeline can, for example, incrementally read a high-volume Orders table while fully reading a smaller Products reference table:
 
-FabricOps uses [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) to solve that wiring problem. Each Fabric store gets a stable logical name such as `source`, `unified`, or `product`. `02_pipeline` refers to those logical names, while FabricOps resolves the physical resource for the current environment.
+```python
+orders = orchestrate_read(
+    name="orders",
+    store="Bronze",
+    schema="demo",
+    table_name="orders",
+    read_mode="incremental",
+    target_table_id=target_table_id,
+    spark_session=spark,
+)
 
-`02_pipeline` is deliberately a **full-read pipeline template**. Each governed source is read and canonically profiled as the complete persisted table on every run rather than as an incremental source batch. The target can still use its governed write strategy such as append, overwrite, partition overwrite, SCD1, or SCD2; full-read describes the source-processing model, not the target write mode.
+products = orchestrate_read(
+    name="products",
+    store="Bronze",
+    schema="demo",
+    table_name="products",
+    read_mode="full",
+    spark_session=spark,
+)
+```
 
-`02B_incremental_append_pipeline` is a focused **incremental read → append** variant of the canonical `02_pipeline`. The target is defined before its sources so `pipeline_read()` can resolve the watermark or changed partitions last committed for that exact source → target relationship. A first run bootstraps with the complete source only when the append target is new or empty; later no-new-data runs can skip publication explicitly. The variant mixes one incremental driving source with one full supporting source, applies Source Drift to both, and profiles only complete full sources or the complete persisted target. Separate `02C` and `02D` variants can own the SCD patterns instead of mixing write strategies into `02B`.
+The same governed boundary resolves the environment-aware source and runs the standard FabricOps Read lifecycle. The lower-level read, freshness, schema, data-quality, profiling, and routing capabilities remain behind the orchestrator. Advanced users can still compose those public capabilities directly when they genuinely need a custom lifecycle.
 
-That lets the notebook itself stay deliberately simple:
+## Transform in the notebook
+
+FabricOps deliberately does not hide project business logic behind a framework DSL. Once the sources return PySpark DataFrames, the middle of `02_pipeline` belongs to the project.
+
+```python
+orders_df = orders["dataframe"]
+products_df = products["dataframe"]
+
+transformed_df = (
+    orders_df
+    .join(products_df, "product_id")
+    # project-specific filters, derivations, joins, aggregations...
+)
+```
+
+This is also the natural place to use Microsoft Fabric Copilot or another coding assistant. FabricOps standardizes the governed boundaries while the transformation remains normal PySpark.
+
+## Write recipes
+
+Each target independently chooses its publication strategy through `orchestrate_write()`. The same canonical `02_pipeline` can therefore express the supported patterns without requiring a different notebook template for each one.
+
+| Recipe | Orchestrator choice | Typical intent |
+| --- | --- | --- |
+| Replace target | `load_strategy="overwrite"` | Publish the complete target state |
+| Add new rows | `load_strategy="append"` | Append a new batch |
+| Merge current state | `load_strategy="scd1"` | Update matching business keys and insert new rows |
+| Preserve history | `load_strategy="scd2"` | Maintain historical versions as records change |
+
+For example:
+
+```python
+write_result = orchestrate_write(
+    transformed_df,
+    name="curated_orders",
+    sources=[orders, products],
+    store="Silver",
+    schema="demo",
+    table_name="curated_orders",
+    load_strategy="scd1",
+    contracts=CONTRACTS,
+    spark_session=spark,
+)
+```
+
+Read and Write choices are independent. One pipeline may mix full and incremental sources, then publish multiple targets using different supported write strategies.
+
+## Data Contract enforcement is wired into the same pipeline
+
+The canonical `02_pipeline` selects Data Contract context before the ETL blocks. Contract mode is resolved **per table**, so different governed tables in the same notebook can be at different lifecycle stages.
 
 ```mermaid
 flowchart LR
-    READ["Read"] --> TRANSFORM["Transform"] --> WRITE["Write"]
+    SELECT["Select Data Contract<br/>context per table"] --> READ["orchestrate_read()"]
+    READ --> TRANSFORM["Project transformation"]
+    TRANSFORM --> WRITE["orchestrate_write()"]
+    WRITE --> MODE{"Contract mode"}
+    MODE -->|Validate| VALIDATE["Run guardrails<br/>do not publish"]
+    MODE -->|Enforce / Active| PUBLISH["Run guardrails<br/>publish and profile"]
 ```
 
-FabricOps standardizes the repeatable plumbing around the Read and Write boundaries. The transformation in the middle stays yours.
+Before an applicable Data Contract exists, the same standard notebook can bootstrap normally and contract-backed checks that do not apply are visibly skipped. Once a frozen contract is selected for validation, the same pre-publication guardrails run but the target is not published. Once the approved contract is activated for enforcement, the same notebook and orchestrators enforce it and continue through publication.
 
-The configuration layer also lets FabricOps choose the execution path that matches the underlying store. Lakehouse access naturally uses the PySpark path. Warehouse sources can use the Warehouse SQL path when source-side SQL is the better execution option. In both cases, the pipeline returns to a **PySpark DataFrame** for project transformation.
+The important point is that governance is not a second pipeline implementation. **The Data Contract is wired into the same Read → Transform → Write workflow that Engineering already promotes.**
+
+## Promotion
+
+`00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
+
+That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` resolves logical stores such as Bronze, Silver, Gold, and Metadata to the correct physical Fabric resources for that environment.
 
 ```mermaid
 flowchart LR
-    CONFIG["00_env_config<br/>logical store names"] --> PIPELINE["02_pipeline"]
-    PIPELINE --> READ["Read"]
-    READ -->|Lakehouse| SPARK["PySpark read path"]
-    READ -->|Warehouse| SQL["Warehouse SQL path<br/>when appropriate"]
-    SPARK --> DF["PySpark DataFrame"]
-    SQL --> DF
-    DF --> TRANSFORM["Transform in PySpark"]
-    TRANSFORM --> WRITE["Write"]
+    DEVENV["00 Env Config<br/>DEV"] --> PIPE["02 Pipeline"]
+    PIPE --> DEV["Development resources"]
+    PRODENV["00 Env Config<br/>PROD"] --> SAME["Same 02 Pipeline"]
+    SAME --> PROD["Production resources"]
 ```
 
-### Read
+## Why one canonical pipeline template
 
-A Read block describes one source and calls [`orchestrate_read()`](../api/reference/orchestrate_read.md). The orchestrator visibly executes Read → Freshness → Schema → Data Quality → Profile; skipped Guardrails remain visibly skipped. FabricOps then resolves the configured store from `00_env_config`, the canonical `table_id`, the physical Fabric item, and the correct lower-level reader.
+FabricOps does not need a separate notebook architecture for full refresh, incremental append, SCD1, SCD2, or combinations of them. Those are **recipes expressed through the orchestrators**.
 
-Each Read block is designed to be **fully clonable**. Copy the whole block, change the small set of variables at the top such as the store, schema, table, or optional Warehouse query, and the same structure works for the next source.
+The stable model is:
 
-Inside `orchestrate_read()`, FabricOps executes the standard governed checks and profiling in order:
+```text
+00 Env Config
+      ↓
+02 Pipeline
+  select Data Contract context
+      ↓
+  orchestrate_read(...)   ← one per source; full or incremental
+      ↓
+  project PySpark transformation
+      ↓
+  orchestrate_write(...)  ← one per target; overwrite / append / SCD1 / SCD2
+```
 
-- enforce Freshness with [`check_freshness()`](../api/reference/check_freshness.md)
-- enforce Schema on the returned DataFrame with [`check_schema()`](../api/reference/check_schema.md)
-- enforce Data Quality on that same DataFrame with [`check_dq()`](../api/reference/check_dq.md)
-- canonically profile the complete persisted source with [`profile_table()`](../api/reference/profile_table.md) using its `table_id`
-- return the DQ and Profile results alongside the source DataFrame and canonical `table_id` for optional notebook-level inspection
-
-These capability calls are intentionally not reconstructed in the standard Read block. Advanced users can call the linked lower-level functions directly when composing a genuinely custom lifecycle. Optional `display()` and persistence of caller-owned DQ failure rows remain notebook or project decisions outside the orchestrator.
-
-The routing stays hidden underneath the public functions. [`pipeline_read()`](../api/reference/pipeline_read.md) dispatches governed table reads to [`read_lakehouse_table()`](../api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](../api/reference/read_warehouse_table.md), or [`read_warehouse_query()`](../api/reference/read_warehouse_query.md) according to the resolved store and source definition. Raw Lakehouse files continue to use the foundational file readers directly.
-
-A normal governed source therefore follows one canonical path in `02_pipeline`: read the complete source, run the source Guardrails, and refresh the complete physical table Profile. A filtered, joined, or aggregated Warehouse query may still be used as derived project data, but it does not replace the canonical Profile of the complete governed source table.
-
-For a Lakehouse table, PySpark is the natural execution path. For a Warehouse, project-owned SQL can be pushed down through `query=...` so filtering, aggregation, projection, or other source-side work happens in the Warehouse before the result enters the Spark workflow. That avoids unnecessarily translating more Warehouse data into Spark than the pipeline needs.
-
-### Transform
-
-Once the Read blocks return Spark DataFrames, FabricOps gets out of the way. **Project transformations are ordinary PySpark DataFrame transformations.**
-
-Join, filter, aggregate, derive columns, reshape data, or apply whatever business logic the project requires. This keeps the transformation readable to engineers instead of hiding it inside a framework-specific DSL.
-
-That also means engineers can use **Microsoft Fabric Copilot** to help write or refine PySpark transformation code while the FabricOps Read and Write boundaries stay standardized.
-
-### Write
-
-A Write block publishes the prepared DataFrame through [`orchestrate_write()`](../api/reference/orchestrate_write.md). Validate and Enforce visibly execute the same Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage path. Validate then returns without publication; Enforce continues through Write → Profile. Like the Read block, it is designed to be **fully clonable**: copy the complete block, change the target variables at the top, and reuse the same governed publication structure for another target.
-
-The target identity is resolved with [`resolve_table_id()`](../api/reference/resolve_table_id.md). The Write block is where the Data Contract becomes operational: FabricOps resolves the selected or active Data Contract and uses its governed processing definition to determine how the target is published.
-
-Inside `orchestrate_write()`, FabricOps executes the invariant target lifecycle in sequence:
-
-- enforce target Schema with [`check_schema()`](../api/reference/check_schema.md)
-- enforce Sensitive Data Guardrails with [`check_sensitive_data()`](../api/reference/check_sensitive_data.md), then carry its returned DataFrame into every later step; when tokenization returns a caller-owned `support_mapping` DataFrame, optionally persist that mapping as project-owned support data
-- enforce Source Drift with [`check_source_drift()`](../api/reference/check_source_drift.md) once the governed source-to-target relationship is known; the source's governed processing defines allowed changes, while the target identity selects its last-successful Source Observation baseline
-- enforce target Data Quality on the Sensitive Data output with [`check_dq()`](../api/reference/check_dq.md)
-- verify the governed target has the required Guardrail coverage with `check_guardrail_coverage()` before publication
-
-After Guardrail Coverage passes, contract mode controls only publication:
-
-- **Validate** returns `published=False` and `validation_passed=True`; no target is written or profiled
-- **Enforce** publishes the prepared DataFrame with [`pipeline_write()`](../api/reference/pipeline_write.md), then profiles the complete persisted target with [`profile_table()`](../api/reference/profile_table.md)
-
-`pipeline_write()` retains responsibility for resolving the governed load strategy and physical Lakehouse or Warehouse path, adding FabricOps technical audit columns, persisting the processing definition in Catalogue, and committing successful Lineage plus Source Observation state only after the physical write succeeds.
-
-The standard Write block exposes the destination, load strategy, source participation, and transformed DataFrame—not the repeated capability call sequence. Advanced users retain direct access to every linked capability for custom composition. Optional inspection and persistence of returned support mappings or DQ failure rows remain explicit project-owned actions outside orchestration.
-
-This gives `02_pipeline` a consistent shape without turning it into a black box: **configure stores once in `00_env_config`, clone the Read and Write blocks, change the variables, and keep the project transformation in the middle as normal PySpark.**
-
-??? info "Read more: how FabricOps routes work across Lakehouse and Warehouse"
-
-    FabricOps public functions give the notebook stable interfaces while resolving the correct Lakehouse or Warehouse implementation underneath.
-
-    [`pipeline_read()`](../api/reference/pipeline_read.md) routes governed table reads to the Lakehouse table, Warehouse table, or Warehouse query implementation. Raw Lakehouse files remain explicit file reads through the foundational file readers.
-
-    [`profile_table()`](../api/reference/profile_table.md) uses Spark for a supplied DataFrame or Lakehouse table, and can use Warehouse-native SQL when profiling a physical Warehouse table.
-
-    [`pipeline_write()`](../api/reference/pipeline_write.md) resolves the governed target and routes publication through the correct Lakehouse or Warehouse path while applying the Data Contract load strategy.
-
-### Why it matters
-
-Projects can reuse the same engineering pattern instead of rebuilding environment wiring, Fabric item resolution, validation, and publication behavior for every pipeline.
-
-A future screen recording will show the same notebook pattern moving across environments without rewriting pipeline logic.
+This keeps the template easy to clone, the transformation easy to understand, promotion environment-aware, and the governed runtime behavior centralized in FabricOps rather than copied into every project notebook.
 
 ## Go deeper
 
-For the hands-on workflow, start with the [Guided Demo](../guided-demo.md).
+Follow the [Guided Demo](../guided-demo.md) to build the pipeline step by step. Use the [Function Reference](../reference/index.md) when you need the lower-level capabilities behind the orchestrators.
