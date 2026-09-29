@@ -21,11 +21,9 @@ The standard **full refresh** pipeline shape is:
 
 ```mermaid
 flowchart LR
-    ENV["00_env_config"] --> CONTRACT["Data Contract Per Table ID"]
-
-    CONTRACT --> R1["READ 1<br/>Orders Table"]
-    CONTRACT --> R2["READ 2<br/>Products Table"]
-    CONTRACT --> R3["READ 3<br/>Order History Table"]
+    ENV["00_env_config"] --> R1["READ 1<br/>Orders Table"]
+    ENV --> R2["READ 2<br/>Products Table"]
+    ENV --> R3["READ 3<br/>Order History Table"]
 
     R1 --> TRANSFORM["PySpark Transform"]
     R2 --> TRANSFORM
@@ -42,22 +40,13 @@ Run the shared environment notebook from Step 00B and import the pipeline functi
 ??? example "Show notebook setup screenshot"
     ![02 Pipeline setup](../assets/02/Setup.png)
 
-## 2. Run the Data Contract selection
+## 2. Run the pipeline without a Data Contract
 
-Run the **Data Contract** section:
+At this point in the Guided Demo, no Data Contract exists yet. **Do not run `widget_select_data_contract()` in this step.** The initial pipeline run creates the governed table identities, profiles, Catalogue entries, and lineage that Governance uses to author the first Data Contract in Step 3.
 
-```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
-```
+The orchestrators work without contract-selection context. Contract-backed Guardrails return `SKIPPED` when no applicable contract exists, while the initial pipeline can still read, transform, publish, profile, and register its governed tables.
 
-??? example "Show Data Contract selection output"
-    ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
-
-The selector defaults every discovered source and target to **Enforce**. This is the normal pipeline path, so no mode change is required for the initial Guided Demo run.
-
-This is expected. There is no enforceable Data Contract yet because Governance has not authored and activated one. In Development, contract-backed checks therefore return skipped instead of requiring you to comment them out.
-
-This means the same `02_pipeline` notebook and the same cloneable blocks work before and after Governance is introduced. Step 4 explicitly switches only the governed target to Validate mode; unrelated sources and targets keep their own Enforce behavior.
+`widget_select_data_contract()` is introduced in Step 4, after Governance has authored and frozen a contract and Engineering has something meaningful to select for validation.
 
 ## 3. Read
 
@@ -237,19 +226,17 @@ Everything below uses those settings. You normally do not need to edit the Fabri
 
 `orchestrate_write()` is the normal path. Validate and Enforce visibly run the same Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage sequence. Validate then returns without publication; Enforce continues through Write → Profile while `pipeline_write()` retains the physical publication and metadata commit boundary.
 
-The selector's default Enforce mode follows this existing path. Validate mode is optional and target-scoped; when selected in Step 4, the same Write block evaluates the frozen candidate and structurally skips `pipeline_write()` for that target only.
-
 ```python
 write_result = orchestrate_write(
     WRITE_DATAFRAME, name=WRITE_NAME,
     sources=[sources[name] for name in WRITE_SOURCE_NAMES],
     store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE,
-    load_strategy=WRITE_LOAD_STRATEGY, contracts=CONTRACTS,
+    load_strategy=WRITE_LOAD_STRATEGY,
     spark_session=spark,
 )
 ```
 
-In Enforce mode, success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, and Source Observation state handled by the publication flow. In Validate mode, success returns `published=False` and `validation_passed=True`; the notebook exits without writing or profiling the target.
+In this initial run there is no Data Contract selection context, so `orchestrate_write()` follows the normal publication path. Success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, profile, and Source Observation state needed by the later governance steps. Validate mode is introduced in Step 4 after a frozen contract exists.
 
 ??? info "Write block details"
     The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.
