@@ -40,13 +40,22 @@ Run the shared environment notebook from Step 00B and import the pipeline functi
 ??? example "Show notebook setup screenshot"
     ![02 Pipeline setup](../assets/02/Setup.png)
 
-## 2. Run the pipeline without a Data Contract
+## 2. Run the Data Contract selection
 
-At this point in the Guided Demo, no Data Contract exists yet. **Do not run `widget_select_data_contract()` in this step.** The initial pipeline run creates the governed table identities, profiles, Catalogue entries, and lineage that Governance uses to author the first Data Contract in Step 3.
+Run the standard Data Contract section from `02_pipeline`:
 
-The orchestrators work without contract-selection context. Contract-backed Guardrails return `SKIPPED` when no applicable contract exists, while the initial pipeline can still read, transform, publish, profile, and register its governed tables.
+```python
+CONTRACTS = widget_select_data_contract(spark_session=spark)
+```
 
-`widget_select_data_contract()` is introduced in Step 4, after Governance has authored and frozen a contract and Engineering has something meaningful to select for validation.
+??? example "Show Data Contract selection output"
+    ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
+
+At this point in the Guided Demo, Governance has not authored a Data Contract yet, so there is nothing to select. **That is expected and does not require changing or skipping the standard template.** The selector returns the available contract context and the same `02_pipeline` continues normally.
+
+The orchestrators then execute the standard pipeline lifecycle. Contract-backed Guardrails with no applicable contract return `SKIPPED`, while the pipeline can still read, transform, publish, profile, and register the metadata Governance needs for Step 3.
+
+After Step 3 authors and freezes a Data Contract, this same selector becomes meaningful in Step 4 when Engineering selects the frozen candidate for validation.
 
 ## 3. Read
 
@@ -99,60 +108,16 @@ df = source["dataframe"]
 
 **You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
 
-??? info "Read block details"
-    The full Read block follows **READ → CHECK → PROFILE → KEEP**.
+??? info "What `orchestrate_read()` does"
+    The variables at the top of the Read block describe the source. The standard block then passes them directly to `orchestrate_read()`.
 
-    **READ**
+    FabricOps owns the repeated runtime sequence:
 
-    `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
+    **Read → Freshness → Schema → Data Quality → Profile**
 
-    A Warehouse source may still use `READ_QUERY` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
+    The returned `source` contains the Spark DataFrame, canonical `table_id`, check results, profile result, and stage observability. Keep the transformation itself outside the orchestrator as normal PySpark.
 
-    ```python
-    READ_QUERY = """
-    SELECT
-        historical_order_id,
-        customer_id,
-        order_datetime,
-        net_amount
-    FROM demo.order_history
-    """
-    ```
-
-    This remains a full-read pattern because the query is not selecting an incremental scope by watermark, partition, or previously committed source state.
-
-    **CHECK**
-
-    FabricOps then runs the configured source Guardrails such as freshness, schema, and Data Quality checks. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **PROFILE**
-
-    `profile_table()` profiles the complete table. For a full source read, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
-
-    ```python
-    profile_result = profile_table(
-        dataframe=df,
-        store=READ_STORE,
-        schema=READ_SCHEMA,
-        table_name=READ_TABLE,
-        spark_session=spark,
-    )
-
-    # display(profile_result["profile"])
-    # display(profile_result["frequency_profile"])
-    ```
-
-    **KEEP**
-
-    `sources[READ_NAME] = source` keeps the completed source flow available for downstream Transform and Write blocks.
-
-    Optional inspection remains available when you need it:
-
-    ```python
-    # display(df)
-    # display(dq_df)
-    # display(dq_failed_values)
-    ```
+    You do not need to call `pipeline_read()`, `check_freshness()`, `check_schema()`, `check_dq()`, or `profile_table()` individually in the standard `02_pipeline` flow. Those lower-level public functions remain available for advanced custom composition and are documented in the Function Reference.
 
 ??? example "Show complete Read block output"
     ![Read block output](../assets/02/Read_Block_Output.png)
@@ -231,59 +196,23 @@ write_result = orchestrate_write(
     WRITE_DATAFRAME, name=WRITE_NAME,
     sources=[sources[name] for name in WRITE_SOURCE_NAMES],
     store=WRITE_STORE, schema=WRITE_SCHEMA, table_name=WRITE_TABLE,
-    load_strategy=WRITE_LOAD_STRATEGY,
+    load_strategy=WRITE_LOAD_STRATEGY, contracts=CONTRACTS,
     spark_session=spark,
 )
 ```
 
 In this initial run there is no Data Contract selection context, so `orchestrate_write()` follows the normal publication path. Success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, profile, and Source Observation state needed by the later governance steps. Validate mode is introduced in Step 4 after a frozen contract exists.
 
-??? info "Write block details"
-    The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.
+??? info "What `orchestrate_write()` does"
+    The variables at the top of the Write block describe the output. The standard block passes the transformed DataFrame, contributing sources, destination settings, load strategy, and current contract context directly to `orchestrate_write()`.
 
-    **PREPARE**
+    FabricOps owns the repeated governed sequence:
 
-    FabricOps resolves the target `table_id`, the source lineage, the load strategy, and any optional `WRITE_REPARTITION_BY` setting.
+    **Schema → Sensitive Data → Source Drift → Data Quality → Guardrail Coverage → Write → Profile**
 
-    **CHECK**
+    Contract-backed stages with no applicable contract are visibly `SKIPPED`. When a frozen contract is later selected in Validate mode, the same pre-publication Guardrails run but publication stops before Write. In Enforce mode, the orchestrator continues through Write and Profile.
 
-    FabricOps validates the target schema, applies configured sensitive data handling, checks source drift, runs Data Quality rules, and confirms Guardrail coverage. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **WRITE**
-
-    `pipeline_write()` is the physical publication boundary. This template deliberately uses `WRITE_LOAD_STRATEGY = "overwrite"` for every target.
-
-    `WRITE_REPARTITION_BY` optionally controls Spark write parallelism. Leave it as `None` for small or normal writes and increase it only when write scale or performance justifies the extra parallelism.
-
-    **PROFILE**
-
-    FabricOps profiles the complete persisted target after publication.
-
-    ```python
-    write_profile = profile_table(
-        table_id=write_result["table_id"],
-        spark_session=spark,
-    )
-
-    # display(write_profile["profile"])
-    # display(write_profile["frequency_profile"])
-    ```
-
-    Because this is a full-refresh pattern, FabricOps profiles the complete persisted target after the overwrite succeeds.
-
-    **KEEP**
-
-    `writes[WRITE_NAME] = write_result` keeps the completed publication result available for later notebook use.
-
-    Optional inspection remains available when you need it:
-
-    ```python
-    # display(WRITE_DATAFRAME)
-    # display(prepared_df)
-    # display(target_dq_df)
-    # display(target_dq_failed_values)
-    # display(support_mapping_df)
-    ```
+    You do not need to call the individual Guardrail functions, `pipeline_write()`, or `profile_table()` yourself in the standard `02_pipeline` flow. Those lower-level public functions remain available for advanced custom composition and are documented in the Function Reference.
 
 ??? example "Show complete Write block outputs"
     ![Write 1 block output](../assets/02/Write_Block_Output.png)
