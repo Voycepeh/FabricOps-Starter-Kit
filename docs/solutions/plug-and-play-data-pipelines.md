@@ -4,7 +4,11 @@
 
 ## The problem
 
-Fabric pipelines often start simple, then accumulate environment-specific workspace IDs, item IDs, paths, SQL endpoints, repeated read/write plumbing, and governance logic. That makes the notebook harder to promote from Development to Production and harder to reuse across projects.
+Building a governed data pipeline involves much more than reading a table, transforming a DataFrame, and writing the result. Engineers also need to handle environment resolution, incremental processing, load strategies, metadata, profiling, Data Contracts, Guardrails, validation, lineage, and the differences between Fabric Lakehouses and Warehouses.
+
+A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
+
+FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
 
 ## The solution
 
