@@ -91,58 +91,54 @@ sources["orders"] = source
 The returned DataFrame is available as `source["dataframe"]` and the named source is available later as `sources["orders"]`.
 
 ??? info "Read block details"
-    The full Read block follows **READ → CHECK → PROFILE → KEEP**.
+    The standard Read block is intentionally small. **The `orchestrate_read()` arguments are the configuration.** FabricOps owns the governed execution behind them.
 
-    **READ**
+    **What you choose**
 
-    `orchestrate_read()` gets the DataFrame and canonical `table_id`. `query=None` reads the full table.
+    - `name` gives the source a readable notebook name.
+    - `store`, `schema`, and `table_name` identify the logical source. `00_env_config` resolves the physical Fabric resource for the current environment.
+    - `read_mode` is chosen independently for each source. Use `"full"` when the pipeline needs the complete source, or `"incremental"` when that source should read only the new scope supported by the governed source-to-target state.
+    - `query` optionally pushes source-side SQL to a Warehouse. `query=None` uses the normal table read.
+    - `target_table_id` is supplied when an incremental read needs the governed target context used to resolve its committed incremental state.
 
-    A Warehouse source may still use `query` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
-
-    ```python
-    query = """
-    SELECT
-        historical_order_id,
-        customer_id,
-        order_datetime,
-        net_amount
-    FROM demo.order_history
-    """
-    ```
-
-    This remains a full-read pattern because the query is not selecting an incremental scope by watermark, partition, or previously committed source state.
-
-    **CHECK**
-
-    FabricOps then runs the configured source Guardrails such as freshness, schema, and Data Quality checks. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **PROFILE**
-
-    `profile_table()` profiles the complete table. For a full source read, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+    This means one pipeline can mix source strategies. For example, Orders can be incremental while Products remains a full reference read.
 
     ```python
-    profile_result = profile_table(
-        dataframe=df,
-        store=READ_STORE,
-        schema=READ_SCHEMA,
-        table_name=READ_TABLE,
+    orders = orchestrate_read(
+        name="orders",
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        read_mode="incremental",
+        target_table_id=target_table_id,
         spark_session=spark,
     )
 
-    # display(profile_result["profile"])
-    # display(profile_result["frequency_profile"])
+    products = orchestrate_read(
+        name="products",
+        store="Bronze",
+        schema="demo",
+        table_name="products",
+        read_mode="full",
+        spark_session=spark,
+    )
     ```
 
-    **KEEP**
+    **What FabricOps handles**
 
-    `sources[READ_NAME] = source` keeps the completed source flow available for downstream Transform and Write blocks.
+    Behind that one call, FabricOps resolves the source and canonical `table_id`, chooses the Lakehouse or Warehouse read path, applies the standard source Guardrails such as Freshness, Schema, and Data Quality, and profiles the source when the read mode provides the complete persisted table. Stages that do not apply are reported as skipped rather than requiring notebook plumbing.
 
-    Optional inspection remains available when you need it:
+    You do **not** reconstruct `pipeline_read()`, `check_freshness()`, `check_schema()`, `check_dq()`, or `profile_table()` inside the standard `02_pipeline`. Those lower-level public functions remain available for advanced custom composition.
+
+    **What comes back**
+
+    The result keeps the Spark DataFrame, canonical source identity, Guardrail results, profile result when applicable, and orchestration stage status together. Keep the result in `sources` so the transformation can access its DataFrame and the Write block can retain source lineage.
 
     ```python
-    # display(df)
-    # display(dq_df)
-    # display(dq_failed_values)
+    sources["orders"] = source
+
+    # Optional development inspection
+    # display(source["dataframe"])
     ```
 
 ??? example "Show complete Read block output"
