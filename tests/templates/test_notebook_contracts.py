@@ -285,16 +285,16 @@ def test_02_pipeline_is_full_read_and_full_profile_by_design():
     code = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert "full refresh pipeline template" in source.lower()
     assert "full read → transform → full overwrite" in source
-    assert code.count('READ_MODE = "full"') == 3
-    assert code.count("read_mode=READ_MODE") == 3
+    assert code.count('read_mode="full"') == 3
+    assert "READ_MODE =" not in code
     assert source.count("source = orchestrate_read(") == 3
     assert "profile_table(" not in source
 
 def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filter():
     """Order History demonstrates Warehouse SQL projection while keeping a full row scope."""
     block = _cell_by_id("02_pipeline.ipynb", "read-3").source
-    assert 'READ_STORE = "Gold"' in block
-    assert 'READ_TABLE = "order_history"' in block
+    assert 'store="Gold"' in block
+    assert 'table_name="order_history"' in block
     assert "SELECT" in block
     assert "historical_order_id" in block
     assert "customer_id" in block
@@ -302,15 +302,14 @@ def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filte
     assert "net_amount" in block
     assert "FROM demo.order_history" in block
     assert "WHERE" not in block
-    assert "query=READ_QUERY" in block
+    assert 'query="SELECT historical_order_id, customer_id, order_datetime, net_amount FROM demo.order_history"' in block
 
 
 def test_02_pipeline_source_dictionary_is_explained():
     """The notebook tells engineers exactly what the multi-source dictionary contains."""
     setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
     assert "Dictionary used to keep multiple source reads" in setup
-    assert "Key = READ_NAME" in setup
-    assert "source DataFrame and table_id" in setup
+    assert "source results for transformation and lineage" in setup
     assert "sources = {}" in setup
 
 
@@ -342,10 +341,10 @@ def test_02_pipeline_demonstrates_full_refresh_writes_and_parallel_warehouse_wri
     write_1 = _cell_by_id("02_pipeline.ipynb", "write-1").source
     write_2 = _cell_by_id("02_pipeline.ipynb", "write-2").source
 
-    assert 'WRITE_LOAD_STRATEGY = "overwrite"' in write_1
-    assert "WRITE_REPARTITION_BY = None" in write_1
-    assert 'WRITE_LOAD_STRATEGY = "overwrite"' in write_2
-    assert "WRITE_REPARTITION_BY = 4" in write_2
+    assert 'load_strategy="overwrite"' in write_1
+    assert "repartition_by=None" in write_1
+    assert 'load_strategy="overwrite"' in write_2
+    assert "repartition_by=4" in write_2
 
 
 def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
@@ -373,8 +372,7 @@ def test_02_pipeline_keeps_standard_orchestration_at_public_boundaries():
 def test_02_pipeline_optional_display_stays_outside_orchestration():
     """Optional inspection remains explicit notebook code."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count("# display(df)") == 3
-    assert source.count("# display(WRITE_DATAFRAME)") == 2
+    assert source.count('# display(source["dataframe"])') == 3
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     """Every required workflow cell contains active parseable code."""
