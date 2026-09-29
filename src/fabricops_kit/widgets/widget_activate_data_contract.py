@@ -80,7 +80,6 @@ def widget_activate_data_contract(
     """
     from IPython import display as ip
     import ipywidgets as widgets
-
     config, env, runtime_context = resolve_fabric_context(context=context)
     spark = get_spark_session(spark_session)
     quiet_context = {
@@ -89,7 +88,6 @@ def widget_activate_data_contract(
         "env": env,
         "_fabricops_suppress_io_log": True,
     }
-
     governance = contracts.list_contract_governance_state(
         config=config, env=env, spark_session=spark
     )
@@ -115,7 +113,6 @@ def widget_activate_data_contract(
         spark_session=spark,
         context=quiet_context,
     ))
-
     table_labels = {
         str(row.get("table_id") or ""): (
             f"{row.get('layer') or ''} · {row.get('schema_name') or ''}.{row.get('table_name') or ''}"
@@ -125,7 +122,6 @@ def widget_activate_data_contract(
     initial_table = str(table_id or "")
     if initial_table not in table_labels:
         initial_table = next(iter(table_labels), "")
-
     field_layout = widgets.Layout(width="100%", min_width="0", max_width="100%")
     field_style = {"description_width": "96px"}
     table_select = widgets.Dropdown(
@@ -140,8 +136,10 @@ def widget_activate_data_contract(
         style=field_style,
         layout=field_layout,
     )
-    agreement_select = widgets.Dropdown(
+    agreement_select = widgets.Combobox(
         description="Agreement",
+        placeholder="Search Data Agreements...",
+        ensure_option=True,
         style=field_style,
         layout=field_layout,
     )
@@ -176,7 +174,6 @@ def widget_activate_data_contract(
             gap="10px",
         ),
     )
-
     state: dict[str, Any] = {
         "environment_name": env,
         "table_id": initial_table or None,
@@ -202,6 +199,8 @@ def widget_activate_data_contract(
             for row in candidates
         ]
 
+    agreement_lookup: dict[str, tuple[str, str]] = {}
+
     def agreement_options() -> list[tuple[str, tuple[str, str]]]:
         ordered = sorted(
             agreements,
@@ -220,7 +219,7 @@ def widget_activate_data_contract(
 
     def refresh_review(*_: Any) -> None:
         selected = contract_select.value
-        agreement = agreement_select.value
+        agreement = agreement_lookup.get(str(agreement_select.value or ""))
         if not selected:
             state.update(contract_id=None, contract_version=None, validation=None)
             validation_view.value = (
@@ -252,7 +251,6 @@ def widget_activate_data_contract(
             state["agreement_id"], state["agreement_version"] = agreement
         else:
             state["agreement_id"], state["agreement_version"] = None, None
-
         if validation["validated"]:
             validation_view.value = (
                 "<div style='font-size:12px;line-height:1.45;'>"
@@ -299,10 +297,11 @@ def widget_activate_data_contract(
         refresh_review()
 
     def on_activate(_: Any) -> None:
-        if activate.disabled or not contract_select.value or not agreement_select.value:
+        agreement = agreement_lookup.get(str(agreement_select.value or ""))
+        if activate.disabled or not contract_select.value or not agreement:
             return
         _, version = contract_select.value
-        agreement_id_value, agreement_version_value = agreement_select.value
+        agreement_id_value, agreement_version_value = agreement
         confirmation_text.value = (
             "<div style='font-size:13px;line-height:1.5;'>"
             "<b>Activate Data Contract?</b><br>"
@@ -317,11 +316,12 @@ def widget_activate_data_contract(
         confirmation_prompt.layout.display = "none"
 
     def perform_activation(_: Any) -> None:
-        if activate.disabled or not contract_select.value or not agreement_select.value:
+        agreement = agreement_lookup.get(str(agreement_select.value or ""))
+        if activate.disabled or not contract_select.value or not agreement:
             confirmation_prompt.layout.display = "none"
             return
         contract_id_value, version = contract_select.value
-        agreement_id_value, agreement_version_value = agreement_select.value
+        agreement_id_value, agreement_version_value = agreement
         try:
             result = contracts.activate_contract_version(
                 config=config,
@@ -354,10 +354,11 @@ def widget_activate_data_contract(
     activate.on_click(on_activate)
     cancel_confirmation.on_click(cancel_activation)
     confirm_activation.on_click(perform_activation)
-    agreement_select.options = agreement_options()
-    agreement_select.value = None
+    agreement_choices = agreement_options()
+    agreement_lookup.update(agreement_choices)
+    agreement_select.options = [label for label, _ in agreement_choices]
+    agreement_select.value = ""
     refresh_contracts()
-
     activation_actions = shared.action_row(widgets, [activate])
     activation_flow = widgets.GridBox(
         [
