@@ -317,12 +317,10 @@ def test_02_pipeline_read_blocks_use_standard_orchestration():
     """Every source exposes decisions before one standard orchestrator call."""
     for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
         block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
-        call = block.index("orchestrate_read(")
-        for name in ("READ_NAME", "READ_STORE", "READ_SCHEMA", "READ_TABLE", "READ_MODE", "READ_QUERY"):
-            assert block.index(f"{name} =") < call
-        assert f'READ_NAME = "{read_name}"' in block
-        assert 'df = source["dataframe"]' in block
-        assert "# display(df)" in block
+        assert f'name="{read_name}"' in block
+        assert "READ_NAME =" not in block
+        assert "READ_STORE =" not in block
+        assert '# display(source["dataframe"])' in block
         for expanded in ("pipeline_read(", "check_freshness(", "check_schema(", "check_dq(", "profile_table("):
             assert expanded not in block
 
@@ -353,11 +351,10 @@ def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
     assert "writes = {}" in setup
     for index in (1, 2):
         block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        call = block.index("orchestrate_write(")
-        for name in ("WRITE_NAME", "WRITE_STORE", "WRITE_SCHEMA", "WRITE_TABLE", "WRITE_LOAD_STRATEGY"):
-            assert block.index(f"{name} =") < call
+        assert "orchestrate_write(" in block
         assert "contracts=CONTRACTS" in block
-        assert "# display(WRITE_DATAFRAME)" in block
+        assert "WRITE_NAME =" not in block
+        assert "WRITE_STORE =" not in block
         for expanded in ("resolve_table_id(", "check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(", "check_guardrail_coverage(", "pipeline_write(", "profile_table("):
             assert expanded not in block
 
