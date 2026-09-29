@@ -22,4 +22,9 @@ __all__ = [
     "resolve_table_id",
     "pipeline_write",
     "profile_table",
+    "orchestrate_read",
+    "orchestrate_write",
 ]
+
+from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+from fabricops_kit.pipeline.orchestrate_write import orchestrate_write

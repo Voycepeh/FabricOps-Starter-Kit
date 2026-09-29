@@ -49,7 +49,7 @@ FOUNDATIONAL_IO_FUNCTION_NAMES = frozenset({
     "write_lakehouse_table",
     "write_warehouse_table",
 })
-PIPELINE_ORCHESTRATION_FUNCTION_NAMES = frozenset({"pipeline_read", "pipeline_write"})
+PIPELINE_ORCHESTRATION_FUNCTION_NAMES = frozenset({"orchestrate_read", "orchestrate_write"})
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -474,10 +474,10 @@ def architecture_classification(info: FunctionInfo, public_qns: set[str]) -> str
     if info.qualified_name not in public_qns:
         return "internal"
     if info.function_name in FOUNDATIONAL_IO_FUNCTION_NAMES:
-        return "foundation_io"
+        return "foundational_io"
     if info.function_name in PIPELINE_ORCHESTRATION_FUNCTION_NAMES:
-        return "pipeline_orchestration"
-    return "domain_public_api"
+        return "standard_orchestration"
+    return "capability"
 
 
 def classify_architecture_violation(

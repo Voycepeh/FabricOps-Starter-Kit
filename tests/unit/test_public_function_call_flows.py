@@ -466,7 +466,7 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
     assert {
         public_by_name[name]["architecture_classification"]
         for name in flows.FOUNDATIONAL_IO_FUNCTION_NAMES
-    } == {"foundation_io"}
+    } == {"foundational_io"}
     json_reader = public_by_name["read_lakehouse_json"]
     assert json_reader["lifecycle_status"] == "live"
     assert json_reader["live_since"] == "0.2.0"
@@ -497,13 +497,26 @@ def test_repository_type_zero_edges_never_contribute_architecture_violations() -
     assert catalogue_read["function_type"] == "public_dependency"
 
 
-def test_pipeline_read_has_explicit_orchestration_classification() -> None:
-    """Classify only the explicit orchestration API in the orchestration layer."""
+def test_pipeline_read_is_a_capability_below_standard_orchestration() -> None:
+    """Classify the governed read primitive as a reusable capability."""
     pipeline_read = info("pipeline_read", "src/fabricops_kit/pipeline/pipeline_read.py")
 
     assert flows.architecture_classification(
         pipeline_read, {pipeline_read.qualified_name}
-    ) == "pipeline_orchestration"
+    ) == "capability"
+
+
+def test_standard_orchestrators_are_the_orchestration_roots() -> None:
+    """Reserve the standard orchestration layer for the two high-level roots."""
+    orchestrators = (
+        info("orchestrate_read", "src/fabricops_kit/pipeline/orchestrate_read.py"),
+        info("orchestrate_write", "src/fabricops_kit/pipeline/orchestrate_write.py"),
+    )
+
+    for orchestrator in orchestrators:
+        assert flows.architecture_classification(
+            orchestrator, {orchestrator.qualified_name}
+        ) == "standard_orchestration"
 
 
 def test_pipeline_read_flow_stops_at_foundational_io_boundaries() -> None:
@@ -518,7 +531,7 @@ def test_pipeline_read_flow_stops_at_foundational_io_boundaries() -> None:
     foundational_qns = {
         row["qualified_name"]
         for row in flow
-        if row["architecture_classification"] == "foundation_io"
+        if row["architecture_classification"] == "foundational_io"
     }
 
     assert {row["function_name"] for row in flow if row["qualified_name"] in foundational_qns} == {
@@ -531,7 +544,7 @@ def test_pipeline_package_location_does_not_imply_orchestration() -> None:
     """Keep domain capabilities in the domain layer regardless of package location."""
     check_schema = info("check_schema", "src/fabricops_kit/pipeline/check_schema.py")
 
-    assert flows.architecture_classification(check_schema, {check_schema.qualified_name}) == "domain_public_api"
+    assert flows.architecture_classification(check_schema, {check_schema.qualified_name}) == "capability"
 
 
 def test_nested_foundational_io_is_a_visible_terminal_but_its_root_expands(tmp_path: Path) -> None:

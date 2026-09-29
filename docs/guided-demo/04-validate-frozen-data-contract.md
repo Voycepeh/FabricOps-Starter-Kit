@@ -27,29 +27,27 @@ Run the same visible **Read → Transform → Write-block** sequence.
 - The Read blocks continue enforcing their own current contract state.
 - Transform remains ordinary PySpark.
 - The selected target Write block reads `CONTRACTS["tables"][target_table_id]`.
-- Validate mode evaluates the transformed target against the exact frozen candidate and records aggregate evidence.
-- Validate is a small pre-write exit gate: it evaluates the exact frozen candidate, records the evidence, and exits the notebook before the existing Enforce checks and `pipeline_write()` path.
-- Enforce does not need a second branch. Its existing checks remain flat and stop naturally at the first blocking failure; only a successful Enforce run reaches `pipeline_write()`.
+- Validate mode runs the transformed target through the exact same Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage functions as Enforce.
+- The modes differ only after every applicable Guardrail passes: Validate returns `published=False` and `validation_passed=True`, while Enforce reaches `pipeline_write()` and profiles the persisted target.
+- A blocking Guardrail fails at the same stage with the same evidence and exception behaviour in either mode.
 
 | Step 2 default | Step 4 selected target |
 | --- | --- |
 | Enforce mode | Validate mode |
-| Existing checks stop on the first blocking failure, then publish | Exact frozen candidate evaluation, then notebook exit |
+| Existing checks stop on the first blocking failure, then publish | The same checks stop on the first blocking failure, then a successful dry run exits |
 | No contract-backed rule before authoring | Applicable Schema, DQ, and Sensitive Data rules evaluate |
 | Target write is allowed only after checks pass | `pipeline_write()` is never reached |
 
 ## Review the validation result
 
-The target validation result identifies the exact table, contract version, environment, and run. Review:
+The target orchestration result identifies the table and exposes every standard Guardrail result. Review:
 
-- `validation_passed`,
-- passed, warning, and blocked counts,
-- `not_applicable` outcomes for Guardrails that require enforcement pipeline context,
-- caller-visible DQ failure details when present.
+- `published=False`,
+- `validation_passed=True`,
+- the Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage results,
+- skipped, warning, and blocking outcomes plus caller-visible DQ failure details where present.
 
-Sensitive Data is evaluated against the exact frozen candidate using the same treatment core as Enforce; any token support mapping remains caller-owned and is not persisted automatically. Freshness and Source Drift require enforcement observation context, so validation keeps those outcomes visible as `not_applicable` rather than falsely recording them as PASS.
-
-Only aggregate evidence is appended to `METADATA_GUARDRAIL_RESULTS` with `execution_type = validate`.
+Because Validate uses the enforcement functions rather than a separate callback, existing Guardrail evidence persistence remains unchanged. Any Sensitive Data token support mapping remains caller-owned and is not persisted automatically. No target Profile is created because Validate does not publish a new target state.
 
 ## Iterate if needed
 

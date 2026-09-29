@@ -6,11 +6,70 @@ import hashlib
 import json
 import ast
 import re
+import time
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import reduce
 from uuid import uuid4
 from typing import Any, Mapping
+
+def _orchestration_status(result: Any) -> str:
+    """Normalize a capability result into an orchestration stage status."""
+    if isinstance(result, (list, tuple)):
+        statuses = [_orchestration_status(item) for item in result]
+        if "blocked" in statuses:
+            return "blocked"
+        if "warning" in statuses:
+            return "warning"
+        if statuses and all(status == "skipped" for status in statuses):
+            return "skipped"
+        return "passed"
+    if isinstance(result, dict):
+        status = str(result.get("status", "")).strip().lower().replace("-", "_").replace(" ", "_")
+        if result.get("can_continue") is False:
+            return "blocked"
+        if status in {"skip", "skipped", "not_applicable"}:
+            return "skipped"
+        if status in {"warn", "warning"}:
+            return "warning"
+        if status in {"block", "blocked", "fail", "failed", "failure", "error"}:
+            return "blocked"
+        if status in {"pass", "passed", "success", "succeeded"}:
+            return "passed"
+        if status:
+            return "warning"
+    return "passed"
+
+
+def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool):
+    """Run one visible stage while retaining its original exception as the cause."""
+    started = time.perf_counter()
+    if verbose:
+        print(f"[{index}/{total}] {stage} ... running")
+    try:
+        result = function()
+        status = _orchestration_status(result)
+        if status == "blocked":
+            reason = result.get("reason") if isinstance(result, dict) else None
+            detail = f" Reason: {reason}" if reason else ""
+            raise RuntimeError(f"Stage returned blocking status.{detail}")
+    except Exception as exc:
+        duration = time.perf_counter() - started
+        if verbose:
+            print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
+            print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
+        raise RuntimeError(f"{operation} {name!r} failed during {stage}.") from exc
+    duration = time.perf_counter() - started
+    if verbose:
+        outcomes = {
+            "skipped": ("○", "Skipped / not applicable"),
+            "warning": ("⚠", "Warning"),
+            "passed": ("✓", "Passed"),
+        }
+        marker, label = outcomes[status]
+        print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
+    return result, {"stage": stage, "status": status, "duration_seconds": duration}
+
 
 from fabricops_kit.config.shared import (
     get_audit_timezone,

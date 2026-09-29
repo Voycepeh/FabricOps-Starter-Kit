@@ -632,7 +632,9 @@ def test_public_callable_description_renders_before_source_and_usage() -> None:
     title_index = text.index("# `profile_table`")
     description_index = text.index("Profile a Spark DataFrame or complete governed table")
     source_index = text.index('<div class="reference-source-card" markdown="1">')
-    usage_index = text.index("**Used in notebooks:** `02_pipeline`")
+    usage_index = text.index(
+        "**Used in notebooks:** `99_explore`, `02B_incremental_append_pipeline`"
+    )
 
     assert title_index < description_index < source_index < usage_index
 
