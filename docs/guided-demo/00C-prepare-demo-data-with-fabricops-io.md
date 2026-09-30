@@ -109,11 +109,11 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
     For guidance on when to use SQL pushdown versus landing Warehouse data into a Lakehouse for repeated PySpark engineering, see [Lakehouse-first engineering](../reference/engineering-cheat-sheet.md#lakehouse-first).
 
 
-??? info "What the notebook intentionally does not load"
+??? info "Later scenarios reuse the canonical Orders baseline"
 
-    `orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
+    Later incremental and load-strategy scenarios create their source changes directly in the walkthrough. `modified_datetime` is the watermark column, and a partition date can be derived from `order_datetime` when needed.
 
-    Later incremental and load-strategy scenarios reuse this canonical Orders source and create their source changes directly in the walkthrough. `modified_datetime` is the watermark column, and a partition date can be derived from `order_datetime` when needed.
+    Guardrail validation creates a temporary dirty transformed DataFrame in the notebook session, so the canonical source files and seeded tables remain unchanged.
 
 ## Expected result
 
