@@ -51,7 +51,7 @@ nav:
   - Reference Documentation:
       - Glossary: glossary.md
       - Function Reference: reference/index.md
-      - Read & Load Strategies: reference/read-and-load-strategies.md
+      - Read & Write Modes: reference/read-and-load-strategies.md
       - Data Quality Rules:
           - Overview: reference/dq-rules/index.md
           - Completeness: reference/dq-rules/completeness.md
