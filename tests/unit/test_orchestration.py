@@ -49,7 +49,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write():
         patch("fabricops_kit.pipeline.orchestrate_write.profile_table", effect("profile", {"profile":object()})),
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6] as write, patches[7]:
-        actual = orchestrate_write(dataframe, name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", load_strategy="overwrite", verbose=False)
+        actual = orchestrate_write(dataframe, name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", write_mode="overwrite", verbose=False)
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
@@ -62,7 +62,7 @@ def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
     cause = RuntimeError("blocking DQ rule: completeness 96.7%")
     with patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"), patch("fabricops_kit.pipeline.orchestrate_write.check_schema", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", return_value={"status":"passed", "dataframe":object()}), patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_dq", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
         with pytest.raises(RuntimeError, match="WRITE 'target' failed during Data Quality") as raised:
-            orchestrate_write(object(), name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", load_strategy="overwrite", verbose=False)
+            orchestrate_write(object(), name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", write_mode="overwrite", verbose=False)
     assert raised.value.__cause__ is cause
     write.assert_not_called()
 
@@ -169,7 +169,7 @@ def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
             store="Silver",
             schema="demo",
             table_name="target",
-            load_strategy="overwrite",
+            write_mode="overwrite",
             contracts=contracts,
             verbose=False,
         )
@@ -221,7 +221,7 @@ def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys
                 store="Silver",
                 schema="demo",
                 table_name="target",
-                load_strategy="overwrite",
+                write_mode="overwrite",
                 contracts=contracts,
             )
 
