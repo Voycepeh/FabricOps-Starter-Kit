@@ -1,6 +1,6 @@
-# Step 3. Author and freeze the Data Contract
+# Step 3. Author and freeze the Data Contracts
 
-**Return to `01_governance`, author a complete contract for `curated_orders`, then freeze the exact version Engineering will exercise in Step 4.**
+**Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
 
 Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
 
@@ -11,15 +11,33 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     Learn more: [AI-assisted Data Contract Authoring](../solutions/ai-assisted-data-contract-authoring.md).
 
-## 1. Open the Data Contract editor
+## 1. Cover the whole pipeline, not only the target
 
-Open `01_governance`, run the setup cells, select the `curated_orders` target produced in Step 2, then run:
+Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+
+| Pipeline role | Table | Guardrails exercised |
+| --- | --- | --- |
+| Source | `orders` | Freshness, Schema, Source Drift |
+| Source | `products` | Schema |
+| Source | `order_history` | Schema |
+| Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
+| Target | `curated_order_items` | Schema |
+
+Guardrail Coverage then proves that every selected source/target contract has applicable rules and that every applicable rule produced evidence in the current activity.
+
+Open `01_governance`, run the setup cells, select each table above, then run:
 
 ```python
 widget_data_contract()
 ```
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
+
+For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep these rules on **Warn** for the first integration run.
+
+For `products`, `order_history`, and `curated_order_items`, a Schema rule is sufficient for this exercise. Their purpose is to make the complete two-target pipeline Guardrail-ready without inventing unrelated business rules.
+
+For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep Schema and DQ on **Warn** for the first dirty run. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
 
 For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
 
@@ -94,7 +112,11 @@ Before freezing, the contract should exercise all nine supported runtime DQ type
 
 This is intentionally broader than a normal contract. The Guided Demo uses it as the canonical Fabric integration exercise for the complete DQ authoring and execution path.
 
-## 6. Manifest & Freeze
+## 6. Freeze every participating contract
+
+Freeze the source contracts and both target contracts. Step 4 must select the exact frozen versions for all five tables; otherwise Guardrail Coverage correctly reports that the pipeline is not ready.
+
+## 7. Manifest & Freeze
 
 Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
@@ -104,7 +126,7 @@ The frozen version is immutable and becomes the exact candidate Engineering sele
 
 ## Expected result
 
-You now have one frozen `curated_orders` Data Contract with all nine DQ rule types represented and all DQ rules initially configured to warn so Step 4 can observe every deliberate failure in one run.
+You now have frozen contracts for the complete demo pipeline. `curated_orders` represents all nine DQ rule types, `orders` supplies the source-side Freshness and Source Drift expectations, Schema is represented across the pipeline, and Sensitive Data treatment is configured on the governed target. Step 4 can now exercise every Guardrail stage that the orchestrators actually run.
 
 **Previous:** [Step 2. Run the Development pipeline](02-build-and-run-etl.md)  
 **Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)
