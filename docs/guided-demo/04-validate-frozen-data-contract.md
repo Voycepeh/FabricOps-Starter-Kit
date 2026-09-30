@@ -9,7 +9,7 @@ The selector defaults every table to **Enforce**. For this step, put only `curat
 In the Data Contract selector at the top of `02_pipeline`:
 
 1. leave every source table in **Enforce** mode and select its exact frozen Step 3 contract,
-2. choose **Validate** for `curated_orders`,
+2. choose **Validate** only for the target, `curated_orders`,
 3. select the exact frozen candidate version from Step 3 for `curated_orders`.
 
 All participating tables need selected contracts because Guardrail Coverage checks the complete source → target relationship once any contract is selected.
@@ -216,6 +216,8 @@ To prove enforcement:
 6. rerun its dirty path.
 
 The selected violation should now stop the orchestration at that Guardrail stage. You can repeat this with other rules if you want to exercise each Block path individually.
+
+Do not edit a frozen version in place. Refine the draft, freeze a new immutable version, and select that version for validation.
 
 ## 8. Prove Guardrail Coverage
 
