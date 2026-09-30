@@ -89,15 +89,13 @@ sources["orders"] = source
 
 The returned `source` keeps the DataFrame together with the supporting Read outputs:
 
-```python
-source["dataframe"]
-source["table_id"]
-source["freshness_result"]
-source["schema_result"]
-source["dq_result"]
-source["profile_result"]
-source["orchestration_stages"]
-```
+- `source["dataframe"]` → the Spark DataFrame returned by the Read.
+- `source["table_id"]` → the canonical FabricOps identity for the source table.
+- `source["freshness_result"]` → the Freshness Guardrail result.
+- `source["schema_result"]` → the Schema Guardrail result.
+- `source["dq_result"]` → the Data Quality Guardrail result.
+- `source["profile_result"]` → the profiling result when profiling applies.
+- `source["orchestration_stages"]` → the status and timing of each Read stage.
 
 Store the complete result in `sources["orders"]` so later transformation and Write steps can reuse the DataFrame, canonical `table_id`, Guardrail results, profiling output, and orchestration status.
 
@@ -171,17 +169,15 @@ write_result = orchestrate_write(
 
 The returned `write_result` keeps the target identity together with the supporting Write outputs:
 
-```python
-write_result["table_id"]
-write_result["schema_result"]
-write_result["sensitive_result"]
-write_result["source_drift_results"]
-write_result["dq_result"]
-write_result["coverage_result"]
-write_result["orchestration_stages"]
-write_result["published"]
-write_result["profile_result"]
-```
+- `write_result["table_id"]` → the canonical FabricOps identity for the target table.
+- `write_result["schema_result"]` → the Schema Guardrail result.
+- `write_result["sensitive_result"]` → the Sensitive Data Guardrail result, including any applied treatment.
+- `write_result["source_drift_results"]` → the Source Drift results for the contributing sources.
+- `write_result["dq_result"]` → the Data Quality Guardrail result.
+- `write_result["coverage_result"]` → whether the required Guardrails are covered for the target.
+- `write_result["orchestration_stages"]` → the status and timing of each Write stage.
+- `write_result["published"]` → whether the target was physically written.
+- `write_result["profile_result"]` → the profile of the persisted target when profiling applies.
 
 This keeps the publication result, Guardrail results, profiling output, and orchestration status together for later use in the notebook.
 
