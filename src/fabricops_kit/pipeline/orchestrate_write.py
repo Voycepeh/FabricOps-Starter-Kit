@@ -106,6 +106,6 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
             "published": False,
             "validation_passed": True,
         }
-    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=load_strategy, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
+    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], spark_session=spark_session))
     return {**common_results, **write_result, "published": True, "profile_result": profile}
