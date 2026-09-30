@@ -1,6 +1,6 @@
-# AI-assisted Data Sensitivity & Description
+# Sensitive Data Classification & Treatment
 
-![AI-assisted Data Sensitivity & Description](../assets/AiDatacontract.png)
+![Sensitive Data Classification & Treatment](../assets/AiDatacontract.png)
 
 ## The problem
 
@@ -92,13 +92,13 @@ Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
 
 ### Where AI helps
 
-AI is used selectively in Data Contract authoring; it is **not the enforcement engine**.
+Sensitive Data governance does not depend on AI. Governance can classify and configure treatment manually. AI is an optional authoring aid; it is **not the enforcement engine**.
 
-On this authoring path, Fabric AI Functions can use Data Catalogue and profiling context to assist with **descriptions, classifications, and Sensitive Data classification/treatment suggestions**. Grain & Row Key candidates are derived deterministically from profile evidence, not AI. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
+Governance can author descriptions, classifications, and Sensitive Data treatments manually. When enabled, Fabric AI Functions can use Data Catalogue and profiling context to suggest descriptions, classifications, and Sensitive Data classification/treatment choices. Grain & Row Key candidates are derived deterministically from profile evidence, not AI. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
 
 Governance reviews those suggestions in the same authoring workflow as manually entered decisions. Once accepted into a frozen Data Contract, enforcement is deterministic through the FabricOps Guardrail functions.
 
-That separation is intentional: **AI assists only the interpretation-heavy authoring steps; deterministic evidence and Governance decisions remain explicit and reviewable; Engineering enforcement remains deterministic.**
+That separation is intentional: **manual Governance authoring is always available; AI can accelerate interpretation-heavy authoring; the approved Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
 
 ## Go deeper
 
